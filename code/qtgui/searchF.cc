@@ -190,10 +190,7 @@ void searchW::addOccurence(int occnum,
   tmpStr.sprintf(" Line %d, Column %d", line, col);
 
   QString posStr;
-// 20111201 -->
-  //posStr = filename + tmpStr;
   posStr = QFileInfo(filename).fileName() + tmpStr;
-// <-- 20111201
 
 #if QT_VERSION >= 0x040000
   this->occurenceList->addItem(numStr + posStr);

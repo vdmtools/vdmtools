@@ -411,10 +411,8 @@ QWidget* toolOptionsDialog::createMultiFileSupportedCheckBox( QWidget* parent )
   QCheckBox* checkbox = new QCheckBox( parent );
   checkbox->setText( tr( "Editor suports multiple files in one editor" ) );
   this->if_multiFilesSupported = checkbox;
-// 20081215
   this->if_multiFilesSupported->setChecked(false);
   this->if_multiFilesSupported->setEnabled( false );
-//
   return checkbox;
 }
 
@@ -1408,8 +1406,6 @@ void toolOptionsDialog::applyDialog()
     this->setEditor();
   }
   this->singleLoadFormat = this->if_singleLoadFormat->text();
-// 20081215
-//  this->multiFilesSupported = this->if_multiFilesSupported->isChecked();
   this->multiFilesSupported = false;
   this->multiLoadFormat = this->if_multiLoadFormat->text();
   this->printCommand = this->if_printCommand->text();
@@ -1519,10 +1515,7 @@ void toolOptionsDialog::setOptions()
   this->if_useExternalEditor->setChecked(this->useExternalEditor);
   this->if_editorName->setText(this->editorName);
   this->if_singleLoadFormat->setText(this->singleLoadFormat);
-// 20081215
-//  this->if_multiFilesSupported->setChecked(this->multiFilesSupported);
   this->if_multiFilesSupported->setChecked(false);
-//
   this->if_multiLoadFormat->setText(this->multiLoadFormat);
   this->if_printCommand->setText(this->printCommand);
   this->if_syntaxColoring->setChecked(this->syntaxColoring);
@@ -1586,23 +1579,17 @@ void toolOptionsDialog::setEditor()
 
 void toolOptionsDialog::editerNameEnabled()
 {
-  if(this->if_useExternalEditor->isChecked())
-  {
+  if(this->if_useExternalEditor->isChecked()) {
     this->if_selectEditor->setEnabled(true);
     this->if_editorNameLabel->setEnabled(true);
     this->if_editorName->setEnabled(true);
     this->if_singleLoadFormatLabel->setEnabled(true);
     this->if_singleLoadFormat->setEnabled(true);
-// 20081215
-//    this->if_multiFilesSupported->setEnabled(true);
     this->if_multiFilesSupported->setEnabled(false);
-//    this->if_multiLoadFormatLabel->setEnabled(true);
-//    this->if_multiLoadFormat->setEnabled(true);
     this->if_loadFormatHelp->setEnabled(true);
     this->multiLoadEnabled();
   }
-  else
-  {
+  else {
     this->if_selectEditor->setEnabled(false);
     this->if_editorNameLabel->setEnabled(false);
     this->if_editorName->setEnabled(false);
@@ -1617,13 +1604,11 @@ void toolOptionsDialog::editerNameEnabled()
 
 void toolOptionsDialog::multiLoadEnabled()
 {
-  if(this->if_multiFilesSupported->isChecked())
-  {
+  if(this->if_multiFilesSupported->isChecked()) {
     this->if_multiLoadFormatLabel->setEnabled(true);
     this->if_multiLoadFormat->setEnabled(true);
   }
-  else
-  {
+  else {
     this->if_multiLoadFormatLabel->setEnabled(false);
     this->if_multiLoadFormat->setEnabled(false);
   }
@@ -1633,29 +1618,37 @@ void toolOptionsDialog::multiLoadEnabled()
 void toolOptionsDialog::setUMLOptions()
 {
   QString itrf (umlInterfaces[this->umlinterface]);
-  if ((itrf == UML_JUDE_XMI) || (itrf == UML_ASTAH_XMI) || (itrf == UML_ASTAH_PRO_XMI))
+  if ((itrf == UML_JUDE_XMI) || (itrf == UML_ASTAH_XMI) || (itrf == UML_ASTAH_PRO_XMI)) {
     Qt2TB::SetToolInterfaceI(INTERFACE_XMI11_UML14_ASTAH);
-  else if (itrf == UML_EA_XMI)
+  }
+  else if (itrf == UML_EA_XMI) {
     Qt2TB::SetToolInterfaceI(INTERFACE_XMI11_UML14_EA);
+  }
 #ifdef _MSC_VER
 #ifdef _USE_ROSE
-  else if (itrf == UML_Rose_OLE)
+  else if (itrf == UML_Rose_OLE) {
     Qt2TB::SetToolInterfaceI(INTERFACE_ROSE98);
+  }
 #endif // _USE_ROSE
 #endif // _MSC_VER
 
   QString ftp (umlNewFileTypes[this->umlnewfiletype]);
-  if (ftp == UML_FTYPE_VDM)
+  if (ftp == UML_FTYPE_VDM) {
     Qt2TB::SetNewFileTypeI(FILETYPE_VPP);
-  else if (ftp == UML_FTYPE_RTF)
+  }
+  else if (ftp == UML_FTYPE_RTF) {
     Qt2TB::SetNewFileTypeI(FILETYPE_RTF);
-  else if (ftp == UML_FTYPE_TEX)
+  }
+  else if (ftp == UML_FTYPE_TEX) {
     Qt2TB::SetNewFileTypeI(FILETYPE_TEX);
+  }
 
-  if (this->useNewFile)
+  if (this->useNewFile) {
     Qt2TB::SetRTFTemplateI(this->newFileName);
-  else
+  }
+  else {
     Qt2TB::SetRTFTemplateI(QString(""));
+  }
 }
 #endif // VDMPP
 

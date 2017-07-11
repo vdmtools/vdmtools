@@ -1285,17 +1285,13 @@ void optionsW::setOptions()
   this->jcg_outputDirName->setText(optionMap[ "JCG_DIRNAME" ]);
   this->jcg_needBackup->setChecked(String2Bool(optionMap[ "JCG_NEEDBACKUP" ]));
 
-// 20120409 -->
-  if (this->jcg_useOutputDir->isChecked())
-  {
+  if (this->jcg_useOutputDir->isChecked()) {
     QDir dir (this->jcg_outputDirName->text());
-    if (!dir.exists())
-    {
+    if (!dir.exists()) {
       this->jcg_useOutputDir->setChecked(false);
       this->jcg_outputDirName->setText("");
     }
   }
-// <-- 20120409
 #endif //VDMPP
   
   // Java2VDM options
@@ -1303,7 +1299,6 @@ void optionsW::setOptions()
   //  j2v_autoRenaming->setChecked();
   //  j2v_genAccessors->setChecked();
 
-// 20071031
   this->invClicked();
 }
 
@@ -1325,23 +1320,22 @@ void optionsW::putOptions()
   optionMap[ "STEPSIZE" ] = QString::number(this->ip_stepSize->value());
   optionMap[ "DEFAULTCPUCAPACITY" ] = QString::number(this->ip_cpuCapacity->value());
 
-  if( this->ip_vcpuCapacitycb->isChecked() )
+  if( this->ip_vcpuCapacitycb->isChecked() ) {
     optionMap[ "DEFAULTVCPUCAPACITY" ] = QString::number(this->ip_vcpuCapacity->value());
-  else
+  }
+  else {
     optionMap[ "DEFAULTVCPUCAPACITY" ] = "<INFINITE>";
+  }
 
   optionMap[ "JITTERMODE" ] = this->ip_jitterMode->currentText();
 
-  if( this->ip_logArgsAllCheck->isChecked() ) 
-  {
+  if( this->ip_logArgsAllCheck->isChecked() ) {
     optionMap[ "LOGARGS" ] = "<ALL>";
   }
-  else
-  {
+  else {
     int len = this->ip_selectedOpsList->count();
     QString str;
-    for(int i = 0; i < len; i++)
-    {
+    for(int i = 0; i < len; i++) {
       if( i > 0 ) str += ",";
 #if QT_VERSION >= 0x040000
       QListWidgetItem * item = this->ip_selectedOpsList->item(i);
@@ -1449,7 +1443,6 @@ void optionsW::loadOptions()
 #endif // VDMPP
   QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
 
-// 20121105
   this->mainw->logWrite(QString("loadOptions for ") + filenm);
 
   if( filenm == "" ) {

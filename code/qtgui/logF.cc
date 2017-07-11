@@ -69,9 +69,7 @@ QWidget* logW::createLog( QWidget* parent )
 
 #if QT_VERSION >= 0x040000
   te->setAcceptRichText(false);
-// 20110329 -->
   te->document()->setMaximumBlockCount(1000);
-// <-- 20110329
   te->setLineWrapMode(QTextEdit::WidgetWidth);
   te->setReadOnly(true);
 #else

@@ -59,7 +59,7 @@
 #include <unistd.h>
 #endif // __Cygwin__
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <thread>
 #endif
 
@@ -464,7 +464,7 @@ int main (int argc, char * argv[])
   mainw->cleanUp();
 
 #if defined( __darwin__ ) || defined( __linux__ )
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
   std::this_thread::sleep_for(std::chrono::milliseconds (100));
 #else
   usleep(100000);

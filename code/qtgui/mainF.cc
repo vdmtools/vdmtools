@@ -59,7 +59,7 @@
 #include <qinputdialog.h>
 #endif // QT_VERSION < 0x040000
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <thread>
 #endif
 
@@ -170,8 +170,6 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
 #endif
 #else
 #if defined(  _MSC_VER )
-// 20080207
-//  this->setGeometry(4,30,900,580);
   RECT rect;
   SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
   Qrect qr(rect.left + 4, rect.top + 30, 900, 580);
@@ -1237,12 +1235,8 @@ void mainW::newProject_qt4(bool)
 void mainW::newProject_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  this->checkProjectIsSaved(); // 20051226
+  this->checkProjectIsSaved();
   this->sendCommand(new NewUnnamedProjectCMD());
-
-//  this->clearWindows(true);
-
-//  this->repaint();
   this->update();
 }
 
@@ -1258,7 +1252,7 @@ void mainW::loadProject_qt4(bool)
 void mainW::loadProject_qt3()
 #endif // QT_VERSION >= 0x040000
 { 
-  this->checkProjectIsSaved(); // 20051226
+  this->checkProjectIsSaved();
   
   QString filter ("Project files (*.prj);; all (*.*)");
   QString files (QtPort::QtGetOpenFileName(this, tr("Open Project File..."), this->lastDir, filter));
@@ -1353,11 +1347,7 @@ void mainW::saveAsProject_qt4(bool)
 void mainW::saveAsProject_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-// 20111108 -->
-//  QStringList files(Qt2TB::getProjectFilesI());
-//  if (!files.isEmpty())
-// <-- 20111108
-    this->saveProjectAs();
+  this->saveProjectAs();
 }
 
 bool mainW::saveProjectAs()
@@ -1721,13 +1711,12 @@ void mainW::toolOptions_qt3()
 void mainW::projectHistory_qt4( QAction * a )
 {
 #if QT_VERSION >= 0x040000
-  this->checkProjectIsSaved();  // 20051226
+  this->checkProjectIsSaved();
 
   QString filename (a->whatsThis());
 
   QFileInfo fi( filename );
-  if( !fi.exists() )
-  {
+  if( !fi.exists() ) {
     QString errmsg ( tr("Unnable to find the project:\n") );
     errmsg += filename;
     QMessageBox::warning( this, "Project", errmsg );
@@ -1743,15 +1732,14 @@ void mainW::projectHistory_qt4( QAction * a )
 #if QT_VERSION < 0x040000
 void mainW::projectHistory_qt3( int id )
 {
-  this->checkProjectIsSaved();  // 20051226
+  this->checkProjectIsSaved();
 
   int index = this->history->indexOf(id);
   if ( index == -1 ) return;
   QString filename (this->histAList.at(index)->whatsThis());
 
   QFileInfo fi( filename );
-  if( !fi.exists() )
-  {
+  if( !fi.exists() ) {
     QString errmsg ( tr("Unnable to find the project:\n") );
     errmsg += filename;
     QMessageBox::warning( this, "Project", errmsg );
@@ -3371,7 +3359,7 @@ void mainW::userEvent(QEvent *e)
 #endif // QT_VERSION < 0x040000
   this->setComplete(true);
 #ifdef __darwin__
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
   std::this_thread::sleep_for(std::chrono::microseconds(20));
 #else
   usleep(20);
@@ -3504,17 +3492,15 @@ void mainW::setTextCodec(QString menuName)
 {
   this->setEncoding(menuName);
 
-  if( NULL != this->codew )
+  if( NULL != this->codew ) {
     this->codew->closeAll();
+  }
 
   QStringList files(Qt2TB::getProjectFilesI());
-  if (!files.isEmpty())
-  {
+  if (!files.isEmpty()) {
     this->sendSyntaxCommand(files);
-// 20120820 -->
     this->isModified = true;
     this->mayBeModified = false;
-// <-- 20120820
   }
 }
 
@@ -3572,13 +3558,10 @@ void mainW::addFiles(const QStringList & newFiles)
 {
   this->browserw->addFiles(newFiles);
 
-// 20120725 -->
-  if (this->mayBeModified)
-  {
+  if (this->mayBeModified) {
     this->mayBeModified = false;
     Qt2TB::SetSavedFileState(true);
   }
-// <-- 20120725
 }
 
 //
@@ -3591,7 +3574,7 @@ void mainW::removeFiles(const QStringList & removedFiles)
 
   this->browserw->removeFiles(removedFiles);
 
-  // remove from source window // 20051222
+  // remove from source window
   this->removeFilesFromGUI(removedFiles);
 }
 
@@ -3641,19 +3624,17 @@ void mainW::addModuleAndStatus(const QString & module, const QStringList & files
 //
 void mainW::removeModules(const QStringList & removedModules)
 {
-  if (this->cleaningUp)
+  if (this->cleaningUp) {
     return;
+  }
 
   this->browserw->removeModules(removedModules);
 
-// 20120725 -->
-  if (this->isModified)
-  {
+  if (this->isModified) {
     this->isModified = false;
     this->mayBeModified = true;
     Qt2TB::SetSavedFileState(true);
   }
-// <-- 20120725
 }
 
 //
@@ -3681,14 +3662,12 @@ void mainW::updateModuleStatus(const QString & module, int syntax, int type, int
                  (StatusType::status)pp);
   this->browserw->updateModuleStatus(module, st);
 
-// 20120725 -->
-  if (this->mayBeModified)
-  {
+  if (this->mayBeModified) {
     this->mayBeModified = false;
     Qt2TB::SetSavedFileState(true);
   }
-// <-- 20120725
 }
+
 //
 // mainW::changeFileState(const QString& filename)
 //
@@ -3702,14 +3681,11 @@ void mainW::changeFileState(const QString & filename)
     StatusType st (Qt2TB::getStatusI(*iter));
     this->browserw->updateModuleStatus(*iter, st);
   }
-// 20120725 -->
-  if (this->isModified)
-  {
+  if (this->isModified) {
     this->isModified = false;
     this->mayBeModified = true;
     Qt2TB::SetSavedFileState(true);
   }
-// <-- 20120725
 }
 
 //
@@ -3841,28 +3817,28 @@ void mainW::addMessage(int errnum, const QString & filename, int line, int col,
                        const QString & message, const QString & tempFilenm)
 {
   this->errorw->addErrorMessage(errnum, filename, line, col, message, tempFilenm);
-// 20090616 -->
 #if QT_VERSION >= 0x040000
   int index = message.indexOf( "  Run-Time Error" );
 #else
   int index = message.find( "  Run-Time Error" );
 #endif // QT_VERSION >= 0x040000
-  if (index != -1 )
-  {
+  if (index != -1 ) {
     this->interpreterWrite(message.left(index));
     this->interpreterWrite(message.mid(index));
   }
-// <-- 20090616
  /*&& col != -1 See item 4) in http://zeus.ifad.dk/bugzilla/show_bug.cgi?id=3*/
 #if QT_VERSION >= 0x040000
-  if (!this->errorw->parentWidget()->isVisible())
+  if (!this->errorw->parentWidget()->isVisible()) {
     this->errorw->parentWidget()->show();
-  if (!this->errorw->isVisible())
+  }
+  if (!this->errorw->isVisible()) {
     this->errorw->show();
+  }
   this->errorw->parentWidget()->raise();
 #else
-  if (!this->errorw->isVisible())
+  if (!this->errorw->isVisible()) {
     this->errorw->show();
+  }
   this->errorw->parentWidget()->raise();
 #endif // QT_VERSION >= 0x040000
   this->errorw->setFocus();
@@ -3918,11 +3894,13 @@ void mainW::setErrorInfo(int numErrs, int numWarn)
     // error window
     QString caption1, caption2;
     caption1.sprintf("%d error", numErrs);
-    if (numErrs != 1)
+    if (numErrs != 1) {
       caption1.append("s");
+    }
     caption2.sprintf(", %d warning", numWarn);
-    if (numWarn != 1)
+    if (numWarn != 1) {
       caption2.append("s");
+    }
     this->logWrite(caption1 + caption2);
     this->errorw->setInfo(numErrs, numWarn);
   }
@@ -3945,15 +3923,15 @@ void mainW::openFile(const QString & title, const QString & file, int lineno = 1
   this->codew->openIn(title, file, lineno, col, length, coloring);
 
 #if QT_VERSION >= 0x040000
-  if(!this->codew->parentWidget()->isVisible())
-  {
+  if(!this->codew->parentWidget()->isVisible()) {
     this->codew->parentWidget()->show();
     this->codew->show();
   }
   this->codew->update();
 #else
-  if(!this->codew->isVisible())
+  if(!this->codew->isVisible()) {
     this->codew->show();
+  }
   this->codew->repaint();
 #endif // QT_VERSION >= 0x040000
 }
@@ -3984,10 +3962,12 @@ bool mainW::roseIsAlive()
 //
 void mainW::addRoseDiff(const QString& msg)
 {
-  if (this->rosew)
+  if (this->rosew) {
     this->rosew->addDiff(msg);
-  else
+  }
+  else {
     this->logWrite(msg);
+  }
 }
 
 //
@@ -3995,10 +3975,12 @@ void mainW::addRoseDiff(const QString& msg)
 //
 void mainW::addRoseError(const QString& msg)
 {
-  if (this->rosew)
+  if (this->rosew) {
     this->rosew->addError(msg);
-  else
+  }
+  else {
     this->logWrite(msg);
+  }
 }
 #endif // VDMPP
 
@@ -4294,15 +4276,14 @@ void mainW::interpreterWrite(const QString & msg)
 {
   this->interpreterw->write(msg);
 
-// 20140122 -->
 #if QT_VERSION >= 0x040000
   QString smsg = msg.simplified();
 #else
   QString smsg = msg.stripWhiteSpace();
 #endif // QT_VERSION >= 0x040000
-  if ((smsg == "calllog set") || (smsg == "calllog unset"))
+  if ((smsg == "calllog set") || (smsg == "calllog unset")) {
     this->setCallLogMenu();
-// <-- 20140122
+  }
 }
 
 //
@@ -4330,7 +4311,7 @@ void mainW::setComplete( bool complete )
 #ifdef _MSC_VER
     Sleep( 1 );
 #else
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
     std::this_thread::sleep_for(std::chrono::microseconds(3));
 #else
     usleep( 1 );
@@ -4358,7 +4339,7 @@ void mainW::waitComplete()
 //    Sleep( 5 );
     Sleep( 10 );
 #else
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
     std::this_thread::sleep_for(std::chrono::microseconds(3));
 #else
     usleep( 10 );
@@ -4817,13 +4798,10 @@ void mainW::enableEditor(bool enable)
 
 void mainW::modified(QStringList modifiedFiles)
 {
-  if( this->tw->doAutoSyntaxChecking() )
-  {
+  if( this->tw->doAutoSyntaxChecking() ) {
     this->sendSyntaxCommand(modifiedFiles); 
-// 20120725 -->
     this->isModified = true;
     this->mayBeModified = false;
-// <-- 20120725
   }
   this->removeFilesFromGUI(modifiedFiles);
 }
@@ -4832,14 +4810,13 @@ void mainW::selectAll_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * aw = this->ws->activeSubWindow();
-  if( aw != NULL )
-  {
-    if( aw == this->browserw->parentWidget() )
-    {
+  if( aw != NULL ) {
+    if( aw == this->browserw->parentWidget() ) {
       this->browserw->selectAll();
     }
-    else if ( aw == this->codew->parentWidget() )
+    else if ( aw == this->codew->parentWidget() ) {
       this->codew->selectAll();
+    }
   }
 #endif // QT_VERSION >= 0x040000
 }
@@ -4847,14 +4824,13 @@ void mainW::selectAll_qt4(bool)
 void mainW::selectAll_qt3()
 {
   QWidget * aw = this->ws->activeWindow();
-  if( aw != NULL )
-  {
-    if( aw == this->browserw )
-    {
+  if( aw != NULL ) {
+    if( aw == this->browserw ) {
       this->browserw->selectAll();
     }
-    else if ( aw == this->codew )
+    else if ( aw == this->codew ) {
       this->codew->selectAll();
+    }
   }
 }
 #endif // QT_VERSION < 0x040000
@@ -4868,8 +4844,7 @@ void mainW::searchId(QString str, bool partial, bool defOnly)
   if (!sel.isEmpty()) {
     GUIOccurenceList list (Qt2TB::SearchIdI(sel, str, partial, defOnly));
     int num = 0;
-    for (GUIOccurenceList::const_iterator it = list.begin(); it != list.end(); ++it)
-    {
+    for (GUIOccurenceList::const_iterator it = list.begin(); it != list.end(); ++it) {
       num++;
       GUIOccurenceInfo goif (*it);
       searchw->addOccurence(num,
@@ -4970,17 +4945,16 @@ void mainW::setEncoding(const QString & cnm)
 
     QString cs (QTLOCALE::MenuNameToCharSet( cnm ));
 
-    if( !cs.isEmpty() )
-    {
+    if( !cs.isEmpty() ) {
       Qt2TB::setIOCharSetEnvI( cs );
 
-// 20060425
 #ifdef VDMPP
       Qt2TB::SetCharsetI( cs );
 #endif // VDMPP
     }
-    if (!Qt2TB::getProjectNameI().isNull())
+    if (!Qt2TB::getProjectNameI().isNull()) {
       this->ow->loadOptions();
+    }
     this->ow->setCurrentCodecName(cnm);
     this->ow->saveOptions();
   }

@@ -127,6 +127,8 @@ fi
 export CORBAHOME=/usr/local/omniORB
 export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
 
+#ARFLAGS=rvU
+
 export OSTYPE=`uname`
 export YACC=bison
 

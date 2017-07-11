@@ -191,13 +191,8 @@ endif
 
 # -Wno-return-type is needed for egcs. See http://egcs.cygnus.com/caveats.html
 ifeq ($(strip $(OSTYPE)),Darwin)
-#WARNINGS = -Wunused  -Wall -Wno-return-type -DML_TRACE
-#WARNINGS = -Wunused -Wall -Wno-return-type -Wno-deprecated
-#WARNINGS = -Wunused -Wall -Wno-deprecated
 WARNINGS = -Wall -Wno-unused -Wno-deprecated
 else
-#WARNINGS = -Wno-unused -Wall -Wno-return-type
-#WARNINGS = -Wunused -Wall
 WARNINGS = -Wall -Wno-unused
 endif
 
