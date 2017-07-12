@@ -560,12 +560,12 @@ static void yyerror(const char *);
 
 %type <record>   IsExpression
 %type <record>   NarrowExpression
+%type <record>   MacroExpression
 %type <record>   Name
 %type <record>   OldNameOrName
 %type <record>   IdentifierPrimeList
 %type <record>   Identifier
 %type <record>   SimpleIdentifier
-%type <record>   MacroIdentifier
 #ifdef VDMPP
 %type <record>   KeywordIdentifier
 #endif // VDMPP
@@ -708,11 +708,11 @@ static void yyerror(const char *);
 #endif // FULL
 %type <sequence> LocalParameterTypes
 %type <tuple>    PrePost
+%type <generic>  Pre
+%type <generic>  Post
 
 #if FULL
 %type <generic>  Measure
-%type <generic>  Pre
-%type <generic>  Post
 #endif // FULL
 
 //************** Misc *********************************************/
@@ -3681,25 +3681,16 @@ FunctionDefinition
         ;
 
 ImplFunctionDefinition
-        : Identifier TypeVarList ParameterTypes NonEmptyIdentifierTypePairList PrePost
+        : Identifier TypeVarList ParameterTypes NonEmptyIdentifierTypePairList Pre Post
         { $$ = new Tuple (2); // (AS`Name * AS`ImplFnDef)
-          Generic post;
-          if ($5->GetField (2).IsNil ()) {
-            MYPARSER::Report (L"Implicit function definition must have post-condition.", @1);
-            post = MYPARSER::GetAstTrue();
-          } else {
-            post = $5->GetField(2);
-          }
-
           TYPE_AS_ImplFnDef ifd;
-          MYPARSER::SetPos2(ifd, @1, @5);
+          MYPARSER::SetPos2(ifd, @1, @6);
           ifd.SetField (pos_AS_ImplFnDef_nm,       *$1);
           ifd.SetField (pos_AS_ImplFnDef_params,   *$2);
           ifd.SetField (pos_AS_ImplFnDef_partps,   *$3);
           ifd.SetField (pos_AS_ImplFnDef_resnmtps, *$4);
-          ifd.SetField (pos_AS_ImplFnDef_fnpre,    $5->GetField (1));
-          ifd.SetField (pos_AS_ImplFnDef_fnpost,   post);
-          //ifd.SetField (pos_AS_ImplFnDef_access,   Int (NOT_INITIALISED_AS));
+          ifd.SetField (pos_AS_ImplFnDef_fnpre,    *$5);
+          ifd.SetField (pos_AS_ImplFnDef_fnpost,   *$6);
           ifd.SetField (pos_AS_ImplFnDef_access,   Int (DEFAULT_AS));
           ifd.SetField (pos_AS_ImplFnDef_stat,     Bool(false));
 
@@ -3711,6 +3702,7 @@ ImplFunctionDefinition
           delete $3;
           delete $4;
           delete $5;
+          delete $6;
         }
         ;
 
@@ -3729,7 +3721,6 @@ ExplFunctionDefinition
           efd.SetField (pos_AS_ExplFnDef_body,    *$8);
           efd.SetField (pos_AS_ExplFnDef_fnpre,   $9->GetField (1));
           efd.SetField (pos_AS_ExplFnDef_fnpost,  $9->GetField (2));
-          //efd.SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
           efd.SetField (pos_AS_ExplFnDef_access,  Int (DEFAULT_AS));
           efd.SetField (pos_AS_ExplFnDef_stat,    Bool(false));
           efd.SetField (pos_AS_ExplFnDef_measu,   *$10);
@@ -3761,7 +3752,6 @@ ExtExplFunctionDefinition
           eefd.SetField (pos_AS_ExtExplFnDef_body,     *$6);
           eefd.SetField (pos_AS_ExtExplFnDef_fnpre,    $7->GetField (1));
           eefd.SetField (pos_AS_ExtExplFnDef_fnpost,   $7->GetField (2));
-          //eefd.SetField (pos_AS_ExtExplFnDef_access,   Int (NOT_INITIALISED_AS));
           eefd.SetField (pos_AS_ExtExplFnDef_access,   Int (DEFAULT_AS));
           eefd.SetField (pos_AS_ExtExplFnDef_stat,     Bool(false));
           eefd.SetField (pos_AS_ExtExplFnDef_measu,    *$8);
@@ -3942,29 +3932,19 @@ OperationDefinition
         ;
 
 ImplOperationDefinition
-        : Identifier ParameterTypes IdentifierTypePairList Externals PrePost Exceptions
+        : Identifier ParameterTypes IdentifierTypePairList Externals Pre Post Exceptions
         { $$ = new Tuple (2); // (AS`Name * AS`ImplOpDef)
-
-          Generic post;
-          if ($5->GetField (2).IsNil ()) {
-            MYPARSER::Report (L"Implicit operation definition must have post-condition.", @1);
-            post = MYPARSER::GetAstTrue();
-          } else {
-            post = $5->GetField(2);
-          }
-
           TYPE_AS_ImplOpDef iod;
-          MYPARSER::SetPos2(iod, @1, @6);
+          MYPARSER::SetPos2(iod, @1, @7);
           iod.SetField (pos_AS_ImplOpDef_nm,       *$1);
           iod.SetField (pos_AS_ImplOpDef_oppure,   Bool(false));
           iod.SetField (pos_AS_ImplOpDef_opsync,   Bool(true));
           iod.SetField (pos_AS_ImplOpDef_partps,   *$2);
           iod.SetField (pos_AS_ImplOpDef_resnmtps, *$3);
           iod.SetField (pos_AS_ImplOpDef_opext,    *$4);
-          iod.SetField (pos_AS_ImplOpDef_oppre,    $5->GetField (1));
-          iod.SetField (pos_AS_ImplOpDef_oppost,   post);
-          iod.SetField (pos_AS_ImplOpDef_excps,    *$6);
-          //iod.SetField (pos_AS_ImplOpDef_access,   Int (NOT_INITIALISED_AS));
+          iod.SetField (pos_AS_ImplOpDef_oppre,    *$5);
+          iod.SetField (pos_AS_ImplOpDef_oppost,   *$6);
+          iod.SetField (pos_AS_ImplOpDef_excps,    *$7);
           iod.SetField (pos_AS_ImplOpDef_access,   Int (DEFAULT_AS));
           iod.SetField (pos_AS_ImplOpDef_stat,     Bool(false));
 #if VDMPP
@@ -3983,6 +3963,7 @@ ImplOperationDefinition
           delete $4;
           delete $5;
           delete $6;
+          delete $7;
         }
         ;
 
@@ -4005,7 +3986,6 @@ ExplOperationDefinition
           eod.SetField (pos_AS_ExplOpDef_oppre,  $9->GetField (1));
           eod.SetField (pos_AS_ExplOpDef_oppost, $9->GetField (2));
           //eod.SetField (pos_AS_ExplOpDef_excps, *$10); // not yet
-          //eod.SetField (pos_AS_ExplOpDef_access, Int (NOT_INITIALISED_AS));
           eod.SetField (pos_AS_ExplOpDef_access, Int (DEFAULT_AS));
           eod.SetField (pos_AS_ExplOpDef_stat,   Bool(false));
 #if VDMPP
@@ -4045,7 +4025,6 @@ ExtExplOperationDefinition
           eeod.SetField (pos_AS_ExtExplOpDef_oppre,    $7->GetField (1));
           eeod.SetField (pos_AS_ExtExplOpDef_oppost,   $7->GetField (2));
           eeod.SetField (pos_AS_ExtExplOpDef_excps,    *$8);
-          //eeod.SetField (pos_AS_ExtExplOpDef_access,   Int (NOT_INITIALISED_AS));
           eeod.SetField (pos_AS_ExtExplOpDef_access,   Int (DEFAULT_AS));
           eeod.SetField (pos_AS_ExtExplOpDef_stat,     Bool(false));
 #if VDMPP
@@ -5376,6 +5355,7 @@ Expression
         | LastResult
 #endif //FULL
         | NarrowExpression
+        | MacroExpression
         ;
 
 #if !FULL
@@ -5580,18 +5560,9 @@ LocalFunctionDefinition
         ;
 
 ImplLocalFunctionDefinition
-        : Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList PrePost
+        : Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList Pre Post
         { $$ = new TYPE_AS_ImplFnDef();
-          MYPARSER::SetPos2(*$$, @1, @5);
-
-          Generic post;
-          if ($5->GetField (2).IsNil ()) {
-            MYPARSER::Report (L"Implicit function definition must have post-condition.", @1);
-            post = MYPARSER::GetAstTrue();
-          } else {
-            post = $5->GetField(2);
-          }
-
+          MYPARSER::SetPos2(*$$, @1, @6);
           if ($1->Is (TAG_TYPE_AS_PatternName))
           { $$->SetField (pos_AS_ImplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
           }
@@ -5603,8 +5574,8 @@ ImplLocalFunctionDefinition
           $$->SetField (pos_AS_ImplFnDef_params,   *$2);
           $$->SetField (pos_AS_ImplFnDef_partps,   *$3);
           $$->SetField (pos_AS_ImplFnDef_resnmtps, *$4);
-          $$->SetField (pos_AS_ImplFnDef_fnpre,    $5->GetField (1));
-          $$->SetField (pos_AS_ImplFnDef_fnpost,   post);
+          $$->SetField (pos_AS_ImplFnDef_fnpre,    *$5);
+          $$->SetField (pos_AS_ImplFnDef_fnpost,   *$6);
           $$->SetField (pos_AS_ImplFnDef_access,   Int (NOT_INITIALISED_AS));
           $$->SetField (pos_AS_ImplFnDef_stat,   Bool(false));
 
@@ -5613,6 +5584,7 @@ ImplLocalFunctionDefinition
           delete $3;
           delete $4;
           delete $5;
+          delete $6;
         }
         ;
 
@@ -5690,7 +5662,6 @@ ListOfPatternTypePair
         }
         ;
 
-#if (FULL)  //&& //VDMPP
 Pre     : /* empty */
         { $$ = new Generic (Nil());
         }
@@ -5705,8 +5676,6 @@ Post    : LEX_POST Expression
           delete $2;
         }
         ;
-
-#endif //
 
 PrePost : /* empty */
         { $$ = new Tuple (2); // ([AS`Expr] * [AS`Expr])
@@ -7123,7 +7092,6 @@ Name    : IdentifierPrimeList
         {
           $$ = $1;
         }
-        | MacroIdentifier
         ;
 
 OldNameOrName
@@ -7242,7 +7210,7 @@ KeywordIdentifier
         ;
 #endif //VDMPP
 
-MacroIdentifier
+MacroExpression
         : LEX_FILE_MACRO
         {
           $$ = new TYPE_AS_Macro();
