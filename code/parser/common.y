@@ -4704,7 +4704,7 @@ LetOrLetBeStatement
           delete $2;
           delete $4;
         }
-        | LEX_LET Bind LEX_IN Statement
+        | LEX_LET TypeBind LEX_IN Statement
         {
           $$ = new TYPE_AS_LetBeSTStmt();
           MYPARSER::SetPos2(*$$, @1, @4);
@@ -4714,7 +4714,7 @@ LetOrLetBeStatement
           delete $2;
           delete $4;
         }
-        | LEX_LET Bind LEX_BE LEX_ST Expression LEX_IN Statement
+        | LEX_LET TypeBind LEX_BE LEX_ST Expression LEX_IN Statement
         {
           $$ = new TYPE_AS_LetBeSTStmt();
           MYPARSER::SetPos2(*$$, @1, @7);
@@ -5500,7 +5500,7 @@ LetOrLetBeExpression
           delete $2;
           delete $4;
         }
-        | LEX_LET Bind LEX_IN Expression
+        | LEX_LET TypeBind LEX_IN Expression
         {
           $$ = new TYPE_AS_LetBeSTExpr();
           MYPARSER::SetPos2(*$$, @1, @4);
@@ -5510,7 +5510,7 @@ LetOrLetBeExpression
           delete $2;
           delete $4;
         }
-        | LEX_LET Bind LEX_BE LEX_ST Expression LEX_IN Expression
+        | LEX_LET TypeBind LEX_BE LEX_ST Expression LEX_IN Expression
         {
           $$ = new TYPE_AS_LetBeSTExpr();
           MYPARSER::SetPos2(*$$, @1, @7);
