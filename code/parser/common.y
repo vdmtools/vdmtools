@@ -5576,19 +5576,6 @@ ValueDefinition
           delete $1;
           delete $3;
         }
-/*
-        | TypeBind LEX_EQUAL Expression
-        { $$ = new TYPE_AS_ValueDef();
-          MYPARSER::SetPos2(*$$, @1, @3);
-          $$->SetField (pos_AS_ValueDef_pat,    $1->GetRecord(pos_AS_TypeBind_pat));
-          $$->SetField (pos_AS_ValueDef_tp,     $1->GetRecord(pos_AS_TypeBind_tp));
-          $$->SetField (pos_AS_ValueDef_val,    *$3);
-          $$->SetField (pos_AS_ValueDef_access, Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ValueDef_stat,   Bool(true));
-          delete $1;
-          delete $3;
-        }
-*/
         | Pattern ':' Type LEX_EQUAL Expression
         { $$ = new TYPE_AS_ValueDef();
           MYPARSER::SetPos2(*$$, @1, @5);
@@ -5604,24 +5591,6 @@ ValueDefinition
           delete $3;
           delete $5;
         }
-/*
-        | Pattern TypeVarList ':' Type LEX_EQUAL Expression
-        { $$ = new TYPE_AS_ValueDef();
-          MYPARSER::SetPos2(*$$, @1, @6);
-          if ($1->Is(TAG_TYPE_AS_PatternName)) {
-            $1->SetField(pos_AS_PatternName_tp, *$4);
-          }
-          $$->SetField (pos_AS_ValueDef_pat,    *$1);
-          $$->SetField (pos_AS_ValueDef_tp,     *$4);
-          $$->SetField (pos_AS_ValueDef_val,    *$6);
-          $$->SetField (pos_AS_ValueDef_access, Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ValueDef_stat,   Bool(true));
-          delete $1;
-          delete $2;
-          delete $4;
-          delete $6;
-        }
-*/
         | Pattern ':' FunctionType Identifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost
         { $$ = new TYPE_AS_ExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @8);
