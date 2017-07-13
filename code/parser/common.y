@@ -494,9 +494,8 @@ static void yyerror(const char *);
 %type <record>   DefExpression
 %type <sequence> ListOfDefPatternBinds
 %type <tuple>    DefPatternBind
-%type <record>   LetExpression
+%type <record>   LetOrLetBeExpression
 %type <sequence> ListOfLocalDefinitions
-%type <record>   LetBeExpression
 %type <record>   IfExpression
 %type <sequence> ListOfElsifExpressions
 %type <record>   CasesExpression
@@ -565,7 +564,7 @@ static void yyerror(const char *);
 %type <record>   OldNameOrName
 %type <record>   IdentifierPrimeList
 %type <record>   Identifier
-%type <record>   SimpleIdentifier
+%type <record>   FnOpNameIdentifier
 #ifdef VDMPP
 %type <record>   KeywordIdentifier
 #endif // VDMPP
@@ -602,8 +601,7 @@ static void yyerror(const char *);
 %type <record>   DefStatement
 %type <sequence> ListOfEqualsDefinitions
 %type <tuple>    EqualsDefinition
-%type <record>   LetStatement
-%type <record>   LetBeStatement
+%type <record>   LetOrLetBeStatement
 %type <record>   StateDesignator
 %type <record>   NameOrNarrowRef
 %type <sequence> ListOfStateDesignatorQualifiers
@@ -681,11 +679,9 @@ static void yyerror(const char *);
 //************** Stuff related to LocalDef  ***********************/
 %type <record>   LocalDefinition
 %type <record>   ValueDefinition
-
-%type <record>   LocalFunctionDefinition
-%type <record>   ExplLocalFunctionDefinition
-%type <record>   ImplLocalFunctionDefinition
-%type <record>   ExtExplLocalFunctionDefinition
+%type <record>   LocalImplFunctionDefinition
+//%type <record>   LocalExplFunctionDefinition
+//%type <record>   LocalExtExplFunctionDefinition
 
 %type <sequence> TypeVarList
 %type <sequence> ParametersList
@@ -2715,12 +2711,12 @@ TraceRepeatPattern
         ;
 
 IdentifierSlashList
-        : SimpleIdentifier
+        : Identifier
         { $$ = new Sequence ();
           $$->ImpAppend (*$1);
           delete $1;
         }
-        | IdentifierSlashList '/' SimpleIdentifier
+        | IdentifierSlashList '/' Identifier
         { $1->ImpAppend (*$3);
           delete $3;
         }
@@ -3681,7 +3677,7 @@ FunctionDefinition
         ;
 
 ImplFunctionDefinition
-        : Identifier TypeVarList ParameterTypes NonEmptyIdentifierTypePairList Pre Post
+        : FnOpNameIdentifier TypeVarList ParameterTypes NonEmptyIdentifierTypePairList Pre Post
         { $$ = new Tuple (2); // (AS`Name * AS`ImplFnDef)
           TYPE_AS_ImplFnDef ifd;
           MYPARSER::SetPos2(ifd, @1, @6);
@@ -3707,7 +3703,7 @@ ImplFunctionDefinition
         ;
 
 ExplFunctionDefinition
-        : Identifier TypeVarList ':' FunctionType Identifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost Measure
+        : FnOpNameIdentifier TypeVarList ':' FunctionType FnOpNameIdentifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost Measure
         { $$ = new Tuple (2); // (AS`Name * AS`ExplFnDef)
 
           TYPE_AS_ExplFnDef efd;
@@ -3740,7 +3736,7 @@ ExplFunctionDefinition
         ;
 
 ExtExplFunctionDefinition
-        : Identifier TypeVarList ParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost Measure
+        : FnOpNameIdentifier TypeVarList ParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost Measure
         { $$ = new Tuple (2); // (AS`name * AS`ExtExplFnDef)
 
           TYPE_AS_ExtExplFnDef eefd;
@@ -3932,7 +3928,7 @@ OperationDefinition
         ;
 
 ImplOperationDefinition
-        : Identifier ParameterTypes IdentifierTypePairList Externals Pre Post Exceptions
+        : FnOpNameIdentifier ParameterTypes IdentifierTypePairList Externals Pre Post Exceptions
         { $$ = new Tuple (2); // (AS`Name * AS`ImplOpDef)
           TYPE_AS_ImplOpDef iod;
           MYPARSER::SetPos2(iod, @1, @7);
@@ -3968,7 +3964,7 @@ ImplOperationDefinition
         ;
 
 ExplOperationDefinition
-        : Identifier ':' OperationType Identifier Parameters LEX_IS_DEFINED_AS OpBody Externals PrePost Exceptions
+        : FnOpNameIdentifier ':' OperationType FnOpNameIdentifier Parameters LEX_IS_DEFINED_AS OpBody Externals PrePost Exceptions
         { $$ = new Tuple (2); // (AS`Name * AS`ExplOpDef)
 
           if (! (*$1 == *$4))
@@ -4010,7 +4006,7 @@ ExplOperationDefinition
         ;
 
 ExtExplOperationDefinition
-        : Identifier ParameterTypes IdentifierTypePairList LEX_IS_DEFINED_AS OpBody Externals PrePost Exceptions
+        : FnOpNameIdentifier ParameterTypes IdentifierTypePairList LEX_IS_DEFINED_AS OpBody Externals PrePost Exceptions
         { $$ = new Tuple (2); // (AS`Name * AS`ExtExplOpDef)
 
           TYPE_AS_ExtExplOpDef eeod;
@@ -4439,8 +4435,7 @@ Statement
         | ExitStatement
         | IdentityStatement
         | DefStatement
-        | LetStatement
-        | LetBeStatement
+        | LetOrLetBeStatement
         | SequenceForLoop
         | SetForLoop
         | IndexForLoop
@@ -4699,7 +4694,7 @@ EqualsDefinition
         }
         ;
 
-LetStatement
+LetOrLetBeStatement
         : LEX_LET ListOfLocalDefinitions LEX_IN Statement
         {
           $$ = new TYPE_AS_LetStmt();
@@ -4709,10 +4704,7 @@ LetStatement
           delete $2;
           delete $4;
         }
-        ;
-
-LetBeStatement
-        : LEX_LET Bind LEX_IN Statement
+        | LEX_LET Bind LEX_IN Statement
         {
           $$ = new TYPE_AS_LetBeSTStmt();
           MYPARSER::SetPos2(*$$, @1, @4);
@@ -5458,9 +5450,8 @@ BracketedExpression
 /** Deviations from the standard/Remarks: IPTES                              **/
 
 ComplexExpression
-        : LetExpression
+        : LetOrLetBeExpression
         | DefExpression
-        | LetBeExpression
         | IfExpression
         | CasesExpression
         ;
@@ -5499,7 +5490,7 @@ DefPatternBind
         }
         ;
 
-LetExpression
+LetOrLetBeExpression
         : LEX_LET ListOfLocalDefinitions LEX_IN Expression
         {
           $$ = new TYPE_AS_LetExpr();
@@ -5508,6 +5499,48 @@ LetExpression
           $$->SetField (pos_AS_LetExpr_body,     *$4);
           delete $2;
           delete $4;
+        }
+        | LEX_LET Bind LEX_IN Expression
+        {
+          $$ = new TYPE_AS_LetBeSTExpr();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField (pos_AS_LetBeSTExpr_lhs, ASTAUX::BindToBindList(*$2));
+          $$->SetField (pos_AS_LetBeSTExpr_St,  Nil());
+          $$->SetField (pos_AS_LetBeSTExpr_In,  *$4);
+          delete $2;
+          delete $4;
+        }
+        | LEX_LET Bind LEX_BE LEX_ST Expression LEX_IN Expression
+        {
+          $$ = new TYPE_AS_LetBeSTExpr();
+          MYPARSER::SetPos2(*$$, @1, @7);
+          $$->SetField (pos_AS_LetBeSTExpr_lhs, ASTAUX::BindToBindList(*$2));
+          $$->SetField (pos_AS_LetBeSTExpr_St,  *$5);
+          $$->SetField (pos_AS_LetBeSTExpr_In,  *$7);
+          delete $2;
+          delete $5;
+          delete $7;
+        }
+        | LEX_LET BindList LEX_IN Expression
+        {
+          $$ = new TYPE_AS_LetBeSTExpr();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField (pos_AS_LetBeSTExpr_lhs, *$2);
+          $$->SetField (pos_AS_LetBeSTExpr_St,  Nil());
+          $$->SetField (pos_AS_LetBeSTExpr_In,  *$4);
+          delete $2;
+          delete $4;
+        }
+        | LEX_LET BindList LEX_BE LEX_ST Expression LEX_IN Expression
+        {
+          $$ = new TYPE_AS_LetBeSTExpr();
+          MYPARSER::SetPos2(*$$, @1, @7);
+          $$->SetField (pos_AS_LetBeSTExpr_lhs, *$2);
+          $$->SetField (pos_AS_LetBeSTExpr_St,  *$5);
+          $$->SetField (pos_AS_LetBeSTExpr_In,  *$7);
+          delete $2;
+          delete $5;
+          delete $7;
         }
         ;
 
@@ -5524,8 +5557,11 @@ ListOfLocalDefinitions
         ;
 
 LocalDefinition
-        : ValueDefinition
-        | LocalFunctionDefinition
+//        : LocalExtExplFunctionDefinition
+//        | LocalImplFunctionDefinition
+        : LocalImplFunctionDefinition
+//        | LocalExplFunctionDefinition
+        | ValueDefinition
         ;
 
 ValueDefinition
@@ -5540,6 +5576,7 @@ ValueDefinition
           delete $1;
           delete $3;
         }
+/*
         | TypeBind LEX_EQUAL Expression
         { $$ = new TYPE_AS_ValueDef();
           MYPARSER::SetPos2(*$$, @1, @3);
@@ -5551,15 +5588,108 @@ ValueDefinition
           delete $1;
           delete $3;
         }
+*/
+        | Pattern ':' Type LEX_EQUAL Expression
+        { $$ = new TYPE_AS_ValueDef();
+          MYPARSER::SetPos2(*$$, @1, @5);
+          if ($1->Is(TAG_TYPE_AS_PatternName)) {
+            $1->SetField(pos_AS_PatternName_tp, *$3);
+          }
+          $$->SetField (pos_AS_ValueDef_pat,    *$1);
+          $$->SetField (pos_AS_ValueDef_tp,     *$3);
+          $$->SetField (pos_AS_ValueDef_val,    *$5);
+          $$->SetField (pos_AS_ValueDef_access, Int (NOT_INITIALISED_AS));
+          $$->SetField (pos_AS_ValueDef_stat,   Bool(true));
+          delete $1;
+          delete $3;
+          delete $5;
+        }
+/*
+        | Pattern TypeVarList ':' Type LEX_EQUAL Expression
+        { $$ = new TYPE_AS_ValueDef();
+          MYPARSER::SetPos2(*$$, @1, @6);
+          if ($1->Is(TAG_TYPE_AS_PatternName)) {
+            $1->SetField(pos_AS_PatternName_tp, *$4);
+          }
+          $$->SetField (pos_AS_ValueDef_pat,    *$1);
+          $$->SetField (pos_AS_ValueDef_tp,     *$4);
+          $$->SetField (pos_AS_ValueDef_val,    *$6);
+          $$->SetField (pos_AS_ValueDef_access, Int (NOT_INITIALISED_AS));
+          $$->SetField (pos_AS_ValueDef_stat,   Bool(true));
+          delete $1;
+          delete $2;
+          delete $4;
+          delete $6;
+        }
+*/
+        | Pattern ':' FunctionType Identifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost
+        { $$ = new TYPE_AS_ExplFnDef();
+          MYPARSER::SetPos2(*$$, @1, @8);
+
+          if ($1->Is (TAG_TYPE_AS_PatternName))
+          { if (! ($1->GetField (pos_AS_PatternName_nm) == *$4))
+              MYPARSER::Report (L"Identifiers in function heading should be identical.",@1,@4);
+            $$->SetField (pos_AS_ExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
+          }
+          else
+          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+            $$->SetField (pos_AS_ExplFnDef_nm, Record());
+          }
+          //$$->SetField (pos_AS_ExplFnDef_nm,      *$1);
+
+          $$->SetField (pos_AS_ExplFnDef_tpparms, Sequence());
+          $$->SetField (pos_AS_ExplFnDef_tp,      *$3);
+          $$->SetField (pos_AS_ExplFnDef_parms,   *$5);
+          $$->SetField (pos_AS_ExplFnDef_body,    *$7);
+          $$->SetField (pos_AS_ExplFnDef_fnpre,   $8->GetField (1));
+          $$->SetField (pos_AS_ExplFnDef_fnpost,  $8->GetField (2));
+          $$->SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
+          $$->SetField (pos_AS_ExplFnDef_stat,    Bool (false));
+          $$->SetField (pos_AS_ExplFnDef_measu,   Nil ());
+
+          delete $1;
+          delete $3;
+          delete $4;
+          delete $5;
+          delete $7;
+          delete $8;
+        }
+        | Pattern '[' ListOfTypeVar ']' ':' FunctionType Identifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost
+        { $$ = new TYPE_AS_ExplFnDef();
+          MYPARSER::SetPos2(*$$, @1, @11);
+
+          if ($1->Is (TAG_TYPE_AS_PatternName))
+          { if (! ($1->GetField (pos_AS_PatternName_nm) == *$7))
+              MYPARSER::Report (L"Identifiers in function heading should be identical.",@1,@7);
+            $$->SetField (pos_AS_ExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
+          }
+          else
+          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+            $$->SetField (pos_AS_ExplFnDef_nm, Record());
+          }
+          //$$->SetField (pos_AS_ExplFnDef_nm,      *$1);
+
+          $$->SetField (pos_AS_ExplFnDef_tpparms, *$3);
+          $$->SetField (pos_AS_ExplFnDef_tp,      *$6);
+          $$->SetField (pos_AS_ExplFnDef_parms,   *$8);
+          $$->SetField (pos_AS_ExplFnDef_body,    *$10);
+          $$->SetField (pos_AS_ExplFnDef_fnpre,   $11->GetField (1));
+          $$->SetField (pos_AS_ExplFnDef_fnpost,  $11->GetField (2));
+          $$->SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
+          $$->SetField (pos_AS_ExplFnDef_stat,    Bool (false));
+          $$->SetField (pos_AS_ExplFnDef_measu,   Nil ());
+
+          delete $1;
+          delete $3;
+          delete $6;
+          delete $7;
+          delete $8;
+          delete $10;
+          delete $11;
+        }
         ;
 
-LocalFunctionDefinition
-        : ExplLocalFunctionDefinition
-        | ExtExplLocalFunctionDefinition
-        | ImplLocalFunctionDefinition
-        ;
-
-ImplLocalFunctionDefinition
+LocalImplFunctionDefinition
         : Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList Pre Post
         { $$ = new TYPE_AS_ImplFnDef();
           MYPARSER::SetPos2(*$$, @1, @6);
@@ -5570,6 +5700,7 @@ ImplLocalFunctionDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ImplFnDef_nm, Record());
           }
+          //$$->SetField (pos_AS_ImplFnDef_nm,       *$1);
 
           $$->SetField (pos_AS_ImplFnDef_params,   *$2);
           $$->SetField (pos_AS_ImplFnDef_partps,   *$3);
@@ -5577,7 +5708,7 @@ ImplLocalFunctionDefinition
           $$->SetField (pos_AS_ImplFnDef_fnpre,    *$5);
           $$->SetField (pos_AS_ImplFnDef_fnpost,   *$6);
           $$->SetField (pos_AS_ImplFnDef_access,   Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ImplFnDef_stat,   Bool(false));
+          $$->SetField (pos_AS_ImplFnDef_stat,     Bool(false));
 
           delete $1;
           delete $2;
@@ -5586,9 +5717,78 @@ ImplLocalFunctionDefinition
           delete $5;
           delete $6;
         }
+        | Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost
+        { $$ = new TYPE_AS_ExtExplFnDef();
+          MYPARSER::SetPos2(*$$, @1, @7);
+
+          if ($1->Is (TAG_TYPE_AS_PatternName))
+          { $$->SetField (pos_AS_ExtExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
+          }
+          else
+          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+            $$->SetField (pos_AS_ExtExplFnDef_nm, Record());
+          }
+          //$$->SetField (pos_AS_ExtExplFnDef_nm,       *$1);
+
+          $$->SetField (pos_AS_ExtExplFnDef_params,   *$2);
+          $$->SetField (pos_AS_ExtExplFnDef_partps,   *$3);
+          $$->SetField (pos_AS_ExtExplFnDef_resnmtps, *$4);
+          $$->SetField (pos_AS_ExtExplFnDef_body,     *$6);
+          $$->SetField (pos_AS_ExtExplFnDef_fnpre,    $7->GetField (1));
+          $$->SetField (pos_AS_ExtExplFnDef_fnpost,   $7->GetField (2));
+          $$->SetField (pos_AS_ExtExplFnDef_access,   Int (NOT_INITIALISED_AS));
+          $$->SetField (pos_AS_ExtExplFnDef_stat,     Bool (false));
+          $$->SetField (pos_AS_ExtExplFnDef_measu,    Nil());
+
+          delete $1;
+          delete $2;
+          delete $3;
+          delete $4;
+          delete $6;
+          delete $7;
+        }
         ;
 
-ExtExplLocalFunctionDefinition
+/*
+LocalExplFunctionDefinition
+        : Pattern TypeVarList ':' FunctionType Identifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost
+        { $$ = new TYPE_AS_ExplFnDef();
+          MYPARSER::SetPos2(*$$, @1, @9);
+
+          if ($1->Is (TAG_TYPE_AS_PatternName))
+          { if (! ($1->GetField (pos_AS_PatternName_nm) == *$5))
+              MYPARSER::Report (L"Identifiers in function heading should be identical.",@1,@5);
+            $$->SetField (pos_AS_ExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
+          }
+          else
+          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+            $$->SetField (pos_AS_ExplFnDef_nm, Record());
+          }
+          //$$->SetField (pos_AS_ExplFnDef_nm,      *$1);
+
+          $$->SetField (pos_AS_ExplFnDef_tpparms, *$2);
+          $$->SetField (pos_AS_ExplFnDef_tp,      *$4);
+          $$->SetField (pos_AS_ExplFnDef_parms,   *$6);
+          $$->SetField (pos_AS_ExplFnDef_body,    *$8);
+          $$->SetField (pos_AS_ExplFnDef_fnpre,   $9->GetField (1));
+          $$->SetField (pos_AS_ExplFnDef_fnpost,  $9->GetField (2));
+          $$->SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
+          $$->SetField (pos_AS_ExplFnDef_stat,    Bool (false));
+          $$->SetField (pos_AS_ExplFnDef_measu,   Nil ());
+
+          delete $1;
+          delete $2;
+          delete $4;
+          delete $5;
+          delete $6;
+          delete $8;
+          delete $9;
+        }
+        ;
+*/
+
+/*
+LocalExtExplFunctionDefinition
         : Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost
         { $$ = new TYPE_AS_ExtExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @7);
@@ -5600,6 +5800,7 @@ ExtExplLocalFunctionDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExtExplFnDef_nm, Record());
           }
+          //$$->SetField (pos_AS_ExtExplFnDef_nm,       *$1);
 
           $$->SetField (pos_AS_ExtExplFnDef_params,   *$2);
           $$->SetField (pos_AS_ExtExplFnDef_partps,   *$3);
@@ -5608,7 +5809,7 @@ ExtExplLocalFunctionDefinition
           $$->SetField (pos_AS_ExtExplFnDef_fnpre,    $7->GetField (1));
           $$->SetField (pos_AS_ExtExplFnDef_fnpost,   $7->GetField (2));
           $$->SetField (pos_AS_ExtExplFnDef_access,   Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ExtExplFnDef_stat,   Bool (false));
+          $$->SetField (pos_AS_ExtExplFnDef_stat,     Bool (false));
           $$->SetField (pos_AS_ExtExplFnDef_measu,    Nil());
 
           delete $1;
@@ -5619,6 +5820,7 @@ ExtExplLocalFunctionDefinition
           delete $7;
         }
         ;
+*/
 
 #ifdef FULL
 ParameterTypes
@@ -5746,41 +5948,6 @@ NonEmptyIdentifierTypePairList
         }
         ;
 
-ExplLocalFunctionDefinition
-        : Pattern TypeVarList ':' FunctionType Identifier ParametersList LEX_IS_DEFINED_AS FnBody PrePost
-        { $$ = new TYPE_AS_ExplFnDef();
-          MYPARSER::SetPos2(*$$, @1, @9);
-
-          if ($1->Is (TAG_TYPE_AS_PatternName))
-          { if (! ($1->GetField (pos_AS_PatternName_nm) == *$5))
-              MYPARSER::Report (L"Identifiers in function heading should be identical.",@1,@5);
-            $$->SetField (pos_AS_ExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
-          }
-          else
-          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
-            $$->SetField (pos_AS_ExplFnDef_nm, Record());
-          }
-
-          $$->SetField (pos_AS_ExplFnDef_tpparms, *$2);
-          $$->SetField (pos_AS_ExplFnDef_tp,      *$4);
-          $$->SetField (pos_AS_ExplFnDef_parms,   *$6);
-          $$->SetField (pos_AS_ExplFnDef_body,    *$8);
-          $$->SetField (pos_AS_ExplFnDef_fnpre,   $9->GetField (1));
-          $$->SetField (pos_AS_ExplFnDef_fnpost,  $9->GetField (2));
-          $$->SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ExplFnDef_stat,  Bool (false));
-          $$->SetField (pos_AS_ExplFnDef_measu,   Nil ());
-
-          delete $1;
-          delete $2;
-          delete $4;
-          delete $5;
-          delete $6;
-          delete $8;
-          delete $9;
-        }
-        ;
-
 TypeVarList
         : /* empty */
         {  $$ = new Sequence;
@@ -5814,7 +5981,6 @@ ParametersList
         }
         ;
 
-
 Parameters
         : '(' ')'
         { $$ = new Sequence;
@@ -5822,51 +5988,6 @@ Parameters
         | '(' PatternList ')'
         { $$ = new Sequence (*$2);
           delete $2;
-        }
-        ;
-
-LetBeExpression
-        : LEX_LET Bind LEX_IN Expression
-        {
-          $$ = new TYPE_AS_LetBeSTExpr();
-          MYPARSER::SetPos2(*$$, @1, @4);
-          $$->SetField (pos_AS_LetBeSTExpr_lhs, ASTAUX::BindToBindList(*$2));
-          $$->SetField (pos_AS_LetBeSTExpr_St,  Nil());
-          $$->SetField (pos_AS_LetBeSTExpr_In,  *$4);
-          delete $2;
-          delete $4;
-        }
-        | LEX_LET Bind LEX_BE LEX_ST Expression LEX_IN Expression
-        {
-          $$ = new TYPE_AS_LetBeSTExpr();
-          MYPARSER::SetPos2(*$$, @1, @7);
-          $$->SetField (pos_AS_LetBeSTExpr_lhs, ASTAUX::BindToBindList(*$2));
-          $$->SetField (pos_AS_LetBeSTExpr_St,  *$5);
-          $$->SetField (pos_AS_LetBeSTExpr_In,  *$7);
-          delete $2;
-          delete $5;
-          delete $7;
-        }
-        | LEX_LET BindList LEX_IN Expression
-        {
-          $$ = new TYPE_AS_LetBeSTExpr();
-          MYPARSER::SetPos2(*$$, @1, @4);
-          $$->SetField (pos_AS_LetBeSTExpr_lhs, *$2);
-          $$->SetField (pos_AS_LetBeSTExpr_St,  Nil());
-          $$->SetField (pos_AS_LetBeSTExpr_In,  *$4);
-          delete $2;
-          delete $4;
-        }
-        | LEX_LET BindList LEX_BE LEX_ST Expression LEX_IN Expression
-        {
-          $$ = new TYPE_AS_LetBeSTExpr();
-          MYPARSER::SetPos2(*$$, @1, @7);
-          $$->SetField (pos_AS_LetBeSTExpr_lhs, *$2);
-          $$->SetField (pos_AS_LetBeSTExpr_St,  *$5);
-          $$->SetField (pos_AS_LetBeSTExpr_In,  *$7);
-          delete $2;
-          delete $5;
-          delete $7;
         }
         ;
 
@@ -7108,7 +7229,7 @@ OldNameOrName
         ;
 
 IdentifierPrimeList
-        : Identifier
+        : FnOpNameIdentifier
         | Identifier LEX_PRIME Identifier
         {
           $$ = new TYPE_AS_Name();
@@ -7139,7 +7260,14 @@ IdentifierCommaList
     some error productions, we cannot trap wrong PRIME as eg. L"'".
 **/
 
-SimpleIdentifier
+FnOpNameIdentifier
+        : Identifier
+#if VDMPP
+        | KeywordIdentifier
+#endif // VDMPP
+        ;
+
+Identifier
         : LEX_identifier
         {
           $$ = new TYPE_AS_Name();
@@ -7153,19 +7281,12 @@ SimpleIdentifier
           }
 #endif // FULL
         }
-        ;
-
-Identifier
-        : SimpleIdentifier
         | LEX_dollar_identifier
         {
           $$ = new TYPE_AS_Name();
           MYPARSER::SetPos2(*$$, @1, @1); // @?
           $$->SetField (pos_AS_Name_ids, MYPARSER::GetIdentifier(*$1));
         }
-#if VDMPP
-        | KeywordIdentifier
-#endif // VDMPP
         ;
 
 #if VDMPP
@@ -7686,31 +7807,17 @@ SetBind
         ;
 
 TypeBind
-        : Pattern TypeVarList ':' Type
+        : Pattern ':' Type
         {
           $$ = new TYPE_AS_TypeBind();
-          MYPARSER::SetPos2(*$$, @1, @4);
-          if (!$2->IsEmpty())
-            MYPARSER::Report (L"No type variable list in a type bind.", @2);
+          MYPARSER::SetPos2(*$$, @1, @3);
           if ($1->Is(TAG_TYPE_AS_PatternName))
-            $1->SetField(pos_AS_PatternName_tp, *$4);
+            $1->SetField(pos_AS_PatternName_tp, *$3);
           $$->SetField (pos_AS_TypeBind_pat, *$1);
-          $$->SetField (pos_AS_TypeBind_tp,  *$4);
+          $$->SetField (pos_AS_TypeBind_tp,  *$3);
           delete $1;
-          delete $2;
-          delete $4;
+          delete $3;
         }
-//        : Pattern ':' Type
-//        {
-//          $$ = new TYPE_AS_TypeBind();
-//          MYPARSER::SetPos2(*$$, @1, @3);
-//          if ($1->Is(TAG_TYPE_AS_PatternName))
-//            $1->SetField(pos_AS_PatternName_tp, *$3);
-//          $$->SetField (pos_AS_TypeBind_pat, *$1);
-//          $$->SetField (pos_AS_TypeBind_tp,  *$3);
-//          delete $1;
-//          delete $3;
-//        }
         ;
 
 SeqBind
