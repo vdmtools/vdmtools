@@ -417,12 +417,11 @@ public:
     int lineid = msg.GetInt (pos_ErrMsg_line);
     int columnid = msg.GetInt (pos_ErrMsg_col);
 
-    int length = POSITION::GetLength(); // 20081201
+    int length = POSITION::GetLength();
 
     wstring file (Qt2TB::GetFileNameI(fileid));
 
-    if (!file.empty())
-    {
+    if (!file.empty()) {
       wstring src (Qt2TB::GetSrcFileI(file));
       postGUIEvent(new OpenFileEvent(Qt2TB::wstring2qstring(src),
                                      Qt2TB::wstring2qstring(file),

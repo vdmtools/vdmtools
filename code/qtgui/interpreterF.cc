@@ -1075,10 +1075,8 @@ void interpreterW::traceClicked_qt4(QTreeWidgetItem * item, int column)
 void interpreterW::traceClicked_qt3(QListViewItem * item, const QPoint & pnt, int column )
 #endif// QT_VERSION >= 0x040000
 {
-  if (item && (column == 1))
-  {
-    if (item->text(1) == "[...]")
-    {
+  if (item && (column == 1)) {
+    if (item->text(1) == "[...]") {
 #if QT_VERSION >= 0x040000
       int index = item->text(2).toInt();
 #else
@@ -1089,17 +1087,14 @@ void interpreterW::traceClicked_qt3(QListViewItem * item, const QPoint & pnt, in
 #if QT_VERSION >= 0x040000
       item->setText(1, arguments);
 #else
-      if (arguments.contains('\n'))
-      {
+      if (arguments.contains('\n')) {
         QListViewItem* lastItem = item;
         int startIndex = 0;
         for(int endIndex = arguments.find('\n');
             endIndex != -1;
-            endIndex = arguments.find('\n', startIndex))
-        {
+            endIndex = arguments.find('\n', startIndex)) {
           QString argumentLine = arguments.mid(startIndex, endIndex -startIndex);
-          if (startIndex != 0) 
-          {
+          if (startIndex != 0) {
             QListViewItem *lvi = new QListViewItem(this->traceLV, lastItem, "");
             lastItem = lvi;
           }
@@ -1116,35 +1111,32 @@ void interpreterW::traceClicked_qt3(QListViewItem * item, const QPoint & pnt, in
       }
 #endif // QT_VERSION >= 0x040000
     }
-    else
-    {
+    else {
 #if QT_VERSION >= 0x040000
       QList<QTreeWidgetItem *> list (item->takeChildren());
       item->setText(1, "[...]");
 #else
       QListViewItem *firstItem = item;
-      while ((firstItem != 0) && firstItem->text(0) == "")
+      while ((firstItem != 0) && firstItem->text(0) == "") {
              firstItem = firstItem->itemAbove();
-      if (firstItem != 0)
-      {
+      }
+      if (firstItem != 0) {
         firstItem->setText(1, "[...]");
         QListViewItem* nextItem = firstItem->nextSibling();
-        while (nextItem && nextItem->text(0) == "")
-        {
+        while (nextItem && nextItem->text(0) == "") {
           QListViewItem* thisItem = nextItem;
           nextItem = nextItem->nextSibling();
           delete thisItem;
         }
       }
-      else
+      else {
         emit logWrite("Internal Error: interpreterW::traceClicked");
+      }
 #endif // QT_VERSION >= 0x040000
     }
-// 20130425 -->
 #if QT_VERSION >= 0x040000
     this->traceLV->resizeColumnToContents(1);
 #endif // QT_VERSION >= 0x040000
-// <-- 20130425
   }
 }
 
