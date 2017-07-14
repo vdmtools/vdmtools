@@ -699,10 +699,7 @@ static void yyerror(const char *);
 
 %type <sequence> Parameters
 %type <sequence> ListOfPatternTypePair
-#ifdef FULL
 %type <sequence> ParameterTypes
-#endif // FULL
-%type <sequence> LocalParameterTypes
 %type <tuple>    PrePost
 %type <generic>  Pre
 %type <generic>  Post
@@ -5604,7 +5601,6 @@ ValueDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExplFnDef_nm, Record());
           }
-          //$$->SetField (pos_AS_ExplFnDef_nm,      *$1);
 
           $$->SetField (pos_AS_ExplFnDef_tpparms, Sequence());
           $$->SetField (pos_AS_ExplFnDef_tp,      *$3);
@@ -5636,7 +5632,6 @@ ValueDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExplFnDef_nm, Record());
           }
-          //$$->SetField (pos_AS_ExplFnDef_nm,      *$1);
 
           $$->SetField (pos_AS_ExplFnDef_tpparms, *$3);
           $$->SetField (pos_AS_ExplFnDef_tp,      *$6);
@@ -5659,7 +5654,7 @@ ValueDefinition
         ;
 
 LocalImplFunctionDefinition
-        : Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList Pre Post
+        : Pattern TypeVarList ParameterTypes NonEmptyIdentifierTypePairList Pre Post
         { $$ = new TYPE_AS_ImplFnDef();
           MYPARSER::SetPos2(*$$, @1, @6);
           if ($1->Is (TAG_TYPE_AS_PatternName))
@@ -5669,7 +5664,6 @@ LocalImplFunctionDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ImplFnDef_nm, Record());
           }
-          //$$->SetField (pos_AS_ImplFnDef_nm,       *$1);
 
           $$->SetField (pos_AS_ImplFnDef_params,   *$2);
           $$->SetField (pos_AS_ImplFnDef_partps,   *$3);
@@ -5686,7 +5680,7 @@ LocalImplFunctionDefinition
           delete $5;
           delete $6;
         }
-        | Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost
+        | Pattern TypeVarList ParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost
         { $$ = new TYPE_AS_ExtExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @7);
 
@@ -5697,7 +5691,6 @@ LocalImplFunctionDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExtExplFnDef_nm, Record());
           }
-          //$$->SetField (pos_AS_ExtExplFnDef_nm,       *$1);
 
           $$->SetField (pos_AS_ExtExplFnDef_params,   *$2);
           $$->SetField (pos_AS_ExtExplFnDef_partps,   *$3);
@@ -5733,7 +5726,6 @@ LocalExplFunctionDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExplFnDef_nm, Record());
           }
-          //$$->SetField (pos_AS_ExplFnDef_nm,      *$1);
 
           $$->SetField (pos_AS_ExplFnDef_tpparms, *$2);
           $$->SetField (pos_AS_ExplFnDef_tp,      *$4);
@@ -5758,7 +5750,7 @@ LocalExplFunctionDefinition
 
 /*
 LocalExtExplFunctionDefinition
-        : Pattern TypeVarList LocalParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost
+        : Pattern TypeVarList ParameterTypes NonEmptyIdentifierTypePairList LEX_IS_DEFINED_AS FnBody PrePost
         { $$ = new TYPE_AS_ExtExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @7);
 
@@ -5769,7 +5761,6 @@ LocalExtExplFunctionDefinition
           { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExtExplFnDef_nm, Record());
           }
-          //$$->SetField (pos_AS_ExtExplFnDef_nm,       *$1);
 
           $$->SetField (pos_AS_ExtExplFnDef_params,   *$2);
           $$->SetField (pos_AS_ExtExplFnDef_partps,   *$3);
@@ -5791,18 +5782,7 @@ LocalExtExplFunctionDefinition
         ;
 */
 
-#ifdef FULL
 ParameterTypes
-        : '(' ListOfPatternTypePair ')'
-        { $$ = $2;
-        }
-        | '(' ')'
-        { $$ = new Sequence ();
-        }
-        ;
-#endif // FULL
-
-LocalParameterTypes
         : '(' ListOfPatternTypePair ')'
         { $$ = $2;
         }
