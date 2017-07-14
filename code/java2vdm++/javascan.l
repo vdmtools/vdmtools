@@ -195,11 +195,6 @@ SingleCharacter    [^\r\n\'\\]
                    JAVASCANNER::javasINSERT_TOKEN2 (yylpos, CLASS, yytext); 
                    return CLASS;        
                  }
-"const"          { 
-                   JAVASCANNER::javasAdjustLineColumn (yytext); 
-                   JAVASCANNER::javasINSERT_TOKEN2 (yylpos, CONST, yytext); 
-                   return CONST;        
-                 }
 "continue"       { 
                    JAVASCANNER::javasAdjustLineColumn (yytext); 
                    JAVASCANNER::javasINSERT_TOKEN2 (yylpos, CONTINUE, yytext); 
@@ -289,11 +284,6 @@ SingleCharacter    [^\r\n\'\\]
                    JAVASCANNER::javasAdjustLineColumn (yytext); 
                    JAVASCANNER::javasINSERT_TOKEN2 (yylpos, NEW, yytext); 
                    return NEW;          
-                 }
-"goto"           { 
-                   JAVASCANNER::javasAdjustLineColumn (yytext); 
-                   JAVASCANNER::javasINSERT_TOKEN2 (yylpos, GOTO, yytext); 
-                   return GOTO;         
                  }
 "if"             { 
                    JAVASCANNER::javasAdjustLineColumn (yytext); 
