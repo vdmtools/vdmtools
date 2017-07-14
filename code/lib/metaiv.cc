@@ -4700,11 +4700,11 @@ void TimeVal::ostream_out(wostream & os, const VDMFormatter & /*vf*/) const
   string timestr (timebuf);
   os << string2wstring(timestr.substr(0, 24));
 #else
-  //string timestr (ctime(&value));
-  char timebuf[30];
-  strftime(timebuf, 29, "%a %b %d %H:%M:%S %Z %Y", localtime(&value));
-  string timestr (timebuf);
-  os << string2wstring(timestr);
+  string timestr (ctime(&value));
+//  char timebuf[30];
+//  strftime(timebuf, 29, "%a %b %d %H:%M:%S %Z %Y", localtime(&value));
+//  string timestr (timebuf);
+  os << string2wstring(timestr.substr(0, 24));
 #endif // _MSC_VER
 }
 
