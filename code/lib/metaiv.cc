@@ -4698,11 +4698,14 @@ void TimeVal::ostream_out(wostream & os, const VDMFormatter & /*vf*/) const
   char timebuf[30];
   ctime_s(timebuf, 26, &value);
   string timestr (timebuf);
+  os << string2wstring(timestr.substr(0, 24));
 #else
   string timestr (ctime(&value));
-#endif // _MSC_VER
-
+//  char timebuf[30];
+//  strftime(timebuf, 29, "%a %b %d %H:%M:%S %Z %Y", localtime(&value));
+//  string timestr (timebuf);
   os << string2wstring(timestr.substr(0, 24));
+#endif // _MSC_VER
 }
 
 void TimeVal::WriteVal (ostream & ostr) const

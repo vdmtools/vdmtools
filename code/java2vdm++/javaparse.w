@@ -236,9 +236,9 @@ Definition of union moved to L"javascan.h"
 %token <uRecord>  VOID           CATCH          INTERFACE
 %token <uRecord>  CASE           EXTENDS        FINALLY
 %token <uRecord>  SUPER          WHILE          CLASS
-%token <uRecord>  SWITCH         CONST          TRY
+%token <uRecord>  SWITCH         TRY
 %token <uRecord>  FOR            NEW            CONTINUE
-%token <uRecord>  GOTO           PACKAGE        THIS
+%token <uRecord>  PACKAGE        THIS
 %token <uRecord>  INT
 %token <uRecord>  LONG           CHAR
 %token <uRecord>  FLOAT          DOUBLE
