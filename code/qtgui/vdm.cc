@@ -60,7 +60,9 @@
 #endif // __Cygwin__
 
 #if __cplusplus >= 201103L
+#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
 #include <thread>
+#endif
 #endif
 
 TBOptions *cliOpt = NULL;        
@@ -465,7 +467,11 @@ int main (int argc, char * argv[])
 
 #if defined( __darwin__ ) || defined( __linux__ )
 #if __cplusplus >= 201103L
+#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
   std::this_thread::sleep_for(std::chrono::milliseconds (100));
+#else
+  usleep(100000);
+#endif
 #else
   usleep(100000);
 #endif

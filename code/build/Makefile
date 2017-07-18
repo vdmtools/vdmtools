@@ -1667,10 +1667,10 @@ ifeq ($(strip $(MOUNTAINLION_OR_LATER)),true)
 ARCH += -std=c++11
 WARNINGS += -Wno-deprecated-register
 else
-ifeq ($(strip $(QTVERSION)),5)
+#ifeq ($(strip $(QTVERSION)),5)
 ARCH += -std=c++11
-WARNINGS += -Wno-deprecated-register
-endif
+#WARNINGS += -Wno-deprecated-register
+#endif
 endif
 CCPATH = /usr/bin/
 GCC_VERSION=

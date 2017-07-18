@@ -60,7 +60,9 @@
 #endif // QT_VERSION < 0x040000
 
 #if __cplusplus >= 201103L
+#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
 #include <thread>
+#endif
 #endif
 
 #include "qtport.h"
@@ -3360,7 +3362,11 @@ void mainW::userEvent(QEvent *e)
   this->setComplete(true);
 #ifdef __darwin__
 #if __cplusplus >= 201103L
+#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
   std::this_thread::sleep_for(std::chrono::microseconds(20));
+#else
+  usleep(20);
+#endif
 #else
   usleep(20);
 #endif
@@ -4312,7 +4318,11 @@ void mainW::setComplete( bool complete )
     Sleep( 1 );
 #else
 #if __cplusplus >= 201103L
+#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
     std::this_thread::sleep_for(std::chrono::microseconds(3));
+#else
+    usleep( 1 );
+#endif
 #else
     usleep( 1 );
 #endif
@@ -4340,7 +4350,11 @@ void mainW::waitComplete()
     Sleep( 10 );
 #else
 #if __cplusplus >= 201103L
+#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
     std::this_thread::sleep_for(std::chrono::microseconds(3));
+#else
+    usleep( 10 );
+#endif
 #else
     usleep( 10 );
 #endif
