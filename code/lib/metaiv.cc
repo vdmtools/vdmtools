@@ -87,24 +87,26 @@ int getM4DebugLevel()
 // Of course if x > y, the x includes debug messages for level y
 void setM4DebugLevel(int i)
 {
-  if (i >= 0 && i < 4)
+  if (i >= 0 && i < 4) {
     m4DebugLevel = i;
-  else
+  }
+  else {
     cerr << "setM4DebugLevel: argument must be between 0 and 3" << endl;
+  }
 }
 
 wofstream* getM4trace()
 {
-  if (!m4trace)
+  if (!m4trace) {
     m4trace = new wofstream("m4trace");
+  }
 
   return m4trace;
 }
 
 void Common::traceObj( const wchar_t *method )
 {
-  if ( m4DebugLevel > 2 )
-  {
+  if ( m4DebugLevel > 2 ) {
     (*getM4trace()) << ""
                     << traceHeader( this->p ) << " "
                     << method
@@ -122,8 +124,7 @@ void Common::traceObj( const wchar_t *method )
 
 void MetaivVal::traceObj( const wchar_t *method )
 {
-  if ( m4DebugLevel > 0 )
-  {
+  if ( m4DebugLevel > 0 ) {
     (*getM4trace()) << L""
                     << traceHeader( this ) << " "
                     << method
@@ -132,8 +133,7 @@ void MetaivVal::traceObj( const wchar_t *method )
                     << L" BuildCount=" << this->BuildCount
                     << L" RefCount=" << this->RefCount
                     << L" Refs:";
-    for( unsigned int i = 0; i < this->m_list.size(); i++ )
-    {
+    for( unsigned int i = 0; i < this->m_list.size(); i++ ) {
       long id = this->m_list.at(i);
       (*getM4trace()) << L" " << id;
     }
@@ -145,8 +145,7 @@ wstring traceHeader( MetaivVal *obj )
 {
   wstring ret;
   wchar_t hebuf[20];
-  if( obj->seq_count == 0 )
-  {
+  if( obj->seq_count == 0 ) {
     swprintf( hebuf, 20, L" %08d\n", obj->metaivval_object_id );
     ret += hebuf;
   }
@@ -160,8 +159,7 @@ wstring traceHeader( Common *obj )
 {
   wstring ret;
   wchar_t hebuf[20];
-  if( obj->seq_count == 0 )
-  {
+  if( obj->seq_count == 0 ) {
     swprintf( hebuf, 20, L"C%08d\n", obj->metaiv_object_id );
     ret += hebuf;
   }
@@ -186,18 +184,22 @@ wstring ConvertChar(int e)
 
 wstring StringNumber(int i)
 {
-  if (i<0)
+  if (i < 0) {
     return L"-" + StringNumber(-i);
-  else if (i / 10 == 0)
+  }
+  else if (i / 10 == 0) {
     return ConvertChar(i);
-  else
+  }
+  else {
     return StringNumber(i / 10) +  ConvertChar(i % 10);
+  }
 }
 
 void VDMFormatter::print_spaces(wostream&os, int indent)
 {
-  for (int i=0; i<indent; i++)
+  for (int i = 0; i < indent; i++) {
     os << L" ";
+  }
 }
 
 std::wstring string2wstring(const std::string & s)
@@ -340,9 +342,7 @@ int MetaivVal::CompareMetaivType(MetaivVal * m) const
 class VDMValCache
 {
 typedef std::map<RealVal::RealValueType, RealVal*> RealValMapType;
-// 20151001 -->
 typedef std::map<wstring, SequenceVal*> StringValMapType;
-// <-- 20151001
 
 public:
   BoolVal * const falsev ;
@@ -414,18 +414,14 @@ public:
     this->textv->RemoveRef();
     this->tokenv->RemoveRef();
 
-    for (RealValMapType::const_iterator miter(this->rvm.begin()); miter != this->rvm.end(); miter++)
-    {
+    for (RealValMapType::const_iterator miter(this->rvm.begin()); miter != this->rvm.end(); miter++) {
       miter->second->RemoveRef();
     }
     this->rvm.clear();
-// 20151001 -->
-    for (StringValMapType::const_iterator miter(this->svm.begin()); miter != this->svm.end(); miter++)
-    {
+    for (StringValMapType::const_iterator miter(this->svm.begin()); miter != this->svm.end(); miter++) {
       miter->second->RemoveRef();
     }
     this->svm.clear();
-// <-- 20151001
   }
 
   RealVal * GetCachedRealVal(RealVal::RealValueType i) {
@@ -442,7 +438,6 @@ public:
     }
   }
 
-// 20151001 -->
   SequenceVal * GetCachedStringVal(const wstring & str) {
     StringValMapType::const_iterator miter (this->svm.find(str));
     if (miter != this->svm.end()) {
@@ -456,7 +451,6 @@ public:
       return sv;
     }
   }
-// <-- 20151001
 };
 
 static VDMValCache *ValCache = NULL;
@@ -531,8 +525,9 @@ void Common::ChangeSimple(int* CopyCount)
 **************************************************************************/
 int Common::Compare(const Common & g) const
 {
-  if (this->mvp == g.mvp)
+  if (this->mvp == g.mvp) {
     return 0;
+  }
 
   int cmt = this->mvp->CompareMetaivType(g.mvp);
   if (cmt == 0) {
@@ -540,20 +535,26 @@ int Common::Compare(const Common & g) const
       // Containers require special compare.
       typedef const type_info & TI;
       TI ti1(typeid(*this->mvp)), ti2(typeid(*g.mvp));
-      if (ti1 == ti2)
+      if (ti1 == ti2) {
         return this->mvp->Compare(*g.mvp);
-      else
+      }
+      else {
         return (ti1.before(ti2)) ? -1 : 1;
+      }
     }
-    else
+    else {
       return this->mvp->Compare(*g.mvp);
+    }
   }
-  else if (this->IsInt() && g.IsReal())
+  else if (this->IsInt() && g.IsReal()) {
     return this->mvp->Compare(*g.mvp);
-  else if (this->IsReal() && g.IsInt())
+  }
+  else if (this->IsReal() && g.IsInt()) {
     return this->mvp->Compare(*g.mvp);
-  else
+  }
+  else {
     return cmt;
+  }
 }
 
 wostream& operator<<(wostream & os, const Common & c)
@@ -598,10 +599,12 @@ void Common::pr_ascii(wostream & os, int ind) const
 
 bool Common::Is(const int tag) const
 {
-  if (this->mvp->IsRecordVal())
+  if (this->mvp->IsRecordVal()) {
     return static_cast<const RecordVal *>(mvp)->Is(tag);
-  else
+  }
+  else {
     return false;
+  }
 }
 
 /**************************************************************************
@@ -655,10 +658,8 @@ const Common & MapVal::operator[](const Common & gdom) const
 
 MapVal & MapVal::ImpOverride(const MapVal & m)
 {
-  if( !m.value.empty() )
-  {
-    for (MapValueType::const_iterator miter(m.value.begin()); miter != m.value.end(); miter++)
-    {
+  if( !m.value.empty() ) {
+    for (MapValueType::const_iterator miter(m.value.begin()); miter != m.value.end(); miter++) {
       pair<MapValueType::iterator, bool> p (this->value.insert(*miter));
       if (!p.second) { // Existed!
         // This is reentrant safe since we keep a ref to the value to be overwritten.
@@ -675,8 +676,7 @@ Map MapVal::Override(const MapVal & m) const
   Map tm;
   MapVal & mv (tm.SHAREDGETVAL(MapVal));
   mv.value.insert(this->value.begin(), this->value.end());
-  if( !m.value.empty() )
-  {
+  if( !m.value.empty() ) {
     for (MapValueType::const_iterator miter(m.value.begin()); miter != m.value.end(); miter++) {
       pair<MapValueType::iterator, bool> p (mv.value.insert(*miter));
       if (!p.second) { // Existed!
@@ -692,11 +692,9 @@ Map MapVal::Override(const MapVal & m) const
 Set MapVal::Dom() const
 {
   Set ts;
-  if( !this->value.empty() )
-  {
+  if( !this->value.empty() ) {
     SetVal & sv (ts.SHAREDGETVAL(SetVal));
-    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-    {
+    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
       sv.value.insert(sv.value.end(), miter->first);
     }
   }
@@ -706,11 +704,9 @@ Set MapVal::Dom() const
 Set MapVal::Rng() const
 {
   Set ts;
-  if( !this->value.empty() )
-  {
+  if( !this->value.empty() ) {
     SetVal & sv (ts.SHAREDGETVAL(SetVal));
-    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-    {
+    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
       sv.value.insert(sv.value.end(), miter->second);
     }
   }
@@ -771,11 +767,9 @@ MapVal & MapVal::RemElem(const Common & gdom)
 Map MapVal::Inverse() const
 {
   Map tm;
-  if( !this->value.empty() )
-  {
+  if( !this->value.empty() ) {
     MapVal & mv (tm.SHAREDGETVAL(MapVal));
-    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-    {
+    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
       mv.Insert(miter->second, miter->first);
     }
   }
@@ -787,11 +781,9 @@ bool MapVal::IsCompatible(const MapVal & m) const
   Set s (this->Dom().ImpIntersect(m.Dom()));
   const SetVal & sv (s.CGETVAL(SetVal));
   bool forall = true;
-  if (!sv.IsEmpty())
-  {
+  if (!sv.IsEmpty()) {
     SetVal::SetValueType::const_iterator siter;
-    for (siter = sv.value.begin(); siter != sv.value.end() && forall; siter++)
-    {
+    for (siter = sv.value.begin(); siter != sv.value.end() && forall; siter++) {
       forall = (this->value.find(*siter)->second == m.value.find(*siter)->second); 
     }
   }
@@ -802,10 +794,10 @@ Map MapVal::DomRestrictedTo(const SetVal & s) const
 {
   Map tm;
   MapVal & mv (tm.SHAREDGETVAL(MapVal));
-  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-  {
-    if(s.InSet(miter->first))
+  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
+    if(s.InSet(miter->first)) {
       mv.value.insert(*miter);
+    }
   }
   return tm;
 }
@@ -814,10 +806,10 @@ Map MapVal::DomRestrictedBy(const SetVal & s) const
 {
   Map tm;
   MapVal & mv (tm.SHAREDGETVAL(MapVal));
-  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-  {
-    if(!s.InSet(miter->first))
+  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
+    if(!s.InSet(miter->first)) {
       mv.value.insert(*miter);
+    }
   }
   return tm;
 }
@@ -826,10 +818,10 @@ Map MapVal::RngRestrictedTo(const SetVal & s) const
 {
   Map tm;
   MapVal & mv (tm.SHAREDGETVAL(MapVal));
-  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-  {
-    if(s.InSet(miter->second))
+  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
+    if(s.InSet(miter->second)) {
       mv.value.insert(*miter);
+    }
   }
   return tm;
 }
@@ -838,10 +830,10 @@ Map MapVal::RngRestrictedBy(const SetVal & s) const
 {
   Map tm;
   MapVal & mv (tm.SHAREDGETVAL(MapVal));
-  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-  {
-    if(!s.InSet(miter->second))
+  for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
+    if(!s.InSet(miter->second)) {
       mv.value.insert(*miter);
+    }
   }
   return tm;
 }
@@ -901,10 +893,13 @@ bool MapVal::Next(Common & gdom, Common & gran, MapValIterator & iterator) const
 int MapVal::Compare(const MetaivVal & mval) const
 {
   const MapVal & m (static_cast<const MapVal &>(mval));
-  if (this->value.size() < m.value.size()) return -1;
-  else if (this->value.size() > m.value.size()) return 1;
-  else
-  {
+  if (this->value.size() < m.value.size()) {
+    return -1;
+  }
+  else if (this->value.size() > m.value.size()) {
+    return 1;
+  }
+  else {
     for (MapValueType::const_iterator miter1(this->value.begin()), miter2(m.value.begin());
          miter1 != this->value.end();
          miter1++, miter2++) {
@@ -951,24 +946,23 @@ void MapVal::ostream_out(wostream & os, const VDMFormatter & vf) const
       is_simple_d = miter->first.IsSimple() && is_simple_d;
       is_simple_r = miter->second.IsSimple() && is_simple_r;
     }
-    if (!is_simple_d)
+    if (!is_simple_d) {
       multiline_d = true;
-    if (!is_simple_r)
+    }
+    if (!is_simple_r) {
       multiline_r = true;
+    }
   }
 
   os << L"{ ";
 
-  if (this->value.empty())
-  {
+  if (this->value.empty()) {
     os << L"|->";
   }
-  else
-  {
+  else {
     bool first = true;
     int indent = vf2.GetIndent();
-    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-    {
+    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
       vf2.SetIndent( indent );
       if (!first) {
         os << L",";
@@ -977,11 +971,13 @@ void MapVal::ostream_out(wostream & os, const VDMFormatter & vf) const
           os << endl;
           vf2.print_spaces(os, vf2.GetIndent());
         }
-        else
+        else {
           os << L" ";
+        }
       }
-      else
+      else {
         first = false;
+      }
 
       miter->first.ostream_out(os, vf2);
       os << L" |-> ";
@@ -1000,20 +996,17 @@ void MapVal::GC()
 {
 //wcout << L"GC: " << this->value.size() << L" : ";
   bool exists = true;
-  while ( !this->value.empty() && exists )
-  {
+  while ( !this->value.empty() && exists ) {
     SetVal::SetValueType sv;
-    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++)
-    {
-      if (!(miter->first.get_mvp()->MultiLinked()))
+    for (MapValueType::const_iterator miter(this->value.begin()); miter != this->value.end(); miter++) {
+      if (!(miter->first.get_mvp()->MultiLinked())) {
         sv.insert(sv.end(), miter->first);
+      }
     }
     exists = !sv.empty();
-    if( exists )
-    {
+    if( exists ) {
       SetVal::SetValueType::const_iterator siter;
-      for (siter = sv.begin(); siter != sv.end(); siter++)
-      {
+      for (siter = sv.begin(); siter != sv.end(); siter++) {
         const MapValueType::iterator miter2 (this->value.find(*siter));
         MapValueType::value_type keepref (*miter2);
         this->value.erase(miter2);
@@ -1027,8 +1020,7 @@ void MapVal::GC2(const Common & c)
 {
   const MapValueType::iterator miter (this->value.find(c));
   if (miter != this->value.end()) {
-    if (!(miter->first.get_mvp()->MultiLinked()))
-    {
+    if (!(miter->first.get_mvp()->MultiLinked())) {
       // This is reentrant safe since we keep a ref to the value to be erased.
       MapValueType::value_type keepref (*miter);
       this->value.erase(miter);
@@ -1048,8 +1040,7 @@ MapVal* GetMapVal()
   try {
     return new MapVal();
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -1061,8 +1052,9 @@ Map::Map() : Common(GetMapVal()), iteratorP(NULL)
 
 Map::Map(const Generic & m) : Common(m), iteratorP(NULL)
 {
-  if (!this->IsMap())
+  if (!this->IsMap()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Map");
+  }
 }
 
 Map::~Map()
@@ -1072,8 +1064,9 @@ Map::~Map()
 
 Map & Map::operator=(const Generic & g)
 {
-  if (!g.IsMap())
+  if (!g.IsMap()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Map");
+  }
 
   this->Link(g);
   return *this;
@@ -1255,25 +1248,30 @@ SequenceVal::SequenceVal(const wstring & s) : MetaivVal(mt_sequence), isString(t
 #endif // SHOW_MALLOC_STATS
 
   string::size_type len = s.length();
-  for(string::size_type i = 0; i < len; i++)
+  for(string::size_type i = 0; i < len; i++) {
     this->value.push_back(Char(s[i]));
+  }
 }
 
 int SequenceVal::Compare(const MetaivVal & mval) const
 {
   const SequenceVal & s ((static_cast<const SequenceVal &>(mval)));
 
-  if (this->value.size() < (size_t)s.Length()) return -1;
-  else if (this->value.size() > (size_t)s.Length()) return 1;
-  else
-  {
+  if (this->value.size() < (size_t)s.Length()) {
+    return -1;
+  }
+  else if (this->value.size() > (size_t)s.Length()) {
+    return 1;
+  }
+  else {
 #ifdef VDM_FINGERPRINT
     Fingerprint fp1, fp2;
     readfingerprint(fp1);
     s.readfingerprint(fp2);
     int fp_cmp = fp1.Compare(fp2);
-    if (fp_cmp != 0)
+    if (fp_cmp != 0) {
       return fp_cmp;
+    }
 #endif // VDM_FINGERPRINT
 
     int res = 0;
@@ -1288,13 +1286,15 @@ int SequenceVal::Compare(const MetaivVal & mval) const
 
 bool SequenceVal::IsSimple() const
 {
-  if (this->value.empty() || IsString())
+  if (this->value.empty() || IsString()) {
     return true;
+  }
 
   bool forall = true;
   SequenceVal::SequenceValueType::const_iterator siter;
-  for (siter = this->value.begin(); (siter != this->value.end()) && forall; siter++)
+  for (siter = this->value.begin(); (siter != this->value.end()) && forall; siter++) {
     forall = siter->IsSimple();
+  }
   return forall;
 }
 
@@ -1304,31 +1304,28 @@ void SequenceVal::ostream_out(wostream & os, const VDMFormatter & vf) const
 
   bool all_char = (this->isString || this->value.size() > 0);
   bool is_simple = true;
-  if (!this->isString)
-  {
+  if (!this->isString) {
     SequenceValueType::const_iterator i1;
-    for (i1 = this->value.begin(); i1 != this->value.end(); i1++)
-    {
+    for (i1 = this->value.begin(); i1 != this->value.end(); i1++) {
       all_char = all_char && i1->IsChar();
       is_simple = is_simple && i1->IsSimple();
     }
   }
 
-  if (all_char)
-  {
+  if (all_char) {
     os << L"\"";
     wstring s;
     this->GetString(s);
     Backslashed::convert_internal_to_printed_backslash(s, os, true);
     os << L"\"";
   }
-  else
-  {
+  else {
     bool multiline = false;
     if (vf.PrettyPrinting()) {
       vf2.IncrementIndent();
-      if (!is_simple)
+      if (!is_simple) {
         multiline = true;
+      }
     }
 
     os << L"[ ";
@@ -1341,12 +1338,13 @@ void SequenceVal::ostream_out(wostream & os, const VDMFormatter & vf) const
           os << endl;
           vf2.print_spaces(os, vf2.GetIndent());
         }
-        else
+        else {
           os << L" ";
+        }
       }
-      else
+      else {
         first = false;
-
+      }
       (*i1).ostream_out(os, vf2);
     }
     os << L" ]";
@@ -1358,14 +1356,14 @@ void SequenceVal::WriteVal (ostream& ostr) const
   ostr << 'b' << (int) this->value.size() << ",";
 
   SequenceValueType::const_iterator i1;
-  for (i1 = this->value.begin(); i1 != this->value.end(); i1++)
+  for (i1 = this->value.begin(); i1 != this->value.end(); i1++) {
     (*i1).WriteVal (ostr);
+  }
 }
 
 Common & SequenceVal::refIndex(int64_t j) //const
 {
-  if (OutOfRange(j))
-  {
+  if (OutOfRange(j)) {
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,L"Sequence::Index");
     return Common::dummy; // Only executed if ReportError is changed.
   }
@@ -1374,8 +1372,7 @@ Common & SequenceVal::refIndex(int64_t j) //const
 
 const Common & SequenceVal::operator[](int64_t j) const
 {
-  if (OutOfRange(j))
-  {
+  if (OutOfRange(j)) {
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,L"Sequence::Index");
     return Common::dummy; // Only executed if ReportError is changed.
   }
@@ -1384,8 +1381,7 @@ const Common & SequenceVal::operator[](int64_t j) const
 
 const Common & SequenceVal::Hd() const
 {
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     return this->value.front();
   }
   else {
@@ -1396,8 +1392,7 @@ const Common & SequenceVal::Hd() const
 
 const Common & SequenceVal::Last() const
 {
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     return this->value.back();
   }
   else {
@@ -1419,36 +1414,42 @@ Sequence SequenceVal::Tl() const
 
 SequenceVal& SequenceVal::ImpTl()
 {
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     // This is reentrant safe since we keep a ref to the value to be erased.
     Generic keepref (*this->value.begin()); //
+#ifdef USE_DEQUE
     this->value.pop_front();
+#else
+    this->value.erase(this->value.begin());
+#endif // USE_DEQUE
   }
-  else
+  else {
     M4LibError::ReportError(ML_OP_ON_EMPTY_SEQ,L"'ImpTl' on empty Sequence");
-
+  }
   return *this;
 }
 
 Generic SequenceVal::ImpPop()
 {
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     Generic g (*this->value.begin()); //
+#ifdef USE_DEQUE
     this->value.pop_front();
+#else
+    this->value.erase(this->value.begin());
+#endif // USE_DEQUE
     return g;
   }
-  else
+  else {
     M4LibError::ReportError(ML_OP_ON_EMPTY_SEQ,L"'Pop' on empty Sequence");
+  }
 
   return Generic();
 }
 
 Sequence SequenceVal::ImpPop(int64_t n)
 {
-  if (static_cast<int64_t>(this->value.size()) < n)
-  {
+  if (static_cast<int64_t>(this->value.size()) < n) {
     M4LibError::ReportError(ML_OP_ON_EMPTY_SEQ,L"'Pop' on empty Sequence");
     return Sequence();
   }
@@ -1466,28 +1467,26 @@ Sequence SequenceVal::ImpPop(int64_t n)
 
 SequenceVal & SequenceVal::ImpCopy()
 {
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     Generic item (*this->value.begin()); //
     this->value.insert(this->value.begin(), item);
   }
-  else
+  else {
     M4LibError::ReportError(ML_OP_ON_EMPTY_SEQ,L"'ImpCopy' on empty Sequence");
-
+  }
   return *this;
 }
 
 SequenceVal & SequenceVal::ImpSwap()
 {
-  if (this->value.size() > 1)
-  {
+  if (this->value.size() > 1) {
     Generic item (*this->value.begin()); //
     this->value[0] = this->value[1];
     this->value[1] = item;
   }
-  else
+  else {
     M4LibError::ReportError(ML_OP_ON_EMPTY_SEQ,L"'ImpSwap' on empty Sequence");
-
+  }
   return *this;
 }
 
@@ -1503,11 +1502,11 @@ bool SequenceVal::GetString(wstring & str) const
   wstring res;
   bool forall = true;
   SequenceVal::SequenceValueType::const_iterator i1;
-  for (i1 = this->value.begin(); (i1 != this->value.end()) && forall; i1++)
-  {
+  for (i1 = this->value.begin(); (i1 != this->value.end()) && forall; i1++) {
     forall = i1->IsChar();
-    if (forall)
+    if (forall) {
       res += Char(*i1).GetValue();
+    }
   }
   str = (forall ? res : wstring(L""));
   return forall;
@@ -1515,13 +1514,13 @@ bool SequenceVal::GetString(wstring & str) const
 
 bool SequenceVal::IsString() const
 {
-  if(!this->isString)
-  {
+  if(!this->isString) {
     if(this->value.empty()) return false;
     SequenceVal::SequenceValueType::const_iterator siter;
     bool forall = true;
-    for (siter = this->value.begin(); (siter != this->value.end()) && forall; siter++)
+    for (siter = this->value.begin(); (siter != this->value.end()) && forall; siter++) {
       forall = siter->IsChar();
+    }
     return forall;
   }
   return true;
@@ -1529,8 +1528,7 @@ bool SequenceVal::IsString() const
 
 SequenceVal & SequenceVal::ImpConc(const SequenceVal & v2)
 {
-  if ( !v2.value.empty() )
-  {
+  if ( !v2.value.empty() ) {
     this->value.insert(this->value.end(), v2.value.begin(), v2.value.end());
     this->isString &= v2.isString;
   }
@@ -1543,8 +1541,7 @@ Sequence SequenceVal::Conc(const SequenceVal & v2) const
   SequenceVal & sv (ts.SHAREDGETVAL(SequenceVal));
   sv.value.insert(sv.value.end(), this->value.begin(), this->value.end());
   sv.isString = this->isString;
-  if ( !v2.value.empty() )
-  {
+  if ( !v2.value.empty() ) {
     sv.value.insert(sv.value.end(), v2.value.begin(), v2.value.end());
     sv.isString &= v2.isString;
   }
@@ -1553,10 +1550,10 @@ Sequence SequenceVal::Conc(const SequenceVal & v2) const
 
 SequenceVal & SequenceVal::RemElem(int64_t i)
 {
-  if (OutOfRange(i))
+  if (OutOfRange(i)) {
     M4LibError::ReportError(ML_RANGE_ERROR, L"Sequence::RemElem");
-  else
-  {
+  }
+  else {
     // This is reentrant safe //since we keep a ref to the value
     // to be erased.
     Generic keepref (*(this->value.begin()+(i-1)));
@@ -1567,13 +1564,14 @@ SequenceVal & SequenceVal::RemElem(int64_t i)
 
 SequenceVal & SequenceVal::ImpModify(int64_t j,  const Common& g)
 {
-  if (OutOfRange(j))
+  if (OutOfRange(j)) {
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,
                 L"index out of range in 'Sequence::ImpModify'");
-  else
-  {
-    if (!g.IsChar())
+  }
+  else {
+    if (!g.IsChar()) {
       this->isString = false;
+    }
     // This is reentrant safe since we keep a ref to the value
     // to be overwritten.
     Generic keepref (this->value[j-1]);
@@ -1592,8 +1590,7 @@ Set SequenceVal::Elems() const
 Set SequenceVal::Inds() const
 {
   Set ts;
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     SetVal & sv (ts.SHAREDGETVAL(SetVal));
     int len = this->value.size();
     for (int i = 1; i <= len; i++)
@@ -1614,12 +1611,12 @@ Sequence SequenceVal::Reverse() const
 Set SequenceVal::Permute() const
 {
   Set ts;
-  if ( this->value.empty() )
+  if ( this->value.empty() ) {
     return ts;
+  }
 
   SetVal & sv (ts.SHAREDGETVAL(SetVal));
-  if ( this->value.size() == 1 )
-  {
+  if ( this->value.size() == 1 ) {
     Sequence s;
     SequenceVal & tsv (s.SHAREDGETVAL(SequenceVal));
     tsv.value.insert(tsv.value.end(), this->value.begin(), this->value.end());
@@ -1629,22 +1626,20 @@ Set SequenceVal::Permute() const
   }
 
   SequenceVal::SequenceValueType::const_iterator i1;
-  for (i1 = this->value.begin(); i1 != this->value.end(); i1++)
-  {
+  for (i1 = this->value.begin(); i1 != this->value.end(); i1++) {
     SequenceVal tsv;
     SequenceVal::SequenceValueType::const_iterator i2;
-    for (i2 = this->value.begin(); i2 != this->value.end(); i2++)
-    {
-      if (i1 != i2)
+    for (i2 = this->value.begin(); i2 != this->value.end(); i2++) {
+      if (i1 != i2) {
        tsv.value.push_back(*i2);
+      }
     }
     tsv.isString = this->isString;
     Set perm_s (tsv.Permute());
 
     SetVal & perm_sv (perm_s.SHAREDGETVAL(SetVal));
     SetVal::SetValueType::const_iterator i3;
-    for (i3 = perm_sv.value.begin(); i3 != perm_sv.value.end(); i3++)
-    {
+    for (i3 = perm_sv.value.begin(); i3 != perm_sv.value.end(); i3++) {
       Sequence tbd_l (*i3);
       tbd_l.SHAREDGETVAL(SequenceVal).ImpPrepend(*i1);
       sv.Insert(tbd_l);
@@ -1655,8 +1650,7 @@ Set SequenceVal::Permute() const
 
 Sequence SequenceVal::DistrSetProduct() const
 {
-  if (this->value.empty())
-  {
+  if (this->value.empty()) {
     return mk_sequence(Sequence());
   }
 
@@ -1666,19 +1660,21 @@ Sequence SequenceVal::DistrSetProduct() const
 
   Sequence ts (mk_sequence(Sequence())); // [ [] ]
 
-  while (!tmp_lv.value.empty())
-  {
+  while (!tmp_lv.value.empty()) {
     Set elem (tmp_lv.value.front()); // Hd
     SetVal & elemv (elem.SHAREDGETVAL(SetVal));
+#ifdef USE_DEQUE
     tmp_lv.value.pop_front(); // ImpTl
+#else
+    tmp_lv.value.erase(tmp_lv.value.begin()); // ImpTl
+#endif // USE_DEQUE
 
     Sequence lts;
     SequenceVal & ltsv (lts.SHAREDGETVAL(SequenceVal));
     const SequenceVal & tsv (ts.SHAREDGETVAL(SequenceVal));
     for (SequenceVal::SequenceValueType::const_iterator i1 = tsv.value.begin(); i1 != tsv.value.end(); i1++)
     {
-      for (SetVal::SetValueType::const_iterator i2 = elemv.value.begin(); i2 != elemv.value.end(); i2++)
-      {
+      for (SetVal::SetValueType::const_iterator i2 = elemv.value.begin(); i2 != elemv.value.end(); i2++) {
         Sequence l (*i1);
         ltsv.ImpAppend(l.ImpAppend(*i2));
       }
@@ -1694,10 +1690,10 @@ Sequence SequenceVal::SubSequence(int64_t from, int64_t to) const
   SequenceVal & sv (ts.SHAREDGETVAL(SequenceVal));
   SequenceVal::SequenceValueType::const_iterator i1;
   int64_t index = 1;
-  for (i1 = this->value.begin(); i1 != this->value.end(); i1++)
-  {
-    if( from <= index && index <= to ) 
+  for (i1 = this->value.begin(); i1 != this->value.end(); i1++) {
+    if( from <= index && index <= to ) {
       sv.value.push_back(*i1);
+    }
     index++;
   }
   sv.isString = this->isString;
@@ -1735,8 +1731,7 @@ Sequence SequenceVal::Product(const SetVal & s) const
   Sequence ts;
   SequenceVal & sv (ts.SHAREDGETVAL(SequenceVal));
   SetVal::SetValueType::const_iterator siter;
-  for (siter = s.value.begin(); siter != s.value.end(); siter++)
-  {
+  for (siter = s.value.begin(); siter != s.value.end(); siter++) {
     Sequence tts;
     SequenceVal & tsv (tts.SHAREDGETVAL(SequenceVal));
     tsv.value.insert(tsv.value.end(), this->value.begin(), this->value.end());
@@ -1748,13 +1743,11 @@ Sequence SequenceVal::Product(const SetVal & s) const
 
 int64_t SequenceVal::Find(const Common & c) const
 {
-  if (!this->value.empty())
-  {
+  if (!this->value.empty()) {
     int64_t index = 0;
     bool exists = false;
     SequenceVal::SequenceValueType::const_iterator i1;
-    for (i1 = this->value.begin(); (i1 != this->value.end()) && !exists; i1++)
-    {
+    for (i1 = this->value.begin(); (i1 != this->value.end()) && !exists; i1++) {
       index++;
       exists = (c == *i1);
     }
@@ -1765,26 +1758,26 @@ int64_t SequenceVal::Find(const Common & c) const
 
 bool SequenceVal::First(Common & g, SequenceValueType::const_iterator& traverseIter) const
 {
-  if ( !this->value.empty() )
-  {
+  if ( !this->value.empty() ) {
     traverseIter = this->value.begin();
     g = (*traverseIter);
     return true;
   }
-  else
+  else {
     return false;
+  }
 }
 
 bool SequenceVal::Next(Common & g, SequenceValueType::const_iterator& traverseIter) const
 {
   traverseIter++;
-  if (traverseIter != this->value.end())
-  {
+  if (traverseIter != this->value.end()) {
     g = (*traverseIter);
     return true;
   }
-  else
+  else {
     return false;
+  }
 }
 
 MetaivVal * SequenceVal::mk_sequenceval(int num, ...)
@@ -1792,8 +1785,7 @@ MetaivVal * SequenceVal::mk_sequenceval(int num, ...)
   va_list list;
   va_start (list, num);
   SequenceVal * sv = new SequenceVal();
-  for (int i = 0; i < num; i++)
-  {
+  for (int i = 0; i < num; i++) {
     const Generic & g = *static_cast<const Generic *>(va_arg(list, const Generic *));
     sv->value.push_back(g);
   }
@@ -1810,13 +1802,9 @@ static inline
 SequenceVal* GetSequenceVal(const wchar_t* c)
 {
   try {
-// 20151001 -->
-    //return ((c == NULL) ? new SequenceVal(wstring(L"")) : new SequenceVal(wstring(c)));
     return ValCache->GetCachedStringVal (c == NULL ? wstring(L"") : wstring(c));
-// <-- 20151001
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -1828,8 +1816,7 @@ SequenceVal* GetSequenceVal()
   try {
     return new SequenceVal();
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -1854,8 +1841,9 @@ Sequence::~Sequence()
 
 Sequence::Sequence(const Generic & m) : Common(m), IteratorP(NULL)
 {
-  if (!this->IsSequence())
+  if (!this->IsSequence()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Sequence");
+  }
 }
 
 Sequence & Sequence::operator=(const wstring & s)
@@ -1867,10 +1855,10 @@ Sequence & Sequence::operator=(const wstring & s)
 
 Sequence & Sequence::operator=(const Generic & g)
 {
-  if (!g.IsSequence())
+  if (!g.IsSequence()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Sequence");
+  }
   this->IteratorP = NULL;
-
   this->Link(g);
   return *this;
 }
@@ -2062,8 +2050,9 @@ Sequence Sequence::Product(const Set & s) const
 bool Sequence::First(Generic & g) const
 {
   //if (this->IteratorP == NULL) this->IteratorP = new SequenceValIterator();
-  if (this->IteratorP == NULL) ((Sequence &)*this).IteratorP = new SequenceValIterator();
-
+  if (this->IteratorP == NULL) {
+    ((Sequence &)*this).IteratorP = new SequenceValIterator();
+  }
   return static_cast<const SequenceVal *>(mvp)->First(g, this->IteratorP->traverseIter);
 }
 
@@ -2141,13 +2130,13 @@ Generic Stack::Pop()
 
 Sequence Stack::Pop(int64_t n)
 {
-  if (n > 0)
-  {
+  if (n > 0) {
     this->Clone();
     return static_cast<SequenceVal *>(mvp)->ImpPop(n);
   }
-  else
+  else {
     return Sequence();
+  }
 }
 
 Stack & Stack::RemoveNth(int64_t n)
@@ -2185,8 +2174,7 @@ Set SetVal::Power() const
   {
     SetVal svp (sv);
     SetVal::SetValueType::const_iterator svpiter;
-    for (svpiter = svp.value.begin(); svpiter != svp.value.end(); svpiter++)
-    {
+    for (svpiter = svp.value.begin(); svpiter != svp.value.end(); svpiter++) {
       Set s (*svpiter);
       s.Insert(*siter);
       sv.Insert(s);
@@ -2197,8 +2185,7 @@ Set SetVal::Power() const
 
 SetVal & SetVal::ImpUnion(const SetVal & s)
 {
-  if( !s.value.empty() )
-  {
+  if ( !s.value.empty() ) {
     SetVal::SetValueType sval;
     insert_iterator<SetVal::SetValueType> ii (sval, sval.begin()) ;
     set_union(this->value.begin(), this->value.end(), s.value.begin(), s.value.end(), ii);
@@ -2219,17 +2206,16 @@ Set SetVal::Union(const SetVal & s) const
 
 SetVal & SetVal::ImpIntersect(const SetVal & s)
 {
-  if( !s.value.empty() )
-  {
+  if( !s.value.empty() ) {
     SetVal::SetValueType sval;
     insert_iterator<SetVal::SetValueType> ii (sval, sval.begin()) ;
     set_intersection(this->value.begin(), this->value.end(), s.value.begin(), s.value.end(), ii);
     this->value.clear();
     this->value = sval;
   }
-  else
+  else {
     this->value.clear();
-
+  }
   return *this;
 }
 
@@ -2244,8 +2230,7 @@ Set SetVal::Intersect(const SetVal & s) const
 
 SetVal & SetVal::ImpDiff(const SetVal& s)
 {
-  if( !s.value.empty() )
-  {
+  if( !s.value.empty() ) {
     SetVal::SetValueType sval;
     const SetVal::SetValueType & s_value = s.value;
     insert_iterator<SetVal::SetValueType> ii (sval, sval.begin()) ;
@@ -2267,12 +2252,13 @@ Set SetVal::Diff(const SetVal & s) const
 
 const Common & SetVal::GetElem(bool reverse) const
 {
-  if (!this->value.empty())
-  {
-    if (reverse)
+  if (!this->value.empty()) {
+    if (reverse) {
       return *(this->value.rbegin());   // Last element
-    else
+    }
+    else {
       return *(this->value.begin());    // First element
+    }
   }
   else {
     M4LibError::ReportError(ML_OP_ON_EMPTY_SET,L"vdm_SetVal::GetElem: on empty Set");
@@ -2295,20 +2281,17 @@ SetVal & SetVal::RemElem(const Common & g)
 
 bool SetVal::SubSet(const SetVal & s) const
 {
-  if( !this->value.empty() )
-  {
-//    const SetVal::SetValueType & s_value = s.value;
-//    return includes(s_value.begin(), s_value.end(), this->value.begin(), this->value.end());
+  if( !this->value.empty() ) {
     return includes(s.value.begin(), s.value.end(), this->value.begin(), this->value.end());
   }
-  else
+  else {
     return true;
+  }
 }
 
 bool SetVal::First(Common & g, SetValueType::const_iterator & setIter) const
 {
-  if ( !this->value.empty() )
-  {
+  if ( !this->value.empty() ) {
     setIter = this->value.begin();
     g = (*setIter);
     return true;
@@ -2320,8 +2303,7 @@ bool SetVal::First(Common & g, SetValueType::const_iterator & setIter) const
 bool SetVal::Next(Common & g, SetValueType::const_iterator & setIter) const
 {
   setIter++;
-  if (setIter != this->value.end())
-  {
+  if (setIter != this->value.end()) {
     g = (*setIter);
     return true;
   } else {
@@ -2332,10 +2314,13 @@ bool SetVal::Next(Common & g, SetValueType::const_iterator & setIter) const
 int SetVal::Compare(const MetaivVal & mval) const
 {
   const SetVal & s (static_cast<const SetVal &>(mval));
-  if (this->value.size() < s.value.size()) return -1;
-  else if (this->value.size() > s.value.size()) return 1;
-  else
-  {
+  if (this->value.size() < s.value.size()) {
+    return -1;
+  }
+  else if (this->value.size() > s.value.size()) {
+    return 1;
+  }
+  else {
     int res = 0;
     SetValueType::const_iterator miter1, miter2;
     for (miter1 = this->value.begin(), miter2 = s.value.begin();
@@ -2349,14 +2334,14 @@ int SetVal::Compare(const MetaivVal & mval) const
 
 bool SetVal::IsSimple() const
 {
-  //return this->value.empty();
-  if (this->value.empty())
+  if (this->value.empty()) {
     return true;
-
+  }
   bool forall = true;
   SetVal::SetValueType::const_iterator siter;
-  for (siter = this->value.begin(); (siter != this->value.end()) && forall; siter++)
+  for (siter = this->value.begin(); (siter != this->value.end()) && forall; siter++) {
     forall = siter->IsSimple();
+  }
   return forall;
 }
 
@@ -2364,10 +2349,12 @@ Sequence SetVal::ToSequence(bool reverse) const
 {
   Sequence ts;
   SequenceVal & sv (ts.SHAREDGETVAL(SequenceVal));
-  if (reverse)
+  if (reverse) {
     sv.value.insert(sv.value.end(), this->value.rbegin(), this->value.rend());
-  else
+  }
+  else {
     sv.value.insert(sv.value.end(), this->value.begin(), this->value.end());
+  }
   return ts;
 }
 
@@ -2376,11 +2363,9 @@ Set SetVal::DirectProduct(const SetVal & s) const
   Set ts;
   SetVal & sv (ts.SHAREDGETVAL(SetVal));
   SetVal::SetValueType::const_iterator siter;
-  for (siter = this->value.begin(); siter != this->value.end(); siter++)
-  {
+  for (siter = this->value.begin(); siter != this->value.end(); siter++) {
     SetVal::SetValueType::const_iterator siter2;
-    for (siter2 = s.value.begin(); siter2 != s.value.end(); siter2++)
-    {
+    for (siter2 = s.value.begin(); siter2 != s.value.end(); siter2++) {
       Set tts;
       SetVal & tsv (tts.SHAREDGETVAL(SetVal));
       tsv.value.insert(*siter);
@@ -2393,8 +2378,7 @@ Set SetVal::DirectProduct(const SetVal & s) const
 
 Set SetVal::DistrDirectProduct() const
 {
-  if (this->value.empty() || this->InSet(Set()))
-  {
+  if (this->value.empty() || this->InSet(Set())) {
     return Set();
   }
 
@@ -2404,8 +2388,7 @@ Set SetVal::DistrDirectProduct() const
 
   Set ts (mk_set(Set()));
   
-  while (!tmpsv.value.empty())
-  {
+  while (!tmpsv.value.empty()) {
     Set elem (*tmpsv.value.begin()); // GetElem
     const SetVal & elemv (elem.CGETVAL(SetVal));
     tmpsv.value.erase(tmpsv.value.begin()); // RemElem
@@ -2413,10 +2396,8 @@ Set SetVal::DistrDirectProduct() const
     Set lts;
     SetVal & ltsv (lts.SHAREDGETVAL(SetVal));
     const SetVal & tsv (ts.SHAREDGETVAL(SetVal));
-    for (SetVal::SetValueType::const_iterator s1 = tsv.value.begin(); s1 != tsv.value.end(); s1++)
-    {
-      for (SetVal::SetValueType::const_iterator s2 = elemv.value.begin(); s2 != elemv.value.end(); s2++)
-      {
+    for (SetVal::SetValueType::const_iterator s1 = tsv.value.begin(); s1 != tsv.value.end(); s1++) {
+      for (SetVal::SetValueType::const_iterator s2 = elemv.value.begin(); s2 != elemv.value.end(); s2++) {
         Set s (*s1);
         ltsv.Insert(s.Insert(*s2));
       }
@@ -2431,11 +2412,10 @@ Set SetVal::DUnion() const
   Set ts;
   SetVal & sv (ts.SHAREDGETVAL(SetVal));
   SetVal::SetValueType::const_iterator siter;
-  for (siter = this->value.begin(); siter != this->value.end(); siter++)
-  {
-    if (!(*siter).IsSet())
+  for (siter = this->value.begin(); siter != this->value.end(); siter++) {
+    if (!(*siter).IsSet()) {
       M4LibError::ReportError(ML_CAST_ERROR, (*siter).PrintType() + L" casted to Set");
-
+    }
     SetValueType::value_type ref (*siter);
     sv.ImpUnion(ref.CGETVAL(SetVal));
   }
@@ -2444,9 +2424,9 @@ Set SetVal::DUnion() const
 
 Set SetVal::DInter() const
 {
-  if (this->value.empty() || this->InSet(Set()))
+  if (this->value.empty() || this->InSet(Set())) {
     return Set();
-
+  }
   Set ts;
   SetVal & sv (ts.SHAREDGETVAL(SetVal));
 
@@ -2462,11 +2442,10 @@ Set SetVal::DInter() const
   sv.value.insert(elemv.value.begin(), elemv.value.end());
 
   SetVal::SetValueType::const_iterator siter;
-  for (siter = tmpsv.value.begin(); siter != tmpsv.value.end(); siter++)
-  {
-    if (!(*siter).IsSet())
+  for (siter = tmpsv.value.begin(); siter != tmpsv.value.end(); siter++) {
+    if (!(*siter).IsSet()) {
       M4LibError::ReportError(ML_CAST_ERROR, (*siter).PrintType() + L" casted to Set");
-
+    }
     SetValueType::value_type ref (*siter);
     sv.ImpIntersect(ref.CGETVAL(SetVal));
   }
@@ -2490,8 +2469,9 @@ void SetVal::ostream_out(wostream & os, const VDMFormatter & vf) const
   bool multiline = false;
   if (vf.PrettyPrinting()) {
     vf2.IncrementIndent();
-    if (!is_simple)
+    if (!is_simple) {
       multiline = true;
+    }
   }
 
   os << L"{ ";
@@ -2504,12 +2484,13 @@ void SetVal::ostream_out(wostream & os, const VDMFormatter & vf) const
         os << endl;
         vf2.print_spaces(os, vf2.GetIndent());
       }
-      else
+      else {
         os << L" ";
+      }
     }
-    else
+    else {
       first = false;
-
+    }
     (*i1).ostream_out(os, vf2);
   }
 
@@ -2521,8 +2502,9 @@ void SetVal::WriteVal (ostream& ostr) const
   ostr << 'c' << this->value.size() << ",";
 
   SetValueType::const_iterator i1;
-  for (i1 = this->value.begin(); i1 != this->value.end(); i1++)
+  for (i1 = this->value.begin(); i1 != this->value.end(); i1++) {
     (*i1).WriteVal (ostr);
+  }
 }
 
 MetaivVal * SetVal::mk_setval(int num, ...)
@@ -2530,10 +2512,11 @@ MetaivVal * SetVal::mk_setval(int num, ...)
   va_list list;
   va_start (list, num);
   SetVal * sv = new SetVal();
-  for (int i = 0; i < num; i++)
-  {
+  for (int i = 0; i < num; i++) {
     const Generic & g = *static_cast<const Generic *>(va_arg(list, const Generic *));
-    if (sv->value.find(g) == sv->value.end()) sv->value.insert(g);
+    if (sv->value.find(g) == sv->value.end()) {
+      sv->value.insert(g);
+    }
   }
   va_end(list);
   return sv;
@@ -2550,8 +2533,7 @@ SetVal* GetSetVal()
   try {
     return new SetVal();
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -2563,8 +2545,9 @@ Set::Set() : Common(GetSetVal()), IteratorP(NULL)
 
 Set::Set( const Generic & m) : Common(m), IteratorP(NULL)
 {
-  if (!this->IsSet())
+  if (!this->IsSet()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Set");
+  }
 }
 
 Set::~Set()
@@ -2574,10 +2557,10 @@ Set::~Set()
 
 Set & Set::operator=(const Generic & g)
 {
-  if (!g.IsSet())
+  if (!g.IsSet()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Set");
+  }
   this->IteratorP = NULL;
-
   this->Link(g);
   return *this;
 }
@@ -2586,7 +2569,9 @@ void Set::Clear()
 {
   this->Clone();
   static_cast<SetVal *>(mvp)->Clear();
-  if (this->IteratorP) delete this->IteratorP;
+  if (this->IteratorP) {
+    delete this->IteratorP;
+  }
   this->IteratorP = NULL;
 }
 
@@ -2596,7 +2581,9 @@ bool Set::First(Generic & g) const
   // but DEC cxx does not understand this keyword. So we have to cast
   // away const'ness.
   //if (this->IteratorP == NULL) this->IteratorP = new SetValIterator();
-  if (this->IteratorP == NULL) ((Set &)*this).IteratorP = new SetValIterator();
+  if (this->IteratorP == NULL) {
+    ((Set &)*this).IteratorP = new SetValIterator();
+  }
   return static_cast<const SetVal *>(mvp)->First(g, this->IteratorP->traverseIter);
 }
 
@@ -2777,16 +2764,13 @@ int RecordVal::Compare(const MetaivVal & mval) const
 {
   const RecordVal & r (static_cast<const RecordVal &>(mval));
   //if (this->GetTag() == r.GetTag())
-  if (this->recinfop->GetTag() == r.recinfop->GetTag())
-  {
+  if (this->recinfop->GetTag() == r.recinfop->GetTag()) {
     //int len = this->GetSize();
     int len = this->recinfop->GetSize();
     //if (len == r.GetSize())
-    if (len == r.recinfop->GetSize())
-    {
+    if (len == r.recinfop->GetSize()) {
       int res = 0;
-      for (int i = 0; (i < len) && (res == 0); i++)
-      {
+      for (int i = 0; (i < len) && (res == 0); i++) {
         if (this->recinfop->AskDontCare(i))
           continue;           // Skip don't care field.
         res = this->value[i].Compare(r.value[i]);
@@ -2839,8 +2823,7 @@ void RecordVal::ostream_out(wostream & os, const VDMFormatter & vf) const
   }
 
   const wstring symname (this->recinfop->GetSymTag());
-  if ( !symname.empty() )
-  {
+  if ( !symname.empty() ) {
     if ( (symname == L"AS`Name") ||
          (symname == L"AS`OldName") ||
          (symname == L"AS`TypeName") ||
@@ -2867,42 +2850,43 @@ void RecordVal::ostream_out(wostream & os, const VDMFormatter & vf) const
          (symname == L"INSTRTP`PUSH") ||
          (symname == L"INSTRTP`ERRINST") ||
          (symname == L"SEM`OBJ_uRef") ||
-         (symname == L"SEM`QUOTE_V") )
-    {
+         (symname == L"SEM`QUOTE_V") ) {
       is_simple = true;
     }
     os << L"mk_" << symname << L"(";
   }
-  else
-  {
+  else {
     os << L"mk_unknown" << this->GetTag() << L"(";
   }
 
   bool multiline = false;
   if (vf2.PrettyPrinting()) {
-    if (!is_simple)
+    if (!is_simple) {
       multiline = true;
+    }
   }
 
   bool first = true;
   for (int j = 1; j <= (int) GetSize(); j++) {
-    if (!first)
+    if (!first) {
       os << L",";
-    else
+    }
+    else {
       first = false;
+    }
 
     if (multiline) {
       os << endl;
       vf2.print_spaces(os, vf2.GetIndent());
     }
-    else
-    {
+    else {
       os << L" ";
     }
     value[j-1].ostream_out(os, vf2);
   }
-  if (GetSize() > 0)
+  if (GetSize() > 0) {
     os << L" ";
+  }
   os << L")";
 }
 
@@ -2910,8 +2894,9 @@ void RecordVal::WriteVal(ostream & ostr) const
 {
   ostr << 'd' << this->GetTag() << "," << this->GetSize() << ",";
 
-  for (int i = 1; i<=(int) this->GetSize(); i++)
+  for (int i = 1; i<=(int) this->GetSize(); i++) {
     this->value[i-1].WriteVal(ostr);
+  }
 }
 
 void RecordVal::SetField(int i, const Common & gdom)
@@ -2945,7 +2930,6 @@ Common & RecordVal::refField(int i)
     wcerr << L"tag=" << GetTextTag() << L" size=" << GetSize() << L" field=" << i << endl;
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,L"index out of range in 'refField'");
   }
-
   return this->value[i-1];
 }
 
@@ -2983,8 +2967,7 @@ RecordVal * GetRecordVal(const wstring & symtag, const VDMRecInfoMap & tagspace)
   try {
     return new RecordVal(symtag, tagspace);
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -2996,8 +2979,7 @@ RecordVal * GetRecordVal(int tag, int size, VDMRecInfoMap & tagspace)
   try {
     return new RecordVal(tag, size, tagspace);
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -3009,16 +2991,14 @@ Record::Record() : Common(ValCache->recordv)
 
 Record::Record(const Generic & m) : Common(m)
 {
-  if (!this->IsRecord())
-  {
+  if (!this->IsRecord()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Record");
   }
 }
 
 Record::Record(const Common & m) : Common(m)
 {
-  if (!this->IsRecord())
-  {
+  if (!this->IsRecord()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Record");
   }
 }
@@ -3037,9 +3017,9 @@ Record::Record(int tag, int size) : Common(GetRecordVal(tag, size, VDMGetDefault
 
 Record & Record::operator=(const Generic & g)
 {
-  if (!g.IsRecord())
+  if (!g.IsRecord()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Record");
-
+  }
   this->Link(g);
   return *this;
 }
@@ -3162,17 +3142,21 @@ int TupleVal::Compare(const MetaivVal & mval) const
 {
   const TupleVal & t (static_cast<const TupleVal &>(mval));
 
-  if (value.size() < t.value.size()) return -1;
-  else if (value.size() > t.value.size()) return 1;
-  else
-  {
+  if (value.size() < t.value.size()) {
+    return -1;
+  }
+  else if (value.size() > t.value.size()) {
+    return 1;
+  }
+  else {
 #ifdef VDM_FINGERPRINT
     Fingerprint fp1, fp2;
     readfingerprint(fp1);
     t.readfingerprint(fp2);
     int fp_cmp = fp1.Compare(fp2);
-    if (fp_cmp != 0)
+    if (fp_cmp != 0) {
       return fp_cmp;
+    }
 #endif // VDM_FINGERPRINT
 
     int res = 0;
@@ -3197,21 +3181,19 @@ bool TupleVal::IsSimple() const
 
 TupleVal & TupleVal::SetField(int i, const Common & gdom)
 {
-  if (OutOfRange(i))
+  if (OutOfRange(i)) {
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,L"index out of range in 'SetField'");
-
+  }
   this->value[i-1] = gdom;
   return *this;
 }
 
 const Common & TupleVal::GetField(int i) const
 {
-  if (OutOfRange(i))
-  {
+  if (OutOfRange(i)) {
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,L"index out of range in 'GetField'");
     return Common::dummy;
   }
-
   return this->value[i-1];
 }
 
@@ -3225,9 +3207,9 @@ Sequence TupleVal::GetFields() const
 
 Common & TupleVal::refField(int i)
 {
-  if (OutOfRange(i))
+  if (OutOfRange(i)) {
     M4LibError::ReportError(ML_INDEX_OUT_OF_RANGE,L"index out of range in 'refField'");
-
+  }
   return this->value[i-1];
 }
 
@@ -3243,12 +3225,9 @@ void TupleVal::ostream_out(wostream & os, const VDMFormatter & vf) const
     is_simple = itr->IsSimple();
   }
 
-  if( !is_simple )
-  {
-    if( ( this->value.size() == 2 ) && this->value[1].IsInt() )
-    {
-      if( this->value[0].IsRecord() )
-      {
+  if( !is_simple ) {
+    if( ( this->value.size() == 2 ) && this->value[1].IsInt() ) {
+      if( this->value[0].IsRecord() ) {
         Record r (this->value[0]);
         wstring tag (r.GetTextTag());
         if ((tag == L"SEM`NUM") ||
@@ -3259,20 +3238,24 @@ void TupleVal::ostream_out(wostream & os, const VDMFormatter & vf) const
             is_simple = true;
         }
         else if (tag == L"SEM`SEQ") {
-          Sequence s (r.GetField( 1 ));
-          if (s.IsEmpty()) is_simple = true;
+          //Sequence s (r.GetField( 1 ));
+          //if (s.IsEmpty()) is_simple = true;
+          is_simple = r.GetSequence(1).IsEmpty();
         }
         else if (tag == L"SEM`SET") {
-          Set s (r.GetField( 1 ));
-          if (s.IsEmpty()) is_simple = true;
+          //Set s (r.GetField( 1 ));
+          //if (s.IsEmpty()) is_simple = true;
+          is_simple = r.GetSet(1).IsEmpty();
         }
         else if (tag == L"SEM`MAP") {
-          Map m (r.GetField( 1 ));
-          if (m.IsEmpty()) is_simple = true;
+          //Map m (r.GetField( 1 ));
+          //if (m.IsEmpty()) is_simple = true;
+          is_simple = r.GetMap(1).IsEmpty();
         }
         else if (tag == L"SEM`TUPLE") {
-          Sequence t (r.GetField( 1 ));
-          if (t.IsEmpty()) is_simple = true;
+          //Sequence t (r.GetField( 1 ));
+          //if (t.IsEmpty()) is_simple = true;
+          is_simple = r.GetSequence(1).IsEmpty();
         }
 //
       }
@@ -3282,8 +3265,9 @@ void TupleVal::ostream_out(wostream & os, const VDMFormatter & vf) const
   bool multiline = false;
   if (vf2.PrettyPrinting()) {
     vf2.IncrementIndent(5);
-    if (!is_simple)
+    if (!is_simple) {
       multiline = true;
+    }
   }
 
   os << L"mk_( ";
@@ -3295,12 +3279,13 @@ void TupleVal::ostream_out(wostream & os, const VDMFormatter & vf) const
         os << endl;
         vf2.print_spaces(os, vf2.GetIndent());
       }
-      else
+      else {
        os << L" ";
+      }
     }
-    else
+    else {
       first = false;
-
+    }
     value[j-1].ostream_out(os, vf2);
   }
   os << L" )";
@@ -3310,8 +3295,9 @@ void TupleVal::WriteVal (ostream& ostr) const
 {
   ostr << 'e' << (int) this->value.size() << ",";
 
-  for (int i = 1; i <= (int) this->value.size(); i++)
+  for (int i = 1; i <= (int) this->value.size(); i++) {
     this->value[i-1].WriteVal(ostr);
+  }
 }
 
 MetaivVal * TupleVal::mk_tupleval(int num, ...)
@@ -3319,8 +3305,9 @@ MetaivVal * TupleVal::mk_tupleval(int num, ...)
   va_list list;
   va_start (list, num);
   TupleVal * tv = new TupleVal(num);
-  for (int i = 0; i < num; i++)
+  for (int i = 0; i < num; i++) {
     tv->value[i] = *static_cast<const Generic *>(va_arg(list, const Generic *));
+  }
   va_end(list);
   return tv;
 }
@@ -3336,8 +3323,7 @@ TupleVal* GetTupleVal(int size)
   try {
     return ((size == 0) ? ValCache->tuplev : new TupleVal(size));
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -3349,8 +3335,9 @@ Tuple::Tuple() : Common(ValCache->tuplev)
 
 Tuple::Tuple(const Generic & m) : Common(m)
 {
-  if (!this->IsTuple())
+  if (!this->IsTuple()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Tuple");
+  }
 }
 
 Tuple::Tuple(int size) : Common(GetTupleVal(size))
@@ -3404,9 +3391,9 @@ Tuple & Tuple::operator=(const Tuple & t)
 
 Tuple & Tuple::operator=(const Generic & g)
 {
-  if (!g.IsTuple())
+  if (!g.IsTuple()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Tuple");
-
+  }
   this->Link(g);
   return *this;
 }
@@ -3592,9 +3579,9 @@ static vdmBase* vdmBaseP;
 static
 vdmBase* dummy_vdmBase()
 {
-  if (!vdmBaseP)
+  if (!vdmBaseP) {
     vdmBaseP = new vdmBase;
-
+  }
   vdmBaseP->AddRef();
   return vdmBaseP;
 }
@@ -3609,8 +3596,9 @@ ObjectRef::ObjectRef(const ObjectRef&m) : Common((const Common&)m)
 
 ObjectRef::ObjectRef(const Generic & m) : Common((const Common&)m)
 {
-  if (!this->IsObjectRef())
+  if (!this->IsObjectRef()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to ObjectRef");
+  }
 }
 
 ObjectRef::~ObjectRef()
@@ -3625,8 +3613,9 @@ ObjectRef & ObjectRef::operator=(const ObjectRef & t)
 
 ObjectRef & ObjectRef::operator=(const Generic & g)
 {
-  if (!g.IsObjectRef())
+  if (!g.IsObjectRef()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to ObjectRef");
+  }
   this->Link(g);
   return *this;
 }
@@ -3699,8 +3688,7 @@ IntVal* GetIntVal(int64_t i)
   try {
     return (((i >= 0) && (i < 256)) ? ValCache->intv[i] : new IntVal(static_cast<IntVal::IntValueType>(i)));
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -3720,15 +3708,12 @@ Int::Int(const Real & r) : Common(GetIntVal(static_cast<int64_t>(r.GetValue())))
 
 Int::Int(const Generic & g) : Common(g)
 {
-  if (g.IsInt())
-  {
+  if (g.IsInt()) {
   }
-  else if (g.IsReal())
-  {
+  else if (g.IsReal()) {
     this->Link(GetIntVal(static_cast<int64_t>(Real(g).GetValue())));
   }
-  else
-  {
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Int");
   }
 }
@@ -3807,18 +3792,15 @@ Int& Int::operator=(const int64_t i)
 
 Int & Int::operator=(const Generic & g)
 {
-  if (g.IsInt())
-  {
+  if (g.IsInt()) {
     this->Link(g);
     return *this;
   }
-  else if (g.IsReal())
-  {
+  else if (g.IsReal()) {
     this->Link(GetIntVal(static_cast<int64_t>(Real(g).GetValue())));
     return *this;
   }
-  else
-  {
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Int");
     return *this;
   }
@@ -3856,8 +3838,9 @@ Nil::Nil(const Nil& /*par*/) : Common(ValCache->nilv)
 
 Nil::Nil(const Generic & I) : Common(I)
 {
-  if (!this->IsNil())
+  if (!this->IsNil()) {
     M4LibError::ReportError(ML_CAST_ERROR, I.PrintType() + L" casted to Nil");
+  }
 }
 
 Nil & Nil::operator=(const Nil & /*unused*/)
@@ -3868,9 +3851,9 @@ Nil & Nil::operator=(const Nil & /*unused*/)
 
 Nil & Nil::operator=(const Generic & g)
 {
-  if (!g.IsNil())
+  if (!g.IsNil()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Nil");
-
+  }
   this->Link(g);
   return *this;
 }
@@ -3896,8 +3879,9 @@ Bool::Bool(bool b) : Common(GetBoolVal(b))
 
 Bool::Bool(const Generic & B) : Common(B)
 {
-  if (!IsBool())
+  if (!IsBool()) {
     M4LibError::ReportError(ML_CAST_ERROR, B.PrintType() + L" casted to Bool");
+  }
 }
 
 Bool::operator bool() const
@@ -3919,8 +3903,9 @@ Bool & Bool::operator=(const bool b)
 
 Bool & Bool::operator=(const Generic & g)
 {
-  if (!g.IsBool())
+  if (!g.IsBool()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Bool");
+  }
 
   this->Link(g);
   return *this;
@@ -3982,17 +3967,14 @@ static inline
 RealVal* GetRealVal(IntVal::IntValueType i)
 {
   try {
-// 20100128 -->
 #ifdef _MSC_VER
   return (((i >= 0) && (i < 256)) ? ValCache->realv[i] : new RealVal(static_cast<RealVal::RealValueType>(i)));
 #else
   return (((i >= 0) && (i < 256)) ? ValCache->realv[i]
                                   : ValCache->GetCachedRealVal(static_cast<RealVal::RealValueType>(i)));
 #endif // _MSC_VER
-// <-- 20100128
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4001,8 +3983,9 @@ RealVal* GetRealVal(IntVal::IntValueType i)
 static inline
 RealVal* GetRealVal(RealVal::RealValueType d)
 {
-  if ((d == VLFLOOR(d)) && (d <= 2147483647))
+  if ((d == VLFLOOR(d)) && (d <= 2147483647)) {
     return GetRealVal(static_cast<IntVal::IntValueType>(d));
+  }
   return new RealVal(static_cast<RealVal::RealValueType>(d));
 }
 
@@ -4020,15 +4003,14 @@ Real::Real(const Int & i) : Common(GetRealVal(i.GetValue()))
 
 Real::Real(const Generic & r) : Common(r)
 {
-  if (r.IsReal())
-  {
+  if (r.IsReal()) {
   }
-  else if (r.IsInt())
-  {
+  else if (r.IsInt()) {
     this->Link(GetRealVal(Int(r).GetValue()));
   }
-  else
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, r.PrintType() + L" casted to Real");
+  }
 }
 
 Real::operator double() const
@@ -4111,18 +4093,15 @@ Real& Real::operator=(const double r)
 
 Real& Real::operator=(const Generic & g)
 {
-  if (g.IsReal())
-  {
+  if (g.IsReal()) {
     this->Link(g);
     return *this;
   }
-  else if (g.IsInt())
-  {
+  else if (g.IsInt()) {
     this->Link(GetRealVal(static_cast<IntVal::IntValueType>(Int(g).GetValue())));
     return *this;
   }
-  else
-  {
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Real");
     return *this;
   }
@@ -4298,8 +4277,7 @@ CharVal* GetCharVal(wchar_t ch)
   try {
     return ((ch < 256) ? ValCache->charv[(wchar_t)ch] : new CharVal(ch));
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4315,8 +4293,9 @@ Char::Char(wchar_t ch) : Common(GetCharVal(ch))
 
 Char::Char(const Generic & G) : Common(G)
 {
-  if (!this->IsChar())
+  if (!this->IsChar()) {
     M4LibError::ReportError(ML_CAST_ERROR, G.PrintType() + L" casted to Char");
+  }
 }
 
 Char::operator wchar_t()
@@ -4338,8 +4317,9 @@ Char& Char::operator=(const wchar_t i)
 
 Char & Char::operator=(const Generic & g)
 {
-  if (!g.IsChar())
+  if (!g.IsChar()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Char");
+  }
 
   this->Link(g);
   return *this;
@@ -4387,8 +4367,7 @@ QuoteVal* GetQuoteVal(const wchar_t* c)
   try {
     return ((c == NULL) ? ValCache->quotev : new QuoteVal(wstring(c)));
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4408,8 +4387,9 @@ Quote::Quote(const wchar_t * c) : Common(GetQuoteVal(c))
 
 Quote::Quote(const Generic & g) : Common(g)
 {
-  if (!this->IsQuote())
+  if (!this->IsQuote()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Quote");
+  }
 }
 
 Quote & Quote::operator=(const Quote & i)
@@ -4432,9 +4412,9 @@ Quote & Quote::operator=(const wstring & c)
 
 Quote & Quote::operator=(const Generic & g)
 {
-  if (!g.IsQuote())
+  if (!g.IsQuote()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Quote");
-
+  }
   this->Link(g);
   return *this;
 }
@@ -4449,15 +4429,15 @@ wstring Quote::GetValue() const
 *  DLObject
 *
 **************************************************************************/
-DLObject::DLObject(const wstring & name, DlClass *p)
-  : Common(new DLObjectVal(name, p))
+DLObject::DLObject(const wstring & name, DlClass *p) : Common(new DLObjectVal(name, p))
 {
 }
 
 DLObject::DLObject(const Generic & g) : Common(g)
 {
-  if (!this->IsDLObject())
+  if (!this->IsDLObject()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to DLObject");
+  }
 }
 
 DLObject & DLObject::operator=(const DLObject & i)
@@ -4468,9 +4448,9 @@ DLObject & DLObject::operator=(const DLObject & i)
 
 DLObject & DLObject::operator=(const Generic & g)
 {
-  if (!g.IsDLObject())
+  if (!g.IsDLObject()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to DLObject");
-
+  }
   this->Link(g);
   return *this;
 }
@@ -4521,8 +4501,9 @@ Text::Text(const wchar_t* cr) : Common(GetTextVal(cr))
 
 Text::Text(const Generic & m) : Common(m)
 {
-  if (!this->IsText())
+  if (!this->IsText()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Text");
+  }
 }
 
 wstring Text::GetValue() const
@@ -4550,9 +4531,9 @@ Text & Text::operator=(const wstring & i)
 
 Text & Text::operator=(const Generic & g)
 {
-  if (!g.IsText())
+  if (!g.IsText()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Text");
-
+  }
   this->Link(g);
   return *this;
 }
@@ -4564,13 +4545,11 @@ Text & Text::operator=(const Generic & g)
 **************************************************************************/
 void TokenVal::WriteVal (ostream & ostr) const
 {
-  if (IsString())
-  {
+  if (IsString()) {
     string tmpstr (TBWSTR::wstring2string(GetString()));
     ostr << 'm' << (int) tmpstr.length() << "," << tmpstr;
   }
-  else
-  {
+  else {
     ostringstream o;
     this->value.WriteVal(o);
     string tmpstr (o.str());
@@ -4589,8 +4568,7 @@ TokenVal* GetTokentVal(const wchar_t* c)
   try {
     return ((c == NULL) ? ValCache->tokenv : new TokenVal(wstring(c)));
   }
-  catch (bad_alloc e)
-  {
+  catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4610,8 +4588,9 @@ Token::Token(const wchar_t* cr) : Common(GetTokentVal(cr))
 
 Token::Token(const Generic & m) : Common(m)
 {
-  if (!this->IsToken())
+  if (!this->IsToken()) {
     M4LibError::ReportError(ML_CAST_ERROR, m.PrintType() + L" casted to Token");
+  }
 }
 
 const Generic & Token::GetValue() const
@@ -4621,10 +4600,7 @@ const Generic & Token::GetValue() const
 
 wstring Token::GetString() const
 {
-// 20100614 -->
-//  return static_cast<const TokenVal *>(mvp)->GetValue();
   return static_cast<const TokenVal *>(mvp)->GetString();
-// <-- 20100614
 }
 
 Token & Token::operator=(const Token & i)
@@ -4647,8 +4623,9 @@ Token & Token::operator=(const wstring & i)
 
 Token & Token::operator=(const Generic & g)
 {
-  if (!g.IsToken())
+  if (!g.IsToken()) {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Token");
+  }
 
   this->Link(g);
   return *this;
@@ -4675,13 +4652,11 @@ MetaivVal * DRPtr::GetPtr() const
 
 DRPtr & DRPtr::operator=(const Common & g)
 {
-  if (g.IsDRPtr())
-  {
+  if (g.IsDRPtr()) {
     this->Link(g);
     return *this;
   }
-  else
-  {
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to DRPtr");
     return *this;
   }
@@ -4744,13 +4719,11 @@ Time::Time() : Common(new TimeVal())
 
 Time & Time::operator=(const Common & g)
 {
-  if (g.IsTime())
-  {
+  if (g.IsTime()) {
     this->Link(g);
     return *this;
   }
-  else
-  {
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, g.PrintType() + L" casted to Time");
     return *this;
   }
@@ -4780,13 +4753,11 @@ Function::Function(const wchar_t* nm, vdm_function_ptr p) : Common(new FunctionV
 
 Function & Function::operator=(const Common & c)
 {
-  if (c.IsFunction())
-  {
+  if (c.IsFunction()) {
     this->Link(c);
     return *this;
   }
-  else
-  {
+  else {
     M4LibError::ReportError(ML_CAST_ERROR, c.PrintType() + L" casted to Function");
     return *this;
   }
@@ -4811,8 +4782,7 @@ int VDMLibControl::initiated = 0; // Inititialised to zero by compiler.
 
 void VDMLibControl::init()
 {
-  if (VDMLibControl::initiated == 0)
-  {
+  if (VDMLibControl::initiated == 0) {
     CopyOnModify = true;
 #ifdef VDM_FINGERPRINT
     Fingerprint::crcgen();
@@ -4837,8 +4807,9 @@ static wstring * res; // must be static since we return its c_str().
 
 const wchar_t * vdmdlgetsymtag(VDMRecInfoMap *m, int tag)
 {
-  if (!res)
+  if (!res) {
     res = new wstring;
+  }
   m->GetSymTag(tag, *res);
   return res->c_str();
 }
@@ -4983,8 +4954,7 @@ void VDMSerializeInfoMap::Register(const wstring & typeidname,
   typedef pair<VDMSerializeInfoMap_t::iterator,bool>  pair_ib_t;
   vdm_Seri vs(deseri, seri);
   pair_ib_t p = this->mapvalue.insert(VDMSerializeInfoMap_t::value_type(typeidname, vs));
-  if (p.second == false)
-  { // Existed
+  if (p.second == false) { // Existed
     cerr << "Register: duplicate typeinfo" << TBWSTR::wstring2string(typeidname) << endl;
   }
 }
@@ -5002,8 +4972,7 @@ const vdm_Seri * VDMSerializeInfoMap::LookUp(const wstring & typeidname)
 string ReadToken(istream& istr)
 {
   string ret;
-  while(!istr.eof())
-  {
+  while(!istr.eof()) {
     char c;
     istr.get(c);
     if( c == ',' ) break;
@@ -5027,8 +4996,7 @@ double ReadDouble(istream& istr)
 int ReadChar(istream& istr)
 {
   string s;
-  while(!istr.eof())
-  {
+  while(!istr.eof()) {
     int n = istr.peek();
     if( (n < '0') || (n > '9') ) break;
     char c;
@@ -5043,8 +5011,7 @@ wstring ReadString(istream& istr)
 {
   int length = ReadInteger(istr);
   string s;
-  for(int i = 1; i <= length; i++ )
-  {
+  for(int i = 1; i <= length; i++ ) {
     char c;
     istr.get(c);
     s += c;
@@ -5058,12 +5025,10 @@ Generic ReadVal(istream& istr)
   char ch;
   istr.get(ch);
   switch (ch){
-    case 'a': // Map
-    {
+    case 'a': {// Map
       int length = ReadInteger(istr);
       Map r;
-      for (int i = 1; i <= length; i++)
-      {
+      for (int i = 1; i <= length; i++) {
         Generic dom (ReadVal (istr));
         Generic rng (ReadVal (istr));
         r.Insert (dom, rng);
@@ -5071,98 +5036,88 @@ Generic ReadVal(istream& istr)
       res = r;
       break;
     }
-    case 'b': // Sequence
-    {
+    case 'b': {// Sequence
       int length = ReadInteger(istr);
       Sequence r;
-      for (int i = 1; i <= length; i++)
+      for (int i = 1; i <= length; i++) {
         r.ImpAppend (ReadVal (istr));
+      }
       res = r;
       break;
     }
-    case 'c': // Set
-    {
+    case 'c': {// Set
       int length = ReadInteger(istr);
       Set r;
-      for (int i = 1; i <= length; i++)
+      for (int i = 1; i <= length; i++) {
         r.Insert (ReadVal (istr));
+      }
       res = r;
       break;
     }
-    case 'd': // Record
-    {
+    case 'd': {// Record
       int tag = ReadInteger(istr);
       int length = ReadInteger(istr);
       Record r (tag, length);
 
-      for (int i = 1; i <= length; i++)
+      for (int i = 1; i <= length; i++) {
         r.SetField (i, ReadVal (istr));
-
+      }
       res = r;
       break;
     }
-    case 'e': // Tuple
-    {
+    case 'e': {// Tuple
       int length = ReadInteger(istr);
       Tuple r (length);
-      for (int i = 1; i <= length; i++)
+      for (int i = 1; i <= length; i++) {
         r.SetField (i, ReadVal (istr));
+      }
       res = r;
       break;
     }
-    case 'f': // Int
-    {
+    case 'f': {// Int
       int val = ReadInteger(istr);
       Int r(val);
       res = r;
       break;
     }
-    case 'g': // Nil
-    {
+    case 'g': {// Nil
       Nil r;
       res = r;
       break;
     }
-    case 'h': // Bool
-    {
+    case 'h': {// Bool
       int val = ReadInteger(istr);
       Bool r(val != 0);
       res = r;
       break;
     }
-    case 'i': // Real
-    {
+    case 'i': {// Real
       double val = ReadDouble(istr);
       Real r(val);
       res = r;
       break;
     }
-    case 'j': // Char
-    {
+    case 'j': {// Char
       Char r(ReadChar(istr));
       res = r;
       break;
     }
-    case 'k': // Quote
-    {
+    case 'k': {// Quote
       Quote r (ReadString(istr));
       res = r;
       break;
     }
-    case 'l': // Text
-    {
+    case 'l': {// Text
       Text r (ReadString(istr));
       res = r;
       break;
     }
-    case 'm': // Token
-    {
+    case 'm': {// Token
       Token r (ReadString(istr));
       res = r;
       break;
     }
-    case 'n': // Container types
-    {
+    case 'n': {// Container types
       wstring id = ReadString(istr);
       char dummy;istr.get(dummy); // skip ','
       const vdm_Seri * vs = VDMGetDefaultSerializeInfoMap().LookUp(id);
@@ -5174,12 +5129,10 @@ Generic ReadVal(istream& istr)
       }
       break;
     }
-    case 'o': //
-    {
+    case 'o': {
       int length = ReadInteger(istr);
       string s;
-      for (int i = 1; i <= length; i++)
-      {
+      for (int i = 1; i <= length; i++) {
         char c;
         istr.get(c);
         s += c;
@@ -5189,8 +5142,7 @@ Generic ReadVal(istream& istr)
       res = mk_token(g) ;
       break;
     }
-    default:
-    {
+    default: {
       cerr << L"Unknown key: " << ch << endl << flush;
       break;
     }

@@ -60,8 +60,8 @@ imports
 
   from TD
    operations 
-     GenInvDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration;
-     GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration,
+     GenInvEqOrdDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration;
+     GenInvEqOrdDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration,
 
   from CGMAIN all,
   from TPGEN all,
@@ -517,7 +517,7 @@ GenHFile(cs) ==
             others                              -> cl_l := cl_l ^ typedefs
           end;
 
-        pub_l := pub_l ^ TD`GenInvDecl(BC`Rename(nm), type_l);
+        pub_l := pub_l ^ TD`GenInvEqOrdDecl(BC`Rename(nm), type_l);
 
         for all fnm in set dom fcts do
 	  def fctas = fcts(fnm);
@@ -682,7 +682,7 @@ class definition.
             type_l := type_l ^ [tp];
           cpp_l := GenStaticInstVarInit(iVars, nm);
           cpp_l := cpp_l ^ GenClassInit(nm, type_l);
-          cpp_l := cpp_l ^ TD`GenInvDef(type_l);
+          cpp_l := cpp_l ^ TD`GenInvEqOrdDef(type_l);
           if not CGAUX`GetHasDefaultConstr()
           then 
             cpp_l := cpp_l ^ GenConstructorDef_cc(nm, iVars, inh = [], useslib <> nil); 
@@ -918,8 +918,7 @@ GenJavaFile(mk_AS`Class(nm, -, inh, defs,useslib, clcid), isInterface) ==
           
        prtype_l := DS`GenTypeDef(nm,type_l);
 
-       if (CGMAIN`get_preandpost_option()) 
-       then cpp_l := cpp_l ^ TD`GenInvDef(type_l);
+       cpp_l := cpp_l ^ TD`GenInvEqOrdDef(type_l);
 
        if (not (CGMAIN`get_onlytypes_option()))
        then

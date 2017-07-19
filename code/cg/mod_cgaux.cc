@@ -1844,7 +1844,9 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
         else
 #endif // VDMPP
         {
-          if ( ( (i == 3) && ( (str.find(L"inv") == 0) || (str.find(L"pre") == 0) ) ) ||
+          if ( ( (i == 2) && (str.find(L"eq") == 0) ) ||
+               ( (i == 3) && ( (str.find(L"inv") == 0) || (str.find(L"pre") == 0) ||
+                               (str.find(L"ord") == 0) ) ) ||
                ( (i == 4) && ( str.find(L"post") == 0 ) ) )
             res +=L"_";
           else

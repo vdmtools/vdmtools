@@ -24,17 +24,18 @@ imports
    from CI all,
    from DS all,
    from FD all,
+   from CGMAIN all,
    from CGAUX all
 
 exports
     operations
 #ifdef VDMSL
-      GenInvDecl: seq of AS`TypeDef ==> CPP`CPPAS;
+      GenInvEqOrdDecl: seq of AS`TypeDef ==> CPP`CPPAS;
 #endif VDMSL
 #ifdef VDMPP
-      GenInvDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration;
+      GenInvEqOrdDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration;
 #endif VDMPP
-      GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
+      GenInvEqOrdDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
 #ifdef VDMSL
       GenVDMLibInit: AS`Name * map AS`Name to AS`TypeDef * [AS`StateDef]
                      ==> seq of CPP`FunctionDefinition
@@ -46,18 +47,18 @@ operations
 
 \end{vdm_al}
 
-The operations $GenInvDecl$ generates a sequence of function
+The operations $GenInvEqOrdDecl$ generates a sequence of function
 declarations corresponding to invariants on the type definitions in
 $td-l$.
 
 \begin{vdm_al}
 #ifdef VDMSL
-  GenInvDecl: seq of AS`TypeDef ==> CPP`CPPAS
-  GenInvDecl(td_l) ==
+  GenInvEqOrdDecl: seq of AS`TypeDef ==> CPP`CPPAS
+  GenInvEqOrdDecl(td_l) ==
 #endif
 #ifdef VDMPP
-  GenInvDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration
-  GenInvDecl(-, td_l) ==
+  GenInvEqOrdDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration
+  GenInvEqOrdDecl(-, td_l) ==
 #endif
 #ifdef VDMSL
   ( dcl cpp : CPP`CPPAS := [];
@@ -66,36 +67,63 @@ $td-l$.
   ( dcl cpp : seq of CPP`MemberDeclaration := [];
 #endif VDMPP
     for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, -, -) in td_l do
-      if Inv <> nil then
+      if Inv <> nil or Eq <> nil or Ord <> nil
+      then
 #ifdef VDMSL
         def ds_l = [DS`GenBoolType()];
 #endif VDMSL
 #ifdef VDMPP
-        --def ds_l = [BC`GenFctSpecifier(<VIRTUAL>), DS`GenBoolType()];
         def ds_l = [BC`GenStorageClassSpecifier(<STATIC>), DS`GenBoolType()];
 #endif VDMPP
-            fnm = BC`GivePrePostNm(tnm, "inv");
             argtp = TPGEN`Rep2CppTypeSpecifier(CGAUX`FromAS2RepType(shape), shape);
             ref = BC`GenRefAbsDecl(nil, nil);
             arg_decl = [BC`GenArgAbs( [BC`GenTypeSpecifier(<CONST>), argtp], ref)];
-            fndecl = BC`GenFctDecl(fnm, arg_decl)
+            arg2_decl = arg_decl ^ arg_decl;
         in
+         (if Inv <> nil
+          then 
+            def fnm = BC`GivePrePostNm(tnm, "inv");
+                fndecl = BC`GenFctDecl(fnm, arg_decl)
+            in
 #ifdef VDMSL
-          cpp := cpp ^ [ BC`GenIdentDecl([], ds_l, fndecl, nil) ];
-#endif
+              cpp := cpp ^ [ BC`GenIdentDecl([], ds_l, fndecl, nil) ];
+#endif VDMSL
 #ifdef VDMPP
-          cpp := cpp ^ [ BC`GenMemberSpec(ds_l, fndecl) ];
-#endif
+              cpp := cpp ^ [ BC`GenMemberSpec(ds_l, fndecl) ];
+#endif VDMPP
+          if Eq <> nil
+          then 
+            def fnm = BC`GivePrePostNm(tnm, "eq");
+                fndecl = BC`GenFctDecl(fnm, arg2_decl)
+            in
+#ifdef VDMSL
+              cpp := cpp ^ [ BC`GenIdentDecl([], ds_l, fndecl, nil) ];
+#endif VDMSL
+#ifdef VDMPP
+              cpp := cpp ^ [ BC`GenMemberSpec(ds_l, fndecl) ];
+#endif VDMPP
+          if Ord <> nil
+          then 
+            def fnm = BC`GivePrePostNm(tnm, "ord");
+                fndecl = BC`GenFctDecl(fnm, arg2_decl)
+            in
+#ifdef VDMSL
+              cpp := cpp ^ [ BC`GenIdentDecl([], ds_l, fndecl, nil) ];
+#endif VDMSL
+#ifdef VDMPP
+              cpp := cpp ^ [ BC`GenMemberSpec(ds_l, fndecl) ];
+#endif VDMPP
+         );
     return cpp
   );
 \end{vdm_al}
 
-The operation $GenInvDef$ generates a sequence of function definitions
+The operation $GenInvEqOrdDef$ generates a sequence of function definitions
 corresponding to invariants on the type definitions in $td-l$.
 
 \begin{vdm_al}
-  GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration
-  GenInvDef(td_l) ==
+  GenInvEqOrdDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration
+  GenInvEqOrdDef(td_l) ==
   ( dcl
 #ifdef VDMPP
         cidtocpp: map int to seq of CPP`Declaration := {|->},
@@ -105,9 +133,11 @@ corresponding to invariants on the type definitions in $td-l$.
     for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, acc, -) in td_l do
 #endif VDMSL
 #ifdef VDMPP
-    for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, acc, tpcid) in td_l do
+    --for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, acc, tpcid) in td_l do
+    for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, acc, -) in td_l do
 #endif VDMPP
-      if Inv <> nil then
+     (if Inv <> nil
+      then
         let mk_AS`Invariant(pat, expr, -) = Inv,
             ci =  CI`NilContextId,
             fnm = BC`GivePrePostName(tnm, "inv"),
@@ -118,10 +148,44 @@ corresponding to invariants on the type definitions in $td-l$.
 #ifdef VDMPP
           if CPP`isJAVA()
           then
-            cidtocpp := cidtocpp munion {tpcid |-> FD`GenFctDef(fdef,false)}
+            if CGMAIN`get_preandpost_option()
+            then
+              cidtocpp := cidtocpp munion {Inv.cid |-> FD`GenFctDef(fdef,false)}
+            else skip
           else
 #endif VDMPP
             cpp := cpp ^ FD`GenFctDef(fdef,false);
+      if Eq <> nil then
+        let mk_AS`Equal(lhs, rhs, expr, -) = Eq,
+            ci =  CI`NilContextId,
+            fnm = BC`GivePrePostName(tnm, "eq"),
+            ftp = mk_AS`TotalFnType([shape,shape],mk_AS`BooleanType(ci),ci),
+            fnbd = mk_AS`FnBody(expr,ci),
+            fdef = mk_AS`ExplFnDef(fnm,[],ftp,[[lhs,rhs]],fnbd,nil,nil,acc, true, nil, ci)
+        in
+#ifdef VDMPP
+          if CPP`isJAVA()
+          then
+            cidtocpp := cidtocpp munion {Eq.cid |-> FD`GenFctDef(fdef,false)}
+          else
+#endif VDMPP
+            cpp := cpp ^ FD`GenFctDef(fdef,false);
+      if Ord <> nil then
+        let mk_AS`Order(lhs, rhs, expr, -) = Ord,
+            ci =  CI`NilContextId,
+            fnm = BC`GivePrePostName(tnm, "ord"),
+            ftp = mk_AS`TotalFnType([shape,shape],mk_AS`BooleanType(ci),ci),
+            fnbd = mk_AS`FnBody(expr,ci),
+            fdef = mk_AS`ExplFnDef(fnm,[],ftp,[[lhs,rhs]],fnbd,nil,nil,acc, true, nil, ci)
+        in
+#ifdef VDMPP
+          if CPP`isJAVA()
+          then
+            cidtocpp := cidtocpp munion {Ord.cid |-> FD`GenFctDef(fdef,false)}
+          else
+#endif VDMPP
+            cpp := cpp ^ FD`GenFctDef(fdef,false);
+     );
 #ifdef VDMPP
     if CPP`isJAVA()
     then

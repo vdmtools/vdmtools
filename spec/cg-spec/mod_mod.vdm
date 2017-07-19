@@ -56,10 +56,10 @@ imports
 
 --  from TD
 --    operations
---               GenInvDecl: seq of AS`TypeDef ==> CPP`CPPAS;
+--               GenInvEqOrdDecl: seq of AS`TypeDef ==> CPP`CPPAS;
 --               GenVDMLibInit: AS`Name * map AS`Name to AS`TypeDef ==>
 --                              seq of CPP`FunctionDefinition;
---               GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration,
+--               GenInvEqOrdDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration,
 
   from VD
     operations
@@ -664,7 +664,7 @@ GenTypes( nm, type_m, sd ) ==
   for all tpnm in set dom type_m do
     (type_l := type_l ^ [ type_m(tpnm) ];
   def - = CGAUX`InsertGlobalName(tpnm) in skip;);
-  return DS`GenTypeDef(nm, type_l) ^ TD`GenInvDecl(type_l);
+  return DS`GenTypeDef(nm, type_l) ^ TD`GenInvEqOrdDecl(type_l);
  );
 \end{vdm_al}
 
@@ -681,7 +681,7 @@ GenTypeInvFcts(type_m, sd) ==
     in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, nil, nil, <DEFAULT_AS>, CI`NilContextId)];
   for all tpnm in set dom type_m do
     type_l := type_l ^ [ type_m(tpnm) ];
-  return TD`GenInvDef(type_l));
+  return TD`GenInvEqOrdDef(type_l));
 \end{vdm_al}
 
 \subsection{Value and State Definitions}

@@ -46,20 +46,16 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenInvDecl(const TYPE_CPP_Name & cnm,
 #endif // VDMPP
 
   size_t len_td_l = td_l.Length();
-  for (size_t idx = 1; idx <= len_td_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_td_l; idx++) {
     const TYPE_AS_TypeDef & td (td_l[idx]);
     const Generic & Inv (td.GetField(pos_AS_TypeDef_Inv));
-    if (! Inv.IsNil())
-    {
-      TYPE_CPP_Name fnm (vdm_BC_GivePrePostNm(td.GetRecord(pos_AS_TypeDef_nm), ASTAUX::MkId(L"inv")));
+    const Generic & Eq (td.GetField(pos_AS_TypeDef_Eq));
+    const Generic & Ord (td.GetField(pos_AS_TypeDef_Ord));
+    if (!Inv.IsNil() || !Eq.IsNil() || !Ord.IsNil()) {
 
       SEQ<TYPE_CPP_DeclSpecifier> ds_l;
 #ifdef VDMPP
-// 20110629 -->
-      //ds_l.ImpAppend(vdm_BC_GenFctSpecifier(quote_VIRTUAL));
       ds_l.ImpAppend(vdm_BC_GenStorageClassSpecifier(quote_STATIC));
-// <-- 20110629
 #endif //VDMPP
       ds_l.ImpAppend(GenBoolType());
 
@@ -72,14 +68,44 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenInvDecl(const TYPE_CPP_Name & cnm,
 
       type_dL arg_dcl;
       arg_dcl.ImpAppend(vdm_BC_GenArgAbs(decls, ref));
-      TYPE_CPP_FctDecl fndecl (vdm_BC_GenFctDecl(fnm, arg_dcl));
+
+      type_dL arg2_dcl;
+      arg2_dcl.ImpAppend(vdm_BC_GenArgAbs(decls, ref));
+      arg2_dcl.ImpAppend(vdm_BC_GenArgAbs(decls, ref));
+
+      if (!Inv.IsNil()) {
+        TYPE_CPP_Name fnm (vdm_BC_GivePrePostNm(td.GetRecord(pos_AS_TypeDef_nm), ASTAUX::MkId(L"inv")));
+        TYPE_CPP_FctDecl fndecl (vdm_BC_GenFctDecl(fnm, arg_dcl));
 
 #ifdef VDMSL
-      cpp.ImpAppend(vdm_BC_GenIdentDecl(SEQ<TYPE_CPP_Annotation>(), ds_l, fndecl, Nil()));
+        cpp.ImpAppend(vdm_BC_GenIdentDecl(SEQ<TYPE_CPP_Annotation>(), ds_l, fndecl, Nil()));
 #endif //VDMSL
 #ifdef VDMPP
-      cpp.ImpAppend(vdm_BC_GenMemberSpec(ds_l, fndecl));
+        cpp.ImpAppend(vdm_BC_GenMemberSpec(ds_l, fndecl));
 #endif //VDMPP
+      }
+      if (!Eq.IsNil()) {
+        TYPE_CPP_Name fnm (vdm_BC_GivePrePostNm(td.GetRecord(pos_AS_TypeDef_nm), ASTAUX::MkId(L"eq")));
+        TYPE_CPP_FctDecl fndecl (vdm_BC_GenFctDecl(fnm, arg2_dcl));
+
+#ifdef VDMSL
+        cpp.ImpAppend(vdm_BC_GenIdentDecl(SEQ<TYPE_CPP_Annotation>(), ds_l, fndecl, Nil()));
+#endif //VDMSL
+#ifdef VDMPP
+        cpp.ImpAppend(vdm_BC_GenMemberSpec(ds_l, fndecl));
+#endif //VDMPP
+      }
+      if (!Ord.IsNil()) {
+        TYPE_CPP_Name fnm (vdm_BC_GivePrePostNm(td.GetRecord(pos_AS_TypeDef_nm), ASTAUX::MkId(L"ord")));
+        TYPE_CPP_FctDecl fndecl (vdm_BC_GenFctDecl(fnm, arg2_dcl));
+
+#ifdef VDMSL
+        cpp.ImpAppend(vdm_BC_GenIdentDecl(SEQ<TYPE_CPP_Annotation>(), ds_l, fndecl, Nil()));
+#endif //VDMSL
+#ifdef VDMPP
+        cpp.ImpAppend(vdm_BC_GenMemberSpec(ds_l, fndecl));
+#endif //VDMPP
+      }
     }
   }
   return cpp;
@@ -99,6 +125,8 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
   for (size_t idx = 1; idx <= len_td_l; idx++) {
     const TYPE_AS_TypeDef & td (td_l[idx]);
     const Generic & Inv (td.GetField(pos_AS_TypeDef_Inv));
+    const Generic & Eq (td.GetField(pos_AS_TypeDef_Eq));
+    const Generic & Ord (td.GetField(pos_AS_TypeDef_Ord));
     if (! Inv.IsNil()) {
       TYPE_AS_Invariant inv (Inv);
       const TYPE_AS_Name & tnm (td.GetRecord(pos_AS_TypeDef_nm));
@@ -136,8 +164,109 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
 
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
-        const TYPE_CI_ContextId & tpcid (td.GetInt(pos_AS_TypeDef_cid));
-        cidtocpp.Insert(tpcid, GenFctDef_FD(fdef, false));
+        if (get_preandpost_option()) {
+          //const TYPE_CI_ContextId & cid (td.GetInt(pos_AS_TypeDef_cid));
+          const TYPE_CI_ContextId & cid (inv.GetInt(pos_AS_Invariant_cid));
+          cidtocpp.Insert(cid, GenFctDef_FD(fdef, false));
+        }
+      }
+      else 
+#endif //VDMPP
+      {
+        cpp.ImpConc(GenFctDef_FD(fdef, false));
+      }
+    }
+    if (! Eq.IsNil()) {
+      TYPE_AS_Equal eq (Eq);
+      const TYPE_AS_Name & tnm (td.GetRecord(pos_AS_TypeDef_nm));
+      const Generic & acc (td.GetField(pos_AS_TypeDef_access));
+
+      TYPE_AS_Name fnm (vdm_BC_GivePrePostName(tnm, ASTAUX::MkId(L"eq")));
+
+      SEQ<TYPE_AS_Type> shape_l;
+      shape_l.ImpAppend(td.GetRecord(pos_AS_TypeDef_shape));
+      shape_l.ImpAppend(td.GetRecord(pos_AS_TypeDef_shape));
+      TYPE_AS_TotalFnType ftp;
+      ftp.Init(shape_l, btp, NilContextId);
+
+      TYPE_AS_Expr expr (eq.GetRecord(pos_AS_Equal_expr));
+      TYPE_AS_FnBody fnbd;
+      fnbd.Init(expr, NilContextId);
+
+      SEQ<TYPE_AS_Pattern> pat_l;
+      pat_l.ImpAppend(eq.GetRecord(pos_AS_Equal_lhs));
+      pat_l.ImpAppend(eq.GetRecord(pos_AS_Equal_rhs));
+
+      SEQ<TYPE_AS_Parameters> pat_ll;
+      pat_ll.ImpAppend(pat_l);
+
+      TYPE_AS_ExplFnDef fdef;
+      fdef.Init(fnm,
+                SEQ<TYPE_AS_TypeVar>(),
+                ftp,
+                pat_ll,
+                fnbd,
+                Nil(),
+                Nil(),
+                acc,
+                Bool(true),
+                Nil(),
+                NilContextId);
+
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        //const TYPE_CI_ContextId & cid (td.GetInt(pos_AS_TypeDef_cid));
+        const TYPE_CI_ContextId & cid (eq.GetInt(pos_AS_Equal_cid));
+        cidtocpp.Insert(cid, GenFctDef_FD(fdef, false));
+      }
+      else 
+#endif //VDMPP
+      {
+        cpp.ImpConc(GenFctDef_FD(fdef, false));
+      }
+    }
+    if (! Ord.IsNil()) {
+      TYPE_AS_Invariant ord (Ord);
+      const TYPE_AS_Name & tnm (td.GetRecord(pos_AS_TypeDef_nm));
+      const Generic & acc (td.GetField(pos_AS_TypeDef_access));
+
+      TYPE_AS_Name fnm (vdm_BC_GivePrePostName(tnm, ASTAUX::MkId(L"ord")));
+
+      SEQ<TYPE_AS_Type> shape_l;
+      shape_l.ImpAppend(td.GetRecord(pos_AS_TypeDef_shape));
+      shape_l.ImpAppend(td.GetRecord(pos_AS_TypeDef_shape));
+      TYPE_AS_TotalFnType ftp;
+      ftp.Init(shape_l, btp, NilContextId);
+
+      TYPE_AS_Expr expr (ord.GetRecord(pos_AS_Order_expr));
+      TYPE_AS_FnBody fnbd;
+      fnbd.Init(expr, NilContextId);
+
+      SEQ<TYPE_AS_Pattern> pat_l;
+      pat_l.ImpAppend(ord.GetRecord(pos_AS_Order_lhs));
+      pat_l.ImpAppend(ord.GetRecord(pos_AS_Order_rhs));
+
+      SEQ<TYPE_AS_Parameters> pat_ll;
+      pat_ll.ImpAppend(pat_l);
+
+      TYPE_AS_ExplFnDef fdef;
+      fdef.Init(fnm,
+                SEQ<TYPE_AS_TypeVar>(),
+                ftp,
+                pat_ll,
+                fnbd,
+                Nil(),
+                Nil(),
+                acc,
+                Bool(true),
+                Nil(),
+                NilContextId);
+
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        //const TYPE_CI_ContextId & cid (td.GetInt(pos_AS_TypeDef_cid));
+        const TYPE_CI_ContextId & cid (ord.GetInt(pos_AS_Order_cid));
+        cidtocpp.Insert(cid, GenFctDef_FD(fdef, false));
       }
       else 
 #endif //VDMPP
@@ -153,8 +282,7 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
       SET<TYPE_CI_ContextId> cidtocppdom (cidtocpp.Dom());
       TYPE_CI_ContextId cid (cidtocppdom.GetElem());
       Generic gg;
-      for (bool bb = cidtocppdom.First (gg); bb; bb = cidtocppdom.Next (gg))
-      {
+      for (bool bb = cidtocppdom.First (gg); bb; bb = cidtocppdom.Next (gg)) {
         TYPE_CI_ContextId tempcid (gg);
 
         Tuple gfp1 (GetCI().GetFilePos(cid));

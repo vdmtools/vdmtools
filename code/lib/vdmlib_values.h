@@ -646,13 +646,18 @@ public:
   MetaivVal * Copy() const { return new BoolVal(this->value); };
 };
 
+#define USE_DEQUE
 //
 // SequenceVal
 //
 class SequenceVal : public MetaivVal
 {
 public:
+#ifdef USE_DEQUE
   typedef std::deque<Common> SequenceValueType;
+#else
+  typedef std::vector<Common> SequenceValueType;
+#endif // USE_DEQUE
 
 private:
   friend class Sequence;
@@ -676,9 +681,11 @@ public:
   SequenceVal & ImpAppend( const Common & g)
   { this->value.push_back(g); this->isString &= g.IsChar(); return *this; };
   SequenceVal & ImpPrepend( const Common & g)
-// for deque
-//  { this->value.insert(this->value.begin(), g); this->isString &= g.IsChar(); return *this; };
+#ifdef USE_DEQUE
   { this->value.push_front(g); this->isString &= g.IsChar(); return *this; };
+#else
+  { this->value.insert(this->value.begin(), g); this->isString &= g.IsChar(); return *this; };
+#endif // USE_DEQUE
 
   int Compare(const MetaivVal & s) const;
 
@@ -863,8 +870,9 @@ public:
   FunctionNameType GetName() const { return this->fnm; };
 
   Sequence Apply (const Sequence & args) const
-  { if (this->value == NULL)
+  { if (this->value == NULL) {
       M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Function pointer is NULL"));
+    }
     return (*this->value)(args);
   };
 

@@ -993,6 +993,8 @@ operations
         preSet : bool := len id > 4 and "pre_" = id(1, ..., 4),
         postSet : bool := len id > 5 and "post_" = id(1, ..., 5),
         invSet : bool := len id > 4 and "inv_" = id(1, ..., 4),
+        eqSet : bool := len id > 3 and "eq_" = id(1, ..., 3),
+        ordSet : bool := len id > 4 and "ord_" = id(1, ..., 4),
         i : nat := 1;
     for ch in id do
      (
@@ -1006,7 +1008,8 @@ operations
           id' := id' ^ [ch]
         else
 #endif VDMPP
-          if ( (preSet or invSet) and i = 4 ) or ( postSet and i = 5 )
+          if ( (eqSet and i = 3) or
+               (preSet or invSet or ordSet) and i = 4 ) or ( postSet and i = 5 )
           then id' := id' ^ "_"
           else id' := id' ^ "_u"
       else id' := id' ^ [ch];

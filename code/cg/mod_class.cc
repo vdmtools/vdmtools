@@ -611,11 +611,11 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
       type_l.ImpAppend (tps[tp]);
     }
 
-    if (! get_onlytypes_option())
-    {
+    if (! get_onlytypes_option()) {
       GenValues(nm, vals);
-      if (isInterface)
+      if (isInterface) {
         cpp_l.ImpConc(GetIdeclL());
+      }
       else {
         pr_l.ImpConc(GenInstVars(iVars));
         cpp_l.ImpConc(GenJavaClassInit());
@@ -623,13 +623,10 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
     }
 
     prtype_l = GenTypeDef_DS(nm,type_l);
-    if (get_preandpost_option())
-          cpp_l.ImpConc(GenInvDef(type_l));
+    cpp_l.ImpConc(GenInvDef(type_l));
 
-    if (! get_onlytypes_option())
-    {
-      if (!isInterface)
-      {
+    if (! get_onlytypes_option()) {
+      if (!isInterface) {
         cpp_l.ImpAppend(GenInstanceVarInit(nm, iVars));
         cpp_l.ImpConc(GenInstanceInv(nm, iVars));
       }
