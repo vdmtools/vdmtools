@@ -288,7 +288,7 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
         cl_l.ImpConc(typedefs);
     }
 
-    pub_l.ImpConc(GenInvDecl(vdm_BC_Rename(nm), type_l));
+    pub_l.ImpConc(GenInvEqOrdDecl(vdm_BC_Rename(nm), type_l));
 
     Set dom_fcts (fcts.Dom());
     Generic fnm;
@@ -503,7 +503,7 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Class & cs)
 
     cpp_l.ImpConc(GenStaticInstVarInit(iVars, nm));
     cpp_l.ImpConc(GenClassInit(nm, type_l));
-    cpp_l.ImpConc(GenInvDef(type_l));
+    cpp_l.ImpConc(GenInvEqOrdDef(type_l));
 
     if (!GetHasDefaultConstr())
       cpp_l.ImpConc (GenConstructorDef_cc (nm, iVars, inh.IsEmpty(), !useslib.IsNil()));
@@ -623,7 +623,7 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
     }
 
     prtype_l = GenTypeDef_DS(nm,type_l);
-    cpp_l.ImpConc(GenInvDef(type_l));
+    cpp_l.ImpConc(GenInvEqOrdDef(type_l));
 
     if (! get_onlytypes_option()) {
       if (!isInterface) {

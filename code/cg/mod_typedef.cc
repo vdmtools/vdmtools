@@ -24,17 +24,17 @@
 #include "BC.h"
 
 #ifdef VDMSL
-// GenInvDecl
+// GenInvEqOrdDecl
 // td_l : seq of AS`TypeDef
 // ==> CPP`CPPAS
-TYPE_CPP_CPPAS vdmcg::GenInvDecl(const SEQ<TYPE_AS_TypeDef> & td_l)
+TYPE_CPP_CPPAS vdmcg::GenInvEqOrdDecl(const SEQ<TYPE_AS_TypeDef> & td_l)
 #endif //VDMSL
 #ifdef VDMPP
-// GenInvDecl
+// GenInvEqOrdDecl
 // cnm : CPP`Name
 // td_l : seq of AS`TypeDef
 // ==> seq of CPP`MemberDeclaration
-SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenInvDecl(const TYPE_CPP_Name & cnm,
+SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenInvEqOrdDecl(const TYPE_CPP_Name & cnm,
                                                   const SEQ<TYPE_AS_TypeDef> & td_l)
 #endif //VDMPP
 {
@@ -111,10 +111,10 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenInvDecl(const TYPE_CPP_Name & cnm,
   return cpp;
 }
 
-// GenInvDef
+// GenInvEqOrdDef
 // td_l : seq of AS`TypeDef
 // ==> CPP`CPPAS | seq of CPP`MemberDeclaration
-Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
+Sequence vdmcg::GenInvEqOrdDef(const SEQ<TYPE_AS_TypeDef> & td_l)
 {
   TYPE_AS_BooleanType btp;
   btp.Init(NilContextId);

@@ -426,7 +426,7 @@ TYPE_CPP_CPPAS vdmcg::GenTypes(const TYPE_AS_Name & nm, const MAP<TYPE_AS_Name, 
   SEQ<TYPE_AS_TypeDef> type_l (TypeMapToSeq(type_m, sd));
   TYPE_CPP_CPPAS cpp;
   cpp.ImpConc (GenTypeDef_DS(nm, type_l));
-  cpp.ImpConc (GenInvDecl(type_l));
+  cpp.ImpConc (GenInvEqOrdDecl(type_l));
   return cpp;
 }
 
@@ -438,7 +438,7 @@ TYPE_CPP_CPPAS vdmcg::GenTypeInvFcts(const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & 
                                      const Generic & sd)
 {
   TYPE_CPP_CPPAS cpp;
-  cpp.ImpConc (GenInvDef(TypeMapToSeq(type_m, sd)));
+  cpp.ImpConc (GenInvEqOrdDef(TypeMapToSeq(type_m, sd)));
   return cpp;
 }
 

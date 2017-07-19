@@ -20,14 +20,14 @@
 #ifndef __mod_typedef_h__
 #define __mod_typedef_h__
 
-Sequence GenInvDef(const SEQ<TYPE_AS_TypeDef> &);
+Sequence GenInvEqOrdDef(const SEQ<TYPE_AS_TypeDef> &);
 
 #ifdef VDMSL
-TYPE_CPP_CPPAS GenInvDecl(const SEQ<TYPE_AS_TypeDef> &);
+TYPE_CPP_CPPAS GenInvEqOrdDecl(const SEQ<TYPE_AS_TypeDef> &);
 #endif //VDMSL
 
 #ifdef VDMPP
-SEQ<TYPE_CPP_MemberDeclaration> GenInvDecl(const TYPE_CPP_Name &, const SEQ<TYPE_AS_TypeDef> &);
+SEQ<TYPE_CPP_MemberDeclaration> GenInvEqOrdDecl(const TYPE_CPP_Name &, const SEQ<TYPE_AS_TypeDef> &);
 #endif //VDMPP
 
 #ifdef VDMSL
