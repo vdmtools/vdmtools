@@ -37,7 +37,7 @@ ifeq ($(strip $(MAJER_DARWIN_VERSION)),10) # 10.6
 CC      = $(CCPATH)g++
 CXX     = $(CCPATH)g++
 CFLAGS	= -g -I$(INCDIR) -I/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
-LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
+LIBFLAGS = -L. -L$(LIBDIR) -lvdm -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
 else #10.7~
 JDK_HOME = $(shell $(shell readlink $(shell which javac) | xargs dirname)/java_home)
 CFLAGS	= -g -I$(INCDIR) -I$(JDK_HOME)/include -I$(JDK_HOME)/include/darwin
@@ -45,7 +45,7 @@ JNI_LIB_DIR=$(JDK_HOME)/jre/lib/server
 CC      = $(CCPATH)clang++
 CXX     = $(CCPATH)clang++
 CFLAGS	+= -Wno-return-type-c-linkage
-LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK) -L$(JNI_LIB_DIR) -ljvm
+LIBFLAGS = -L. -L$(LIBDIR) -lvdm -liconv -Wl,-syslibroot,$(SDK) -L$(JNI_LIB_DIR) -ljvm
 endif #10.6
 endif #10.5
 endif #10.4
