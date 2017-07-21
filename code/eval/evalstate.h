@@ -16,17 +16,24 @@
 #include "AS.h"
 #include "GLOBAL.h"
 #include "semvalues.h"
-#ifdef VDMPP
-#include "objtab.h"
-#endif // VDMPP
+//#ifdef VDMPP
+//#include "objtab.h"
+//#endif // VDMPP
 #include "stackeval.h"
 #include "dlfactory.h"
+#if __cplusplus >= 201103L
+#include <unordered_map>
+#endif
 
 #ifdef VDMPP
 class ObjTab
 {
 private:
+#if __cplusplus >= 201103L
+  typedef std::unordered_map<int64_t, TYPE_GLOBAL_OBJ_uDesc> ObjTabMapType;
+#else
   typedef std::map<int64_t, TYPE_GLOBAL_OBJ_uDesc> ObjTabMapType;
+#endif
   ObjTabMapType value;
   TYPE_GLOBAL_OBJ_uDesc dummy;
 

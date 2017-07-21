@@ -3483,13 +3483,11 @@ SEQ<Int> StackEval::Permute(const SEQ<Int> & indices_o)
 // ==> ()
 void StackEval::ExeNEWOBJ (const TYPE_AS_Name & nm, const Generic & dlobject)
 {
-// 20120117 -->
   TYPE_AS_Name name (nm);
   Tuple ecn (theState().ExpandClassName(nm, GetCurCl(), Set()));
   if (ecn.GetBoolValue(1)) {
     name = ecn.GetRecord(2);
   }
-// <-- 20120117
 
   if (Settings.DTC() && theState().CheckIfAbstractClass(name)) {
     RTERR::Error(L"ExeNEWOBJ", RTERR_INST_ABS_CL,
@@ -3560,11 +3558,9 @@ void StackEval::ExeINITCLASS (const TYPE_AS_Name & nm, const Int & initno)
   Generic obj_ref (POP());
   SEQ<TYPE_SEM_VAL> const_vals (POPN(initno));
 
-// 20110303 -->
   if (obj_ref.Is(TAG_TYPE_SEM_OBJ_uRef)) {
     theState().SetNewArgs(obj_ref, const_vals);
   }
-// <-- 20110303
 
   PUSH(obj_ref);
   PUSH(const_vals);

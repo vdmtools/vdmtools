@@ -92,7 +92,6 @@ Map EXPANDED::ExpandClassTraces(const TYPE_AS_Class & cl, wostream & wos)
     if (!tracem.IsEmpty())
     {
       EXPANDED::curcl = nm;
-// 20110309 -->
       TYPE_AS_NewExpr ne;
       ne.Init(nm, SEQ<TYPE_AS_Expr>(), NilContextId);
 
@@ -102,8 +101,7 @@ Map EXPANDED::ExpandClassTraces(const TYPE_AS_Class & cl, wostream & wos)
         RTERR::Error(L"ExpandClassTraces", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
 
       EXPANDED::curobj = crres.GetRecord(2);
-      theStackMachine().SetLastRes(sem_undef);  // 20110309
-// <-- 20110309
+      theStackMachine().SetLastRes(sem_undef);
 
       //Map res (ExpandTraceDefs(nm, tracem));
       Map res (ConvertTestCases(ExpandTraceDefs(nm, tracem, wos), wos));
@@ -277,11 +275,6 @@ Set EXPANDED::ExpandRepeatTrace(const TYPE_AS_RepeatTrace & tdef, const SET<TYPE
 // -> set of seq of AS`Expr
 Set EXPANDED::ExpandQualifiedRepeatTrace(const TYPE_AS_QualifiedRepeatTrace & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s)
 {
-// 20110418 -->
-//  SET<TYPE_SEM_BlkEnv> new_ctx_s (ExpandTraceBind(tdef.GetSequence(pos_AS_QualifiedRepeatTrace_binds), ctx_s));
-//  Set expr_l_s (ExpandTraceDef(tdef.GetRecord(pos_AS_QualifiedRepeatTrace_tdef), new_ctx_s));
-//  return ExpandTraceRepeatPat(tdef.GetField(pos_AS_QualifiedRepeatTrace_pat), expr_l_s);
-
   SET<TYPE_SEM_BlkEnv> new_ctx_s (ExpandTraceBind(tdef.GetSequence(pos_AS_QualifiedTrace_binds), ctx_s));
 
   PushCxt(new_ctx_s);
@@ -297,7 +290,6 @@ Set EXPANDED::ExpandQualifiedRepeatTrace(const TYPE_AS_QualifiedRepeatTrace & td
   }
   PopCxt();
   return res;
-// <-- 20110418
 }
 
 // ExpandTraceDefAltn

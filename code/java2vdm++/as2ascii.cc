@@ -1523,14 +1523,11 @@ void AS2ASCII::LetExpr2ASCII(const TYPE_AS_LetExpr & expr, wostream & result)
 void AS2ASCII::LocalDefs2ASCII(const SEQ<TYPE_AS_LocalDef> & localdefs, wostream& result)
 {
   size_t len_localdefs = localdefs.Length();
-  for (size_t idx = 1; idx <= len_localdefs; idx++)
-  {
-    if (idx > 1)
+  for (size_t idx = 1; idx <= len_localdefs; idx++) {
+    if (idx > 1) {
       result << L", ";
+    }
     LocalDef2ASCII(localdefs[idx], result);
-//    if (idx < len_localdefs)
-//      result << L",";
-//    Newline(result); // 20110302
   }
   MakeSpace(result);
 }
@@ -1829,25 +1826,21 @@ void AS2ASCII::SetEnumExpr2ASCII(const TYPE_AS_SetEnumerationExpr & expr, wostre
 
 void AS2ASCII::SeqEnumExpr2ASCII(const TYPE_AS_SeqEnumerationExpr & expr, wostream & result)
 {
-// 20110302 -->
   const SEQ<TYPE_AS_Expr> & expr_l (expr.GetSequence(pos_AS_SeqEnumerationExpr_els));
   size_t len_expr_l = expr_l.Length();
   bool forall = (len_expr_l > 0);
-  for (size_t idx = 1; (idx <= len_expr_l) && forall; idx++)
+  for (size_t idx = 1; (idx <= len_expr_l) && forall; idx++) {
     forall = expr_l[idx].Is(TAG_TYPE_AS_CharLit); 
-  if (forall)
-  {
+  }
+  if (forall) {
     result << L"\"";
-    for (size_t i = 1; i <= len_expr_l; i++)
-    {
+    for (size_t i = 1; i <= len_expr_l; i++) {
       const TYPE_AS_CharLit & cl (expr_l[i]);
       result << cl.GetChar(pos_AS_CharLit_val).GetValue();
     }
     result << L"\"";
     return ;
   }
-// <-- 20110302
-  
   result << L"[";
   MakeSpace(result);
   ExprSequence2ASCII(expr.GetSequence(pos_AS_SeqEnumerationExpr_els), L",", result);

@@ -229,10 +229,7 @@ Tuple vdmcg::Impl2ExplSignature(const SEQ<TYPE_AS_PatTypePair> & partps, const S
   switch (resnmtps.Length())
   {
     case 0:
-// 20111205 -->
-      //restp = Nil();
       restp = TYPE_AS_VoidType().Init(NilContextId);
-// <--20111205
       break;
     case 1: {
       restp = resnmtps[1].GetRecord(pos_AS_NameType_tp);
@@ -1077,11 +1074,9 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
 
     SEQ<TYPE_CPP_Identifier> excs (GenExceptionsHdr());
 
-// 20120213 -->
     if (isEntries(nm)) {
       excs.Clear();
     }
-// <--20120213
 
     if (isabstract) {
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), mods, ds, decl, excs, nil));
@@ -1105,11 +1100,9 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
                              SEQ<TYPE_CPP_Modifier>().ImpAppend(pub), ds, exdecl, excs, vdm_BC_GenBlock(implfb))));
     }
 
-// 20110301 -->
     if ((ASTAUX::ASName2String(nm) == L"toString") &&
          tp.GetSequence(pos_AS_OpType_opdom).IsEmpty() &
-         IsStringType(FromAS2RepType(tp.GetRecord(pos_AS_OpType_oprng))))
-    {
+         IsStringType(FromAS2RepType(tp.GetRecord(pos_AS_OpType_oprng)))) {
       SEQ<TYPE_CPP_Modifier> mods;
       mods.ImpAppend(vdm_BC_GenModifier(quote_PUBLIC));
       type_dL ds;
@@ -1137,7 +1130,6 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                      mods, ds, decl, excs, vdm_BC_GenTryBlock(fb, handlers, Nil())));
     }
-// <--20110301
   }
   else 
 #endif // VDMPP

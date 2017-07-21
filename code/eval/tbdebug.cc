@@ -923,7 +923,7 @@ Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & cls, wostream
         const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
         if (eval_state.Is(TAG_TYPE_STKM_Success)) {
           theStackMachine().PushCurObj(res.GetRecord(2), cls_name, cls_name);
-          theStackMachine().SetLastRes(sem_undef);  // 20110309
+          theStackMachine().SetLastRes(sem_undef);
           wos << L"Current class is now: " << ASTAUX::ASName2String (cls_name) << endl;
           return Bool(true);
         }
@@ -2310,11 +2310,7 @@ void TBDEBUG::UpdateGui (bool printPos, wostream & wos)
 
   POSITION::SetPosition(cid);
 
-// 20121023 -->
-//  if (printPos)
-  if (printPos && (cid != NilContextId))
-// <-- 20121023
-  {
+  if (printPos && (cid != NilContextId)) {
     PrintBreakPosition(wos);
   }
 
@@ -2648,22 +2644,18 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   Generic trnm = Nil();
   Generic tpnm = Nil();
   TYPE_AS_Name clmodnm (defmod);
-  if ( 0 != nos )
-  {
+  if ( 0 != nos ) {
     TYPE_AS_Name n (ASTAUX::MkNameFromStr(params[0], NilContextId));
     TYPE_AS_Ids ids (n.GetSequence(pos_AS_Name_ids));
-    if (ids.Length() == 1)
-    {
+    if (ids.Length() == 1) {
       if (ToolMediator::GetAllVDMModuleNames().InSet(n))
         clmodnm = n;
-      else
-      {
+      else {
         trnm = n; 
         tpnm = AUX::ConstructDoubleName(defmod, n);
       }
     }
-    else
-    {
+    else {
       clmodnm = ASTAUX::GetFirstName(n);
       trnm = ASTAUX::GetSecondName(n);
       tpnm = n;
@@ -2671,8 +2663,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   }
 #endif // VDMSL
 #ifdef VDMPP
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
     wos << L"Please, specify a class name or test name." << endl << flush;
     return;
   }
@@ -2680,8 +2671,9 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   TYPE_AS_Name tpnm (ASTAUX::MkNameFromStr(params[0], NilContextId));
   TYPE_AS_Name clmodnm (ASTAUX::GetFirstName(tpnm));
   Generic trnm = Nil();
-  if (tpnm.GetSequence(pos_AS_Name_ids).Length() > 1)
+  if (tpnm.GetSequence(pos_AS_Name_ids).Length() > 1) {
     trnm = ASTAUX::GetSecondName(tpnm);
+  }
 #endif // VDMPP
 
   bool SavedSetting_DTC(Settings.DTC());
@@ -2692,7 +2684,6 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   bool SavedSetting_RTEE(Settings.RTErrException());
   bool SavedSetting_UsesOldName(theStackMachine().UsesOldName());
 
-// 20120521 -->
 /*
   Settings.DtcOff();
   Settings.PreOff();
@@ -2702,7 +2693,6 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   Settings.RTErrExceptionOff();
   theStackMachine().SetUsesOldName(false);
 */
-// <-- 20120521
 
   Map m;
   try {
@@ -2715,10 +2705,8 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
 
     Set dom_em (em.Dom());
     Generic nm;
-    for (bool bb = dom_em.First(nm); bb; bb = dom_em.Next(nm))
-    {
-      if (trnm.IsNil() || (nm == tpnm))
-      {
+    for (bool bb = dom_em.First(nm); bb; bb = dom_em.Next(nm)) {
+      if (trnm.IsNil() || (nm == tpnm)) {
         m.ImpModify(nm, em[nm]);
       }
     }
@@ -2790,14 +2778,11 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
       }
       wos << wostr.str() << endl;
 
-// 20110311 -->
-      if (exists) 
-      {
+      if (exists) {
         count_skip++;
         wos << L"<SKIP>" << endl;
         continue;
       }
-// <-- 20110311
 
       wstring estr;
       try {

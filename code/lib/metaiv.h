@@ -20,6 +20,9 @@
 #include <vector>
 #include <map>
 #include <typeinfo>
+#if __cplusplus >= 201103L
+#include <unordered_map>
+#endif
 using namespace std;
 
 #ifdef __linux__
@@ -300,8 +303,13 @@ public:
   typedef void (*vdm_pp_function_ptr)(wostream&, const Record&, VDMFormatter vf, bool simple);
 
 private:
+#if __cplusplus >= 201103L
+  typedef unordered_map<int, VDM_RecInfo *> VDMRecInfoMap_t;
+  typedef unordered_map<wstring, VDM_RecInfo *> VDMRecInfoSymTagMap_t;
+#else
   typedef map<int, VDM_RecInfo *> VDMRecInfoMap_t;
   typedef map<wstring, VDM_RecInfo *> VDMRecInfoSymTagMap_t;
+#endif
 
   friend class RecordVal;
   VDMRecInfoMap_t mapvalue;

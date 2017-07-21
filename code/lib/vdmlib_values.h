@@ -378,8 +378,10 @@ public:
   RecordVal(int tag, int size, VDMRecInfoMap & tagspace)
     : MetaivVal(mt_record), value(size), recinfop(tagspace.Register(tag, size)) {};
   RecordVal(const wstring & symtag, const VDMRecInfoMap & tagspace)
-    : MetaivVal(mt_record), recinfop(tagspace.GetInfo(symtag))
-  { this->value.reserve(recinfop->GetSize()); };
+//    : MetaivVal(mt_record), recinfop(tagspace.GetInfo(symtag))
+//  { this->value.reserve(recinfop->GetSize()); };
+    : MetaivVal(mt_record), value(tagspace.GetInfo(symtag)->GetSize()), recinfop(tagspace.GetInfo(symtag))
+  {};
   RecordVal(const RecordVal & r)
     : MetaivVal(mt_record), value(r.value), recinfop(r.recinfop) {};
   ~RecordVal() { this->value.clear(); };
