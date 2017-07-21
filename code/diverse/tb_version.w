@@ -252,15 +252,6 @@ TB_Version::GetToolType() const
   return tb_type;
 }
 
-bool TB_Version::isDLModuleEnabled() const
-{
-#ifdef DL_MODULE_ENABLED
-  return true;
-#else
-  return false;
-#endif // DL_MODULE_ENABLED
-}
-
 bool TB_Version::isDebug() const
 {
 #ifdef _MSC_VER
@@ -321,17 +312,13 @@ public:
   void GetVersionComponents(unsigned short &a, unsigned short &b, unsigned short &c, unsigned short &d) const;
   TB_Type GetToolType () const;
 
-  bool isDLModuleEnabled() const;
   bool isDebug() const;
 };
 
 extern const TB_Version& tb_version;
-extern const TB_Version tb_version_sll;
 extern const TB_Version tb_version_sl;
 extern const TB_Version tb_version_pp;
-extern const TB_Version tb_version_ppl;
 extern const TB_Version tb_version_rt;
-extern const TB_Version tb_version_rtl;
 
 #endif // __tb_version_h__
 @}

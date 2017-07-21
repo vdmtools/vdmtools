@@ -125,7 +125,6 @@ wstring DlLibInfo::GetLoadErrorStr()
                  FORMAT_MESSAGE_ARGUMENT_ARRAY,
                  NULL,
                  GetLastError(),
-//                 MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                  (LPWSTR) &lpMsgBuf,
                  0,
@@ -141,21 +140,17 @@ wstring DlLibInfo::GetLoadErrorStr()
 
 void DlLibInfo::OpenLibrary()
 {
-  if (this->dlLib == NULL)
-  {
+  if (this->dlLib == NULL) {
     // We catch and rethrow any errors relating to opening the
     // dllibrary since we can then close it properly.
-    try
-    {
+    try {
       this->path = this->FullLibName();
       this->dlLib = DLOPEN( path );
-      if (this->dlLib == NULL)
-      {
+      if (this->dlLib == NULL) {
         wstring err (RTERR::GetWhatStr(RTERR_LIB_NOT_DEFINED).GetString() + L"'" + path + L"': " + DLERROR());
         throw DLException(DLException::DLL_LOAD_ERR, err);
       }
-      else
-      {
+      else {
         vdm_log << L"\"" << this->path << L"\" loaded." << endl;
       }
 #ifdef VDMPP
@@ -180,8 +175,9 @@ void DlLibInfo::OpenLibrary()
       {
         unsigned int version = (*(this->dlrecinfodata.functions.vdmgetvdmlibversion))();
         //extern unsigned int GetVDMLibVersion();
-        if (GetVDMLibVersion() != version)
+        if (GetVDMLibVersion() != version) {
           throw DLException(DLException::DLL_LOAD_ERR, RTERR::GetWhatStr(RTERR_LIB_WRONG_VERSION).GetString());
+        }
       }
 
 #ifdef VDMSL
@@ -194,15 +190,17 @@ void DlLibInfo::OpenLibrary()
       }
 #endif //VDMSL
 
-      if (this->dlFunctions.dlInit)
+      if (this->dlFunctions.dlInit) {
         (*(this->dlFunctions.dlInit))(true);
+      }
       else {
         // vdm_err << L"Warning: no InitDLModule function in " << s << endl << flush;
       }
     }
     catch (DLException & e) {
-      if ( NULL != this->dlLib )
+      if ( NULL != this->dlLib ) {
         CloseLibrary();
+      }
       throw e;
     }
   }
@@ -537,34 +535,28 @@ void DlClassInstance::DestroyInstance ()
 // This function convert a name to a name with path.
 wstring DlLibInfo::FullLibName()
 {
-  if( Settings.isDLModuleEnabled() ) {
-    if (TBUTILS::HasPathSpec(this->libName))
-      return this->libName;
-
-    wstring lib (TBUTILS::GetEnv("VDM_DYNLIB"));
-    wstring library (lib.empty() ? wstring(L".") : lib);
-
-    if (library != this->libPath)
-    {
-#ifdef _MSC_VER
-      library += L";" + this->libPath;
-#else
-      library += L":" + this->libPath;
-#endif // _MSC_VAR 
-    }
-    //
-    // library : aaa:bbb:ccc for unix
-    // library : aaa;bbb;ccc for windows
-    wstring res (TBUTILS::tb_Search(library, this->libName));
-    if (res.empty())
-    {
-      wstring err (RTERR::GetWhatStr(RTERR_FILE_DOES_NOT_EXISTS).GetString() + L" (" + this->libName + L")");
-      throw DLException(DLException::DLL_LOAD_ERR, err);
-    }
-    return res;
-  } else {
-    return wstring(L"");
+  if (TBUTILS::HasPathSpec(this->libName)) {
+    return this->libName;
   }
+
+  wstring lib (TBUTILS::GetEnv("VDM_DYNLIB"));
+  wstring library (lib.empty() ? wstring(L".") : lib);
+
+  if (library != this->libPath) {
+#ifdef _MSC_VER
+    library += L";" + this->libPath;
+#else
+    library += L":" + this->libPath;
+#endif // _MSC_VAR 
+  }
+  // library : aaa:bbb:ccc for unix
+  // library : aaa;bbb;ccc for windows
+  wstring res (TBUTILS::tb_Search(library, this->libName));
+  if (res.empty()) {
+    wstring err (RTERR::GetWhatStr(RTERR_FILE_DOES_NOT_EXISTS).GetString() + L" (" + this->libName + L")");
+    throw DLException(DLException::DLL_LOAD_ERR, err);
+  }
+  return res;
 }
 
 int vdm_Compare (const DlClassInstanceHolder &, const DlClassInstanceHolder &)

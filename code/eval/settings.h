@@ -196,7 +196,6 @@ public:
   SET<TYPE_AS_Name> GetJCGDouble() const { return this->jcg_double; }
   
 public:
-  bool isDLModuleEnabled() const;
   void SetName(const SEQ<Char> & name);
 
   bool Profile() const;
@@ -323,7 +322,6 @@ private:
 
   bool uses_corba;
 
-  bool uses_dlmodule;
   SEQ<Char> myname;
 
   bool profile;

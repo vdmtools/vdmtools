@@ -2764,10 +2764,6 @@ TYPE_GLOBAL_SigmaEXP DEF::TranslateDLExportSig(const TYPE_AS_Name & mod_id,
                                                const TYPE_AS_DLExportSig & dlexportsig,
                                                const Generic & useslib)
 {
-  if ( !Settings.isDLModuleEnabled() ) {
-    RTERR::Error(L"TranslateDLExportSig", RTERR_DL_NOT_ENABLED, Nil(), Nil(), Sequence());
-  }
-
   Map val (dlexportsig.get_val());
   Map fns (dlexportsig.get_fns());
   Map ops (dlexportsig.get_ops());

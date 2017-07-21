@@ -139,8 +139,6 @@ void SETTINGS::InitSettings()
 //  this->seed_nondetstmt = -1;
   this->SetCorbaOn();
 
-  this->uses_dlmodule = tb_version.isDLModuleEnabled();
-
   this->ProfileOff();
   //this->ProfileOn();
 
@@ -772,11 +770,6 @@ void SETTINGS::SetCorbaOff()
 bool SETTINGS::UsesCorba() const
 {
   return this->uses_corba;
-}
-
-bool SETTINGS::isDLModuleEnabled() const
-{
-  return this->uses_dlmodule;
 }
 
 void SETTINGS::SetName(const SEQ<Char> & name)

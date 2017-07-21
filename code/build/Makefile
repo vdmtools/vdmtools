@@ -143,7 +143,6 @@ RANLIB=@echo ranlib not needed
 #############################################################################
 # PLATFORM SETUP
 #############################################################################
-USE_DL_MODULE ?= 1
 USE_CORBA_API ?= 1
 
 ifndef JDKHOME
@@ -155,24 +154,16 @@ ifdef JAVA_HOME
 endif
 endif
 
-dummy := $(foreach V, OSTYPE REALOS USE_DL_MODULE USE_CORBA_API, \
+dummy := $(foreach V, OSTYPE REALOS USE_CORBA_API, \
   $(shell echo make is using $V=$($V) >/dev/tty) \
 )
 ifeq ($(strip $(OSTYPE)),Darwin)
 dummy := $(shell echo make is using MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) >/dev/tty)
 endif
 
-ifeq ($(strip $(USE_DL_MODULE)),1)
-#  DL_MODULE = -DDL_MODULE_ENABLED=1
-  DL_MODULE = -DDL_MODULE_ENABLED
 ifeq ($(strip $(OSTYPE)),FreeBSD)
 else
   LIB_DL = -ldl
-endif
-else
-#  DL_MODULE = -DDL_MODULE_ENABLED=0
-  DL_MODULE = 
-  LIB_DL =
 endif
 
 #OPTIMIZE += -O
@@ -181,8 +172,6 @@ endif
 VDMSL=-DVDMSL
 VDMPP=-DVDMPP
 VDMRT=-DVICE -DVDMPP
-
-#VPPEXPRTC=-DVPPEXPRTC
 
 PREPROCESS = $(GCC) -P -E -C
 ifeq ($(strip $(OSTYPE)),Darwin)
@@ -212,7 +201,7 @@ LNKOPT =$(strip $(LNKOPTX))
 GUILNKOPT = $(LNKOPT) $(QTLIBFLAG)
 
 ifeq ($(strip $(OSTYPE)),win32)
-INCDIR = $(SHADOWINC) #$(STLDIR)
+INCDIR = $(SHADOWINC)
 else
 ifeq ($(strip $(OSTYPE)),SunOS)
 ifneq ($(strip $(FLEXROOT)),/usr/sfw)
@@ -450,18 +439,6 @@ CFLAGS-libCG.a += -I/usr/local/include
 CFLAGS-libvdm_shared.a += -I/usr/local/include
 CFLAGS-libCG_shared.a += -I/usr/local/include
 endif
-
-CFLAGS-libeval-sl.a += $(DL_MODULE)
-CFLAGS-libeval-pp.a += $(DL_MODULE)
-CFLAGS-libeval-rt.a += $(DL_MODULE)
-
-#CFLAGS-libservman-sl.a += $(DL_MODULE)
-#CFLAGS-libservman-pp.a += $(DL_MODULE)
-#CFLAGS-libservman-rt.a += $(DL_MODULE)
-
-CFLAGS-tb_version-sl.o += $(DL_MODULE)
-CFLAGS-tb_version-pp.o += $(DL_MODULE)
-CFLAGS-tb_version-rt.o += $(DL_MODULE)
 
 ifdef WINDEBUG
 CFLAGS-tb_version-sl.o += -DWINDEBUG
@@ -1127,9 +1104,6 @@ CC = cl /nologo /Fmvppuml.map
 endif
 
 SHADOWINC = $(patsubst %,-I%,$(subst :, ,$(VPATH)))
-# We use our own STL library. This path is based on VPATH containing a single
-# component. 
-#STLDIR =
 
 WARNINGS = #-W3
 WINGUIOBJS = # winprint.o
@@ -1142,7 +1116,6 @@ LIB_OUTPUT_OPTION = /Fo$% # No space after /Fo
 COMPILE.cc = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) /c
 # _NOTHREADS is defined to avoid including windows.h in stl_config.h
 
-#ARCH_DEFINES = $(MD) /EHsc $(SRCTYPE) /GR /D__STL_USE_NEWALLOC /D__WIN32__
 ARCH_DEFINES = $(MD) /EHsc $(SRCTYPE) /GR /D__WIN32__ 
 
 SRCTYPE = $(TYPE$(suffix $<))
@@ -1616,7 +1589,6 @@ CCPATH = /Developer/usr/bin/
 GCC_VERSION=-4.0
 CC      = $(CCPATH)gcc$(GCC_VERSION)
 CCC     = $(CCPATH)g++$(GCC_VERSION)
-#HASPKGMAKER=1
 endif # 10.4
 
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
@@ -1682,7 +1654,6 @@ endif # >= 10.7
 OS_NAME=$(strip $(MACOSX_DEPLOYMENT_TARGET))
 
 ifndef NOOPT
-#OPTIMIZE += -O3
 OPTIMIZE += -O3 -fPIC
 endif # NOOPT
 
@@ -1696,7 +1667,6 @@ GCC_MAJOR = $(word 1, $(subst ., ,$(strip $(GCCVERSION))))
 GCC_MINOR = $(word 2, $(subst ., ,$(strip $(GCCVERSION))))
 
 FLEXROOT?=/usr
-#FLEXROOT?=$(SDK)/usr
 FLEXINC?=$(FLEXROOT)/include
 FLEXLIB?=$(FLEXROOT)/lib
 FLEXBIN?=$(FLEXROOT)/bin
@@ -1706,7 +1676,6 @@ READLINE_LIB += -lreadline
 LNKOPT += -framework CoreFoundation
 
 STATIC = #-static 
-#DISTARCH = MacOSX-$(OS_NAME)-$(CPU_TYPE)
 DISTARCH = MacOSX-$(OS_NAME)
 DISTCC = gcc$(GCC_VERSION)
 STRIP = strip -S
@@ -1730,7 +1699,6 @@ libvdm.dylib: libvdm.a
 	rm -rf ./artmp
 	mkdir ./artmp
 	cd ./artmp; ar -x ../$<
-	#libtool -dynamic ./artmp/*.o -o $@ -liconv
 	$(CXX) $(ARCH) -dynamiclib -fPIC -o $@ -L. -liconv -Wl,-syslibroot,$(SDK) artmp/*.o
 	rm -rf ./artmp
 
@@ -1738,7 +1706,6 @@ libvdm.dylib: libvdm.a
 	rm -rf ./artmp
 	mkdir ./artmp
 	cd ./artmp; ar -x ../$<
-	#libtool -dynamic ./artmp/*.o -o $@ -liconv -lvdm
 	$(CXX) $(ARCH) -dynamiclib -fPIC -o $@ -L. -liconv -Wl,-syslibroot,$(SDK) artmp/*.o -lvdm
 	rm -rf ./artmp
 
@@ -1890,16 +1857,10 @@ else
 endif
 
 ifneq ($(strip $(OSTYPE)),win32)
-#errmsg_jp_hex.txt: errmsg_jp_sjis.txt convertToHexquad
-#	iconv -f sjis -t utf-8 < $< | ./convertToHexquad > $@
-#errmsg_jp_hex.txt: errmsg_jp_utf8.txt convertToHexquad
 errmsg_jp_hex.txt: errmsg_jp_utf8.txt
-#	cat $< | ./convertToHexquad > $@
 	./convertToHexquad $< $@
 
-#rt_errmsg_jp.cc: rt_errmsg_jp_utf8.cc convertToHexquad
 rt_errmsg_jp.cc: rt_errmsg_jp_utf8.cc
-#	cat $< | ./convertToHexquad > $@
 	./convertToHexquad $< $@
 endif
 
@@ -1949,7 +1910,6 @@ contextinfo.h : contextinfo.stamp
 contextinfotest.cc: contextinfo.stamp
 
 ##contextinfo.cc contextinfo.h contextinfotest.cc: contextinfo.w
-##	$(NUWEB) $(NUWEB_ALWAYS_WRITE) $(NUWEB_NOTEX) $<
 
 contextinfo.dvi: contextinfo.w
 	$(NUWEB) $(NUWEB_NOCODE) $<
@@ -1963,14 +1923,8 @@ contextinfotest: contextinfotest.cc contextinfo.o $(VDMLIB)
 
 preprocess.cc: preprocess.l
 	$(FLEX) -+ -t -Ppp $< > $@
-#	$(FLEX) -+ -t $< | \
-#	perl -ple 's/class istream;/#include <iostream>\nusing namespace std;/;' | \
-#	perl -ple 's/#define yyFlexLexer/#define ppyyFlexLexer/' | \
-#	perl -ple 's/yyfree/ppyyfree/' | \
-#	perl -ple 's/yyrealloc/ppyyrealloc/' | \
-#	perl -ple 's/yyalloc/ppyyalloc/' > $@
-preprocess: preprocess.cc
 
+preprocess: preprocess.cc
 
 #############################################################################
 # Various object that don't seem to belong anywhere else
@@ -2053,7 +2007,6 @@ PROFILING= #-pg  -fno-builtin -fno-inline  #-fno-implicit-templates
 DBMALLOC = # -L../../tmp/dmalloc-3.1.2/ # -L../../tmp/dbmalloc_1.14L -ldbmalloc
 DBMALLOCLIB = # -ldmalloc
 GNULIBPATH = 
-#STLDIR = 
 endif
 
 # Y A C C  definitions
@@ -2268,7 +2221,6 @@ LIB_VDM_DEBUG=libvdm_debug.a
 $(LIB_VDM): $(LIB_VDM)($(LIB_VDM_O))
 $(LIB_VDM_SHARED): $(LIB_VDM_SHARED)($(LIB_VDM_O))
 $(LIB_VDM_FAT): $(LIB_VDM_FAT)($(LIB_VDM_O))
-#$(LIB_VDM_DEBUG): $(LIB_VDM_DEBUG)($(LIB_VDM_O))
 
 ifeq ($(strip $(OSTYPE)),Darwin)
 ifeq ($(strip $(LION_OR_LATER)),true)
@@ -2307,7 +2259,6 @@ LIB_CG_DEBUG=libCG_debug.a
 $(LIB_CG): $(LIB_CG)($(LIB_CG_O))
 $(LIB_CG_SHARED): $(LIB_CG_SHARED)($(LIB_CG_O))
 $(LIB_CG_FAT): $(LIB_CG_FAT)($(LIB_CG_O))
-#$(LIB_CG_DEBUG): $(LIB_CG_DEBUG)($(LIB_CG_O))
 
 LIB_CG_SO=libCG.so
 $(LIB_CG_SO): $(LIB_CG_O)
@@ -2349,7 +2300,6 @@ javascan.cc: javascan.l javaparse.tab.h
 
 javaparse.cc javaparse.tab.h: javaparse.y
 	$(YACC) -pjavap ${YACCOPT} -b $(YACCFILEPREFIX) $(YACCFILEPREFIX).y
-#	perl -pl $(FIXPOSASSIGN) $(YACCFILEPREFIX).tab.c > $(YACCFILEPREFIX).cc
 	cat $(YACCFILEPREFIX).tab.c | $(FIXPOSASSIGN) > $(YACCFILEPREFIX).cc
 	rm -f $(YACCFILEPREFIX).tab.c 
 
@@ -2464,10 +2414,6 @@ $(LIB_MGR_RT): $(LIB_MGR_RT)($(LIB_MGR_RT_O))
 # in two flavours; libgen-pp.a and libgen-sl.a
 ##############################################################################
 
-#LIB_GEN_MODULES = AS CI REP CPP SEM GLOBAL MANGLE UTIL INSTRTP SCHDTP DEBUGTP BC BCCI CGTYPES
-#LIB_GEN_COMMON_O = $(patsubst %, %.o, $(LIB_GEN_MODULES)) \
-#                   $(patsubst %, %_anonym.o, $(LIB_GEN_MODULES))
-
 LIB_GEN_MODULES = AS CI REP CPP SEM GLOBAL UTIL INSTRTP DEBUGTP BC BCCI CGTYPES
 LIB_GEN_COMMON_O = $(patsubst %, %.o, $(LIB_GEN_MODULES)) \
                    $(patsubst %, %_anonym.o, $(LIB_GEN_MODULES))
@@ -2481,17 +2427,6 @@ LIB_GEN_UML_O = $(patsubst %, %.o, $(LIB_GEN_UML_MODULES)) \
                 $(patsubst %, %_anonym.o, $(LIB_GEN_UML_MODULES))
 
 LIB_GEN_SL_O=$(LIB_GEN_COMMON_O:%.o=%-sl.o)
-
-#LIB_GEN_PP_O=$(LIB_GEN_COMMON_O:%.o=%-pp.o) \
-#	     $(LIB_GEN_PP_COMMON_O:%.o=%-pp.o) \
-#	     $(LIB_GEN_UML_O) \
-#	     TI_userimpl-pp.o
-#
-#LIB_GEN_RT_O=$(LIB_GEN_COMMON_O:%.o=%-rt.o) \
-#	     $(LIB_GEN_PP_COMMON_O:%.o=%-rt.o) \
-#	     $(LIB_GEN_UML_O) \
-#	     TI_userimpl-rt.o \
-#	     TIMETRACETP.o VC.o TIMEPARSER.o TIMEMAP.o
 
 LIB_GEN_PP_O=$(LIB_GEN_COMMON_O:%.o=%-pp.o) \
 	     $(LIB_GEN_PP_COMMON_O:%.o=%-pp.o) \
@@ -2511,9 +2446,6 @@ LIB_GEN_RT = libgen-rt.a
 $(LIB_GEN_SL):$(LIB_GEN_SL)($(LIB_GEN_SL_O))
 $(LIB_GEN_PP):$(LIB_GEN_PP)($(LIB_GEN_PP_O))
 $(LIB_GEN_RT):$(LIB_GEN_RT)($(LIB_GEN_RT_O))
-
-#$(GENLIBPP): $(GENLIBPP)($(GENPP:%.cc=%.o)) $(GENLIBPP)($(GENPPO))
-#$(GENLIBSL): $(GENLIBSL)($(GENSL:%.cc=%.o)) $(GENLIBSL)($(GENSLO))
 
 dependGEN: AS-sl.h REP-sl.h AS-pp.h REP-pp.h AUML.h DEP.h UMLERR.h MERGE.h
 	$(CXX) -MM -DVDMSL $(CXXFLAGS) $(GENSL) $(GENSLPP:%.cc=%-sl.cc) | \
@@ -2858,7 +2790,6 @@ CORBALIB_DIR = $(CORBADIR)/lib
 CORBALIB = -L$(CORBALIB_DIR)
 CORBABIN_DIR = $(CORBADIR)/bin
 CORBA_CPPFLAGS = $(CORBA_API)
-#CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lomniDynamic4
 IDLCCFLACS = -bcxx -Wbs=SK.cc 
 IDLCC = $(CORBABIN_DIR)/omniidl $(IDLCCFLACS)
@@ -2877,7 +2808,6 @@ CORBALIB_DIR = $(CORBADIR)/lib
 CORBALIB = -L$(CORBALIB_DIR)
 CORBABIN_DIR = $(CORBADIR)/bin
 CORBA_CPPFLAGS = $(CORBA_API)
-#CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lomniDynamic4
 IDLCCFLACS = -bcxx -Wbs=SK.cc 
 IDLCC = $(CORBABIN_DIR)/omniidl $(IDLCCFLACS)
@@ -2919,7 +2849,6 @@ ifeq ($(strip $(OSTYPE)),SunOS)
 CORBADIR ?= /usr/local/omniORB
 CORBALIB_DIR = $(CORBADIR)/lib
 CORBA_CPPFLAGS = $(CORBA_API)
-#CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lsocket -lnsl
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4 -lsocket -lnsl
 CORBALIB = -L$(CORBADIR)/lib
 IDLCC = $(CORBADIR)/bin/omniidl -bcxx -Wbs=SK.cc
@@ -2935,7 +2864,6 @@ ifeq ($(strip $(OSTYPE)),FreeBSD)
 CORBADIR ?= /usr/local
 CORBALIB_DIR = $(CORBADIR)/lib
 CORBA_CPPFLAGS = $(CORBA_API)
-#CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4
 CORBALIB = -L$(CORBADIR)/lib
 IDLCC = $(CORBADIR)/bin/omniidl -bcxx -Wbs=SK.cc
@@ -3073,32 +3001,8 @@ dlclass_test1.so: %.so: %.obj
 endif 
 
 #
-#
 # j2vdll  (Dynamic link classes for j2v)
 #
-#LIB_J2VDLL_SRC = \
-#	Character.cc Character_anonym.cc \
-#	Comparable.cc Comparable_anonym.cc \
-#	DriverManager.cc DriverManager_anonym.cc \
-#	File.cc \
-#	FileDescriptor.cc FileDescriptor_anonym.cc\
-#	FileInputStream.cc FileInputStream_anonym.cc \
-#	FileOutputStream.cc FileOutputStream_anonym.cc \
-#	Integer.cc Integer_anonym.cc \
-#	J2VUTIL.cc J2VUTIL_anonym.cc \
-#	JavaLocale.cc Locale_anonym.cc \
-#	Number.cc Number_anonym.cc \
-#	Object.cc Object_anonym.cc \
-#	OutputStream.cc OutputStream_anonym.cc \
-#	SqlConnection.cc SqlConnection_anonym.cc \
-#	SqlException.cc \
-#	SqlStatement.cc SqlStatement_anonym.cc \
-#	SqlResultSet.cc SqlResultSet_anonym.cc \
-#	Serializable.cc Serializable_anonym.cc \
-#	JavaString.cc String_anonym.cc \
-#	StringBuffer.cc StringBuffer_anonym.cc \
-#	StreamTokenizer.cc \
-#	Double.cc
 LIB_J2VDLL_SRC = \
 	Character.cc \
 	Comparable.cc \
@@ -3231,8 +3135,6 @@ CXX_FLAGS= -fPIC
 j2vmain.o: j2vmain.cc 
 	$(CXX) $(CXX_FLAGS) -I. $(INCDIR) $(ODBCINCDIR) -c -o $@ $<
 
-#j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm_shared.a libCG_shared.a
-#	$(CXX) -shared $(CXX_FLAGS) -o $@ $^ -L. -lvdm_shared -lCG_shared -lposix4  $(ODBCLIBDIR) $(ODBCLIB)
 j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm_shared.a
 	$(CXX) -shared $(CXX_FLAGS) -o $@ $^ -lposix4  $(ODBCLIBDIR) $(ODBCLIB)
 endif # SunOS
@@ -3251,8 +3153,6 @@ CXX_FLAGS= -fPIC
 j2vmain.o: j2vmain.cc 
 	$(CXX) $(CXX_FLAGS) -I. $(INCDIR) $(ODBCINCDIR) -c -o $@ $<
 
-#j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm_shared.a libCG_shared.a
-#	$(CXX) -shared $(CXX_FLAGS) -o $@ $^ -L. -lvdm_shared -lCG_shared $(ODBCLIBDIR) $(ODBCLIB)
 j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm_shared.a
 	$(CXX) -shared $(CXX_FLAGS) -o $@ $^ $(ODBCLIBDIR) $(ODBCLIB)
 endif # SunOS
@@ -3561,77 +3461,6 @@ links:  tb_version-sl.cc tb_version-pp.cc tb_version-rt.cc \
 
 # VDM Graphical Development Environment. 
 #
-#TCL2CODE=tcl2code2.pl
-#
-#TCLSOURCES-SL= $(TCLAPPLFILES-SL)
-#TCLSOURCES-PP= $(TCLAPPLFILES-PP)
-#
-#interface_processed.html: interface.html
-#	perl -ne 's/^##.*\n//; print;' $< > $@
-#
-#help-sl.input: interface_processed.html
-#	rm -f $@
-#	ifdeffilt -DVDMSL $< > $@.html
-#	echo Notice: makeman terminates when window is closed.
-#	$(WISH) makeman.tcl $@.html $@.tmp && mv $@.tmp $@
-#
-#help-pp.input: interface_processed.html
-#	rm -f $@
-#	ifdeffilt -DVDMPP $< > $@.html
-#	echo Notice: makeman terminates when window is closed.
-#	$(WISH) makeman.tcl $@.html $@.tmp && mv $@.tmp $@
-#
-#
-#TCLAPPLFILES-SL = main.tcl default.tcl util.tcl menuline.tcl help.tcl error.tcl \
-#	project.tcl stub.tcl buttons.tcl functions.tcl options.tcl \
-#	windows.tcl modules.tcl editor.tcl command.tcl log.tcl trace.tcl \
-#	breakpoint.tcl \
-#	variable.tcl general.tcl runtime_eh.tcl debug.tcl interp.tcl help-sl.input \
-#	dependency.tcl inhtree.tcl 
-#
-#TCLAPPLFILES-PP = main.tcl default.tcl util.tcl menuline.tcl help.tcl error.tcl \
-#	project.tcl stub.tcl buttons.tcl functions.tcl options.tcl \
-#	windows.tcl modules.tcl editor.tcl command.tcl log.tcl trace.tcl \
-#	breakpoint.tcl \
-#	variable.tcl general.tcl runtime_eh.tcl debug.tcl interp.tcl help-pp.input \
-#	dependency.tcl inhtree.tcl tcovtxt.tcl \
-#	umltool.tcl
-#
-#CFLAGS-tkAppInit-sl.o =  -DEMBEDDED
-#CFLAGS-tkAppInit2-sl.o = -UEMBEDDED
-#
-#
-#tkAppInit2-sl.o: tkAppInit.cc tb_version.h
-#
-#tkAppInit2-pp.o: tkAppInit.cc tb_version.h
-#
-#tcl_embed-sl.cc: $(TCLSOURCES-SL) 
-#	$(TCL2CODE) $^ > $@.tmp && mv $@.tmp $@
-#
-#tcl_embed-pp.cc: $(TCLSOURCES-PP) 
-#	$(TCL2CODE) $^ > $@.tmp && mv $@.tmp $@
-#
-#tkAppInit2.cc: tkAppInit.cc
-#	rm -f $@
-#	cp $< $@
-#	chmod 444 $@
-#
-#tkAppInit3-uml-pp.cc: tkAppInit.cc
-#	rm -f $@
-#	cp $< $@
-#	chmod 444 $@
-#
-#GUIOBJS-SL = tkAppInit-sl.o tk_if-sl.o tcl_embed-sl.o bitmap_embed.o 
-#GUI2OBJS-SL = tkAppInit2-sl.o tk_if-sl.o tcl_embed-sl.o bitmap_embed.o 
-#
-#GUIOBJS-PP = tkAppInit-pp.o tk_if-pp.o tcl_embed-pp.o bitmap_embed.o 
-#GUIOBJS-RT = tkAppInit-rt.o tk_if-rt.o tcl_embed-pp.o bitmap_embed.o 
-#GUI2OBJS-PP = tkAppInit2-pp.o tk_if-pp.o tcl_embed-pp.o bitmap_embed.o 
-#GUIOBJS-UML-PP = tkAppInit-uml-pp.o tk_if-uml-pp.o tcl_embed-pp.o bitmap_embed.o 
-#GUIOBJS3-UML-PP = tkAppInit3-uml-pp.o tk_if-uml-pp.o tcl_embed-pp.o bitmap_embed.o 
-#GUIOBJS-UML-RT = tkAppInit-uml-pp.o tk_if-uml-rt.o tcl_embed-pp.o bitmap_embed.o 
-#GUIOBJS3-UML-RT = tkAppInit-uml-rt.o tk_if-uml-rt.o tcl_embed-pp.o bitmap_embed.o 
-#
 # For dependency generation:
 ALL_GUI_O = bitmap_embed.o  
 ALL_GUI_SL_O = vdm-sl.o
@@ -3653,88 +3482,16 @@ vdmgde-sl.res: vdmgde.rc vdmgde-sl.rch vdmgde.ico
 vdmgde-pp.res: vdmgde.rc vdmgde-pp.rch vdmgde.ico
 vdmgde-rt.res: vdmgde.rc vdmgde-rt.rch vdmgde.ico
 
-#vdmgde-%.res: vdmgde-%.rch vdmgde.ico vdmgde.rc
-
 vdmde-sl.res: vdmgde.rc vdmde-sl.rch vdmgde.ico
 vdmde-pp.res: vdmgde.rc vdmde-pp.rch vdmgde.ico
 vdmde-rt.res: vdmgde.rc vdmde-rt.rch vdmgde.ico
 
-#vdmde-%.res: vdmde-%.rch vdmgde.ico vdmgde.rc
-
-#vdmgde-%.rch: print_name_vers$(EXE)
 vdmgde-%.rch: print_name_vers.exe
 	$< -gui -$* --outputrch > $@
 
-#vdmde-%.rch: print_name_vers$(EXE)
 vdmde-%.rch: print_name_vers.exe
 	$< -$* --outputrch > $@
 
-#CFLAGS-qttest.o = -DQT_THREAD_SUPPORT -DQT_DLL -DQT_NO_STL
-#qttest$(EXE): $(shell $(LINKCHG) \
-#        qttest.o mytabwidget.o moc_mytabwidget.o)
-#	$(shell $(LINKCHG) \
-#	  $(CCC) $(LNKOPT) $(DEBUG) $(LINKOUT)$@ \
-#          $+ \
-#            $(LIBQT) $(AFXLINK)\
-#        )
-#
-#ifeq ($(strip $(OSTYPE)),win32)
-#CXXPREPROCESSEDFLAGS = -C -E 
-#else
-#CXXPREPROCESSEDFLAGS = -C -E -dD 
-#endif
-#
-#%.i: %.cc
-#	$(CCC) $(CXXPREPROCESSEDFLAGS) $(CXXFLAGS) $(SRCNAME)$<  > $@
-#
-#PP_S_TYPE = $(VDM$(patsubst %-pp.s,PP,$(filter %-pp.s, $@)))
-#SL_S_TYPE = $(VDM$(patsubst %-sl.s,SL,$(filter %-sl.s, $@)))
-#PPSLFLAG_S= $(PP_S_TYPE) $(SL_S_TYPE)
-#
-#%.s: %.cc
-#	$(COMPILE.cc) $(PPSLFLAG_S) $(SRCNAME)$< -S -o $@
-#	c++filt < $@ > $(@:.s=.x)
-#
-#ALLCC = $(wildcard *.cc)
-#ALLCCI = $(ALLCC:.cc=.i)
-#
-#alli:  $(ALLCC)
-#	-$(MAKE) -k $(^:.cc=.i)
-#
-#tagcheck: 
-#	/home/erik/perl5/checkrectag *.i
-#
-#BITMAPS = Down Left Right Up \
-#	checkFailed checkFailedChanged checkOk checkOkChanged clear clearBig \
-#	close closeBig edit editBig errormarker \
-#	first generatedOk generatedWarn generatedJavaOk generatedJavaWarn last \
-#	moveAround moveAroundBig moveDown moveDownBig moveUp \
-#	moveUpBig next none pipe pipeBig prev print printBig \
-#	printedOk printedFailed space toolbox_logo.xbm typeFailed typeOk \
-#	no_action both_ways left2right right2left \
-#	all_left all_right plusminus plusminusBig \
-#	hier_on hier_off
-#
-#BITMAPFILES = $(addprefix bitmaps/, $(BITMAPS))
-#
-#bitmaps.tar: $(BITMAPFILES)
-#	tar -cvf $@ $(BITMAPFILES)
-#
-#.PHONY: ALWAYS
-#
-#bitmap_embed.cc: $(BITMAPFILES) 
-#	bitmap_embedder.pl tkif_CreateBitmaps "bm\`" $^ >$@
-#
-#################################################################
-# splitvdmtokens: 
-# Read in specification (without begin{vdm_al}/end{vdm_al}) tokenize it
-# and output with space between tokens. 
-# Used by recovery test environment
-#################################################################
-#
-#splitvdmtokens: splitvdmtokens.o libparser-sl.a 
-#	${CCC} $(LNKOPT) -o $@ splitvdmtokens.o $(PARSSL) $(LIBM4) $(LIBMGRSL) tb_exceptions.o $(LIBMATH)
-#
 ##################################################################
 # Stand-alone backend for code generator
 ##################################################################

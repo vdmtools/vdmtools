@@ -3194,10 +3194,6 @@ void TOOLS::EvalInfo (wostream & wos)
     wstring cmd (Infos[i].str);
 
     if( cmd == L"#" ) continue;
-    if( !isDLModuleEnabled() )
-    {
-      if( cmd == L"dlclose (dlc)" ) continue;
-    }
     if ((cliOpt != NULL) && !cliOpt->IsCLI()) {
       if( cmd == L"new" ) continue;
     }
@@ -4159,15 +4155,9 @@ wstring TOOLS::getCredit()
   return L"VDM Toolbox is currently developed with the cooperation of Research Center for Architecture-Oriented Formal Methods of Kyusyu University.";
 }
 
-bool TOOLS::isDLModuleEnabled()
-{
-  return tb_version.isDLModuleEnabled();
-}
-
 void TOOLS::OpenCallLog()
 {
-  if (!TOOLS::calllogstream.is_open())
-  {
+  if (!TOOLS::calllogstream.is_open()) {
     string fname = TBWSTR::wstring2fsstr(Settings.GetCallLogFileName());
     TOOLS::calllogstream.open( fname.c_str(), ios_base::out|ios_base::app );
   }
@@ -5081,7 +5071,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       vdm_iplog << endl << flush;
       return true;
     }
-    else if ((cmd == L"dlclose") && Settings.isDLModuleEnabled())
+    else if (cmd == L"dlclose")
     {
       theState().dlclose();
       return true;
@@ -5090,11 +5080,9 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
     {
       if (ToolMediator::Repos()->vdm_IsSession (none_session)) {
         vdm_iplog << L"No specification present" << endl << flush;
-// 20150318 -->
         InitToolbox( false );
         ToolMediator::Repos()->vdm_ClearAll();
         UpdateToolbox();
-// <-- 20150318
         return true;
       }
       TBDEBUG::InitCurrentDefinition (false, vdm_iplog);

@@ -1811,20 +1811,15 @@ bool EvalState::IsDLOp(const TYPE_AS_Name & cls, const TYPE_AS_Name & fnop)
 // gdefs : [AS`Definitions]
 void EvalState::RegisterDLClass(const TYPE_AS_Name & clnm, const TYPE_AS_TextLit & useslib, const Generic & gdefs)
 {
-  if( !Settings.isDLModuleEnabled() )
-    RTERR::Error(L"RegisterDLClass", RTERR_DL_NOT_ENABLED, Nil(), Nil(), Sequence());
-
   InsertDLClass(clnm);
-  if (! gdefs.IsNil())
-  {
+  if (! gdefs.IsNil()) {
     TYPE_AS_Definitions defs (gdefs);
     Map m (defs.GetMap(pos_AS_Definitions_fnm));
     m.ImpOverride (defs.GetMap(pos_AS_Definitions_opm));
 
     Set dom_m (m.Dom());
     Generic nm, fnop;
-    for (bool bb = dom_m.First(nm); bb; bb = dom_m.Next(nm))
-    {
+    for (bool bb = dom_m.First(nm); bb; bb = dom_m.Next(nm)) {
       Record fnop (m[nm]);
       switch(fnop.GetTag()) {
         case TAG_TYPE_AS_ExplOpDef:
@@ -3274,20 +3269,17 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
         break;
       }
       case TAG_TYPE_GLOBAL_SigmaIMO: {
-        if( Settings.isDLModuleEnabled() ) // 20060523
-        {
-          if (!AUX::IsInDLDeclared(loc_nm, mod_nm)) {
-            return RTERR::ErrorVal (L"LookUp", RTERR_LIB_NOT_DECLARED,
-                                 M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
-          }
-
-          Tuple idlfo (IsDLFnOP(loc_nm, mod_nm));
-          if( idlfo.GetBoolValue(1) )
-            return idlfo.GetRecord(2);
-
-          Tuple idlv (IsDLVal (loc_nm, mod_nm));
-          if( idlv.GetBoolValue(1) )
-            return idlv.GetRecord(2);
+        if (!AUX::IsInDLDeclared(loc_nm, mod_nm)) {
+          return RTERR::ErrorVal (L"LookUp", RTERR_LIB_NOT_DECLARED,
+                               M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
+        }
+        Tuple idlfo (IsDLFnOP(loc_nm, mod_nm));
+        if( idlfo.GetBoolValue(1) ) {
+          return idlfo.GetRecord(2);
+        }
+        Tuple idlv (IsDLVal (loc_nm, mod_nm));
+        if( idlv.GetBoolValue(1) ) {
+          return idlv.GetRecord(2);
         }
         return RTERR::ErrorVal (L"LookUp", RTERR_MOD_NOT_DEFINED,
                              M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());

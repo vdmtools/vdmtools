@@ -552,9 +552,6 @@ bool MOD::IsAllPatternName (const TYPE_AS_PatternBind & pat_p)
 // ==> GLOBAL`SigmaIMO
 TYPE_GLOBAL_SigmaIMO MOD::TranslateDLModule(const TYPE_AS_DLModule & dlmod)
 {
-  if( !Settings.isDLModuleEnabled() )
-    RTERR::Error(L"TranslateDLModule", RTERR_DL_NOT_ENABLED, Nil(), Nil(), Sequence());
-
   const TYPE_AS_Name & mod_id (dlmod.GetRecord(pos_AS_DLModule_nm));
   const TYPE_AS_DLInterface & intf (dlmod.GetRecord(pos_AS_DLModule_intf));
   const TYPE_AS_TextLit & useslib (dlmod.GetRecord(pos_AS_DLModule_useslib));

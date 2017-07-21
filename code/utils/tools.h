@@ -253,7 +253,6 @@ public:
   static wstring giveToolVersionDate();
   static wstring getVersionId();
   static wstring getCredit();
-  static bool isDLModuleEnabled();
   static void OpenCallLog();
   static void CloseCallLog();
   static void WriteCallLog(const wstring & id, const Sequence & arg_l, int level);
