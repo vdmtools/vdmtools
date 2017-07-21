@@ -7515,7 +7515,8 @@ Generic vdmcg::CGBinaryExpr(const TYPE_AS_BinaryExpr & be, const TYPE_CGMAIN_VT 
     case AND:
     case OR:
     case IMPLY:
-    case EQUIV:
+    case EQUIV:        { return CGLogBinaryExpr(le, op, re, vt); break; }
+
     case EQ:
     case NE:           { return CGLogBinaryExpr(le, op, re, vt); break; }
 
@@ -7525,11 +7526,12 @@ Generic vdmcg::CGBinaryExpr(const TYPE_AS_BinaryExpr & be, const TYPE_CGMAIN_VT 
     case NUMDIV:
     case NUMREM:
     case INTDIV:
+    case NUMMOD:       { return CGNumBinaryExpr(le, op, re, vt); break; }
+
     case NUMLT:
     case NUMLE:
     case NUMGT:
-    case NUMGE:
-    case NUMMOD:       { return CGNumBinaryExpr(le, op, re, vt); break; }
+    case NUMGE:        { return CGNumBinaryExpr(le, op, re, vt); break; }
 
     case INSET:
     case NOTINSET:
