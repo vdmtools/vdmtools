@@ -20,7 +20,7 @@
 #include <vector>
 #include <map>
 #include <typeinfo>
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && (!defined( __darwin__ ) || MAJOR_VERSION > 13)
 #include <unordered_map>
 #endif
 using namespace std;
@@ -303,7 +303,7 @@ public:
   typedef void (*vdm_pp_function_ptr)(wostream&, const Record&, VDMFormatter vf, bool simple);
 
 private:
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && (!defined( __darwin__ ) || MAJOR_VERSION > 13)
   typedef unordered_map<int, VDM_RecInfo *> VDMRecInfoMap_t;
   typedef unordered_map<wstring, VDM_RecInfo *> VDMRecInfoSymTagMap_t;
 #else

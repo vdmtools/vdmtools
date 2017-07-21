@@ -21,7 +21,7 @@
 //#endif // VDMPP
 #include "stackeval.h"
 #include "dlfactory.h"
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && (!defined( __darwin__ ) || MAJOR_VERSION > 13)
 #include <unordered_map>
 #endif
 
@@ -29,7 +29,7 @@
 class ObjTab
 {
 private:
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && (!defined( __darwin__ ) || MAJOR_VERSION > 13)
   typedef std::unordered_map<int64_t, TYPE_GLOBAL_OBJ_uDesc> ObjTabMapType;
 #else
   typedef std::map<int64_t, TYPE_GLOBAL_OBJ_uDesc> ObjTabMapType;
