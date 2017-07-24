@@ -4093,7 +4093,7 @@ inst%:  inst-%.files print_name_vers.exe $(VDMMANIFEST)
 	$(MAKENSIS) /V4 /DVERSION=$$VERSION /DVERSIONL=0.0.0.0 /DSETUPNAME=$$NAME $(NSISOPTIONS-$*) $(WIN64) $(NSISSCR)
 else # must be WISE
 inst%:  setup.wse instid-%.wse inst-%.files \
-	print_name_vers.exe print_name_vers_ac.exe $(VDMMANIFEST)
+	print_name_vers.exe $(VDMMANIFEST)
 	VERSION=$(GETVERSION); \
 	NAME=$(SETUPNAME); \
 	echo Creating $$NAME; \
@@ -5184,12 +5184,9 @@ clean: bin_clean distclean $(CLEANJAVALIB)
 	rm -f *.hh *SK.cc
 	rm -f javaparse.y
 	rm -f vdmpars.lex.c
-	rm -f parssl.y pexprsl.y 
-	rm -f parssl.cc pexprsl.cc
-	rm -f parspp.y pexprpp.y pstmtpp.y
-	rm -f parspp.cc pexprpp.cc pstmtpp.cc
-	rm -f parsrt.y pexprrt.y pstmtrt.y
-	rm -f parsrt.cc pexprrt.cc pstmtrt.cc
+	rm -f parssl.y pexprsl.y parssl.cc pexprsl.cc
+	rm -f parspp.y pexprpp.y pstmtpp.y parspp.cc pexprpp.cc pstmtpp.cc
+	rm -f parsrt.y pexprrt.y pstmtrt.y parsrt.cc pexprrt.cc pstmtrt.cc
 	rm -f lex.backup
 	rm -f unmangle.cc
 	rm -f unmangle-sl.cc unmangle-pp.cc unmangle-rt.cc
@@ -5205,22 +5202,18 @@ clean: bin_clean distclean $(CLEANJAVALIB)
 	rm -f libparser-pp.a scanner-pp.cc
 	rm -f priority.tab-pp.cc priority.tab-rt.cc 
 	rm -f lex.tp_.cc lex.pf_.cc
-	rm -f vppexprtc.y
 	rm -f errmsg.cc tm-pp.cc tm-sl.cc contextinfo.cc contextinfo.h
 	rm -f errmsg_jp.cc errmsg_jp_hex.txt
 	rm -f convertToHexquad convertToHexquad.o
 	rm -f contextinfo.stamp preprocess.h tb_version.h scanner-rt.cc
-	rm -f help-sl.input.html help-sl.input tcl_embed-sl.cc be-pp.cc
-	rm -f help-pp.input.html help-pp.input tcl_embed-pp.cc 
+	rm -f be-pp.cc
 	rm -f contextinfotest.cc
 	rm -f contextinfo.stamp
 	rm -f tb_version.cc tb_version.h
 	rm -f tb_version-sl.cc tb_version-pp.cc tb_version-rt.cc
-	rm -f tb_version_ac-sl.cc tb_version_ac-pp.cc tb_version_ac-rt.cc
-	rm -f tb_version_lite-sl.cc tb_version_lite-pp.cc tb_version_lite-rt.cc
 	rm -f metaiv_idl.stamp corba_api.stamp toolboxclient.stamp
 	rm -f vdmprofile
-	rm -f dlclass_test1.so
+	rm -f dlclass_test1.o dlclass_test1.so
 	rm -f VDM.jar javaapi.jar ToolboxAPI.jar
 	rm -rf jp libdoc javaapi javaapi-doc
 ifeq ($(strip $(OSTYPE)),win32)
@@ -5235,13 +5228,7 @@ bin_clean:
 	rm -f vppde$(EXE) vppqt$(EXE) vppumlqt$(EXE)
 	rm -f vicede$(EXE) viceqt$(EXE) viceumlqt$(EXE)
 	rm -f be_spec-sl$(EXE) be_ip-sl$(EXE)
-	rm -f vdmde_ac$(EXE) vdmqt_ac$(EXE)
-	rm -f vppde_ac$(EXE) vppqt_ac$(EXE) vppumlqt_ac$(EXE)
-	rm -f vicede_ac$(EXE) viceqt_ac$(EXE) viceumlqt_ac$(EXE)
-	rm -f vdmde_lite$(EXE) vdmqt_lite$(EXE)
-	rm -f vppde_lite$(EXE) vppqt_lite$(EXE) vppumlqt_lite$(EXE)
-	rm -f vicede_lite$(EXE) viceqt_lite$(EXE) viceumlqt_lite$(EXE)
-	rm -f print_name_vers$(EXE)  print_name_vers_ac$(EXE)
+	rm -f print_name_vers$(EXE)
 	rm -f j2vdll.so
 	rm -f *.exe.manifest
 	rm -f *a.fat

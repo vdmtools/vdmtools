@@ -969,7 +969,6 @@ operations
           in
             if tps(nm) = nil
             then
-              --exptps := exptps ++ {if modid = nil then nm else AUX`ExtName(modid,nm) |-> mk_REP`TypeParRep(nm)}
               exptps := exptps ++ { if modid = nil
                                     then nm
                                     else AUX`ExtName(modid,nm) |-> ENV`TransTypeDef(modid,nm,tp,Invar) }
@@ -1012,15 +1011,9 @@ operations
             ----------------------------------------
             ERR`GenErr(nm,<WARNING>,343,[ENV`PrintName(nm)]);
             exptps := {AUX`ExtName(modid,nm) |-> mk_REP`AllTypeRep()} ++ exptps)
-        --else if modid = nil
-        --     then exptps := exptps ++ {nm |-> mk_REP`TypeParRep(nm)}
-        --     else exptps := exptps ++ {AUX`ExtName(modid,nm) |-> mk_REP`TypeParRep(nm)};
         else
           let mk_AS`TypeDef(-,tp,-,-,-,-,-) = typem(nm)
           in
-            --if modid = nil
-            --then exptps := exptps ++ {nm |-> ENV`TransType(modid,tp)}
-            --else exptps := exptps ++ {AUX`ExtName(modid,nm) |-> ENV`TransType(modid,tp)};
             exptps := exptps ++ { if modid = nil
                                   then nm
                                   else AUX`ExtName(modid,nm) |-> ENV`TransType(modid,tp) };

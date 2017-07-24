@@ -203,7 +203,9 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   sb->addWidget(pb, 1);
 
 #if QT_VERSION >= 0x040600
+#if !defined( __darwin__ )
   this->menuBar()->setNativeMenuBar(false);
+#endif
 #endif // QT_VERSION >= 0x040600
 
   // Create menus
