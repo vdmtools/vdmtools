@@ -886,7 +886,7 @@ ARCH_DEFINES = -D__linux__ $(NOCG)
 LINK_DEBUG=
 
 ifeq ($(strip $(CXX)),$(CCPATH)clang++)
-ARCH_DEFINES += -std=c++11
+ARCH += -std=c++11
 WARNINGS += -Wno-deprecated-register
 endif
 
@@ -1634,15 +1634,9 @@ LINK_DEBUG=
 
 ifeq ($(strip $(LION_OR_LATER)),true)
 SDK?=$(shell xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $$2}')
-ARCH=-arch x86_64
+ARCH=-arch x86_64 -std=c++11
 ifeq ($(strip $(MOUNTAINLION_OR_LATER)),true)
-ARCH += -std=c++11
 WARNINGS += -Wno-deprecated-register
-else
-#ifeq ($(strip $(QTVERSION)),5)
-ARCH += -std=c++11
-#WARNINGS += -Wno-deprecated-register
-#endif
 endif
 CCPATH = /usr/bin/
 GCC_VERSION=
