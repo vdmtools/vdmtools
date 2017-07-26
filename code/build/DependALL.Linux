@@ -502,7 +502,7 @@ libeval-rt.a(diverse.o): diverse.cc semvalues.h metaiv.h m4lib_errmsg.h \
   RTERR_anonym.h DEBUGTP.h DEBUGTP-rt.h DEBUGTP_anonym.h \
   DEBUGTP_anonym-rt.h DEBUGTP_userdef.h objtab.h
 libeval-rt.a(dlfactory.o): dlfactory.cc dlfactory.h evaldl.h metaiv.h \
-  m4lib_errmsg.h tb_wstring.h semvalues.h RTERR.h tb_version.h
+  m4lib_errmsg.h tb_wstring.h semvalues.h RTERR.h
 libeval-rt.a(evaldl.o): evaldl.cc metaiv.h m4lib_errmsg.h tb_wstring.h \
   dlfactory.h evaldl.h semvalues.h \
   contextinfo.h \
@@ -1193,7 +1193,7 @@ libeval-pp.a(diverse.o): diverse.cc semvalues.h metaiv.h m4lib_errmsg.h \
   PAT_anonym.h RTERR_anonym.h DEBUGTP.h DEBUGTP-pp.h \
   DEBUGTP_anonym.h DEBUGTP_anonym-pp.h DEBUGTP_userdef.h objtab.h
 libeval-pp.a(dlfactory.o): dlfactory.cc dlfactory.h evaldl.h metaiv.h \
-  m4lib_errmsg.h tb_wstring.h semvalues.h RTERR.h tb_version.h
+  m4lib_errmsg.h tb_wstring.h semvalues.h RTERR.h
 libeval-pp.a(evaldl.o): evaldl.cc metaiv.h m4lib_errmsg.h tb_wstring.h \
   dlfactory.h evaldl.h semvalues.h \
   contextinfo.h \
@@ -1812,7 +1812,7 @@ libeval-sl.a(diverse.o): diverse.cc semvalues.h metaiv.h m4lib_errmsg.h \
   DEBUGTP-sl.h DEBUGTP_anonym.h DEBUGTP_anonym-sl.h DEBUGTP_userdef.h \
   objtab.h
 libeval-sl.a(dlfactory.o): dlfactory.cc dlfactory.h evaldl.h metaiv.h \
-  m4lib_errmsg.h tb_wstring.h semvalues.h RTERR.h tb_version.h
+  m4lib_errmsg.h tb_wstring.h semvalues.h RTERR.h
 libeval-sl.a(evaldl.o): evaldl.cc metaiv.h m4lib_errmsg.h tb_wstring.h \
   dlfactory.h evaldl.h semvalues.h \
   contextinfo.h \

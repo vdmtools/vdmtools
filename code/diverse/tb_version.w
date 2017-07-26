@@ -168,23 +168,16 @@ TB_Version::TB_Version(const wchar_t *tit,
 
 std::wstring TB_Version::FormatVersionId(bool compressed) const
 {
-  std::wstring dot;
-  if (compressed) {
-    dot = L"";
-  }
-  else {
-    dot = L".";
-  }
+  std::wstring dot (compressed ? L"" : L".");
 
   wostringstream s;
-  s << Int(majorxx).ascii();
-  s << dot << Int(minorxx).ascii();
+  s << majorxx << dot << minorxx;
 
-  if (subminor != 0) {
-    s << dot << Int(subminor).ascii();
+  if (0 != subminor) {
+    s << dot << subminor;
   }
-  if (subsubminor != 0) {
-    s << Char(subsubminor).GetValue();
+  if (0 != subsubminor) {
+    s << subsubminor;
   }
   return s.str();
 }
@@ -235,20 +228,22 @@ std::wstring TB_Version::GetCompilerVersion () const
 #ifdef _MSC_VER
   s << L"MSVC++ ";
   switch(_MSC_VER) {
-    case 1400: { s << L"8.0"; break; }
-    case 1500: { s << L"9.0"; break; }
-    case 1600: { s << L"10.0"; break; }
-    case 1700: { s << L"11.0"; break; }
-    case 1800: { s << L"12.0"; break; }
-    case 1900: { s << L"14.0"; break; }
-    case 1910: { s << L"14.1"; break; }
-    default: { s << L"Unknown"; break; }
+    case 1400: { s << L"8.0 (Visual Studio 2005)"; break; }
+    case 1500: { s << L"9.0 (Visual Studio 2008)"; break; }
+    case 1600: { s << L"10.0 (Visual Studio 2010)"; break; }
+    case 1700: { s << L"11.0 (Visual Studio 2012)"; break; }
+    case 1800: { s << L"12.0 (Visual Studio 2013)"; break; }
+    case 1900: { s << L"14.0 (Visual Studio 2015)"; break; }
+    case 1910: { s << L"14.1 (Visual Studio 2017)"; break; }
+    default: { s << L"unknown version"; break; }
   }
 #else
-#ifdef __clang__
-  s << L"clang++ " << Int(__clang_major__).ascii() << L"." << Int(__clang_minor__).ascii();
+#if defined(__clang__)
+  s << L"clang++ " << __clang_version__;
+#elif defined(__GNUC__)
+  s << L"g++ " << __VERSION__;
 #else
-  s << L"g++ " << Int(__GNUC__).ascii() << L"." << Int(__GNUC_MINOR__).ascii();
+  s << L"unspecified";
 #endif 
 #endif
   return s.str();
@@ -257,7 +252,7 @@ std::wstring TB_Version::GetCompilerVersion () const
 std::wstring TB_Version::GetCppVersion() const
 {
   wostringstream s;
-  s << Int(__cplusplus).ascii();
+  s << __cplusplus;
   return s.str();
 }
 
