@@ -8,7 +8,6 @@
 #include <wchar.h>
 
 #include <iostream>
-//#include <string.h>
 
 #include "tb_version.h"
 #include "tb_wstring.h"
@@ -68,8 +67,9 @@ std::wstring QT(const std::wstring s, bool zeroter)
   std::wstring res;
   res = L"\"";
   res += s;
-  if (zeroter)
+  if (zeroter) {
     res += L"\\0";
+  }
   res += L"\"";
   return res;
 }
@@ -90,12 +90,12 @@ void output_rch(const TB_Version& tbvers, Info& info)
 
 void output_version(const TB_Version& tbvers, Info& info, bool shortversion)
 {
-  if (shortversion) 
-//    wcout << tbvers.GetShortVersionId(); 
+  if (shortversion)  {
     std::wcout << tbvers.GetShortVersionId() << tbvers.GetExtraComment();
-  else 
-//    wcout << tbvers.GetVersionId();
+  }
+  else {
     std::wcout << tbvers.GetVersionId() << tbvers.GetExtraComment();
+  }
 }
 
 int main(int argc, char **argv)

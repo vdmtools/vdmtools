@@ -169,37 +169,41 @@ TB_Version::TB_Version(const wchar_t *tit,
 std::wstring TB_Version::FormatVersionId(bool compressed) const
 {
   std::wstring dot;
-  if (compressed)
+  if (compressed) {
     dot = L"";
-  else
+  }
+  else {
     dot = L".";
+  }
 
   wostringstream s;
   s << Int(majorxx).ascii();
   s << dot << Int(minorxx).ascii();
 
-  if (subminor != 0)
+  if (subminor != 0) {
     s << dot << Int(subminor).ascii();
-
-  if (subsubminor != 0)
+  }
+  if (subsubminor != 0) {
     s << Char(subsubminor).GetValue();
-
+  }
   return s.str();
 }
 
 std::wstring TB_Version::GiveToolTitle () const
 {
   std::wstring res (title);
-  if(isDebug())
+  if(isDebug()) {
     res += L" Debug";
+  }
   return res;
 }
 
 std::wstring TB_Version::GiveStartMenuToolTitle () const
 {
   std::wstring res (startmenutooltitle);
-  if(isDebug())
+  if(isDebug()) {
     res += L" Debug";
+  }
   res += L" v" + GetVersionId();
   return res;
 }
@@ -225,14 +229,37 @@ std::wstring TB_Version::GiveToolVersionDate () const
   return  L"v" + GetVersionId() + L" - " + date;
 }
 
-// Only return a.b
-//std::wstring TB_Version::GetVersionIdForFLEXlm() const
-//{
-//  std::wstring s;
-//  s += Int(majorxx).ascii();
-//  s += L"." + Int(minorxx).ascii();
-//  return s;
-//}
+std::wstring TB_Version::GetCompilerVersion () const
+{
+  wostringstream s;
+#ifdef _MSC_VER
+  s << L"MSVC++ ";
+  switch(_MSC_VER) {
+    case 1400: { s << L"8.0"; break; }
+    case 1500: { s << L"9.0"; break; }
+    case 1600: { s << L"10.0"; break; }
+    case 1700: { s << L"11.0"; break; }
+    case 1800: { s << L"12.0"; break; }
+    case 1900: { s << L"14.0"; break; }
+    case 1910: { s << L"14.1"; break; }
+    default: { s << L"Unknown"; break; }
+  }
+#else
+#ifdef __clang__
+  s << L"clang++ " << Int(__clang_major__).ascii() << L"." << Int(__clang_minor__).ascii();
+#else
+  s << L"g++ " << Int(__GNUC__).ascii() << L"." << Int(__GNUC_MINOR__).ascii();
+#endif 
+#endif
+  return s.str();
+}
+
+std::wstring TB_Version::GetCppVersion() const
+{
+  wostringstream s;
+  s << Int(__cplusplus).ascii();
+  return s.str();
+}
 
 void TB_Version::GetVersionComponents(unsigned short &a,
                                       unsigned short &b,
@@ -309,6 +336,8 @@ public:
   std::wstring GiveToolTitle () const;
   std::wstring GiveStartMenuToolTitle () const;
   std::wstring GiveToolVersionDate () const;
+  std::wstring GetCompilerVersion() const;
+  std::wstring GetCppVersion() const;
   void GetVersionComponents(unsigned short &a, unsigned short &b, unsigned short &c, unsigned short &d) const;
   TB_Type GetToolType () const;
 

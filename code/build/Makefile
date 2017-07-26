@@ -945,6 +945,8 @@ CCPATH = /usr/bin/
 ARCH_DEFINES = -D__Cygwin__ -D__GNU_LIBRARY__ $(NOCG)
 LINK_DEBUG=
 
+ARCH += -std=gnu++11
+
 LNKOPT += -liconv
 
 READLINE_LIB += -lreadline
@@ -1010,6 +1012,20 @@ endif
 # installer: "NSIS" or "WISE"
 INSTALLER ?= NSIS
 
+# VC++ Version
+#MSVC++ 4.x  _MSC_VER == 1000
+#MSVC++ 5.0  _MSC_VER == 1100
+#MSVC++ 6.0  _MSC_VER == 1200
+#MSVC++ 7.0  _MSC_VER == 1300
+#MSVC++ 7.1  _MSC_VER == 1310 (Visual Studio 2003)
+#MSVC++ 8.0  _MSC_VER == 1400 (Visual Studio 2005)
+#MSVC++ 9.0  _MSC_VER == 1500 (Visual Studio 2008)
+#MSVC++ 10.0 _MSC_VER == 1600 (Visual Studio 2010)
+#MSVC++ 11.0 _MSC_VER == 1700 (Visual Studio 2012)
+#MSVC++ 12.0 _MSC_VER == 1800 (Visual Studio 2013)
+#MSVC++ 14.0 _MSC_VER == 1900 (Visual Studio 2015)
+#MSVC++ 14.1 _MSC_VER == 1910 (Visual Studio 2017)
+
 # 14 : VC8
 # 15 : VC9
 # 16 : VC10
@@ -1021,7 +1037,6 @@ CL_MAJOR = $(word 1, $(subst ., ,$(strip $(CLVERSION))))
 #DEBUG=/Zi
 DEBUG=
 
-# VC++ Version
 ifndef MSCVER
 MSCVERSTR = $(shell cl >& msc_tmp;cat msc_tmp | head -1)
 VERSTR1 = $(word 1, $(subst ., ,$(strip $(word 8, $(MSCVERSTR)))))
@@ -1263,11 +1278,11 @@ MANIFEST = /MANIFEST
 
 STACK = /STACK:0x400000
 
-ifeq ($(strip $(QTVERSION)),4)
-ENTRY_GUI = /ENTRY:mainCRTStartup
-ENTRY_CLI = /ENTRY:mainCRTStartup
-else #Qt3
+ifeq ($(strip $(QTVERSION)),3)
 ENTRY_GUI = /ENTRY:WinMainCRTStartup
+ENTRY_CLI = /ENTRY:mainCRTStartup
+else #Qt4/5
+ENTRY_GUI = /ENTRY:mainCRTStartup
 ENTRY_CLI = /ENTRY:mainCRTStartup
 endif
 
@@ -2952,36 +2967,36 @@ endif
 ifeq ($(strip $(OSTYPE)),Linux)
 
 dlclass_test1.so: %.so: %.cc libvdm_shared.a
-	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared
+	${CXX} $(ARCH) -shared -fPIC -o $@ $< -L. -lvdm_shared
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -fPIC -c -o $@ $< 
+	${CXX} $(ARCH) -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 
 dlclass_test1.so: %.so: %.cc libvdm.a
-	${CXX} -shared -o $@ $< -L. -lvdm -liconv
+	${CXX} $(ARCH) -shared -o $@ $< -L. -lvdm -liconv
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} $(ARCH) -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),SunOS)
 dlclass_test1.so: %.so: %.cc libvdm_shared.a
-	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared -lposix4
+	${CXX} $(ARCH) -shared -fPIC -o $@ $< -L. -lvdm_shared -lposix4
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -fPIC -c -o $@ $< 
+	${CXX} $(ARCH) -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),FreeBSD)
 
 dlclass_test1.so: %.so: %.cc libvdm_shared.a
-	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared
+	${CXX} $(ARCH) -shared -fPIC -o $@ $< -L. -lvdm_shared
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -fPIC -c -o $@ $< 
+	${CXX} $(ARCH) -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),win32)
@@ -3891,7 +3906,7 @@ JAVA2VDM-EXAMPLES = examples/j2v-examples
 JAVA2VDM-APILIB = javaapi.jar
 endif
 
-WORKPATH = `pwd`
+WORKPATH = $(shell pwd)
 CLASSPATH = $(WORKPATH)/VDM.jar
 
 javaapi.jar: Makefile.javaapijar
@@ -4035,7 +4050,7 @@ endif
 ifdef SPLIT
 WISESPLIT=-s
 SETUPNAME=$*$$VERSION.exe
-GETVERSION=`./print_name_vers -$(INSTVERSION-$*) --outputshortversion`
+GETVERSION=$(shell ./print_name_vers -$(INSTVERSION-$*) --outputshortversion)
 else
 WISESPLIT=
 SNAME=setup$*
@@ -4046,7 +4061,7 @@ SETUPNAME=$(S2NAME:%rtl=%vicel)-$$VERSION-$(RDATE)-$(VSVER)-x64.exe
 else
 SETUPNAME=$(S2NAME:%rtl=%vicel)-$$VERSION-$(RDATE)-$(VSVER)-i586.exe
 endif
-GETVERSION=`./print_name_vers -$(INSTVERSION-$*) --outputversion`
+GETVERSION=$(shell ./print_name_vers -$(INSTVERSION-$*) --outputversion)
 endif
 
 df inst_addin.exe: inst_addin.wse instid-pp.wse
@@ -4608,9 +4623,9 @@ VDMRT_CUI_NAME=vicede
 VDMRT_GUI_NAME=viceqt
 PRINT_NAME_VERS_NAME=print_name_vers
 
-TBVERSION_SL=$(shell print_name_vers -sl --outputversion)
-TBVERSION_PP=$(shell print_name_vers -pp --outputversion)
-TBVERSION_RT=$(shell print_name_vers -rt --outputversion)
+TBVERSION_SL=$(shell $(PRINT_NAME_VERS_NAME) -sl --outputversion)
+TBVERSION_PP=$(shell $(PRINT_NAME_VERS_NAME) -pp --outputversion)
+TBVERSION_RT=$(shell $(PRINT_NAME_VERS_NAME) -rt --outputversion)
 
 TARFILESL = bin.$(DISTARCH).vdmsl-$(TBVERSION_SL)-$(RDATE).tar$(TARSUFFIX)
 TARFILEPP = bin.$(DISTARCH).vdmpp-$(TBVERSION_PP)-$(RDATE).tar$(TARSUFFIX)
@@ -4757,12 +4772,10 @@ ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 else
 	cp $(PWD)/$(VDMSL_CUI_NAME) $(DISTDIR)/bin/vdmde.bin
 	$(STRIP) $(DISTDIR)/bin/vdmde.bin
-#	ln -s $(PWD)/vdmde.script $(DISTDIR)/bin/vdmde
 	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmde.bin/; print;' > $(DISTDIR)/bin/vdmde
 	chmod 755 $(DISTDIR)/bin/vdmde
 	cp $(PWD)/$(VDMSL_GUI_NAME) $(DISTDIR)/bin/vdmqt.bin
 	$(STRIP) $(DISTDIR)/bin/vdmqt.bin
-#	ln -s $(PWD)/vdmgde.script $(DISTDIR)/bin/vdmgde
 	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmqt.bin/; print;' > $(DISTDIR)/bin/vdmgde
 	chmod 755 $(DISTDIR)/bin/vdmgde
 	cp $(QMFILES) $(DISTDIR)/bin/.
@@ -4777,7 +4790,7 @@ endif
 endif
 	rm -rf $(DISTDIRSL)
 	ln -s $(DISTDIR) $(DISTDIRSL)
-	VERSION=`./$(PRINT_NAME_VERS_NAME) -sl --outputversion`; \
+	VERSION=$(shell ./$(PRINT_NAME_VERS_NAME) -sl --outputversion); \
 	echo Creating $(TARFILESL); \
 	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILESL) ./$(DISTDIRSL)
 	rm -rf $(DISTDIRSL)
@@ -4926,7 +4939,7 @@ endif
 	cp $(PWD)/j2vdll.so $(DISTDIR)/bin/j2vdll.so
 	rm -rf $(DISTDIRPP)
 	ln -s $(DISTDIR) $(DISTDIRPP)
-	VERSION=`./$(PRINT_NAME_VERS_NAME) -pp --outputversion`; \
+	VERSION=$(shell ./$(PRINT_NAME_VERS_NAME) -pp --outputversion); \
 	echo Creating $(TARFILEPP); \
 	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILEPP) ./$(DISTDIRPP)
 	rm -rf $(DISTDIRPP)
@@ -5077,7 +5090,7 @@ endif
 	cp $(PWD)/j2vdll.so $(DISTDIR)/bin/j2vdll.so
 	rm -rf $(DISTDIRRT)
 	ln -s $(DISTDIR) $(DISTDIRRT)
-	VERSION=`./$(PRINT_NAME_VERS_NAME) -rt --outputversion`; \
+	VERSION=$(shell ./$(PRINT_NAME_VERS_NAME) -rt --outputversion); \
 	echo Creating $(TARFILERT); \
 	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILERT) ./$(DISTDIRRT)
 	rm -rf $(DISTDIRRT)
@@ -5112,7 +5125,7 @@ endif
 
 distcg: tb_version.h print_name_vers $(DISTDIR) $(CG_LIB_CG) $(CG_LIB_VDM) \
 	inst-cgfiles
-	VERSION=`./print_name_vers -pp --outputversion`; \
+	VERSION=$(shell ./print_name_vers -pp --outputversion); \
 	echo Creating $(TARFILECG); \
 	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILECG) -C $(DISTDIR) .
 
