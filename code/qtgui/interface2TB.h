@@ -334,6 +334,7 @@ public:
   static QString GetVersionIdI();
   static QString GetCreditI();
   static QString GiveToolVersionDateI();
+  static QString GetCompilerVersionI();
 
   static GUITokenList getGUITokenListI( const QString & filename );
   static GUIOccurenceList SearchIdI(const QStringList & files,

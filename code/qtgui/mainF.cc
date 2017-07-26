@@ -2840,6 +2840,7 @@ void mainW::about_qt3()
 {
   QString title (Qt2TB::GiveToolTitleI());
   QString version (Qt2TB::GiveToolVersionDateI());
+  QString buildby (Qt2TB::GetCompilerVersionI());
   QString message ("<p>The answer is <b>42</b>, if the bug isn't in the specification.</p>");
   QString credit (Qt2TB::GetCreditI().replace("\n", "</p>\n<p>"));
   QString link ("<a href=\"http://fmvdm.org/\">http://fmvdm.org/</a>, "
@@ -2849,10 +2850,11 @@ void mainW::about_qt3()
   QString text (QMessageBox::tr(
     "<h3>%1</h3>"
     "<p>%2</p>"
-    "<p>%3</p>"
+    "<p>Build by %3</p>"
     "<p>%4</p>"
-    "<p>See %5 for more information.</p>"
-  ).arg(title, version, message, credit, link));
+    "<p>%5</p>"
+    "<p>See %6 for more information.</p>"
+  ).arg(title, version, buildby, message, credit, link));
 #else
   QString text (QMessageBox::tr(
     "<h3>%1</h3>"

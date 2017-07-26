@@ -253,6 +253,7 @@ public:
   static wstring giveToolVersionDate();
   static wstring getVersionId();
   static wstring getCredit();
+  static wstring getCompilerVersion();
   static void OpenCallLog();
   static void CloseCallLog();
   static void WriteCallLog(const wstring & id, const Sequence & arg_l, int level);

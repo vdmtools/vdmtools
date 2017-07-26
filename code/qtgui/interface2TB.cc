@@ -1267,6 +1267,11 @@ QString Qt2TB::GiveToolVersionDateI()
   return wstring2qstring( TOOLS::giveToolVersionDate() );
 }
 
+QString Qt2TB::GetCompilerVersionI()
+{
+  return wstring2qstring( TOOLS::getCompilerVersion() );
+}
+
 QString Qt2TB::GetVersionIdI()
 {
   return wstring2qstring( TOOLS::getVersionId() );

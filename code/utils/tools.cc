@@ -4155,6 +4155,11 @@ wstring TOOLS::getCredit()
   return L"VDM Toolbox is currently developed with the cooperation of Research Center for Architecture-Oriented Formal Methods of Kyusyu University.";
 }
 
+wstring TOOLS::getCompilerVersion()
+{
+  return tb_version.GetCompilerVersion();
+}
+
 void TOOLS::OpenCallLog()
 {
   if (!TOOLS::calllogstream.is_open()) {
