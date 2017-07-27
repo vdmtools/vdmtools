@@ -4007,9 +4007,6 @@ inst-powertest-files:
 	cp $(VPATH)/MATH.java $(POWERTEST_CGFILES_DIR)
 	cp $(VPATH)/VDMUtil.java $(POWERTEST_CGFILES_DIR)
 	cp $(VPATH)/VDM.jar $(POWERTEST_CGFILES_DIR)
-endif
-
-ifeq ($(strip $(OSTYPE)),win32)
 
 NSISSCR = vdmtools.nsi
 ifeq ($(strip $(CLCPUTYPE)),x64)
@@ -4091,6 +4088,14 @@ instcm:
 	rm -rf vicede.exe $(RTGUITOOL) j2vdll.so
 	$(MAKE) instrt
 
+INSTFILES-sl = vdmde.exe vdmqt.exe
+INSTFILES-pp = vppde.exe $(PPGUITOOL) j2vdll.so
+INSTFILES-rt = vicede.exe $(RTGUITOOL) j2vdll.so
+
+DISTDIR := distdir
+clean-distdir: 
+	rm -rf $(DISTDIR)
+
 # instsl instpp instrt
 ifeq ($(strip $(INSTALLER)),NSIS)
 inst%:  inst-%.files print_name_vers.exe $(VDMMANIFEST)
@@ -4113,15 +4118,6 @@ inst%:  setup.wse instid-%.wse inst-%.files \
 	rm -f tmp.wse
 # instid.wse inst.files
 #	rm -f tmp.wse 
-endif
-
-INSTFILES-sl = vdmde.exe vdmqt.exe
-INSTFILES-pp = vppde.exe $(PPGUITOOL) j2vdll.so
-INSTFILES-rt = vicede.exe $(RTGUITOOL) j2vdll.so
-
-DISTDIR = distdir
-clean-distdir: 
-	rm -rf $(DISTDIR)
 
 WISE_SL_BIN = -d bin \
                -l "%MENUTITLE%" $(DISTDIR)/bin/vdmgde.exe \
@@ -4192,11 +4188,13 @@ WISE_OPTION_RT = $(WISE_COMMON_OPTION_RT) \
 		 $(WISE_JAVACG_OPTION)
 
 WISE_OPTION_RTL = $(WISE_COMMON_OPTION_RT)
+endif
 
 TESTFILES=metaiv.h m4lib_errmsg.h dlclass.h cg.h cg_aux.h random.h IO.java MATH.java VDMUtil.java \
 IO_userimpl.cpp IO_userimpl-pp.cc IO_userimpl-sl.cc \
 MATH_userimpl.cpp MATH_userimpl-pp.cc MATH_userimpl-sl.cc \
 VDMUtil_userimpl.cpp VDMUtil_userimpl-pp.cc VDMUtil_userimpl-sl.cc
+
 testfiles:
 	mkdir -p testfiles
 	for i in $(TESTFILES); do cp $(VPATH)/$$i testfiles/.; done
@@ -4370,7 +4368,6 @@ inst-gcclibs:
 	cp -dp $(CCPATH)../lib/*.* $(DISTDIR)/lib/.
 
 ifeq ($(strip $(OSTYPE)),win32)
-#inst-cgfiles: $(CG_FILES_INCLUDES)
 ifndef WINDEBUG
 inst-cgfiles: $(CG_LIB_CG) $(CG_LIB_VDM) $(CG_FILES_INCLUDES)
 else
@@ -4450,7 +4447,6 @@ endif
 
 RDATE = $(shell LC_TIME=C date +%y%m%d)
 # $$VERSION below is set before TARFILE{SL,PP,VICE} is referenced.
-#COMPLESSION=gzip
 COMPLESSION=bzip2
 
 ifeq ($(strip $(COMPLESSION)),gzip)
@@ -4462,20 +4458,6 @@ TARSUFFIX=.bz2
 TARCOMFLG=j
 endif
 endif
-
-#TARFILESL = bin.$(DISTARCH).vdmsl-$$VERSION-$(RDATE).tar$(TARSUFFIX)
-#TARFILEPP = bin.$(DISTARCH).vdmpp-$$VERSION-$(RDATE).tar$(TARSUFFIX)
-#TARFILERT = bin.$(DISTARCH).vice-$$VERSION-$(RDATE).tar$(TARSUFFIX)
-#TARFILESLL = bin.$(DISTARCH).vdmsl-$$VERSION-Lite-$(RDATE).tar$(TARSUFFIX)
-#TARFILEPPL = bin.$(DISTARCH).vdmpp-$$VERSION-Lite-$(RDATE).tar$(TARSUFFIX)
-#TARFILERTL = bin.$(DISTARCH).vice-$$VERSION-Lite-$(RDATE).tar$(TARSUFFIX)
-#TARFILECG = bin.$(DISTARCH)-$(DISTCC).cglib-$$VERSION-$(RDATE).tar$(TARSUFFIX)
-#MACPKGSL = "The VDM-SL Toolbox"-$$VERSION-$(RDATE).pkg
-#MACPKGPP = "The VDM++ Toolbox"-$$VERSION-$(RDATE).pkg
-#MACPKGRT = "The VDM++ VICE Toolbox"-$$VERSION-$(RDATE).pkg
-#MACPKGSLL = "The VDM-SL Toolbox Lite"-$$VERSION-$(RDATE).pkg
-#MACPKGPPL = "The VDM++ Toolbox"-$$VERSION-$(RDATE).pkg
-#MACPKGRTL = "The VDM++ VICE Toolbox"-$$VERSION-$(RDATE).pkg
 
 DISTDIR = distdir
 PWD = $(shell pwd)
@@ -4631,9 +4613,6 @@ TARFILESL = bin.$(DISTARCH).vdmsl-$(TBVERSION_SL)-$(RDATE).tar$(TARSUFFIX)
 TARFILEPP = bin.$(DISTARCH).vdmpp-$(TBVERSION_PP)-$(RDATE).tar$(TARSUFFIX)
 TARFILERT = bin.$(DISTARCH).vice-$(TBVERSION_RT)-$(RDATE).tar$(TARSUFFIX)
 
-TARFILESLL = bin.$(DISTARCH).vdmsl-$(TBVERSION_SL)-Lite-$(RDATE).tar$(TARSUFFIX)
-TARFILEPPL = bin.$(DISTARCH).vdmpp-$(TBVERSION_PP)-Lite-$(RDATE).tar$(TARSUFFIX)
-TARFILERTL = bin.$(DISTARCH).vice-$(TBVERSION_RT)-Lite-$(RDATE).tar$(TARSUFFIX)
 TARFILECG = bin.$(DISTARCH)-$(DISTCC).cglib-$(TBVERSION_PP)-$(RDATE).tar$(TARSUFFIX)
 
 TBNAMESL=The VDM-SL Toolbox
@@ -4847,8 +4826,6 @@ ifeq ($(strip $(OSTYPE)),Darwin)
 	cp $(PWD)/vdmtools.icns $(CONT_PP)/Resources/vdmtools.icns
 # UML
 	cp $(PWD)/NewClass.rtf $(CONT_PP)/uml/.
-# J2V
-#	cp $(PWD)/j2vdll.so $(CONT_PP)/MacOS/j2vdll.so
 # omniORB
 	cp $(DISTDIR)/lib/$(LIBOMNIORB4) $(DISTDIR)/lib/$(LIBOMNITHREAD) $(DISTDIR)/lib/$(LIBOMNIDYNAMIC4) \
 	   $(CONT_PP)/lib/.
@@ -4918,12 +4895,10 @@ ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 else
 	cp $(PWD)/$(VDMPP_CUI_NAME) $(DISTDIR)/bin/vppde.bin
 	$(STRIP) $(DISTDIR)/bin/vppde.bin
-#	ln -s $(PWD)/vppde.script $(DISTDIR)/bin/vppde
 	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppde.bin/; print;' > $(DISTDIR)/bin/vppde
 	chmod 755 $(DISTDIR)/bin/vppde
 	cp $(PWD)/$(VDMPP_GUI_NAME) $(DISTDIR)/bin/vppqt.bin
 	$(STRIP) $(DISTDIR)/bin/vppqt.bin
-#	ln -s $(PWD)/vppgde.script $(DISTDIR)/bin/vppgde
 	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppqt.bin/; print;' > $(DISTDIR)/bin/vppgde
 	chmod 755 $(DISTDIR)/bin/vppgde
 	cp $(QMFILES) $(DISTDIR)/bin/.
@@ -5069,12 +5044,10 @@ ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 else
 	cp $(PWD)/$(VDMRT_CUI_NAME) $(DISTDIR)/bin/vicede.bin
 	$(STRIP) $(DISTDIR)/bin/vicede.bin
-#	ln -s $(PWD)/vicede.script $(DISTDIR)/bin/vicede
 	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vicede.bin/; print;' > $(DISTDIR)/bin/vicede
 	chmod 755 $(DISTDIR)/bin/vicede
 	cp $(PWD)/$(VDMRT_GUI_NAME) $(DISTDIR)/bin/viceqt.bin
 	$(STRIP) $(DISTDIR)/bin/viceqt.bin
-#	ln -s $(PWD)/vicegde.script $(DISTDIR)/bin/vicegde
 	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/viceqt.bin/; print;' > $(DISTDIR)/bin/vicegde
 	chmod 755 $(DISTDIR)/bin/vicegde
 	cp $(QMFILES) $(DISTDIR)/bin/.

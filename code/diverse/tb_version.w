@@ -177,7 +177,7 @@ std::wstring TB_Version::FormatVersionId(bool compressed) const
     s << dot << subminor;
   }
   if (0 != subsubminor) {
-    s << subsubminor;
+    s << Char(subsubminor).GetValue();
   }
   return s.str();
 }
