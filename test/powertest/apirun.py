@@ -29,9 +29,9 @@ def execute(lang, testType):
   util.SetProfileBaseName("gmon-api-"+lang+"-"+testType+"-"+cmdline.StartDate())
   
   if lang == 'sl':
-    vdmServer = cmdline.LookUp ('api-sl-server')
+    vdmServer = os.path.expanduser(cmdline.LookUp ('api-sl-server'))
   else:
-    vdmServer = cmdline.LookUp ('api-pp-server')
+    vdmServer = os.path.expanduser(cmdline.LookUp ('api-pp-server'))
 
 
   start_toolbox = cmdline.LookUp ('api-run-start-toolbox')
@@ -47,16 +47,15 @@ def execute(lang, testType):
     
     if pid == 0:
       report.Progress(3, "Trying to start "+lang+"-toolbox: "+vdmServer)
-      os.system (vdmServer + " " + "".join (server_args) + " > tb_output.tmp 2>&1")
-      #os.execv (vdmServer, args)
+      cmd = vdmServer + " " + "".join (server_args) + " > tb_output.tmp 2>&1"
+      os.system (cmd)
       report.Error ("Startup of Toolbox failed!")
       return false
       _exit (-1)
     
-#    print ("Waiting 5 seconds for " + lang + "-server to start up...")
-#    time.sleep (5)
-    print ("Waiting 2 seconds for " + lang + "-server to start up...")
-    time.sleep (2)
+    waittime = 2 
+    print ("Waiting " + str(waittime) + " seconds for " + lang + "-server to start up...")
+    time.sleep (waittime)
     
   if "VDM_OBJECT_LOCATION" in environ:
     location = environ["VDM_OBJECT_LOCATION"]
@@ -72,11 +71,12 @@ def execute(lang, testType):
     location = location + '/vppref.ior'
 
   try:
-    stringified_ior = open (location).read()
+    stringified_ior = open (os.path.expanduser(location)).read()
   except IOError:
     report.Error ("Could not find IOR file " + location + "! Please start " + lang + "-Toolbox!")
     if start_toolbox == 'yes':
       os.kill (pid, 9)
+    os.system("tset")
     return false
 
   try:
