@@ -52,7 +52,6 @@ def PP2SL(data):
   data = re.sub(pattern,"\\1module\\2 exports all definitions ", data)
   return re.sub("\\bpublic\\b","",data)
 
-
 #--------------------------------------------------------------------------------
 # Translate the vdm file 'fileName' to an AST using the vdmde parser 'parser'
 #--------------------------------------------------------------------------------
@@ -76,6 +75,7 @@ def VDM2AST(fileName,parser, typeCheck):
     cmd = parser + " -ta " + vdmFile
   else:
     cmd = parser + " -pa " + vdmFile
+
   (exitCode, stdout, stderr) = util.RunCommand(cmd, 0, "Error in input file (" + vdmFile +"), possible syntax error")
   if exitCode != 0:
     return false
@@ -94,6 +94,7 @@ def VDM2AST(fileName,parser, typeCheck):
       _, (_, msg), _ = sys.exc_info()
       report.Error("Error while removing " + astFile + ": " + msg)
       return false
+
   try:
     os.rename('m4pp', astFile)
   except os.error:
@@ -131,7 +132,7 @@ def ParseOptionsFile(fileName):
   filestem = util.StripExt(fileName)
   optionsFileName = filestem + '.opt'
   if not os.path.exists(optionsFileName):
-    return "";
+    return ""
 
   report.Progress(4, "Parsing " + optionsFileName)
   data = util.ReadFile(optionsFileName)
@@ -144,7 +145,7 @@ def ParseOptionsFile(fileName):
   startMatch = reStart.search(data, startIndex)
   if startMatch == None:
     report.Error("Unable to parse options file (2)")
-    return
+    return ""
 
   startIndex = startMatch.start()
   reEnd = re.compile(";?\s*end\s+OPTIONS", re.M)

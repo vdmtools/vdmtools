@@ -204,6 +204,8 @@ export LANG=ja_JP.SJIS
 
 export EDITOR=vim
 
+export DISPLAY=localhost:0.0
+
 export PATH=${PATH}:${HOME}/bin:.
 export JDKHOME=/usr/java/default
 export ANTHOME=/usr/local/apache-ant-1.9.4

@@ -132,12 +132,9 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
 #if QT_VERSION >= 0x040000
   this->setWindowTitle(Qt2TB::GiveToolTitleI());
   this->setWindowIcon(QIcon(this->getImage("vdm_small.png", false)));
-//  this->setWindowIcon(QIcon(this->getImage("vdm.png", false)));
-//  this->setUnifiedTitleAndToolBarOnMac(true);
 #else
   this->setCaption(Qt2TB::GiveToolTitleI());
   this->setIcon(this->getImage("vdm_small.png", false));
-//  this->setIcon(this->getImage("vdm.png", false));
 #endif // QT_VERSION >= 0x040000
 
   // Initialize "normal" instance variables
@@ -152,8 +149,9 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
     this->envVarsOk = false;
     return;
   }
-  else
+  else {
     this->envVarsOk = true;
+  }
 
   this->projectName = "New Project";
 
@@ -258,7 +256,6 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   this->useCorba = false;
 
   this->repaint();
-//  this->update();
   this->closing = false;
 
   this->isModified = false;
@@ -303,65 +300,69 @@ void mainW::createDocWindow()
 
 QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
 {
-  if( as.accel == -1 ) // for separator
-  {
+  if( as.accel == -1 ) { // for separator
 #if QT_VERSION >= 0x040000
     menu->addSeparator();
 #else
     menu->insertSeparator();
 #endif // QT_VERSION >= 0x040000
-    if( as.tool )
+    if( as.tool ) {
       toolbar->addSeparator();
+    }
     return NULL;
   }
-  else if( as.accel == -2 )
+  else if( as.accel == -2 ) {
     return NULL;
+  }
 
 #if QT_VERSION >= 0x040000
   QIcon iconSet;
 #else
   QIconSet iconSet;
 #endif // QT_VERSION >= 0x040000
-  if( as.imgfile != NULL )
-  {
+  if( as.imgfile != NULL ) {
     QPixmap pm (this->getImage(as.imgfile, false));
-    if( !pm.isNull() )
+    if( !pm.isNull() ) {
 #if QT_VERSION >= 0x040000
       iconSet.addPixmap( pm, QIcon::Normal);
 #else
       iconSet.setPixmap( pm, QIconSet::Automatic );
 #endif // QT_VERSION >= 0x040000
-
+    }
     QString greyFileName (as.imgfile);
     greyFileName.replace(QRegExp(".png"), "_grey.png");
     QPixmap gpm (this->getImage(greyFileName, true));
-    if( !gpm.isNull() )
+    if( !gpm.isNull() ) {
 #if QT_VERSION >= 0x040000
       iconSet.addPixmap( gpm, QIcon::Disabled);
 #else
       iconSet.setPixmap( gpm, QIconSet::Automatic, QIconSet::Disabled);
 #endif // QT_VERSION >= 0x040000
-    else
+    }
+    else {
 #if QT_VERSION >= 0x040000
       iconSet.addPixmap( pm, QIcon::Disabled);
 #else
       iconSet.setPixmap( pm, QIconSet::Automatic, QIconSet::Disabled);
 #endif // QT_VERSION >= 0x040000
+    }
   }
 
   // create new action
   QAction *newAction = new QAction(this);
-  if (!iconSet.isNull())
 
 #if QT_VERSION >= 0x040000
+  if (!iconSet.isNull()) {
     newAction->setIcon(iconSet);
-
+  }
 #ifdef __darwin__
   QString str (as.text);
-  if ((str == "&About") || (str == "About &Qt"))
+  if ((str == "&About") || (str == "About &Qt")) {
     newAction->setText( str );
-  else
+  }
+  else {
     newAction->setText( mf(tr(as.text)) );
+  }
 #else
   newAction->setText( mf(tr(as.text)) );
 #endif // __darwin__
@@ -369,7 +370,9 @@ QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
   newAction->setShortcut(as.accel);
   newAction->setStatusTip( tr(as.tooltip) );
 #else
-  newAction->setIconSet(iconSet);
+  if (!iconSet.isNull()) {
+    newAction->setIconSet(iconSet);
+  }
   newAction->setMenuText( mf(tr(as.text)) );
   newAction->setAccel(as.accel);
 #endif // QT_VERSION >= 0x040000
@@ -385,13 +388,13 @@ QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
 #endif // QT_VERSION >= 0x040000
 
   // add new action to toolbar
-  if(as.tool)
+  if(as.tool) {
 #if QT_VERSION >= 0x040000
     toolbar->addAction(newAction);
 #else
     newAction->addTo(toolbar);
 #endif // QT_VERSION >= 0x040000
-
+  }
   return newAction;
 }
 
@@ -399,11 +402,7 @@ QString mainW::mf( const QString & str )
 {
 #ifdef __darwin__
   QString ret ( str );
-//#if QT_VERSION >= 0x040000
-//  QRegExp rx2 ("&");
-//#else
   QRegExp rx ("\\(&.\\)");
-//#endif // QT_VERSION >= 0x040000
   ret.replace( rx, "" );
 #if QT_VERSION >= 0x040000
   QRegExp rx2 ("&");
@@ -1778,15 +1777,17 @@ QString mainW::getFilter()
 {
   QString filter;
 
-  if (this->lastPostfix == "tex")
-    filter += "Tex files (*.tex);;" ;
+  if (this->lastPostfix == "tex") {
+    filter += "Tex files (*.tex);;";
+  }
 #ifdef VDMPP
-  else if (this->lastPostfix == "java")
+  else if (this->lastPostfix == "java") {
     filter += "Java files (*.java);;";
+  }
 #endif // VDMPP
-  else if (this->lastPostfix == "all")
+  else if (this->lastPostfix == "all") {
     filter += "All Files (*);;";
-
+  }
 #ifdef VDMSL
   filter += "VDM files (*.vdm *.vdmsl *.rtf *.debug *.opt nulloptions);;";
 #endif //VDMSL
@@ -1796,16 +1797,18 @@ QString mainW::getFilter()
 #else
   filter += "VDM files (*.vpp *.vdmpp *.rtf);;";
 #endif // VICE
-  if (this->lastPostfix != "java")
+  if (this->lastPostfix != "java") {
     filter += "Java files (*.java);;";
+  }
 #endif //VDMPP
 
-  if (this->lastPostfix != "tex")
+  if (this->lastPostfix != "tex") {
     filter += "Tex files (*.tex)" ;
-  if (this->lastPostfix != "all")
-  {
-    if( filter.right(2) != ";;" )
+  }
+  if (this->lastPostfix != "all") {
+    if( filter.right(2) != ";;" ) {
       filter += ";;"; 
+    }
     filter += "All Files (*)";
   }
   return filter;
@@ -1816,18 +1819,20 @@ void mainW::setLastFilter(const QStringList& files)
   if (files.isEmpty()) return;
 
   QString ftype;
-  for (QStringList::const_iterator itr = files.begin(); itr != files.end(); itr++)
-  {
+  for (QStringList::const_iterator itr = files.begin(); itr != files.end(); itr++) {
     QString filename (*itr);
     QString tmptype;
-    if( filename.right(4) == ".tex" )
+    if( filename.right(4) == ".tex" ) {
       tmptype = "tex";
-    else if( filename.right(4) == ".rtf" )
+    }
+    else if( filename.right(4) == ".rtf" ) {
       tmptype = "vdm";
+    }
 #ifdef VDMSL
     else if( ( filename.right(4) == ".vdm" ) ||
-             ( filename.right(6) == ".vdmsl" ) )
+             ( filename.right(6) == ".vdmsl" ) ) {
       tmptype = "vdm";
+    }
 #endif // VDMSL
 #ifdef VDMPP
 //    else if( ( filename.right(4) == ".vdm" ) ||
@@ -1836,31 +1841,32 @@ void mainW::setLastFilter(const QStringList& files)
     else if( ( filename.right(4) == ".vpp" ) ||
              ( filename.right(6) == ".vdmpp" ) ||
              ( filename.right(5) == ".vice" ) ||
-             ( filename.right(6) == ".vdmrt" ) )
+             ( filename.right(6) == ".vdmrt" ) ) {
       tmptype = "vpp";
-    else if( filename.right(5) == ".java" )
+    }
+    else if( filename.right(5) == ".java" ) {
       tmptype = "java";
+    }
 #endif // VDMPP
 
-    if ( ftype == "" && tmptype != "" )
+    if ( ftype == "" && tmptype != "" ) {
       ftype = tmptype;
-    if ( ftype != "" && ftype != tmptype )
+    }
+    else if ( ftype != "" && ftype != tmptype ) {
       ftype = "all";
       break;
+    }
   }
   this->lastPostfix = ftype;
 }
 
 void mainW::setLastDir(const QString& file)
 {
-  if( file.isEmpty() )
-  {
+  if( file.isEmpty() ) {
     this->lastDir = this->getHome();
   }
-  else
-  {
+  else {
     QFileInfo fi( file );
-//    if( !fi.exists() ) return;
 #if QT_VERSION >= 0x040000
     this->lastDir = fi.absolutePath(); 
 #else
@@ -1891,8 +1897,7 @@ void mainW::addProject_qt3()
   QString filter (this->getFilter());
   QString title (tr("Select files to Add to project"));
   QStringList files (QtPort::QtGetOpenFileNames(this, title, this->lastDir, filter));
-  if (!files.isEmpty()) 
-  {
+  if (!files.isEmpty()) {
     this->setLastFilter(files);
     this->setLastDir(files[0]);
     this->sendCommand(new AddFilesCMD(files));
@@ -1947,8 +1952,7 @@ void mainW::newFile_qt3()
 #endif // QT_VERSION >= 0x040000
 {
   // check project exists
-  if (Qt2TB::getProjectNameI().isNull())
-  {
+  if (Qt2TB::getProjectNameI().isNull()) {
     QMessageBox::warning(this, tr("Creating new File"), QString(tr("Please save project first")));
     return;
   }
@@ -1957,8 +1961,7 @@ void mainW::newFile_qt3()
   // get class/module name
 #ifdef VDMSL
   bool iso = false;
-  if ((moduleList.count() == 1) && (moduleList.first() == QString("DefaultMod")))
-  {
+  if ((moduleList.count() == 1) && (moduleList.first() == QString("DefaultMod"))) {
     iso = true;
   }
 #endif // VDMSL
@@ -1966,15 +1969,13 @@ void mainW::newFile_qt3()
   bool createOk = false;
   QString clmodnm;
   QString filenm;
-  while(!createOk)
-  {
+  while(!createOk) {
     bool ok;
 #ifdef VDMSL
 //    QString title (iso ? tr("new file") : tr("new module"));
 //    //QString label (tr("Please input file name:"));
 //    QString label (iso ? tr("Please input file name:") : tr("Please input module name:"));
-    if (iso) 
-    {
+    if (iso) {
       createOk = true;
       break;
     }
@@ -1992,26 +1993,25 @@ void mainW::newFile_qt3()
 #endif // QT_VERSION >= 0x040000
     if (!ok) return;
 
-    if (!clmodnm.isEmpty())
-    {
+    if (!clmodnm.isEmpty()) {
       // check class/module name isn't exists
       bool forall = true;
       QStringList::const_iterator iter;
-      for (iter = moduleList.begin(); (iter != moduleList.end()) && forall; ++iter)
-      { 
+      for (iter = moduleList.begin(); (iter != moduleList.end()) && forall; ++iter) { 
         forall = (clmodnm != *iter);
       }
-      if (!forall)
-      {
+      if (!forall) {
         QString str = clmodnm + " " + QString(tr("already exists"));
         QMessageBox::warning(this, tr("Creating new File"), str);
       }
-      else
+      else {
         createOk = true;
+      }
     }
   }
-  if (createOk)
+  if (createOk) {
     this->saveNewFileAs(clmodnm);
+  }
 }
 
 //
@@ -2026,15 +2026,13 @@ void mainW::externalEditor_qt4(bool)
 void mainW::externalEditor_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (this->tw->get_if_useExternalEditor())
-  {
+  if (this->tw->get_if_useExternalEditor()) {
 #if QT_VERSION >= 0x040000
     QWidget * aw = this->ws->activeSubWindow();
 #else
     QWidget * aw = this->ws->activeWindow();
 #endif // QT_VERSION >= 0x040000
-    if( aw != NULL )
-    {
+    if( aw != NULL ) {
 #if QT_VERSION >= 0x040000
       if( aw == this->browserw->parentWidget() )
 #else
@@ -2043,8 +2041,7 @@ void mainW::externalEditor_qt3()
       {
         QStringList files (this->browserw->getSelectedFiles(true));
         QStringList::const_iterator itr;
-        for (itr = files.begin(); itr != files.end(); ++itr)
-        {
+        for (itr = files.begin(); itr != files.end(); ++itr) {
           QString filename (*itr);
           openEditor(filename, 1, 1);
         }
@@ -2068,13 +2065,13 @@ void mainW::externalEditor_qt3()
 
 void mainW::openEditor(QString file, int line, int col)
 {
-  if (!this->tw->get_if_useExternalEditor())
-    return;
+  if (this->tw->get_if_useExternalEditor()) {
 
-  QString editor (this->tw->get_if_editorName());
-  QString format (this->tw->get_if_singleLoadFormat());
+    QString editor (this->tw->get_if_editorName());
+    QString format (this->tw->get_if_singleLoadFormat());
 
-  this->codew->openFileWithEditor(editor, format, file, line, col);
+    this->codew->openFileWithEditor(editor, format, file, line, col);
+  }
 }
 
 //
@@ -2116,12 +2113,13 @@ void mainW::browser_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * sw = this->browserw->parentWidget();
-  if (sw->isVisible())
+  if (sw->isVisible()) {
     sw->hide();
-  else
-  {
-    if (!this->browserw->isVisible())
+  }
+  else {
+    if (!this->browserw->isVisible()) {
       this->browserw->show();
+    }
     sw->show();
     sw->raise();
     this->browserw->setFocus();
@@ -2132,10 +2130,10 @@ void mainW::browser_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::browser_qt3()
 {
-  if (this->browserw->isVisible())
+  if (this->browserw->isVisible()) {
     this->browserw->hide();
-  else
-  {
+  }
+  else {
     this->browserw->show();
     this->browserw->parentWidget()->raise();
     this->browserw->setFocus();
@@ -2150,12 +2148,13 @@ void mainW::codeInspector_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * w = this->codew->parentWidget();
-  if (w->isVisible())
+  if (w->isVisible()) {
     w->hide();
-  else
-  {
-    if (!this->codew->isVisible())
+  }
+  else {
+    if (!this->codew->isVisible()) {
       this->codew->show();
+    }
     w->show();
     w->raise();
     this->codew->setFocus();
@@ -2166,10 +2165,10 @@ void mainW::codeInspector_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::codeInspector_qt3()
 {
-  if (this->codew->isVisible() )
+  if (this->codew->isVisible() ) {
     this->codew->hide();
-  else
-  {
+  }
+  else {
     this->codew->show();
     this->codew->parentWidget()->raise();
     this->codew->setFocus();
@@ -2184,12 +2183,13 @@ void mainW::errorlist_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * w = this->errorw->parentWidget();
-  if (w->isVisible())
+  if (w->isVisible()) {
     w->hide();
-  else
-  {
-    if (!this->errorw->isVisible())
+  }
+  else {
+    if (!this->errorw->isVisible()) {
       this->errorw->show();
+    }
     w->show();
     w->raise();
     this->errorw->setFocus();
@@ -2200,10 +2200,10 @@ void mainW::errorlist_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::errorlist_qt3()
 {
-  if (this->errorw->isVisible())
+  if (this->errorw->isVisible()) {
     this->errorw->hide();
-  else
-  {
+  }
+  else {
     this->errorw->show();
     this->errorw->parentWidget()->raise();
     this->errorw->setFocus();
@@ -2218,12 +2218,13 @@ void mainW::search_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * w = this->searchw->parentWidget();
-  if (w->isVisible())
+  if (w->isVisible()) {
     w->hide();
-  else
-  {
-    if (!this->searchw->isVisible())
+  }
+  else {
+    if (!this->searchw->isVisible()) {
       this->searchw->show();
+    }
     w->show();
     w->raise();
     this->searchw->setFocus();
@@ -2234,10 +2235,10 @@ void mainW::search_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::search_qt3()
 {
-  if (this->searchw->isVisible())
+  if (this->searchw->isVisible()) {
     this->searchw->hide();
-  else
-  {
+  }
+  else {
     this->searchw->show();
     this->searchw->parentWidget()->raise();
     this->searchw->setFocus();
@@ -2252,12 +2253,13 @@ void mainW::interpreterWindow_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * w = this->interpreterw->parentWidget();
-  if (w->isVisible())
+  if (w->isVisible()) {
     w->hide();
-  else
-  {
-    if (!this->interpreterw->isVisible())
+  }
+  else {
+    if (!this->interpreterw->isVisible()) {
       this->interpreterw->show();
+    }
     w->show();
     w->raise();
     this->interpreterw->setFocus();
@@ -2269,10 +2271,10 @@ void mainW::interpreterWindow_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::interpreterWindow_qt3()
 {
-  if (this->interpreterw->isVisible())
+  if (this->interpreterw->isVisible()) {
     this->interpreterw->hide();
-  else
-  {
+  }
+  else {
     this->interpreterw->show();
     this->interpreterw->parentWidget()->raise();
     this->interpreterw->setFocus();
@@ -2305,12 +2307,13 @@ void mainW::log_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * w = this->logw->parentWidget();
-  if (w->isVisible())
+  if (w->isVisible()) {
     w->hide();
-  else
-  {
-    if (!this->logw->isVisible())
+  }
+  else {
+    if (!this->logw->isVisible()) {
       this->logw->show();
+    }
     w->show();
     this->logw->setFocus();
   }
@@ -2320,10 +2323,10 @@ void mainW::log_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::log_qt3()
 {
-  if (this->logw->isVisible())
+  if (this->logw->isVisible()) {
     this->logw->hide();
-  else
-  {
+  }
+  else {
     this->logw->show();
     this->logw->setFocus();
   }
@@ -2337,12 +2340,13 @@ void mainW::pog_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   QWidget * w = this->pogw->parentWidget();
-  if (w->isVisible())
+  if (w->isVisible()) {
     w->hide();
-  else
-  {
-    if (!this->pogw->isVisible())
+  }
+  else {
+    if (!this->pogw->isVisible()) {
       this->pogw->show();
+    }
     w->show();
     this->pogw->setFocus();
   }
@@ -2352,10 +2356,10 @@ void mainW::pog_qt4(bool)
 #if QT_VERSION < 0x040000
 void mainW::pog_qt3()
 {
-  if (this->pogw->isVisible())
+  if (this->pogw->isVisible()) {
     this->pogw->hide();
-  else
-  {
+  }
+  else {
     this->pogw->show();
     this->pogw->setFocus();
   }
@@ -2376,11 +2380,9 @@ void mainW::rose_qt3()
 #endif // QT_VERSION < 0x040300
 {
 #ifdef VDMPP
-  if (Qt2TB::getProjectNameI().isNull())
-  {
+  if (Qt2TB::getProjectNameI().isNull()) {
     QStringList files(Qt2TB::getProjectFilesI());
-    if (!files.isEmpty())
-    {
+    if (!files.isEmpty()) {
       Qt2TB::setBlock( false );
       bool ok = this->saveProjectAs();
       Qt2TB::setBlock( true );
@@ -2390,22 +2392,19 @@ void mainW::rose_qt3()
       Qt2TB::setBlock( true );
     }
   }
-  if (this->rosew == NULL)
-  {
+  if (this->rosew == NULL) {
     this->rosew = new roseW(this, this, "", true, 0);
     QObject::connect(this->rosew, SIGNAL(sendUMLDiffCommand(QStringList)),
                      this, SLOT(sendUMLDiffCommand(QStringList)));
   }
 
 #ifdef _MSC_VER
-  if (this->tw != NULL)
-  {
+  if (this->tw != NULL) {
     this->rosew->SetRoseMode(this->tw->isRoseMode());
   }
 #endif // _MSC_VER
 
-  if (this->rosew->AddAllClasses())
-  {
+  if (this->rosew->AddAllClasses()) {
 #if QT_VERSION >= 0x040000
     this->rosew->setWindowIcon(this->getImage( "rose.png", false ));
 #else
@@ -2455,8 +2454,7 @@ void mainW::type_qt3()
 #endif // QT_VERSION >= 0x040000
 {
   QStringList moduleList (this->browserw->getSelectedModules());
-  if( !moduleList.empty() )
-  {
+  if( !moduleList.empty() ) {
     this->sendTypecheckCommand(moduleList);
   }
 } 
@@ -2500,8 +2498,7 @@ void mainW::pretty_qt3()
 #endif // QT_VERSION >= 0x040000
 {
   QStringList sel (this->browserw->getSelectedFiles());
-  if( !sel.empty() )
-  {
+  if( !sel.empty() ) {
     this->sendCommand(new PrettyPrintCMD(sel));
   }
 }
@@ -2542,10 +2539,10 @@ void mainW::java2vdm_qt3()
 #endif // QT_VERSION < 0x040000
 {
 #ifdef VDMPP
-  if(!this->browserw->isJavaClassSelected())
+  if(!this->browserw->isJavaClassSelected()) {
     QMessageBox::warning( this, tr("Generation of VDM++ from Java"), QString(tr(javaWinSelErr)));
-  else 
-  {
+  }
+  else {
     QStringList sel (this->browserw->getSelectedModules());
     this->sendCommand(new VDMGenerateCMD(sel, ow->get_j2v_stubsOnly(), true, ow->get_j2v_transforms()));
   }
@@ -2567,8 +2564,7 @@ void mainW::run_qt3()
 #endif // QT_VERSION < 0x040000
 {
   QString expr = this->ow->getExpression();
-  if (!expr.isEmpty())
-  {
+  if (!expr.isEmpty()) {
 #if QT_VERSION >= 0x040000
     this->ipInit_qt4(true);
 #else
@@ -2627,14 +2623,14 @@ void mainW::genPOG_qt3()
 {
   this->pogw->clearAllMessages();
 #if QT_VERSION >= 0x040000
-  if (!this->pogw->parentWidget()->isVisible())
-  {
+  if (!this->pogw->parentWidget()->isVisible()) {
     this->pogw->parentWidget()->show();
     this->pogw->show();
   }
 #else
-  if (!this->pogw->isVisible())
+  if (!this->pogw->isVisible()) {
     this->pogw->show();
+  }
 #endif // QT_VERSION >= 0x040000
   
   QStringList moduleList (this->browserw->getSelectedModules());
@@ -2656,17 +2652,19 @@ void mainW::ipInit_qt3()
 {
   this->executeCommand("init");
   emit refreshButtons(this->tbThread->canContinue());
-  if( NULL != this->interpreterw )
-  {
+  if( NULL != this->interpreterw ) {
 #if QT_VERSION >= 0x040000
-    if( !this->interpreterw->parentWidget()->isVisible() )
-       this->interpreterw->parentWidget()->show(); 
-    if( !this->interpreterw->isVisible() )
-       this->interpreterw->show(); 
+    if( !this->interpreterw->parentWidget()->isVisible() ) {
+      this->interpreterw->parentWidget()->show(); 
+    }
+    if( !this->interpreterw->isVisible() ) {
+      this->interpreterw->show(); 
+    }
     this->interpreterw->parentWidget()->raise();
 #else
-    if( !this->interpreterw->isVisible() )
+    if( !this->interpreterw->isVisible() ) {
       this->interpreterw->show(); 
+    }
     this->interpreterw->parentWidget()->raise();
 #endif // QT_VERSION >= 0x040000
     this->interpreterw->setFocus();
@@ -2687,7 +2685,7 @@ void mainW::ipStep_qt4(bool)
 void mainW::ipStep_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (this->tbThread->canContinue()){
+  if (this->tbThread->canContinue()) {
     this->executeCommand("step");
   }
   emit refreshButtons(this->tbThread->canContinue());
@@ -2724,8 +2722,7 @@ void mainW::ipSingle_qt4(bool)
 void mainW::ipSingle_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (this->tbThread->canContinue())
-  {
+  if (this->tbThread->canContinue()) {
     this->executeCommand("singlestep");
   }
   emit refreshButtons(this->tbThread->canContinue());
@@ -2744,8 +2741,7 @@ void mainW::ipContinue_qt4(bool)
 void mainW::ipContinue_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (this->tbThread->canContinue())
-  {
+  if (this->tbThread->canContinue()) {
     this->executeCommand("cont");
   }
   emit refreshButtons(this->tbThread->canContinue());
@@ -2764,8 +2760,7 @@ void mainW::ipFinish_qt4(bool)
 void mainW::ipFinish_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (this->tbThread->canContinue())
-  {
+  if (this->tbThread->canContinue()) {
     this->executeCommand("finish");
   }
   emit refreshButtons(this->tbThread->canContinue());
@@ -2816,8 +2811,7 @@ void mainW::ipStop_qt4(bool)
 void mainW::ipStop_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (this->tbThread->canContinue())
-  {
+  if (this->tbThread->canContinue()) {
     Qt2TB::ipStopI();
   }
   emit refreshButtons(this->tbThread->canContinue());
@@ -2961,8 +2955,7 @@ void mainW::resetFilePosition(QString title, QString filename, int line, int col
 //
 void mainW::resetFilePosition(QString filename, int line, int col)
 {
-  if (this->browserw)
-  {
+  if (this->browserw) {
     QString apparentFile (this->browserw->getFilePath(filename));
     QString filename; // empty
     QApplication::postEvent(this, new OpenFileEvent(filename, apparentFile, line, col, 1));  
@@ -2986,16 +2979,17 @@ void mainW::setBreakPoint()
 //
 bool mainW::event (QEvent * e)
 {
-  if (e->type() == QEvent::WindowActivate)
-  {
-    if (this->browserw)
+  if (e->type() == QEvent::WindowActivate) {
+    if (this->browserw) {
       this->browserw->checkModifiedModules();
-    if (this->interpreterw)
+    }
+    if (this->interpreterw) {
       this->interpreterw->checkBreakpointsFile();
+    }
   }
-  else if (e->type () >= QEvent::User)
+  else if (e->type () >= QEvent::User) {
     this->userEvent( e );
-
+  }
   return QWidget::event(e);
 }
 //
@@ -3021,40 +3015,34 @@ void mainW::userEvent(QEvent *e)
   this->appRef->lock();
 #endif // QT_VERSION < 0x040000
   switch((int)e->type()) {
-    case GUIEvent::EV_OPENFILE:
-    {
+    case GUIEvent::EV_OPENFILE: {
       OpenFileEvent *ofe = (OpenFileEvent*) e;
       openFile(ofe->title(), ofe->filename(), ofe->line(), ofe->column(), ofe->length());
       break;
     }
-    case GUIEvent::EV_CHANGE_PROJECT_NAME:
-    {
+    case GUIEvent::EV_CHANGE_PROJECT_NAME: {
        // caution
        // at this point projectname is't changed in repository
        //
       this->loading = false;
       break;
     }
-    case GUIEvent::EV_POST_SAVE_PROJECT_AS:
-    {
+    case GUIEvent::EV_POST_SAVE_PROJECT_AS: {
       this->browserw->refreshProjectName();
-      if (!this->ow->optionFileExists())
-      {
+      if (!this->ow->optionFileExists()) {
         this->ow->saveOptions();
       }
       this->ow->loadOptions();
       this->loading = false;
       break;
     }
-    case GUIEvent::EV_LOAD_PROJECT:
-    {
+    case GUIEvent::EV_LOAD_PROJECT: {
       this->browserw->refreshProjectName();
       this->ow->loadOptions();
       this->loading = false;
       break;
     }
-    case GUIEvent::EV_NEW_UNNAMEDPROJECT:
-    {
+    case GUIEvent::EV_NEW_UNNAMEDPROJECT: {
       this->browserw->refreshFiles();
       //this->ow->loadOptions();
       Qt2TB::InitOptions();
@@ -3062,210 +3050,174 @@ void mainW::userEvent(QEvent *e)
       this->clearWindows(true);
       break;
     }
-    case GUIEvent::EV_ADD_FILES:
-    {
+    case GUIEvent::EV_ADD_FILES: {
       AddFileEvent *afe = (AddFileEvent*) e;
       this->addFiles(afe->files());
       break;
     }
-    case GUIEvent::EV_REMOVE_FILES:
-    {
+    case GUIEvent::EV_REMOVE_FILES: {
       RemoveFilesEvent *rfe = (RemoveFilesEvent*) e;
       this->removeFiles(rfe->files());
       break;
     }
-    case GUIEvent::EV_ADD_MODULES:
-    {
+    case GUIEvent::EV_ADD_MODULES: {
       AddModulesEvent *ame = (AddModulesEvent*) e;
       this->addModules(ame->modules());
       break;
     }
-    case GUIEvent::EV_REMOVE_MODULES:
-    {
+    case GUIEvent::EV_REMOVE_MODULES: {
       RemoveModulesEvent *rme = (RemoveModulesEvent*) e;
       this->removeModules(rme->modules());
       break;
     }
-    case GUIEvent::EV_CHANGE_MODULES_STATUS:
-    {
+    case GUIEvent::EV_CHANGE_MODULES_STATUS: {
       ChangeModulesStatusEvent *cms = (ChangeModulesStatusEvent*) e;
       this->changeModulesStatus(cms->modules());
       break;
     }
-    case GUIEvent::EV_CHANGED_FILE_STATUS:
-    {
+    case GUIEvent::EV_CHANGED_FILE_STATUS: {
       ChangedFileStatusEvent *cfs = (ChangedFileStatusEvent*) e;
       this->changeFileState(cfs->file());
       break;
     }
-    case GUIEvent::EV_ADD_BREAK_NAME:
-    {
+    case GUIEvent::EV_ADD_BREAK_NAME: {
       AddBreakNameEvent *abn = (AddBreakNameEvent*) e;
       this->addBreakName(abn->breakName(), abn->breakNum());
       break;
     }
-    case GUIEvent::EV_ADD_BREAK_POS:
-    {
+    case GUIEvent::EV_ADD_BREAK_POS: {
       AddBreakPosEvent *abp = (AddBreakPosEvent*) e;
       this->addBreakPos(abp->breakName(), abp->breakLine(), abp->breakCol(), abp->breakNum());
       break;
     }
-    case GUIEvent::EV_REMOVE_BREAK:
-    {
+    case GUIEvent::EV_REMOVE_BREAK: {
       RemoveBreakEvent *rbe = (RemoveBreakEvent*) e;
       this->removeBreak(rbe->breakNum());
       break;
     }
-    case GUIEvent::EV_ENABLE_BREAK:
-    {
+    case GUIEvent::EV_ENABLE_BREAK: {
       EnableBreakEvent *ebe = (EnableBreakEvent*) e;
       this->enableBreak(ebe->breakNum());
       break;
     }
-    case GUIEvent::EV_DISABLE_BREAK:
-    {
+    case GUIEvent::EV_DISABLE_BREAK: {
       DisableBreakEvent *dbe = (DisableBreakEvent*) e;
       this->disableBreak(dbe->breakNum());
       break;
     }
-    case GUIEvent::EV_BACK_TRACE:
-    {
+    case GUIEvent::EV_BACK_TRACE: {
       BackTraceEvent *bte = (BackTraceEvent*) e;
       this->setBackTrace(bte->bts());
       break;
     }
-    case GUIEvent::EV_GOTO_BT_LEVEL:
-    {
+    case GUIEvent::EV_GOTO_BT_LEVEL: {
       GotoBtLevelEvent *gbl = (GotoBtLevelEvent*) e;
       this->gotoBtLevel(gbl->level());
       break;
     }
-    case GUIEvent::EV_CLEAR_DEBUG_WINDOW:
-    {
+    case GUIEvent::EV_CLEAR_DEBUG_WINDOW: {
       this->clearDebugWindow();
       break;
     }
-    case GUIEvent::EV_UPDATE_SELECTIONS:
-    {
+    case GUIEvent::EV_UPDATE_SELECTIONS: {
       this->updateSelections();
       break;
     }
-    case GUIEvent::EV_CLEAR_ALL:
-    {
+    case GUIEvent::EV_CLEAR_ALL: {
       this->clearWindows(false);
       break;
     }
-    case GUIEvent::EV_ROSE_DIFF:
-    {
+    case GUIEvent::EV_ROSE_DIFF: {
 #ifdef VDMPP
       RoseDiffEvent *rde = (RoseDiffEvent*) e;
       this->addRoseDiff(rde->text());
 #endif // VDMPP
       break;
     }
-    case GUIEvent::EV_INTERPRETER_WRITE:
-    {
+    case GUIEvent::EV_INTERPRETER_WRITE: {
       InterpreterWriteEvent *iwe = (InterpreterWriteEvent*) e;
       this->interpreterWrite(iwe->text());
       break;
     }
-    case GUIEvent::EV_LOG_WRITE:
-    {
+    case GUIEvent::EV_LOG_WRITE: {
       LogWriteEvent *lwe = (LogWriteEvent*) e;
       this->logWrite(lwe->text());
       break;
     }
-    case GUIEvent::EV_POG_ADD:
-    {
+    case GUIEvent::EV_POG_ADD: {
       PogAddEvent *pwe = (PogAddEvent*) e;
       this->pogAdd(pwe);
       break;
     }
-    case GUIEvent::EV_POG_CLEAN:
-    {
+    case GUIEvent::EV_POG_CLEAN: {
       PogCleanUpEvent *pwe = (PogCleanUpEvent*) e;
       this->pogCleanUp(pwe);
       break;
     }
-    case GUIEvent::EV_POG_UPDATE_FILTER:
-    {
+    case GUIEvent::EV_POG_UPDATE_FILTER: {
       this->pogUpdateFilters();
       break;
     }
-    case GUIEvent::EV_ROSE_ERROR:
-    {
+    case GUIEvent::EV_ROSE_ERROR: {
 #ifdef VDMPP
       RoseErrorEvent *ree = (RoseErrorEvent*) e;
       this->addRoseError(ree->text());
 #endif // VDMPP
       break;
     }
-    case GUIEvent::EV_MESSAGE_SHOW:
-    {
+    case GUIEvent::EV_MESSAGE_SHOW: {
       MessageShowEvent *mse = (MessageShowEvent*) e;
       this->showMessage(mse->index(), mse->message());
       break;
     }
-    case GUIEvent::EV_MESSAGE_ADD:
-    {
+    case GUIEvent::EV_MESSAGE_ADD: {
       MessageAddEvent *mae = (MessageAddEvent*) e;
       this->addMessage(mae->errnum(), mae->filename(), mae->line(),
                        mae->column(), mae->message(), mae->tempFilename());
       break;
     }
-    case GUIEvent::EV_MESSAGE_CLEAR_ALL:
-    {
+    case GUIEvent::EV_MESSAGE_CLEAR_ALL: {
       if( !this->loading )
         this->clearAllMessages();
       break;
     }
-    case GUIEvent::EV_MESSAGE_ALL_DONE:
-    {
+    case GUIEvent::EV_MESSAGE_ALL_DONE: {
       this->messagesAllDone();
       break;
     }
-    case GUIEvent::EV_MESSAGE_NEXT:
-    {
+    case GUIEvent::EV_MESSAGE_NEXT: {
       this->nextMessage();
       break;
     }
-    case GUIEvent::EV_MESSAGE_PREV:
-    {
+    case GUIEvent::EV_MESSAGE_PREV: {
       this->prevMessage();
       break;
     }
-    case GUIEvent::EV_MESSAGE_FIRST:
-    {
+    case GUIEvent::EV_MESSAGE_FIRST: {
       this->firstMessage();
       break;
     }
-    case GUIEvent::EV_MESSAGE_LAST:
-    {
+    case GUIEvent::EV_MESSAGE_LAST: {
       this->lastMessage();
       break;
     }
-    case GUIEvent::EV_ERROR_STATUS:
-    {
+    case GUIEvent::EV_ERROR_STATUS: {
       ErrorStatusEvent *ese = (ErrorStatusEvent*) e;
       this->setErrorInfo(ese->errors(), ese->warnings());
       break;
     }
-    case GUIEvent::EV_ENABLE_INPUT:
-    {
+    case GUIEvent::EV_ENABLE_INPUT: {
       this->enableGUI();
       break;
     }
-    case GUIEvent::EV_DISABLE_INPUT:
-    {
+    case GUIEvent::EV_DISABLE_INPUT: {
       this->disableGUI();
       break;
     }
-    case GUIEvent::EV_REFRESH_INTERFACE:
-    {
+    case GUIEvent::EV_REFRESH_INTERFACE: {
       break;
     }
-    case GUIEvent::EV_METER_INIT:
-    {
+    case GUIEvent::EV_METER_INIT: {
       MeterInitEvent *mie = (MeterInitEvent*) e;
 #if QT_VERSION >= 0x040000
       this->statusBar->showMessage(mie->title() + ": " + mie->label());
@@ -3275,8 +3227,7 @@ void mainW::userEvent(QEvent *e)
       this->pb->reset();
       break;
     }
-    case GUIEvent::EV_METER_INCREMENT:
-    {
+    case GUIEvent::EV_METER_INCREMENT: {
       QString label (((MeterIncrementEvent*) e)->label());
 #if QT_VERSION >= 0x040000
       if (!label.isEmpty())
@@ -3291,8 +3242,7 @@ void mainW::userEvent(QEvent *e)
 #endif // QT_VERSION >= 0x040000
       break;
     }
-    case GUIEvent::EV_METER_SET_TOTAL:
-    {
+    case GUIEvent::EV_METER_SET_TOTAL: {
       int total = (int)((MeterSetTotalEvent*) e)->total();
 #if QT_VERSION >= 0x040000
       this->pb->setMaximum(total);
@@ -3301,8 +3251,7 @@ void mainW::userEvent(QEvent *e)
 #endif // QT_VERSION >= 0x040000
       break;
     }
-    case GUIEvent::EV_METER_UPDATE:
-    {
+    case GUIEvent::EV_METER_UPDATE: {
       MeterUpdateEvent *mue = (MeterUpdateEvent*) e;
 #if QT_VERSION >= 0x040000
       this->statusBar->showMessage(mue->label());
@@ -3313,8 +3262,7 @@ void mainW::userEvent(QEvent *e)
 #endif // QT_VERSION >= 0x040000
       break;
     }
-    case GUIEvent::EV_METER_DESTROY:
-    {
+    case GUIEvent::EV_METER_DESTROY: {
 #if QT_VERSION >= 0x040000
       this->statusBar->clearMessage();
 #else
@@ -3323,42 +3271,37 @@ void mainW::userEvent(QEvent *e)
       this->pb->reset();
       break;
     }
-    case GUIEvent::EV_REFRESH_SRC_WINDOW:
-    {
+    case GUIEvent::EV_REFRESH_SRC_WINDOW: {
       RefreshSrcWindowEvent *rsw = (RefreshSrcWindowEvent*) e;
       this->refreshSourceWindow(rsw->title(), rsw->filename());
       break;
     }
-    case GUIEvent::EV_CHECK_ACTIONS:
-    {
+    case GUIEvent::EV_CHECK_ACTIONS: {
       this->checkActions();
       break;
     }
-    case GUIEvent::EV_ENABLE_STOP:
-    {
+    case GUIEvent::EV_ENABLE_STOP: {
       this->stopEnabled = true;
       break;
     }
-    case GUIEvent::EV_DISABLE_STOP:
-    {
+    case GUIEvent::EV_DISABLE_STOP: {
       this->stopEnabled = false;
       break;
     }
-    case GUIEvent::EV_ADD_MODULE_AND_STATUS:
-    {
+    case GUIEvent::EV_ADD_MODULE_AND_STATUS: {
       AddModuleAndStatusEvent * amase = (AddModuleAndStatusEvent*) e;
       this->addModuleAndStatus(amase->module(), amase->files(), amase->syntax(), amase->type(),
                                amase->cg(), amase->jcg(), amase->pp());
       break;
     }
-    case GUIEvent::EV_UPDATE_MODULE_STATUS:
-    {
+    case GUIEvent::EV_UPDATE_MODULE_STATUS: {
       UpdateModuleStatusEvent * umse = (UpdateModuleStatusEvent*) e;
       this->updateModuleStatus(umse->module(), umse->syntax(), umse->type(), umse->cg(), umse->jcg(), umse->pp());
       break;
     }
-    default:
+    default: {
       break;
+    }
   }
 #if QT_VERSION < 0x040000
   this->appRef->unlock();
@@ -3387,8 +3330,7 @@ void mainW::userEvent(QEvent *e)
 //
 void mainW::checkProjectIsSaved()
 {
-  if (!Qt2TB::stateIsSavedI())
-  {
+  if (!Qt2TB::stateIsSavedI()) {
     switch (QMessageBox::information(this, 
 	                             Qt2TB::GiveToolTitleI(),
 	                             tr( saveProjectPrompt ),
@@ -3519,7 +3461,9 @@ void mainW::setTextCodec(QString menuName)
 //
 void mainW::logWrite(QString msg)
 {
-  if( NULL != this->logw ) this->logw->write( msg );
+  if( NULL != this->logw ) {
+    this->logw->write( msg );
+  }
 }
 
 //
@@ -3579,8 +3523,9 @@ void mainW::addFiles(const QStringList & newFiles)
 //
 void mainW::removeFiles(const QStringList & removedFiles)
 {
-  if (this->cleaningUp)
+  if (this->cleaningUp) {
     return;
+  }
 
   this->browserw->removeFiles(removedFiles);
 
@@ -3591,8 +3536,7 @@ void mainW::removeFiles(const QStringList & removedFiles)
 void mainW::removeFilesFromGUI(const QStringList & files)
 {
   QStringList::const_iterator itr;
-  for (itr = files.begin(); itr != files.end(); ++itr)
-  {
+  for (itr = files.begin(); itr != files.end(); ++itr) {
     QString filename (*itr);
     this->interpreterw->removeBreakOfFile( filename );
     this->codew->closeFile( filename );
@@ -3606,8 +3550,7 @@ void mainW::removeFilesFromGUI(const QStringList & files)
 void mainW::addModules(const QStringList & moduleNames)
 {
   QStringList::const_iterator itr;
-  for (itr = moduleNames.begin(); itr != moduleNames.end(); ++itr)
-  {
+  for (itr = moduleNames.begin(); itr != moduleNames.end(); ++itr) {
     QStringList files (Qt2TB::getFilesOfModule(*itr));
     StatusType st (Qt2TB::getStatusI(*itr));
 
