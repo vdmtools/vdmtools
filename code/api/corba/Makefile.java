@@ -1,6 +1,6 @@
 ifndef JDKHOME
 ifeq ($(strip $(OSTYPE)),win32)
-JDKHOME = c:/j2sdk1.4.2_07
+JDKHOME = /usr/java/default
 else
 ifeq ($(strip $(OSTYPE)),Darwin)
 JDKHOME = /usr
@@ -35,24 +35,27 @@ SOURCEPATH="$(shell cygpath -w baselink)"/api/corba/
 DESTPATH="$(shell cygpath -w $(shell pwd))"/
 endif
 
+JAVA_VERSION=$(shell java -version 2>&1 | grep "java version" | awk -F '.' '{print $$2}' )
+
 ifeq ($(strip $(OSTYPE)),win32)
-JAVACFLAGS = -source 6 -target 6 -classpath ".;javaapi"
+JAVACFLAGS = -source $(JAVA_VERSION) -classpath ".;javaapi"
 TOOLBOX_CLIENT = $(VPATH)/ToolboxClient.java
 else
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
-JAVACFLAGS = -source 6 -target 6 -classpath ".;javaapi"
+JAVACFLAGS = -source $(JAVA_VERSION) -classpath ".;javaapi"
 TOOLBOX_CLIENT = $(VPATH)/ToolboxClient.java
 else
 ifeq ($(strip $(OSTYPE)),Darwin)
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
-JAVACFLAGS = -source 5 -target 5 -classpath .:./javaapi
+#JAVACFLAGS = -source 5 -target 5 -classpath .:./javaapi
+JAVACFLAGS = -classpath .:./javaapi
 TOOLBOX_CLIENT = ToolboxClient.java
 else
-JAVACFLAGS = -source 6 -target 6 -classpath .:./javaapi
+JAVACFLAGS = -source $(JAVA_VERSION) -classpath .:./javaapi
 TOOLBOX_CLIENT = ToolboxClient.java
 endif
 else
-JAVACFLAGS = -source 6 -target 6 -classpath .:./javaapi
+JAVACFLAGS = -source $(JAVA_VERSION) -classpath .:./javaapi
 TOOLBOX_CLIENT = ToolboxClient.java
 endif
 endif

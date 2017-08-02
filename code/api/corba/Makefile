@@ -87,17 +87,14 @@ ifndef JDKHOME
 ifdef JAVA_HOME
 JDKHOME ?= $(JAVA_HOME)
 JAR = $(JDKHOME)/bin/jar
-#JAVAC = $(JDKHOME)/bin/javac -source 1.4
-JAVAC = $(JDKHOME)/bin/javac -source 5
+JAVAC = $(JDKHOME)/bin/javac
 else
 JAR = jar
-#JAVAC = javac -source 1.4
-JAVAC = javac -source 5
+JAVAC = javac
 endif
 else
 JAR = $(JDKHOME)/bin/jar
-#JAVAC = $(JDKHOME)/bin/javac -source 1.4
-JAVAC = $(JDKHOME)/bin/javac -source 5
+JAVAC = $(JDKHOME)/bin/javac
 endif
 
 INCDIR = -I. -I$(OMNIDIR)/include -I$(TBINC)  #-I~/toolbox/code/lib/

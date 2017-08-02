@@ -16,20 +16,21 @@ JDKHOME=/usr/java/current
 endif
 endif
 
+JAVA_VERSION=$(shell java -version 2>&1 | grep "java version" | awk -F '.' '{print $$2}' )
+
 ifeq ($(strip $(OSTYPE)),Darwin)
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
 JAVAC   = $(JDKHOME)/bin/javac -J-Dfile.encoding=UTF-8 -source 5
 else
-JAVAC   = $(JDKHOME)/bin/javac -J-Dfile.encoding=UTF-8 -source 6
+JAVAC   = $(JDKHOME)/bin/javac -J-Dfile.encoding=UTF-8 -source $(JAVA_VERSION)
 endif
 JAR     = $(JDKHOME)/bin/jar -J-Dfile.encoding=UTF-8
 JAVADOC = $(JDKHOME)/bin/javadoc -locale en_US -J-Dfile.encoding=UTF-8
 else
-JAVAC   = $(JDKHOME)/bin/javac -source 6
+JAVAC   = $(JDKHOME)/bin/javac -source $(JAVA_VERSION)
 JAR     = $(JDKHOME)/bin/jar
 JAVADOC = $(JDKHOME)/bin/javadoc -locale en_US
 endif
-
 
 # Normal library files
 JAVAFILES = CGException.java VDMRunTimeException.java  VDMSpecException.java\
