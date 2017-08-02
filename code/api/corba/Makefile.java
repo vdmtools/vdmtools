@@ -35,7 +35,7 @@ SOURCEPATH="$(shell cygpath -w baselink)"/api/corba/
 DESTPATH="$(shell cygpath -w $(shell pwd))"/
 endif
 
-JAVA_VERSION=$(shell java -version 2>&1 | grep "java version" | awk -F '.' '{print $$2}' )
+JAVA_VERSION=$(shell java -version 2>&1 | head -1 | awk -F '.' '{print $$2}' )
 
 ifeq ($(strip $(OSTYPE)),win32)
 JAVACFLAGS = -source $(JAVA_VERSION) -classpath ".;javaapi"

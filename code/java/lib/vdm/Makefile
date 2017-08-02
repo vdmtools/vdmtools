@@ -16,7 +16,7 @@ JDKHOME=/usr/java/current
 endif
 endif
 
-JAVA_VERSION=$(shell java -version 2>&1 | grep "java version" | awk -F '.' '{print $$2}' )
+JAVA_VERSION=$(shell java -version 2>&1 | head -1 | awk -F '.' '{print $$2}' )
 
 ifeq ($(strip $(OSTYPE)),Darwin)
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
