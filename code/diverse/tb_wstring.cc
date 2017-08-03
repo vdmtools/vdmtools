@@ -24,17 +24,15 @@ std::wstring TBWSTR::vdmencoding;
 
 std::wstring TBWSTR::mbstr2wstr(const std::string& str, bool utf8)
 {
-  if( str.size() == 0 ) return std::wstring( L"" );
+  if (str.empty()) return std::wstring( L"" );
 
   std::string s(str);
 #ifndef _MSC_VER
-  if( !utf8 )
-  {
-    try
-    {
+  if ( !utf8 ) {
+    try {
       s = convertToUTF8( str, getFileCode() );
     }
-    catch(...){}
+    catch(...) {}
   }
 #endif // _MSC_VER
 
@@ -46,14 +44,11 @@ std::wstring TBWSTR::mbstr2wstr(const std::string& str, bool utf8)
   int size = 0;
   if( utf8 || codepage == "65001" ) // UTF-8
     size = MultiByteToWideChar( CP_UTF8, 0, src, s.length(), buf, s.size() );	
-  else
-  {
-    if( codepage.length() > 0 )
-    {
+  else {
+    if( codepage.length() > 0 ) {
       string lang = "." + codepage;
       setlocale( LC_CTYPE, lang.c_str() );
     }
-    
     size = mbsrtowcs(buf, &src, s.size(), NULL);
   }
 
@@ -69,7 +64,7 @@ std::wstring TBWSTR::mbstr2wstr(const std::string& str, bool utf8)
 
 std::string TBWSTR::wstr2mbstr(const std::wstring& s, bool utf8)
 {
-  if( s.size() == 0 ) return string( "" );
+  if (s.empty()) return string( "" );
 
   size_t len = MB_CUR_MAX*((2*s.length())+1);
   char* mbcs = new char[ len + 1 ];
@@ -77,12 +72,11 @@ std::string TBWSTR::wstr2mbstr(const std::wstring& s, bool utf8)
   const wchar_t *src = s.c_str();
 #ifdef _MSC_VER
   std::string codepage (getFileCode());
-  if( utf8 || codepage == "65001" ) // UTF-8
+  if( utf8 || codepage == "65001" ) { // UTF-8
     WideCharToMultiByte( CP_UTF8, 0, src, s.length(), mbcs, len, NULL, NULL );	
-  else
-  {
-    if( codepage.length() > 0 )
-    {
+  }
+  else {
+    if( codepage.length() > 0 ) {
       string lang = "." + codepage; 
       setlocale( LC_CTYPE, lang.c_str() );
     }
@@ -97,10 +91,8 @@ std::string TBWSTR::wstr2mbstr(const std::wstring& s, bool utf8)
   delete[] mbcs;
 
 #ifndef _MSC_VER
-  if( !utf8 )
-  {
-    try
-    {
+  if( !utf8 ) {
+    try {
       res = convertFromUTF8( res, getFileCode() );  
     }
     catch(...){}
@@ -137,15 +129,10 @@ std::wstring TBWSTR::MakeAsciiWstring(const std::string& s)
   std::wstring ws(s.begin(), s.end());
   return ws;
 #else
-  //    wchar_t* buf = new wchar_t[s.size()];
-  //  int size = mbstowcs(buf, s.c_str(), s.size());
-  //  return wstring(buf, size);
-  wchar_t* buf = new wchar_t[s.size()];
-  for (int i = 0; i < s.size(); i++){
-    buf[i] = btowc( s[i]);
+  std::wstring res;
+  for (std::string::const_iterator it = s.begin(); it != s.end(); it++) {
+    res.push_back(btowc(*it));
   }
-  std::wstring res(buf, s.size());
-  delete [] buf;
   return res;
 #endif //_MSC_VER
 }
@@ -160,8 +147,7 @@ std::string TBWSTR::wstring2coutstr(const std::wstring& s)
   std::string res (wstring2utf8str( s ));
 
 #ifndef _MSC_VER
-  try
-  {
+  try {
     res = convertFromUTF8( res, getConsoleCode() );  
   }
   catch(...){}
@@ -180,42 +166,37 @@ std::string TBWSTR::wstring2string(const std::wstring & ws)
   return ConvertToHexquad(ws);
 }
 
-unsigned long TBWSTR::unhexquad(const char* hexquad)
+wchar_t TBWSTR::unhexquad(const char* hexquad)
 {
-  unsigned long s = strtoul(hexquad, (char**) NULL, 16);
-  return s;
+  return (wchar_t)strtoul(hexquad, (char**) NULL, 16);
 }
 
-unsigned long TBWSTR::unhexquadw(const wchar_t* hexquad)
+wchar_t TBWSTR::unhexquadw(const wchar_t* hexquad)
 {
-  unsigned long s = wcstoul(hexquad, (wchar_t**) NULL, 16);
-  return s;
+  return (wchar_t)wcstoul(hexquad, (wchar_t**) NULL, 16);
 }
 
 std::wstring TBWSTR::hexquadstring2wstring(const std::string & hqs)
 {
   std::wstring ws;
   std::string::size_type i = 0;
-  while(i < hqs.size())
-  {
-    if (i == hqs.size() - 1)
-      ws.append(wstring(1,btowc(hqs[i++])));
-// 20131219 -->
-    else if ((i+1 < hqs.size()) && (hqs[i] == L'\\') && (hqs[i+1] == L'\\'))
-    {
-      ws.append(std::wstring(1,btowc(hqs[i])));
-      ws.append(std::wstring(1,btowc(hqs[i+1])));
+  size_t len_hqs = hqs.size();
+  while(i < len_hqs) {
+    wchar_t wc = btowc(hqs[i]);
+    if ((i+1 < len_hqs) && (wc == L'\\') && (hqs[i+1] == '\\')) {
+      ws.push_back(wc);
+      ws.push_back(btowc(hqs[i+1]));
       i = i + 2;
     }
-// <-- 20131219
-    else if ((i+5 < hqs.size()) && (hqs[i] == '\\') && (hqs[i+1]=='u'))
-    {
+    else if ((i+5 < len_hqs) && (wc == L'\\') && (hqs[i+1]=='u')) {
       std::string str(hqs.substr(i+2, 4));
-      ws.append(wstring(1,(wchar_t) unhexquad(str.c_str())));
+      ws.push_back(unhexquad(str.c_str()));
       i = i + 6;
     }
-    else
-      ws.append(wstring(1,btowc(hqs[i++])));
+    else {
+      ws.push_back(wc);
+      i++;
+    }
   }
   return ws;
 }
@@ -224,106 +205,63 @@ std::wstring TBWSTR::hexquadwstring2wstring(const std::wstring & hqs)
 {
   std::wstring ws;
   std::string::size_type i = 0;
-  while(i < hqs.size())
-  {
-    if (i == hqs.size() - 1)
-      ws.append(std::wstring(1,hqs[i++]));
-// 20131219 -->
-    else if ((i+1 < hqs.size()) && (hqs[i] == L'\\') && (hqs[i+1] == L'\\'))
-    {
-      ws.append(std::wstring(1,hqs[i]));
-      ws.append(std::wstring(1,hqs[i+1]));
+  size_t len_hqs = hqs.size();
+  while(i < len_hqs) {
+    wchar_t wc = hqs[i];
+    if ((i+1 < len_hqs) && (wc == L'\\') && (hqs[i+1] == L'\\')) {
+      ws.push_back(wc);
+      ws.push_back(hqs[i+1]);
       i = i + 2;
     }
-// <-- 20131219
-    else if ((i+5 < hqs.size()) && (hqs[i] == L'\\') && (hqs[i+1]==L'u'))
-    {
-      ws.append(std::wstring(1,(wchar_t) unhexquadw(hqs.substr(i+2, 4).c_str())));
+    else if ((i+5 < len_hqs) && (wc == L'\\') && (hqs[i+1]==L'u')) {
+      ws.push_back(unhexquadw(hqs.substr(i+2, 4).c_str()));
       i = i + 6;
     }
-    else
-      ws.append(wstring(1, hqs[i++]));
+    else {
+      ws.push_back(wc);
+      i++;
+    }
   }
   return ws;
 }
 
 Sequence TBWSTR::hexquadseq2wseq(const Sequence & hqs)
 {
+  Sequence header (L"\\u");
   Sequence ws;
+  int64_t len_hqs = hqs.Length();
   int64_t i = 1;
-  while(i <= hqs.Length())
-  {
-    if (i == hqs.Length())
+  while(i <= len_hqs) {
+    if (i == len_hqs) {
       ws.ImpAppend(hqs[i++]);
-    else if (hqs[i] == Char(L'\\') && hqs[i+1]== Char(L'u') && i+5 <= hqs.Length())
-    {
-      Sequence subseq;
-      for (int64_t j = i+2; j <i+6; j++)
-	subseq.ImpAppend(hqs[j]);
-      std::wstring subseqStr;
-      subseq.GetString(subseqStr);
-      ws.ImpAppend(Char((wchar_t) unhexquadw(subseqStr.c_str())));
+    }
+    else if ((i+5 <= len_hqs) && (hqs.SubSequence(i, i+1) == header)) {
+      std::wstring subseqStr (hqs.SubSequence(i+2, i+6).GetString());
+      ws.ImpAppend(Char(unhexquadw(subseqStr.c_str())));
       i = i + 6;
     }
-    else
+    else {
       ws.ImpAppend(hqs[i++]);
+    }
   }
   return ws;
 }
 
 std::string TBWSTR::ConvertToHexquad(const std::wstring & ws)
 {
-  const wchar_t* pwc = ws.c_str();
   std::string result;
-  for (std::string::size_type i = 0; i < ws.size(); i++) {
-    char converted[7];
-    char*pc = converted;
-    if(pwc[i] < 0x007F) {
-      result.append(1, (char) pwc[i]);
-    } else {
-      result.append(1, '\\');
-      result.append(1,'u');
-      hexquad(pwc[i], &pc);
-      *pc++ = '\0';
-      result.append(converted, strlen(converted));
+  char converted[9];
+  for (std::wstring::const_iterator it = ws.begin(); it != ws.end(); it++) {
+    int wc = *it;
+    if(wc < 0x007F) {
+      result.append(1, (char) wc);
+    }
+    else {
+      sprintf(converted, "\\u%04X", wc);
+      result.append(std::string(converted));
     }
   }
   return result;
-}
-
-// Conversion to sequence of (ASCII | Universal_character)
-
-void TBWSTR::hexquad(int c, char** converted)
-{
-  unsigned hexDigit;
-  c = c << 16;
-  for(int i=0; i<4; i++){
-    hexDigit=(0xF0000000 & (unsigned)c) >> 28;
-    switch(hexDigit) {
-      case 15:  
-      case 14:
-      case 13:
-      case 12:
-      case 11:
-      case 10:
-        **converted='A'+(hexDigit-10);
-        *converted = *converted + 1;
-      break;
-      case 1:  
-      case 2:  
-      case 3:  
-      case 4:  
-      case 5:  
-      case 6:  
-      case 7:  
-      case 8:  
-      case 9:  
-      default:
-        **converted='0'+hexDigit;
-        *converted = *converted + 1;
-    }
-    c = c << 4;
-  }
 }
 
 //
@@ -342,8 +280,7 @@ std::wstring TBWSTR::cinstr2wstring(const std::string& s)
   return mbstr2wstr( s, false );
 #else
   std::string instr(s); 
-  try
-  {
+  try {
     instr = convertToUTF8( instr, getConsoleCode() );
   }
   catch(...){}
@@ -363,12 +300,12 @@ std::string TBWSTR::unicode2rtf(const std::wstring& unistr)
     if ((unsigned short) unistr[i] < 128){
       int c = (unsigned short) unistr[i];
       res.append(1, (char) c);
-    } else {
+    }
+    else {
       std::wstring ws;
       ws += unistr[i];
       std::string mbstr (wstring2mbstr(ws));
-      for( std::string::size_type j = 0; j < mbstr.length(); j++ )
-      {
+      for( std::string::size_type j = 0; j < mbstr.length(); j++ ) {
         res.append("\\'");
         char hexadec[3]; 
         sprintf(hexadec, "%2x", 0x000000FF & (unsigned char)mbstr[j]);        
@@ -408,16 +345,12 @@ std::string TBWSTR::mbstr2rtfstring(const std::string& str)
 std::string TBWSTR::convertCrToNl(const std::string& line )
 {
   std::string ret;
-  if( line.length() > 0 )
-  {
-    for( std::string::size_type i = 0; i < line.length(); i++ )
-    {
-      if( line.at( i ) == '\x0d' )
-      {
+  if( line.length() > 0 ) {
+    for( std::string::size_type i = 0; i < line.length(); i++ ) {
+      if( line.at( i ) == '\x0d' ) {
         if( i < line.length() - 1 ) ret += '\n';
       } 
-      else
-      {
+      else {
         ret += line.at( i );
       } 
     } 
@@ -427,26 +360,21 @@ std::string TBWSTR::convertCrToNl(const std::string& line )
 
 std::wstring TBWSTR::getIOCharSetEnv()
 {
-  if (TBWSTR::vdmencoding.empty())
-  {
+  if (TBWSTR::vdmencoding.empty()) {
 #ifdef _MSC_VER
     TBWSTR::vdmencoding = Int(GetACP()).ascii();
 #else
     std::wstring encoding;
     const char* vdmenv = getenv( VDMENCODING );
-    if( vdmenv != NULL )
-    {
+    if( vdmenv != NULL ) {
       encoding = string2wstring(vdmenv);
     }
-    else
-    {
+    else {
       const char * langenv = getenv( "LANG" );
-      if( langenv != NULL )
-      {
+      if( langenv != NULL ) {
         encoding = string2wstring(langenv);
       }
-      else
-      {
+      else {
         encoding = wstring(L"en_US.UTF-8");
       }
     }
@@ -483,13 +411,12 @@ std::string TBWSTR::getFileCode()
   std::string encoding (wstring2string( getIOCharSetEnv() ));
 
   std::string::size_type index = 0;
-  if( ( index = encoding.find_last_of( "." ) ) != string::npos )
-  {
+  if( ( index = encoding.find_last_of( "." ) ) != string::npos ) {
     filecode = encoding.substr( index + 1 );
   }
-  else
+  else {
     filecode = encoding;
-
+  }
   return filecode;
 #endif // _MSC_VER
 }
@@ -507,8 +434,7 @@ std::string TBWSTR::getConsoleCode()
   if( lang == "ja" ) lang = "ja_JP.eucJP";
 #endif // __SunOS__
   std::string::size_type index = 0;
-  if( ( index = lang.find_last_of( "." ) ) != string::npos )
-  {
+  if( ( index = lang.find_last_of( "." ) ) != string::npos ) {
     code = lang.substr( index + 1 );
   }
   if( 0 == code.length() ) code = "UTF8";
@@ -523,8 +449,7 @@ void TBWSTR::setUTF8Locale()
 #ifndef __SunOS__
   std::string lang (wstring2string( getIOCharSetEnv() ));
   std::string::size_type index = 0;
-  if( ( index = lang.find_last_of( "." ) ) != string::npos )
-  {
+  if( ( index = lang.find_last_of( "." ) ) != string::npos ) {
     lc_ctype = lang.substr( 0, index ) + "." + "UTF-8";
   }
 #endif // __SunOS__
@@ -535,8 +460,7 @@ std::string TBWSTR::convertToUTF8(const std::string& fromstr, const std::string&
 {
   string utf8( "UTF-8" );
   string ret;
-  if( !convertCode( fromstr, code, ret, utf8 ) )
-  {
+  if( !convertCode( fromstr, code, ret, utf8 ) ) {
     throw "ERROR";
   }
   return ret;
@@ -546,8 +470,7 @@ std::string TBWSTR::convertFromUTF8(const std::string& fromstr, const std::strin
 {
   string utf8( "UTF-8" );
   string ret;
-  if( !convertCode( fromstr, utf8, ret, code ) )
-  {
+  if( !convertCode( fromstr, utf8, ret, code ) ) {
     throw "ERROR";
   }
   return ret;
@@ -560,51 +483,41 @@ bool TBWSTR::convertCode(const std::string& fromstr,
 {
   // \x5c(backslash) \x7e(tilde)
   if( ( fromstr.length() == 0 ) || ( fromcode.length() == 0 ) ||
-      ( tocode.length() == 0 ) || ( fromcode == tocode ) )
-  {
+      ( tocode.length() == 0 ) || ( fromcode == tocode ) ) {
     tostr = fromstr;
   }
-  else if( fromcode == "SJIS" )
-  {
+  else if( fromcode == "SJIS" ) {
     std::string tmpstr;
     if( !convWithIConv( fromstr, fromcode, tmpstr, tocode ) ) return false;
     tostr = "";
     std::string::size_type index = 0;
-    while( index < tmpstr.length() )
-    {
+    while( index < tmpstr.length() ) {
       if( ( index < tmpstr.length() - 1 ) &&
           ( '\xc2' == tmpstr[index] ) && 
-          ( '\xa5' == tmpstr[index + 1] ) )
-      {
+          ( '\xa5' == tmpstr[index + 1] ) ) {
          tostr += '\x5c';
          index += 2;
       }
       else if( ( index < tmpstr.length() - 2 ) &&
                ( '\xe2' == tmpstr[index] ) &&
                ( '\x80' == tmpstr[index + 1] ) &&
-               ( '\xbe' == tmpstr[index + 2] ) )
-      {
+               ( '\xbe' == tmpstr[index + 2] ) ) {
          tostr += '\x7e';
          index += 3;
       }
-      else
-      {
+      else {
         tostr += tmpstr[index];
         index++;
       }
     }
   }
-  else if( tocode == "SJIS" )
-  {
+  else if( tocode == "SJIS" ) {
     tostr = "";
     std::string tmpstr = "";
     std::string::size_type index = 0;
-    while( index < fromstr.length() ) 
-    {
-      if( ( '\x5c' == fromstr[ index ] ) || ( '\x7e' == fromstr[ index ] ) )
-      {
-        if( tmpstr.length() > 0 )
-        {
+    while( index < fromstr.length() ) {
+      if( ( '\x5c' == fromstr[ index ] ) || ( '\x7e' == fromstr[ index ] ) ) {
+        if( tmpstr.length() > 0 ) {
           std::string buf;
           if ( !convWithIConv( tmpstr, fromcode, buf, tocode ) ) return false;
           tostr += buf;
@@ -612,21 +525,18 @@ bool TBWSTR::convertCode(const std::string& fromstr,
         }
         tostr += fromstr[ index ];
       }
-      else
-      {
+      else {
         tmpstr += fromstr[ index ];
       }
       index++;
     }
-    if( tmpstr.length() > 0 )
-    {
+    if( tmpstr.length() > 0 ) {
       std::string buf;
       if ( !convWithIConv( tmpstr, fromcode, buf, tocode ) ) return false;
       tostr += buf;
     }
   }
-  else
-  {
+  else {
     if ( !convWithIConv( fromstr, fromcode, tostr, tocode ) ) return false;
   }
   return true;
@@ -637,8 +547,7 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
                            std::string& tostr,
                            const std::string& tocode )
 {
-  if( ( fromstr.length() == 0 ) || ( fromcode == tocode ) )
-  {
+  if( ( fromstr.length() == 0 ) || ( fromcode == tocode ) ) {
     tostr = fromstr;
     return true;
   }
@@ -648,7 +557,6 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
   size_t outbytesleft = inbytesleft * 3;
   char* tmpibuf = new char[ inbytesleft + 1 ];
   char* tmpobuf = new char[ outbytesleft + 1 ];
-  //strcpy( tmpibuf, fromstr.c_str() );
   memcpy( tmpibuf, fromstr.c_str(), inbytesleft + 1 );
   memset( tmpobuf, '\0', outbytesleft + 1 );
 
@@ -674,10 +582,8 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
   char * obuf = tmpobuf;
 
   iconv_t cd = iconv_open( tocode.c_str() , fromcode.c_str() );
-  if( cd != (iconv_t)(-1) )
-  {
+  if( cd != (iconv_t)(-1) ) {
     iconv( cd, &ibuf, &inbytesleft, &obuf, &outbytesleft );
-//    *obuf = '\0';
     iconv_close( cd );
     tostr = tmpobuf;
     ret = ( inbytesleft == 0 );
@@ -690,19 +596,15 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
 
 std::wstring TBWSTR::wstring2wcoutstr( const std::wstring& ws )
 {
-  if( ws.size() == 0 )
-  {
+  if( ws.size() == 0 ) {
     return wstring(L"");
   }
 
   std::string s = wstring2mbstr( ws );
-  wchar_t* buf = new wchar_t[s.size()];
-  for( std::string::size_type i = 0; i < s.size(); i++ )
-  {
-    buf[i] = ( s[i] + 256 )%256;
+  std::wstring res;
+  for (std::string::const_iterator it = s.begin(); it != s.end(); it++) {
+    res.push_back(( *it + 256 )%256);
   }
-  std::wstring res(buf, s.size());
-  delete[] buf; 
   return res;
 }
 

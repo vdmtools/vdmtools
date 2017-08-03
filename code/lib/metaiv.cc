@@ -1247,10 +1247,6 @@ SequenceVal::SequenceVal(const wstring & s) : MetaivVal(mt_sequence), isString(t
     showmalloccount->log_insert(typeid(*this).name(), this, sizeof(*this));
 #endif // SHOW_MALLOC_STATS
 
-//  string::size_type len = s.length();
-//  for(string::size_type i = 0; i < len; i++) {
-//    this->value.push_back(Char(s[i]));
-//  }
   for (wstring::const_iterator it = s.begin(); it != s.end(); it++) {
     this->value.push_back(Char(*it));
   } 
@@ -1407,11 +1403,18 @@ const Common & SequenceVal::Last() const
 Sequence SequenceVal::Tl() const
 {
   Sequence ts;
-  SequenceVal & sv (ts.SHAREDGETVAL(SequenceVal));
+  if (!this->value.empty()) {
+    SequenceVal & sv (ts.SHAREDGETVAL(SequenceVal));
 
-  sv.value = this->value;
-  sv.isString = this->isString;
-  sv.ImpTl();
+//    sv.value = this->value;
+//    sv.isString = this->isString;
+//    sv.ImpTl();
+    sv.value.insert(sv.value.begin(), this->value.begin() + 1, this->value.end());
+    sv.isString = this->isString;
+  }
+  else {
+    M4LibError::ReportError(ML_OP_ON_EMPTY_SEQ,L"'Tl' on empty Sequence");
+  }
   return ts;
 }
 

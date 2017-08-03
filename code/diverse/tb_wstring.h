@@ -23,7 +23,6 @@ public:
   static std::wstring hexquadwstring2wstring(const std::wstring & hqs);
   static Sequence hexquadseq2wseq(const Sequence & hqs);
   static std::string ConvertToHexquad(const std::wstring & ws);
-  static void hexquad(int c, char ** converted);
   static std::string mbstr2rtfstring(const std::string & str);
   static std::string hexquard2rtfstring(const std::string & hqstr);
   static std::wstring wstring2wcoutstr( const std::wstring & ws );
@@ -64,8 +63,8 @@ public:
 private:
   static std::wstring mbstr2wstr(const std::string& str, bool utf8);
   static std::string wstr2mbstr(const std::wstring& s, bool utf8);
-  static unsigned long unhexquad(const char* hexquad);
-  static unsigned long unhexquadw(const wchar_t* hexquad);
+  static wchar_t unhexquad(const char* hexquad);
+  static wchar_t unhexquadw(const wchar_t* hexquad);
   static std::string unicode2rtf(const std::wstring& unistr);
 };
 #endif //__tb_wstring_h__
