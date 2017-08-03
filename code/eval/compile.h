@@ -139,8 +139,6 @@ private:
   // }}}
 
 public:
-  enum FN_TYPE {TP_ParameterTypes, TP_Parameters, TP_ParametersList};
-
   // Constructors
   StackCompiler();
   ~StackCompiler();
@@ -162,9 +160,7 @@ public:
                                const TYPE_AS_FnBody &,
                                const SEQ<TYPE_AS_NameType> &,
                                const TYPE_AS_Name &,
-                               const Sequence &,
-                               FN_TYPE);
-  SEQ<TYPE_AS_Pattern> MakeParmList(const Sequence & l, FN_TYPE type) const;
+                               const Sequence &);
   TYPE_STKM_SubProgram PrePost2I(const Generic &, bool);
   TYPE_STKM_SubProgram ImplFnDef2I(const TYPE_CI_ContextId &);
   TYPE_STKM_SubProgram OpDef2I(const Generic &,
@@ -174,7 +170,6 @@ public:
                                const TYPE_AS_Name &,
                                const Sequence &,
                                const Bool &,
-                               FN_TYPE,
                                const Bool &
                                );
   TYPE_STKM_SubProgram ImplOpDef2I(const TYPE_CI_ContextId &);

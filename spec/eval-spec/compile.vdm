@@ -242,17 +242,20 @@ the index for this entry is returned.
   CompileFnOpDef(fndef) ==
    (dcl instr : STKM`SubProgram;
     cases fndef:
-      mk_AS`ExplFnDef(nm,-,-,parms,body,fnpre,fnpost,-,-,-,-) ->
-                      instr := Mease2I(fndef) ^
-                               FnDef2I(fnpre, fnpost, body, [], nm, parms, <ParametersList>),
+      mk_AS`ExplFnDef(nm,-,-,parmss,body,fnpre,fnpost,-,-,-,-) ->
+                      let parms = if len parmss = 0 then [] else hd parmss
+                      in instr := Mease2I(fndef) ^
+                                 FnDef2I(fnpre, fnpost, body, [], nm, parms),
       mk_AS`ExtExplFnDef(nm,-,partps,resnmtps,body,fnpre,fnpost,-,-,-,-) ->
-                      instr := Mease2I(fndef) ^
-                               FnDef2I(fnpre, fnpost, body, resnmtps, nm, partps, <ParameterTypes>),
+                      let parms = conc [partps(i).pats | i in set inds partps]
+                      in instr := Mease2I(fndef) ^
+                                 FnDef2I(fnpre, fnpost, body, resnmtps, nm, parms),
       mk_AS`ImplFnDef(-,-,-,-,-,-,-,-,cid) -> instr := ImplFnDef2I(cid),
       mk_AS`ExplOpDef(nm,-,sync,-,parms,body,oppre,oppost,-,-,constr,-) ->
-                      instr := OpDef2I(oppre, oppost, body, [], nm, parms, constr, <Parameters>, sync),
+                      instr := OpDef2I(oppre, oppost, body, [], nm, parms, constr, sync),
       mk_AS`ExtExplOpDef(nm,-,sync,partps,resnmtps,body,-,oppre,oppost,-,-,-,constr,-) ->
-                      instr := OpDef2I(oppre, oppost, body, resnmtps, nm, partps, constr, <ParameterTypes>, sync),
+                      let parms = conc [partps(i).pats | i in set inds partps]
+                      in instr := OpDef2I(oppre, oppost, body, resnmtps, nm, parms, constr, sync),
       mk_AS`ImplOpDef(-,-,-,-,-,-,-,-,-,-,-,-,cid) -> instr := ImplOpDef2I(cid)
     end;
     return InsertProgram(GetClMod(), SetContext(fndef.cid, false) ^ instr ^ [mk_INSTRTP`RETURN()]));
@@ -335,25 +338,23 @@ definition of a function, being explicit or extended explicit.
 \begin{vdm_al}
 operations
 
-FnDef2I: [AS`Expr] * [AS`Expr] * AS`FnBody * seq of AS`NameType * AS`Name * (AS`ParametersList | AS`ParameterTypes)
-         * (<ParametersList> | <ParameterTypes> | <Parameters>) ==>  STKM`SubProgram
-FnDef2I(fnpre, fnpost, mk_AS`FnBody(body,-), resnmtps, fnname, parms, type) ==
+FnDef2I: [AS`Expr] * [AS`Expr] * AS`FnBody * seq of AS`NameType * AS`Name * AS`Parameters
+         ==>  STKM`SubProgram
+FnDef2I(fnpre, fnpost, mk_AS`FnBody(body,-), resnmtps, fnname, parms) ==
  (dcl i_body : STKM`SubProgram := [],
       i_fnpre : STKM`SubProgram := PrePost2I(fnpre, true),
       i_fnpost : STKM`SubProgram := [];
 
   cases body:
 #ifdef VDMSL
-    <NOTYETSPEC> -> i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECFCT,
-                                                      GetClMod(),fnname, MakeParmList(parms, type))],
+    <NOTYETSPEC> -> i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECFCT, GetClMod(),fnname, parms)],
 #endif VDMSL
 #ifdef VDMPP
     <NOTYETSPEC> -> if STATE`IsDLClass(GetClMod())
                     then i_body := [mk_INSTRTP`DLCALL(GetClMod(), fnname)]
-                    else i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECFCT,
-                                                      GetClMod(),fnname, MakeParmList(parms, type))],
+                    else i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECFCT, GetClMod(),fnname, parms)],
     <SUBRESP>    -> (STATE`AddAbstract(GetClMod());
-                     i_body := [mk_INSTRTP`NOBODY(RTERR`SUBRESP, GetClMod(),fnname, MakeParmList(parms, type))];
+                     i_body := [mk_INSTRTP`NOBODY(RTERR`SUBRESP, GetClMod(),fnname, parms)];
                     ),
 #endif VDMPP
     others -> i_body := CEXPR`E2I(body)
@@ -365,20 +366,6 @@ FnDef2I(fnpre, fnpost, mk_AS`FnBody(body,-), resnmtps, fnname, parms, type) ==
          i_fnpost := pr_i ^ PrePost2I(fnpost, false) ^ po_i;
   return i_fnpre ^ i_body ^ i_fnpost
  );
-
-functions
-  MakeParmList: (AS`ParametersList | AS`ParameterTypes | AS`Parameters) *
-                (<ParametersList> | <ParameterTypes> | <Parameters>) ->
-                AS`Parameters
-  MakeParmList(list,type) ==
-    cases type:
-      <Parameters>     -> list,
-      <ParametersList> -> if len list = 0
-                          then []
-                          else hd list,
-      others           -> conc [list(i).pats | i in set inds list]
-    end;
-
 \end{vdm_al}
 
 The function {\em PrePost2I} compiles pre and post conditions to instruction code.
@@ -419,14 +406,13 @@ operations
 
 \begin{vdm_al}
   OpDef2I: [AS`Expr] * [AS`Expr] * AS`OpBody * seq of AS`NameType *
-           AS`Name * (AS`Parameters | AS`ParameterTypes) * bool *
-           (<ParametersList> | <ParameterTypes> | <Parameters>) * bool
+           AS`Name * AS`Parameters * bool * bool
            ==> STKM`SubProgram
 #ifdef VDMSL
-  OpDef2I(precond, postcond, mk_AS`OpBody(body,-), resnmtps, fnname, parms, -, type, -) ==
+  OpDef2I(precond, postcond, mk_AS`OpBody(body,-), resnmtps, fnname, parms, -, -) ==
 #endif VDMSL
 #ifdef VDMPP
-  OpDef2I(precond, postcond, mk_AS`OpBody(body,-), resnmtps, fnname, parms, constr, type,-) ==
+  OpDef2I(precond, postcond, mk_AS`OpBody(body,-), resnmtps, fnname, parms, constr, -) ==
 #endif VDMPP
    (dcl i_body : STKM`SubProgram := [],
         i_fnpre : STKM`SubProgram := [],
@@ -438,8 +424,7 @@ operations
 #endif VDMPP
 #ifdef VDMSL
     cases body:
-      <NOTYETSPEC> -> i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECOP,
-                                                      GetClMod(),fnname, MakeParmList(parms, type))],
+      <NOTYETSPEC> -> i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECOP, GetClMod(),fnname, parms)],
       others       -> i_body := CSTMT`S2I(body)
     end;
 #endif VDMSL
@@ -447,9 +432,8 @@ operations
     cases body:
       <NOTYETSPEC> -> if STATE`IsDLClass(GetClMod())
                       then i_body := [mk_INSTRTP`DLCALL(GetClMod(), fnname)]
-                      else i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECOP,
-                                              GetClMod(),fnname, MakeParmList(parms, type))],
-      <SUBRESP>    -> i_body := [mk_INSTRTP`NOBODY(RTERR`SUBRESP, GetClMod(), fnname, MakeParmList(parms, type))],
+                      else i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECOP, GetClMod(),fnname, parms)],
+      <SUBRESP>    -> i_body := [mk_INSTRTP`NOBODY(RTERR`SUBRESP, GetClMod(), fnname, parms)],
       others       -> i_body := CSTMT`S2I(body) ^ (if constr
                                                    then [mk_INSTRTP`POP(1),mk_INSTRTP`SELFEXPR()]
                                                    else [])

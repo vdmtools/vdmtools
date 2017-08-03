@@ -44,9 +44,9 @@ void ProgramTable::ResetProgramTable(const TYPE_AS_Name & modnm)
 TYPE_STKM_SubProgramId ProgramTable::InsertProgram(const TYPE_AS_Name & modnm, const TYPE_STKM_SubProgram & instr)
 {
   // 20060216
-  if( !this->program_table.DomExists( modnm ) )
+  if( !this->program_table.DomExists( modnm ) ) {
     this->ResetProgramTable( modnm );
-
+  }
   ModuleProgramTable mpt (this->program_table[modnm]);
   SEQ<TYPE_STKM_SubProgram> tbl (mpt.get_tbl());  // seq of STKM`SubProgram
   TYPE_STKM_SubProgramId id (mpt.get_old_id());     // STKM`SubProgramId
@@ -87,8 +87,7 @@ void ProgramTable::CopyProgram(const TYPE_AS_Name & oldnm, const TYPE_AS_Name & 
 // modnm : AS`Name
 SEQ<TYPE_STKM_SubProgram> ProgramTable::DumpProgram(const TYPE_AS_Name & modnm) const
 {
-  if (this->program_table.DomExists(modnm))
-  {
+  if (this->program_table.DomExists(modnm)) {
     ModuleProgramTable mpt (this->program_table[modnm]);
     return mpt.get_tbl();
   }
@@ -149,25 +148,35 @@ TYPE_STKM_SubProgramId StackCompiler::CompileFnOpDef(const Record & fndef)
   switch(fndef.GetTag()) {
     // Various types of functions:
     case TAG_TYPE_AS_ExplFnDef: {
+      const TYPE_AS_ParametersList & parmss (fndef.GetSequence(pos_AS_ExplFnDef_parms));
+      TYPE_AS_Parameters parms;
+      if (!parmss.IsEmpty()) {
+        parms.ImpConc(parmss.Hd());
+      }
       instr.ImpConc(Mease2I(fndef));
       instr.ImpConc(FnDef2I(fndef.GetField(pos_AS_ExplFnDef_fnpre),
                             fndef.GetField(pos_AS_ExplFnDef_fnpost),
                             fndef.GetField(pos_AS_ExplFnDef_body),
                             SEQ<TYPE_AS_NameType>(),
                             fndef.GetField(pos_AS_ExplFnDef_nm),
-                            fndef.GetField(pos_AS_ExplFnDef_parms),
-                            TP_ParametersList));
+                            parms));
       break;
     }
     case TAG_TYPE_AS_ExtExplFnDef: {
+      const TYPE_AS_ParameterTypes & partps(fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
+      TYPE_AS_Parameters parms;
+      size_t len_partps = partps.Length();
+      for (size_t i = 1; i <= len_partps; i++) {
+        const TYPE_AS_PatTypePair & ptp (partps[i]);
+        parms.ImpConc(ptp.GetSequence(pos_AS_PatTypePair_pats));
+      }
       instr.ImpConc(Mease2I(fndef));
       instr.ImpConc(FnDef2I(fndef.GetField(pos_AS_ExtExplFnDef_fnpre),
                             fndef.GetField(pos_AS_ExtExplFnDef_fnpost),
                             fndef.GetField(pos_AS_ExtExplFnDef_body),
                             fndef.GetSequence(pos_AS_ExtExplFnDef_resnmtps),
                             fndef.GetField(pos_AS_ExtExplFnDef_nm),
-                            fndef.GetSequence(pos_AS_ExtExplFnDef_partps),
-                            TP_ParameterTypes));
+                            parms));
       break;
     }
     case TAG_TYPE_AS_ImplFnDef: {
@@ -184,20 +193,25 @@ TYPE_STKM_SubProgramId StackCompiler::CompileFnOpDef(const Record & fndef)
                             fndef.GetField(pos_AS_ExplOpDef_nm),
                             fndef.GetSequence(pos_AS_ExplOpDef_parms),
                             fndef.GetBool(pos_AS_ExplOpDef_constr),
-                            TP_Parameters
-                            ,fndef.GetBool(pos_AS_ExplOpDef_opsync)
+                            fndef.GetBool(pos_AS_ExplOpDef_opsync)
                             ));
       break;
     }
     case TAG_TYPE_AS_ExtExplOpDef: {
+      const TYPE_AS_ParameterTypes & partps(fndef.GetSequence(pos_AS_ExtExplOpDef_partps));
+      TYPE_AS_Parameters parms;
+      size_t len_partps = partps.Length();
+      for (size_t i = 1; i <= len_partps; i++) {
+        const TYPE_AS_PatTypePair & ptp (partps[i]);
+        parms.ImpConc(ptp.GetSequence(pos_AS_PatTypePair_pats));
+      }
       instr.ImpConc(OpDef2I(fndef.GetField(pos_AS_ExtExplOpDef_oppre),
                             fndef.GetField(pos_AS_ExtExplOpDef_oppost),
                             fndef.GetField(pos_AS_ExtExplOpDef_body),
                             fndef.GetSequence(pos_AS_ExtExplOpDef_resnmtps),
                             fndef.GetField(pos_AS_ExtExplOpDef_nm),
-                            fndef.GetSequence(pos_AS_ExtExplOpDef_partps), 
+                            parms,
                             fndef.GetBool(pos_AS_ExtExplOpDef_constr),
-                            TP_ParameterTypes,
                             fndef.GetBool(pos_AS_ExtExplOpDef_opsync)
                            ));
       break;
@@ -219,8 +233,9 @@ TYPE_STKM_SubProgramId StackCompiler::CompileFnOpDef(const Record & fndef)
   prog.ImpConc(SetContext(ASTAUX::GetCid(fndef), false));
 #endif // VDMSL
 #ifdef VDMPP
-  if (!ASTAUX::IsSubrespFnOp(fndef))
+  if (!ASTAUX::IsSubrespFnOp(fndef)) {
     prog.ImpConc(SetContext(ASTAUX::GetCid(fndef), false));
+  }
 #endif // VDMPP
 
   prog.ImpConc(instr);
@@ -254,38 +269,39 @@ TYPE_STKM_SubProgram StackCompiler::Mease2I(const TYPE_AS_FnDef& fndef)
     int count = 0;
     
     if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
-      if (!fndef.GetSequence(pos_AS_ExplFnDef_tpparms).IsEmpty())
+      if (!fndef.GetSequence(pos_AS_ExplFnDef_tpparms).IsEmpty()) {
         tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExplFnDef_tpparms)));
+      }
       tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
 
       const SEQ< SEQ<TYPE_AS_Pattern> > & pat_l_l (fndef.GetSequence(pos_AS_ExplFnDef_parms));
       size_t len_pat_l_l = pat_l_l.Length();
-      for (size_t idx1 = 1; idx1 <= len_pat_l_l; idx1++)
-      {
+      for (size_t idx1 = 1; idx1 <= len_pat_l_l; idx1++) {
         SEQ<TYPE_AS_Pattern> pat_l (pat_l_l[idx1]);
-        if (!pat_l.IsEmpty())
-        {
+        if (!pat_l.IsEmpty()) {
           size_t len_pat_l = pat_l.Length();
-          for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++)
+          for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++) {
             tsp.ImpConc(E2I(P2E(pat_l[idx2])));
+          }
           count += len_pat_l;
         }
       }
     }
     else if (fndef.Is(TAG_TYPE_AS_ExtExplFnDef)) {
-      if (!fndef.GetSequence(pos_AS_ExtExplFnDef_params).IsEmpty())
+      if (!fndef.GetSequence(pos_AS_ExtExplFnDef_params).IsEmpty()) {
         tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExtExplFnDef_params)));
+      }
       tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
 
       const SEQ<TYPE_AS_PatTypePair> & parml (fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
       size_t len_parml = parml.Length(); 
       for (size_t idx1 = 1; idx1 <= len_parml; idx1++) {
         SEQ<TYPE_AS_Pattern> pat_l (parml[idx1].GetSequence(pos_AS_PatTypePair_pats));
-        if (!pat_l.IsEmpty())
-        {
+        if (!pat_l.IsEmpty()) {
           size_t len_pat_l = pat_l.Length();
-          for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++)
+          for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++) {
             tsp.ImpConc(E2I(P2E(pat_l[idx2])));
+          }
           count += len_pat_l;
         }
       }
@@ -321,44 +337,38 @@ TYPE_STKM_SubProgramId StackCompiler::CompileLambdaBody(const TYPE_AS_Expr & e)
 // resnmtps : seq of AS`NameType
 // fnname : AS`Name
 // parms : (AS`ParametersList | AS`ParameterTypes)
-// type : (<ParametersList> | <ParameterTypes> | <Parameters>)
 // ==>  STKM`SubProgram
 TYPE_STKM_SubProgram StackCompiler::FnDef2I(const Generic & fnpre, 
                                             const Generic & fnpost, 
                                             const TYPE_AS_FnBody & body,
                                             const SEQ<TYPE_AS_NameType> & resnmtps,
                                             const TYPE_AS_Name & fnname,
-                                            const Sequence & parms, 
-                                            FN_TYPE type)
+                                            const Sequence & parms)
 {
   const Generic & body_body (body.GetField(pos_AS_FnBody_body));
 
   TYPE_STKM_SubProgram i_fnpre (PrePost2I(fnpre, true));
 
   TYPE_STKM_SubProgram i_body;
-  if (body_body.IsInt())
-  {
+  if (body_body.IsInt()) {
     // <NOTYETSPEC> or <SUBRESP>
     switch (Int(body_body).GetValue()) {
       case NOTYETSPEC: {
 #ifdef VDMPP
-        if (theState().IsDLClass(GetClMod()))
+        if (theState().IsDLClass(GetClMod())) {
           i_body.ImpAppend(TYPE_INSTRTP_DLCALL().Init(GetClMod(), fnname));
+        }
         else 
 #endif // VDMPP
           i_body.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_NOTYETSPECFCT),
-                                                      GetClMod(),
-                                                      fnname,
-                                                      MakeParmList(parms, type)));
+                                                      GetClMod(), fnname, parms));
         break;
       }
 #ifdef VDMPP    
       case SUBRESP: {
         theState().AddAbstract(GetClMod());
         i_body.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_SUBRESP),
-                                                    GetClMod(),
-                                                    fnname,
-                                                    MakeParmList(parms, type)));
+                                                    GetClMod(), fnname, parms));
         break;
       }
 #endif // VDMPP
@@ -381,63 +391,35 @@ TYPE_STKM_SubProgram StackCompiler::FnDef2I(const Generic & fnpre,
   return prog;
 }
 
-// MakeParmList
-// list : (AS`ParametersList | AS`ParameterTypes | AS`Parameters)
-// type : (<ParametersList> | <ParameterTypes> | <Parameters>)
-// -> AS`Parameters
-SEQ<TYPE_AS_Pattern> StackCompiler::MakeParmList(const Sequence & list, FN_TYPE type) const
-{
-  switch(type) {
-    case TP_Parameters: {
-      return list;
-    }
-    case TP_ParametersList: {
-      if (list.IsEmpty())
-        return SEQ<TYPE_AS_Pattern>();
-      else
-        return list.Hd();
-    }
-    case TP_ParameterTypes: {
-      SEQ<TYPE_AS_Pattern> res;
-      size_t len = list.Length();
-      for (size_t i = 1; i <= len; i++) {
-        TYPE_AS_PatTypePair ptp (list[i]);
-        res.ImpConc(ptp.GetSequence(pos_AS_PatTypePair_pats));
-      }
-      return res;
-    }
-    default:
-      return SEQ<TYPE_AS_Pattern>();
-  }
-}
-
 // PrePost2I
 // cond : [AS`Expr]
 // precond : bool
 // -> STKM`SubProgram
 TYPE_STKM_SubProgram StackCompiler::PrePost2I(const Generic & cond, bool precond)
 {
-  if(cond.IsNil())
+  if(cond.IsNil()) {
     return TYPE_STKM_SubProgram();
-  else
-  {
+  }
+  else {
     // icond 
     TYPE_STKM_SubProgram i_cond (E2I(cond)); // pre/post expr
 
     // prepost
     TYPE_STKM_SubProgram prepost;
-    if (precond)
+    if (precond) {
       prepost.ImpAppend(TYPE_INSTRTP_PRE());
-    else
+    }
+    else {
       prepost.ImpAppend(TYPE_INSTRTP_POST());
-
+    }
     // errMsg
     TYPE_STKM_SubProgram errMsg;
-    if (precond)
+    if (precond) {
       errMsg.ImpConc(CompileRunTime(TYPE_RTERR_ERR(RTERR_EVAL_PRE_GIVES_FALSE), ASTAUX::GetCid(cond)));
-    else
+    }
+    else {
       errMsg.ImpConc(CompileRunTime(TYPE_RTERR_ERR(RTERR_EVAL_POST_GIVES_FALSE), ASTAUX::GetCid(cond)));
-
+    }
     TYPE_STKM_SubProgram sp;
 #ifdef VICE
     sp.ImpAppend(TYPE_INSTRTP_PUSHDURATION());
@@ -468,10 +450,9 @@ TYPE_STKM_SubProgram StackCompiler::ImplFnDef2I(const TYPE_CI_ContextId& cid)
 // body : AS`OpBody
 // resnmtps seq of AS`NameType
 // fnname : AS`Name
-// parms : (AS`Parameters | AS`ParameterTypes)
+// parms : AS`Parameters
 // constr :  bool
-// type : (<ParametersList> | <ParameterTypes> | <Parameters>)
-// bool
+// sync : bool
 // ==> STKM`SubProgram
 TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre, 
                                             const Generic & fnpost, 
@@ -480,9 +461,7 @@ TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre,
                                             const TYPE_AS_Name & fnname,
                                             const Sequence & parms, 
                                             const Bool & constr,
-                                            FN_TYPE type,
-                                            const Bool & sync
-                                            )
+                                            const Bool & sync)
 {
   const Generic & body_body (body.GetField(pos_AS_OpBody_body));
 
@@ -494,15 +473,7 @@ TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre,
 
   TYPE_STKM_SubProgram prog (PrePost2I(fnpre, true));
 
-  // If we have a post then execute PUSHOS.
-// 20140817 -->
-//  if (!fnpost.IsNil()) {
-//    prog.ImpAppend(TYPE_INSTRTP_PUSHOS().Init(GetClMod()));
-//  }
-// <-- 20140817
-  
-  if (body_body.IsInt())
-  {
+  if (body_body.IsInt()) {
     // <NOTYETSPEC> or <SUBRESP>
     switch(Int(body_body).GetValue()) {
       case NOTYETSPEC: {
@@ -513,17 +484,13 @@ TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre,
         else 
 #endif //VDMPP
           prog.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_NOTYETSPECOP),
-                                                    GetClMod(),
-                                                    fnname,
-                                                    MakeParmList(parms, type)));
+                                                    GetClMod(), fnname, parms));
         break;
       }
 #ifdef VDMPP
       case SUBRESP: {
         prog.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_SUBRESP),
-                                                  GetClMod(),
-                                                  fnname,
-                                                  MakeParmList(parms, type)));
+                                                  GetClMod(), fnname, parms));
         break;
       }
 #endif // VDMPP
