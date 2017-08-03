@@ -1247,10 +1247,13 @@ SequenceVal::SequenceVal(const wstring & s) : MetaivVal(mt_sequence), isString(t
     showmalloccount->log_insert(typeid(*this).name(), this, sizeof(*this));
 #endif // SHOW_MALLOC_STATS
 
-  string::size_type len = s.length();
-  for(string::size_type i = 0; i < len; i++) {
-    this->value.push_back(Char(s[i]));
-  }
+//  string::size_type len = s.length();
+//  for(string::size_type i = 0; i < len; i++) {
+//    this->value.push_back(Char(s[i]));
+//  }
+  for (wstring::const_iterator it = s.begin(); it != s.end(); it++) {
+    this->value.push_back(Char(*it));
+  } 
 }
 
 int SequenceVal::Compare(const MetaivVal & mval) const
