@@ -23,10 +23,10 @@
 
 extern void postGUIEvent(QEvent*);
 
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 //#define REQUIRED_STACK_SIZE 1024*1024
 #define REQUIRED_STACK_SIZE 2048*1024
-#endif // __darwin__
+#endif // __APPLE_CC__
 //
 // ToolboxThread::ToolboxThread
 //
@@ -37,19 +37,19 @@ extern void postGUIEvent(QEvent*);
 // Returns: instance of ToolboxThread
 //
 ToolboxThread::ToolboxThread()
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 #if QT_VERSION < 0x040000
   : QThread(REQUIRED_STACK_SIZE)
 #endif // QT_VERSION < 0x040000
-#endif // __darwin__
+#endif // __APPLE_CC__
 {
   mainLoopContinue = false;
 
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 #if QT_VERSION >= 0x040000
   this->setStackSize(REQUIRED_STACK_SIZE);
 #endif // QT_VERSION >= 0x040000
-#endif // __darwin__
+#endif // __APPLE_CC__
 
   QThread::start();
 }

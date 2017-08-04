@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#ifndef __darwin__
+#ifndef __APPLE_CC__
 #ifndef __FreeBSD__
 #include <malloc.h>
 #endif

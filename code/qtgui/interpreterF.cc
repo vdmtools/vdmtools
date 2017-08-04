@@ -218,7 +218,7 @@ interpreterW::interpreterW(QWidget* parent, const char* name, WFlags fl)
 bool interpreterW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   if (e->type() == QEvent::Paint)
   {
     if (this->pcount < 2) {
@@ -229,7 +229,7 @@ bool interpreterW::event (QEvent * e)
       this->pcount = 0;
     }
   }
-#endif // __darwin__
+#endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
   return QWidget::event(e);
 }
@@ -274,7 +274,7 @@ QWidget* interpreterW::createInLE( QWidget* parent )
 QLayout* interpreterW::createToggleAndLogOperationBox( QWidget* parent )
 {
   QHBoxLayout* layout = new QHBoxLayout();
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   layout->setSpacing( 0 );
   layout->setMargin( 0 );
 #else
@@ -290,7 +290,7 @@ QLayout* interpreterW::createToggleAndLogOperationBox( QWidget* parent )
 QWidget* interpreterW::createToggleB( QWidget* parent )
 {
   QPushButton* button = new QPushButton( parent );
-//#ifdef __darwin__
+//#ifdef __APPLE_CC__
 //  button->setMaximumSize( QSize( 32767, 30 ) );
 //#else
 //  button->setMaximumSize( QSize( 32767, 16 ) );
@@ -342,7 +342,7 @@ QWidget* interpreterW::createSaveLogButton( QWidget* parent )
 QLayout* interpreterW::createTraceAndBreakPointsBox( QWidget* parent )
 {
   QHBoxLayout* layout = new QHBoxLayout();
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   layout->setSpacing( 0 );
   layout->setMargin( 0 );
 #else
@@ -361,7 +361,7 @@ QWidget* interpreterW::createTraceLVBox( QWidget* parent )
   gbox->setTitle( tr( "Trace" ) );
 #if QT_VERSION >= 0x040000
   QVBoxLayout *layout = new QVBoxLayout();
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   layout->setSpacing( 10 );
   layout->setMargin( 0 );
 #else
@@ -375,7 +375,7 @@ QWidget* interpreterW::createTraceLVBox( QWidget* parent )
 
   QLayout* layout = gbox->layout();
 //  layout->setAlignment( Qt::AlignTop );
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   layout->setSpacing( 10 );
   layout->setMargin( 0 );
 #else
@@ -416,7 +416,7 @@ QWidget* interpreterW::createTraceList( QWidget* parent )
   int cn1 = lv->addColumn( tr( "Function/Operation" ) );
   lv->setColumnWidth(cn1, 200);
   int cn2 = lv->addColumn( tr( "Value" ) );
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   lv->setColumnWidth(cn2, 158);
 #else
   lv->setColumnWidth(cn2, 160);

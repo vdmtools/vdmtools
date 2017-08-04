@@ -54,9 +54,9 @@
 
 #include <string>
 
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 #include <CoreFoundation/CoreFoundation.h>
-#endif // __darwin__
+#endif // __APPLE_CC__
 
 //contains the file path_name of where vdmde was started originally.
 //The search for a file will always start in the standard path.
@@ -887,7 +887,7 @@ std::wstring TBUTILS::GetTmpDir()
   if ( NULL != tmp )
     return TBWSTR::fsstr2wstring(tmp);
  
-#if defined( __darwin__ ) || defined( __SunOS__ )
+#if defined( __APPLE_CC__ ) || defined( __SunOS__ )
   return TBWSTR::fsstr2wstring(string("/var/tmp"));
 #else
   return TBWSTR::fsstr2wstring(string("/tmp"));
@@ -1350,8 +1350,8 @@ wstring TBUTILS::getLanguage()
   }
   return lang;
 #else // Linux & Solaris
-#ifdef __darwin__
-#if (MAJOR_VERSION <= 8)
+#ifdef __APPLE_CC__
+#if (__APPLE_CC__ < 5493)
   CFLocaleRef ref = CFLocaleCopyCurrent();
   if (ref != NULL)
   {
@@ -1385,8 +1385,8 @@ wstring TBUTILS::getLanguage()
     if (darwin_locale.size() > 0)
       return darwin_locale;
   }
-#endif // (MAJOR_VERSION <= 8)
-#endif // __darwin__
+#endif // (__APPLE_CC__ < 5493)
+#endif // __APPLE_CC__
   string lang;
   const char * l = getenv( "LANG" );
   if( NULL == l ) return string2wstring(lang);

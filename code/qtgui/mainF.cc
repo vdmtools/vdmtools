@@ -60,7 +60,7 @@
 #endif // QT_VERSION < 0x040000
 
 #if __cplusplus >= 201103L
-#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
+#if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
 #include <thread>
 #endif
 #endif
@@ -163,7 +163,7 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
 #if defined(  _MSC_VER )
   // for Windows 7
   QRect qr (rect.left() + 6,rect.top() + 30, rect.width() -12, rect.height() - 66);
-#elif defined( __darwin__ )
+#elif defined( __APPLE_CC__ )
   QRect qr (rect.left(),rect.top(), rect.width(), rect.height());
 #elif defined( __linux__ ) || defined( __SunOS__ ) || defined( __Cygwin__ )
   QRect qr (rect.left(),rect.top(), rect.width() - 1, rect.height() - 1);
@@ -175,7 +175,7 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   Qrect qr(rect.left + 4, rect.top + 30, 900, 580);
   // for Windows 7 full
   //Qrect qr(rect.left + 6, rect.top + 30, rect.right - 12, rect.bottom - 36);
-#elif defined( __darwin__ )
+#elif defined( __APPLE_CC__ )
 #if QT_VERSION >= 0x040600
   QRect qr(0, 0, 900, 600);
 #else
@@ -201,7 +201,7 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   sb->addWidget(pb, 1);
 
 #if QT_VERSION >= 0x040600
-#if !defined( __darwin__ )
+#if !defined( __APPLE_CC__ )
   this->menuBar()->setNativeMenuBar(false);
 #endif
 #endif // QT_VERSION >= 0x040600
@@ -355,7 +355,7 @@ QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
   if (!iconSet.isNull()) {
     newAction->setIcon(iconSet);
   }
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   QString str (as.text);
   if ((str == "&About") || (str == "About &Qt")) {
     newAction->setText( str );
@@ -365,7 +365,7 @@ QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
   }
 #else
   newAction->setText( mf(tr(as.text)) );
-#endif // __darwin__
+#endif // __APPLE_CC__
 
   newAction->setShortcut(as.accel);
   newAction->setStatusTip( tr(as.tooltip) );
@@ -400,7 +400,7 @@ QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
 
 QString mainW::mf( const QString & str )
 {
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   QString ret ( str );
   QRegExp rx ("\\(&.\\)");
   ret.replace( rx, "" );
@@ -411,7 +411,7 @@ QString mainW::mf( const QString & str )
   return ret;
 #else
   return str;
-#endif // __darwin__
+#endif // __APPLE_CC__
 }
 
 void mainW::createProjectMenu()
@@ -497,7 +497,7 @@ void mainW::createProjectMenu()
 
   this->createProjectHistoryMenu( this->projectMenu );
 
-#ifndef __darwin__
+#ifndef __APPLE_CC__
 #if QT_VERSION >= 0x040000
   this->projectMenu->addSeparator();
 #else
@@ -510,7 +510,7 @@ void mainW::createProjectMenu()
 #else
   QObject::connect(exitA, SIGNAL(activated()), this->appRef, SLOT(closeAllWindows()));
 #endif // QT_VERSION >= 0x040000
-#endif // __darwin__
+#endif // __APPLE_CC__
 
 //  QObject::connect(menu, SIGNAL(highlighted(int)),this, SLOT(statusHint(int)));
 }
@@ -835,11 +835,11 @@ void mainW::createHelpMenu()
   // Create help menu
   /////////////////////////////////////////////////////////////////
 #if QT_VERSION >= 0x040000
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   this->helpMenu = this->menuBar()->addMenu( tr("Help") );
 #else
   this->helpMenu = this->menuBar()->addMenu( mf(tr("&Help")) );
-#endif // __darwin__
+#endif // __APPLE_CC__
   this->helpTools = this->addToolBar( tr("Help") );
   this->helpTools->setIconSize(QSize(24,24));
 #else
@@ -3307,9 +3307,9 @@ void mainW::userEvent(QEvent *e)
   this->appRef->unlock();
 #endif // QT_VERSION < 0x040000
   this->setComplete(true);
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 #if __cplusplus >= 201103L
-#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
+#if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
   std::this_thread::sleep_for(std::chrono::microseconds(20));
 #else
   usleep(20);
@@ -3317,7 +3317,7 @@ void mainW::userEvent(QEvent *e)
 #else
   usleep(20);
 #endif
-#endif // __darwin__
+#endif // __APPLE_CC__
 }
 
 ///////////////////////////////////////////////////////////////// 
@@ -4265,7 +4265,7 @@ void mainW::setComplete( bool complete )
     Sleep( 1 );
 #else
 #if __cplusplus >= 201103L
-#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
+#if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
     std::this_thread::sleep_for(std::chrono::microseconds(3));
 #else
     usleep( 1 );
@@ -4297,7 +4297,7 @@ void mainW::waitComplete()
     Sleep( 10 );
 #else
 #if __cplusplus >= 201103L
-#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
+#if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
     std::this_thread::sleep_for(std::chrono::microseconds(3));
 #else
     usleep( 10 );

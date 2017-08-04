@@ -203,7 +203,7 @@ QString QTLOCALE::getDefaultCodec()
 {
   QString lang (QTLOCALE::getLanguage());
 #if defined _MSC_VER
-#elif defined( __darwin__ ) // Mac OS X
+#elif defined( __APPLE_CC__ ) // Mac OS X
 #else // Linux & Solaris
 #endif
   return "UTF-8";
@@ -493,7 +493,7 @@ QString QTLOCALE::getLanguage()
     default: break;
   }
   return lang;
-#elif defined( __darwin__ ) // Mac OS X
+#elif defined( __APPLE_CC__ ) // Mac OS X
   CFLocaleRef ref = CFLocaleCopyCurrent();
   CFStringRef str = (CFStringRef)CFLocaleGetIdentifier(ref);
   QString lang = CFStringGetCStringPtr( str, kCFStringEncodingUTF8 );

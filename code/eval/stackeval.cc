@@ -1547,11 +1547,11 @@ void StackEval::PrintProfile()
   {
     int index = sortedidx[ii];
     VDMGetDefaultRecInfoMap().GetSymTag(index + TAG_INSTRTP, tmptag);
-#ifdef __darwin__
+#ifdef __APPLE_CC__
     sprintf(buf, "%-30s %12llu usec %12llu instrs %8llu ns/instr",
 #else
     sprintf(buf, "%-30s %12lu usec %12lu instrs %8llu ns/instr",
-#endif //__darwin__
+#endif //__APPLE_CC__
             TBWSTR::wstring2string(tmptag).c_str(),
             instrclk[index],
             instrcnt[index],

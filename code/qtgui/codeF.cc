@@ -84,7 +84,7 @@ codeW::~codeW()
 bool codeW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   if (e->type() == QEvent::Paint)
   {
     if (this->pcount < 2)
@@ -95,7 +95,7 @@ bool codeW::event (QEvent * e)
     else
       this->pcount = 0;
   }
-#endif // __darwin__
+#endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
   return QWidget::event(e);
 }
@@ -652,7 +652,7 @@ void codeW::externalEdit(const QStringList& files, const QString& editorName)
     int pid = fork();
     if (pid == 0) // child process
     {
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 #if QT_VERSION >= 0x040000
       execlp("open",
              "-a" ,
@@ -680,7 +680,7 @@ void codeW::externalEdit(const QStringList& files, const QString& editorName)
              (*it).latin1(),
              (const char*) NULL);
 #endif // QT_VERSION >= 0x040000
-#endif // __darwin__
+#endif // __APPLE_CC__
     }
 #endif //_MSC_VER
   }
@@ -815,14 +815,14 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
   QString eapp (editor);
   QStringList eargs (args);
 
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   if (editor.endsWith(".app"))
   {
     eapp = QString("open");
     eargs.prepend(QString(editor)); 
     eargs.prepend(QString("-a"));
   }
-#endif // __darwin__
+#endif // __APPLE_CC__
 
   int pid = fork();
   if (pid == 0) // child process

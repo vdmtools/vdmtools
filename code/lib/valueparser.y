@@ -29,9 +29,9 @@
 #include "valuescanner.h"
 #include "cg.h"
 
-#if !defined(__darwin__) && !defined(__FreeBSD__)
+#if !defined(__APPLE_CC__) && !defined(__FreeBSD__)
 #include <malloc.h>
-#endif // !defined(__darwin__) && !defined(__FreeBSD__)
+#endif // !defined(__APPLE_CC__) && !defined(__FreeBSD__)
 
 string VALUEPARSER::valueptextstring;
 Generic * VALUEPARSER::exprs = NULL;

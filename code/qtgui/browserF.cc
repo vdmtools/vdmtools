@@ -74,7 +74,7 @@ browserW::~browserW()
 bool browserW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   if (e->type() == QEvent::Paint)
   {
     if (this->pcount < 2)
@@ -85,7 +85,7 @@ bool browserW::event (QEvent * e)
     else
       this->pcount = 0;
   }
-#endif // __darwin__
+#endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
   return QWidget::event(e);
 }

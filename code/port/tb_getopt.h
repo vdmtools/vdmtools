@@ -6,7 +6,7 @@ extern "C" {
 }
 #endif // _HPUX_SOURCE
 
-#if defined(__linux__) || defined(__darwin__)
+#if defined(__linux__) || defined(__APPLE_CC__)
   #include <unistd.h>
 #endif
 

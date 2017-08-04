@@ -577,7 +577,7 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
   memcpy( tmpibuf, fromstr.c_str(), inbytesleft + 1 );
   memset( tmpobuf, '\0', outbytesleft + 1 );
 
-#if (defined( __darwin__ ) && (MAJOR_VERSION <= 8)) || defined( __SunOS__ ) || defined( __FreeBSD__ )
+#if (defined( __APPLE_CC__ ) && (__APPLE_CC__ < 5493)) || defined( __SunOS__ ) || defined( __FreeBSD__ )
   const char * ibuf = tmpibuf;
 #else
   char * ibuf = tmpibuf;

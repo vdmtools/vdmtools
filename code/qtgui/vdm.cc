@@ -47,9 +47,9 @@
 #include <stdlib.h>
 #endif // __linux__
 
-#ifdef __darwin__
+#ifdef __APPLE_CC__
 #include <unistd.h>
-#endif // __darwin__
+#endif // __APPLE_CC__
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -60,7 +60,7 @@
 #endif // __Cygwin__
 
 #if __cplusplus >= 201103L
-#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
+#if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
 #include <thread>
 #endif
 #endif
@@ -185,13 +185,13 @@ void drawVersion( QPixmap * pmap )
   int y = bottom * 19/78;
   int h = bottom * 12/78;
   int weight = QFont::DemiBold; // 63
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   int f1size = 20;
   int f2size = 16;
 #else
   int f1size = 18;
   int f2size = 12;
-#endif // __darwin__
+#endif // __APPLE_CC__
 #else
   int x = 0;
   int y = bottom * 28/78;
@@ -212,9 +212,9 @@ void drawVersion( QPixmap * pmap )
   QFont f("Courier New", f1size, weight);
   QFont f2("Courier New", f2size, weight);
 #endif
-#ifndef __darwin__
+#ifndef __APPLE_CC__
   f.setStretch( QFont::SemiCondensed );
-#endif // __darwin__
+#endif // __APPLE_CC__
 #endif // __linux__
 
   QString title (Qt2TB::GiveToolTitleI());
@@ -259,9 +259,9 @@ void drawVersion( QPixmap * pmap )
 
   y += 20;
   QString os;
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   os = "for Mac OS X";
-#endif // __darwin__
+#endif // __APPLE_CC__
 #ifdef __linux__
 #if QT_VERSION >= 0x040000
   os = "for Linux 2.6/3";
@@ -465,9 +465,9 @@ int main (int argc, char * argv[])
   Qt2TB::CleanUpI();
   mainw->cleanUp();
 
-#if defined( __darwin__ ) || defined( __linux__ )
+#if defined( __APPLE_CC__ ) || defined( __linux__ )
 #if __cplusplus >= 201103L
-#if !defined( __darwin__ ) || (MAJOR_VERSION > 11)
+#if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
   std::this_thread::sleep_for(std::chrono::milliseconds (100));
 #else
   usleep(100000);
@@ -475,7 +475,7 @@ int main (int argc, char * argv[])
 #else
   usleep(100000);
 #endif
-#endif // __darwin__ || __linux__
+#endif // __APPLE_CC__ || __linux__
 
   return result;
 }

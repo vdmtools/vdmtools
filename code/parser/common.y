@@ -26,9 +26,9 @@
 #ifdef __GNUC__
 #include <stdlib.h>
 #endif // __GNUC__
-#if !defined(__darwin__) && !defined(__FreeBSD__)
+#if !defined(__APPLE_CC__) && !defined(__FreeBSD__)
 #include <malloc.h>
-#endif // !defined(__darwin__) && !defined(__FreeBSD__)
+#endif // !defined(__APPLE_CC__) && !defined(__FreeBSD__)
 
 #include <stdio.h>
 #include "metaiv.h"  // Basic Meta-IV/VDM data types and operations.

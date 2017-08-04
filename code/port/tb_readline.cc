@@ -60,7 +60,7 @@ std::string TBReadLine::ReadLine(std::wostream & wos)
     if (strlen(line)>0)
       add_history(line);
 
-#if defined( __darwin__ ) && (MAJOR_VERSION <= 8)
+#if defined( __APPLE_CC__ ) && (__APPLE_CC__ < 5493)
 #else
     if (++history_no > MAX_HISTORY_NO) {
       HIST_ENTRY *history = remove_history(0);

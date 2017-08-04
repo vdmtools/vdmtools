@@ -267,9 +267,9 @@ QGroupBox * roseW::createMapBox( QWidget * parent )
   gb->setTitle( tr( "Map" ) );
   QLayout * layout = gb->layout();
 #if QT_VERSION >= 0x040000
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   layout->setMargin(0);
-#endif // __darwin__
+#endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
 
   QBoxLayout * hlayout = this->createHBoxLayout( NULL );
@@ -394,9 +394,9 @@ QGroupBox * roseW::createDiffBox( QWidget * parent )
   gb->setTitle( tr( "Differences" ) );
   QLayout * layout = gb->layout();
 #if QT_VERSION >= 0x040000
-#ifdef __darwin__
+#ifdef __APPLE_CC__
   layout->setMargin(0);
-#endif // __darwin__
+#endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
 
   QHBoxLayout * hlayout = this->createHBoxLayout(NULL);

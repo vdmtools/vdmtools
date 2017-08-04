@@ -80,7 +80,7 @@ A rule like L"something_nsi": 'nsi' should be read 'no_short_if'.
 @d Includes @{
 %{
 #include <stdlib.h>
-#if (!defined(__darwin__) && !defined(__FreeBSD__))
+#if (!defined(__APPLE_CC__) && !defined(__FreeBSD__))
 #include <malloc.h>
 #endif
 #include <stdio.h>
