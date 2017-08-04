@@ -2954,14 +2954,14 @@ endif
 ifeq ($(strip $(OSTYPE)),Darwin)
 ifeq ($(strip $(LION_OR_LATER)),true)
 dlclass_test1.so: %.so: %.cc libvdm.a
-	${CXX} $(ARCH) -dynamiclib -fPIC -o $@ $< -L. -lvdm -liconv -Wl,-syslibroot,$(SDK)
+	${CXX} $(ARCH) $(ARCH_DEFINES) -dynamiclib -fPIC -o $@ $< -L. -lvdm -liconv -Wl,-syslibroot,$(SDK)
 else
 dlclass_test1.so: %.so: %.cc libvdm_darwin.a
-	${CXX} $(ARCH) -dynamiclib -fPIC -o $@ $< -L. -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK)
+	${CXX} $(ARCH) $(ARCH_DEFINES) -dynamiclib -fPIC -o $@ $< -L. -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK)
 endif
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} $(ARCH) -fPIC -c -o $@ $< 
+	${CXX} $(ARCH) $(ARCH_DEFINES) -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
