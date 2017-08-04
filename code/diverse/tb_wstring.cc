@@ -10,22 +10,19 @@
 #define VDMENCODING "VDMENCODING"
 #endif // _MSC_VER
 
-#ifdef __linux__
+#if defined( __linux__ ) || defined( __Cygwin__ )
 #include <string.h>
 #include <stdlib.h>
-#endif // __linux__
-#ifdef __Cygwin__
-#include <string.h>
-#include <stdlib.h>
-#endif // __Cygwin__
+#endif // __linux__ || __Cygwin__
 
 std::wstring TBWSTR::vdmcodepage;
 std::wstring TBWSTR::vdmencoding;
 
 std::wstring TBWSTR::mbstr2wstr(const std::string& str, bool utf8)
 {
-  if (str.empty()) return std::wstring( L"" );
-
+  if (str.empty()) {
+    return std::wstring( L"" );
+  }
   std::string s(str);
 #ifndef _MSC_VER
   if ( !utf8 ) {
@@ -36,69 +33,68 @@ std::wstring TBWSTR::mbstr2wstr(const std::string& str, bool utf8)
   }
 #endif // _MSC_VER
 
+  std::string::size_type len = s.size();
   const char *src = s.c_str();
-  wchar_t* buf = new wchar_t[s.size() + 1];
-  wmemset( buf, L'\0', s.size() );
+  wchar_t* buf = new wchar_t[len + 1];
+  wmemset( buf, L'\0', len );
 #ifdef _MSC_VER
   std::string codepage (getFileCode());
   int size = 0;
-  if( utf8 || codepage == "65001" ) // UTF-8
-    size = MultiByteToWideChar( CP_UTF8, 0, src, s.length(), buf, s.size() );	
+  if( utf8 || codepage == "65001" ) {// UTF-8
+    size = MultiByteToWideChar( CP_UTF8, 0, src, len, buf, len );	
+  }
   else {
-    if( codepage.length() > 0 ) {
+    if (!codepage.empty()) {
       string lang = "." + codepage;
       setlocale( LC_CTYPE, lang.c_str() );
     }
-    size = mbsrtowcs(buf, &src, s.size(), NULL);
+    size = mbsrtowcs(buf, &src, len, NULL);
   }
-
-  std::wstring res(buf, buf+size);
+  //std::wstring res(buf, buf + size);
+  std::wstring res(buf, size);
 #else
   setUTF8Locale();
-  int size = mbsrtowcs(buf, &src, s.size(), NULL);
-  wstring res(buf, size);
+  int size = mbsrtowcs(buf, &src, len, NULL);
+  std::wstring res(buf, size);
 #endif // _MSC_VER
   delete[] buf;
   return res;  
 }
 
-std::string TBWSTR::wstr2mbstr(const std::wstring& s, bool utf8)
+std::string TBWSTR::wstr2mbstr(const std::wstring& ws, bool utf8)
 {
-  if (s.empty()) return string( "" );
-
-  size_t len = MB_CUR_MAX*((2*s.length())+1);
+  if (ws.empty()) {
+    return string( "" );
+  }
+  size_t len = MB_CUR_MAX * ((2 * ws.length()) + 1);
   char* mbcs = new char[ len + 1 ];
   memset(mbcs,'\0',len);
-  const wchar_t *src = s.c_str();
+  const wchar_t *src = ws.c_str();
 #ifdef _MSC_VER
   std::string codepage (getFileCode());
   if( utf8 || codepage == "65001" ) { // UTF-8
-    WideCharToMultiByte( CP_UTF8, 0, src, s.length(), mbcs, len, NULL, NULL );	
+    WideCharToMultiByte( CP_UTF8, 0, src, ws.size(), mbcs, len, NULL, NULL );	
   }
   else {
-    if( codepage.length() > 0 ) {
+    if (!codepage.empty()) {
       string lang = "." + codepage; 
       setlocale( LC_CTYPE, lang.c_str() );
     }
     wcsrtombs(mbcs, &src, len, NULL); 
   }
-
+  std::string res (mbcs);
 #else
   setUTF8Locale();
   wcsrtombs(mbcs, &src, len, NULL); 
-#endif // _MSC_VER
   std::string res (mbcs);
-  delete[] mbcs;
-
-#ifndef _MSC_VER
-  if( !utf8 ) {
+  if ( !utf8 ) {
     try {
       res = convertFromUTF8( res, getFileCode() );  
     }
-    catch(...){}
+    catch(...) {}
   }
 #endif //_MSC_VER
-
+  delete[] mbcs;
   return res;
 }
 
@@ -297,15 +293,15 @@ std::string TBWSTR::unicode2rtf(const std::wstring& unistr)
 {
   std::string res;
   for (std::string::size_type i = 0; i < unistr.length(); i++) {
-    if ((unsigned short) unistr[i] < 128){
-      int c = (unsigned short) unistr[i];
-      res.append(1, (char) c);
+    wchar_t wc = unistr[i];
+    if (wc < 128) {
+      res.push_back(wc);
     }
     else {
       std::wstring ws;
-      ws += unistr[i];
+      ws.push_back(wc);
       std::string mbstr (wstring2mbstr(ws));
-      for( std::string::size_type j = 0; j < mbstr.length(); j++ ) {
+      for ( std::string::size_type j = 0; j < mbstr.length(); j++ ) {
         res.append("\\'");
         char hexadec[3]; 
         sprintf(hexadec, "%2x", 0x000000FF & (unsigned char)mbstr[j]);        
@@ -344,14 +340,18 @@ std::string TBWSTR::mbstr2rtfstring(const std::string& str)
 //
 std::string TBWSTR::convertCrToNl(const std::string& line )
 {
+  std::string::size_type len_line = line.length();
   std::string ret;
-  if( line.length() > 0 ) {
-    for( std::string::size_type i = 0; i < line.length(); i++ ) {
-      if( line.at( i ) == '\x0d' ) {
-        if( i < line.length() - 1 ) ret += '\n';
+  if( len_line > 0 ) {
+    for( std::string::size_type i = 0; i < len_line; i++ ) {
+      char c = line.at(i);
+      if( c == '\x0d' ) {
+        if( i < len_line - 1 ) {
+          ret.push_back('\n');
+        }
       } 
       else {
-        ret += line.at( i );
+        ret.push_back(c);
       } 
     } 
   } 
@@ -379,7 +379,9 @@ std::wstring TBWSTR::getIOCharSetEnv()
       }
     }
 #ifdef __SunOS__
-    if( encoding == L"ja" ) encoding = L"ja_JP.eucJP";
+    if( encoding == L"ja" ) {
+      encoding = L"ja_JP.eucJP";
+    }
 #endif // __SunOS__
     TBWSTR::vdmencoding = encoding; 
 #endif // _MSC_VER
@@ -429,15 +431,21 @@ std::string TBWSTR::getConsoleCode()
   std::string code;
   std::string lang;
   const char* l = getenv( "LANG" );
-  if( NULL != l ) lang = l;
+  if( NULL != l ) {
+    lang = l;
+  }
 #ifdef __SunOS__
-  if( lang == "ja" ) lang = "ja_JP.eucJP";
+  if( lang == "ja" ) {
+    lang = "ja_JP.eucJP";
+  }
 #endif // __SunOS__
   std::string::size_type index = 0;
   if( ( index = lang.find_last_of( "." ) ) != string::npos ) {
     code = lang.substr( index + 1 );
   }
-  if( 0 == code.length() ) code = "UTF8";
+  if( code.empty() ) {
+    code = "UTF8";
+  }
   return code;
 #endif // _MSC_VER
 }
@@ -488,56 +496,65 @@ bool TBWSTR::convertCode(const std::string& fromstr,
   }
   else if( fromcode == "SJIS" ) {
     std::string tmpstr;
-    if( !convWithIConv( fromstr, fromcode, tmpstr, tocode ) ) return false;
+    if( !convWithIConv( fromstr, fromcode, tmpstr, tocode ) ) {
+      return false;
+    }
     tostr = "";
     std::string::size_type index = 0;
-    while( index < tmpstr.length() ) {
-      if( ( index < tmpstr.length() - 1 ) &&
-          ( '\xc2' == tmpstr[index] ) && 
-          ( '\xa5' == tmpstr[index + 1] ) ) {
-         tostr += '\x5c';
+    std::string::size_type len_tmpstr = tmpstr.length();
+    while( index < len_tmpstr ) {
+      char c = tmpstr[index];
+      if( ( index < len_tmpstr - 1 ) &&
+          ( '\xc2' == c ) && ( '\xa5' == tmpstr[index + 1] ) ) {
+         tostr.push_back('\x5c');
          index += 2;
       }
-      else if( ( index < tmpstr.length() - 2 ) &&
-               ( '\xe2' == tmpstr[index] ) &&
+      else if( ( index < len_tmpstr - 2 ) &&
+               ( '\xe2' == c ) &&
                ( '\x80' == tmpstr[index + 1] ) &&
                ( '\xbe' == tmpstr[index + 2] ) ) {
-         tostr += '\x7e';
+         tostr.push_back('\x7e');
          index += 3;
       }
       else {
-        tostr += tmpstr[index];
+        tostr.push_back(c);
         index++;
       }
     }
   }
-  else if( tocode == "SJIS" ) {
+  else if ( tocode == "SJIS" ) {
     tostr = "";
     std::string tmpstr = "";
     std::string::size_type index = 0;
-    while( index < fromstr.length() ) {
-      if( ( '\x5c' == fromstr[ index ] ) || ( '\x7e' == fromstr[ index ] ) ) {
-        if( tmpstr.length() > 0 ) {
+    std::string::size_type len_fromstr = fromstr.length();
+    while ( index < len_fromstr ) {
+      char c = fromstr[ index ];
+      if ( ( '\x5c' == c ) || ( '\x7e' == c ) ) {
+        if ( !tmpstr.empty() ) {
           std::string buf;
           if ( !convWithIConv( tmpstr, fromcode, buf, tocode ) ) return false;
-          tostr += buf;
+          tostr.append(buf);
           tmpstr = "";
         }
-        tostr += fromstr[ index ];
+        tostr.push_back(c);
       }
       else {
-        tmpstr += fromstr[ index ];
+        tmpstr.push_back(c);
       }
       index++;
     }
-    if( tmpstr.length() > 0 ) {
+    if ( !tmpstr.empty() ) {
       std::string buf;
-      if ( !convWithIConv( tmpstr, fromcode, buf, tocode ) ) return false;
-      tostr += buf;
+      if ( !convWithIConv( tmpstr, fromcode, buf, tocode ) ) {
+        return false;
+      }
+      tostr.append(buf);
     }
   }
   else {
-    if ( !convWithIConv( fromstr, fromcode, tostr, tocode ) ) return false;
+    if ( !convWithIConv( fromstr, fromcode, tostr, tocode ) ) {
+      return false;
+    }
   }
   return true;
 }
@@ -547,7 +564,7 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
                            std::string& tostr,
                            const std::string& tocode )
 {
-  if( ( fromstr.length() == 0 ) || ( fromcode == tocode ) ) {
+  if ( fromstr.empty() || ( fromcode == tocode ) ) {
     tostr = fromstr;
     return true;
   }
@@ -560,29 +577,15 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
   memcpy( tmpibuf, fromstr.c_str(), inbytesleft + 1 );
   memset( tmpobuf, '\0', outbytesleft + 1 );
 
-#if defined( __darwin__ )
-#if (MAJOR_VERSION <= 8)
+#if (defined( __darwin__ ) && (MAJOR_VERSION <= 8)) || defined( __SunOS__ ) || defined( __FreeBSD__ )
   const char * ibuf = tmpibuf;
 #else
-  char * ibuf = tmpibuf;
-#endif
-#endif
-#if defined( __linux__ )
-  char * ibuf = tmpibuf;
-#endif
-#if defined( __SunOS__ )
-  const char * ibuf = tmpibuf;
-#endif
-#if defined( __FreeBSD__ )
-  const char * ibuf = tmpibuf;
-#endif
-#if defined( __Cygwin__ )
   char * ibuf = tmpibuf;
 #endif
   char * obuf = tmpobuf;
 
   iconv_t cd = iconv_open( tocode.c_str() , fromcode.c_str() );
-  if( cd != (iconv_t)(-1) ) {
+  if ( cd != (iconv_t)(-1) ) {
     iconv( cd, &ibuf, &inbytesleft, &obuf, &outbytesleft );
     iconv_close( cd );
     tostr = tmpobuf;
@@ -596,7 +599,7 @@ bool TBWSTR::convWithIConv(const std::string& fromstr,
 
 std::wstring TBWSTR::wstring2wcoutstr( const std::wstring& ws )
 {
-  if( ws.size() == 0 ) {
+  if ( ws.empty() ) {
     return wstring(L"");
   }
 
@@ -636,8 +639,9 @@ std::wstring TBWSTR::fsstr2wstring( const std::string& s )
 
 int TBWSTR::hiansi2sjis( int c )
 {
-  if( c < 0x80 )
+  if ( c < 0x80 ) {
     return c;
+  }
   switch (c) {
     case 0x89: {
       return 0x81F1;
@@ -650,12 +654,15 @@ int TBWSTR::hiansi2sjis( int c )
 
 int TBWSTR::hiansi2utf8( int c )
 {
-  if( c < 0x80 )
+  if ( c < 0x80 ) {
     return c;
-  else if( c < 0xC0 )
+  }
+  else if( c < 0xC0 ) {
     return 0xc2 * 256 + c % 256;
-  else
+  }
+  else {
     return 0xc3 * 256 + c % 256;
+  }
 }
 
 std::string TBWSTR::hiansi2string( int c )
@@ -664,30 +671,30 @@ std::string TBWSTR::hiansi2string( int c )
 
   int a = 0;
 #ifdef _MSC_VER
-  if( code == "932" )
+  if( code == "932" ) {
 #else
-  if( code == "SJIS" )
+  if( code == "SJIS" ) {
 #endif // _MSC_VER
     a = hiansi2sjis( c );
-  else
+  }
+  else {
     a = hiansi2utf8( c ); 
-
+  }
   std::string res;
-  if( (a / 256) > 0 )
-    res += a/256;
-  res += a % 256;
+  if( (a / 256) > 0 ) {
+    res.push_back(a/256);
+  }
+  res.push_back(a % 256);
   return res;
 }
 
 std::string TBWSTR::vdm_getline(std::istream & ifs)
 {
   string s;
-  while ((ifs.peek() != EOF) && (ifs.peek() != '\r') && (ifs.peek() != '\n'))
-  {
-    s += ifs.get();
+  while ((ifs.peek() != EOF) && (ifs.peek() != '\r') && (ifs.peek() != '\n')) {
+    s.push_back(ifs.get());
   }
-  if (ifs.peek() != EOF)
-  {
+  if (ifs.peek() != EOF) {
     char c = (char)ifs.get();
     if ((c == '\r') && ((ifs.peek() != EOF) && (ifs.peek() == '\n')))
       ifs.get();
