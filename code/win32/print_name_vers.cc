@@ -14,10 +14,10 @@
 
 #include <string>
 
-#if defined ( __linux__ ) || defined ( __Cygwin__ )
+#if defined ( __linux__ ) || defined ( __CYGWIN__ )
 #include <stdlib.h>
 #include <string.h>
-#endif // __linux__ || __Cygwin__
+#endif // __linux__ || __CYGWIN__
 
 struct Info {
   std::wstring ORIGINALFILENAME;

@@ -38,9 +38,9 @@ $CCHead = <<EOT;
 #ifdef __linux__
 #include <stdlib.h>
 #endif // __linux__
-#ifdef __Cygwin__
+#ifdef __CYGWIN__
 #include <stdlib.h>
-#endif // __Cygwin__
+#endif // __CYGWIN__
 const wchar_t *StatSem::getErrMsg(int num) {
     switch (num) {
 EOT

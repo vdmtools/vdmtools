@@ -55,9 +55,9 @@
 #include <windows.h>
 #endif // _MSC_VER
 
-#ifdef __Cygwin__
+#ifdef __CYGWIN__
 #include <unistd.h>
-#endif // __Cygwin__
+#endif // __CYGWIN__
 
 #if __cplusplus >= 201103L
 #if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)

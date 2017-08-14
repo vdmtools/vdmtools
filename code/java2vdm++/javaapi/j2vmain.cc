@@ -25,13 +25,9 @@
 #include <crtdbg.h>
 #endif
 
-#ifdef __linux__
+#if defined( __linux__ ) || defined( __CYGWIN__ )
 #include <string.h>
-#endif // __linux__
-
-#ifdef __Cygwin__
-#include <string.h>
-#endif // __Cygwin__
+#endif // __linux__ || __CYGWIN__
 
 FILE* pLog = NULL;
 

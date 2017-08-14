@@ -8,15 +8,10 @@
 #include "FileInputStream_userimpl.cpp"
 #endif
 
-#ifdef __linux__
+#if defined( __linux__ ) || defined( __CYGWIN__ )
 #include <stdlib.h>
 #include <string.h>
-#endif // __linux__
-
-#ifdef __Cygwin__
-#include <stdlib.h>
-#include <string.h>
-#endif // __Cygwin__
+#endif // __linux__ || __CYGWIN__
 
 const wchar_t* vdm_FileInputStream::name = L"JavaIoFileInputStream";
 

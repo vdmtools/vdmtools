@@ -942,7 +942,7 @@ BISON2=1
 YACC=bison
 
 CCPATH = /usr/bin/
-ARCH_DEFINES = -D__Cygwin__ -D__GNU_LIBRARY__ $(NOCG)
+ARCH_DEFINES = -D__GNU_LIBRARY__ $(NOCG)
 LINK_DEBUG=
 
 ARCH += -std=gnu++11

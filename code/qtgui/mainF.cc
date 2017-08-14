@@ -165,7 +165,7 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   QRect qr (rect.left() + 6,rect.top() + 30, rect.width() -12, rect.height() - 66);
 #elif defined( __APPLE_CC__ )
   QRect qr (rect.left(),rect.top(), rect.width(), rect.height());
-#elif defined( __linux__ ) || defined( __SunOS__ ) || defined( __Cygwin__ )
+#elif defined( __linux__ ) || defined( __SunOS__ ) || defined( __CYGWIN__ )
   QRect qr (rect.left(),rect.top(), rect.width() - 1, rect.height() - 1);
 #endif
 #else

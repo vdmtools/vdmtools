@@ -6,15 +6,10 @@
 
 #include "sqlext.h"
 
-#ifdef __linux__
+#if defined( __linux__ ) || defined( __CYGWIN__ )
 #include <stdlib.h>
 #include <string.h>
 #endif // __linux__
-
-#ifdef __Cygwin__
-#include <stdlib.h>
-#include <string.h>
-#endif // __Cygwin__
 
 #ifdef Nil
 #undef Nil

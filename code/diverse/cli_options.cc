@@ -14,11 +14,11 @@
 #ifdef __linux__
 #include <stdlib.h>
 #endif // __linux__
-#ifdef __Cygwin__
+
+#ifdef __CYGWIN__
 #include <stdlib.h>
 #include "getopt.h"
-#endif // __Cygwin__
-
+#endif // __CYGWIN__
 
 //
 // Remaining chars for single char flags

@@ -10,10 +10,10 @@
 #define VDMENCODING "VDMENCODING"
 #endif // _MSC_VER
 
-#if defined( __linux__ ) || defined( __Cygwin__ )
+#if defined( __linux__ ) || defined( __CYGWIN__ )
 #include <string.h>
 #include <stdlib.h>
-#endif // __linux__ || __Cygwin__
+#endif // __linux__ || __CYGWIN__
 
 std::wstring TBWSTR::vdmcodepage;
 std::wstring TBWSTR::vdmencoding;

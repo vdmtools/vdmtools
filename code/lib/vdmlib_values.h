@@ -167,7 +167,7 @@ public:
 };
 
 #define LONGDOUBLE 1
-#if defined(LONGDOUBLE) && !defined(_MSC_VER) && !defined(__Cygwin__)
+#if defined(LONGDOUBLE) && !defined(_MSC_VER) && !defined(__CYGWIN__)
 #define VLFLOOR floorl
 #define VLFABS std::fabs
 #define VLCEIL ceill
