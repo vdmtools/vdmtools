@@ -16,30 +16,27 @@ CGFLAGS = -DCG #-DDEBUG
 ifeq ($(strip $(OSTYPE)),Darwin)
 OSV = $(shell uname -r)
 OSMV = $(word 1, $(subst ., ,$(strip $(OSV))))
+LION_OR_LATER=$(shell [ $(OSMV) -ge 11 ] && echo true)
+
 CCPATH = /usr/bin/
-ifeq ($(strip $(OSMV)),12) # 10.8
-CC      = $(CCPATH)clang++
-CXX     = $(CCPATH)clang++
-else
-ifeq ($(strip $(OSMV)),11) # 10.7
-CC      = $(CCPATH)clang++
+ifeq ($(strip $(LION_OR_LATER)),true) # >= 10.7
+CC      = $(CCPATH)clang
 CXX     = $(CCPATH)clang++
 else
 ifeq ($(strip $(OSMV)),10) # 10.6
-CC      = $(CCPATH)g++
+CC      = $(CCPATH)gcc
 CXX     = $(CCPATH)g++
 else
 ifeq ($(strip $(OSMV)),9) # 10.5
-CC      = $(CCPATH)g++-4.2
+CC      = $(CCPATH)gcc-4.2
 CXX     = $(CCPATH)g++-4.2
 else
 ifeq ($(strip $(OSMV)),8) # 10.4
-CC      = $(CCPATH)g++-4.0
+CC      = $(CCPATH)gcc-4.0
 CXX     = $(CCPATH)g++-4.0
 else
-CC      = $(CCPATH)g++
+CC      = $(CCPATH)gcc
 CXX     = $(CCPATH)g++
-endif
 endif
 endif
 endif
@@ -47,16 +44,12 @@ endif
 
 LIB     = -L. -L$(VDMLIB) -lCG -lvdm -lm -liconv
 
-#ifeq ($(strip $(GCC_VERSION)),-3.3)
-#MAPMLIB = lib_mapm_darwin_ppcg3.a
-#else
 MAPMLIB = lib_mapm_darwin.a
-#endif
 endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
 CPUTYPE = $(shell uname -m)
-CC      = /usr/bin/g++
+CC      = /usr/bin/gcc
 CXX	= /usr/bin/g++
 LIB     = -L. -L$(VDMLIB) -lCG -lvdm -lm
 ifeq ($(strip $(CPUTYPE)),x86_64)
@@ -67,14 +60,14 @@ endif
 endif
 
 ifeq ($(strip $(OSTYPE)),SunOS)
-CC      = /usr/sfw/bin/g++
+CC      = /usr/sfw/bin/gcc
 CXX	= /usr/sfw/bin/g++
 LIB     = -L. -L$(VDMLIB) -L../../lib -lCG -lvdm -lm
 MAPMLIB = lib_mapm_solaris.a
 endif
 
 ifeq ($(strip $(OSTYPE)),FreeBSD)
-CC      = /usr/bin/g++
+CC      = /usr/bin/gcc
 CXX	= /usr/bin/g++
 LIB     = -L. -L$(VDMLIB) -L../../lib -lCG -lvdm -lm -L/usr/local/lib -liconv
 MAPMLIB = lib_mapm_freebsd.a
@@ -91,7 +84,7 @@ endif
 
 ifeq ($(strip $(OSTYPE2)),CYGWIN)
 CPUTYPE = $(shell uname -m)
-CC      = /usr/bin/g++
+CC      = /usr/bin/gcc
 CXX	= /usr/bin/g++
 LIB     = -L. -L$(VDMLIB) -L../../lib -lCG -lvdm -liconv
 ifeq ($(strip $(CPUTYPE)),x86_64)
@@ -112,16 +105,16 @@ cgex:	cgex.o $(CGOBJS) bigint_cg.o $(MAPMDIR)/$(MAPMLIB)
 ifeq ($(strip $(OSTYPE)),Darwin)
 	ranlib $(MAPMDIR)/$(MAPMLIB)
 endif
-	$(CC) $(DEBUG) $(INCL) $(CGFLAGS) -o $@ $^ $(LIB)
+	$(CXX) $(DEBUG) $(INCL) $(CGFLAGS) -o $@ $^ $(LIB)
 
 cgex.o: cgex.cc A_userdef.h BankAccount_userdef.h cg.stamp
-	$(CC) $(DEBUG) $(INCL) $(CGFLAGS) -c -o $@ cgex.cc 
+	$(CXX) $(DEBUG) $(INCL) $(CGFLAGS) -c -o $@ cgex.cc 
 
 %.o: %.cc
-	$(CC) $(DEBUG) $(CCFLAGS) $(INCL) -c -o $@ $^
+	$(CXX) $(DEBUG) $(CCFLAGS) $(INCL) -c -o $@ $^
 
 %_shared.o: %.cc
-	$(CC) $(DEBUG) -fPIC $(CCFLAGS) $(INCL) -c -o $@ $^
+	$(CXX) $(DEBUG) -fPIC $(CCFLAGS) $(INCL) -c -o $@ $^
 
 cg.stamp: bigint.vpp
 	$(VPPDE) -c $^

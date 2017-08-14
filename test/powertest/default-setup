@@ -66,7 +66,8 @@ compiler = /usr/bin/g++
 
 # C++ Compiler flags
 # for Mac OS X
-cflags = -I ~/vdmwork -D__darwin__ -liconv ~/vdmwork/libCG_darwin.a ~/vdmwork/libvdm_darwin.a
+#cflags = -I ~/vdmwork -D__darwin__ -liconv ~/vdmwork/libCG_darwin.a ~/vdmwork/libvdm_darwin.a
+cflags = -I ~/vdmwork -liconv ~/vdmwork/libCG.a ~/vdmwork/libvdm.a
 # for Linux
 #cflags = -I ~/vdmwork -D__linux__ ~/vdmwork/libCG.a ~/vdmwork/libvdm.a
 # for Windows

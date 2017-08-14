@@ -22,12 +22,10 @@ INCL    = -I$(TBDIR)/cg/include
 ifeq ($(strip $(OSTYPE)),Darwin)
 OSV = $(shell uname -r)
 OSMV = $(word 1, $(subst ., ,$(strip $(OSV))))
+LION_OR_LATER=$(shell [ $(OSMV) -ge 11 ] && echo true)
+
 CCPATH = /usr/bin/
-ifeq ($(strip $(OSMV)),12) # 10.8
-CC      = $(CCPATH)clang
-CCC     = $(CCPATH)clang++
-else
-ifeq ($(strip $(OSMV)),11) # 10.7
+ifeq ($(strip $(LION_OR_LATER)),true) # >= 10.7
 CC      = $(CCPATH)clang
 CCC     = $(CCPATH)clang++
 else
@@ -45,7 +43,6 @@ CCC     = $(CCPATH)g++-4.0
 else
 CC      = $(CCPATH)gcc
 CCC     = $(CCPATH)g++
-endif
 endif
 endif
 endif
