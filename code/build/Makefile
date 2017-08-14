@@ -174,9 +174,6 @@ VDMPP=-DVDMPP
 VDMRT=-DVICE -DVDMPP
 
 PREPROCESS = $(GCC) -P -E -C
-ifeq ($(strip $(OSTYPE)),Darwin)
-PREPROCESS += -D__darwin__
-endif
 
 # -Wno-return-type is needed for egcs. See http://egcs.cygnus.com/caveats.html
 ifeq ($(strip $(OSTYPE)),Darwin)
@@ -1637,7 +1634,7 @@ CCC     = $(CCPATH)g++$(GCC_VERSION)
 HASPKGBUILD=1
 endif # 10.6
 
-ARCH_DEFINES = -D__darwin__ -DMAJOR_VERSION=$(OSV_MAJOR)
+ARCH_DEFINES =
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.3)
 ARCH_DEFINES += -B$(SDK)
 LNKOPT += -liconv
@@ -3117,7 +3114,7 @@ j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm_shared.a
 endif # Linux
 
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
-CXX_FLAGS=-D__Cygwin__
+CXX_FLAGS=
 ODBCLIB= -lodbc
 
 %-j2vdll.o: %.cc
