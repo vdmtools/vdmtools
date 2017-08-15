@@ -3185,32 +3185,31 @@ void StackEval::BindPat(const TYPE_STKM_Pattern & pat, const TYPE_SEM_VAL & val)
 {
   SET<TYPE_SEM_BlkEnv> env_s (PAT::PatternMatch(pat, val)); // one
 
-  if (env_s.IsEmpty())
-  {
-    if (pat.Is(TAG_TYPE_STKM_PatternName) && !pat.GetField(pos_STKM_PatternName_tp).IsNil())
-    {
+  if (env_s.IsEmpty()) {
+    if (pat.Is(TAG_TYPE_STKM_PatternName) && !pat.GetField(pos_STKM_PatternName_tp).IsNil()) {
       TYPE_AS_Type tp (pat.GetRecord(pos_STKM_PatternName_tp));
-      if (tp.Is(TAG_TYPE_AS_TypeVar))
-      {
+      if (tp.Is(TAG_TYPE_AS_TypeVar)) {
         Generic el;
         if (theStackMachine().HdTypeInst().DomExists(tp, el))
         tp = el;
       }
-      if (theState().RealSubType(val, tp, false))
-      {
+      if (theState().RealSubType(val, tp, false)) {
         // in this case 
         vdm_iplog << L"Type invariant of " << GetStatSem().ASType2Ascii(tp);
         vdm_iplog << L" was broken by " << VAL2X::val2asc(val);
         vdm_iplog << L" in pattern binding." << endl;
       }
+      const TYPE_AS_Name & nm (pat.GetRecord(pos_STKM_PatternName_nm));
       RTERR::ReportError(L"BindPat", RTERR_INCOMPATIBLE_BIND_TYPE, val, tp,
-                         pat.GetInt(pos_STKM_PatternName_cid), Sequence());
+                         nm.GetInt(pos_AS_Name_cid), Sequence());
     }
-    else
+    else {
       RTERR::Error(L"BindPat", RTERR_EMPTY_ENV_S, Nil(), Nil(), Sequence());
+    }
   }
-  else
+  else {
     AddToTopBlkEnv(env_s.GetElem());
+  }
 }
 
 // ExeCOPYVAL

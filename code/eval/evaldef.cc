@@ -917,16 +917,17 @@ Map DEF::CreateExplPrePostFns (const TYPE_AS_Name & mod_id,
     tp_fnrng_s.ImpAppend(tp.GetField (2));
     TYPE_AS_Type tp_post (CreateFunctionPostType (tp.GetSequence (1), tp_fnrng_s, parms));
 
+    TYPE_CI_ContextId cid (ASTAUX::GetCid(post_e));
     TYPE_STKM_PatternName pat_id;
-    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), ASTAUX::GetCid(post_e)), Nil(), ASTAUX::GetCid(post_e));
+    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), cid), Nil(), cid);
 
     SEQ<type_dL> parm_post; // seq of seq of STKM`Pattern
     size_t len_parms = parms.Length();
-    for (size_t idx = 1; idx <= len_parms; idx++)
-    {
+    for (size_t idx = 1; idx <= len_parms; idx++) {
       SEQ<TYPE_STKM_Pattern> tmp (theCompiler().PL2PL(parms[idx]));
-      if (idx == len_parms)
+      if (idx == len_parms) {
         tmp.ImpAppend (pat_id);
+      }
       parm_post.ImpAppend (tmp);
     }
 
@@ -1204,16 +1205,17 @@ Map DEF::CreateExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
 
     TYPE_AS_Type tp_post (CreateFunctionPostType (tp.GetSequence (1), tp_fnrng_s, parms));
 
+    TYPE_CI_ContextId cid (ASTAUX::GetCid(post_e));
     TYPE_STKM_PatternName pat_id;
-    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), NilContextId), Nil(), NilContextId);
+    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), cid), Nil(), cid);
 
     SEQ<type_dL> parm_post; // seq of seq of STKM`Pattern
     size_t len_parms = parms.Length();
-    for (size_t idx = 1; idx <= len_parms; idx++)
-    {
+    for (size_t idx = 1; idx <= len_parms; idx++) {
       SEQ<TYPE_STKM_Pattern> tmp (theCompiler().PL2PL(parms[idx]));
-      if (idx == len_parms)
+      if (idx == len_parms) {
         tmp.ImpAppend (pat_id);
+      }
       parm_post.ImpAppend (tmp);
     }
 

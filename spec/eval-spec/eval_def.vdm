@@ -518,7 +518,7 @@ CreatePrePostFns (mod_id, fndef,overloadnm) ==
 \begin{vdm_al}
 operations
 CreateExplPrePostFns: AS`Name * AS`ExplFnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
-CreateExplPrePostFns (mod_id, mk_AS`ExplFnDef (name, -,tp,parms,-,Pre_e,Post_e,access,-,-,-),overloadnm) ==
+CreateExplPrePostFns (mod_id, mk_AS`ExplFnDef (-,-,tp,parms,-,Pre_e,Post_e,access,-,-,-),overloadnm) ==
  (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
 
   if Pre_e = nil
@@ -538,7 +538,7 @@ CreateExplPrePostFns (mod_id, mk_AS`ExplFnDef (name, -,tp,parms,-,Pre_e,Post_e,a
 
   if Post_e = nil
   then skip
-  else def mk_AS`Name(-, cid) = name;
+  else def cid = Post_e.cid;
            nm_post   = AUX`PostName(overloadnm);
            tp_post   = CreateFunctionPostType (tp.fndom, [tp.fnrng]);
            parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil,cid)];
@@ -697,10 +697,11 @@ CreateExplPolyPrePostFns (mod_id, mk_AS`ExplFnDef (-, ttp, tp, parms, -, Pre_e, 
 
   if Post_e = nil
   then skip
-  else def nid = CI`NilContextId;
+  else def --cid = CI`NilContextId;
+           cid = Post_e.cid;
            nm_post   = AUX`PostName(overloadnm);
            tp_post   = CreateFunctionPostType (tp.fndom, [tp.fnrng]);
-           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],nid),nil,nid)];
+           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil,cid)];
            fn_post = mk_SEM`ExplPOLY (ttp,
                                       tp_post,
                                       [ parm_post ],
