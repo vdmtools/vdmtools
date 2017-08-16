@@ -107,59 +107,46 @@ than an expression.
             ;
 
   PatternName :: nm : [AS`Name] 
-                 tp : [AS`Type]
-                 cid :- CI`ContextId;
+                 tp : [AS`Type];
 
   MatchVal ::
-    val : SEM`VAL
-    cid :- CI`ContextId;
+    val : SEM`VAL;
 
   SetPattern = SetEnumPattern | SetUnionPattern;
 
-  SetEnumPattern :: els : seq of Pattern
-                    cid :- CI`ContextId;
+  SetEnumPattern :: els : seq of Pattern;
 
   SetUnionPattern :: lp : Pattern
-                     rp : Pattern
-                     cid :- CI`ContextId;
+                     rp : Pattern;
                    
   SeqPattern = SeqEnumPattern | SeqConcPattern;
 
-  SeqEnumPattern :: els : seq of Pattern
-                    cid :- CI`ContextId;
+  SeqEnumPattern :: els : seq of Pattern;
 
   SeqConcPattern :: lp : Pattern
-                    rp : Pattern
-                    cid :- CI`ContextId;
+                    rp : Pattern;
   
   MapPattern = MapEnumPattern | MapMergePattern;
 
   MapletPattern :: dp : Pattern
-                   rp : Pattern
-                   cid :- CI`ContextId;
+                   rp : Pattern;
 
-  MapEnumPattern :: mls : seq of MapletPattern
-                    cid :- CI`ContextId;
+  MapEnumPattern :: mls : seq of MapletPattern;
 
   MapMergePattern :: lp : Pattern
-                     rp : Pattern
-                     cid :- CI`ContextId;
+                     rp : Pattern;
   
-  TuplePattern :: fields : seq of Pattern
-                  cid :- CI`ContextId;
+  TuplePattern :: fields : seq of Pattern;
 
   RecordPattern :: nm: AS`Name
-                   fields: seq of Pattern
-                   cid :- CI`ContextId;
+                   fields: seq of Pattern;
 
 #ifdef VDMPP
   ObjectPattern :: cls : AS`Name
-                   fields : seq of FieldPattern
-                   cid :- CI`ContextId;
+                   fields : seq of FieldPattern;
 
   FieldPattern :: nm : AS`Name
-                  pat : Pattern
-                  cid :- CI`ContextId;
+                  pat : Pattern;
 #endif VDMPP
 
 \end{vdm_al}
@@ -4391,28 +4378,28 @@ operations
     mk_INSTRTP`SWAP()                       -> INSTR`ExeSWAP(),
     mk_INSTRTP`EMPTYBLKENV(permis)          -> INSTR`ExeEmptyBlkEnv(permis),
     mk_INSTRTP`MATCHANDBIND()               -> INSTR`ExeMatchAndBind(),
-    mk_INSTRTP`MATCHVAL(cid)                -> INSTR`ExeMATCHVAL(cid),
     mk_INSTRTP`TRYANYMATCH()                -> INSTR`ExeTRYANYMATCH(),        
     mk_INSTRTP`CLOSENV(blkenv,b_m)          -> INSTR`ExeCLOSENV(blkenv,b_m),
     mk_INSTRTP`ADDTOBLKENV()                -> INSTR`ExeADDTOBLKENV(),
     mk_INSTRTP`UPDATECLOSENV(ex)            -> INSTR`ExeUPDATECLOSENV(ex),
     mk_INSTRTP`ERRINST(err)                 -> INSTR`ExeERRINST(err),
-    mk_INSTRTP`SETENUM(length, cid)         -> INSTR`ExeSETENUM(length, cid),
-    mk_INSTRTP`SEQENUM(length, cid)         -> INSTR`ExeSEQENUM(length, cid),
-    mk_INSTRTP`MAPLET(cid)                  -> INSTR`ExeMAPLET(cid),
-    mk_INSTRTP`MAPENUM(length, cid)         -> INSTR`ExeMAPENUM(length, cid),
-    mk_INSTRTP`SETUNION(cid)                -> INSTR`ExeSetUnion(cid),
-    mk_INSTRTP`SEQCONC(cid)                 -> INSTR`ExeSeqConc(cid),
-    mk_INSTRTP`MAPMERGE(cid)                -> INSTR`ExeMapMerge(cid),
+    mk_INSTRTP`MATCHVAL()                   -> INSTR`ExeMATCHVAL(),
+    mk_INSTRTP`SETENUM(length)              -> INSTR`ExeSETENUM(length),
+    mk_INSTRTP`SEQENUM(length)              -> INSTR`ExeSEQENUM(length),
+    mk_INSTRTP`MAPLET()                     -> INSTR`ExeMAPLET(),
+    mk_INSTRTP`MAPENUM(length)              -> INSTR`ExeMAPENUM(length),
+    mk_INSTRTP`SETUNION()                   -> INSTR`ExeSetUnion(),
+    mk_INSTRTP`SEQCONC()                    -> INSTR`ExeSeqConc(),
+    mk_INSTRTP`MAPMERGE()                   -> INSTR`ExeMapMerge(),
+    mk_INSTRTP`RECPATCONS(tag, length)      -> INSTR`ExeRECPATCONS(tag, length),
+    mk_INSTRTP`TUPPATCONS(length)           -> INSTR`ExeTUPPATCONS(length),
 #ifdef VDMPP
-    mk_INSTRTP`OBJECTPAT(cls,length,cid)    -> INSTR`ExeOBJECTPAT(cls,length,cid),
-    mk_INSTRTP`FIELDPAT(nm,cid)             -> INSTR`ExeFIELDPAT(nm,cid),
+    mk_INSTRTP`OBJECTPAT(cls,length)        -> INSTR`ExeOBJECTPAT(cls,length),
+    mk_INSTRTP`FIELDPAT(nm)                 -> INSTR`ExeFIELDPAT(nm),
 #endif VDMPP
     mk_INSTRTP`FREF(sel,cid)                -> INSTR`ExeFREF(sel,cid),
     mk_INSTRTP`MOSREF(cid)                  -> INSTR`ExeMOSREF(cid),
     mk_INSTRTP`ASSIGNSD()                   -> INSTR`ExeASSIGNSD(),
-    mk_INSTRTP`RECPATCONS(tag, length, cid) -> INSTR`ExeRECPATCONS(tag, length, cid),
-    mk_INSTRTP`TUPPATCONS(length, cid)      -> INSTR`ExeTUPPATCONS(length, cid),
     mk_INSTRTP`RECCONS(tag,length)          -> INSTR`ExeRECCONS(tag,length), 
     mk_INSTRTP`RECMOD(fid)                  -> INSTR`ExeRECMOD(fid),
     mk_INSTRTP`FIELDSEL(nm)                 -> INSTR`ExeFIELDSEL(nm),

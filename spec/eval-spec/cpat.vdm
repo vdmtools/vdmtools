@@ -109,26 +109,26 @@ operations
   PStack2I: AS`Pattern ==> STKM`SubProgram
   PStack2I(pat) ==
     cases pat:
-      mk_AS`PatternName(nm,tp,cid)        -> return [mk_INSTRTP`PUSH(mk_STKM`PatternName(nm,tp,cid))],
-      mk_AS`MatchVal(val,cid)             -> return CEXPR`E2I(val) ^ [mk_INSTRTP`MATCHVAL(cid)],
-      mk_AS`SetEnumPattern(els,cid)       -> return conc [ P2I(els(i)) | i in set inds els ] ^
-                                                    [mk_INSTRTP`SETENUM(len els, cid)],
-      mk_AS`SeqEnumPattern(els,cid)       -> return conc [ P2I(els(i)) | i in set inds els ] ^
-                                                    [mk_INSTRTP`SEQENUM(len els, cid)],
-      mk_AS`MapEnumPattern(mls,cid)       -> return conc [ P2I(mls(i)) | i in set inds mls ] ^
-                                                    [mk_INSTRTP`MAPENUM(len mls, cid)],
-      mk_AS`SetUnionPattern(lp,rp,cid)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SETUNION(cid)],
-      mk_AS`SeqConcPattern(lp,rp,cid)     -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SEQCONC(cid)],
-      mk_AS`MapMergePattern(lp,rp,cid)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`MAPMERGE(cid)],
-      mk_AS`MapletPattern(dp,rp,cid)      -> return P2I(dp) ^ P2I(rp) ^ [mk_INSTRTP`MAPLET(cid)],
-      mk_AS`TuplePattern(fields,cid)      -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
-                                                    [mk_INSTRTP`TUPPATCONS(len fields, cid)],
-      mk_AS`RecordPattern(nm,fields,cid)  -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
-                                                    [mk_INSTRTP`RECPATCONS(nm, len fields, cid)],
+      mk_AS`PatternName(nm,tp,-)        -> return [mk_INSTRTP`PUSH(mk_STKM`PatternName(nm,tp))],
+      mk_AS`MatchVal(val,-)             -> return CEXPR`E2I(val) ^ [mk_INSTRTP`MATCHVAL()],
+      mk_AS`SetEnumPattern(els,-)       -> return conc [ P2I(els(i)) | i in set inds els ] ^
+                                                    [mk_INSTRTP`SETENUM(len els)],
+      mk_AS`SeqEnumPattern(els,-)       -> return conc [ P2I(els(i)) | i in set inds els ] ^
+                                                    [mk_INSTRTP`SEQENUM(len els)],
+      mk_AS`MapEnumPattern(mls,-)       -> return conc [ P2I(mls(i)) | i in set inds mls ] ^
+                                                    [mk_INSTRTP`MAPENUM(len mls)],
+      mk_AS`SetUnionPattern(lp,rp,-)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SETUNION()],
+      mk_AS`SeqConcPattern(lp,rp,-)     -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SEQCONC()],
+      mk_AS`MapMergePattern(lp,rp,-)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`MAPMERGE()],
+      mk_AS`MapletPattern(dp,rp,-)      -> return P2I(dp) ^ P2I(rp) ^ [mk_INSTRTP`MAPLET()],
+      mk_AS`TuplePattern(fields,-)      -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
+                                                    [mk_INSTRTP`TUPPATCONS(len fields)],
+      mk_AS`RecordPattern(nm,fields,-)  -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
+                                                    [mk_INSTRTP`RECPATCONS(nm, len fields)],
 #ifdef VDMPP
-      mk_AS`ObjectPattern(cls,fields,cid) -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
-                                                    [mk_INSTRTP`OBJECTPAT(cls, len fields, cid)],
-      mk_AS`FieldPattern(nm,fp,cid)       -> return P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm, cid)],
+      mk_AS`ObjectPattern(cls,fields,-) -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
+                                                    [mk_INSTRTP`OBJECTPAT(cls, len fields)],
+      mk_AS`FieldPattern(nm,fp,-)       -> return P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm)],
 #endif VDMPP
       others -> error
     end;
@@ -142,17 +142,17 @@ operations
   P2P: AS`Pattern ==> STKM`Pattern
   P2P(pat) ==
     cases pat:
-      mk_AS`PatternName(nm,tp,cid)     -> return mk_STKM`PatternName(nm,tp,cid),
-      mk_AS`MatchVal(val,cid)          ->
+      mk_AS`PatternName(nm,tp,-)     -> return mk_STKM`PatternName(nm,tp),
+      mk_AS`MatchVal(val,-)          ->
            cases val:
-             mk_AS`BoolLit(b,-)    -> return mk_STKM`MatchVal(mk_SEM`BOOL(b),cid),
-             mk_AS`NilLit(-)       -> return mk_STKM`MatchVal(mk_SEM`NIL(),cid),
-             mk_AS`RealLit(r,-)    -> return mk_STKM`MatchVal(mk_SEM`NUM(r),cid),
-             mk_AS`NumLit(r,-)     -> return mk_STKM`MatchVal(mk_SEM`NUM(r),cid),
-             mk_AS`CharLit(c,-)    -> return mk_STKM`MatchVal(mk_SEM`CHAR(c),cid),
+             mk_AS`BoolLit(b,-)    -> return mk_STKM`MatchVal(mk_SEM`BOOL(b)),
+             mk_AS`NilLit(-)       -> return mk_STKM`MatchVal(mk_SEM`NIL()),
+             mk_AS`RealLit(r,-)    -> return mk_STKM`MatchVal(mk_SEM`NUM(r)),
+             mk_AS`NumLit(r,-)     -> return mk_STKM`MatchVal(mk_SEM`NUM(r)),
+             mk_AS`CharLit(c,-)    -> return mk_STKM`MatchVal(mk_SEM`CHAR(c)),
              mk_AS`TextLit(str,-)  -> return mk_STKM`MatchVal(mk_SEM`SEQ([mk_SEM`CHAR(str(i))
-                                                                          | i in set inds str ]),cid),
-             mk_AS`QuoteLit(quo,-) -> return mk_STKM`MatchVal(mk_SEM`QUOTE(quo),cid),
+                                                                          | i in set inds str ])),
+             mk_AS`QuoteLit(quo,-) -> return mk_STKM`MatchVal(mk_SEM`QUOTE(quo)),
  -- PGL (06.07) This is not correct but a major update is needed to fix it.
              --others                -> return mk_STKM`PatternName(nil,nil,cid)
              others                -> def clmodName = CMPL`GetClMod();
@@ -161,32 +161,32 @@ operations
                                           env = mk_SEM`BlkEnv({|->},<READ_ONLY>);
                                           fnm = mk_AS`Name([],CI`NilContextId);
                                           efn = mk_SEM`ExplFN(lft,[],id,env,{|->},fnm,clmodName,false,nil,<PRIVATE_AS>);
-                                      in return mk_STKM`MatchVal(SEM`CompFN(efn),cid)
+                                      in return mk_STKM`MatchVal(SEM`CompFN(efn))
            end,
       mk_AS`SetEnumPattern(-,-)    -> def mk_AS`SetEnumPattern(els,-) =
                            PAT`DoCarePattern(pat,mk_AS`Name(["1"], CI`NilContextId));
                                           e_l = [P2P(els(i)) | i in set inds els];
                                           e_l' = [ e_l(i) | i in set inds e_l &
                                                    e_l(i) not in set { e_l(j) | j in set inds e_l & j < i } ]
-                                          in return mk_STKM`SetEnumPattern(e_l', pat.cid),
-      mk_AS`SetUnionPattern(lp,rp,cid) -> return mk_STKM`SetUnionPattern(P2P(lp), P2P(rp), cid),
-      mk_AS`SeqEnumPattern(els,cid)    -> def e_l = [P2P(els(i)) | i in set inds els]
-                                          in return mk_STKM`SeqEnumPattern(e_l, cid),
-      mk_AS`SeqConcPattern(lp,rp,cid)  -> return mk_STKM`SeqConcPattern(P2P(lp),  P2P(rp), cid),
-      mk_AS`MapletPattern(dp,rp,cid)   -> return mk_STKM`MapletPattern(P2P(dp), P2P(rp), cid),
-      mk_AS`MapEnumPattern(mls,cid)    -> def m_l = [P2P(mls(i)) | i in set inds mls];
+                                          in return mk_STKM`SetEnumPattern(e_l'),
+      mk_AS`SetUnionPattern(lp,rp,-) -> return mk_STKM`SetUnionPattern(P2P(lp), P2P(rp)),
+      mk_AS`SeqEnumPattern(els,-)    -> def e_l = [P2P(els(i)) | i in set inds els]
+                                          in return mk_STKM`SeqEnumPattern(e_l),
+      mk_AS`SeqConcPattern(lp,rp,-)  -> return mk_STKM`SeqConcPattern(P2P(lp), P2P(rp)),
+      mk_AS`MapletPattern(dp,rp,-)   -> return mk_STKM`MapletPattern(P2P(dp), P2P(rp)),
+      mk_AS`MapEnumPattern(mls,-)    -> def m_l = [P2P(mls(i)) | i in set inds mls];
                                               m_l' = [ m_l(i) | i in set inds m_l &
                                                        m_l(i) not in set { m_l(j) | j in set inds m_l & j < i } ]
-                                          in return mk_STKM`MapEnumPattern(m_l', cid),
-      mk_AS`MapMergePattern(lp,rp,cid) -> return mk_STKM`MapMergePattern(P2P(lp), P2P(rp), cid),
-      mk_AS`TuplePattern(p_l,cid)      -> def els = [P2P(p_l(i)) | i in set inds p_l]
-                                          in return mk_STKM`TuplePattern(els, cid),
-      mk_AS`RecordPattern(nm,p_l,cid)  -> def els = [P2P(p_l(i)) | i in set inds p_l]
-                                          in return mk_STKM`RecordPattern(nm, els, cid),
+                                          in return mk_STKM`MapEnumPattern(m_l'),
+      mk_AS`MapMergePattern(lp,rp,-) -> return mk_STKM`MapMergePattern(P2P(lp), P2P(rp)),
+      mk_AS`TuplePattern(p_l,-)      -> def els = [P2P(p_l(i)) | i in set inds p_l]
+                                          in return mk_STKM`TuplePattern(els),
+      mk_AS`RecordPattern(nm,p_l,-)  -> def els = [P2P(p_l(i)) | i in set inds p_l]
+                                          in return mk_STKM`RecordPattern(nm, els),
 #ifdef VDMPP
-      mk_AS`ObjectPattern(cls,fields,cid) -> def f_l = [P2P(fields(i)) | i in set inds fields]
-                                             in return mk_STKM`ObjectPattern(cls, f_l, cid),
-      mk_AS`FieldPattern(nm,fp,cid)    -> return mk_STKM`FieldPattern(nm, P2P(fp), cid),
+      mk_AS`ObjectPattern(cls,fields,-) -> def f_l = [P2P(fields(i)) | i in set inds fields]
+                                             in return mk_STKM`ObjectPattern(cls, f_l),
+      mk_AS`FieldPattern(nm,fp,-)    -> return mk_STKM`FieldPattern(nm, P2P(fp)),
 #endif VDMPP
       others -> error
     end;
@@ -243,7 +243,7 @@ operations
       mk_AS`Name(-,-)                -> return [mk_INSTRTP`PUSH(sd)],
       mk_AS`FieldRef(var,sel,cid)    -> return SD2I(var) ^ [mk_INSTRTP`FREF(sel,cid)],
       mk_AS`MapOrSeqRef(var,arg,cid) -> return SD2I(var) ^ CEXPR`E2I(arg) ^ [mk_INSTRTP`MOSREF(cid)],
-      mk_AS`NarrowRef(var,-,-)      -> return SD2I(var)
+      mk_AS`NarrowRef(var,-,-)       -> return SD2I(var)
     end;
 
 functions

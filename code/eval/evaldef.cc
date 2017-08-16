@@ -919,7 +919,7 @@ Map DEF::CreateExplPrePostFns (const TYPE_AS_Name & mod_id,
 
     TYPE_CI_ContextId cid (ASTAUX::GetCid(post_e));
     TYPE_STKM_PatternName pat_id;
-    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), cid), Nil(), cid);
+    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), cid), Nil());
 
     SEQ<type_dL> parm_post; // seq of seq of STKM`Pattern
     size_t len_parms = parms.Length();
@@ -1207,7 +1207,7 @@ Map DEF::CreateExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
 
     TYPE_CI_ContextId cid (ASTAUX::GetCid(post_e));
     TYPE_STKM_PatternName pat_id;
-    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), cid), Nil(), cid);
+    pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), cid), Nil());
 
     SEQ<type_dL> parm_post; // seq of seq of STKM`Pattern
     size_t len_parms = parms.Length();

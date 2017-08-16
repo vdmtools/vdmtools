@@ -2319,19 +2319,19 @@ void StackEval::ExeSUBSEQ()
 // ExeRECPATCONS
 // length : nat
 // ==> ()
-void StackEval::ExeRECPATCONS(const TYPE_AS_Name & tag, const Int & length, const TYPE_CI_ContextId & cid)
+void StackEval::ExeRECPATCONS(const TYPE_AS_Name & tag, const Int & length)
 {
   SEQ<TYPE_STKM_Pattern> fields (POPN(length));
-  PUSH(TYPE_STKM_RecordPattern().Init(tag, fields, cid));
+  PUSH(TYPE_STKM_RecordPattern().Init(tag, fields));
 }
 
 // ExeTUPPATCONS
 // length : nat
 // ==> ()
-void StackEval::ExeTUPPATCONS(const Int & length, const TYPE_CI_ContextId & cid)
+void StackEval::ExeTUPPATCONS(const Int & length)
 {
   SEQ<TYPE_STKM_Pattern> fields (POPN(length));
-  PUSH(TYPE_STKM_TuplePattern().Init(fields, cid));
+  PUSH(TYPE_STKM_TuplePattern().Init(fields));
 }
 
 // ExeRECCONS
@@ -2425,8 +2425,9 @@ TYPE_GLOBAL_Type StackEval::UpdateTypeInfo(const TYPE_GLOBAL_Type & tp, const TY
     case TAG_TYPE_AS_VoidType:
     case TAG_TYPE_AS_QuoteType:
     case TAG_TYPE_AS_TypeVar:
-    case TAG_TYPE_AS_CompositeType:
+    case TAG_TYPE_AS_CompositeType: {
       return tp;
+    }
     case TAG_TYPE_AS_BracketedType: {
       return TYPE_AS_BracketedType().Init(UpdateTypeInfo(tp.GetRecord(pos_AS_BracketedType_tp), usedclass),
                                           tp.GetInt(pos_AS_BracketedType_cid));
@@ -2843,9 +2844,8 @@ void StackEval::ExeSEQMAPOVER()
 
 // ExeSETENUM
 // length : nat
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeSETENUM(const Int & length, const TYPE_CI_ContextId & cid)
+void StackEval::ExeSETENUM(const Int & length)
 {
   SEQ<TYPE_STKM_Pattern> fields (POPN(length));
 
@@ -2862,35 +2862,32 @@ void StackEval::ExeSETENUM(const Int & length, const TYPE_CI_ContextId & cid)
   }
 // <-- 20140303
 
-  PUSH(TYPE_STKM_SetEnumPattern().Init(fields_q, cid));
+  PUSH(TYPE_STKM_SetEnumPattern().Init(fields_q));
 }
 
 // ExeSEQENUM
 // length : nat
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeSEQENUM(const Int & length, const TYPE_CI_ContextId & cid)
+void StackEval::ExeSEQENUM(const Int & length)
 {
   SEQ<TYPE_STKM_Pattern> fields (POPN(length));
 
-  PUSH(TYPE_STKM_SeqEnumPattern().Init(fields, cid));
+  PUSH(TYPE_STKM_SeqEnumPattern().Init(fields));
 }
 
 // ExeMAPLET
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeMAPLET(const TYPE_CI_ContextId & cid)
+void StackEval::ExeMAPLET()
 {
   SEQ<TYPE_STKM_Pattern> pat_l (POPN(2)); // [dompat,rngpat]
 
-  PUSH(TYPE_STKM_MapletPattern().Init(pat_l[1], pat_l[2], cid));
+  PUSH(TYPE_STKM_MapletPattern().Init(pat_l[1], pat_l[2]));
 }
 
 // ExeMAPENUM
 // length : nat
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeMAPENUM(const Int & length, const TYPE_CI_ContextId & cid)
+void StackEval::ExeMAPENUM(const Int & length)
 {
   SEQ<TYPE_STKM_MapletPattern> mls (POPN(length));
 
@@ -2907,54 +2904,49 @@ void StackEval::ExeMAPENUM(const Int & length, const TYPE_CI_ContextId & cid)
   }
 // <-- 20140303
 
-  PUSH(TYPE_STKM_MapEnumPattern().Init(mls_q, cid));
+  PUSH(TYPE_STKM_MapEnumPattern().Init(mls_q));
 }
 
 // ExeSetUnion
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeSetUnion(const TYPE_CI_ContextId & cid)
+void StackEval::ExeSetUnion()
 {
   SEQ<TYPE_STKM_Pattern> pat_l (POPN(2)); // [leftpat,rightpat]
-  PUSH(TYPE_STKM_SetUnionPattern().Init(pat_l[1], pat_l[2], cid)); // leftpat, rightpat
+  PUSH(TYPE_STKM_SetUnionPattern().Init(pat_l[1], pat_l[2])); // leftpat, rightpat
 }
 
 // ExeSeqConc
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeSeqConc(const TYPE_CI_ContextId & cid)
+void StackEval::ExeSeqConc()
 {
   SEQ<TYPE_STKM_Pattern> pat_l (POPN(2)); // [leftpat,rightpat]
-  PUSH(TYPE_STKM_SeqConcPattern().Init(pat_l[1], pat_l[2], cid)); // leftpat, rightpat
+  PUSH(TYPE_STKM_SeqConcPattern().Init(pat_l[1], pat_l[2])); // leftpat, rightpat
 }
 
 // ExeMapMerge
-// cid : CI`ContextId
 // ==> ()
-void StackEval::ExeMapMerge(const TYPE_CI_ContextId & cid)
+void StackEval::ExeMapMerge()
 {
   SEQ<TYPE_STKM_Pattern> pat_l (POPN(2)); // [leftpat,rightpat]
-  PUSH(TYPE_STKM_MapMergePattern().Init(pat_l[1], pat_l[2], cid)); // leftpat, rightpat
+  PUSH(TYPE_STKM_MapMergePattern().Init(pat_l[1], pat_l[2])); // leftpat, rightpat
 }
 
 #ifdef VDMPP
 // ExeOBJECTPAT
 // cls : AS`Name
 // length : nat
-// cid : CI`ContextId
-void StackEval::ExeOBJECTPAT(const TYPE_AS_Name & cls, const Int & length, const TYPE_CI_ContextId & cid)
+void StackEval::ExeOBJECTPAT(const TYPE_AS_Name & cls, const Int & length)
 {
   SEQ<TYPE_STKM_FieldPattern> fields (POPN(length));
-  PUSH(TYPE_STKM_ObjectPattern().Init(cls, fields, cid)); // sd, nm
+  PUSH(TYPE_STKM_ObjectPattern().Init(cls, fields)); // sd, nm
 }
 
 // ExeFIELDPAT
 // nm : AS`Name
-// cid : CI`ContextId
-void StackEval::ExeFIELDPAT(const TYPE_AS_Name & nm, const TYPE_CI_ContextId & cid)
+void StackEval::ExeFIELDPAT(const TYPE_AS_Name & nm)
 {
   TYPE_STKM_Pattern pat (POP());
-  PUSH(TYPE_STKM_FieldPattern().Init(nm, pat, cid)); // sd, nm
+  PUSH(TYPE_STKM_FieldPattern().Init(nm, pat)); // sd, nm
 }
 #endif // VDMPP
 
@@ -3303,11 +3295,11 @@ void StackEval::ExeTRYANYMATCH()
 
 // ExeMATCHVAL
 // ==> ()
-void StackEval::ExeMATCHVAL(const TYPE_CI_ContextId & cid)
+void StackEval::ExeMATCHVAL()
 {
   TYPE_SEM_VAL val (POP());
 
-  PUSH(TYPE_STKM_MatchVal().Init(val,cid));
+  PUSH(TYPE_STKM_MatchVal().Init(val));
 }
 
 // ExeCLOSENV

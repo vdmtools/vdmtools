@@ -292,25 +292,27 @@ environments improved with the closure environment.
 
   SWAP :: ;
   
-  MATCHVAL :: cid :- CI`ContextId;
   MATCHANDBIND :: ;
   TRYANYMATCH :: ;
   ENUMAPPEND ::;
-  SETENUM :: length : nat
-             cid :- CI`ContextId;
-  SEQENUM :: length : nat
-             cid :- CI`ContextId;
-  MAPLET :: cid :- CI`ContextId;
-  MAPENUM :: length : nat
-             cid :- CI`ContextId;
-  SETUNION :: cid :- CI`ContextId;
-  SEQCONC :: cid :- CI`ContextId;
-  MAPMERGE :: cid :- CI`ContextId;
+
+  MATCHVAL :: ;
+  SETENUM :: length : nat;
+  SEQENUM :: length : nat;
+  MAPLET :: ;
+  MAPENUM :: length : nat;
+  SETUNION :: ;
+  SEQCONC :: ;
+  MAPMERGE :: ;
   RECPATCONS :: tag : AS`Name
-                length : nat
-                cid :- CI`ContextId;
-  TUPPATCONS :: length : nat
-                cid :- CI`ContextId;
+                length : nat;
+  TUPPATCONS :: length : nat;
+#ifdef VDMPP
+  OBJECTPAT :: cls : AS`Name
+               length : nat;
+  FIELDPAT  :: nm : AS`Name;
+#endif VDMPP
+
   SEQELEMMATCH :: index : nat;
   FREF :: sel : AS`Name
           cid :- CI`ContextId;
@@ -324,13 +326,6 @@ environments improved with the closure environment.
 
   POP :: n : nat;
 
-#ifdef VDMPP
-  OBJECTPAT :: cls : AS`Name
-               length : nat
-               cid :- CI`ContextId;
-  FIELDPAT  :: nm : AS`Name
-               cid :- CI`ContextId;
-#endif VDMPP
 \end{vdm_al}
 #ifdef VDMPP
 \begin{vdm_al}

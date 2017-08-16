@@ -541,7 +541,7 @@ CreateExplPrePostFns (mod_id, mk_AS`ExplFnDef (-,-,tp,parms,-,Pre_e,Post_e,acces
   else def cid = Post_e.cid;
            nm_post   = AUX`PostName(overloadnm);
            tp_post   = CreateFunctionPostType (tp.fndom, [tp.fnrng]);
-           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil,cid)];
+           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil)];
            fn_post = SEM`CompFN(mk_SEM`ExplFN (tp_post,
                                                [ parm_post ],
                                                CMPL`CompilePrePostExpr(Post_e),
@@ -701,7 +701,7 @@ CreateExplPolyPrePostFns (mod_id, mk_AS`ExplFnDef (-, ttp, tp, parms, -, Pre_e, 
            cid = Post_e.cid;
            nm_post   = AUX`PostName(overloadnm);
            tp_post   = CreateFunctionPostType (tp.fndom, [tp.fnrng]);
-           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil,cid)];
+           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil)];
            fn_post = mk_SEM`ExplPOLY (ttp,
                                       tp_post,
                                       [ parm_post ],

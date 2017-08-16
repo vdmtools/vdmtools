@@ -114,7 +114,7 @@ but that no binding were made.
 \begin{vdm_al}
 operations
 MatchPatternName : STKM`PatternName * SEM`VAL ==> set of SEM`BlkEnv
-MatchPatternName(mk_STKM`PatternName(nm,tp,-),val_v) ==
+MatchPatternName(mk_STKM`PatternName(nm,tp),val_v) ==
   if tp <> nil and not STATE`RealSubType(val_v, tp, true)
   then return {}
   else
@@ -123,7 +123,7 @@ MatchPatternName(mk_STKM`PatternName(nm,tp,-),val_v) ==
     else return { AUX`MkBlkEnv(nm,val_v,tp,<READ_ONLY>) };
 
 MatchMatchVal : STKM`MatchVal * SEM`VAL ==> set of SEM`BlkEnv
-MatchMatchVal (mk_STKM`MatchVal(val,-),val_v) ==
+MatchMatchVal (mk_STKM`MatchVal(val),val_v) ==
   cases val:
     mk_SEM`CompExplFN([mk_SEM`ExplFN(-,-,instr,env,-,mk_AS`Name([],-),modName,-,-,-)],-) -> 
         def prog = CMPL`GetProgram(modName, instr)
@@ -153,7 +153,7 @@ MatchMatchVal (mk_STKM`MatchVal(val,-),val_v) ==
   end;
 
 MatchSetEnumPattern : STKM`SetEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchSetEnumPattern (mk_STKM`SetEnumPattern(elems_lp,-),val_v) ==
+MatchSetEnumPattern (mk_STKM`SetEnumPattern(elems_lp),val_v) ==
   cases val_v:
     mk_SEM`SET(val_sv)
         -> if card val_sv = len elems_lp
@@ -186,7 +186,7 @@ the elements from the permutation.
 operations
 
 MatchSetUnionPattern : STKM`SetUnionPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchSetUnionPattern ( mk_STKM`SetUnionPattern(lp, rp,-), val_v) ==
+MatchSetUnionPattern ( mk_STKM`SetUnionPattern(lp, rp), val_v) ==
   cases val_v:
     mk_SEM`SET(val_sv) ->
        let swap_pat = not is_STKM`SetEnumPattern(lp) and is_STKM`SetEnumPattern(rp),
@@ -254,7 +254,7 @@ binding environments after duplicate entries are removed.
 operations
 
 MatchSeqEnumPattern : STKM`SeqEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchSeqEnumPattern ( mk_STKM`SeqEnumPattern(els_lp,-), val_v) ==
+MatchSeqEnumPattern ( mk_STKM`SeqEnumPattern(els_lp), val_v) ==
   cases val_v:
     mk_SEM`SEQ(val_lv) -> return MatchLists(els_lp, val_lv),
     others -> return {}
@@ -268,7 +268,7 @@ order in the sequence is important.
 operations
 
 MatchSeqConcPattern : STKM`SeqConcPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchSeqConcPattern ( mk_STKM`SeqConcPattern(lp_p, rp_p,-), val_v) ==
+MatchSeqConcPattern ( mk_STKM`SeqConcPattern(lp_p, rp_p), val_v) ==
   cases val_v: 
     mk_SEM`SEQ(val_lv) ->
       let lp_is_seq_enum_pattern = is_STKM`SeqEnumPattern(lp_p),
@@ -373,7 +373,7 @@ also stripped.
 \begin{vdm_al}
 operations
 MatchMapEnumPattern : STKM`MapEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchMapEnumPattern (mk_STKM`MapEnumPattern(mls_lp,-),val_v) ==
+MatchMapEnumPattern (mk_STKM`MapEnumPattern(mls_lp),val_v) ==
   cases val_v:
     mk_SEM`MAP(val_mv) -> if card dom val_mv = len mls_lp
                           then
@@ -390,7 +390,7 @@ MatchMapEnumPattern (mk_STKM`MapEnumPattern(mls_lp,-),val_v) ==
   end;
 
 MatchMapletPattern : STKM`MapletPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchMapletPattern (mk_STKM`MapletPattern(dp_p, rp_p,-),val_v) ==
+MatchMapletPattern (mk_STKM`MapletPattern(dp_p, rp_p),val_v) ==
   cases val_v:
     mk_SEM`MAP(val_mv) -> cases val_mv:
                             {|->}     -> return {},
@@ -401,7 +401,7 @@ MatchMapletPattern (mk_STKM`MapletPattern(dp_p, rp_p,-),val_v) ==
   end;
 
 MatchMapMergePattern : STKM`MapMergePattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchMapMergePattern ( mk_STKM`MapMergePattern(lp, rp,-), val_v) ==
+MatchMapMergePattern ( mk_STKM`MapMergePattern(lp, rp), val_v) ==
   cases val_v:
     mk_SEM`MAP(val_mv) ->
        let val_sv = dom val_mv,
@@ -460,7 +460,7 @@ MatchMapMergePattern ( mk_STKM`MapMergePattern(lp, rp,-), val_v) ==
   end;
 
 MatchTuplePattern : STKM`TuplePattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchTuplePattern ( mk_STKM`TuplePattern(fields_lp,-), val_v) ==
+MatchTuplePattern ( mk_STKM`TuplePattern(fields_lp), val_v) ==
   cases val_v:
     mk_SEM`TUPLE(val_lv) -> if len fields_lp = len val_lv
                             then MatchLists(fields_lp, val_lv)
@@ -476,7 +476,7 @@ separate fields in the tuple value.
 operations
 
 MatchRecordPattern : STKM`RecordPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchRecordPattern (mk_STKM`RecordPattern(ptag,fields_lp,-),val_v) ==
+MatchRecordPattern (mk_STKM`RecordPattern(ptag,fields_lp),val_v) ==
   cases val_v:
     mk_SEM`REC(vtag, v, v_dc) ->
          def mk_(vtagname, v_isit) = AUX`ExtractTagName(vtag, {});
@@ -507,14 +507,14 @@ separate fields in the record value.
 #ifdef VDMPP
 \begin{vdm_al}
 MatchObjectPattern : STKM`ObjectPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchObjectPattern ( mk_STKM`ObjectPattern(cls, fields_lp,-), val_v) ==
+MatchObjectPattern ( mk_STKM`ObjectPattern(cls, fields_lp), val_v) ==
   cases val_v:
     mk_SEM`OBJ_Ref(-,objnm) -> if STATE`IsAClass(cls) and
                                   ((objnm = cls) or STATE`IsSubClass(objnm, cls))
                                then
                                 (dcl pat_lp : seq of STKM`Pattern := [],
                                      val_lv : seq of SEM`VAL := [];
-                                 for mk_STKM`FieldPattern(field, pat, -) in fields_lp do
+                                 for mk_STKM`FieldPattern(field, pat) in fields_lp do
                                   (pat_lp := pat_lp ^ [pat];
                                    val_lv := val_lv ^ [EXPR`EvalFieldOBJRefSelect(val_v, field)]);
                                  return MatchLists(pat_lp, val_lv))
@@ -531,7 +531,7 @@ MatchLists (els_lp, val_lv) ==
   if len val_lv = len els_lp
   then
     let p_v_l = [ mk_(els_lp(i),val_lv(i)) | i in set inds els_lp & cases els_lp(i):
-                                                                      mk_STKM`PatternName(nil,-,-) -> false,
+                                                                      mk_STKM`PatternName(nil,-) -> false,
                                                                       others -> true
                                                                     end ]
     in

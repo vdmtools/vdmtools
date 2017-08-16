@@ -1427,27 +1427,27 @@ ConvertTypeVarType(type, tm) ==
 ConvertPattern: STKM`Pattern * map AS`TypeVar to AS`Type ==> STKM`Pattern
 ConvertPattern(pat, tm) ==
   cases pat:
-    mk_STKM`PatternName(-,tp,-)       -> cases tp:
+    mk_STKM`PatternName(-,tp)       -> cases tp:
                                            nil    -> return pat,
                                            others -> return mu(pat, tp |-> ConvertTypeVarType(tp,tm))
                                          end,
-    mk_STKM`MatchVal(-,-)             -> return pat,
-    mk_STKM`SetEnumPattern(els,-)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
-    mk_STKM`SetUnionPattern(lp, rp,-) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
+    mk_STKM`MatchVal(-)             -> return pat,
+    mk_STKM`SetEnumPattern(els)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
+    mk_STKM`SetUnionPattern(lp, rp) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
                                                  rp |-> ConvertPattern(rp, tm)),
-    mk_STKM`SeqEnumPattern(els,-)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
-    mk_STKM`SeqConcPattern(lp, rp,-)  -> return mu(pat, lp |-> ConvertPattern(lp, tm),
+    mk_STKM`SeqEnumPattern(els)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
+    mk_STKM`SeqConcPattern(lp, rp)  -> return mu(pat, lp |-> ConvertPattern(lp, tm),
                                                  rp |-> ConvertPattern(rp, tm)),
-    mk_STKM`MapEnumPattern(mls,-)     -> return mu(pat, mls |-> [ ConvertPattern(mls(i), tm) | i in set inds mls ]),
-    mk_STKM`MapletPattern(dp,rp,-)    -> return mu(pat, dp |-> ConvertPattern(dp, tm),
+    mk_STKM`MapEnumPattern(mls)     -> return mu(pat, mls |-> [ ConvertPattern(mls(i), tm) | i in set inds mls ]),
+    mk_STKM`MapletPattern(dp,rp)    -> return mu(pat, dp |-> ConvertPattern(dp, tm),
                                                  rp |-> ConvertPattern(rp, tm)),
-    mk_STKM`MapMergePattern(lp, rp,-) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
+    mk_STKM`MapMergePattern(lp, rp) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
                                                  rp |-> ConvertPattern(rp, tm)),
-    mk_STKM`TuplePattern(flds,-)      -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
-    mk_STKM`RecordPattern(-,flds,-)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
+    mk_STKM`TuplePattern(flds)      -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
+    mk_STKM`RecordPattern(-,flds)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
 #ifdef VDMPP
-    mk_STKM`ObjectPattern(-,flds,-)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
-    mk_STKM`FieldPattern(-,fp,-)      -> return mu(pat, pat |-> ConvertPattern(fp, tm)),
+    mk_STKM`ObjectPattern(-,flds)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
+    mk_STKM`FieldPattern(-,fp)      -> return mu(pat, pat |-> ConvertPattern(fp, tm)),
 #endif VDMPP
     others -> error
   end;

@@ -63,58 +63,45 @@ void VAL2X::init_EVAL_SEM()
 
 void VAL2X::init_STKM()
 {
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MatchVal, 2);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MatchVal, 1);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_MatchVal, L"STKM`MatchVal");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_MatchVal, 2);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_PatternName, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_PatternName, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_PatternName, L"STKM`PatternName");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_PatternName, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_RecordPattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_RecordPattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_RecordPattern, L"STKM`RecordPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_RecordPattern, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SeqConcPattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SeqConcPattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_SeqConcPattern, L"STKM`SeqConcPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_SeqConcPattern, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SeqEnumPattern, 2);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SeqEnumPattern, 1);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_SeqEnumPattern, L"STKM`SeqEnumPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_SeqEnumPattern, 2);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SetEnumPattern, 2);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SetEnumPattern, 1);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_SetEnumPattern, L"STKM`SetEnumPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_SetEnumPattern, 2);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SetUnionPattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_SetUnionPattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_SetUnionPattern, L"STKM`SetUnionPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_SetUnionPattern, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapEnumPattern, 2);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapEnumPattern, 1);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_MapEnumPattern, L"STKM`MapEnumPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_MapEnumPattern, 2);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapMergePattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapMergePattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_MapMergePattern, L"STKM`MapMergePattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_MapMergePattern, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapletPattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapletPattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_MapletPattern, L"STKM`MapletPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_MapletPattern, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_TuplePattern, 2);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_TuplePattern, 1);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_TuplePattern, L"STKM`TuplePattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_TuplePattern, 2);
 
 #ifdef VDMPP
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_ObjectPattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_ObjectPattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_ObjectPattern, L"STKM`ObjectPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_ObjectPattern, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_FieldPattern, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_FieldPattern, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_FieldPattern, L"STKM`FieldPattern");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_FieldPattern, 3);
 #endif // VDMPP
 
   VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_Trap, 9);

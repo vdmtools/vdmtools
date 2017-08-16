@@ -2127,11 +2127,6 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
       break;
     }
 
-    case TAG_TYPE_INSTRTP_MATCHVAL: {
-      ExeMATCHVAL(i.GetInt(pos_INSTRTP_MATCHVAL_cid));
-      break;
-    }
-
     case TAG_TYPE_INSTRTP_TRYANYMATCH: {
       ExeTRYANYMATCH();
       break;
@@ -2157,52 +2152,65 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
       break;
     }
 
+    case TAG_TYPE_INSTRTP_MATCHVAL: {
+      ExeMATCHVAL();
+      break;
+    }
+
     case TAG_TYPE_INSTRTP_SETENUM: {
-      ExeSETENUM(i.GetInt(pos_INSTRTP_SETENUM_length), i.GetInt(pos_INSTRTP_SETENUM_cid));
+      ExeSETENUM(i.GetInt(pos_INSTRTP_SETENUM_length));
       break;
     }
 
     case TAG_TYPE_INSTRTP_SEQENUM: {
-      ExeSEQENUM(i.GetInt(pos_INSTRTP_SEQENUM_length), i.GetInt(pos_INSTRTP_SEQENUM_cid));
+      ExeSEQENUM(i.GetInt(pos_INSTRTP_SEQENUM_length));
       break;
     }
 
     case TAG_TYPE_INSTRTP_MAPLET: {
-      ExeMAPLET(i.GetInt(pos_INSTRTP_MAPLET_cid));
+      ExeMAPLET();
       break;
     }
 
     case TAG_TYPE_INSTRTP_MAPENUM: {
-      ExeMAPENUM(i.GetInt(pos_INSTRTP_MAPENUM_length), i.GetInt(pos_INSTRTP_MAPENUM_cid));
+      ExeMAPENUM(i.GetInt(pos_INSTRTP_MAPENUM_length));
       break;
     }
 
     case TAG_TYPE_INSTRTP_SETUNION: {
-      ExeSetUnion(i.GetInt(pos_INSTRTP_SETUNION_cid));
+      ExeSetUnion();
       break;
     }
 
     case TAG_TYPE_INSTRTP_SEQCONC: {
-      ExeSeqConc(i.GetInt(pos_INSTRTP_SEQCONC_cid));
+      ExeSeqConc();
       break;
     }
 
     case TAG_TYPE_INSTRTP_MAPMERGE: {
-      ExeMapMerge(i.GetInt(pos_INSTRTP_SEQCONC_cid));
+      ExeMapMerge();
+      break;
+    }
+
+    case TAG_TYPE_INSTRTP_RECPATCONS: {
+      ExeRECPATCONS(i.GetRecord(pos_INSTRTP_RECPATCONS_tag), i.GetInt(pos_INSTRTP_RECPATCONS_length));
+      break;
+    }
+
+    case TAG_TYPE_INSTRTP_TUPPATCONS: {
+      ExeTUPPATCONS(i.GetInt(pos_INSTRTP_TUPPATCONS_length));
       break;
     }
 
 #ifdef VDMPP
     case TAG_TYPE_INSTRTP_OBJECTPAT: {
       ExeOBJECTPAT(i.GetRecord(pos_INSTRTP_OBJECTPAT_cls),
-                   i.GetInt(pos_INSTRTP_OBJECTPAT_length),
-                   i.GetInt(pos_INSTRTP_OBJECTPAT_cid));
+                   i.GetInt(pos_INSTRTP_OBJECTPAT_length));
       break;
     }
 
     case TAG_TYPE_INSTRTP_FIELDPAT: {
-      ExeFIELDPAT(i.GetRecord(pos_INSTRTP_FIELDPAT_nm),
-                  i.GetInt(pos_INSTRTP_FIELDPAT_cid));
+      ExeFIELDPAT(i.GetRecord(pos_INSTRTP_FIELDPAT_nm));
       break;
     }
 #endif // VDMPP
@@ -2220,18 +2228,6 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
 
     case TAG_TYPE_INSTRTP_ASSIGNSD: {
       ExeASSIGNSD();
-      break;
-    }
-
-    case TAG_TYPE_INSTRTP_RECPATCONS: {
-      ExeRECPATCONS(i.GetRecord(pos_INSTRTP_RECPATCONS_tag),
-                    i.GetInt(pos_INSTRTP_RECPATCONS_length),
-                    i.GetInt(pos_INSTRTP_RECPATCONS_cid));
-      break;
-    }
-
-    case TAG_TYPE_INSTRTP_TUPPATCONS: {
-      ExeTUPPATCONS(i.GetInt(pos_INSTRTP_TUPPATCONS_length), i.GetInt(pos_INSTRTP_TUPPATCONS_cid));
       break;
     }
 

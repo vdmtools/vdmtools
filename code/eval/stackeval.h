@@ -70,54 +70,41 @@ enum {
   pos_STKM_CallStackItem_cur_umod_uobj_ul_uh = 11,
   pos_STKM_CallStackItem_rterror = 12,
   pos_STKM_CallStackItem_measu = 13,
-  length_STKM_PatternName = 3,
+  length_STKM_PatternName = 2,
   pos_STKM_PatternName_nm = 1,
   pos_STKM_PatternName_tp = 2,
-  pos_STKM_PatternName_cid = 3,
-  length_STKM_MatchVal = 2,
+  length_STKM_MatchVal = 1,
   pos_STKM_MatchVal_val = 1,
-  pos_STKM_MatchVal_cid = 2,
-  length_STKM_SetEnumPattern = 2,
+  length_STKM_SetEnumPattern = 1,
   pos_STKM_SetEnumPattern_els = 1,
-  pos_STKM_SetEnumPattern_cid = 2,
-  length_STKM_SetUnionPattern = 3,
+  length_STKM_SetUnionPattern = 2,
   pos_STKM_SetUnionPattern_lp = 1,
   pos_STKM_SetUnionPattern_rp = 2,
-  pos_STKM_SetUnionPattern_cid = 3,
-  length_STKM_SeqEnumPattern = 2,
+  length_STKM_SeqEnumPattern = 1,
   pos_STKM_SeqEnumPattern_els = 1,
-  pos_STKM_SeqEnumPattern_cid = 2,
-  length_STKM_SeqConcPattern = 3,
+  length_STKM_SeqConcPattern = 2,
   pos_STKM_SeqConcPattern_lp = 1,
   pos_STKM_SeqConcPattern_rp = 2,
-  pos_STKM_SeqConcPattern_cid = 3,
-  length_STKM_MapEnumPattern = 2,
+  length_STKM_MapEnumPattern = 1,
   pos_STKM_MapEnumPattern_mls = 1,
-  pos_STKM_MapEnumPattern_cid = 2,
-  length_STKM_MapMergePattern = 3,
+  length_STKM_MapMergePattern = 2,
   pos_STKM_MapMergePattern_lp = 1,
   pos_STKM_MapMergePattern_rp = 2,
-  pos_STKM_MapMergePattern_cid = 3,
-  length_STKM_MapletPattern = 3,
+  length_STKM_MapletPattern = 2,
   pos_STKM_MapletPattern_dp = 1,
   pos_STKM_MapletPattern_rp = 2,
-  pos_STKM_MapletPattern_cid = 3,
-  length_STKM_TuplePattern = 2,
+  length_STKM_TuplePattern = 1,
   pos_STKM_TuplePattern_fields = 1,
-  pos_STKM_TuplePattern_cid = 2,
-  length_STKM_RecordPattern = 3,
+  length_STKM_RecordPattern = 2,
   pos_STKM_RecordPattern_nm = 1,
   pos_STKM_RecordPattern_fields = 2,
-  pos_STKM_RecordPattern_cid = 3,
 #ifdef VDMPP
-  length_STKM_ObjectPattern = 3,
+  length_STKM_ObjectPattern = 2,
   pos_STKM_ObjectPattern_cls = 1,
   pos_STKM_ObjectPattern_fields = 2,
-  pos_STKM_ObjectPattern_cid = 3,
-  length_STKM_FieldPattern = 3,
+  length_STKM_FieldPattern = 2,
   pos_STKM_FieldPattern_nm = 1,
   pos_STKM_FieldPattern_pat = 2,
-  pos_STKM_FieldPattern_cid = 3,
 #endif // VDMPP
   length_STKM_FieldRef = 3,
   pos_STKM_FieldRef_var = 1,
@@ -251,19 +238,16 @@ enum {
 class TYPE_STKM_PatternName : public Record
 {
 public:
-  TYPE_STKM_PatternName() : Record(TAG_TYPE_STKM_PatternName, 3) {}
+  TYPE_STKM_PatternName() : Record(TAG_TYPE_STKM_PatternName, 2) {}
   TYPE_STKM_PatternName& Init(const Generic & p1,
-                              const Generic & p2,
-                              const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                              const Generic & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_PatternName(const Common &c) : Record(c) {}
 
   const Generic & get_nm() const { return GetField(1); }
   void set_nm(const Generic &p) { SetField(1, p); }
   const Generic & get_tp() const { return GetField(2); }
   void set_tp(const Generic &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -273,15 +257,13 @@ class TYPE_STKM_MatchVal : public Record
 {
 public:
 
-  TYPE_STKM_MatchVal() : Record(TAG_TYPE_STKM_MatchVal, 2) {}
-  TYPE_STKM_MatchVal& Init(const Generic & p1, const TYPE_CI_ContextId & p2)
-  { SetField(1, p1); SetField(2, p2); return *this; }
+  TYPE_STKM_MatchVal() : Record(TAG_TYPE_STKM_MatchVal, 1) {}
+  TYPE_STKM_MatchVal& Init(const Generic & p1)
+  { SetField(1, p1); return *this; }
   TYPE_STKM_MatchVal(const Common &c) : Record(c) {}
 
   const Record & get_val() const { return GetRecord(1); }
   void set_val(const Record &p) { SetField(1, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(2); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(2, p); }
 };
 
 // }}}
@@ -296,17 +278,14 @@ class TYPE_STKM_SetEnumPattern : public Record
 {
 public:
 
-  TYPE_STKM_SetEnumPattern() : Record(TAG_TYPE_STKM_SetEnumPattern, 2) {}
-  TYPE_STKM_SetEnumPattern& Init(const type_dL & p1,
-                                 const TYPE_CI_ContextId & p2)
-  { SetField(1, p1); SetField(2, p2); return *this; }
+  TYPE_STKM_SetEnumPattern() : Record(TAG_TYPE_STKM_SetEnumPattern, 1) {}
+  TYPE_STKM_SetEnumPattern& Init(const type_dL & p1)
+  { SetField(1, p1); return *this; }
   TYPE_STKM_SetEnumPattern(const Common &c) : Record(c) {}
 
   const SEQ<TYPE_STKM_Pattern> & get_els() const
   { return (const SEQ<TYPE_STKM_Pattern> &)GetSequence(1); }
   void set_els(const SEQ<TYPE_STKM_Pattern> &p) { SetField(1, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(2); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(2, p); }
 };
 
 // }}}
@@ -315,19 +294,16 @@ public:
 class TYPE_STKM_SetUnionPattern : public Record
 {
 public:
-  TYPE_STKM_SetUnionPattern() : Record(TAG_TYPE_STKM_SetUnionPattern, 3) {}
+  TYPE_STKM_SetUnionPattern() : Record(TAG_TYPE_STKM_SetUnionPattern, 2) {}
   TYPE_STKM_SetUnionPattern& Init(const TYPE_STKM_Pattern & p1,
-                                  const TYPE_STKM_Pattern & p2,
-                                  const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                                  const TYPE_STKM_Pattern & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_SetUnionPattern(const Common &c) : Record(c) {}
 
   const TYPE_STKM_Pattern & get_lp() const { return GetRecord(1); }
   void set_lp(const TYPE_STKM_Pattern &p) { SetField(1, p); }
   const TYPE_STKM_Pattern & get_rp() const { return GetRecord(2); }
   void set_rp(const TYPE_STKM_Pattern &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -341,17 +317,14 @@ typedef TYPE_STKM_Pattern TYPE_STKM_SeqPattern;
 class TYPE_STKM_SeqEnumPattern : public Record
 {
 public:
-  TYPE_STKM_SeqEnumPattern() : Record(TAG_TYPE_STKM_SeqEnumPattern, 2) {}
-  TYPE_STKM_SeqEnumPattern& Init(const type_dL & p1,
-                                 const TYPE_CI_ContextId & p2)
-  { SetField(1, p1); SetField(2, p2); return *this; }
+  TYPE_STKM_SeqEnumPattern() : Record(TAG_TYPE_STKM_SeqEnumPattern, 1) {}
+  TYPE_STKM_SeqEnumPattern& Init(const type_dL & p1)
+  { SetField(1, p1); return *this; }
   TYPE_STKM_SeqEnumPattern(const Common &c) : Record(c) {}
 
   const SEQ<TYPE_STKM_Pattern> & get_els() const
   { return (const SEQ<TYPE_STKM_Pattern> &)GetSequence(1); }
   void set_els(const SEQ<TYPE_STKM_Pattern> &p) { SetField(1, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(2); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(2, p); }
 };
 
 // }}}
@@ -361,19 +334,16 @@ class TYPE_STKM_SeqConcPattern : public Record
 {
 public:
 
-  TYPE_STKM_SeqConcPattern() : Record(TAG_TYPE_STKM_SeqConcPattern, 3) {}
+  TYPE_STKM_SeqConcPattern() : Record(TAG_TYPE_STKM_SeqConcPattern, 2) {}
   TYPE_STKM_SeqConcPattern& Init(const TYPE_STKM_Pattern & p1,
-                                 const TYPE_STKM_Pattern & p2,
-                                 const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                                 const TYPE_STKM_Pattern & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_SeqConcPattern(const Common &c) : Record(c) {}
 
   const TYPE_STKM_Pattern & get_lp() const { return GetRecord(1); }
   void set_lp(const TYPE_STKM_Pattern &p) { SetField(1, p); }
   const TYPE_STKM_Pattern & get_rp() const { return GetRecord(2); }
   void set_rp(const TYPE_STKM_Pattern &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -383,19 +353,16 @@ class TYPE_STKM_MapletPattern : public Record
 {
 public:
 
-  TYPE_STKM_MapletPattern() : Record(TAG_TYPE_STKM_MapletPattern, 3) {}
+  TYPE_STKM_MapletPattern() : Record(TAG_TYPE_STKM_MapletPattern, 2) {}
   TYPE_STKM_MapletPattern& Init(const TYPE_STKM_Pattern & p1,
-                                const TYPE_STKM_Pattern & p2,
-                                const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                                const TYPE_STKM_Pattern & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_MapletPattern(const Common &c) : Record(c) {}
 
   const TYPE_STKM_Pattern & get_dp() const { return GetRecord(1); }
   void set_dp(const TYPE_STKM_Pattern &p) { SetField(1, p); }
   const TYPE_STKM_Pattern & get_rp() const { return GetRecord(2); }
   void set_rp(const TYPE_STKM_Pattern &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -404,17 +371,14 @@ public:
 class TYPE_STKM_MapEnumPattern : public Record
 {
 public:
-  TYPE_STKM_MapEnumPattern() : Record(TAG_TYPE_STKM_MapEnumPattern, 2) {}
-  TYPE_STKM_MapEnumPattern& Init(const type_dL & p1,
-                                 const TYPE_CI_ContextId & p2)
-  { SetField(1, p1); SetField(2, p2); return *this; }
+  TYPE_STKM_MapEnumPattern() : Record(TAG_TYPE_STKM_MapEnumPattern, 1) {}
+  TYPE_STKM_MapEnumPattern& Init(const type_dL & p1)
+  { SetField(1, p1); return *this; }
   TYPE_STKM_MapEnumPattern(const Common &c) : Record(c) {}
 
   const SEQ<TYPE_STKM_MapletPattern> & get_mls() const
   { return (const SEQ<TYPE_STKM_MapletPattern> &)GetSequence(1); }
   void set_mls(const SEQ<TYPE_STKM_MapletPattern> &p) { SetField(1, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(2); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(2, p); }
 };
 
 // }}}
@@ -424,19 +388,16 @@ class TYPE_STKM_MapMergePattern : public Record
 {
 public:
 
-  TYPE_STKM_MapMergePattern() : Record(TAG_TYPE_STKM_MapMergePattern, 3) {}
+  TYPE_STKM_MapMergePattern() : Record(TAG_TYPE_STKM_MapMergePattern, 2) {}
   TYPE_STKM_MapMergePattern& Init(const TYPE_STKM_Pattern & p1,
-                                  const TYPE_STKM_Pattern & p2,
-                                  const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                                  const TYPE_STKM_Pattern & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_MapMergePattern(const Common &c) : Record(c) {}
 
   const TYPE_STKM_Pattern & get_lp() const { return GetRecord(1); }
   void set_lp(const TYPE_STKM_Pattern &p) { SetField(1, p); }
   const TYPE_STKM_Pattern & get_rp() const { return GetRecord(2); }
   void set_rp(const TYPE_STKM_Pattern &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -446,17 +407,14 @@ class TYPE_STKM_TuplePattern : public Record
 {
 public:
 
-  TYPE_STKM_TuplePattern() : Record(TAG_TYPE_STKM_TuplePattern, 2) {}
-  TYPE_STKM_TuplePattern& Init(const type_dL & p1,
-                               const TYPE_CI_ContextId & p2)
-  { SetField(1, p1); SetField(2, p2); return *this; }
+  TYPE_STKM_TuplePattern() : Record(TAG_TYPE_STKM_TuplePattern, 1) {}
+  TYPE_STKM_TuplePattern& Init(const type_dL & p1)
+  { SetField(1, p1); return *this; }
   TYPE_STKM_TuplePattern(const Common &c) : Record(c) {}
 
   const SEQ<TYPE_STKM_Pattern> & get_fields() const
   { return (const SEQ<TYPE_STKM_Pattern> &)GetSequence(1); }
   void set_fields(const SEQ<TYPE_STKM_Pattern> &p) { SetField(1, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(2); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(2, p); }
 };
 
 // }}}
@@ -466,11 +424,10 @@ class TYPE_STKM_RecordPattern : public Record
 {
 public:
 
-  TYPE_STKM_RecordPattern() : Record(TAG_TYPE_STKM_RecordPattern, 3) {}
+  TYPE_STKM_RecordPattern() : Record(TAG_TYPE_STKM_RecordPattern, 2) {}
   TYPE_STKM_RecordPattern& Init(const TYPE_AS_Name & p1,
-                                const type_dL & p2,
-                                const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                                const type_dL & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_RecordPattern(const Common &c) : Record(c) {}
 
   const TYPE_AS_Name & get_nm() const
@@ -479,8 +436,6 @@ public:
   const SEQ<TYPE_STKM_Pattern> & get_fields() const
   { return (const SEQ<TYPE_STKM_Pattern> &)GetSequence(2); }
   void set_fields(const SEQ<TYPE_STKM_Pattern> &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -491,11 +446,10 @@ class TYPE_STKM_ObjectPattern : public Record
 {
 public:
 
-  TYPE_STKM_ObjectPattern() : Record(TAG_TYPE_STKM_ObjectPattern, 3) {}
+  TYPE_STKM_ObjectPattern() : Record(TAG_TYPE_STKM_ObjectPattern, 2) {}
   TYPE_STKM_ObjectPattern& Init(const TYPE_AS_Name & p1,
-                                const type_dL & p2,
-                                const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                                const type_dL & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_ObjectPattern(const Common &c) : Record(c) {}
 
   const TYPE_AS_Name & get_nm() const
@@ -504,8 +458,6 @@ public:
   const SEQ<TYPE_STKM_Pattern> & get_fields() const
   { return (const SEQ<TYPE_STKM_Pattern> &)GetSequence(2); }
   void set_fields(const SEQ<TYPE_STKM_Pattern> &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -515,11 +467,10 @@ class TYPE_STKM_FieldPattern : public Record
 {
 public:
 
-  TYPE_STKM_FieldPattern() : Record(TAG_TYPE_STKM_FieldPattern, 3) {}
+  TYPE_STKM_FieldPattern() : Record(TAG_TYPE_STKM_FieldPattern, 2) {}
   TYPE_STKM_FieldPattern& Init(const TYPE_AS_Name & p1,
-                               const TYPE_STKM_Pattern & p2,
-                               const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                               const TYPE_STKM_Pattern & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_FieldPattern(const Common &c) : Record(c) {}
 
   const TYPE_AS_Name & get_nm() const
@@ -528,8 +479,6 @@ public:
   const TYPE_STKM_Pattern & get_pat() const
   { return (const TYPE_STKM_Pattern &)GetRecord(2); }
   void set_pat(const TYPE_STKM_Pattern &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -1769,19 +1718,19 @@ public:
   void ExeSEQFOR();
   SET<TYPE_AS_Name> NameInPattern(const TYPE_STKM_Pattern & pat);
   void ExeSEQMAPOVER();
-  void ExeSETENUM(const Int & length, const TYPE_CI_ContextId & cid);
-  void ExeSEQENUM(const Int & length, const TYPE_CI_ContextId & cid);
-  void ExeMAPLET(const TYPE_CI_ContextId & cid);
-  void ExeMAPENUM(const Int & length, const TYPE_CI_ContextId & cid);
-  void ExeSetUnion(const TYPE_CI_ContextId & cid);
-  void ExeSeqConc(const TYPE_CI_ContextId & cid);
-  void ExeMapMerge(const TYPE_CI_ContextId & cid);
+  void ExeSETENUM(const Int & length);
+  void ExeSEQENUM(const Int & length);
+  void ExeMAPLET();
+  void ExeMAPENUM(const Int & length);
+  void ExeSetUnion();
+  void ExeSeqConc();
+  void ExeMapMerge();
 #ifdef VDMPP
-  void ExeOBJECTPAT(const TYPE_AS_Name & cls, const Int & length, const TYPE_CI_ContextId & cid);
-  void ExeFIELDPAT(const TYPE_AS_Name & nm, const TYPE_CI_ContextId & cid);
+  void ExeOBJECTPAT(const TYPE_AS_Name & cls, const Int & length);
+  void ExeFIELDPAT(const TYPE_AS_Name & nm);
 #endif // VDMPP
-  void ExeRECPATCONS(const TYPE_AS_Name & tag, const Int & length, const TYPE_CI_ContextId & cid);
-  void ExeTUPPATCONS(const Int & length, const TYPE_CI_ContextId & cid);
+  void ExeRECPATCONS(const TYPE_AS_Name & tag, const Int & length);
+  void ExeTUPPATCONS(const Int & length);
   void ExeFREF(const TYPE_AS_Name & nm, const TYPE_CI_ContextId & cid);
   void ExeMOSREF(const TYPE_CI_ContextId & cid);
   void ExeATOMIC(const Int & no);
@@ -1797,7 +1746,7 @@ public:
   void ExeDTCSET();
   void ExeSIZE(const Int & n);
   void ExeTRYANYMATCH();
-  void ExeMATCHVAL(const TYPE_CI_ContextId & cid);
+  void ExeMATCHVAL();
   void ExeCLOSENV (const TYPE_SEM_BlkEnv & blkenv, const Map & bodym);
   void ExeUPDATECLOSENV(const TYPE_AS_Expr & expr);
   void ExeVERIFYINDEXARGS();

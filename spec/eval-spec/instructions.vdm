@@ -1538,15 +1538,15 @@ pre STKM`LenES(3) and
     def [v1,v2,v3] = STKM`GetES(3)
     in SEM`IsSemVal(v1) and SEM`IsSemVal(v2) and SEM`IsSemVal(v3);
 
-ExeRECPATCONS: AS`Name * nat * CI`ContextId ==> ()
-ExeRECPATCONS(tag, length, cid) ==
+ExeRECPATCONS: AS`Name * nat ==> ()
+ExeRECPATCONS(tag, length) ==
     def fields = STKM`Pop(length)
-    in STKM`Push(mk_STKM`RecordPattern(tag, fields, cid));
+    in STKM`Push(mk_STKM`RecordPattern(tag, fields));
 
-ExeTUPPATCONS: nat * CI`ContextId ==> ()
-ExeTUPPATCONS(length, cid) ==
+ExeTUPPATCONS: nat ==> ()
+ExeTUPPATCONS(length) ==
     def fields = STKM`Pop(length)
-    in STKM`Push(mk_STKM`TuplePattern(fields, cid));
+    in STKM`Push(mk_STKM`TuplePattern(fields));
 
 ExeRECCONS: AS`Name * nat ==> ()
 ExeRECCONS(tag,length) ==
@@ -1806,22 +1806,22 @@ functions
   NameInPattern : STKM`Pattern +> set of AS`Name
   NameInPattern(pat) ==
     cases pat:
-      mk_STKM`PatternName(nm,-,-)       -> if nm = nil then {} else {nm},
-      mk_STKM`MatchVal(-,-)             -> {},
-      mk_STKM`SetEnumPattern(els,-)     -> dunion {NameInPattern(p) | p in set elems els},
-      mk_STKM`SetUnionPattern(lp,rp,-)  -> NameInPattern(lp) union NameInPattern(rp),
-      mk_STKM`SeqEnumPattern(els,-)     -> dunion {NameInPattern(p) | p in set elems els},
-      mk_STKM`SeqConcPattern(lp,rp,-)   -> NameInPattern(lp) union NameInPattern(rp),
-      mk_STKM`MapEnumPattern(mls,-)     -> dunion {NameInPattern(p) | p in set elems mls},
-      mk_STKM`MapMergePattern(lp,rp,-)  -> NameInPattern(lp) union NameInPattern(rp),
-      mk_STKM`RecordPattern(-,fields,-) -> dunion {NameInPattern(p) | p in set elems fields},
-      mk_STKM`TuplePattern(fields,-)    -> dunion {NameInPattern(p) | p in set elems fields},
-      mk_STKM`MapletPattern(dp,rp,-)    -> NameInPattern(dp) union NameInPattern(rp),
+      mk_STKM`PatternName(nm,-)       -> if nm = nil then {} else {nm},
+      mk_STKM`MatchVal(-)             -> {},
+      mk_STKM`SetEnumPattern(els)     -> dunion {NameInPattern(p) | p in set elems els},
+      mk_STKM`SetUnionPattern(lp,rp)  -> NameInPattern(lp) union NameInPattern(rp),
+      mk_STKM`SeqEnumPattern(els)     -> dunion {NameInPattern(p) | p in set elems els},
+      mk_STKM`SeqConcPattern(lp,rp)   -> NameInPattern(lp) union NameInPattern(rp),
+      mk_STKM`MapEnumPattern(mls)     -> dunion {NameInPattern(p) | p in set elems mls},
+      mk_STKM`MapMergePattern(lp,rp)  -> NameInPattern(lp) union NameInPattern(rp),
+      mk_STKM`RecordPattern(-,fields) -> dunion {NameInPattern(p) | p in set elems fields},
+      mk_STKM`TuplePattern(fields)    -> dunion {NameInPattern(p) | p in set elems fields},
+      mk_STKM`MapletPattern(dp,rp)    -> NameInPattern(dp) union NameInPattern(rp),
 #ifdef VDMPP
-      mk_STKM`ObjectPattern(-,fields,-) -> dunion {NameInPattern(p) | p in set elems fields},
-      mk_STKM`FieldPattern(-,p,-)       -> NameInPattern(p),
+      mk_STKM`ObjectPattern(-,fields) -> dunion {NameInPattern(p) | p in set elems fields},
+      mk_STKM`FieldPattern(-,p)       -> NameInPattern(p),
 #endif VDMPP
-      others                            -> undefined
+      others                          -> undefined
   end;
 \end{vdm_al}
 
@@ -1841,79 +1841,79 @@ operations
 \subsection{Pattern Instructions}
 
 \begin{vdm_al}
-  ExeSETENUM: nat * CI`ContextId ==> ()
-  ExeSETENUM(length, cid) ==
+  ExeSETENUM: nat ==> ()
+  ExeSETENUM(length) ==
     def fields = STKM`Pop(length);
         fields' = [ fields(i) | i in set inds fields &
                     fields(i) not in set { fields(j) | j in set inds fields & j < i } ]
-    in STKM`Push(mk_STKM`SetEnumPattern(fields', cid))
+    in STKM`Push(mk_STKM`SetEnumPattern(fields'))
   pre STKM`LenES(length) and
       def v_l = STKM`GetES(length)
       in forall v in set elems v_l & STKM`IsPat(v);
 
-  ExeSEQENUM: nat * CI`ContextId ==> ()
-  ExeSEQENUM(length, cid) ==
+  ExeSEQENUM: nat ==> ()
+  ExeSEQENUM(length) ==
     def fields = STKM`Pop(length)
-    in STKM`Push(mk_STKM`SeqEnumPattern(fields, cid))
+    in STKM`Push(mk_STKM`SeqEnumPattern(fields))
   pre STKM`LenES(length) and
       def v_l = STKM`GetES(length)
       in forall v in set elems v_l & STKM`IsPat(v);
 
-  ExeMAPLET: CI`ContextId ==> ()
-  ExeMAPLET(cid) ==
+  ExeMAPLET: () ==> ()
+  ExeMAPLET() ==
     def [dompat, rngpat] = STKM`Pop(2)
-    in STKM`Push(mk_STKM`MapletPattern(dompat, rngpat, cid))
+    in STKM`Push(mk_STKM`MapletPattern(dompat, rngpat))
   pre STKM`LenES(2) and
       def [ dompat, rngpat ] = STKM`GetES(2)
       in STKM`IsPat(dompat) and STKM`IsPat(rngpat);
 
-  ExeMAPENUM: nat * CI`ContextId ==> ()
-  ExeMAPENUM(length, cid) ==
+  ExeMAPENUM: nat ==> ()
+  ExeMAPENUM(length) ==
     def mls = STKM`Pop(length);
         mls' = [ mls(i) | i in set inds mls &
                  mls(i) not in set { mls(j) | j in set inds mls & j < i } ]
-    in STKM`Push(mk_STKM`MapEnumPattern(mls', cid))
+    in STKM`Push(mk_STKM`MapEnumPattern(mls'))
   pre STKM`LenES(length) and
       def v_l = STKM`GetES(length)
       in forall v in set elems v_l & is_STKM`MapletPattern(v);
 
-  ExeSetUnion: CI`ContextId ==> ()
-  ExeSetUnion(cid) ==
+  ExeSetUnion: () ==> ()
+  ExeSetUnion() ==
     def [leftpat, rightpat] = STKM`Pop(2)
-    in STKM`Push(mk_STKM`SetUnionPattern(leftpat, rightpat, cid))
+    in STKM`Push(mk_STKM`SetUnionPattern(leftpat, rightpat))
   pre STKM`LenES(2) and
       def [ left_v, right_v ] = STKM`GetES(2)
       in STKM`IsPat(left_v) and STKM`IsPat(right_v);
 
-  ExeSeqConc: CI`ContextId ==> ()
-  ExeSeqConc(cid) ==
+  ExeSeqConc: () ==> ()
+  ExeSeqConc() ==
     def [leftpat, rightpat] = STKM`Pop(2)
-    in STKM`Push(mk_STKM`SeqConcPattern(leftpat, rightpat, cid))
+    in STKM`Push(mk_STKM`SeqConcPattern(leftpat, rightpat))
   pre STKM`LenES(2) and
       def [ left_v, right_v ] = STKM`GetES(2)
       in STKM`IsPat(left_v) and STKM`IsPat(right_v);
 
-  ExeMapMerge: CI`ContextId ==> ()
-  ExeMapMerge(cid) ==
+  ExeMapMerge: () ==> ()
+  ExeMapMerge() ==
     def [leftpat, rightpat] = STKM`Pop(2)
-    in STKM`Push(mk_STKM`MapMergePattern(leftpat, rightpat, cid))
+    in STKM`Push(mk_STKM`MapMergePattern(leftpat, rightpat))
   pre STKM`LenES(2) and
       def [ left_v, right_v ] = STKM`GetES(2)
       in STKM`IsPat(left_v) and STKM`IsPat(right_v);
 
 #ifdef VDMPP
-  ExeOBJECTPAT: AS`Name * nat * CI`ContextId ==> ()
-  ExeOBJECTPAT(cls,length,cid) ==
+  ExeOBJECTPAT: AS`Name * nat ==> ()
+  ExeOBJECTPAT(cls,length) ==
     def fields = STKM`Pop(length)
-    in STKM`Push(mk_STKM`ObjectPattern(cls, fields, cid))
+    in STKM`Push(mk_STKM`ObjectPattern(cls, fields))
     pre STKM`LenES(length) and
         def fields = STKM`GetES(length)
         in forall fp in set elems fields & is_STKM`FieldPattern(fp);
 
-  ExeFIELDPAT: AS`Name * CI`ContextId ==> ()
-  ExeFIELDPAT(nm,cid) ==
+  ExeFIELDPAT: AS`Name ==> ()
+  ExeFIELDPAT(nm) ==
     def [pat] = STKM`Pop(1)
-    in STKM`Push(mk_STKM`FieldPattern(nm, pat, cid))
+    in STKM`Push(mk_STKM`FieldPattern(nm, pat))
   pre STKM`LenES(1) and
       def [pat] = STKM`GetES(1)
       in STKM`IsPat(pat);
@@ -2142,10 +2142,10 @@ operations
       def [p,v] = STKM`GetES(2)
       in SEM`IsSemVal(v) and STKM`IsPat(p);
 
-  ExeMATCHVAL: CI`ContextId ==> ()
-  ExeMATCHVAL(cid) ==
+  ExeMATCHVAL: () ==> ()
+  ExeMATCHVAL() ==
     def [val] = STKM`Pop(1)
-    in STKM`Push(mk_STKM`MatchVal(val,cid));
+    in STKM`Push(mk_STKM`MatchVal(val));
 
   ExeCLOSENV: SEM`BlkEnv * map AS`Name to (AS`Expr | <NOTYETSPEC>) ==> ()
   ExeCLOSENV(blkenv,bodym) ==
