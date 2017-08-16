@@ -2984,16 +2984,16 @@ LookUpSD (sd) ==
           def - = RTERR`ErrorVal(RTERR`STATE_DESIG_UNKNOWN, nil, nil, [])
           in return mk_(mk_SEM`UNDEF(), [], nil, nil);
          ),
-    mk_STKM`FieldRef(fsd, sel,-)    ->
+    mk_STKM`FieldRef(fsd, sel)    ->
 #ifdef VDMPP
-                                       if is_AS`SelfExpr(fsd)
-                                       then return LookUpSD(sel)
-                                       else
+                                     if is_AS`SelfExpr(fsd)
+                                     then return LookUpSD(sel)
+                                     else
 #endif VDMPP
-                                       def mk_(scomp_v, index_l, gres, lres) = LookUpSD(fsd)
-                                       in return mk_(scomp_v, index_l ^ [ sel ], gres, lres),
-    mk_STKM`MapOrSeqRef(msd, arg,-) -> def mk_(scomp_v, index_l, gres, lres) = LookUpSD(msd)
-                                       in return mk_(scomp_v, index_l ^ [ arg ], gres, lres),
+                                     def mk_(scomp_v, index_l, gres, lres) = LookUpSD(fsd)
+                                     in return mk_(scomp_v, index_l ^ [ sel ], gres, lres),
+    mk_STKM`MapOrSeqRef(msd, arg) -> def mk_(scomp_v, index_l, gres, lres) = LookUpSD(msd)
+                                     in return mk_(scomp_v, index_l ^ [ arg ], gres, lres),
     others -> error
   end;
 

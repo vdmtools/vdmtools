@@ -314,9 +314,8 @@ environments improved with the closure environment.
 #endif VDMPP
 
   SEQELEMMATCH :: index : nat;
-  FREF :: sel : AS`Name
-          cid :- CI`ContextId;
-  MOSREF :: cid :- CI`ContextId;
+  FREF :: sel : AS`Name;
+  MOSREF :: ;
   ASSIGNSD :: ;
   
   PUSHLIST :: length : nat;

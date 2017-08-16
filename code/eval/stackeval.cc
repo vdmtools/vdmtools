@@ -2216,13 +2216,12 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
 #endif // VDMPP
 
     case TAG_TYPE_INSTRTP_FREF: {
-      ExeFREF(i.GetRecord(pos_INSTRTP_FREF_sel),
-              i.GetInt(pos_INSTRTP_FREF_cid));
+      ExeFREF(i.GetRecord(pos_INSTRTP_FREF_sel));
       break;
     }
 
     case TAG_TYPE_INSTRTP_MOSREF: {
-      ExeMOSREF(i.GetInt(pos_INSTRTP_MOSREF_cid));
+      ExeMOSREF();
       break;
     }
 

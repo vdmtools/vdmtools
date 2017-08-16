@@ -189,12 +189,10 @@ StateDesignator = AS`Name | FieldRef | MapOrSeqRef | AS`SelfExpr;
 #endif VDMPP
 
 FieldRef :: var : StateDesignator
-            sel : AS`Name
-            cid :- CI`ContextId;
+            sel : AS`Name;
 
 MapOrSeqRef :: var : StateDesignator
-               arg : SEM`VAL
-               cid :- CI`ContextId;
+               arg : SEM`VAL;
 
 functions
                
@@ -4397,8 +4395,8 @@ operations
     mk_INSTRTP`OBJECTPAT(cls,length)        -> INSTR`ExeOBJECTPAT(cls,length),
     mk_INSTRTP`FIELDPAT(nm)                 -> INSTR`ExeFIELDPAT(nm),
 #endif VDMPP
-    mk_INSTRTP`FREF(sel,cid)                -> INSTR`ExeFREF(sel,cid),
-    mk_INSTRTP`MOSREF(cid)                  -> INSTR`ExeMOSREF(cid),
+    mk_INSTRTP`FREF(sel)                    -> INSTR`ExeFREF(sel),
+    mk_INSTRTP`MOSREF()                     -> INSTR`ExeMOSREF(),
     mk_INSTRTP`ASSIGNSD()                   -> INSTR`ExeASSIGNSD(),
     mk_INSTRTP`RECCONS(tag,length)          -> INSTR`ExeRECCONS(tag,length), 
     mk_INSTRTP`RECMOD(fid)                  -> INSTR`ExeRECMOD(fid),

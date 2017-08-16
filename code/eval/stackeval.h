@@ -106,14 +106,12 @@ enum {
   pos_STKM_FieldPattern_nm = 1,
   pos_STKM_FieldPattern_pat = 2,
 #endif // VDMPP
-  length_STKM_FieldRef = 3,
+  length_STKM_FieldRef = 2,
   pos_STKM_FieldRef_var = 1,
   pos_STKM_FieldRef_sel = 2,
-  pos_STKM_FieldRef_cid = 3,
-  length_STKM_MapOrSeqRef = 3,
+  length_STKM_MapOrSeqRef = 2,
   pos_STKM_MapOrSeqRef_var = 1,
   pos_STKM_MapOrSeqRef_arg = 2,
-  pos_STKM_MapOrSeqRef_cid = 3,
   length_STKM_Step = 1,
   pos_STKM_Step_level = 1,
   length_STKM_StepIn = 0,
@@ -494,11 +492,10 @@ class TYPE_STKM_FieldRef : public Record
 {
 public:
 
-  TYPE_STKM_FieldRef() : Record(TAG_TYPE_STKM_FieldRef, 3) {}
+  TYPE_STKM_FieldRef() : Record(TAG_TYPE_STKM_FieldRef, 2) {}
   TYPE_STKM_FieldRef& Init(const TYPE_STKM_StateDesignator & p1,
-                           const TYPE_AS_Name & p2,
-                           const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                           const TYPE_AS_Name & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_FieldRef(const Common &c) : Record(c) {}
 
   const TYPE_STKM_StateDesignator & get_var() const { return GetRecord(1); }
@@ -506,8 +503,6 @@ public:
   const TYPE_AS_Name & get_sel() const
   { return (const TYPE_AS_Name &)GetRecord(2); }
   void set_sel(const TYPE_AS_Name &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -517,18 +512,16 @@ class TYPE_STKM_MapOrSeqRef : public Record
 {
 public:
 
-  TYPE_STKM_MapOrSeqRef() : Record(TAG_TYPE_STKM_MapOrSeqRef, 3) {}
+  TYPE_STKM_MapOrSeqRef() : Record(TAG_TYPE_STKM_MapOrSeqRef, 2) {}
   TYPE_STKM_MapOrSeqRef& Init(const TYPE_STKM_StateDesignator & p1,
-                 const Generic & p2, const TYPE_CI_ContextId & p3)
-  { SetField(1, p1); SetField(2, p2); SetField(3, p3); return *this; }
+                              const Generic & p2)
+  { SetField(1, p1); SetField(2, p2); return *this; }
   TYPE_STKM_MapOrSeqRef(const Common &c) : Record(c) {}
 
   const TYPE_STKM_StateDesignator & get_var() const { return GetRecord(1); }
   void set_var(const TYPE_STKM_StateDesignator &p) { SetField(1, p); }
   const Generic & get_arg() const { return GetField(2); }
   void set_arg(const Generic &p) { SetField(2, p); }
-  const TYPE_CI_ContextId & get_cid() const { return GetInt(3); }
-  void set_cid(const TYPE_CI_ContextId &p) { SetField(3, p); }
 };
 
 // }}}
@@ -1731,8 +1724,8 @@ public:
 #endif // VDMPP
   void ExeRECPATCONS(const TYPE_AS_Name & tag, const Int & length);
   void ExeTUPPATCONS(const Int & length);
-  void ExeFREF(const TYPE_AS_Name & nm, const TYPE_CI_ContextId & cid);
-  void ExeMOSREF(const TYPE_CI_ContextId & cid);
+  void ExeFREF(const TYPE_AS_Name & nm);
+  void ExeMOSREF();
   void ExeATOMIC(const Int & no);
   void ExeMACRO(const Int & tp, const TYPE_CI_ContextId & cid);
   void ExeASSIGNSD();

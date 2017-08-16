@@ -240,10 +240,10 @@ operations
 #ifdef VDMPP
       mk_AS`SelfExpr(-),
 #endif VDMPP
-      mk_AS`Name(-,-)                -> return [mk_INSTRTP`PUSH(sd)],
-      mk_AS`FieldRef(var,sel,cid)    -> return SD2I(var) ^ [mk_INSTRTP`FREF(sel,cid)],
-      mk_AS`MapOrSeqRef(var,arg,cid) -> return SD2I(var) ^ CEXPR`E2I(arg) ^ [mk_INSTRTP`MOSREF(cid)],
-      mk_AS`NarrowRef(var,-,-)       -> return SD2I(var)
+      mk_AS`Name(-,-)              -> return [mk_INSTRTP`PUSH(sd)],
+      mk_AS`FieldRef(var,sel,-)    -> return SD2I(var) ^ [mk_INSTRTP`FREF(sel)],
+      mk_AS`MapOrSeqRef(var,arg,-) -> return SD2I(var) ^ CEXPR`E2I(arg) ^ [mk_INSTRTP`MOSREF()],
+      mk_AS`NarrowRef(var,-,-)     -> return SD2I(var)
     end;
 
 functions
@@ -260,16 +260,16 @@ functions
       mk_AS`SelfExpr(-),
 #endif VDMPP
       mk_AS`Name(-,-)                -> sd,
-      mk_AS`FieldRef(var,sel,cid)    -> mk_STKM`FieldRef(SD2SD(var),sel,cid),
-      mk_AS`MapOrSeqRef(var,arg,cid) ->
+      mk_AS`FieldRef(var,sel,-)    -> mk_STKM`FieldRef(SD2SD(var),sel),
+      mk_AS`MapOrSeqRef(var,arg,-) ->
            cases arg:
-             mk_AS`BoolLit(b,-)    -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`BOOL(b),cid),
-             mk_AS`NilLit(-)       -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`NIL(),cid),
-             mk_AS`RealLit(r,-)    -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`NUM(r),cid),
-             mk_AS`NumLit(r,-)     -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`NUM(r),cid),
-             mk_AS`CharLit(c,-)    -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`CHAR(c),cid),
-             mk_AS`TextLit(str,-)  -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`SEQ([mk_SEM`CHAR(str(i)) | i in set inds str ]),cid),
-             mk_AS`QuoteLit(quo,-) -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`QUOTE(quo),cid),
+             mk_AS`BoolLit(b,-)    -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`BOOL(b)),
+             mk_AS`NilLit(-)       -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`NIL()),
+             mk_AS`RealLit(r,-)    -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`NUM(r)),
+             mk_AS`NumLit(r,-)     -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`NUM(r)),
+             mk_AS`CharLit(c,-)    -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`CHAR(c)),
+             mk_AS`TextLit(str,-)  -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`SEQ([mk_SEM`CHAR(str(i)) | i in set inds str ])),
+             mk_AS`QuoteLit(quo,-) -> mk_STKM`MapOrSeqRef(SD2SD(var),mk_SEM`QUOTE(quo)),
              others                -> undefined
            end,
       mk_AS`NarrowRef(var,-,-)     -> SD2SD(var)

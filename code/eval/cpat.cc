@@ -592,15 +592,14 @@ TYPE_STKM_SubProgram StackCompiler::SDStack2I(const TYPE_AS_StateDesignator & sd
     case TAG_TYPE_AS_FieldRef: {
       TYPE_STKM_SubProgram sp;
       sp.ImpConc(SD2I(sd.GetRecord(pos_AS_FieldRef_var)))
-        .ImpAppend(TYPE_INSTRTP_FREF().Init(sd.GetRecord(pos_AS_FieldRef_sel),
-                                            sd.GetInt(pos_AS_FieldRef_cid)));
+        .ImpAppend(TYPE_INSTRTP_FREF().Init(sd.GetRecord(pos_AS_FieldRef_sel)));
       return sp;
     }
     case TAG_TYPE_AS_MapOrSeqRef: {
       TYPE_STKM_SubProgram sp;
       sp.ImpConc(SD2I(sd.GetRecord(pos_AS_MapOrSeqRef_var)))
         .ImpConc(E2I(sd.GetRecord(pos_AS_MapOrSeqRef_arg)))
-        .ImpAppend(TYPE_INSTRTP_MOSREF().Init(sd.GetInt(pos_AS_MapOrSeqRef_cid)));
+        .ImpAppend(TYPE_INSTRTP_MOSREF());
       return sp;
     }
     case TAG_TYPE_AS_NarrowRef: {
@@ -638,29 +637,27 @@ TYPE_STKM_StateDesignator StackCompiler::SD2SD(const TYPE_AS_StateDesignator& sd
       return sd;
     case TAG_TYPE_AS_FieldRef: {
       return TYPE_STKM_FieldRef().Init(SD2SD(sd.GetRecord(pos_AS_FieldRef_var)),
-                                       sd.GetRecord(pos_AS_FieldRef_sel),
-                                       sd.GetInt(pos_AS_FieldRef_cid));
+                                       sd.GetRecord(pos_AS_FieldRef_sel));
     }
     case TAG_TYPE_AS_MapOrSeqRef: {
       TYPE_STKM_StateDesignator var (SD2SD(sd.GetRecord(pos_AS_MapOrSeqRef_var)));
       const TYPE_AS_Expr & arg (sd.GetRecord(pos_AS_MapOrSeqRef_arg));
-      const TYPE_CI_ContextId & cid (sd.GetInt(pos_AS_MapOrSeqRef_cid));
       TYPE_SEM_VAL arg_v;
       switch (arg.GetTag()) {
         case TAG_TYPE_AS_BoolLit: {
-          return TYPE_STKM_MapOrSeqRef().Init(var, arg.GetBoolValue(pos_AS_BoolLit_val) ? sem_true : sem_false, cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, arg.GetBoolValue(pos_AS_BoolLit_val) ? sem_true : sem_false);
         }
         case TAG_TYPE_AS_NilLit: {
-          return TYPE_STKM_MapOrSeqRef().Init(var, sem_nil, cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, sem_nil);
         }
         case TAG_TYPE_AS_RealLit: {
-          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_NUM().Init(arg.GetReal(pos_AS_RealLit_val)), cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_NUM().Init(arg.GetReal(pos_AS_RealLit_val)));
         }
         case TAG_TYPE_AS_NumLit: {
-          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_NUM().Init(arg.GetReal(pos_AS_NumLit_val)), cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_NUM().Init(arg.GetReal(pos_AS_NumLit_val)));
         }
         case TAG_TYPE_AS_CharLit: {
-          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_CHAR().Init(arg.GetChar(pos_AS_CharLit_val)), cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_CHAR().Init(arg.GetChar(pos_AS_CharLit_val)));
         }
         case TAG_TYPE_AS_TextLit: {
           const SEQ<Char> & elms (arg.GetSequence(pos_AS_TextLit_val));
@@ -668,10 +665,10 @@ TYPE_STKM_StateDesignator StackCompiler::SD2SD(const TYPE_AS_StateDesignator& sd
           SEQ<TYPE_SEM_VAL> res_elems;
           for (size_t i = 1; i <= len_elms; i++)
             res_elems.ImpAppend(TYPE_SEM_CHAR().Init(elms[i]));
-          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_SEQ().Init(res_elems), cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_SEQ().Init(res_elems));
         }
         case TAG_TYPE_AS_QuoteLit: {
-          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_QUOTE().Init(arg.GetSequence(pos_AS_QuoteLit_val)), cid);
+          return TYPE_STKM_MapOrSeqRef().Init(var, TYPE_SEM_QUOTE().Init(arg.GetSequence(pos_AS_QuoteLit_val)));
         }
         default: {
           // never happen

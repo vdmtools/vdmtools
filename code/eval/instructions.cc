@@ -2952,21 +2952,19 @@ void StackEval::ExeFIELDPAT(const TYPE_AS_Name & nm)
 
 // ExeFREF
 // nm : AS`Name
-// ci : CI`ContextId
 // ==> ()
-void StackEval::ExeFREF(const TYPE_AS_Name & nm, const TYPE_CI_ContextId & ci)
+void StackEval::ExeFREF(const TYPE_AS_Name & nm)
 {
   TYPE_STKM_StateDesignator sd (POP());
-  PUSH(TYPE_STKM_FieldRef().Init(sd, nm, ci)); // sd, nm
+  PUSH(TYPE_STKM_FieldRef().Init(sd, nm)); // sd, nm
 }
 
 // ExeMOSREF
-// ci : CI`ContextId
 // ==> ()
-void StackEval::ExeMOSREF(const TYPE_CI_ContextId & ci)
+void StackEval::ExeMOSREF()
 {
   SEQ<TYPE_STKM_EvalStackItem> items (POPN(2)); // [sd,val]
-  PUSH(TYPE_STKM_MapOrSeqRef().Init(items[1], items[2], ci)); // sd, val
+  PUSH(TYPE_STKM_MapOrSeqRef().Init(items[1], items[2])); // sd, val
 }
 
 // InvOK

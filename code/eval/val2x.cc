@@ -107,11 +107,10 @@ void VAL2X::init_STKM()
   VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_Trap, 9);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_Trap, L"STKM`Trap");
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_FieldRef, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_FieldRef, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_FieldRef, L"STKM`FieldRef");
-  VDMGetDefaultRecInfoMap().SetDontCare(TAG_TYPE_STKM_FieldRef, 3);
 
-  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapOrSeqRef, 3);
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_MapOrSeqRef, 2);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_STKM_MapOrSeqRef, L"STKM`MapOrSeqRef");
 
   VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_STKM_Breakpoint, 0);

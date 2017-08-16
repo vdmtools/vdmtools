@@ -1919,18 +1919,18 @@ operations
       in STKM`IsPat(pat);
 #endif VDMPP
 
-  ExeFREF: AS`Name * CI`ContextId ==> ()
-  ExeFREF(nm,ci) ==
+  ExeFREF: AS`Name ==> ()
+  ExeFREF(nm) ==
     def [sd] = STKM`Pop(1)
-    in STKM`Push(mk_STKM`FieldRef(sd,nm,ci))
+    in STKM`Push(mk_STKM`FieldRef(sd,nm))
   pre STKM`LenES(2) and
       def [ left_v, right_v ] = STKM`GetES(2)
       in STKM`IsSD(right_v) and is_AS`Name(left_v);
 
-  ExeMOSREF: CI`ContextId ==> ()
-  ExeMOSREF(ci) ==
+  ExeMOSREF: () ==> ()
+  ExeMOSREF() ==
     def [sd,val] = STKM`Pop(2)
-    in STKM`Push(mk_STKM`MapOrSeqRef(sd,val,ci))
+    in STKM`Push(mk_STKM`MapOrSeqRef(sd,val))
   pre STKM`LenES(2) and
       def [ left_v, right_v ] = STKM`GetES(2)
       in STKM`IsSD(right_v) and SEM`IsSemVal(left_v);
