@@ -785,10 +785,12 @@ Set PAT::EvalMultBindSeq (const SEQ<TYPE_STKM_Pattern> & pat_lp,
                           const Int & partition)
 {
   Set s (EvalMultBindSeqAll(pat_lp, seq_lv, partition));
-  if (DO_PARTITION == partition.GetValue())
+  if (DO_PARTITION == partition.GetValue()) {
     return s.GetElem(); // set of SEM`BlkEnv
-  else
+  }
+  else {
     return s;  // set of SEM`BlkEnv
+  }
 }
 
 // EvalMultBindSeqAll
@@ -803,84 +805,90 @@ Set PAT::EvalMultBindSeqAll (const SEQ<TYPE_STKM_Pattern> & pat_lp,
   switch (seq_lv.Length()) {
     case 0: {
       //return eset; // set of SEM`BlkEnv
-      if (DO_PARTITION == partition.GetValue())
+      if (DO_PARTITION == partition.GetValue()) {
         return mk_set(eset); // set of set of SEM`BlkEnv
-      else
+      }
+      else {
         return eset;  // set of SEM`BlkEnv
+      }
     }
     case 1: {
       const TYPE_SEM_VAL & val (seq_lv[1]);
-      if (val.Is(TAG_TYPE_SEM_SET))
-      {
+      if (val.Is(TAG_TYPE_SEM_SET)) {
         SET<TYPE_SEM_VAL> val_s (val.GetSet(pos_SEM_SET_v));
         SET<Set> env_ls; // set of set of SEM`BlkEnv
         const TYPE_STKM_Pattern & pat (pat_lp[1]); 
         Generic v;
-        for (bool bb = val_s.First(v); bb; bb = val_s.Next(v))
+        for (bool bb = val_s.First(v); bb; bb = val_s.Next(v)) {
           env_ls.Insert (PatternMatch(pat, v));
-        if (DO_PARTITION == partition.GetValue())
+        }
+        if (DO_PARTITION == partition.GetValue()) {
           return Partition (env_ls); // set of set of SEM`BlkEnv
-        else
+        }
+        else {
           return Collapse (env_ls);  // set of SEM`BlkEnv
+        }
       }
-      else
+      else {
         RTERR::Error (L"EvalMultSetBindSeqAll", RTERR_SET_EXPECTED, seq_lv, Nil(), Sequence());
+      }
       return eset; // Dummy return.
     }
     default: {
       bool all_is_SET = true;
       SEQ<Set> seq_lsv;
       size_t len_seq_lv = seq_lv.Length();
-      for (size_t i = 1; (i <= len_seq_lv) && all_is_SET; i++)
-      {
+      for (size_t i = 1; (i <= len_seq_lv) && all_is_SET; i++) {
         const TYPE_SEM_VAL & val (seq_lv[i]);
         all_is_SET = val.Is(TAG_TYPE_SEM_SET);
-        if(all_is_SET)
+        if(all_is_SET) {
           seq_lsv.ImpAppend (val.GetSet(pos_SEM_SET_v));
+        }
       }
 
       if (all_is_SET) {
         SET<Set> env_ls; // set of set of SEM`BlkEnv
         size_t len_seq_lsv = seq_lsv.Length();
-        for (size_t idx = 1; idx <= len_seq_lsv; idx++)
-        {
+        for (size_t idx = 1; idx <= len_seq_lsv; idx++) {
+          const TYPE_STKM_Pattern & pat (pat_lp[idx]); 
           SET<Set> tmp (env_ls); // set of set of SEM`BlkEnv
           env_ls.Clear();
           Set val_s (seq_lsv[idx]);
           Generic val;
-          for (bool bb = val_s.First(val); bb; bb = val_s.Next(val))
-          {
-            Set env_s (PatternMatch(pat_lp[idx],val)); // set of SEM`BlkEnv
-            if (!env_s.IsEmpty())
-            {
-              if (idx == 1)
+          for (bool bb = val_s.First(val); bb; bb = val_s.Next(val)) {
+            Set env_s (PatternMatch(pat,val)); // set of SEM`BlkEnv
+            if (!env_s.IsEmpty()) {
+              if (idx == 1) {
                 env_ls.Insert(env_s);
-              else
-              {
+              }
+              else {
                 Generic s;
-                for (bool cc = tmp.First(s); cc; cc = tmp.Next(s))
-                {
+                for (bool cc = tmp.First(s); cc; cc = tmp.Next(s)) {
                   Set e_ss (Set(s).DirectProduct(env_s)); 
                   Set newe_s; 
                   Generic e_s;
-                  for (bool ee = e_ss.First(e_s); ee; ee = e_ss.Next(e_s))
+                  for (bool ee = e_ss.First(e_s); ee; ee = e_ss.Next(e_s)) {
                     newe_s.ImpUnion(AUX::DistribCombineBlkEnv(e_s));
-                    //newe_s.Insert (AUX::DistribCombineBlkEnv(e_s));
-                  if (!newe_s.IsEmpty()) 
+                  }
+                  if (!newe_s.IsEmpty())  {
                     env_ls.Insert(newe_s);
+                  }
                 }
               }
             }
           }
         }
 
-        if (DO_PARTITION == partition.GetValue())
+        if (DO_PARTITION == partition.GetValue()) {
           return Partition (env_ls); // set of set of SEM`BlkEnv
-        else
+        }
+        else {
           return Collapse (env_ls);  // set of SEM`BlkEnv
+        }
       }
-      else
+      else {
         RTERR::Error (L"EvalMultSetBindSeqAll", RTERR_SET_EXPECTED, seq_lv, Nil(), Sequence());
+      }
       return eset; // Dummy return.
     }
   }
