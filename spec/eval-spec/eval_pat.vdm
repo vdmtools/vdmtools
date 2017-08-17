@@ -530,28 +530,28 @@ MatchLists : seq of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv
 MatchLists (els_lp, val_lv) ==
   if len val_lv = len els_lp
   then
-    let p_v_l = [ mk_(els_lp(i),val_lv(i)) | i in set inds els_lp & cases els_lp(i):
-                                                                      mk_STKM`PatternName(nil,-) -> false,
-                                                                      others -> true
-                                                                    end ]
-    in
-      cases p_v_l:
-        []         -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
-        [mk_(p,v)] -> return PatternMatch(p, v),
-        others -> def tmp_ss = { let mk_(p, v) = p_v_l(i)
-                                 in PatternMatch(p, v) | i in set inds p_v_l }
+   (dcl env_ss : set of set of SEM`BlkEnv := {};
+    for i = 1 to len els_lp do
+      cases els_lp(i):
+        mk_STKM`PatternName(nil,-) -> skip,
+        others -> def env_s = PatternMatch(els_lp(i), val_lv(i))
                   in
-                    if {} not in set tmp_ss
-                    then
-                      def perm_s = AUX`DistrDirectProduct(tmp_ss)
-                      in
-                        cases perm_s:
-                          {}     -> return {},
-                          {e}    -> return AUX`DistribCombineBlkEnv(e),
-                          others -> return dunion ({AUX`DistribCombineBlkEnv(l) | l in set perm_s})
-                        end
-                    else return {}
-      end
+                    if env_s = {}
+                    then return {}
+                    else env_ss := env_ss union { env_s }
+      end;
+    cases env_ss:
+      {}      -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
+      {env_s} -> return env_s,
+      others  -> def perm_s = AUX`DistrDirectProduct(env_ss)
+                 in
+                   cases perm_s:
+                     {}     -> return {},
+                     {e}    -> return AUX`DistribCombineBlkEnv(e),
+                     others -> return dunion ({AUX`DistribCombineBlkEnv(l) | l in set perm_s})
+                   end
+    end;
+   )
   else return {};
 \end{vdm_al}
 

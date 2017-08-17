@@ -81,8 +81,9 @@ SET<TYPE_SEM_BlkEnv> PAT::PatternMatch (const TYPE_STKM_Pattern & pat_p, const T
 SET<TYPE_SEM_BlkEnv> PAT::MatchPatternName(const TYPE_STKM_PatternName & pat, const TYPE_SEM_VAL & val_v)
 {
   const Generic & tp (pat.GetField (pos_STKM_PatternName_tp));
-  if (!tp.IsNil() && !theState().RealSubType(val_v, tp, true))
+  if (!tp.IsNil() && !theState().RealSubType(val_v, tp, true)) {
     return eset;
+  }
   const Generic & id (pat.GetField (pos_STKM_PatternName_nm));
   return SET<TYPE_SEM_BlkEnv>().Insert (
     id.IsNil () ? AUX::MkEmptyBlkEnv (sem_read_only) : AUX::MkBlkEnv (id, val_v, tp, sem_read_only));
@@ -95,14 +96,11 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchPatternName(const TYPE_STKM_PatternName & pat, co
 SET<TYPE_SEM_BlkEnv> PAT::MatchMatchVal(const TYPE_STKM_MatchVal & pat, const TYPE_SEM_VAL & val_v)
 {
   const TYPE_SEM_VAL & val (pat.GetRecord(pos_STKM_MatchVal_val));
-  if (val.Is(TAG_TYPE_SEM_CompExplFN))
-  {
+  if (val.Is(TAG_TYPE_SEM_CompExplFN)) {
     const SEQ<TYPE_SEM_ExplFN> & fl = val.GetSequence(pos_SEM_CompExplFN_fl);
-    if (fl.Length() == 1 )
-    {
+    if (fl.Length() == 1 ) {
       const TYPE_SEM_ExplFN & fn (fl[1]);
-      if (fn.GetField(pos_SEM_ExplFN_fnName) == ASTAUX::MkNameFromVoid ())
-      {
+      if (fn.GetField(pos_SEM_ExplFN_fnName) == ASTAUX::MkNameFromVoid ()) {
         const TYPE_AS_Name & modName (fn.GetRecord(pos_SEM_ExplFN_modName));
         const Generic & instr (fn.GetField(pos_SEM_ExplFN_instr));
         const TYPE_SEM_BlkEnv & env (fn.GetRecord(pos_SEM_ExplFN_env));
@@ -117,10 +115,10 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMatchVal(const TYPE_STKM_MatchVal & pat, const TY
         theStackMachine().PopClNmCurObj();
 #endif // VDMPP
         const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
-        if (eval_state.Is(TAG_TYPE_STKM_Success))
-        {
-          if (res.GetRecord(2) == val_v)
+        if (eval_state.Is(TAG_TYPE_STKM_Success)) {
+          if (res.GetRecord(2) == val_v) {
             return SET<TYPE_SEM_BlkEnv>().Insert(AUX::MkEmptyBlkEnv(sem_read_only));
+          }
         }
         return eset;
       }
@@ -136,35 +134,32 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMatchVal(const TYPE_STKM_MatchVal & pat, const TY
 SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & pat,
                                                const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_SET))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_SET)) {
     const SEQ<TYPE_STKM_Pattern> & elems_lp_ (pat.GetSequence (pos_STKM_SetEnumPattern_els));
     const Set & val_sv_ (val_v.GetSet(pos_SEM_SET_v));
-    if (val_sv_.Card () == elems_lp_.Length ())
-    {
+    if (val_sv_.Card () == elems_lp_.Length ()) {
 // 20140301 -->
       SEQ<TYPE_STKM_Pattern> elems_lp;
       Set val_sv (val_sv_);
       size_t len_elems_lp_ = elems_lp_.Length();
-      for (size_t idx = 1; idx <= len_elems_lp_; idx++)
-      {
+      for (size_t idx = 1; idx <= len_elems_lp_; idx++) {
         const TYPE_STKM_Pattern & p (elems_lp_[idx]);
         if (p.Is(TAG_TYPE_STKM_MatchVal) &&
-            p.GetRecord(pos_STKM_MatchVal_val).Is(TAG_TYPE_SEM_CompExplFN))
-        {
+            p.GetRecord(pos_STKM_MatchVal_val).Is(TAG_TYPE_SEM_CompExplFN)) {
           const TYPE_SEM_VAL & val (p.GetRecord(pos_STKM_MatchVal_val));
-          if (val_sv.InSet(val))
+          if (val_sv.InSet(val)) {
             val_sv.RemElem(val);
-          else
-          {
-            if (val.Is(TAG_TYPE_SEM_ExplFN) && (val.GetField(pos_SEM_ExplFN_fnName) == ASTAUX::MkNameFromVoid ()))
+          }
+          else {
+            if (val.Is(TAG_TYPE_SEM_ExplFN) && (val.GetField(pos_SEM_ExplFN_fnName) == ASTAUX::MkNameFromVoid ())) {
               elems_lp.ImpAppend(p);
-            else
+            }
+            else {
               return eset;
+            }
           }
         }
-        else
-        {
+        else {
           elems_lp.ImpAppend(p);
         }
       }
@@ -189,11 +184,13 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & 
         }
       }
     }
-    else
+    else {
       return eset;
+    }
   }
-  else
+  else {
     return eset;
+  }
 }
 
 #define POWERLIMIT 15 
@@ -204,8 +201,7 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & 
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchSetUnionPattern (const TYPE_STKM_SetUnionPattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_SET))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_SET)) {
 // 20140227 -->
     //const TYPE_STKM_Pattern & lp_p (pat.GetRecord(pos_STKM_SetUnionPattern_lp));
     //const TYPE_STKM_Pattern & rp_p (pat.GetRecord(pos_STKM_SetUnionPattern_rp));
@@ -246,67 +242,58 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetUnionPattern (const TYPE_STKM_SetUnionPattern 
     int rp_pat_length = (rp_is_set_enum_pattern ? rp_p.GetSequence(pos_STKM_SetEnumPattern_els).Length() : 0); 
 
     SET<TYPE_SEM_BlkEnv> envres_sl;
-    if (!empty_not_allowed)
-    {
+    if (!empty_not_allowed) {
       SET<TYPE_SEM_BlkEnv> envl_s (PatternMatch (lp_p, mk_SEM_SET(Set())));
-      if (!envl_s.IsEmpty())
-      {
+      if (!envl_s.IsEmpty()) {
         SET<TYPE_SEM_BlkEnv> envr_s (PatternMatch (rp_p, mk_SEM_SET(val_sv)));
-        if (!envr_s.IsEmpty())
-        {
+        if (!envr_s.IsEmpty()) {
           SET<Set> envlr_s (envl_s.DirectProduct(envr_s));
-          Generic g;
-          for (bool cc = envlr_s.First(g); cc; cc = envlr_s.Next(g))
-            envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(g));
-            //envres_sl.Insert (AUX::DistribCombineBlkEnv(g));
+          Generic envlr;
+          for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
+            envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
+          }
         }
       }
     }
     Set already; // power set
     already.Insert(SET<TYPE_SEM_VAL>()); // power {} -> {{}}
     Generic e;
-    for (bool bb = val_sv.First(e); bb; bb = val_sv.Next(e))
-    {
+    for (bool bb = val_sv.First(e); bb; bb = val_sv.Next(e)) {
       Set s (already); // part of power set
       Generic es;
-      for (bool cc = s.First(es); cc; cc = s.Next(es))
-      {
+      for (bool cc = s.First(es); cc; cc = s.Next(es)) {
         SET<TYPE_SEM_VAL> setl_sv (Set(es).Insert(e));
-        if (!(lp_is_set_enum_pattern && (setl_sv.Card() >= lp_pat_length)))
+        if (!(lp_is_set_enum_pattern && (setl_sv.Card() >= lp_pat_length))) {
           already.Insert(setl_sv);
+        }
 
-        if (lp_is_set_enum_pattern && (setl_sv.Card() != lp_pat_length))
-          continue;
+        if (!lp_is_set_enum_pattern || (setl_sv.Card() == lp_pat_length)) {
 
-        SET<TYPE_SEM_VAL> setr_sv (val_sv.Diff(setl_sv));
+          SET<TYPE_SEM_VAL> setr_sv (val_sv.Diff(setl_sv));
 
-        //if (( empty_not_allowed && setr_sv.IsEmpty() ) ||
-        //    (lp_is_set_enum_pattern && (lp_pat_length != setl_sv.Card())) ||
-        //    (rp_is_set_enum_pattern && (rp_pat_length != setr_sv.Card())))
-        //  continue;
-        if (( empty_not_allowed && setr_sv.IsEmpty() ) ||
-            (rp_is_set_enum_pattern && (rp_pat_length != setr_sv.Card())))
-          continue;
+          if ((!empty_not_allowed || !setr_sv.IsEmpty()) &&
+              (!rp_is_set_enum_pattern || (rp_pat_length == setr_sv.Card()))) {
 
-        SET<TYPE_SEM_BlkEnv> envl_s (PatternMatch (lp_p, mk_SEM_SET(setl_sv)));
-        if (!envl_s.IsEmpty())
-        {
-          SET<TYPE_SEM_BlkEnv> envr_s (PatternMatch (rp_p, mk_SEM_SET(setr_sv)));
-          if (!envr_s.IsEmpty())
-          {
-            SET<Set> envlr_s (envl_s.DirectProduct(envr_s));
-            Generic g;
-            for (bool cc = envlr_s.First(g); cc; cc = envlr_s.Next(g))
-              envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(g));
-              //envres_sl.Insert (AUX::DistribCombineBlkEnv(g));
+            SET<TYPE_SEM_BlkEnv> envl_s (PatternMatch (lp_p, mk_SEM_SET(setl_sv)));
+            if (!envl_s.IsEmpty()) {
+              SET<TYPE_SEM_BlkEnv> envr_s (PatternMatch (rp_p, mk_SEM_SET(setr_sv)));
+              if (!envr_s.IsEmpty()) {
+                SET<Set> envlr_s (envl_s.DirectProduct(envr_s));
+                Generic envlr;
+                for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
+                  envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
+                }
+              }
+            }
           }
         }
       }
     }
     return envres_sl;
   }
-  else
+  else {
     return eset;
+  }
 }
 
 // MatchSeqEnumPattern
@@ -315,10 +302,12 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetUnionPattern (const TYPE_STKM_SetUnionPattern 
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchSeqEnumPattern (const TYPE_STKM_SeqEnumPattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_SEQ))
+  if (val_v.Is(TAG_TYPE_SEM_SEQ)) {
     return MatchLists (pat.GetSequence (pos_STKM_SeqEnumPattern_els), val_v.GetSequence(pos_SEM_SEQ_v));
-  else
+  }
+  else {
     return eset;
+  }
 }
 
 // MatchSeqConcPattern
@@ -327,8 +316,7 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqEnumPattern (const TYPE_STKM_SeqEnumPattern & 
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_SEQ))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_SEQ)) {
     const TYPE_STKM_Pattern & lp_p (pat.GetRecord(pos_STKM_SeqConcPattern_lp));
     const TYPE_STKM_Pattern & rp_p (pat.GetRecord(pos_STKM_SeqConcPattern_rp));
 
@@ -361,45 +349,42 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
     int len_val_lv = val_lv.Length();
     int from = 1;
     int to = len_val_lv;
-    if(lp_is_seq_enum_pattern)
-    {
+    if(lp_is_seq_enum_pattern) {
       int len_lp_p = lp_p.GetSequence(pos_STKM_SeqEnumPattern_els).Length(); 
       // [x,y,z]^?
-      if (len_val_lv < len_lp_p)
+      if (len_val_lv < len_lp_p) {
         return eset;
-
-      if (rp_p.Is(TAG_TYPE_STKM_SeqEnumPattern))
-        if (len_val_lv != (len_lp_p + rp_p.GetSequence(pos_STKM_SeqEnumPattern_els).Length()))
+      }
+      if (rp_p.Is(TAG_TYPE_STKM_SeqEnumPattern)) {
+        if (len_val_lv != (len_lp_p + rp_p.GetSequence(pos_STKM_SeqEnumPattern_els).Length())) {
           return eset;
-
+        }
+      }
       from = len_lp_p;
       to = from;
     }
-    else if(rp_is_seq_enum_pattern)
-    {
+    else if(rp_is_seq_enum_pattern) {
       int len_rp_p = rp_p.GetSequence(pos_STKM_SeqEnumPattern_els).Length(); 
       // ?^[x,y,z]
-      if (len_val_lv < len_rp_p)
+      if (len_val_lv < len_rp_p) {
         return eset;
-
+      }
       from = len_val_lv - len_rp_p;
       to = from;
     }
-    else if (lp_is_match_val_pattern)
-    {
+    else if (lp_is_match_val_pattern) {
       int len_lp_p = lp_p.GetRecord(pos_STKM_MatchVal_val).GetSequence(pos_SEM_SEQ_v).Length(); 
-      if (len_val_lv < len_lp_p)
+      if (len_val_lv < len_lp_p) {
         return eset;
-
+      }
       from = len_lp_p;
       to = from;
     }
-    else if (rp_is_match_val_pattern)
-    {
+    else if (rp_is_match_val_pattern) {
       int len_rp_p = rp_p.GetRecord(pos_STKM_MatchVal_val).GetSequence(pos_SEM_SEQ_v).Length(); 
-      if (len_val_lv < len_rp_p)
+      if (len_val_lv < len_rp_p) {
         return eset;
-
+      }
       from = len_val_lv - len_rp_p;
       to = from;
     }
@@ -420,54 +405,42 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
     }
 
     SET<TYPE_SEM_BlkEnv> envres_sl;
-    if (rp_is_seq_enum_pattern || rp_is_match_val_pattern)
-    {
-      for (int i = from; i <= to; i++)
-      {
+    if (rp_is_seq_enum_pattern || rp_is_match_val_pattern) {
+      for (int i = from; i <= to; i++) {
         SET<TYPE_SEM_BlkEnv> envr_sl (PatternMatch (rp_p, mk_SEM_SEQ(val_lv.SubSequence(i + 1, len_val_lv ))));
-        if (!envr_sl.IsEmpty())
-        {
+        if (!envr_sl.IsEmpty()) {
           SET<TYPE_SEM_BlkEnv> envl_sl (PatternMatch (lp_p, mk_SEM_SEQ(val_lv.SubSequence(1, i))));
-          if (!envl_sl.IsEmpty())
-          {
+          if (!envl_sl.IsEmpty()) {
             SET<Set> envlr_s (envl_sl.DirectProduct(envr_sl));
             Generic envlr;
-            for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr))
+            for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
               envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
-              //envres_sl.Insert (AUX::DistribCombineBlkEnv(envlr));
+            }
           }
         }
       }
     }
-    else
-    {
-// 20140714 -->
-      if ( len_val_lv == 0 )
-      {
+    else {
+      if ( len_val_lv == 0 ) {
         SET<TYPE_SEM_BlkEnv> envl_sl (PatternMatch (lp_p, mk_SEM_SEQ(Sequence())));
         SET<TYPE_SEM_BlkEnv> envr_sl (PatternMatch (rp_p, mk_SEM_SEQ(Sequence())));
         SET<Set> envlr_s (envl_sl.DirectProduct(envr_sl));
         Generic envlr;
-        for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr))
+        for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
           envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
-          //envres_sl.Insert (AUX::DistribCombineBlkEnv(envlr));
+        }
       }
-      else
-// <-- 20140714
-      {
-        for (int i = from; i <= to; i++)
-        {
+      else {
+        for (int i = from; i <= to; i++) {
           SET<TYPE_SEM_BlkEnv> envl_sl (PatternMatch (lp_p, mk_SEM_SEQ(val_lv.SubSequence(1, i))));
-          if (!envl_sl.IsEmpty())
-          {
+          if (!envl_sl.IsEmpty()) {
             SET<TYPE_SEM_BlkEnv> envr_sl (PatternMatch (rp_p, mk_SEM_SEQ(val_lv.SubSequence(i + 1, len_val_lv ))));
-            if (!envr_sl.IsEmpty())
-            {
+            if (!envr_sl.IsEmpty()) {
               SET<Set> envlr_s (envl_sl.DirectProduct(envr_sl));
               Generic envlr;
-              for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr))
+              for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
                 envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
-                //envres_sl.Insert (AUX::DistribCombineBlkEnv(envlr));
+              }
             }
           }
         }
@@ -475,8 +448,9 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
     }
     return envres_sl;
   }
-  else
+  else {
     return eset;
+  }
 }
 
 // MatchMapEnumPattern
@@ -485,12 +459,10 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_MAP))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_MAP)) {
     const SEQ<TYPE_STKM_MapletPattern> & elems_lp (pat.GetSequence (pos_STKM_MapEnumPattern_mls));
     const Map & val_mv (val_v.GetMap(pos_SEM_MAP_v));
-    if (val_mv.Size () == elems_lp.Length ())
-    {
+    if (val_mv.Size () == elems_lp.Length ()) {
       switch(val_mv.Size()) {
         case 0: {
           //return eset;
@@ -506,13 +478,11 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & 
           SET<Sequence> perm_slv (dom_val_mv.ToSequence().Permute());
           SET<TYPE_SEM_BlkEnv> res_s;
           Generic tmp_lv;
-          for (bool bb = perm_slv.First (tmp_lv); bb; bb = perm_slv.Next (tmp_lv))
-          {
+          for (bool bb = perm_slv.First (tmp_lv); bb; bb = perm_slv.Next (tmp_lv)) {
             Sequence l (tmp_lv);
             SEQ<TYPE_SEM_MAP> tmp_ml;
             size_t len_l = l.Length();
-            for (size_t i = 1; i<= len_l; i++)
-            {
+            for (size_t i = 1; i<= len_l; i++) {
               tmp_ml.ImpAppend(mk_SEM_MAP(Map().Insert(l[i], val_mv[l[i]])));
             }
             res_s.ImpUnion (MatchLists (elems_lp, tmp_ml));
@@ -521,11 +491,13 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & 
         }
       }
     }
-    else
+    else {
       return eset;
+    }
   }
-  else
+  else {
     return eset;
+  }
 }
 
 // MatchMapletPattern
@@ -534,8 +506,7 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & 
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchMapletPattern (const TYPE_STKM_MapletPattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_MAP))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_MAP)) {
     const Map & val_mv (val_v.GetMap(pos_SEM_MAP_v));
     switch (val_mv.Size()) {
       case 0: { return eset; }
@@ -548,8 +519,9 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapletPattern (const TYPE_STKM_MapletPattern & pa
       default: { return eset; }
     } 
   }
-  else
+  else {
     return eset;
+  }
 }
 
 // MatchMapMergePattern
@@ -558,8 +530,7 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapletPattern (const TYPE_STKM_MapletPattern & pa
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchMapMergePattern (const TYPE_STKM_MapMergePattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_MAP))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_MAP)) {
 // 20140227 -->
     //const TYPE_STKM_Pattern & lp_p (pat.GetRecord(pos_STKM_MapMergePattern_lp));
     //const TYPE_STKM_Pattern & rp_p (pat.GetRecord(pos_STKM_MapMergePattern_rp));
@@ -599,67 +570,58 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapMergePattern (const TYPE_STKM_MapMergePattern 
 
     Set val_sv (val_mv.Dom());
     SET<TYPE_SEM_BlkEnv> envres_sl;
-    if (!empty_not_allowed)
-    {
+    if (!empty_not_allowed) {
       SET<TYPE_SEM_BlkEnv> envl_s (PatternMatch (lp_p, mk_SEM_MAP(Map())));
-      if (!envl_s.IsEmpty())
-      {
+      if (!envl_s.IsEmpty()) {
         SET<TYPE_SEM_BlkEnv> envr_s (PatternMatch (rp_p, mk_SEM_MAP(val_mv)));
-        if (!envr_s.IsEmpty())
-        {
+        if (!envr_s.IsEmpty()) {
           SET<Set> envlr_s (envl_s.DirectProduct(envr_s));
-          Generic g;
-          for (bool cc = envlr_s.First(g); cc; cc = envlr_s.Next(g))
-            envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(g));
-            //envres_sl.Insert (AUX::DistribCombineBlkEnv(g));
+          Generic envlr;
+          for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
+            envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
+          }
         }
       }
     }
     Set already;
     already.Insert(SET<TYPE_SEM_VAL>());
     Generic e;
-    for (bool bb = val_sv.First(e); bb; bb = val_sv.Next(e))
-    {
+    for (bool bb = val_sv.First(e); bb; bb = val_sv.Next(e)) {
       Set s (already); //  part of power set
       Generic es;
-      for (bool cc = s.First(es); cc; cc = s.Next(es))
-      {
+      for (bool cc = s.First(es); cc; cc = s.Next(es)) {
         SET<TYPE_SEM_VAL> setl_sv (Set(es).Insert(e));
-        if (!(lp_is_map_enum_pattern && (setl_sv.Card() >= lp_pat_length)))
+        if (!(lp_is_map_enum_pattern && (setl_sv.Card() >= lp_pat_length))) {
           already.Insert(setl_sv);
+        }
 
-        if (lp_is_map_enum_pattern && (setl_sv.Card() != lp_pat_length)) 
-          continue;
+        if (!lp_is_map_enum_pattern || (setl_sv.Card() == lp_pat_length)) {
 
-        SET<TYPE_SEM_VAL> setr_sv (val_sv.Diff(setl_sv));
+          SET<TYPE_SEM_VAL> setr_sv (val_sv.Diff(setl_sv));
+  
+          if ((!empty_not_allowed || !setr_sv.IsEmpty())  &&
+              (!rp_is_map_enum_pattern || (rp_pat_length == setr_sv.Card()))) {
 
-        //if (( empty_not_allowed && setr_sv.IsEmpty() ) ||
-        //    (lp_is_map_enum_pattern && (lp_pat_length != setl_sv.Card())) ||
-        //    (rp_is_map_enum_pattern && (rp_pat_length != setr_sv.Card())))
-        //  continue;
-        if (( empty_not_allowed && setr_sv.IsEmpty() ) ||
-            (rp_is_map_enum_pattern && (rp_pat_length != setr_sv.Card())))
-          continue;
-
-        SET<TYPE_SEM_BlkEnv> envl_s (PatternMatch (lp_p, mk_SEM_MAP(val_mv.DomRestrictedTo(setl_sv))));
-        if (!envl_s.IsEmpty())
-        {
-          SET<TYPE_SEM_BlkEnv> envr_s (PatternMatch (rp_p, mk_SEM_MAP(val_mv.DomRestrictedTo(setr_sv))));
-          if (!envr_s.IsEmpty())
-          {
-            SET<Set> envlr_s (envl_s.DirectProduct(envr_s));
-            Generic g;
-            for (bool cc = envlr_s.First(g); cc; cc = envlr_s.Next(g))
-              envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(g));
-              //envres_sl.Insert (AUX::DistribCombineBlkEnv(g));
+            SET<TYPE_SEM_BlkEnv> envl_s (PatternMatch (lp_p, mk_SEM_MAP(val_mv.DomRestrictedTo(setl_sv))));
+            if (!envl_s.IsEmpty()) {
+              SET<TYPE_SEM_BlkEnv> envr_s (PatternMatch (rp_p, mk_SEM_MAP(val_mv.DomRestrictedTo(setr_sv))));
+              if (!envr_s.IsEmpty()) {
+                SET<Set> envlr_s (envl_s.DirectProduct(envr_s));
+                Generic envlr;
+                for (bool cc = envlr_s.First(envlr); cc; cc = envlr_s.Next(envlr)) {
+                  envres_sl.ImpUnion (AUX::DistribCombineBlkEnv(envlr));
+                }
+              }
+            }
           }
         }
       }
     }
     return envres_sl;
   }
-  else
+  else {
     return eset;
+  }
 }
 // MatchTuplePattern
 // PAT : STKM`TuplePattern
@@ -670,13 +632,16 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchTuplePattern (const TYPE_STKM_TuplePattern & pat,
   if (val_v.Is(TAG_TYPE_SEM_TUPLE)) {
     const SEQ<TYPE_STKM_Pattern> & fields_lp (pat.GetSequence (pos_STKM_TuplePattern_fields));
     const SEQ<TYPE_SEM_VAL> & val_lv (val_v.GetSequence(pos_SEM_TUPLE_v));
-    if ( fields_lp.Length() == val_lv.Length() )
+    if ( fields_lp.Length() == val_lv.Length() ) {
       return MatchLists (fields_lp,val_lv);
-    else 
+    }
+    else  {
       return eset;
+    }
   }
-  else 
+  else {
     return eset;
+  }
 }
 
 // MatchRecordPattern
@@ -685,8 +650,7 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchTuplePattern (const TYPE_STKM_TuplePattern & pat,
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchRecordPattern (const TYPE_STKM_RecordPattern & pat, const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_DYNSEM_SEM_REC))
-  {
+  if (val_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
     const TYPE_AS_Name & ptag (pat.GetRecord  (pos_STKM_RecordPattern_nm));
     const TYPE_AS_Name & vtag (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
 //    Tuple etn_v (AUX::ExtractTagName(vtag));
@@ -701,24 +665,32 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchRecordPattern (const TYPE_STKM_RecordPattern & pa
 
     if (etn_v.GetRecord(1) == etn_p.GetRecord(1)) { // if vtagname = ptagname
       const SEQ<TYPE_STKM_Pattern> & fields_lp (pat.GetSequence (pos_STKM_RecordPattern_fields));
-      // NOTE: SEM`REC implimentation is different from spec.
-      const Record & value (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value));
-      SEQ<TYPE_SEM_VAL> val_lv (value.GetFields());
-      size_t len_fields_lp = fields_lp.Length();
-      for (size_t i = 1; i <= len_fields_lp; i++) {
-        const TYPE_STKM_Pattern & p (fields_lp[i]);
-        if (value.IsDontCare(i) && !p.Is(TAG_TYPE_STKM_PatternName)) {
-          RTERR::Error(L"MatchRecordPattern", RTERR_DC_NOT_PATTERN_NAME, Nil(), Nil(), Sequence());
-          return eset;
-        }
+
+      if (fields_lp.IsEmpty()) {
+        return SET<TYPE_SEM_BlkEnv>().Insert(AUX::MkEmptyBlkEnv(sem_read_only));
       }
-      return MatchLists (fields_lp,val_lv);
+      else {
+        // NOTE: SEM`REC implimentation is different from spec.
+        const Record & value (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value));
+        SEQ<TYPE_SEM_VAL> val_lv (value.GetFields());
+        size_t len_fields_lp = fields_lp.Length();
+        for (size_t i = 1; i <= len_fields_lp; i++) {
+          const TYPE_STKM_Pattern & p (fields_lp[i]);
+          if (value.IsDontCare(i) && !p.Is(TAG_TYPE_STKM_PatternName)) {
+            RTERR::Error(L"MatchRecordPattern", RTERR_DC_NOT_PATTERN_NAME, Nil(), Nil(), Sequence());
+            return eset;
+          }
+        }
+        return MatchLists (fields_lp,val_lv);
+      }
     }
-    else
+    else {
       return eset;
+    }
   }
-  else
+  else {
     return eset;
+  }
 }
 
 #ifdef VDMPP
@@ -729,11 +701,9 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchRecordPattern (const TYPE_STKM_RecordPattern & pa
 SET<TYPE_SEM_BlkEnv> PAT::MatchObjectPattern (const TYPE_STKM_ObjectPattern & pat, const TYPE_SEM_VAL & val_v)
 {
   const TYPE_AS_Name & cls (pat.GetRecord(pos_STKM_ObjectPattern_cls));
-  if (val_v.Is(TAG_TYPE_SEM_OBJ_uRef) && theState().IsAClass(cls))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_OBJ_uRef) && theState().IsAClass(cls)) {
     const TYPE_AS_Name & objnm (val_v.GetRecord(pos_SEM_OBJ_uRef_tp));
-    if ((objnm == cls) || theState().IsSubClass(objnm, cls))
-    {
+    if ((objnm == cls) || theState().IsSubClass(objnm, cls)) {
       const SEQ<TYPE_STKM_Pattern> & fields_lp (pat.GetSequence (pos_STKM_ObjectPattern_fields));
       SEQ<TYPE_STKM_Pattern> pat_lp;
       SEQ<TYPE_SEM_VAL> val_lv;
@@ -757,55 +727,52 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchObjectPattern (const TYPE_STKM_ObjectPattern & pa
 // ==> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> PAT::MatchLists (const SEQ<TYPE_STKM_Pattern> & els_lp, const SEQ<TYPE_SEM_VAL> & val_lv)
 {
-  if (els_lp.Length () == val_lv.Length ())
-  {
-    SEQ<Tuple> p_v_l;
+  if (els_lp.Length () == val_lv.Length ()) {
+    SET<Set> env_ss;
     size_t len_els_lp = els_lp.Length();
     for (size_t i = 1; i <= len_els_lp; i++) {
       const TYPE_STKM_Pattern & pat (els_lp[i]);
       if (!pat.Is(TAG_TYPE_STKM_PatternName) || !pat.GetField(pos_STKM_PatternName_nm).IsNil()) {
-        p_v_l.ImpAppend(mk_(pat, val_lv[i]));
+        SET<TYPE_SEM_BlkEnv> env_s (PatternMatch (pat, val_lv[i]));
+        if (env_s.IsEmpty ()) {
+          return eset;
+        }
+        else {
+          env_ss.Insert (env_s);
+        }
       }
     }
-    switch (p_v_l.Length()) {
+    switch (env_ss.Card()) {
       case 0: {
         return SET<TYPE_SEM_BlkEnv>().Insert(AUX::MkEmptyBlkEnv(sem_read_only));
       }
       case 1: {
-        return PatternMatch (p_v_l[1].GetRecord(1), p_v_l[1].GetRecord(2));
+        return env_ss.GetElem();
       }
       default: {
-        SET<Set> tmp_ss;
-        size_t len_p_v_l = p_v_l.Length ();
-        for (size_t i = 1; i <= len_p_v_l; i++) {
-          SET<TYPE_SEM_BlkEnv> tmp (PatternMatch (p_v_l[i].GetRecord(1), p_v_l[i].GetRecord(2)));
-          if (tmp.IsEmpty ())
-            return eset;
-          else
-            tmp_ss.Insert (tmp);
-        }
-
-        SET<Set> perm_s (tmp_ss.DistrDirectProduct()); // set of set of SEM`BlkEnv
+        SET<Set> perm_s (env_ss.DistrDirectProduct()); // set of set of SEM`BlkEnv
         switch(perm_s.Card()) {
           case 0: {
             return eset;
           }
           case 1: {
-            return AUX::DistribCombineBlkEnv(perm_s.GetElem());
+            return AUX::DistribCombineBlkEnv(perm_s.GetElem()); // set of SEM`BlkEnv
           }
           default: {
             SET<TYPE_SEM_BlkEnv> res_s;
             Generic l;
-            for (bool bb = perm_s.First (l); bb; bb = perm_s.Next (l))
+            for (bool bb = perm_s.First (l); bb; bb = perm_s.Next (l)) {
               res_s.ImpUnion(AUX::DistribCombineBlkEnv(l));
+            }
             return res_s;
           }
         }
       }
     }
   }
-  else
+  else {
     return eset;
+  }
 }
 
 // EvalMultBindSeq
