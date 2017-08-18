@@ -54,6 +54,7 @@ private:
 #ifdef VDMPP
   static SET<TYPE_SEM_BlkEnv> MatchObjectPattern (const TYPE_STKM_ObjectPattern & pat, const TYPE_SEM_VAL & val_v);
 #endif // VDMPP
+  static Set PatternMatchSetVal(const TYPE_STKM_Pattern & pat, const TYPE_SEM_VAL & val);
   static Tuple ConstructExplFN (const TYPE_AS_Name & clmodName, const TYPE_AS_FnDef & fndef);
   static Tuple ConstructExtExplFN (const TYPE_AS_Name & clmodName, const TYPE_AS_FnDef & fndef);
   static Tuple ConstructImplFN (const TYPE_AS_Name & clmodName, const TYPE_AS_FnDef & fndef);

@@ -311,8 +311,7 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandTraceBind(const SEQ<TYPE_AS_TraceBind> & bi
 {
   SET<TYPE_SEM_BlkEnv> c_s (ctx_s);
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; idx <= len_bind_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_bind_l; idx++) {
     const TYPE_AS_TraceBind & bind (bind_l[idx]);
     switch(bind.GetTag()) {
       case TAG_TYPE_AS_LocalTraceBind: {
@@ -338,24 +337,19 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandTraceBind(const SEQ<TYPE_AS_TraceBind> & bi
 // ==> set of seq of AS`Expr
 Set EXPANDED::ExpandTraceRepeatPat(const TYPE_AS_TraceRepeatPattern & regexpr, const Set & expr_l_s)
 {
-  if (regexpr == Int(ANY))
-  {
+  if (regexpr == Int(ANY)) {
     return mk_set(Sequence()).Union(RepeatCombine(expr_l_s, 1, EXPANDED::oneOrMoreMax));
   }
-  else if (regexpr == Int(ATLEASTONE))
-  {
+  else if (regexpr == Int(ATLEASTONE)) {
     return RepeatCombine(expr_l_s, 1, EXPANDED::oneOrMoreMax);
   }
-  else if (regexpr == Int(POSSIBLY))
-  {
+  else if (regexpr == Int(POSSIBLY)) {
     return mk_set(Sequence()).Union(expr_l_s);
   }
-  else if (regexpr.Is(TAG_TYPE_AS_RepeatFixed))
-  {
+  else if (regexpr.Is(TAG_TYPE_AS_RepeatFixed)) {
     return ExpandRepeatFixed(regexpr, expr_l_s);
   }
-  else if (regexpr.Is(TAG_TYPE_AS_RepeatInterval))
-  {
+  else if (regexpr.Is(TAG_TYPE_AS_RepeatInterval)) {
     return ExpandRepeatInterval(regexpr, expr_l_s);
   }
   return Set(); // err
@@ -368,10 +362,12 @@ Set EXPANDED::ExpandTraceRepeatPat(const TYPE_AS_TraceRepeatPattern & regexpr, c
 Set EXPANDED::ExpandRepeatFixed(const TYPE_AS_RepeatFixed & regexpr, const Set & expr_l_s)
 {
   int num = (int)(regexpr.GetRecord(pos_AS_RepeatFixed_num).GetRealValue(pos_AS_NumLit_val));
-  if (num == 0)
+  if (num == 0) {
     return mk_set(Sequence());
-  else
+  }
+  else {
     return RepeatCombine(expr_l_s, num, num);
+  }
 }
 
 // ExpandRepeatInterval
@@ -400,16 +396,14 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandLocalBinding(const TYPE_AS_LocalTraceBind &
   SET<TYPE_SEM_BlkEnv> c_s (ctx_s);
 
   size_t len_def_l = def_l.Length();
-  for (size_t i = 1; i <= len_def_l; i++)
-  {
+  for (size_t i = 1; i <= len_def_l; i++) {
     const TYPE_AS_ValueDef & vd (def_l[i]);
     const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
     const TYPE_AS_Expr & expr (vd.GetRecord(pos_AS_ValueDef_val));
     TYPE_STKM_Pattern p (theCompiler().P2P(pat));
     SET<TYPE_SEM_BlkEnv> newc_s;
     Generic cxt;
-    for (bool bb = c_s.First(cxt); bb; bb = c_s.Next(cxt))
-    {
+    for (bool bb = c_s.First(cxt); bb; bb = c_s.Next(cxt)) {
       TYPE_SEM_VAL val (evaluateExpression(expr, cxt));
       newc_s.ImpUnion(PAT::PatternMatch(p, val));
     }
@@ -428,22 +422,18 @@ Set EXPANDED::RepeatCombine(const Set & expr_l_s, int low, int high)
   Set acc_e_l_s;                      // set of seq of AS`Expr
   Set ith_e_l_s (mk_set(Sequence())); // set of seq of AS`Expr
   Set expr_l_s_q (expr_l_s);
-  for(int i = 1; i <= high; i++)
-  {
+  for(int i = 1; i <= high; i++) {
     Set oldith (ith_e_l_s);
     ith_e_l_s.Clear();
     Generic e_l1;
-    for (bool bb = oldith.First(e_l1); bb; bb = oldith.Next(e_l1))
-    {
+    for (bool bb = oldith.First(e_l1); bb; bb = oldith.Next(e_l1)) {
       Sequence l1 (e_l1);
       Generic e_l2;
-      for (bool cc = expr_l_s_q.First(e_l2); cc; cc = expr_l_s_q.Next(e_l2))
-      {
+      for (bool cc = expr_l_s_q.First(e_l2); cc; cc = expr_l_s_q.Next(e_l2)) {
         ith_e_l_s.Insert(l1.Conc(e_l2));
       }
     }
-    if (i >= low)
-    {
+    if (i >= low) {
       acc_e_l_s.ImpUnion(ith_e_l_s);
     }
   }
@@ -460,49 +450,39 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandLetBinding(const TYPE_AS_LetTraceBind & lbb
   const SEQ<TYPE_AS_MultBind> & bind_l_q (lbbind.GetSequence(pos_AS_LetTraceBind_bind));
 
   Tuple t (TypeBindToSetBind(bind_l_q));
-  if (t.GetBoolValue(1))
-  {
+  if (t.GetBoolValue(1)) {
     const SEQ<TYPE_AS_MultBind> & bind_l (t.GetSequence(2));
     size_t len_bind_l = bind_l.Length();
     SET<TYPE_SEM_BlkEnv> res;
     SET<TYPE_SEM_BlkEnv> ctx_s_q (ctx_s); 
     Generic cxt;
-    for (bool bb = ctx_s_q.First(cxt); bb; bb = ctx_s_q.Next(cxt))
-    {
+    for (bool bb = ctx_s_q.First(cxt); bb; bb = ctx_s_q.Next(cxt)) {
       SEQ<TYPE_STKM_Pattern> pat_l;
       SEQ<TYPE_SEM_VAL> val_l;
-      for (size_t i = 1; i <= len_bind_l; i++)
-      {
+      for (size_t i = 1; i <= len_bind_l; i++) {
         const TYPE_AS_MultSetBind & msb (bind_l[i]);
         const SEQ<TYPE_AS_Pattern> & p_l (msb.GetSequence(pos_AS_MultSetBind_pat));
         const TYPE_AS_Expr & expr (msb.GetRecord(pos_AS_MultSetBind_Set));
         TYPE_SEM_VAL val (evaluateExpression(expr, cxt));
-        if (val.Is(TAG_TYPE_SEM_SET))
-        {
+        if (val.Is(TAG_TYPE_SEM_SET)) {
           size_t len_p_l = p_l.Length();
-          for (size_t j = 1; j <= len_p_l; j++)
-          {
+          for (size_t j = 1; j <= len_p_l; j++) {
             pat_l.ImpAppend(theCompiler().P2P(p_l[j]));
             val_l.ImpAppend(val);
           }
         }
       }
-      Set c_s_s (PAT::EvalMultBindSeqAll(pat_l, val_l, Int(DO_PARTITION))); // set of (set of SEM`BlkEnv)
-      if (!c_s_s.IsEmpty())
-      {
-        //res.ImpUnion(c_s_s.GetElem());
-        Set c_s (c_s_s.GetElem());
+      Set c_s (PAT::EvalMultBindSeq(pat_l, val_l, Int(DO_PARTITION))); // set of (set of SEM`BlkEnv)
+      if (!c_s.IsEmpty()) {
         Generic c2;
-        for (bool cc = c_s.First(c2); cc; cc = c_s.Next(c2))
-        {
+        for (bool cc = c_s.First(c2); cc; cc = c_s.Next(c2)) {
           res.Insert(AUX::CombineBlkEnv(c2, cxt)); 
         }
       }
     }
     return res;
   }
-  else   
-  {
+  else {
     // error
     RTERR::InitError(L"ExpandLetBinding", RTERR_TYPE_BIND_EVAL, Nil(), Nil(), ASTAUX::GetCid(lbbind), Sequence());
     return Set();
@@ -547,17 +527,14 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandLetBeBinding(const TYPE_AS_LetBeTraceBind &
           }
         }
       }
-      Set c_s_s (PAT::EvalMultBindSeqAll(pat_l, val_l, Int(DO_PARTITION))); // set of (set of SEM`BlkEnv)
-      if (!c_s_s.IsEmpty())
-      {
-        SET<TYPE_SEM_BlkEnv> c_s (c_s_s.GetElem());
-        if (pred.IsNil())
+      Set c_s (PAT::EvalMultBindSeq(pat_l, val_l, Int(DO_PARTITION))); // set of (set of SEM`BlkEnv)
+      if (!c_s.IsEmpty()) {
+        if (pred.IsNil()) {
           res.ImpUnion(c_s);
-        else
-        {
+        }
+        else {
           Generic c2;
-          for (bool cc = c_s.First(c2); cc; cc = c_s.Next(c2))
-          {
+          for (bool cc = c_s.First(c2); cc; cc = c_s.Next(c2)) {
             TYPE_SEM_VAL v (evaluateExpression(pred, AUX::CombineBlkEnv(c2, cxt)));
             if (v.Is(TAG_TYPE_SEM_BOOL))
               if (v.GetBoolValue(pos_SEM_BOOL_v))

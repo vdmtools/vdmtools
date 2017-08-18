@@ -250,7 +250,7 @@ ExpandLetBinding: AS`LetTraceBind * set of SEM`BlkEnv -> set of SEM`BlkEnv
 ExpandLetBinding(mk_AS`LetTraceBind(bind_l,-), cxt_s) ==
   if forall b in set elems bind_l & is_AS`MultSetBind(b)
   then
-    dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
+    dunion { def pat_l = conc [ def mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
                                 in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
                  val_l = conc [ def mk_AS`MultSetBind(p_l,expr,-) = bind_l(i);
                                     val = evaluateExpression(expr, cxt)
@@ -259,10 +259,12 @@ ExpandLetBinding(mk_AS`LetTraceBind(bind_l,-), cxt_s) ==
                                   then [ val | - in set inds p_l ]
                                   else undefined
                         | i in set inds bind_l ];
-                 c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+                 --c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+                 c_s = PAT`EvalMultBindSeq(pat_l, val_l, <DO_PARTITION>)
              in
-               let c_s in set c_s_s
-               in { AUX`CombineBlkEnv(c, cxt) | c in set c_s } | cxt in set cxt_s }
+               --let c_s in set c_s_s
+               --in { AUX`CombineBlkEnv(c, cxt) | c in set c_s } | cxt in set cxt_s }
+               { AUX`CombineBlkEnv(c, cxt) | c in set c_s } | cxt in set cxt_s }
   else
     undefined;
 
@@ -279,10 +281,12 @@ ExpandLetBeBinding(mk_AS`LetBeTraceBind(bind_l,pred,-), cxt_s) ==
                                  then [ val | - in set inds p_l ]
                                  else undefined
                                | i in set inds bind_l ];
-                c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+                --c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+                c_s = PAT`EvalMultBindSeq(pat_l, val_l, <DO_PARTITION>)
             in
-              let c_s in set c_s_s
-              in { AUX`CombineBlkEnv(c2, cxt) | c2 in set c_s & pred = nil or
+              --let c_s in set c_s_s
+              --in { AUX`CombineBlkEnv(c2, cxt) | c2 in set c_s & pred = nil or
+              { AUX`CombineBlkEnv(c2, cxt) | c2 in set c_s & pred = nil or
                    def c = AUX`CombineBlkEnv(c2, cxt)
                    in evaluateExpression(pred,c) = mk_SEM`BOOL(true) }
                 | cxt in set cxt_s }

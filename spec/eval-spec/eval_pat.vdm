@@ -572,6 +572,20 @@ EvalMultBindSeq (pat_lp, seq_lv, partition) ==
            then let e in set s in e
            else s;
 
+PatternMatchSetVal : STKM`Pattern * SEM`VAL ==> set of set of SEM`BlkEnv
+PatternMatchSetVal(pat, val) ==
+  cases val:
+    mk_SEM`SET(val_s) -> (dcl env_ss : set of set of SEM`BlkEnv := {};
+                          for all v in set val_s do
+                            def env_s = PatternMatch(pat, v);
+                            in
+                              if env_s <> {}
+                              then env_ss := env_ss union { env_s };
+                          return env_ss),
+    others -> (RTERR`Error(RTERR`SET_EXPECTED, nil, nil, []);
+               return {})
+  end;
+
 EvalMultBindSeqAll : seq of STKM`Pattern * seq of SEM`VAL * PARTITION
                   ==> set of SEM`BlkEnv | set of set of SEM`BlkEnv
 EvalMultBindSeqAll (pat_lp, seq_lv, partition) ==
@@ -579,44 +593,28 @@ EvalMultBindSeqAll (pat_lp, seq_lv, partition) ==
     []     -> return if partition = <DO_PARTITION>
                      then {{}}
                      else {},
-    [val]  -> cases val:
-                mk_SEM`SET(val_s) -> def pat = pat_lp(1);
-                                         env_ls = { PatternMatch(pat, v) | v in set val_s }
-                                     in 
-                                       if partition = <DO_PARTITION>
-                                       then return Partition(env_ls)
-                                       else return Collapse(env_ls),
-                others -> RTERR`ErrorVal(RTERR`SET_EXPECTED, nil, nil, []) 
-              end,
-    others -> if forall elm_v in set elems seq_lv & is_SEM`SET(elm_v)
-              then
-                let seq_lsv = [ seq_lv(i).v | i in set inds seq_lv ]
-                in
-                 (dcl env_ls : set of (set of SEM`BlkEnv) := {};
-                  for idx = 1 to len seq_lsv do
-                   (dcl tmp : set of (set of SEM`BlkEnv) := env_ls;
-                    env_ls := {};
-                    for all val in set seq_lsv(idx) do
-                      def env_s = PatternMatch(pat_lp(idx), val)
-                      in
-                        if env_s <> {}
-                        then 
-                          if idx = 1
-                          then env_ls := env_ls union {env_s}
-                          else
-                            for all s in set tmp do
-                              def newe_s = dunion { AUX`DistribCombineBlkEnv({e, env})
-                                                    | e in set s, env in set env_s }
-                              in 
-                                if newe_s <> {}
-                                then env_ls := env_ls union {newe_s});
-                            --env_ls := { dunion { AUX`DistribCombineBlkEnv({e, env}) | e in set s, env in set env_s }
-                            --         | s in set tmp });
-                  if partition = <DO_PARTITION>
-                  then return Partition(env_ls)
-                  else return Collapse(env_ls)
-                  )
-              else RTERR`ErrorVal(RTERR`SET_EXPECTED, nil, nil, [])
+    [val]  -> def env_ss = PatternMatchSetVal(pat_lp(1), val);
+              in
+                if partition = <DO_PARTITION>
+                then return Partition(env_ss)
+                else return Collapse(env_ss),
+    others -> (dcl env_ss : set of set of SEM`BlkEnv := PatternMatchSetVal(pat_lp(1), seq_lv(1));
+               for i = 2 to len seq_lv do
+                 def next_env_ss = PatternMatchSetVal(pat_lp(i), seq_lv(i));
+                     env_pair_ss = { { e1, e2 } | e1 in set env_ss, e2 in set next_env_ss };
+                 in 
+                  (env_ss := {};
+                   for all pair in set env_pair_ss do
+                     def ss = AUX`DistrDirectProduct(pair);
+                         env = dunion { AUX`DistribCombineBlkEnv(env_s) | env_s in set ss };
+                     in
+                       if env <> {}
+                       then env_ss := env_ss union {env};
+                  );
+               if partition = <DO_PARTITION>
+               then return Partition(env_ss)
+               else return Collapse(env_ss);
+              )
   end;
 \end{vdm_al}
 
