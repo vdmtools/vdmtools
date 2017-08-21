@@ -82,8 +82,6 @@ public:
   static bool IsInDLDeclared (const TYPE_AS_Name & loc_name, const TYPE_AS_Name & mod_name);
   static Tuple RenameExtractModule(const TYPE_AS_Name & name);
 #endif // VDMSL
-  static bool IsSTKMRec(const Record & rec);
-  static TYPE_CI_ContextId GetCid(const Record & rec);
 
   static SET<TYPE_AS_Name> ClModNmInPatternBindList(const SEQ<TYPE_AS_PatternBind> & pat_l);
   static SET<TYPE_AS_Name> ClModNmInPatternBind(const TYPE_AS_PatternBind & patb);

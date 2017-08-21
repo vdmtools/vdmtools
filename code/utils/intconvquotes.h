@@ -43,7 +43,6 @@ public:
 private:
   static TagsTable tag_table;
 
-  static bool IsSTKMRec(const Record & r);
   static bool IsCPPRec(const Record & r);
 };
 

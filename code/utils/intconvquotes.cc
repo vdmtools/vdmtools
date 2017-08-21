@@ -33,37 +33,6 @@
 
 TagsTable INT2Q::tag_table;
 
-bool INT2Q::IsSTKMRec(const Record & r)
-{
-  switch (r.GetTag()) {
-    case TAG_TYPE_STKM_PatternName:
-    case TAG_TYPE_STKM_MatchVal:
-    case TAG_TYPE_STKM_SetEnumPattern:
-    case TAG_TYPE_STKM_SetUnionPattern:
-    case TAG_TYPE_STKM_SeqEnumPattern:
-    case TAG_TYPE_STKM_SeqConcPattern:
-    case TAG_TYPE_STKM_MapEnumPattern:
-    case TAG_TYPE_STKM_MapMergePattern:
-    case TAG_TYPE_STKM_TuplePattern:
-    case TAG_TYPE_STKM_RecordPattern:
-    case TAG_TYPE_STKM_MapletPattern:
-#ifdef VDMPP
-    case TAG_TYPE_STKM_ObjectPattern:
-    case TAG_TYPE_STKM_FieldPattern:
-#endif // VDMPP
-    case TAG_TYPE_STKM_FieldRef:
-    case TAG_TYPE_STKM_MapOrSeqRef:
-#ifdef VDMPP
-    case TAG_TYPE_STKM_ProcThread:
-    case TAG_TYPE_STKM_PerThread:
-    case TAG_TYPE_STKM_SpoThread:
-#endif // VDMPP
-      return true;
-    default:
-      return false;
-  } 
-}
-
 bool INT2Q::IsCPPRec(const Record & r)
 {
   switch (r.GetTag()) {
@@ -430,7 +399,7 @@ Generic INT2Q::TransformIntegers (const Generic & g)
 
       default: {
         int Length;
-        if (!ASTAUX::IsASTRec(Rc) && !IsSTKMRec(Rc) && !IsCPPRec(Rc))
+        if (!ASTAUX::IsASTRec(Rc) && !IsCPPRec(Rc))
           Length = Rc.Length();
         else
           // In this case

@@ -1251,50 +1251,6 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
 }
 */
 
-// GetCid
-// rec : record
-// -> CI`ContextId
-TYPE_CI_ContextId AUX::GetCid(const Record & rec)
-{
-  if (IsSTKMRec(rec))
-    return rec.GetInt(rec.Length());
-  else
-    return ASTAUX::GetCid(rec);
-}
-
-// IsSTKMRec
-// rec : record
-// -> bool
-bool AUX::IsSTKMRec(const Record & rec)
-{
-  switch (rec.GetTag()) {
-    case TAG_TYPE_STKM_PatternName:
-    case TAG_TYPE_STKM_MatchVal:
-    case TAG_TYPE_STKM_SetEnumPattern:
-    case TAG_TYPE_STKM_SetUnionPattern:
-    case TAG_TYPE_STKM_SeqEnumPattern:
-    case TAG_TYPE_STKM_SeqConcPattern:
-    case TAG_TYPE_STKM_MapEnumPattern:
-    case TAG_TYPE_STKM_MapMergePattern:
-    case TAG_TYPE_STKM_MapletPattern:
-    case TAG_TYPE_STKM_TuplePattern:
-    case TAG_TYPE_STKM_RecordPattern:
-#ifdef VDMPP
-    case TAG_TYPE_STKM_ObjectPattern:
-    case TAG_TYPE_STKM_FieldPattern:
-#endif // VDMPP
-    case TAG_TYPE_STKM_FieldRef:
-    case TAG_TYPE_STKM_MapOrSeqRef:
-#ifdef VDMPP
-    case TAG_TYPE_STKM_ProcThread:
-    case TAG_TYPE_STKM_PerThread:
-    case TAG_TYPE_STKM_SpoThread:
-#endif // VDMPP
-      return true;
-    default:
-      return false;
-  }
-}
 
 // ClModNmInPatternBindList
 // pat_l : seq of AS`PatternBind
