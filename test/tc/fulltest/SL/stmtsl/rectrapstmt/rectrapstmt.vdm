@@ -1,4 +1,5 @@
 module RecTrapStmtTest
+exports all
 definitions
 
 types
