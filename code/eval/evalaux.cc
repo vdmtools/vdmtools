@@ -934,6 +934,30 @@ TYPE_AS_Name AUX::OrderName(const TYPE_AS_Name & nm)
   return name;
 }
 
+// MaxName
+// nm : AS`Name
+// -> AS`Name
+TYPE_AS_Name AUX::MaxName(const TYPE_AS_Name & nm)
+{
+  TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
+  TYPE_AS_Id id (ASTAUX::MkId(L"max_").ImpConc(ids[ids.Length()])); 
+  TYPE_AS_Name name (nm);
+  name.SetField(pos_AS_Name_ids, ids.SubSequence(1,ids.Length() -1).ImpAppend(id));
+  return name;
+}
+
+// MinName
+// nm : AS`Name
+// -> AS`Name
+TYPE_AS_Name AUX::MinName(const TYPE_AS_Name & nm)
+{
+  TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
+  TYPE_AS_Id id (ASTAUX::MkId(L"min_").ImpConc(ids[ids.Length()])); 
+  TYPE_AS_Name name (nm);
+  name.SetField(pos_AS_Name_ids, ids.SubSequence(1,ids.Length() -1).ImpAppend(id));
+  return name;
+}
+
 // EqualityName
 // nm : AS`Name
 // -> AS`Name

@@ -2670,17 +2670,30 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
         shape = TYPE_AS_TypeName().Init(shape.GetRecord(pos_AS_CompositeType_name), NilContextId);
       }
 
-      TYPE_AS_TotalFnType tp;
-      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
-              TYPE_AS_BooleanType().Init(NilContextId),
-              NilContextId);
+      TYPE_AS_TotalFnType fntp;
+      fntp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
+                TYPE_AS_BooleanType().Init(NilContextId),
+                NilContextId);
+
+      TYPE_AS_TotalFnType maxMinFntp;
+      maxMinFntp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
+                      shape,
+                      NilContextId);
 
       TYPE_AS_Name orderName (AUX::OrderName(AUX::ExtractName(name)));
+      TYPE_AS_Name maxName (AUX::MaxName(AUX::ExtractName(name)));
+      TYPE_AS_Name minName (AUX::MinName(AUX::ExtractName(name)));
+      TYPE_AS_Expr lhsExpr (theCompiler().P2E(lhs));
+      TYPE_AS_Expr rhsExpr (theCompiler().P2E(rhs));
+      TYPE_AS_Expr cond (TYPE_AS_BinaryExpr().Init(expr,Int(OR),
+                           TYPE_AS_BinaryExpr().Init(lhsExpr,Int(EQ),rhsExpr,NilContextId),NilContextId));
+      TYPE_AS_Expr maxExpr (TYPE_AS_IfExpr().Init(cond,rhsExpr,Sequence(),lhsExpr,NilContextId));
+      TYPE_AS_Expr minExpr (TYPE_AS_IfExpr().Init(cond,lhsExpr,Sequence(),rhsExpr,NilContextId));
 
-      TYPE_AS_ExplFnDef func;
-      func.Init(orderName,
+      TYPE_AS_ExplFnDef orderFunc;
+      orderFunc.Init(orderName,
                 SEQ<TYPE_AS_TypeVar>(),
-                tp,
+                fntp,
                 parms,
                 TYPE_AS_FnBody().Init(expr, NilContextId),
                 Nil (),
@@ -2690,7 +2703,37 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
                 Nil(),
                 NilContextId);
 
-      tmp.Insert (orderName, TransFN (mod_id, func));
+      tmp.Insert (orderName, TransFN (mod_id, orderFunc));
+
+      TYPE_AS_ExplFnDef maxFunc;
+      maxFunc.Init(maxName,
+                SEQ<TYPE_AS_TypeVar>(),
+                maxMinFntp,
+                parms,
+                TYPE_AS_FnBody().Init(maxExpr, NilContextId),
+                Nil (),
+                Nil (),
+                access,
+                Bool(false),
+                Nil(),
+                NilContextId);
+
+      tmp.Insert (maxName, TransFN (mod_id, maxFunc));
+
+      TYPE_AS_ExplFnDef minFunc;
+      minFunc.Init(minName,
+                SEQ<TYPE_AS_TypeVar>(),
+                maxMinFntp,
+                parms,
+                TYPE_AS_FnBody().Init(minExpr, NilContextId),
+                Nil (),
+                Nil (),
+                access,
+                Bool(false),
+                Nil(),
+                NilContextId);
+
+      tmp.Insert (minName, TransFN (mod_id, minFunc));
     }
 
     if (!equal_g.IsNil ()) {

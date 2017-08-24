@@ -69,6 +69,8 @@ public:
   static TYPE_AS_Name InvName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name InitName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name OrderName(const TYPE_AS_Name & nm);
+  static TYPE_AS_Name MaxName(const TYPE_AS_Name & nm);
+  static TYPE_AS_Name MinName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name EqualityName(const TYPE_AS_Name & nm);
   static TYPE_AS_Id ExtractId (const TYPE_AS_Name& nm);
   static TYPE_AS_Name ExtractName(const TYPE_AS_Name & name);

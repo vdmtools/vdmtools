@@ -1524,22 +1524,57 @@ CreateInvs(mod_id, tm) ==
           others -> skip
         end;
         cases Ord:
-          mk_AS`Order(lhs,rhs,expr,-) -> let fntp = mk_AS`TotalFnType([shape, shape], mk_AS`BooleanType(nid),nid),
-                                             orderName = AUX`OrderName(name)
-                                             in res := res ++ { orderName |->
-                                                               TransFN(mod_id,
-                                                                       mk_AS`ExplFnDef(
-                                                                         orderName,
-                                                                         [],
-                                                                         fntp,
-                                                                         [[ lhs, rhs ]],
-                                                                         mk_AS`FnBody(expr, nid),
-                                                                         nil,
-                                                                         nil, 
-                                                                         access,
-                                                                         false,
-                                                                         nil,
-                                                                         nid)) },
+          mk_AS`Order(lhs,rhs,expr,-)
+              -> let fntp = mk_AS`TotalFnType([shape, shape], mk_AS`BooleanType(nid),nid),
+                     maxMinFntp = mk_AS`TotalFnType([shape, shape], shape,nid),
+                     orderName = AUX`OrderName(name),
+                     maxName = AUX`MaxName(name),
+                     minName = AUX`MinName(name),
+                     lhsExpr = CPAT`P2E(lhs),
+                     rhsExpr = CPAT`P2E(rhs),
+                     cond = mk_AS`BinaryExpr(expr,<OR>,
+                               mk_AS`BinaryExpr(lhsExpr,<EQ>,rhsExpr,nid),nid),
+                     maxExpr = mk_AS`IfExpr(cond,rhsExpr,[],lhsExpr,nid), 
+                     minExpr = mk_AS`IfExpr(cond,lhsExpr,[],rhsExpr,nid)
+                 in res := res ++ { orderName |-> TransFN(mod_id,
+                                                    mk_AS`ExplFnDef(
+                                                       orderName,
+                                                       [],
+                                                       fntp,
+                                                       [[ lhs, rhs ]],
+                                                       mk_AS`FnBody(expr, nid),
+                                                       nil,
+                                                       nil, 
+                                                       access,
+                                                       false,
+                                                       nil,
+                                                       nid)),
+                                    maxName |-> TransFN(mod_id,
+                                                    mk_AS`ExplFnDef(
+                                                       maxName,
+                                                       [],
+                                                       maxMinFntp,
+                                                       [[ lhs, rhs ]],
+                                                       mk_AS`FnBody(maxExpr, nid),
+                                                       nil,
+                                                       nil, 
+                                                       access,
+                                                       false,
+                                                       nil,
+                                                       nid)),
+                                    minName |-> TransFN(mod_id,
+                                                    mk_AS`ExplFnDef(
+                                                       minName,
+                                                       [],
+                                                       maxMinFntp,
+                                                       [[ lhs, rhs ]],
+                                                       mk_AS`FnBody(minExpr, nid),
+                                                       nil,
+                                                       nil, 
+                                                       access,
+                                                       false,
+                                                       nil,
+                                                       nid)) },
           others -> skip
         end;
         cases Eq:
