@@ -1527,14 +1527,22 @@ CreateInvs(mod_id, tm) ==
           mk_AS`Order(lhs,rhs,expr,-)
               -> let fntp = mk_AS`TotalFnType([shape, shape], mk_AS`BooleanType(nid),nid),
                      maxMinFntp = mk_AS`TotalFnType([shape, shape], shape,nid),
+                     param1 = mk_AS`Name(["p1"],nid),
+                     param2 = mk_AS`Name(["p2"],nid),
+                     pn1 = mk_AS`PatternName(param1,nil,nid),
+                     pn2 = mk_AS`PatternName(param2,nil,nid),
+                     -- if not ( param1 < param2 ) then ...
+                     --  <==>
+                     -- if param1 >= param2 then ...
+                     cond = mk_AS`LetExpr(
+                         [mk_AS`ValueDef(lhs,nil,param1,<NOT_INITIALISED_AS>,true,nid),
+                          mk_AS`ValueDef(rhs,nil,param2,<NOT_INITIALISED_AS>,true,nid)],
+                         mk_AS`PrefixExpr(<NOT>,expr,nid),nid),
+                     maxExpr = mk_AS`IfExpr(cond,param1,[],param2,nid), 
+                     minExpr = mk_AS`IfExpr(cond,param2,[],param1,nid),
                      orderName = AUX`OrderName(name),
                      maxName = AUX`MaxName(name),
-                     minName = AUX`MinName(name),
-                     lhsExpr = CPAT`P2E(lhs),
-                     rhsExpr = CPAT`P2E(rhs),
-                     cond = mk_AS`PrefixExpr(<NOT>,expr,nid),
-                     maxExpr = mk_AS`IfExpr(cond,lhsExpr,[],rhsExpr,nid), 
-                     minExpr = mk_AS`IfExpr(cond,rhsExpr,[],lhsExpr,nid)
+                     minName = AUX`MinName(name)
                  in res := res ++ { orderName |-> TransFN(mod_id,
                                                     mk_AS`ExplFnDef(
                                                        orderName,
@@ -1553,7 +1561,7 @@ CreateInvs(mod_id, tm) ==
                                                        maxName,
                                                        [],
                                                        maxMinFntp,
-                                                       [[ rhs, lhs ]],
+                                                       [[ pn2, pn1 ]],
                                                        mk_AS`FnBody(maxExpr, nid),
                                                        nil,
                                                        nil, 
@@ -1566,7 +1574,7 @@ CreateInvs(mod_id, tm) ==
                                                        minName,
                                                        [],
                                                        maxMinFntp,
-                                                       [[ rhs, lhs ]],
+                                                       [[ pn2, pn1 ]],
                                                        mk_AS`FnBody(minExpr, nid),
                                                        nil,
                                                        nil, 

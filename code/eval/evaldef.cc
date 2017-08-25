@@ -2609,6 +2609,7 @@ Map DEF::CreateStateInvAndInit(const TYPE_AS_Name & mod_id, const TYPE_AS_StateD
 // ==> map AS`Name to SEM`CompExplFN
 Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & tm)
 {
+  TYPE_AS_Type btp (TYPE_AS_BooleanType().Init(NilContextId));
   Map tmp; // map AS`Name to (SEM`CompExplFN * AS`Access)
   Set dom_tm (tm.Dom());
   Generic name;
@@ -2633,9 +2634,7 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       }
 
       TYPE_AS_TotalFnType tp;
-      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape),
-              TYPE_AS_BooleanType().Init(NilContextId),
-              NilContextId);
+      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape), btp, NilContextId);
 
       TYPE_AS_Name typeInvName (AUX::InvName(AUX::ExtractName(name)));
 
@@ -2662,10 +2661,22 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       const TYPE_AS_Expr & expr     (order.GetRecord(pos_AS_Order_expr));
       const TYPE_AS_Access & access (tdef.GetField(pos_AS_TypeDef_access));
 
-      SEQ<TYPE_AS_Parameters> parms;
-      parms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (lhs).ImpAppend(rhs));
-      SEQ<TYPE_AS_Parameters> maxMinParms;
-      maxMinParms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (rhs).ImpAppend(lhs));
+      TYPE_AS_Name param1 (ASTAUX::MkNameFromId (ASTAUX::MkId(L"p1"), NilContextId));
+      TYPE_AS_Name param2 (ASTAUX::MkNameFromId (ASTAUX::MkId(L"p2"), NilContextId));
+      TYPE_AS_PatternName pn1 (TYPE_AS_PatternName().Init(param1,Nil(),NilContextId));
+      TYPE_AS_PatternName pn2 (TYPE_AS_PatternName().Init(param2,Nil(),NilContextId));
+      // if !(param1 < param2) ...
+      TYPE_AS_Expr cond (TYPE_AS_LetExpr().Init(
+         mk_sequence(TYPE_AS_ValueDef().Init(lhs, Nil(), param1, Int (NOT_INITIALISED_AS),
+                                             Bool(true), NilContextId),
+                     TYPE_AS_ValueDef().Init(rhs, Nil(), param2, Int (NOT_INITIALISED_AS),
+                                             Bool(true), NilContextId)),
+         TYPE_AS_PrefixExpr().Init(Int(NOT),expr,NilContextId), NilContextId));
+      TYPE_AS_Expr maxExpr (TYPE_AS_IfExpr().Init(cond,param1,Sequence(),param2,NilContextId));
+      TYPE_AS_Expr minExpr (TYPE_AS_IfExpr().Init(cond,param2,Sequence(),param1,NilContextId));
+      
+      SEQ<TYPE_AS_Parameters> parms (mk_sequence(mk_sequence(lhs, rhs)));
+      SEQ<TYPE_AS_Parameters> maxMinParms (mk_sequence(mk_sequence(pn2, pn1)));
 
       TYPE_AS_Type shape (tdef.GetRecord(pos_AS_TypeDef_shape));
       if (shape.Is(TAG_TYPE_AS_CompositeType)) {
@@ -2673,23 +2684,14 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       }
 
       TYPE_AS_TotalFnType fntp;
-      fntp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
-                TYPE_AS_BooleanType().Init(NilContextId),
-                NilContextId);
+      fntp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape), btp, NilContextId);
 
       TYPE_AS_TotalFnType maxMinFntp;
-      maxMinFntp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
-                      shape,
-                      NilContextId);
+      maxMinFntp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape), shape, NilContextId);
 
       TYPE_AS_Name orderName (AUX::OrderName(AUX::ExtractName(name)));
       TYPE_AS_Name maxName (AUX::MaxName(AUX::ExtractName(name)));
       TYPE_AS_Name minName (AUX::MinName(AUX::ExtractName(name)));
-      TYPE_AS_Expr lhsExpr (theCompiler().P2E(lhs));
-      TYPE_AS_Expr rhsExpr (theCompiler().P2E(rhs));
-      TYPE_AS_Expr cond (TYPE_AS_PrefixExpr().Init(Int(NOT),expr,NilContextId));
-      TYPE_AS_Expr maxExpr (TYPE_AS_IfExpr().Init(cond,lhsExpr,Sequence(),rhsExpr,NilContextId));
-      TYPE_AS_Expr minExpr (TYPE_AS_IfExpr().Init(cond,rhsExpr,Sequence(),lhsExpr,NilContextId));
 
       TYPE_AS_ExplFnDef orderFunc;
       orderFunc.Init(orderName,
@@ -2753,9 +2755,7 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       }
 
       TYPE_AS_TotalFnType tp;
-      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
-              TYPE_AS_BooleanType().Init(NilContextId),
-              NilContextId);
+      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape), btp, NilContextId);
 
       TYPE_AS_Name equalityName (AUX::EqualityName(AUX::ExtractName(name)));
 
