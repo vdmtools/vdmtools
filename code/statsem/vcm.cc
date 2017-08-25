@@ -1106,26 +1106,30 @@ Map StatSem::ExportInvs (const Generic & modid, const MAP<TYPE_AS_Name, TYPE_AS_
     const Generic & Eq          (tpdef.GetField(pos_AS_TypeDef_Eq));
     const Generic & Ord         (tpdef.GetField(pos_AS_TypeDef_Ord));
     const TYPE_AS_Access & accs (tpdef.GetField(pos_AS_TypeDef_access));
+    TYPE_REP_TypeRep ptp (TransType(modid, tp));
 
     if (!Invar.IsNil ()) {
       SEQ<TYPE_REP_TypeRep> sq;
-      sq.ImpAppend (TransType(modid, tp));
+      sq.ImpAppend (ptp);
       TYPE_REP_TotalFnTypeRep fntp (mk_REP_TotalFnTypeRep(sq, btp_bool));
       invs.ImpModify(SetName(modid, Inv (nm)), MakeFnRng(fntp, accs, Bool(true)));
     }
     if (!Eq.IsNil ()) {
       SEQ<TYPE_REP_TypeRep> sq;
-      sq.ImpAppend (TransType(modid, tp));
-      sq.ImpAppend (TransType(modid, tp));
+      sq.ImpAppend (ptp);
+      sq.ImpAppend (ptp);
       TYPE_REP_TotalFnTypeRep fntp (mk_REP_TotalFnTypeRep(sq, btp_bool));
       invs.ImpModify(SetName(modid, Equality (nm)), MakeFnRng(fntp, accs, Bool(true)));
     }
     if (!Ord.IsNil ()) {
       SEQ<TYPE_REP_TypeRep> sq;
-      sq.ImpAppend (TransType(modid, tp));
-      sq.ImpAppend (TransType(modid, tp));
+      sq.ImpAppend (ptp);
+      sq.ImpAppend (ptp);
       TYPE_REP_TotalFnTypeRep fntp (mk_REP_TotalFnTypeRep(sq, btp_bool));
+      TYPE_REP_TotalFnTypeRep maxMinFntp (mk_REP_TotalFnTypeRep(sq, ptp));
       invs.ImpModify(SetName(modid, Order (nm)), MakeFnRng(fntp, accs, Bool(true)));
+      invs.ImpModify(SetName(modid, Max (nm)), MakeFnRng(maxMinFntp, accs, Bool(true)));
+      invs.ImpModify(SetName(modid, Min (nm)), MakeFnRng(maxMinFntp, accs, Bool(true)));
     }
   }
   return invs;

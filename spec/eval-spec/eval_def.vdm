@@ -1532,10 +1532,9 @@ CreateInvs(mod_id, tm) ==
                      minName = AUX`MinName(name),
                      lhsExpr = CPAT`P2E(lhs),
                      rhsExpr = CPAT`P2E(rhs),
-                     cond = mk_AS`BinaryExpr(expr,<OR>,
-                               mk_AS`BinaryExpr(lhsExpr,<EQ>,rhsExpr,nid),nid),
-                     maxExpr = mk_AS`IfExpr(cond,rhsExpr,[],lhsExpr,nid), 
-                     minExpr = mk_AS`IfExpr(cond,lhsExpr,[],rhsExpr,nid)
+                     cond = mk_AS`PrefixExpr(<NOT>,expr,nid),
+                     maxExpr = mk_AS`IfExpr(cond,lhsExpr,[],rhsExpr,nid), 
+                     minExpr = mk_AS`IfExpr(cond,rhsExpr,[],lhsExpr,nid)
                  in res := res ++ { orderName |-> TransFN(mod_id,
                                                     mk_AS`ExplFnDef(
                                                        orderName,
@@ -1554,7 +1553,7 @@ CreateInvs(mod_id, tm) ==
                                                        maxName,
                                                        [],
                                                        maxMinFntp,
-                                                       [[ lhs, rhs ]],
+                                                       [[ rhs, lhs ]],
                                                        mk_AS`FnBody(maxExpr, nid),
                                                        nil,
                                                        nil, 
@@ -1567,7 +1566,7 @@ CreateInvs(mod_id, tm) ==
                                                        minName,
                                                        [],
                                                        maxMinFntp,
-                                                       [[ lhs, rhs ]],
+                                                       [[ rhs, lhs ]],
                                                        mk_AS`FnBody(minExpr, nid),
                                                        nil,
                                                        nil, 

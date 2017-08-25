@@ -568,6 +568,8 @@ private:
   TYPE_AS_Name Pre (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Equality (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Order (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Max (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Min (const TYPE_AS_Name & nm) const;
   bool IsPrePostFn(const TYPE_AS_Name &) const;
 public:
   TYPE_AS_Name ExtName (const TYPE_AS_Name & mod, const TYPE_AS_Name & nm) const;

@@ -79,7 +79,9 @@ imports
     Post: AS`Name -> AS`Name;
     Inv: AS`Name -> AS`Name;
     Equality: AS`Name -> AS`Name;
-    Order: AS`Name -> AS`Name,
+    Order: AS`Name -> AS`Name;
+    Max: AS`Name -> AS`Name;
+    Min: AS`Name -> AS`Name,
 
   from PAT operations
     wf_Pattern: TYPE`Ind * AS`Pattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
@@ -791,21 +793,24 @@ operations
    (dcl invs : NameToFnType := {|->};
    
     for all mk_AS`TypeDef(nm,tp,Invar,Eq,Ord,acs,-) in set rng typem do
+      def ptp = ENV`TransType(modid,tp);
+          btp = mk_REP`BooleanTypeRep()
+      in
      (if Invar <> nil
-      then def fntp =  MakeFnRng (mk_REP`TotalFnTypeRep([ENV`TransType(modid,tp)],
-                                                        mk_REP`BooleanTypeRep()),acs, true)
+      then def fntp = MakeFnRng (mk_REP`TotalFnTypeRep([ptp], btp),acs, true)
            in
              invs := invs munion { SetName(modid,AUX`Inv(nm) )|-> fntp};
       if Eq <> nil
-      then def fntp =  MakeFnRng (mk_REP`TotalFnTypeRep([ENV`TransType(modid,tp),ENV`TransType(modid,tp)],
-                                                        mk_REP`BooleanTypeRep()),acs, true)
+      then def fntp = MakeFnRng (mk_REP`TotalFnTypeRep([ptp,ptp], btp),acs, true)
            in
              invs := invs munion { SetName(modid,AUX`Equality(nm)) |-> fntp};
       if Ord <> nil
-      then def fntp =  MakeFnRng (mk_REP`TotalFnTypeRep([ENV`TransType(modid,tp),ENV`TransType(modid,tp)],
-                                                        mk_REP`BooleanTypeRep()),acs, true)
+      then def fntp = MakeFnRng (mk_REP`TotalFnTypeRep([ptp,ptp], btp),acs, true);
+               maxMinFntp =  MakeFnRng (mk_REP`TotalFnTypeRep([ptp,ptp], ptp),acs, true)
            in
-             invs := invs munion { SetName(modid,AUX`Order(nm)) |-> fntp};
+             invs := invs munion { SetName(modid,AUX`Order(nm)) |-> fntp,
+                                   SetName(modid,AUX`Max(nm)) |-> maxMinFntp,
+                                   SetName(modid,AUX`Min(nm)) |-> maxMinFntp};
      );
     return invs);
 

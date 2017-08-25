@@ -4461,25 +4461,24 @@ bool StatSem::ImportTypes (const Int & /*i*/ ,
                                     : TransTypeDef (Nil (), nm, tp, Invar));
       TYPE_SSENV_TypeRepElem trep (mk_SSENV_TypeRepElem(tr, Bool(false), Bool(false)));
 
+      TYPE_REP_TypeRep ptp (TransType (modid, tp));
       if (!Invar.IsNil ()) {
-        SEQ<TYPE_REP_TypeRep> domtp;
-        domtp.ImpAppend (TransType (modid, tp));
+        SEQ<TYPE_REP_TypeRep> domtp (mk_sequence(ptp));
         TYPE_REP_TotalFnTypeRep invfn (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->FunctionEnv.ImpModify (Inv (nm), mk_SSENV_TypeRepElem(invfn, Bool(true), Bool(true)));
       }
       if (!Eq.IsNil ()) {
-        SEQ<TYPE_REP_TypeRep> domtp;
-        domtp.ImpAppend (TransType (modid, tp));
-        domtp.ImpAppend (TransType (modid, tp));
+        SEQ<TYPE_REP_TypeRep> domtp (mk_sequence(ptp, ptp));
         TYPE_REP_TotalFnTypeRep eqfn (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->FunctionEnv.ImpModify (Equality (nm), mk_SSENV_TypeRepElem(eqfn, Bool(true), Bool(true)));
       }
       if (!Ord.IsNil ()) {
-        SEQ<TYPE_REP_TypeRep> domtp;
-        domtp.ImpAppend (TransType (modid, tp));
-        domtp.ImpAppend (TransType (modid, tp));
+        SEQ<TYPE_REP_TypeRep> domtp (mk_sequence(ptp, ptp));
         TYPE_REP_TotalFnTypeRep ordfn (mk_REP_TotalFnTypeRep(domtp, btp_bool));
+        TYPE_REP_TotalFnTypeRep maxMinFn (mk_REP_TotalFnTypeRep(domtp, ptp));
         this->FunctionEnv.ImpModify (Order (nm), mk_SSENV_TypeRepElem(ordfn, Bool(true), Bool(true)));
+        this->FunctionEnv.ImpModify (Max (nm), mk_SSENV_TypeRepElem(maxMinFn, Bool(true), Bool(true)));
+        this->FunctionEnv.ImpModify (Min (nm), mk_SSENV_TypeRepElem(maxMinFn, Bool(true), Bool(true)));
       }
 
       this->TypeEnv.ImpModify (nm, trep);
@@ -5216,25 +5215,24 @@ bool StatSem::ExpandTypes (const TYPE_AS_Name & modid, const MAP<TYPE_AS_Name, T
       this->TypeEnv.ImpModify(nm, mk_SSENV_TypeRepElem(stp, Bool(false), Bool(false)));
       this->TypeEnv.ImpModify(ExtName(modid,nm), mk_SSENV_TypeRepElem(stp, Bool(true), Bool(false)));
 
+      TYPE_REP_TypeRep ptp (TransType(Nil (), Tp));
       if (!Invar.IsNil()) {
-        SEQ<TYPE_REP_TypeRep> sq;
-        sq.ImpAppend (TransType(Nil (), Tp));
+        SEQ<TYPE_REP_TypeRep> sq (mk_sequence(ptp));
         TYPE_REP_TypeRep invfn (mk_REP_TotalFnTypeRep( sq, btp_bool ));
         this->FunctionEnv.ImpModify (Inv (nm), mk_SSENV_TypeRepElem(invfn, Bool(true), Bool(true)));
       }
       if (!Eq.IsNil()) {
-        SEQ<TYPE_REP_TypeRep> sq;
-        sq.ImpAppend (TransType(Nil (), Tp));
-        sq.ImpAppend (TransType(Nil (), Tp));
+        SEQ<TYPE_REP_TypeRep> sq (mk_sequence(ptp,ptp));
         TYPE_REP_TypeRep eqfn (mk_REP_TotalFnTypeRep( sq, btp_bool ));
         this->FunctionEnv.ImpModify (Equality (nm), mk_SSENV_TypeRepElem(eqfn, Bool(true), Bool(true)));
       }
       if (!Ord.IsNil()) {
-        SEQ<TYPE_REP_TypeRep> sq;
-        sq.ImpAppend (TransType(Nil (), Tp));
-        sq.ImpAppend (TransType(Nil (), Tp));
+        SEQ<TYPE_REP_TypeRep> sq (mk_sequence(ptp,ptp));
         TYPE_REP_TypeRep ordfn (mk_REP_TotalFnTypeRep( sq, btp_bool ));
+        TYPE_REP_TypeRep maxMinFn (mk_REP_TotalFnTypeRep( sq, ptp ));
         this->FunctionEnv.ImpModify (Order (nm), mk_SSENV_TypeRepElem(ordfn, Bool(true), Bool(true)));
+        this->FunctionEnv.ImpModify (Max (nm), mk_SSENV_TypeRepElem(maxMinFn, Bool(true), Bool(true)));
+        this->FunctionEnv.ImpModify (Min (nm), mk_SSENV_TypeRepElem(maxMinFn, Bool(true), Bool(true)));
       }
     }
   }

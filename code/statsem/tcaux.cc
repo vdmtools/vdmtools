@@ -3810,6 +3810,29 @@ TYPE_AS_Name StatSem::Order (const TYPE_AS_Name & nm) const
   return name;
 }
 
+// Max
+// nm : AS`Name
+// -> AS`Name
+TYPE_AS_Name StatSem::Max (const TYPE_AS_Name & nm) const
+{
+  TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
+  TYPE_AS_Id id (ASTAUX::MkId(L"max_").ImpConc(ids[ids.Length()]));
+  TYPE_AS_Name name (nm);
+  name.SetField(pos_AS_Name_ids, ids.SubSequence(1,ids.Length() -1).ImpAppend(id));
+  return name;
+}
+// Min
+// nm : AS`Name
+// -> AS`Name
+TYPE_AS_Name StatSem::Min (const TYPE_AS_Name & nm) const
+{
+  TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
+  TYPE_AS_Id id (ASTAUX::MkId(L"min_").ImpConc(ids[ids.Length()]));
+  TYPE_AS_Name name (nm);
+  name.SetField(pos_AS_Name_ids, ids.SubSequence(1,ids.Length() -1).ImpAppend(id));
+  return name;
+}
+
 // ReservedPrefix
 // nm : AS`Name
 // -> bool
@@ -3820,6 +3843,7 @@ bool StatSem::ReservedPrefix (const TYPE_AS_Name & nm) const
   id.GetString(txt);
   return (txt.find(L"is_") == 0 || txt.find(L"mk_") == 0 || txt.find(L"eq_") == 0 ||
           txt.find(L"pre_") == 0 || txt.find(L"inv_") == 0 || txt.find(L"ord_") == 0 ||
+          txt.find(L"max_") == 0 || txt.find(L"min_") == 0 ||
           txt.find(L"post_") == 0 || txt.find(L"init_") == 0);
 }
 

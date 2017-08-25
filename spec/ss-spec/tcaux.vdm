@@ -145,6 +145,8 @@ exports
   Init: AS`Name -> AS`Name;
   Equality: AS`Name -> AS`Name;
   Order: AS`Name -> AS`Name;
+  Max: AS`Name -> AS`Name;
+  Min: AS`Name -> AS`Name;
   ReservedPrefix : AS`Name -> bool;
   IsEmptyName : AS`Name -> bool;
 
@@ -1906,10 +1908,20 @@ functions
     mk_AS`Name(ids(1,...,len ids -1) ^ ["ord_"^ids(len ids)],cid);
         -- NOTICE that the contextid is taken from the argument
 
+  Max: AS`Name -> AS`Name
+  Max(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["max_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
+  Min: AS`Name -> AS`Name
+  Min(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["min_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
   ReservedPrefix : AS`Name -> bool
   ReservedPrefix(mk_AS`Name([id],-)) ==
     (id(1,...,3) in set {"is_","mk_","eq_"}) or
-    (id(1,...,4) in set {"pre_","inv_","ord_"}) or
+    (id(1,...,4) in set {"pre_","inv_","ord_","max_","min_"}) or
     (id(1,...,5) in set {"post_","init_"});
 
   IsEmptyName : AS`Name -> bool

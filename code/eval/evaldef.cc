@@ -2664,6 +2664,8 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
 
       SEQ<TYPE_AS_Parameters> parms;
       parms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (lhs).ImpAppend(rhs));
+      SEQ<TYPE_AS_Parameters> maxMinParms;
+      maxMinParms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (rhs).ImpAppend(lhs));
 
       TYPE_AS_Type shape (tdef.GetRecord(pos_AS_TypeDef_shape));
       if (shape.Is(TAG_TYPE_AS_CompositeType)) {
@@ -2685,10 +2687,9 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       TYPE_AS_Name minName (AUX::MinName(AUX::ExtractName(name)));
       TYPE_AS_Expr lhsExpr (theCompiler().P2E(lhs));
       TYPE_AS_Expr rhsExpr (theCompiler().P2E(rhs));
-      TYPE_AS_Expr cond (TYPE_AS_BinaryExpr().Init(expr,Int(OR),
-                           TYPE_AS_BinaryExpr().Init(lhsExpr,Int(EQ),rhsExpr,NilContextId),NilContextId));
-      TYPE_AS_Expr maxExpr (TYPE_AS_IfExpr().Init(cond,rhsExpr,Sequence(),lhsExpr,NilContextId));
-      TYPE_AS_Expr minExpr (TYPE_AS_IfExpr().Init(cond,lhsExpr,Sequence(),rhsExpr,NilContextId));
+      TYPE_AS_Expr cond (TYPE_AS_PrefixExpr().Init(Int(NOT),expr,NilContextId));
+      TYPE_AS_Expr maxExpr (TYPE_AS_IfExpr().Init(cond,lhsExpr,Sequence(),rhsExpr,NilContextId));
+      TYPE_AS_Expr minExpr (TYPE_AS_IfExpr().Init(cond,rhsExpr,Sequence(),lhsExpr,NilContextId));
 
       TYPE_AS_ExplFnDef orderFunc;
       orderFunc.Init(orderName,
@@ -2709,7 +2710,7 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       maxFunc.Init(maxName,
                 SEQ<TYPE_AS_TypeVar>(),
                 maxMinFntp,
-                parms,
+                maxMinParms,
                 TYPE_AS_FnBody().Init(maxExpr, NilContextId),
                 Nil (),
                 Nil (),
@@ -2724,7 +2725,7 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       minFunc.Init(minName,
                 SEQ<TYPE_AS_TypeVar>(),
                 maxMinFntp,
-                parms,
+                maxMinParms,
                 TYPE_AS_FnBody().Init(minExpr, NilContextId),
                 Nil (),
                 Nil (),
