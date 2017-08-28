@@ -276,7 +276,7 @@ public:
   void UnsetTypeJudgement();
   bool RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type & gtp, bool checkinv) /*notconst*/;
   bool SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type & rtp);
-  TYPE_SEM_VAL LookUp (const TYPE_AS_Name & name);
+  TYPE_SEM_ValTp LookUp (const TYPE_AS_Name & name);
 
   Tuple GetCachedRecSel(const TYPE_AS_Name & name);
 
@@ -310,7 +310,8 @@ public:
   Generic LookUpOverInClass(const TYPE_AS_Name &, const TYPE_AS_Name &);
   Tuple LookUpStatic(const TYPE_AS_Name &);
 private:
-  TYPE_SEM_VAL ReturnLookUp(const Generic & val, const int err);
+  //TYPE_SEM_VAL ReturnLookUp(const Generic & val, const int err);
+  TYPE_SEM_ValTp ReturnLookUp(const Generic & val, const Generic & tp, const int err);
   Tuple IsDObjs(const TYPE_AS_Name & name);
 #endif //VDMPP
 

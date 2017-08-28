@@ -1955,14 +1955,14 @@ for this:
 \begin{vdm_al}
 operations
 
-LookUp : AS`Name ==> SEM`VAL
+LookUp : AS`Name ==> SEM`ValTp
 LookUp (name) ==
  (if not AUX`IsRealName (name) and not STKM`IsEmptyEnvL ()
   then
     cases STKM`IsLocalVal( name ):
-      mk_(true, mk_SEM`ValTp(res_v, -)) -> if is_SEM`UNDEF (res_v)
-                          then RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED, nil, nil, [])
-                          else return res_v,
+      mk_(true, mk_SEM`ValTp(res_v, tp)) -> if is_SEM`UNDEF (res_v)
+                          then RTERR`ErrorValTp(RTERR`UNDEF_ENCOUNTERED, nil, nil, [])
+                          else return mk_SEM`ValTp(res_v,tp),
       others -> skip
     end
   else skip;
@@ -1977,44 +1977,44 @@ LookUp (name) ==
       if mod_nm in set dom mods
       then
         if not AUX`IsConstructExported (loc_nm, mod_nm)
-        then RTERR`ErrorVal(RTERR`CONSTRUCT_NOT_EXPORTED, nil, nil, [])
+        then RTERR`ErrorValTp(RTERR`CONSTRUCT_NOT_EXPORTED, nil, nil, [])
         else skip -- to local search
       elseif mod_nm in set dom imods -- dlmodule
       then
         if not AUX`IsInDLDeclared (loc_nm, mod_nm)
-        then RTERR`ErrorVal(RTERR`LIB_NOT_DECLARED, nil, nil, [])
+        then RTERR`ErrorValTp(RTERR`LIB_NOT_DECLARED, nil, nil, [])
         else
           cases EXPR`GetExtFnOpVal (loc_nm, mod_nm):
-            mk_(true, val) -> return val,
+            mk_(true, val) -> return mk_SEM`ValTp(val,nil),
             others -> cases EXPR`GetExtVal (loc_nm, mod_nm):
-                        mk_(true, val) -> return val,
-                        others -> RTERR`ErrorVal(RTERR`MOD_NOT_DEFINED, nil, nil, [])
+                        mk_(true, val) -> return mk_SEM`ValTp(val,nil),
+                        others -> RTERR`ErrorValTp(RTERR`MOD_NOT_DEFINED, nil, nil, [])
                       end
           end
-      else RTERR`ErrorVal(RTERR`MOD_NOT_DEFINED, nil, nil, [])
+      else RTERR`ErrorValTp(RTERR`MOD_NOT_DEFINED, nil, nil, [])
      );
 
     if EXPR`IsFunction (loc_nm, mod_nm)
-    then EXPR`GetFunctionVal (loc_nm, mod_nm)
+    then return mk_SEM`ValTp(EXPR`GetFunctionVal (loc_nm, mod_nm), nil)
     elseif EXPR`IsOperation (loc_nm, mod_nm)
-    then EXPR`GetOperationVal (loc_nm, mod_nm)
+    then return mk_SEM`ValTp(EXPR`GetOperationVal (loc_nm, mod_nm), nil)
     elseif EXPR`IsPoly (loc_nm, mod_nm)
-    then EXPR`GetPolyVal (loc_nm, mod_nm)
+    then return mk_SEM`ValTp(EXPR`GetPolyVal (loc_nm, mod_nm), nil)
     else
       cases IsGlobalVal(loc_nm, mod_nm):
-        mk_(true,val,-) -> return val,
+        mk_(true,val,tp) -> return mk_SEM`ValTp(val,tp),
         others -> if STKM`HdContext() <> <PURE>
                   then
                     cases IsGlobalState(loc_nm, mod_nm):
-                      mk_(true,mk_GLOBAL`State(val,-)) -> return val,
+                      mk_(true,mk_GLOBAL`State(val,tp)) -> return mk_SEM`ValTp(val,tp),
                       others -> if IsTheState(name, mod_nm)
-                                then GetTheState(name, mod_nm)
+                                then return mk_SEM`ValTp(GetTheState(name, mod_nm),nil)
                                 else skip
                     end
       end;
     cases AUX`LookUpRename(name):
       mk_(true,rec_nm) -> LookUp(rec_nm),
-      others -> RTERR`ErrorVal(RTERR`ID_UNKNOWN, nil, nil, [])
+      others -> RTERR`ErrorValTp(RTERR`ID_UNKNOWN, nil, nil, [])
     end;
    )
  );
@@ -2031,7 +2031,7 @@ possibilities are checked.
 #ifdef VDMPP
 \begin{vdm_al}
 operations
-LookUp : AS`Name ==> SEM`VAL
+LookUp : AS`Name ==> SEM`ValTp
 LookUp(mk_AS`Name(ids,cid)) ==
  (dcl name : AS`Name := mk_AS`Name(ids,cid);
   if len ids = 2
@@ -2043,24 +2043,20 @@ LookUp(mk_AS`Name(ids,cid)) ==
       if ok
       then name := AUX`ConstructDoubleName(ocl,memnm);
 
-  --def mk_(isit, mk_SEM`ValTp(val, -)) = STKM`IsLocalVal(name);
   def mk_(isit, valtp) = STKM`IsLocalVal(name);
-      --mk_(isit_d_objs, val_obj) = IsDObjs(name)
   in
     if isit
-    --then ReturnLookUp(val, RTERR`INTERNAL_ERROR)
     then
-      let mk_SEM`ValTp(val, -) = valtp
-      in ReturnLookUp(val, RTERR`INTERNAL_ERROR)
+      let mk_SEM`ValTp(val, tp) = valtp
+      in ReturnLookUp(val, tp, RTERR`INTERNAL_ERROR)
     else
       if not STKM`HasCurObjRef()
       then
         def mk_(isit_d_objs, val_obj) = IsDObjs(name)
         in
         if isit_d_objs
-        --then return val_obj
-        then return ReturnLookUp(val_obj, RTERR`INTERNAL_ERROR)
-        else def mk_(-,staticval,-,-,-) = LookUpStatic(name)
+        then return ReturnLookUp(val_obj, nil, RTERR`INTERNAL_ERROR)
+        else def mk_(-,staticval,tp,-,-) = LookUpStatic(name)
              in
                if staticval = nil
                then
@@ -2072,9 +2068,10 @@ LookUp(mk_AS`Name(ids,cid)) ==
                                    else mk_(nil, nil)
                  in
                    if cl <> nil and cl in set dom classes and nm in set dom classes(cl).vls_init
-                   then return (classes(hd initclstack).vls_init(nm)).#1
-                   else RTERR`ErrorVal(RTERR`ID_UNKNOWN, nil, nil, [])
-               else return staticval
+                   then def mk_(val,tp,-) = classes(hd initclstack).vls_init(nm)
+                        in return mk_SEM`ValTp(val,tp)
+                   else RTERR`ErrorValTp(RTERR`ID_UNKNOWN, nil, nil, [])
+               else return mk_SEM`ValTp(staticval,tp)
       else
 --         def mk_(isit_inst, local_inst, val_inst,-,-,-) = IsInObjScope(name,nil);
 --             mk_(isit_d_objs, val_obj) = IsDObjs(name)
@@ -2108,36 +2105,36 @@ LookUp(mk_AS`Name(ids,cid)) ==
         (def mk_(isit_opfct, -, val_opfct) = LookOpFctPoly(name)
          in
            if isit_opfct
-           then ReturnLookUp(val_opfct, RTERR`OP_OR_FUN_NOT_IN_SCOPE);
+           then ReturnLookUp(val_opfct, nil, RTERR`OP_OR_FUN_NOT_IN_SCOPE);
 
-         def mk_(isstatic,staticval,-,-,-) = LookUpStatic(name)
+         def mk_(isstatic,staticval,tp,-,-) = LookUpStatic(name)
          in
           (if STKM`HdContext() <> <PURE>
            then
              def mk_(isit_inst, local_inst, val_inst,-,-,-) = IsInObjScope(name,nil);
              in
                if isit_inst and (local_inst or not isstatic)
-               then ReturnLookUp(val_inst, RTERR`INSTVAR_NOT_IN_SCOPE);
+               then ReturnLookUp(val_inst, nil, RTERR`INSTVAR_NOT_IN_SCOPE);
            if isstatic
            then
              if staticval = nil
-             then RTERR`ErrorVal(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
-             else return staticval;
+             then RTERR`ErrorValTp(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
+             else return mk_SEM`ValTp(staticval, tp);
           );
 
-         def mk_(isit_val, -, val_val, -) = IsValue(name)
+         def mk_(isit_val, -, val_val, tp) = IsValue(name)
          in
            if isit_val
-           then ReturnLookUp(val_val, RTERR`VAL_NOT_IN_SCOPE);
+           then ReturnLookUp(val_val, tp, RTERR`VAL_NOT_IN_SCOPE);
 
          if STKM`HdContext() <> <PURE>
          then
            def mk_(isit_d_objs, val_obj) = IsDObjs(name)
            in
              if isit_d_objs
-             then ReturnLookUp(val_obj,  RTERR`INTERNAL_ERROR);
+             then ReturnLookUp(val_obj, nil, RTERR`INTERNAL_ERROR);
 
-         return RTERR`ErrorVal(RTERR`NAME_UNKNOWN, nil, nil, []);
+         return RTERR`ErrorValTp(RTERR`NAME_UNKNOWN, nil, nil, []);
         );
 );
 \end{vdm_al}
@@ -2691,12 +2688,12 @@ LookUpStatic(name) ==
 \end{vdm_al}
 
 \begin{vdm_al}
-ReturnLookUp: [SEM`VAL] * RTERR`ERR ==> SEM`VAL
-ReturnLookUp(val, errno) ==
+ReturnLookUp: [SEM`VAL] * [AS`Type] * RTERR`ERR ==> SEM`ValTp
+ReturnLookUp(val, tp, errno) ==
   cases val:
-    mk_SEM`UNDEF() -> RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED, nil, nil, []),
-    nil            -> RTERR`ErrorVal(errno, nil, nil, []),
-    others         -> return val
+    mk_SEM`UNDEF() -> RTERR`ErrorValTp(RTERR`UNDEF_ENCOUNTERED, nil, nil, []),
+    nil            -> RTERR`ErrorValTp(errno, nil, nil, []),
+    others         -> return mk_SEM`ValTp(val,tp)
   end;
 \end{vdm_al}
 
@@ -2976,7 +2973,8 @@ LookUpSD (sd) ==
                                             else return mk_(val, [ sd ], iios, nil)
             end;
 
-          def val = LookUp(sd)
+          --def val = LookUp(sd)
+          def mk_SEM`ValTp(val,-) = LookUp(sd)
           in
             if is_SEM`OBJ_Ref(val)
             then return mk_(val, [sd], nil, nil);

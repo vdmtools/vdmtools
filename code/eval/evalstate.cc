@@ -3231,8 +3231,8 @@ Tuple EvalState::GetCachedGlobalVal(const TYPE_AS_Name & name, const TYPE_AS_Nam
 
 // LookUp
 // name : AS`Name
-// ==> SEM`VAL
-TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
+// ==> SEM`ValTp
+TYPE_SEM_ValTp EvalState::LookUp (const TYPE_AS_Name & name)
 {
 //wcout << L"LookUp: " << ASTAUX::ASName2String(name) << endl;
   if ((name.GetSequence(pos_AS_Name_ids).Length() == 1) && !theStackMachine().IsEmptyEnvL ()) {
@@ -3240,16 +3240,17 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
     if (ilv.GetBoolValue(1)) {
       const TYPE_SEM_VAL & res_v (Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val));
       if (res_v.Is(TAG_TYPE_SEM_UNDEF)) {
-        return RTERR::ErrorVal (L"LookUp", RTERR_UNDEF_ENCOUNTERED,
+        return RTERR::ErrorValTp (L"LookUp", RTERR_UNDEF_ENCOUNTERED,
                              M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
       }
-      else
-        return (res_v);
+      else {
+        return ilv.GetRecord(2);
+      }
     }
   }
 
   if (theStackMachine().CurrentModule().GetSequence(pos_AS_Name_ids).IsEmpty()) {
-    return RTERR::ErrorVal (L"LookUp", RTERR_ID_UNKNOWN,
+    return RTERR::ErrorValTp (L"LookUp", RTERR_ID_UNKNOWN,
                          M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
   }
 
@@ -3262,7 +3263,7 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
     switch(GetAnyModule(mod_nm).GetTag()) {
       case TAG_TYPE_GLOBAL_SigmaMO: {
         if (!AUX::IsConstructExported (loc_nm, mod_nm)) {
-          return RTERR::ErrorVal (L"LookUp", RTERR_CONSTRUCT_NOT_EXPORTED,
+          return RTERR::ErrorValTp (L"LookUp", RTERR_CONSTRUCT_NOT_EXPORTED,
                                M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         }
         // Do notthing.
@@ -3270,23 +3271,23 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
       }
       case TAG_TYPE_GLOBAL_SigmaIMO: {
         if (!AUX::IsInDLDeclared(loc_nm, mod_nm)) {
-          return RTERR::ErrorVal (L"LookUp", RTERR_LIB_NOT_DECLARED,
+          return RTERR::ErrorValTp (L"LookUp", RTERR_LIB_NOT_DECLARED,
                                M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         }
         Tuple idlfo (IsDLFnOP(loc_nm, mod_nm));
         if( idlfo.GetBoolValue(1) ) {
-          return idlfo.GetRecord(2);
+          return TYPE_SEM_ValTp().Init(idlfo.GetRecord(2), Nil());
         }
         Tuple idlv (IsDLVal (loc_nm, mod_nm));
         if( idlv.GetBoolValue(1) ) {
-          return idlv.GetRecord(2);
+          return TYPE_SEM_ValTp().Init(idlv.GetRecord(2), Nil());
         }
-        return RTERR::ErrorVal (L"LookUp", RTERR_MOD_NOT_DEFINED,
+        return RTERR::ErrorValTp (L"LookUp", RTERR_MOD_NOT_DEFINED,
                              M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         break;
       }
       default: {
-        return RTERR::ErrorVal (L"LookUp", RTERR_MOD_NOT_DEFINED,
+        return RTERR::ErrorValTp (L"LookUp", RTERR_MOD_NOT_DEFINED,
                              M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         break;
       }
@@ -3301,29 +3302,34 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
 //  if(EXPR::IsPoly (loc_nm, mod_nm))
 //    return EXPR::GetPolyVal (loc_nm, mod_nm);
   Tuple gfopv (GetCachedFunOpPolyVal (loc_nm, mod_nm));
-  if (gfopv.GetBoolValue(1))
-    return gfopv.GetRecord(2);
+  if (gfopv.GetBoolValue(1)) {
+    return TYPE_SEM_ValTp().Init(gfopv.GetRecord(2), Nil());
+  }
 // <-- 20101105
 
   //Tuple igv (IsGlobalVal(loc_nm, mod_nm));
   Tuple igv (GetCachedGlobalVal(loc_nm, mod_nm));
-  if ( igv.GetBoolValue(1) )
-    return igv.GetRecord(2);
+  if ( igv.GetBoolValue(1) ) {
+    return TYPE_SEM_ValTp().Init(igv.GetRecord(2), igv.GetRecord(3));
+  }
 
   if (theStackMachine().HdContext() != Int(AS_PURE)) {
     Tuple igs (IsGlobalState (loc_nm, mod_nm)); // bool * [GLOBAL`State]
-    if (igs.GetBoolValue(1))
-      return igs.GetRecord(2).GetRecord(pos_GLOBAL_State_val); // SEM`VAL
+    if (igs.GetBoolValue(1)) {
+      return TYPE_SEM_ValTp().Init(igs.GetRecord(2).GetRecord(pos_GLOBAL_State_val),  // SEM`VAL
+                                   igs.GetRecord(2).GetRecord(pos_GLOBAL_State_tp)); // AS`Type
+    }
 
-    if (IsTheState(name, mod_nm))
-      return GetTheState(name, mod_nm);
+    if (IsTheState(name, mod_nm)) {
+      return TYPE_SEM_ValTp().Init(GetTheState(name, mod_nm), Nil());
+    }
   }
 
   Tuple t (AUX::LookUpRename(name));
-  if (t.GetBoolValue(1))
+  if (t.GetBoolValue(1)) {
     return LookUp(t.GetRecord(2));
-
-  return RTERR::ErrorVal (L"LookUp", RTERR_ID_UNKNOWN,
+  }
+  return RTERR::ErrorValTp (L"LookUp", RTERR_ID_UNKNOWN,
                           M42Sem(AUX::SingleNameToString(loc_nm), NULL), Nil(), Sequence());
 }
 #endif //VDMSL
@@ -3331,8 +3337,8 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
 #ifdef VDMPP
 // LookUp
 // name : AS`Name
-// ==> SEM`VAL
-TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
+// ==> SEM`ValTp
+TYPE_SEM_ValTp EvalState::LookUp(const TYPE_AS_Name & name_)
 {
   TYPE_AS_Name name = name_;
   if (name.get_ids().Length() == 2) {
@@ -3346,7 +3352,8 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
 
   Tuple ilv (theStackMachine().IsLocalVal(name));
   if (ilv.GetBoolValue(1)) {
-    return ReturnLookUp(Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val), RTERR_INTERNAL_ERROR);
+    return ReturnLookUp(Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val),
+                        Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_tp), RTERR_INTERNAL_ERROR);
   }
   else {
     if (!theStackMachine().HasCurObjRef()) {
@@ -3355,7 +3362,7 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
       const Generic & val_obj (iso.GetField(2));
 
       if (isit_d_objs) {
-        return ReturnLookUp(val_obj, RTERR_INTERNAL_ERROR);
+        return ReturnLookUp(val_obj, Nil(), RTERR_INTERNAL_ERROR);
       }
       else {
         // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
@@ -3376,8 +3383,9 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
             if(this->classes.DomExists(cl)) {
               TYPE_GLOBAL_ValueMap vls_init (this->classes[cl].GetMap(pos_GLOBAL_SigmaClass_vls_uinit));
               if(vls_init.DomExists(nm)) {
-                if (AccessOk(vls_init[nm].GetRecord(3), theStackMachine().GetCurCl(), cl))
-                  return vls_init[nm].GetRecord(1);
+                if (AccessOk(vls_init[nm].GetRecord(3), theStackMachine().GetCurCl(), cl)) {
+                  return TYPE_SEM_ValTp().Init(vls_init[nm].GetRecord(1),vls_init[nm].GetField(2));
+                }
               }  
 
               if (this->classes[cl].GetMap(pos_GLOBAL_SigmaClass_instvars_utp).DomExists(nm)) {
@@ -3387,11 +3395,12 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
               }
             }
           }
-          return RTERR::ErrorVal (L"LookUp", RTERR_ID_UNKNOWN,
+          return RTERR::ErrorValTp (L"LookUp", RTERR_ID_UNKNOWN,
                               M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         }
         else {
-          return staticval;
+          //return staticval;
+          return TYPE_SEM_ValTp().Init(staticval, lus.GetField(3));
         }
       }
     }
@@ -3402,7 +3411,7 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
       const Generic & val_opfct (lofp.GetField(3));
 
       if (isit_opfct) {
-        return ReturnLookUp(val_opfct, RTERR_OP_OR_FUN_NOT_IN_SCOPE);
+        return ReturnLookUp(val_opfct, Nil(), RTERR_OP_OR_FUN_NOT_IN_SCOPE);
       }
 
       // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
@@ -3420,17 +3429,17 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
 //      TYPE_AS_Access access (iios.GetField(6));     // [AS`Access]
 
         if (isit_inst && (local_inst || !isstatic)) {
-          return ReturnLookUp(val_inst, RTERR_INSTVAR_NOT_IN_SCOPE);
+          return ReturnLookUp(val_inst, Nil(), RTERR_INSTVAR_NOT_IN_SCOPE);
         }
       }
 
       if (isstatic) {
         if (staticval.IsNil()) {
-          return RTERR::ErrorVal(L"LookUp", RTERR_STATIC_NOT_IN_SCOPE,
+          return RTERR::ErrorValTp(L"LookUp", RTERR_STATIC_NOT_IN_SCOPE,
                               M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         }
         else {
-          return staticval;
+          return TYPE_SEM_ValTp().Init(staticval, lus.GetField(3));
         }
       }
 
@@ -3441,7 +3450,7 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
       const Generic & val_val (iv.GetField(3));
 
       if (isit_val) {
-        return ReturnLookUp(val_val, RTERR_VAL_NOT_IN_SCOPE);
+        return ReturnLookUp(val_val, iv.GetField(4), RTERR_VAL_NOT_IN_SCOPE);
       }
 
       if (theStackMachine().HdContext() != Int(AS_PURE)) {
@@ -3450,11 +3459,11 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
         const Generic & val_obj (iso.GetField(2));
 
         if (isit_d_objs) {
-          return ReturnLookUp(val_obj, RTERR_INTERNAL_ERROR);
+          return ReturnLookUp(val_obj, Nil(), RTERR_INTERNAL_ERROR);
         }
       }
 
-      return RTERR::ErrorVal(L"LookUp", RTERR_NAME_UNKNOWN,
+      return RTERR::ErrorValTp(L"LookUp", RTERR_NAME_UNKNOWN,
                           M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
     }
   }
@@ -4215,24 +4224,21 @@ Generic EvalState::LookUpOverloaded(const TYPE_AS_Name & clsnm, const TYPE_AS_Na
   Set allclasses_q (allclasses);
   Map overloads; // map AS`Name to SEM`OverOPFN
   Generic clnm;
-  for (bool bb = allclasses_q.First(clnm); bb; bb = allclasses_q.Next(clnm))
-  {
+  for (bool bb = allclasses_q.First(clnm); bb; bb = allclasses_q.Next(clnm)) {
     Generic opfn (LookUpOverInClass(clnm, name));
-    if (!opfn.IsNil())
+    if (!opfn.IsNil()) {
       overloads.Insert(clnm, opfn);
+    }
   }
 
-  if (overloads.IsEmpty())
-  {
+  if (overloads.IsEmpty()) {
     return Nil();
   }
-  else
-  {
+  else {
     SET<TYPE_AS_Name> dom_overloads (overloads.Dom());
     Map over; // map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN])
     Generic clnm;
-    for (bool bb = dom_overloads.First(clnm); bb; bb = dom_overloads.Next(clnm))
-    {
+    for (bool bb = dom_overloads.First(clnm); bb; bb = dom_overloads.Next(clnm)) {
       TYPE_SEM_OverOPFN oopfn (overloads[clnm]);
       over.ImpOverride(oopfn.GetMap(pos_SEM_OverOPFN_overload));
     }
@@ -4263,8 +4269,9 @@ Generic EvalState::LookUpOverInClass(const TYPE_AS_Name & clsnm, const TYPE_AS_N
     }
     return TYPE_SEM_OverOPFN().Init(load, Nil());
   }
-  else
+  else {
     return Nil();
+  }
 }
 
 // LookUpStatic
@@ -4345,11 +4352,9 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
     const TYPE_GLOBAL_OrigCl & curcls (theStackMachine().GetCurCl());
     switch(curcls.GetTag()) {
       case TAG_TYPE_AS_Name: {
-// 20150226 -->
         if (curcls == ASTAUX::MkNameFromVoid()) {
           return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
         }
-// <--20150226
         return LookUpStatic(AUX::ConstructDoubleName(curcls, name));
       }
       case TAG_TYPE_GLOBAL_Start: {
@@ -4367,18 +4372,20 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
 
 // ReturnLookUp
 // val : [SEM`VAL]
+// tp : [AS`Type]
 // err_str : RTERR`ERR
-// ==> SEM`VAL
-TYPE_SEM_VAL EvalState::ReturnLookUp(const Generic & val, const int errnum)
+// ==> SEM`ValTp
+TYPE_SEM_ValTp EvalState::ReturnLookUp(const Generic & val, const Generic & tp, const int errnum)
 {
   if (val.Is(TAG_TYPE_SEM_UNDEF)) {
-    return RTERR::ErrorVal(L"ReturnLookUp", RTERR_UNDEF_ENCOUNTERED, Nil(), Nil(), Sequence());
+    return RTERR::ErrorValTp(L"ReturnLookUp", RTERR_UNDEF_ENCOUNTERED, Nil(), Nil(), Sequence());
   }
   else if (val.IsNil()) {
-    return RTERR::ErrorVal(L"ReturnLookUp", errnum, Nil(), Nil(), Sequence());
+    return RTERR::ErrorValTp(L"ReturnLookUp", errnum, Nil(), Nil(), Sequence());
   }
-  else
-    return val;
+  else {
+    return TYPE_SEM_ValTp().Init(val, tp);
+  }
 }
 
 // IsDObjs
@@ -4387,10 +4394,12 @@ TYPE_SEM_VAL EvalState::ReturnLookUp(const Generic & val, const int errnum)
 Tuple EvalState::IsDObjs(const TYPE_AS_Name & name)
 {
   Generic g;
-  if (this->d_objs.DomExists(name, g))
+  if (this->d_objs.DomExists(name, g)) {
     return mk_(Bool (true), Tuple(g).GetField(1));
-  else
+  }
+  else {
     return mk_(Bool (false), Nil());
+  }
 }
 
 // GetPreCond
@@ -4399,18 +4408,20 @@ Tuple EvalState::IsDObjs(const TYPE_AS_Name & name)
 // ==> [SEM`CompExplFN]
 Generic EvalState::GetPreCond(const TYPE_AS_Name & clnm, const TYPE_AS_Name & fnnm)
 {
-  if (this->classes.DomExists(clnm))
-  {
+  if (this->classes.DomExists(clnm)) {
     TYPE_AS_Name prenm (AUX::PreName(fnnm));
     const TYPE_GLOBAL_SigmaClass & sigmacl (this->classes[clnm]);
     const Map & explfns (sigmacl.GetMap(pos_GLOBAL_SigmaClass_explfns));
-    if (explfns.DomExists(prenm))
+    if (explfns.DomExists(prenm)) {
       return explfns[prenm];
-    else
+    }
+    else {
       return Nil();
+    }
   }
-  else
+  else {
     return Nil();
+  }
 }
 #endif // VDMPP
 
@@ -4609,8 +4620,7 @@ TYPE_GLOBAL_SigmaIMO EvalState::GetDLModule(const TYPE_AS_Name & mod_name)
   if (this->imods.DomExists (mod_name)) {
     return this->imods[mod_name];
   }
-  else 
-  {
+  else {
     RTERR::Error (L"GetDLModule", RTERR_MOD_NOT_DEFINED,
                          M42Sem(AUX::SingleNameToString(mod_name), NULL), Nil(), Sequence());
     return TYPE_GLOBAL_SigmaIMO();

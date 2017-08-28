@@ -84,7 +84,8 @@ stack.
 \begin{vdm_al}
   EvalStack = seq of EvalStackItem;
 
-  EvalStackItem = SEM`VAL | SemArgList | Pattern | StateDesignator |
+  --EvalStackItem = SEM`VAL | SemArgList | Pattern | StateDesignator | 
+  EvalStackItem = SEM`VAL | SEM`ValTp | SemArgList | Pattern | StateDesignator | 
                   set of SEM`BlkEnv | seq of nat;
  
   SemArgList = seq of SEM`VAL;
@@ -1086,7 +1087,7 @@ RunMessage(mk_Message(id,t,p,mes,-),cpunm) ==
           fullnm = if clnm <> nil
                    then AUX`ConstructDoubleName(clnm,opnm)
                    else opnm;
-          opval = STATE`LookUp(fullnm);
+          mk_SEM`ValTp(opval,-) = STATE`LookUp(fullnm);
           prio: nat = if opnm in set dom cpustate(curcpu).prio_tab
                       then cpustate(curcpu).prio_tab(opnm)
                       else SCHD`Default_priority;
@@ -1115,7 +1116,7 @@ RunBroadcastMessage(id,-,-,mes) ==
     SetCurCPU(cpu,cpustate(cpu).swaptime);
     for all objref in set objrefs do
       def fullnm = opnm;
-          opval = STATE`LookUp(fullnm);
+          mk_SEM`ValTp(opval,-) = STATE`LookUp(fullnm);
           prio: nat = if opnm in set dom cpustate(curcpu).prio_tab
                       then cpustate(curcpu).prio_tab(opnm)
                       else SCHD`Default_priority
@@ -3857,7 +3858,7 @@ EvalFieldOBJRefSelect(objref, field) ==
   PushEmptyEnv();
   PushCurObj(objref, objref.tp, GetCurCl());
 
-  def res_v = STATE`LookUp(field)
+  def mk_SEM`ValTp(res_v,-) = STATE`LookUp(field)
   in
    (PopCurObj();
     PopEnvL();

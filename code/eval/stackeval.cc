@@ -1766,17 +1766,13 @@ TYPE_SEM_VAL StackEval::EvalFieldOBJRefSelect(const TYPE_SEM_OBJ_uRef & objref, 
   PushEmptyEnv();
   PushCurObj(objref, objref.GetRecord(pos_SEM_OBJ_uRef_tp), GetCurCl());
 
-  TYPE_SEM_VAL res_v (theState().LookUp(field));
+  TYPE_SEM_ValTp valTp (theState().LookUp(field));
+  TYPE_SEM_VAL res_v (valTp.GetRecord(pos_SEM_ValTp_val));
 
-// 20121022 -->
-  //PopEnvL();
-  //PopCurObj();
-  if (!IsRuntimeErrorException(res_v))
-  {
+  if (!IsRuntimeErrorException(res_v)) {
     PopCurObj();
     PopEnvL();
   }
-// <-- 20121022
   return res_v;
 }
 #endif //VDMPP

@@ -627,15 +627,14 @@ Tuple SYSTEM::RunMessage(const TYPE_STKM_Message & m, const Generic & cpunm)
         }
         const TYPE_AS_Name & opnm (mes.GetRecord(pos_STKM_MessageInfo_opname));
         TYPE_AS_Name fullnm (!clnm.IsNil() ? AUX::ConstructDoubleName(clnm, opnm) : opnm);
-// 20160316 -->
-        if (!obj_ref.IsNil())
+        if (!obj_ref.IsNil()) {
           theStackMachine().PushCurObj(obj_ref, clnm, clnm);
-// <-- 20160316
-        TYPE_SEM_VAL opval (theState().LookUp(fullnm));
-// 20160316 -->
-        if (!obj_ref.IsNil())
+        }
+        TYPE_SEM_ValTp valTp (theState().LookUp(fullnm));
+        TYPE_SEM_ExplOP opval (valTp.GetRecord(pos_SEM_ValTp_val));
+        if (!obj_ref.IsNil()) {
           theStackMachine().PopCurObj();
-// <-- 20160316
+        }
         const MAP<TYPE_AS_Name, Int> & prio_tab (csigma.GetMap(pos_STKM_CPUSigma_prio_utab));
         Int prio (prio_tab.DomExists(opnm) ? prio_tab[opnm] : SCHD::Default_priority);
 
@@ -660,11 +659,11 @@ Tuple SYSTEM::RunMessage(const TYPE_STKM_Message & m, const Generic & cpunm)
              .ImpAppend(TYPE_INSTRTP_APPLY());
 
         const Generic & threadid (mes.GetField(pos_STKM_MessageInfo_threadid));
-        if( !threadid.IsNil() )
+        if( !threadid.IsNil() ) {
           instr.ImpAppend(TYPE_INSTRTP_RETMES().Init(id, prio, fullnm,
                                                      mes.GetField(pos_STKM_MessageInfo_respond),
                                                      threadid));
-
+        }
         instr.ImpAppend(TYPE_INSTRTP_EOCL());
 
         return theScheduler().RunMessageThread(clnm, obj_ref, instr, prio, id);
@@ -712,7 +711,8 @@ Tuple SYSTEM::RunBroadcastMessage(const TYPE_STKM_MessageId & id,
     const TYPE_SEM_OBJ_uRef & objref (objrefs[index]);
     //Generic cpunm (tcpum[objref]);
     TYPE_AS_Name fullnm (opnm);
-    TYPE_SEM_ExplOP opval (theState().LookUp(fullnm));
+    TYPE_SEM_ValTp valTp (theState().LookUp(fullnm));
+    TYPE_SEM_ExplOP opval (valTp.GetRecord(pos_SEM_ValTp_val));
 
     TYPE_STKM_CPUSigma cursigma (this->cpustate[this->curcpu]);
     const MAP<TYPE_AS_Name, Int> & prio_tab (csigma.GetMap(pos_STKM_CPUSigma_prio_utab));

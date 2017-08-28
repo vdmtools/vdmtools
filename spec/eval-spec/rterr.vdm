@@ -41,6 +41,10 @@ types
   ERR = nat
 
 operations
+  ErrorValTp: ERR * [SEM`VAL] * [AS`Type] * seq of seq of char ==> SEM`ValTp
+  ErrorValTp(err, semval, type, txts) ==
+    return mk_SEM`ValTp(ErrorVal(err, semval, type, txts), nil);
+
   ErrorVal: ERR * [SEM`VAL] * [AS`Type] * seq of seq of char ==>
             [SEM`VAL] | SEM`VAL * seq of (AS`Name | SEM`VAL) |
 	     bool * [CI`ContextId] * [AS`Name] * [AS`Name] |
@@ -53,7 +57,6 @@ operations
 	    (bool * [SEM`VAL])
   ErrorVal(err, semval, type, txts) ==
     (Error(err, semval, type, txts);
-     --return semval);
      return STKM`RuntimeErrorVal());
 \end{vdm_al}
 

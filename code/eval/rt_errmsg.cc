@@ -45,6 +45,12 @@ bool RTERR::RunTimeErrorOccured()
   return !RTERR::RTErrMsg.printed;
 }
 
+TYPE_SEM_ValTp RTERR::ErrorValTp(const wchar_t * Where, const int What,
+                                 const Generic & semval, const Generic & type, const Sequence & txts)
+{
+  return TYPE_SEM_ValTp().Init(ErrorVal(Where,What,semval,type,txts), Nil());
+}
+
 TYPE_SEM_VAL RTERR::ErrorVal(const wchar_t * Where, const int What,
                              const Generic & semval, const Generic & type, const Sequence & txts)
 {

@@ -72,6 +72,8 @@ public:
   static std::wstring GetWhat();
   static std::wstring GetWhere();
 
+  static TYPE_SEM_ValTp ErrorValTp(const wchar_t * Where, const int What,
+                               const Generic & semval, const Generic & type, const Sequence & txts);
   static TYPE_SEM_VAL ErrorVal(const wchar_t * Where, const int What,
                                const Generic & semval, const Generic & type, const Sequence & txts);
   static void Error(const wchar_t * Where, const int What,

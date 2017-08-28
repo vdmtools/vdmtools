@@ -314,7 +314,8 @@ void StackEval::ExeNOBODY(const TYPE_RTERR_ERR & err,
         arg_lv.ImpAppend(sem_nil);
       }
       else {
-        arg_lv.ImpAppend(theState().LookUp(pnm));
+        TYPE_SEM_ValTp valTp (theState().LookUp(pnm));
+        arg_lv.ImpAppend(valTp.GetRecord(pos_SEM_ValTp_val));
       }
     }
     else {
@@ -1007,7 +1008,8 @@ void StackEval::ExeLOOKUP(const TYPE_AS_Expr & name)
 {
   switch(name.GetTag()) {
     case TAG_TYPE_AS_Name: {
-      PUSH(theState().LookUp(name));
+      TYPE_SEM_ValTp valTp(theState().LookUp(name));
+      PUSH(valTp.GetRecord(pos_SEM_ValTp_val));
       break;
     }
     case TAG_TYPE_AS_OldName: {
@@ -1025,8 +1027,8 @@ void StackEval::ExeLOOKUP(const TYPE_AS_Expr & name)
 // ==> ()
 void StackEval::ExeLOOKUPSTATIC(const TYPE_AS_Name & name)
 {
-  Tuple lus (theState().LookUpStatic(name)); // bool * [SEM`VAL] * [As`Name] * [AS`Access]
-//  if (lus.GetBoolValue(1)) {
+  // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
+  Tuple lus (theState().LookUpStatic(name));
   if (lus.GetBoolValue(1) && !lus.GetRecord(2).IsNil()) {
     PUSH(lus.GetRecord(2));
   }
@@ -1057,8 +1059,9 @@ void StackEval::ExeLOOKUPOP(const TYPE_AS_Name & name)
       if (lofp.GetBoolValue(1) && lofp.GetBoolValue(2)) {
           PUSH(lofp.GetRecord(3));
       }
-      else 
+      else {
         RTERR::Error(L"ExeLOOKUPOP", RTERR_OP_NOT_IN_SCOPE, Nil(), Nil(), Sequence());
+      }
     }
   }
 }
@@ -1129,10 +1132,12 @@ void StackEval::EvalExplFnApply(const TYPE_SEM_ExplFN & fct_v, const SEQ<TYPE_SE
   SEQ<TYPE_SEM_VAL> arg_lv_q (UpdateFunctionValue(arg_lv));
 
   if (fct_v.GetField(pos_SEM_ExplFN_instr).IsNil()) {
-    if (arg_lv_q.Length() == 1)
+    if (arg_lv_q.Length() == 1) {
       PUSH(arg_lv_q.Hd());
-    else
+    }
+    else {
       PUSH(TYPE_SEM_TUPLE().Init(arg_lv_q));
+    }
   }
   else {
     if (fct_v.GetSequence(pos_SEM_ExplFN_parms).Length() > 1) {
@@ -1146,13 +1151,14 @@ void StackEval::EvalExplFnApply(const TYPE_SEM_ExplFN & fct_v, const SEQ<TYPE_SE
       if (fnName.IsNil()) {
         newNm = ASTAUX::MkNameFromId(ASTAUX::MkId(lambdaFnName), NilContextId);
       }
-      else
-      {
+      else {
         const TYPE_AS_Name & clmodName (fct_v.GetRecord(pos_SEM_ExplFN_modName));
-        if (clmodName.GetSequence(pos_AS_Name_ids).IsEmpty())
+        if (clmodName.GetSequence(pos_AS_Name_ids).IsEmpty()) {
           newNm = fnName;
-        else
+        }
+        else {
           newNm = AUX::ConstructDoubleName(clmodName, fnName);
+        }
       }
 
 #if defined( PROFILELOG )
@@ -1171,34 +1177,29 @@ void StackEval::EvalExplFnApply(const TYPE_SEM_ExplFN & fct_v, const SEQ<TYPE_SE
 SEQ<TYPE_SEM_VAL> StackEval::UpdateFunctionValue(const SEQ<TYPE_SEM_VAL> & arg_lv)
 {
   Map tm (HdTypeInst());
-  if (tm.IsEmpty())
+  if (tm.IsEmpty()) {
     return arg_lv;
-  else
-  {
+  }
+  else {
     SEQ<TYPE_SEM_VAL> arg_lv_q (arg_lv);
     size_t len_arg_lv = arg_lv.Length();
-    for (size_t index = 1; index <= len_arg_lv; index++)
-    {
+    for (size_t index = 1; index <= len_arg_lv; index++) {
       TYPE_SEM_VAL val (arg_lv_q[index]);
-      if (val.Is(TAG_TYPE_SEM_CompExplFN))
-      {
+      if (val.Is(TAG_TYPE_SEM_CompExplFN)) {
         const SEQ<TYPE_SEM_ExplFN> & fl (val.GetSequence(pos_SEM_CompExplFN_fl)); 
         SEQ<TYPE_SEM_ExplFN> new_fl;
         size_t len_fl = fl.Length();
-        for (size_t j = 1; j <= len_fl; j++)
-        {
+        for (size_t j = 1; j <= len_fl; j++) {
           TYPE_SEM_ExplFN efn (fl[j]);
           const Record & tp (efn.GetRecord(pos_SEM_ExplFN_tp));
           const Sequence & parms (efn.GetSequence(pos_SEM_ExplFN_parms));
           Sequence new_parms; // seq of seq of STKM`Pattern
           size_t len_parms = parms.Length();
-          for (size_t k = 1; k <= len_parms; k++)
-          {
+          for (size_t k = 1; k <= len_parms; k++) {
             const SEQ<TYPE_STKM_Pattern> & p_l (parms[k]);
             SEQ<TYPE_STKM_Pattern> new_p_l;
             size_t len_p_l = p_l.Length();
-            for (size_t l = 1; l <= len_p_l; l++)
-            {
+            for (size_t l = 1; l <= len_p_l; l++) {
               new_p_l.ImpAppend(theState().ConvertPattern(p_l[l], tm));
             }
             new_parms.ImpAppend(new_p_l);
@@ -1230,10 +1231,12 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
 #endif //VDMSL
 #ifdef VDMPP
   const Generic & objref (fndef.GetField(pos_SEM_ExplFN_objref));
-  if (objref.IsNil())
+  if (objref.IsNil()) {
     PushClNmCurObj(clmodName, clmodName);
-  else
+  }
+  else {
     PushCurObj(objref, clmodName, clmodName);
+  }
 #endif //VDMPP
 
 //wcout << L"call fn: " << fndef.GetField(pos_SEM_ExplFN_fnName) << endl;
@@ -1244,8 +1247,7 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
     RTERR::Error(L"EnvSetUpExplFnApply", RTERR_WRONG_NO_OF_ARGS, arg_lv, Nil(), Sequence());
     return;
   }
-  else if (Settings.DTC())
-  {
+  else if (Settings.DTC()) {
     const TYPE_AS_FnType & tp (fndef.GetRecord(pos_SEM_ExplFN_tp));
     const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(1)); // DiscretionaryType
     if (len_arg_lv != (size_t)(fndom.Length())) {
@@ -1270,8 +1272,8 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
     const TYPE_SEM_BlkEnv & closenv (fndef.GetRecord(pos_SEM_ExplFN_env));
     TYPE_SEM_BlkEnv env (env_s.GetElem());
 
-    if (parms.Length() > 1)
-    { // higher order function
+    if (parms.Length() > 1) {
+      // higher order function
       // only update tp, parms, env
       TYPE_SEM_ExplFN fn (fndef);
       fn.SetField(pos_SEM_ExplFN_tp,    fndef.GetRecord(pos_SEM_ExplFN_tp).GetRecord(2));
@@ -1285,22 +1287,24 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
       POPMODULE();
 #endif //VDMSL
 #ifdef VDMPP
-      if (objref.IsNil())
+      if (objref.IsNil()) {
         PopClNmCurObj();
-      else
+      }
+      else {
         PopCurObj();
+      }
 #endif //VDMPP
     }
     else {
       const Generic & fnName          (fndef.GetField(pos_SEM_ExplFN_fnName));
       TYPE_SEM_BlkEnv closenv_q (closenv);
-      if (!fnName.IsNil()) // not lambda function
-      {
+      if (!fnName.IsNil()) { // not lambda function
         Tuple ilv (IsLocalVal(fnName)); // must check before modifying env_l(PUSHEMPTYENV)
-        if (ilv.GetBoolValue(1))
+        if (ilv.GetBoolValue(1)) {
           closenv_q = AUX::CombineBlkEnv(closenv, AUX::MkBlkEnv(fnName,
                  Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val),
                  Record(ilv.GetRecord(2)).GetField(pos_SEM_ValTp_tp), sem_read_only));
+        }
       }
       //PUSHEMPTYENV();
       //PUSHBLKENV(closenv_q);
@@ -1309,8 +1313,7 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
 
       PushTypeInst(fndef.GetMap(pos_SEM_ExplFN_tm));
 #ifdef VDMPP
-      if (!fnName.IsNil() && (!clmodName.GetSequence(pos_AS_Name_ids).IsEmpty()))
-      {
+      if (!fnName.IsNil() && (!clmodName.GetSequence(pos_AS_Name_ids).IsEmpty())) {
         if (theState().IsDLOp(clmodName, fnName)) {
           PUSH(arg_lv);
         }
@@ -1345,14 +1348,14 @@ void StackEval::EvalExplOpApply(const TYPE_SEM_ExplOP & opsem, const SEQ<TYPE_SE
 
 #ifdef VDMPP
 #ifdef VICE
-  if( !opsem.GetBoolValue(pos_SEM_ExplOP_sync) && !theSystem().OnCurCPU(opsem.GetField(pos_SEM_ExplOP_objref)) )
-  {
+  if( !opsem.GetBoolValue(pos_SEM_ExplOP_sync) && !theSystem().OnCurCPU(opsem.GetField(pos_SEM_ExplOP_objref)) ) {
     PUSH(sem_cont);
     return;
   }
 #endif // VICE
-  if (!theState().IsClassInit(clmodName))
+  if (!theState().IsClassInit(clmodName)) {
     theState().InitClassName(clmodName);
+  }
 #endif // VDMPP
 
   PushCS(opsem, newNm, arg_lv, CallStackItemType::CS_FNOP);
@@ -1375,10 +1378,12 @@ void StackEval::EnvSetUpExplOpApply(const TYPE_SEM_ExplOP & opsem, const SEQ<TYP
 #endif //VDMSL
 #ifdef VDMPP
   const Generic & objref (opsem.GetField(pos_SEM_ExplOP_objref));
-  if (!objref.IsNil())
+  if (!objref.IsNil()) {
     PushCurObj(objref, clmodName, clmodName);
-  else
+  }
+  else {
     PushClNmCurObj(clmodName, clmodName);
+  }
 #endif //VDMPP
 
 //wcout << L"call op: " << opsem.GetRecord(pos_SEM_ExplOP_fnName) << endl;
@@ -1389,8 +1394,7 @@ void StackEval::EnvSetUpExplOpApply(const TYPE_SEM_ExplOP & opsem, const SEQ<TYP
     RTERR::Error(L"EnvSetUpExplOpApply", RTERR_WRONG_NO_OF_ARGS, arg_lv, Nil(), Sequence());
     return;
   }
-  else if (Settings.DTC())
-  {
+  else if (Settings.DTC()) {
     const TYPE_AS_OpType & tp (opsem.GetRecord(pos_SEM_ExplOP_tp));
     const SEQ<TYPE_AS_Type> & opdom (tp.GetSequence(pos_AS_OpType_opdom));
     if (len_arg_lv != (size_t)(opdom.Length())) {
@@ -1428,8 +1432,9 @@ void StackEval::EnvSetUpExplOpApply(const TYPE_SEM_ExplOP & opsem, const SEQ<TYP
     TYPE_AS_Name fullopname (AUX::ConstructDoubleName(clmodName, opnm));
 
 #ifdef VICE
-    if( clmodName == opName ) // use of constructor
+    if( clmodName == opName ) { // use of constructor
       theState().UpdateHistCount(fullopname, EvalState::historyKind_req, objref, Bool(true), arg_lv);
+    }
     theState().UpdateHistCount(fullopname, EvalState::historyKind_act, objref,
                                opsem.GetBool(pos_SEM_ExplOP_sync), Sequence());
 #else
@@ -1480,8 +1485,9 @@ void StackEval::EvalDLFnApply(const TYPE_SEM_DLFN & fndef, const SEQ<TYPE_SEM_VA
   if (Settings.DTC() && !theState().SubType(res, rng)) {
     RTERR::Error(L"EvalExtFnApply", RTERR_TYPE_INCOMP, res, rng, Sequence());
   }
-  else
+  else {
     PUSH(res);
+  }
 }
 
 // EvalDLOpApply
@@ -1521,8 +1527,9 @@ void StackEval::EvalDLOpApply(const TYPE_SEM_DLOP & fndef, const SEQ<TYPE_SEM_VA
       !theState().SubType(res, rng)) {
      RTERR::Error(L"EvalExtOpApply", RTERR_TYPE_INCOMP, res, tp.get_oprng(), Sequence());
   }
-  else
+  else {
     PUSH(res);
+  }
 }
 #endif //VDMSL
 
@@ -1542,53 +1549,47 @@ void StackEval::EvalOverOpFnApply(const TYPE_SEM_OverOPFN & fct_v, const SEQ<TYP
 
   Map m;
   Generic g;
-  for (bool bb = dom_over.First(g); bb; bb = dom_over.Next(g))
-  {
+  for (bool bb = dom_over.First(g); bb; bb = dom_over.Next(g)) {
     Tuple domTup (g);        // (AS`Name * AS`Name)
     const TYPE_AS_Name & manglenm (domTup.GetRecord(1)); // AS`Name
     const TYPE_AS_Name & clsnm (domTup.GetRecord(2));    // AS`Name
     Tuple regTup (over[g]);  // ((seq of AS`Type) * AS`Access)
     const SEQ<TYPE_AS_Type> & tp_l (regTup.GetSequence(1));  // seq of AS`Type
 
-    if ((size_t)(tp_l.Length()) == arglen)
-    {
+    if ((size_t)(tp_l.Length()) == arglen) {
       bool allSubType = true;
-      for (size_t i = 1; (i <= arglen) && allSubType; i++)
+      for (size_t i = 1; (i <= arglen) && allSubType; i++) {
         allSubType = (theState().RealSubType(arg_lv[i], tp_l[i], false));
-
-      if (allSubType)
-      {
+      }
+      if (allSubType) {
         if (m.Dom().InSet(clsnm)) { 
           RTERR::Error(L"EvalOverOpFnApply", RTERR_MULTIOVERLOADED, Nil(), Nil(), Sequence());
           return;
         }
-        else
-        {
+        else {
           m.Insert(clsnm, manglenm);
         }
       }
     }
   }
 
-  if (m.IsEmpty())
+  if (m.IsEmpty()) {
     RTERR::Error(L"EvalOverOpFnApply", RTERR_NOOVERLOADED, fct_v, Nil(), Sequence());
-  else if (!CheckMultiOverLoaded(m, fct_v, arg_lv))
+  }
+  else if (!CheckMultiOverLoaded(m, fct_v, arg_lv)) {
     RTERR::Error(L"EvalOverOpFnApply", RTERR_MULTIOVERLOADED, Nil(), Nil(), Sequence());
-  else
-  {
+  }
+  else {
     Set nm_s (m.Dom());
     Tuple existsTup (theState().ExistsOneChild(nm_s, nm_s));
-    if (existsTup.GetBoolValue(1))
-    {
+    if (existsTup.GetBoolValue(1)) {
       const TYPE_AS_Name & child (existsTup.GetRecord(2));
       TYPE_AS_Name manglenm (m[child]);
       Tuple lafop (theState().LookupAllFnsOpsPolys(child, manglenm));
-      if (lafop.GetBool(1))
-      {
+      if (lafop.GetBool(1)) {
         Tuple t (lafop.GetTuple(2));
         const TYPE_SEM_VAL & opval (t.GetRecord(1)); // SEM`VAL
-        if (theState().AccessOk(t.GetField(2), GetOrigCl(), child))
-        {
+        if (theState().AccessOk(t.GetField(2), GetOrigCl(), child)) {
           TYPE_SEM_VAL f (opval); // SEM`FN | SEM`OP
           switch(f.GetTag()) {
             case TAG_TYPE_SEM_ExplOP: {
@@ -1616,11 +1617,9 @@ void StackEval::EvalOverOpFnApply(const TYPE_SEM_OverOPFN & fct_v, const SEQ<TYP
             case TAG_TYPE_SEM_ExplPOLY: {
               Tuple t (over[mk_(manglenm, f.GetRecord(pos_SEM_ExplPOLY_modName))]);
               Generic fng (t.GetField(3));
-              if (fng.IsRecord())
-              {
+              if (fng.IsRecord()) {
                 TYPE_SEM_VAL fn (fng);
-                if (fn.Is(TAG_TYPE_SEM_CompExplFN))
-                {
+                if (fn.Is(TAG_TYPE_SEM_CompExplFN)) {
                   fn.SetField(pos_SEM_CompExplFN_objref, objref);
                   const SEQ<TYPE_SEM_ExplFN> & fn_l (fn.GetSequence(pos_SEM_CompExplFN_fl));
                   SEQ<TYPE_SEM_ExplFN> new_fn_l;
@@ -1639,14 +1638,17 @@ void StackEval::EvalOverOpFnApply(const TYPE_SEM_OverOPFN & fct_v, const SEQ<TYP
           }
           ApplyOpFnMapSeq(f, arg_lv);
         }
-        else
+        else {
           RTERR::Error(L"EvalOverOpFnApply", RTERR_NOT_IN_SCOPE, Nil(), Nil(), Sequence());
+        }
       }
-      else
+      else {
         RTERR::Error(L"EvalOverOpFnApply", RTERR_NOT_IN_SCOPE, Nil(), Nil(), Sequence());
+      }
     }
-    else
+    else {
       RTERR::Error(L"EvalOverOpFnApply", RTERR_MULTIOVERLOADED, Nil(), Nil(), Sequence());
+    }
   }
 }
 
@@ -1670,50 +1672,50 @@ bool StackEval::CheckMultiOverLoaded(const MAP<TYPE_AS_Name, TYPE_AS_Name> & m,
   bool defcon = (theState().IsAClass(mnm) && arg_lv.IsEmpty()); // default constructor
 
   bool stat = false;
-  if (objref.IsNil() && theStackMachine().HasCurObjRef())
-  {
+  if (objref.IsNil() && theStackMachine().HasCurObjRef()) {
     TYPE_AS_Name n (theStackMachine().GetCurObjName());
-    if (theState().GetAllSupers(n).Diff(nm_s).IsEmpty())
+    if (theState().GetAllSupers(n).Diff(nm_s).IsEmpty()) {
       stat = true;
+    }
   }
-  if ((!objref.IsNil() || theStackMachine().HasCurObjRef()) && !defcon && !stat)
-  {
+  if ((!objref.IsNil() || theStackMachine().HasCurObjRef()) && !defcon && !stat) {
     Set done;
     Set notdone;
-    if (!objref.IsNil())
+    if (!objref.IsNil()) {
        notdone.Insert(mk_sequence(TYPE_AS_Name(Record(objref).GetRecord(pos_SEM_OBJ_uRef_tp))));
-    else
+    }
+    else {
       notdone.Insert(mk_sequence(theStackMachine().GetCurObjName()));
-    while (!notdone.IsEmpty())
-    {
+    }
+    while (!notdone.IsEmpty()) {
       Set newnd; // set of seq of AS`Name
       Generic s;
-      for (bool bb = notdone.First(s); bb; bb = notdone.Next(s))
-      {
+      for (bool bb = notdone.First(s); bb; bb = notdone.Next(s)) {
         Sequence ts (s);
         Set s_s (theState().GetSupers(ts[1]));
-        if (s_s.IsEmpty())
+        if (s_s.IsEmpty()) {
           done.Insert(ts);
-        else
-        {
+        }
+        else {
           Generic n;
-          for (bool cc = s_s.First(n); cc; cc = s_s.Next(n))
+          for (bool cc = s_s.First(n); cc; cc = s_s.Next(n)) {
             newnd.Insert(Sequence(ts).ImpPrepend(n));
+          }
         }
       }
       notdone = newnd;
     }
     bool multpath = false;
     Generic t;
-    for (bool dd = done.First(t); dd && !multpath; dd = done.Next(t))
-    {
+    for (bool dd = done.First(t); dd && !multpath; dd = done.Next(t)) {
       Set s (nm_s.Intersect(Sequence(t).Elems()));
        multpath = (!s.IsEmpty() && (s != nm_s));
     }
     return !multpath;
   }
-  else
+  else {
     return true;
+  }
 }
                                  
 // ExeCALLGUARD
@@ -1725,23 +1727,25 @@ void StackEval::ExeCALLGUARD(const Bool & hasobj, const TYPE_AS_Name & oprt)
   SEQ<TYPE_SEM_VAL> args (POP());
 
   Generic obj;
-  if (hasobj)
+  if (hasobj) {
     obj = POP();
-  else
+  }
+  else {
 //  if (HasCurCl())
-  if (HasCurObjRef())
-    obj = GetCurObjRef();
-  else
-    obj = Nil();
+    if (HasCurObjRef()) {
+      obj = GetCurObjRef();
+    }
+    else {
+      obj = Nil();
+    }
+  }
 
   Generic op_v (ConvertOverOPFNToExplOP(oprt, obj, hasobj, args));
 
-  if( !obj.IsNil() && !obj.Is(TAG_TYPE_SEM_OBJ_uRef) )
-  {
+  if( !obj.IsNil() && !obj.Is(TAG_TYPE_SEM_OBJ_uRef) ) {
     RTERR::Error(L"ExeCALLGUARD", RTERR_OBJ_REF_EXP_CALL, Nil(), Nil(), Sequence());
   }
-  else if (!op_v.Is(TAG_TYPE_SEM_ExplOP))
-  {
+  else if (!op_v.Is(TAG_TYPE_SEM_ExplOP)) {
     RTERR::Error(L"ExeCALLGUARD", RTERR_NOT_EXPL_OP_CALL, Nil(), Nil(), Sequence());
   }
   else {
@@ -1788,7 +1792,8 @@ Generic StackEval::ConvertOverOPFNToExplOP(const Record & op, const Generic & ob
     { // TODO
       // static
       if ((Record(op).GetSequence(pos_AS_Name_ids).Length() == 1)) {
-        resval = theState().LookUp(op);
+        TYPE_SEM_ValTp valTp (theState().LookUp(op));
+        resval = valTp.GetRecord(pos_SEM_ValTp_val);
       }
       else if (Record(op).GetSequence(pos_AS_Name_ids).Length() == 2) {
         Tuple lsofp (theState().LookStaticOpFctPoly(ASTAUX::GetFirstName(op), AUX::ExtractName(op)));
@@ -1802,7 +1807,8 @@ Generic StackEval::ConvertOverOPFNToExplOP(const Record & op, const Generic & ob
         }
       }
       else {
-        resval = theState().LookUp(op);
+        TYPE_SEM_ValTp valTp (theState().LookUp(op));
+        resval = valTp.GetRecord(pos_SEM_ValTp_val);
       }
     }
   }

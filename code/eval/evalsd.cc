@@ -407,7 +407,8 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
         return mk_(pval_v, mk_sequence(sd), res, Nil());
       }
 
-      TYPE_SEM_VAL val (LookUp(sd));
+      TYPE_SEM_ValTp valTp (LookUp(sd));
+      const TYPE_SEM_VAL & val (valTp.GetRecord(pos_SEM_ValTp_val));
       if (val.Is(TAG_TYPE_SEM_OBJ_uRef)) {
         //SEQ<Record> index_l (mk_sequence(sd)); // seq of (AS`Name | SEM`VAL)
         //return mk_(val, index_l, Nil(), Nil());
