@@ -1009,7 +1009,21 @@ void StackEval::ExeLOOKUP(const TYPE_AS_Expr & name)
   switch(name.GetTag()) {
     case TAG_TYPE_AS_Name: {
       TYPE_SEM_ValTp valTp(theState().LookUp(name));
-      PUSH(valTp.GetRecord(pos_SEM_ValTp_val));
+      const TYPE_SEM_VAL & val (valTp.GetRecord(pos_SEM_ValTp_val));
+      const Generic & tp (valTp.GetField(pos_SEM_ValTp_tp));
+      
+#ifdef VDMSL
+      if (tp.Is(TAG_TYPE_AS_TypeName)) {
+#endif // VDMSL
+#ifdef VDMPP
+      if (tp.Is(TAG_TYPE_AS_TypeName) && !theState().IsAClass(Record(tp).GetRecord(pos_AS_TypeName_name))) {
+#endif // VDMPP
+        //const TYPE_AS_Name & tag (Record(tp).GetRecord(pos_AS_TypeName_name));
+        PUSH(val);
+      }
+      else {
+        PUSH(val);
+      }
       break;
     }
     case TAG_TYPE_AS_OldName: {
@@ -1073,7 +1087,13 @@ void StackEval::ExeAPPLY()
 {
   SEQ<TYPE_STKM_EvalStackItem> item_l (POPN(2)); // [fct_v, arg_lv]
 
-  ApplyOpFnMapSeq(item_l[1], item_l[2]); // fct_v, arg_lv
+  //ApplyOpFnMapSeq(item_l[1], item_l[2]); // fct_v, arg_lv
+  if (item_l[1].Is(TAG_TYPE_SEM_EQORD)) {
+    ApplyOpFnMapSeq(Record(item_l[1]).GetRecord(pos_SEM_EQORD_v), item_l[2]); // fct_v, arg_lv
+  }
+  else {
+    ApplyOpFnMapSeq(item_l[1], item_l[2]); // fct_v, arg_lv
+  }
 }
 
 // ApplyOpFnMapSeq

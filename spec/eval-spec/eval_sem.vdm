@@ -106,7 +106,8 @@ variables, a type.
 
 \begin{vdm_al}
 VAL = BasicVal | FN | OP | POLY | SEQ | SET | MAP | TUPLE |
-      REC | TOKEN | UNDEF | EXIT | CONT | RETURN
+      REC | TOKEN | UNDEF | EXIT | CONT | RETURN |
+      EQORD
 #ifdef VDMPP
       | OBJ | OBJ_Ref | OverOPFN
 #endif VDMPP
@@ -132,6 +133,13 @@ CHAR :: v : char;
 QUOTE :: v : seq of char;
 
 NIL:: ;
+\end{vdm_al}
+
+\begin{vdm_al}
+EQORD :: name : AS`Name
+         v : VAL
+         Eq : [AS`Name]
+         Ord : [AS`Name];
 \end{vdm_al}
 
 \subsection{Undefined Value}
@@ -600,6 +608,7 @@ functions
 VAL2Expr: VAL -> AS`Expr
 VAL2Expr(val) ==
   cases val:
+    mk_EQORD(-,v,-,-) -> VAL2Expr(v),
     mk_BOOL(v)  -> mk_AS`BoolLit(v, CI`NilContextId),
     mk_NUM(v)   -> mk_AS`RealLit(v, CI`NilContextId),
     mk_CHAR(v)  -> mk_AS`CharLit(v, CI`NilContextId),
@@ -655,6 +664,7 @@ operations
   Size: VAL ==> nat
   Size(val) ==
    cases true:
+    (is_EQORD(val))      -> return Size(val.v),
     (is_BOOL(val))       -> return 1,
     (is_NUM(val))        -> return 64,
     (is_CHAR(val))       -> return 16,
@@ -794,6 +804,7 @@ functions
 Val2String: VAL -> seq of char
 Val2String(val) ==
    cases true:
+    (is_EQORD(val))      -> Val2String(val.v),
     (is_BOOL(val))       -> if val.v then "true " else "false ",
     (is_NUM(val))        -> Num2String(val.v),
     (is_CHAR(val))       -> "'" ^ [val.v] ^ "'",

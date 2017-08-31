@@ -573,8 +573,16 @@ the result on the evaluation stack.
 ExeLOOKUP: AS`Name | AS`OldName ==> ()
 ExeLOOKUP(name) ==
   cases true:
-    (is_AS`Name(name))    -> def mk_SEM`ValTp(val, -) = STATE`LookUp(name)
-                             in STKM`Push(val),
+    (is_AS`Name(name))    -> def mk_SEM`ValTp(val, tp) = STATE`LookUp(name)
+                             in
+#ifdef VDMSL
+                               if is_AS`TypeName(tp)
+#endif VDMSL
+#ifdef VDMPP
+                               if is_AS`TypeName(tp) and not STATE`IsAClass(tp.name)
+#endif VDMPP
+                               then STKM`Push(val)
+                               else STKM`Push(val),
     (is_AS`OldName(name)) -> STKM`Push(STKM`EvalOldName(name)),
     others                -> error
   end;
@@ -631,7 +639,11 @@ The evaluation stack would then look like:
 ExeAPPLY: () ==> ()
 ExeAPPLY() ==
   def [fct_v, arg_lv] = STKM`Pop(2)
-  in ApplyOpFnMapSeq(fct_v,arg_lv);
+  --in ApplyOpFnMapSeq(fct_v,arg_lv);
+  in
+    if is_SEM`EQORD(fct_v)
+    then ApplyOpFnMapSeq(fct_v.v,arg_lv)
+    else ApplyOpFnMapSeq(fct_v,arg_lv);
 
 ApplyOpFnMapSeq: SEM`VAL * (seq of SEM`VAL | SEM`VAL) ==> ()
 ApplyOpFnMapSeq(fct_v,arg_lv) ==

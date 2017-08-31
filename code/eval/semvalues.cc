@@ -51,8 +51,7 @@ TYPE_SEM_VAL SemRec::UpdateClosEnv(const TYPE_SEM_VAL & fnval, const TYPE_SEM_Bl
       SEQ<TYPE_SEM_ExplFN> res_seq;
 
       size_t len = fl.Length();
-      for (size_t i = 1; i <= len; i++)
-      {
+      for (size_t i = 1; i <= len; i++) {
         TYPE_SEM_ExplFN efn (fl[i]);
         efn.SetField(pos_SEM_ExplFN_env, blkenv);
         res_seq.ImpAppend(efn);
@@ -107,8 +106,9 @@ void SemRec::Decl_SEM_REC(const TYPE_AS_Name & astag, int size, const SEQ<Bool> 
   vector<int> dc;
   size_t len = dc_s.Length();
   for (size_t i = 1; i <= len; i++) {
-    if (dc_s[i].GetValue())
+    if (dc_s[i].GetValue()) {
       dc.push_back(i);
+    }
   }
   DefSemRecInfo.NewTag(tag, size, ASTAUX::ASName2String(qnm), dc);
 }
@@ -128,10 +128,12 @@ void SemRec::SetCurrentModClass(const TYPE_AS_Name & name)
 // -> bool
 bool SemRec::IsSemVal(const Generic & val)
 {
-  if(!val.IsRecord())
+  if(!val.IsRecord()) {
     return false;
+  }
 
   switch(((Record)val).GetTag()) {
+    case TAG_TYPE_SEM_EQORD:
     case TAG_TYPE_SEM_BOOL:
     case TAG_TYPE_SEM_NUM:
     case TAG_TYPE_SEM_CHAR:
@@ -156,8 +158,9 @@ bool SemRec::IsSemVal(const Generic & val)
     case TAG_TYPE_SEM_OBJ_uRef:
 #endif // VDMPP
       return true;
-    default:
+    default: {
       return false;
+    }
   }
 }
 
@@ -167,6 +170,9 @@ bool SemRec::IsSemVal(const Generic & val)
 TYPE_AS_Expr SemRec::VAL2Expr(const TYPE_SEM_VAL & val)
 {
   switch(val.GetTag()) {
+    case TAG_TYPE_SEM_EQORD: {
+      return VAL2Expr(val.GetRecord(pos_SEM_EQORD_v));
+    }
     case TAG_TYPE_SEM_BOOL: {
       return TYPE_AS_BoolLit().Init(val.GetBool(pos_SEM_BOOL_v), NilContextId);
     }
@@ -301,9 +307,9 @@ TYPE_DYNSEM_SEM_SemRecord SemRec::CreateSemRecordUndefinedFields(
   size_t size = tp.GetSequence(pos_AS_CompositeType_fields).Length();
   SEQ<TYPE_SEM_VAL> pval_l;
   TYPE_SEM_UNDEF undef;
-  for (size_t i = 1; i <= size; i++)
+  for (size_t i = 1; i <= size; i++) {
     pval_l.ImpAppend (undef);
-
+  }
   return mk_SEM_REC(tag, pval_l);
 }
 
@@ -315,12 +321,13 @@ TYPE_SEM_REC SemRec::SemRecord2REC(const TYPE_DYNSEM_SEM_SemRecord & srec)
   size_t len = seq.Length();
   MAP<Int,TYPE_SEM_VAL> v, v_dc;
   Generic g;
-  for(size_t i = 1; i <= len; i++)
-  {
-    if (value.IsDontCare(i))
+  for(size_t i = 1; i <= len; i++) {
+    if (value.IsDontCare(i)) {
       v_dc.Insert(Int(i), seq[i]);
-    else
+    }
+    else {
       v.Insert(Int(i), seq[i]);
+    }
   }
   TYPE_SEM_REC semrec;
   semrec.Init(srec.GetRecord(pos_DYNSEM_SEM_SemRecord_tag), v, v_dc);
@@ -339,8 +346,7 @@ TYPE_DYNSEM_SEM_SemRecord SemRec::REC2SemRecord(const TYPE_SEM_REC & semrec)
   fieldmap.ImpOverride(semrec.GetMap(pos_SEM_REC_v_udc));
   SEQ<TYPE_SEM_VAL> fields;
   int len = fieldmap.Size();
-  for (int i = 1; i <= len; i++)
-  {
+  for (int i = 1; i <= len; i++) {
     if (fieldmap.DomExists(Int(i)))
       fields.ImpAppend(fieldmap[Int(i)]);
   }
@@ -378,8 +384,7 @@ int SemRec::SizeCompExplFN(const TYPE_SEM_CompExplFN &cefn)
   int sum = (cefn.get_objref().IsNil() ? 8 : 16 );
   SEQ<TYPE_SEM_ExplFN> fl (cefn.get_fl());
   Generic efn_g;
-  for( bool bb = fl.First(efn_g); bb; bb = fl.Next(efn_g))
-  {
+  for( bool bb = fl.First(efn_g); bb; bb = fl.Next(efn_g)) {
     sum += SizeExplFN(efn_g);
   }
   return sum;
@@ -405,8 +410,7 @@ int SemRec::SizeValSeq(const SEQ<TYPE_SEM_VAL> & val_l)
 {
   int sum = 8;
   size_t len_val_l = val_l.Length();
-  for(size_t idx = 1; idx <= len_val_l; idx++)
-  {
+  for(size_t idx = 1; idx <= len_val_l; idx++) {
     sum += Size(val_l[idx]);
   }
   return sum;
@@ -420,8 +424,7 @@ int SemRec::SizeValSet(const SET<TYPE_SEM_VAL> & val_s)
   int sum = 8;
   SET<TYPE_SEM_VAL> val_s_q (val_s);
   Generic g;
-  for(bool bb = val_s_q.First(g); bb; bb = val_s_q.Next(g))
-  {
+  for(bool bb = val_s_q.First(g); bb; bb = val_s_q.Next(g)) {
     sum += Size(g);
   }
   return sum;
@@ -435,8 +438,7 @@ int SemRec::SizeValMap(const MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> & val_m)
   int sum = 8;
   Set dom_val_m (val_m.Dom());
   Generic dom;
-  for(bool bb = dom_val_m.First(dom); bb; bb = dom_val_m.Next(dom))
-  {
+  for(bool bb = dom_val_m.First(dom); bb; bb = dom_val_m.Next(dom)) {
     sum += (Size(dom) + Size(val_m[dom]));
   }
   return sum;
@@ -450,8 +452,7 @@ int SemRec::SizeNatValMap(const Map & val_m)
   int sum = 8;
   Set dom_val_m (val_m.Dom());
   Generic dom;
-  for(bool bb = dom_val_m.First(dom); bb; bb = dom_val_m.Next(dom))
-  {
+  for(bool bb = dom_val_m.First(dom); bb; bb = dom_val_m.Next(dom)) {
     sum += (32 + Size(val_m[dom]));
   }
   return sum;
@@ -465,8 +466,7 @@ int SemRec::SizeOverload(const Map & over_m)
   int sum = 8;
   Set dom_over_m (over_m.Dom());
   Generic dom;
-  for(bool bb = dom_over_m.First(dom); bb; bb = dom_over_m.Next(dom))
-  {
+  for(bool bb = dom_over_m.First(dom); bb; bb = dom_over_m.Next(dom)) {
     Tuple t (over_m[dom]);
     sum += (32 + 16 * t.GetSequence(1).Length());
   }
@@ -481,8 +481,7 @@ int SemRec::SizeValueMap( const Map & val_m )
   int sum = 8;
   Set dom_val_m (val_m.Dom());
   Generic dom;
-  for(bool bb = dom_val_m.First(dom); bb; bb = dom_val_m.Next(dom))
-  {
+  for(bool bb = dom_val_m.First(dom); bb; bb = dom_val_m.Next(dom)) {
     Tuple t (val_m[dom]);
     sum += (2 + Size(t.GetField(1)));
   }
@@ -507,8 +506,7 @@ int SemRec::SizeInstStruct( const Map & ins_m )
   int sum = 8;
   Set dom_ins_m (ins_m.Dom());
   Generic dom;
-  for(bool bb = dom_ins_m.First(dom); bb; bb = dom_ins_m.Next(dom))
-  {
+  for(bool bb = dom_ins_m.First(dom); bb; bb = dom_ins_m.Next(dom)) {
     sum += SizeValueMap(ins_m[dom]);
   }
   return sum;
@@ -519,8 +517,8 @@ int SemRec::SizeInstStruct( const Map & ins_m )
 // -> nat
 int SemRec::Size(const TYPE_SEM_VAL & val)
 {
-  switch(val.GetTag())
-  {
+  switch(val.GetTag()) {
+    case TAG_TYPE_SEM_EQORD:      { return Size(val.GetRecord(pos_SEM_EQORD_v)); }
     case TAG_TYPE_SEM_BOOL:       { return 1; }
     case TAG_TYPE_SEM_NUM:        { return 64; }
     case TAG_TYPE_SEM_CHAR:       { return 16; }
@@ -693,13 +691,17 @@ wstring SemRec::Ids2String(const TYPE_AS_Ids & ids_)
 // -> seq of char
 wstring SemRec::Val2String( const TYPE_SEM_VAL & val )
 {
-  switch(val.GetTag())
-  {
+  switch(val.GetTag()) {
+    case TAG_TYPE_SEM_EQORD: {
+      return Val2String(val.GetRecord(pos_SEM_EQORD_v));
+    }
     case TAG_TYPE_SEM_BOOL: {
-      if (val.GetBoolValue(pos_SEM_BOOL_v))
+      if (val.GetBoolValue(pos_SEM_BOOL_v)) {
         return L"true ";
-      else
+      }
+      else {
         return L"false ";
+      }
     }
     case TAG_TYPE_SEM_NUM: {
       return Num2String(val.GetReal(pos_SEM_NUM_v));
