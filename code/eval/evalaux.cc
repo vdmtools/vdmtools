@@ -1024,6 +1024,82 @@ bool AUX::EqualNames (const TYPE_AS_Name & name1, const TYPE_AS_Name & name2)
   return (name1.GetSequence(pos_AS_Name_ids) == name2.GetSequence(pos_AS_Name_ids));
 }
 
+// IsEq
+// val_v : SEM`VAL
+// val2_v : SEM`VAL
+// ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL]
+Tuple AUX::IsEq (const TYPE_SEM_VAL & val_v, const TYPE_SEM_VAL & val2_v)
+{
+  switch (val_v.GetTag()) {
+    case TAG_TYPE_SEM_EQORD: {
+      const Generic & Eq (val_v.GetField(pos_SEM_EQORD_Eq));
+      if (!Eq.IsNil()) {
+        if (val2_v.Is(TAG_TYPE_SEM_EQORD)) {
+          return mk_(Bool(true), Eq, val_v.GetRecord(pos_SEM_EQORD_v), val2_v.GetRecord(pos_SEM_EQORD_v));
+        }
+        else {
+          return mk_(Bool(true), Eq, val_v.GetRecord(pos_SEM_EQORD_v), val2_v);
+        }
+      }
+      return mk_(Bool(false), Nil(), Nil(), Nil());
+    }
+    case TAG_TYPE_DYNSEM_SEM_REC: {
+      if (val2_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
+        const TYPE_AS_Name & tag (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+        const TYPE_AS_Name & tag2 (val2_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+        if (tag == tag2) {
+          Tuple itd (IsTypeDef(tag));
+          if (itd.GetBoolValue(1) && !itd.GetField(pos_AS_TypeDef_Eq).IsNil()) {
+            return mk_(Bool(true), EqualityName(tag), val_v, val2_v);
+          }
+        }
+      }
+      return mk_(Bool(false), Nil(), Nil(), Nil());
+    }
+    default: {
+      return mk_(Bool(false), Nil(), Nil(), Nil());
+    }
+  }
+}
+
+// IsOrd
+// val_v : SEM`VAL
+// val2_v : SEM`VAL
+// ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL]
+Tuple AUX::IsOrd (const TYPE_SEM_VAL & val_v, const TYPE_SEM_VAL & val2_v)
+{
+  switch (val_v.GetTag()) {
+    case TAG_TYPE_SEM_EQORD: {
+      const Generic & Ord (val_v.GetField(pos_SEM_EQORD_Ord));
+      if (!Ord.IsNil()) {
+        if (val2_v.Is(TAG_TYPE_SEM_EQORD)) {
+          return mk_(Bool(true), Ord, val_v.GetRecord(pos_SEM_EQORD_v), val2_v.GetRecord(pos_SEM_EQORD_v));
+        }
+        else {
+          return mk_(Bool(true), Ord, val_v.GetRecord(pos_SEM_EQORD_v), val2_v);
+        }
+      }
+      return mk_(Bool(false), Nil(), Nil(), Nil());
+    }
+    case TAG_TYPE_DYNSEM_SEM_REC: {
+      if (val2_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
+        const TYPE_AS_Name & tag (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+        const TYPE_AS_Name & tag2 (val2_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+        if (tag == tag2) {
+          Tuple itd (IsTypeDef(tag));
+          if (itd.GetBoolValue(1) && !itd.GetField(pos_AS_TypeDef_Ord).IsNil()) {
+            return mk_(Bool(true), OrderName(tag), val_v, val2_v);
+          }
+        }
+      }
+      return mk_(Bool(false), Nil(), Nil(), Nil());
+    }
+    default: {
+      return mk_(Bool(false), Nil(), Nil(), Nil());
+    }
+  }
+}
+
 #ifdef VDMSL
 // IsInDLDeclared
 // loc_name : AS`Name

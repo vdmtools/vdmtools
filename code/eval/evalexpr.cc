@@ -1021,46 +1021,37 @@ TYPE_SEM_VAL EXPR::EvalLogUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalEqualityExpr(const TYPE_SEM_VAL& op1_v, const Int & opr, const TYPE_SEM_VAL& op2_v)
 {
-  if (op1_v.Is(TAG_TYPE_DYNSEM_SEM_REC) && op2_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
-    const TYPE_AS_Name & tag1 (op1_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
-    const TYPE_AS_Name & tag2 (op2_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
-    if (tag1 == tag2) {
-      Tuple itd = AUX::IsTypeDef(tag1);
-      if (itd.GetBoolValue(1) && !itd.GetField(pos_AS_TypeDef_Eq).IsNil()) {
-        TYPE_STKM_SubProgram sp;
-        sp.ImpAppend(TYPE_INSTRTP_LOOKUP().Init(AUX::EqualityName(tag1)));
-        sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(op1_v,op2_v)));
-        sp.ImpAppend(TYPE_INSTRTP_APPLY());
-        Tuple res (theStackMachine().EvalAuxProgram(sp, SEQ<Char>(L"Order evaluation"), false));
-        const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
-        if (eval_state.Is(TAG_TYPE_STKM_Success)) {
-          const TYPE_SEM_VAL & Eq_v (res.GetRecord(2));
-          if (Eq_v.Is(TAG_TYPE_SEM_BOOL)) {
-            switch(opr.GetValue()) {
-              case EQ: { // "="
-                return Eq_v;
-                break;
-              }
-              case NE: { // "<>"
-                return (Eq_v.GetBoolValue(pos_SEM_BOOL_v) ? sem_false : sem_true);
-                break;
-              }
-            }
+  Tuple ie (AUX::IsEq(op1_v,op2_v));
+  if (ie.GetBoolValue(1)) {
+    TYPE_STKM_SubProgram sp;
+    sp.ImpAppend(TYPE_INSTRTP_LOOKUP().Init(ie.GetRecord(2)));
+    sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(ie.GetRecord(3),ie.GetRecord(4))));
+    sp.ImpAppend(TYPE_INSTRTP_APPLY());
+    Tuple res (theStackMachine().EvalAuxProgram(sp, SEQ<Char>(L"Order evaluation"), false));
+    const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
+    if (eval_state.Is(TAG_TYPE_STKM_Success)) {
+      const TYPE_SEM_VAL & Eq_v (res.GetRecord(2));
+      if (Eq_v.Is(TAG_TYPE_SEM_BOOL)) {
+        switch(opr.GetValue()) {
+          case EQ: { // "="
+            return Eq_v;
+            break;
           }
-          else {
-            return RTERR::ErrorVal(L"EvalEqNeBinaryExpr", RTERR_BOOL_EXPECTED, Eq_v, Nil(), Sequence());
+          case NE: { // "<>"
+            return (Eq_v.GetBoolValue(pos_SEM_BOOL_v) ? sem_false : sem_true);
+            break;
           }
-        }
-        else {
-          return RTERR::ErrorVal(L"EvalEqNeBinaryExpr", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
         }
       }
+      else {
+        return RTERR::ErrorVal(L"EvalEqNeBinaryExpr", RTERR_BOOL_EXPECTED, Eq_v, Nil(), Sequence());
+      }
     }
-    return EvalEqNeBinaryExpr(op1_v, opr, op2_v); 
+    else {
+      return RTERR::ErrorVal(L"EvalEqNeBinaryExpr", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+    }
   }
-  else {
-    return EvalEqNeBinaryExpr(op1_v, opr, op2_v); 
-  }
+  return EvalEqNeBinaryExpr(op1_v, opr, op2_v); 
 }
 
 // EvalEqNeBinaryExpr
@@ -1516,56 +1507,46 @@ TYPE_SEM_VAL EXPR::IterateMap (const TYPE_SEM_MAP & MapV, const TYPE_SEM_NUM & n
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalOrderExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v)
 {
-  if (op1_v.Is(TAG_TYPE_SEM_NUM) && op2_v.Is(TAG_TYPE_SEM_NUM)) {
-    return EvalNumBinaryExpr( op1_v, opr, op2_v );
-  }
-  else if (op1_v.Is(TAG_TYPE_DYNSEM_SEM_REC) && op2_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
-    const TYPE_AS_Name & tag1 (op1_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
-    const TYPE_AS_Name & tag2 (op2_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
-    if (tag1 == tag2) {
-      Tuple itd = AUX::IsTypeDef(tag1);
-      if (itd.GetBoolValue(1) && !itd.GetField(pos_AS_TypeDef_Ord).IsNil()) {
-        TYPE_STKM_SubProgram sp;
-        sp.ImpAppend(TYPE_INSTRTP_LOOKUP().Init(AUX::OrderName(tag1)));
-          switch(opr.GetValue()) {
-          case NUMLT:
-          case NUMGE: {
-            sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(op1_v,op2_v)));
-            break;
-          }
-          case NUMLE:
-          case NUMGT: {
-            sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(op2_v,op1_v)));
-            break;
-          }
-        }
-        sp.ImpAppend(TYPE_INSTRTP_APPLY());
-        switch(opr.GetValue()) {
-          case NUMLE:
-          case NUMGE: {
-            sp = theCompiler().ConcIfThenElse(sp,
-                    TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_false)),
-                    TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true)));
-            break;
-          }
-        }
-        Tuple res (theStackMachine().EvalAuxProgram(sp, SEQ<Char>(L"Order evaluation"), false));
-        const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
-        if (eval_state.Is(TAG_TYPE_STKM_Success)) {
-          const TYPE_SEM_VAL & Ord_v (res.GetRecord(2));
-          if (Ord_v.Is(TAG_TYPE_SEM_BOOL)) {
-            return Ord_v;
-          }
-          else {
-            return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_BOOL_EXPECTED, Ord_v, Nil(), Sequence());
-          }
-        }
-        else {
-          return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-        }
+  Tuple io (AUX::IsOrd(op1_v,op2_v));
+  if (io.GetBoolValue(1)) {
+    TYPE_STKM_SubProgram sp;
+    sp.ImpAppend(TYPE_INSTRTP_LOOKUP().Init(io.GetRecord(2)));
+      switch(opr.GetValue()) {
+      case NUMLT:
+      case NUMGE: {
+        sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(io.GetRecord(3),io.GetRecord(4))));
+        break;
+      }
+      case NUMLE:
+      case NUMGT: {
+        sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(io.GetRecord(4),io.GetRecord(3))));
+        break;
       }
     }
-    return EvalNumBinaryExpr( op1_v, opr, op2_v );
+    sp.ImpAppend(TYPE_INSTRTP_APPLY());
+    switch(opr.GetValue()) {
+      case NUMLE:
+      case NUMGE: {
+        sp = theCompiler().ConcIfThenElse(sp,
+                TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_false)),
+                TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true)));
+        break;
+      }
+    }
+    Tuple res (theStackMachine().EvalAuxProgram(sp, SEQ<Char>(L"Order evaluation"), false));
+    const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
+    if (eval_state.Is(TAG_TYPE_STKM_Success)) {
+      const TYPE_SEM_VAL & Ord_v (res.GetRecord(2));
+      if (Ord_v.Is(TAG_TYPE_SEM_BOOL)) {
+        return Ord_v;
+      }
+      else {
+        return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_BOOL_EXPECTED, Ord_v, Nil(), Sequence());
+      }
+    }
+    else {
+      return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+    }
   }
   else {
     return EvalNumBinaryExpr( op1_v, opr, op2_v );

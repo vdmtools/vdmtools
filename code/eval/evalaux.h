@@ -80,6 +80,8 @@ public:
   static bool IsRealName (const TYPE_AS_Name & name);
 #endif // VDMSL
   static bool EqualNames (const TYPE_AS_Name & name1, const TYPE_AS_Name & name2);
+  static Tuple IsEq (const TYPE_SEM_VAL & val_v, const TYPE_SEM_VAL & val2_v);
+  static Tuple IsOrd (const TYPE_SEM_VAL & val_v, const TYPE_SEM_VAL & val2_v);
 #ifdef VDMSL
   static bool IsInDLDeclared (const TYPE_AS_Name & loc_name, const TYPE_AS_Name & mod_name);
   static Tuple RenameExtractModule(const TYPE_AS_Name & name);

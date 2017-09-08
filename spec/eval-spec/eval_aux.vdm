@@ -100,6 +100,8 @@ module AUX
 #ifdef VDMPP
       IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
 #endif VDMPP
+      IsEq : SEM`VAL * SEM`VAL ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL];
+      IsOrd : SEM`VAL * SEM`VAL ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL];
       DistribCombineBlkEnv : set of SEM`BlkEnv ==> set of SEM`BlkEnv;
       SeqOfSetOf2SetOfSeqOf : seq of set of (SEM`VAL | SEM`BlkEnv) ==> set of seq of (SEM`VAL | SEM`BlkEnv);
 
@@ -507,6 +509,63 @@ this case the position map of the field selectors are also returned.
 
 #endif VDMPP
 
+\begin{vdm_al}
+operations
+IsEq : SEM`VAL * SEM`VAL ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL]
+IsEq (val_v, val2_v) ==
+  cases val_v:
+    mk_SEM`EQORD(-,v,Eq,-) -> if nil <> Eq
+                              then
+                                cases val2_v:
+                                  mk_SEM`EQORD(-,v2,-,-) -> return mk_(true, Eq, v, v2),
+                                  others                 -> return mk_(true, Eq, v, val2_v)
+                                end
+                              else return mk_(false,nil,nil,nil),
+    mk_SEM`REC(tag,-,-)    -> cases val2_v:
+                                mk_SEM`REC((tag),-,-) ->
+#ifdef VDMSL
+                                  def mk_(ok,-,-,Eq,-,-) = IsTypeDef(tag)
+#endif VDMSL
+#ifdef VDMPP
+                                  def mk_(ok,-,-,Eq,-,-,-) = IsTypeDef(tag)
+#endif VDMPP
+                                  in
+                                    if ok and Eq <> nil
+                                    then return mk_(true, EqualityName(tag), val_v, val2_v)
+                                    else return mk_(false,nil,nil,nil),
+                                others -> return mk_(false,nil,nil,nil)
+                              end,
+    others                 -> return mk_(false,nil,nil,nil)
+  end;
+
+IsOrd : SEM`VAL * SEM`VAL ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL]
+IsOrd (val_v,val2_v) ==
+  cases val_v:
+    mk_SEM`EQORD(-,v,Ord,-) -> if nil <> Ord
+                               then
+                                 cases val2_v:
+                                   mk_SEM`EQORD(-,v2,-,-) -> return mk_(true, Ord, v, v2),
+                                   others                 -> return mk_(true, Ord, v, val2_v)
+                                 end
+                               else return mk_(false,nil,nil,nil),
+    mk_SEM`REC(tag,-,-)     -> cases val2_v:
+                                 mk_SEM`REC((tag),-,-) ->
+#ifdef VDMSL
+                                   def mk_(ok,-,-,-,Ord,-) = IsTypeDef(tag)
+#endif VDMSL
+#ifdef VDMPP
+                                   def mk_(ok,-,-,-,Ord,-,-) = IsTypeDef(tag)
+#endif VDMPP
+                                   in
+                                     if ok and Ord <> nil
+                                     then return mk_(true, OrderName(tag), val_v, val2_v)
+                                     else return mk_(false,nil,nil,nil),
+                                 others -> return mk_(false,nil,nil,nil)
+                               end,
+    others                  -> return mk_(false,nil,nil,nil)
+  end;
+\end{vdm_al}
+
 #ifdef VDMSL
 --%\begin{vdm_al}
 --%LookUpTypeDef : AS`Name ==> AS`TypeDef
@@ -692,12 +751,13 @@ IsRat (val_v) ==
   cases val_v:
     mk_SEM`NUM(val) -> is_rat(val),
     others          -> false
-  end
+  end;
 \end{vdm_al}
 
 This function returns $\True$ if the input semantic numeric value is a rational number.
 
 \begin{vdm_al}
+functions
 functions
 IsStmt: AS`Expr | AS`Stmt +> bool
 IsStmt(se) ==

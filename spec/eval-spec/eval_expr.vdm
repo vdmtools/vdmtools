@@ -26,8 +26,8 @@ module EXPR
         Ceiling : real -> int;
         IsNat : SEM`VAL -> bool;
         IsInt : SEM`VAL -> bool;
-        OrderName: AS`Name -> AS`Name;
-        EqualityName: AS`Name -> AS`Name;
+        --OrderName: AS`Name -> AS`Name;
+        --EqualityName: AS`Name -> AS`Name;
 
       operations 
         IsRecSel : AS`Name ==> bool;
@@ -39,6 +39,8 @@ module EXPR
         IsTypeStructExported : AS`Name ==> bool;
 #endif VDMSL
         ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
+        IsEq: SEM`VAL * SEM`VAL ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL];
+        IsOrd: SEM`VAL * SEM`VAL ==> bool * [AS`Name] * [SEM`VAL] * [SEM`VAL];
 #ifdef VDMPP
         IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
 #endif VDMPP
@@ -791,53 +793,35 @@ sets must be equal.
 operations
 EvalOrderExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
 EvalOrderExpr (op1_v, opr, op2_v) ==
-  if is_SEM`NUM(op1_v) and is_SEM`NUM(op2_v)
-  then return EvalNumBinaryExpr (op1_v, opr, op2_v)
-  else
-   (cases mk_(op1_v, op2_v):
-      mk_(mk_SEM`REC(tag,-,-),mk_SEM`REC(tag,-,-)) ->
-#ifdef VDMSL
-        def mk_(ok,-,-,-,Ord,-) = AUX`IsTypeDef(tag)
-#endif VDMSL
-#ifdef VDMPP
-        def mk_(ok,-,-,-,Ord,-,-) = AUX`IsTypeDef(tag)
-#endif VDMPP
-        in
-         if ok and Ord <> nil
-         then
-           def tmp = [ mk_INSTRTP`LOOKUP(AUX`OrderName(tag)),
-                       mk_INSTRTP`PUSH(
-                          cases opr:
-                            <NUMLT>, <NUMGE>  -> [op1_v, op2_v],
-                            <NUMGT>, <NUMLE>  -> [op2_v, op1_v],
-                            others   -> undefined
-                          end),
-                       mk_INSTRTP`APPLY() ];
-               sp =  cases opr:
-                       <NUMLT>, <NUMGT> -> tmp,
-                       <NUMLE>, <NUMGE> -> CEXPR`ConcIfThenElse(tmp,
-                                                    [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))],
-                                                    [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]),
+  def mk_(ok,fnm,o1_v,o2_v) = AUX`IsOrd(op1_v,op2_v)
+  in
+    if ok
+    then
+      def tmp = [ mk_INSTRTP`LOOKUP(fnm),
+                  mk_INSTRTP`PUSH(
+                     cases opr:
+                       <NUMLT>, <NUMGE>  -> [o1_v, o2_v],
+                       <NUMGT>, <NUMLE>  -> [o2_v, o1_v],
                        others   -> undefined
-                     end;
-               res = DEBUG`EvalAuxProgram(sp, "Order evaluation", false) 
-           in
-             cases res:
-               mk_(mk_STKM`Success(), Ord_v) -> cases true:
-                                                  (is_SEM`BOOL(Ord_v)) -> return Ord_v,
-                                                   others -> error
+                     end),
+                  mk_INSTRTP`APPLY() ];
+          sp =  cases opr:
+                  <NUMLT>, <NUMGT> -> tmp,
+                  <NUMLE>, <NUMGE> -> CEXPR`ConcIfThenElse(tmp,
+                                               [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))],
+                                               [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]),
+                  others   -> undefined
+                end;
+          res = DEBUG`EvalAuxProgram(sp, "Order evaluation", false) 
+      in
+        cases res:
+          mk_(mk_STKM`Success(), Ord_v) -> cases true:
+                                             (is_SEM`BOOL(Ord_v)) -> return Ord_v,
+                                              others -> error
                                                 end,
-               others -> error
-             end
-         else skip,
-      others -> skip
-    end;
-    cases false:
-      (is_SEM`NUM(op1_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op1_v,nil, []),
-      (is_SEM`NUM(op2_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op2_v,nil, []),
-      others -> return EvalNumBinaryExpr (op1_v, opr, op2_v)
-    end;
-   );
+          others -> error
+        end
+  else return EvalNumBinaryExpr (op1_v, opr, op2_v);
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -932,37 +916,28 @@ EvalLogUnaryExpr (opr, op_v) ==
 
 EvalEqualityExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
 EvalEqualityExpr(op1_v, op, op2_v) ==
-  cases mk_(op1_v, op2_v):
-    mk_(mk_SEM`REC(tag,-,-),mk_SEM`REC(tag,-,-)) ->
-#ifdef VDMSL
-                   def mk_(ok,-,-,Eq,-,-) = AUX`IsTypeDef(tag)
-#endif VDMSL
-#ifdef VDMPP
-                   def mk_(ok,-,-,Eq,-,-,-) = AUX`IsTypeDef(tag)
-#endif VDMPP
-                   in
-                    if ok and Eq <> nil
-                    then
-                      def sp = [ mk_INSTRTP`LOOKUP(AUX`EqualityName(tag)),
-                                 mk_INSTRTP`PUSH([op1_v, op2_v]),
-                                 mk_INSTRTP`APPLY() ];
-                          res = DEBUG`EvalAuxProgram(sp, "Order evaluation", false) 
-                      in
-                        cases res:
-                          mk_(mk_STKM`Success(), Eq_v) ->
-                                cases true:
-                                  (is_SEM`BOOL(Eq_v)) ->
+  def mk_(ok,fnm,o1_v,o2_v) = AUX`IsEq(op1_v,op2_v)
+  in
+    if ok
+    then
+      def sp = [ mk_INSTRTP`LOOKUP(fnm),
+                 mk_INSTRTP`PUSH([o1_v, o2_v]),
+                 mk_INSTRTP`APPLY() ];
+          res = DEBUG`EvalAuxProgram(sp, "Equality evaluation", false) 
+      in
+        cases res:
+          mk_(mk_STKM`Success(), Eq_v) ->
+                      cases true:
+                        (is_SEM`BOOL(Eq_v)) ->
                                     cases op:
                                       <EQ>    -> return Eq_v,
                                       <NE>    -> return mk_SEM`BOOL(not Eq_v.v)
                                     end,
                                   others -> error
                                 end,
-                          others -> error
-                        end
-                    else return EvalEqNeBinaryExpr(op1_v, op, op2_v),
-    others         -> return EvalEqNeBinaryExpr(op1_v, op, op2_v)
-  end;
+          others -> error
+        end
+    else return EvalEqNeBinaryExpr(op1_v, op, op2_v);
 
 EvalEqNeBinaryExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
 EvalEqNeBinaryExpr(op1_v, op, op2_v) ==
