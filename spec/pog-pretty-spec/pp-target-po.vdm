@@ -74,13 +74,15 @@ functions
       <ExistsUnique>           -> "unique existence binding",
       <Subtype>                -> "subtype",
       <Invariants>             -> "invariants",
+      <Equality>               -> "equality",
+      <Order>                  -> "order",
 --      <FlatType>               -> "flatType",
       <ValueBinding>           -> "non emptiness of binding",
       <PatternBinding>         -> "pattern binding",
       <FunctionPatterns>       -> "exhaustive function patterns",
       <Satisfiability>         -> "satisfiability",
       <PostCondition>          -> "post condition",
-      <OpPostCondition>          -> "post condition",
+      <OpPostCondition>        -> "post condition",
 --      <OperationSat>           -> "OperationSat",
       <FiniteSet>              -> "finiteness of set",
       <FiniteMap>              -> "finiteness of map",
@@ -112,16 +114,16 @@ functions
   PrintPOLocClassification : POGTP`LocClassification -> seq of char
   PrintPOLocClassification (classi) ==
       cases classi:
-        <types>       -> "type",
-        <functions>   -> "function",
-        <operations>  -> "operation",
-        <state>       -> "state",
+        <types>             -> "type",
+        <functions>         -> "function",
+        <operations>        -> "operation",
+        <state>             -> "state",
         <instanceVariables> -> "instance variables",
         <instanceInvariant> -> "instance invariant",
-        <values>      -> "value",
-        <conjectures> -> "conjecture",
-        <expression>  -> "expression",
-        others        -> undefined
+        <values>            -> "value",
+        <conjectures>       -> "conjecture",
+        <expression>        -> "expression",
+        others              -> undefined
       end;
 
   PrintPOLocContext : POGTP`LocContext -> seq of char

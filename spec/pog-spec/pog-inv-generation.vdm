@@ -150,7 +150,6 @@ GenInvariant (expr,type1,type2,marked,fv,cid,contxt) ==
               GenInvariant(expr,grd_tp,type2,marked,fv,cid,contxt),
         ---- basic types ------------------------
         mk_(-,mk_AS`NumericType(<NATONE>,-)) ->
-          --GEN_PO`VerifyNonZeroNatOneInvariant(expr,expr.cid,contxt),
           GEN_PO`VerifyNonZeroNatOneInvariant(expr,CI_AUX`GetCid(expr),contxt),
         mk_(-,mk_AS`NumericType(-,-)),
         mk_(-,mk_AS`BooleanType(-)),
@@ -207,7 +206,6 @@ GenInvariant (expr,type1,type2,marked,fv,cid,contxt) ==
         mk_(mk_AS`GeneralMap1Type(domtp1,rngtp1,-), mk_AS`InjectiveMap0Type(domtp2,rngtp2,-)),
         mk_(mk_AS`GeneralMap1Type(domtp1,rngtp1,-), mk_AS`InjectiveMap1Type(domtp2,rngtp2,-))   ->
           def pog_invar = GenInvariantMap (expr,domtp1,domtp2,rngtp1,rngtp2,marked,fv,cid,contxt);
-              --pog_inmap = GEN_PO`VerifyMapInverseInvariant(expr,fv,expr.cid,contxt)
               pog_inmap = GEN_PO`VerifyMapInverseInvariant(expr,fv,CI_AUX`GetCid(expr),contxt)
           in
               return pog_invar^pog_inmap,

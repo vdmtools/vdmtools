@@ -362,6 +362,8 @@ Set PogInterface::toKind(const wstring & kind)
   else if (kind == L"unique existence binding") return mk_set(Quote(L"ExistsUnique"));
   else if (kind == L"subtype") return mk_set(Quote(L"Subtype"));
   else if (kind == L"invariants") return mk_set(Quote(L"Invariants"));
+  else if (kind == L"equality") return mk_set(Quote(L"Equality"));
+  else if (kind == L"order") return mk_set(Quote(L"Order"));
   //else if (kind == L"flatType") return mk_set(Quote(L"FlatType"));
   else if (kind == L"non emptiness of binding") return mk_set(Quote(L"ValueBinding"));
   else if (kind == L"pattern binding") return mk_set(Quote(L"PatternBinding"));

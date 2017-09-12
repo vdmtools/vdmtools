@@ -82,6 +82,8 @@ types
      -- Types
      | <Subtype>     
      | <Invariants>
+     | <Equality>
+     | <Order>
 --     | <FlatType>
      -- Patterns Binding
      | <ValueBinding>

@@ -225,6 +225,88 @@ VerifyInvariant (expr,type,cid,contxt) ==
        new_po2 = POGTP`UpdateSource(new_po,[tpname])
     in [new_po2];
 
+VerifyEqualityCond : AS`Name * AS`Type * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyEqualityCond (name,type,cid,contxt) ==
+  let ---- get type name ------------------------
+      fnm = AddPrefix("eq_",name),
+      tnm = mk_AS`TypeName(name,CI`NilContextId),
+      -------------------------------------------
+      name_x = mk_AS`Name(["x"],CI`NilContextId),
+      name_y = mk_AS`Name(["y"],CI`NilContextId),
+      name_z = mk_AS`Name(["z"],CI`NilContextId),
+      pat_x = mk_AS`PatternName(name_x,nil,CI`NilContextId),
+      pat_y = mk_AS`PatternName(name_y,nil,CI`NilContextId),
+      pat_z = mk_AS`PatternName(name_z,nil,CI`NilContextId),
+      binds_1 = mk_AS`MultTypeBind([pat_x], tnm, CI`NilContextId),
+      binds_2 = mk_AS`MultTypeBind([pat_x,pat_y], tnm, CI`NilContextId),
+      binds_3 = mk_AS`MultTypeBind([pat_x,pat_y,pat_z], tnm, CI`NilContextId),
+      cond_1 = mk_AS`ApplyExpr(fnm, [name_x,name_x], CI`NilContextId),
+      cond_2 = mk_AS`BinaryExpr(mk_AS`ApplyExpr(fnm, [name_x,name_y], CI`NilContextId),
+                                <IMPLY>,
+                                mk_AS`ApplyExpr(fnm, [name_y,name_x], CI`NilContextId),
+                                CI`NilContextId),
+      cond_3 = mk_AS`BinaryExpr(
+                  mk_AS`BinaryExpr(mk_AS`ApplyExpr(fnm, [name_x,name_y], CI`NilContextId),
+                                   <AND>,
+                                   mk_AS`ApplyExpr(fnm, [name_y,name_z], CI`NilContextId),
+                                   CI`NilContextId),
+                  <IMPLY>,
+                  mk_AS`ApplyExpr(fnm, [name_x,name_z], CI`NilContextId),
+                  CI`NilContextId),
+      forall_bds_1 = mk_AS`AllOrExistsExpr(<ALL>, [binds_1], cond_1, CI`NilContextId),
+      forall_bds_2 = mk_AS`AllOrExistsExpr(<ALL>, [binds_2], cond_2, CI`NilContextId),
+      forall_bds_3 = mk_AS`AllOrExistsExpr(<ALL>, [binds_3], cond_3, CI`NilContextId),
+      po_expr_1 = BuildPO(contxt.expr,forall_bds_1),
+      new_po_1  = MakeProofObligation(po_expr_1, forall_bds_1, <Equality>, contxt.loc, cid),
+      po_expr_2 = BuildPO(contxt.expr,forall_bds_2),
+      new_po_2  = MakeProofObligation(po_expr_2, forall_bds_2, <Equality>, contxt.loc, cid),
+      po_expr_3 = BuildPO(contxt.expr,forall_bds_3),
+      new_po_3  = MakeProofObligation(po_expr_3, forall_bds_3, <Equality>, contxt.loc, cid)
+  in [new_po_1, new_po_2, new_po_3];
+
+VerifyOrderCond : AS`Name * AS`Type * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyOrderCond (name,type,cid,contxt) ==
+  let ---- get type name ------------------------
+      fnm = AddPrefix("ord_",name),
+      tnm = mk_AS`TypeName(name,CI`NilContextId),
+      -------------------------------------------
+      name_x = mk_AS`Name(["x"],CI`NilContextId),
+      name_y = mk_AS`Name(["y"],CI`NilContextId),
+      name_z = mk_AS`Name(["z"],CI`NilContextId),
+      pat_x = mk_AS`PatternName(name_x,nil,CI`NilContextId),
+      pat_y = mk_AS`PatternName(name_y,nil,CI`NilContextId),
+      pat_z = mk_AS`PatternName(name_z,nil,CI`NilContextId),
+      binds_1 = mk_AS`MultTypeBind([pat_x], tnm, CI`NilContextId),
+      binds_2 = mk_AS`MultTypeBind([pat_x,pat_y], tnm, CI`NilContextId),
+      binds_3 = mk_AS`MultTypeBind([pat_x,pat_y,pat_z], tnm, CI`NilContextId),
+      cond_1 = mk_AS`PrefixExpr(<NOT>,
+                                mk_AS`ApplyExpr(fnm, [name_x,name_x], CI`NilContextId),
+                                CI`NilContextId),
+      cond_2 = mk_AS`BinaryExpr(mk_AS`ApplyExpr(fnm, [name_x,name_y], CI`NilContextId),
+                                <IMPLY>,
+                                mk_AS`PrefixExpr(<NOT>,
+                                   mk_AS`ApplyExpr(fnm, [name_y,name_x], CI`NilContextId),
+                                   CI`NilContextId),
+                                CI`NilContextId),
+      cond_3 = mk_AS`BinaryExpr(
+                  mk_AS`BinaryExpr(mk_AS`ApplyExpr(fnm, [name_x,name_y], CI`NilContextId),
+                                   <AND>,
+                                   mk_AS`ApplyExpr(fnm, [name_y,name_z], CI`NilContextId),
+                                   CI`NilContextId),
+                  <IMPLY>,
+                  mk_AS`ApplyExpr(fnm, [name_x,name_z], CI`NilContextId),
+                  CI`NilContextId),
+      forall_bds_1 = mk_AS`AllOrExistsExpr(<ALL>, [binds_1], cond_1, CI`NilContextId),
+      forall_bds_2 = mk_AS`AllOrExistsExpr(<ALL>, [binds_2], cond_2, CI`NilContextId),
+      forall_bds_3 = mk_AS`AllOrExistsExpr(<ALL>, [binds_3], cond_3, CI`NilContextId),
+      po_expr_1 = BuildPO(contxt.expr,forall_bds_1),
+      new_po_1  = MakeProofObligation(po_expr_1, forall_bds_1, <Order>, contxt.loc, cid),
+      po_expr_2 = BuildPO(contxt.expr,forall_bds_2),
+      new_po_2  = MakeProofObligation(po_expr_2, forall_bds_2, <Order>, contxt.loc, cid),
+      po_expr_3 = BuildPO(contxt.expr,forall_bds_3),
+      new_po_3  = MakeProofObligation(po_expr_3, forall_bds_3, <Order>, contxt.loc, cid)
+  in [new_po_1, new_po_2, new_po_3];
+
 --------------------------------------------------------------------
 -- For VDMPP: Only checks at the first level, that is, fx. for a.x.y
 -- it is only checked if the object of a has an invariant, not if the

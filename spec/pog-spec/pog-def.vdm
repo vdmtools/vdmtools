@@ -300,7 +300,7 @@ operations
                   forall i in set inds pat.fields & is_AS`PatternName(pat.fields(i)))
               then []
               else GEN_PO`VerifyPatMatch(nm,type_bind,nil,fv union pog_pat.pid,contxt);
-        ----------------------------------------------------------
+            ----------------------------------------------------------
             po          = pog_pat.po ^ pog_expr.po ^ pog_match_cond
         in return po;
 
@@ -313,17 +313,52 @@ operations
     if Eq = nil
     then return []
     else
-      return []; -- TODO
+      let mk_AS`Equal(lhs,rhs,expr,cid) = Eq
+      in
+        def type_bind   = [mk_AS`MultTypeBind([lhs,rhs], mk_AS`TypeName(nm,CI`NilContextId), CI`NilContextId)];
+            expr_contxt = POGTP`Add2Context(type_bind,contxt);
+            ----------------------------------------------------------
+            pog_pat_l   = POG_PAT`pog_Pattern(lhs,contxt);
+            pog_pat_r   = POG_PAT`pog_Pattern(rhs,contxt);
+            pog_expr    = POG_EXPR`pog_Expr(expr,expr_contxt);
+            ----------------------------------------------------------
+            fv          = pog_pat_l.fv union pog_pat_r.fv union pog_expr.fv;
+            ----------------------------------------------------------
+            pog_match_cond =
+              GEN_PO`VerifyPatMatch(nm,type_bind,nil,fv union pog_pat_l.pid union pog_pat_l.pid,contxt);
+            ----------------------------------------------------------
+            po_eq       = GEN_PO`VerifyEqualityCond (nm,tp,cid,contxt);
+            ----------------------------------------------------------
+            po          = pog_pat_l.po ^ pog_pat_r.po ^ pog_expr.po ^ pog_match_cond ^ po_eq;
+        in return po;
 
 --(forall x:T & not ord_T(x, x)) and 
 --(forall x,y,z:T & ord_T(x, y) and ord_T(y, z) => ord_T(x, z))
+--(forall x,y:T & ord_T(x, y) => not ord_T(y, x))
 
   pog_Order : AS`Name * AS`Type * [AS`Order] * POGTP`Context ==> seq of POGTP`ProofObligation
   pog_Order (nm,tp,Ord,contxt) ==
     if Ord = nil
     then return []
     else
-      return []; -- TODO
+      let mk_AS`Order(lhs,rhs,expr,cid) = Ord
+      in
+        def type_bind   = [mk_AS`MultTypeBind([lhs,rhs], mk_AS`TypeName(nm,CI`NilContextId), CI`NilContextId)];
+            expr_contxt = POGTP`Add2Context(type_bind,contxt);
+            ----------------------------------------------------------
+            pog_pat_l   = POG_PAT`pog_Pattern(lhs,contxt);
+            pog_pat_r   = POG_PAT`pog_Pattern(rhs,contxt);
+            pog_expr    = POG_EXPR`pog_Expr(expr,expr_contxt);
+            ----------------------------------------------------------
+            fv          = pog_pat_l.fv union pog_pat_r.fv union pog_expr.fv;
+            ----------------------------------------------------------
+            pog_match_cond =
+              GEN_PO`VerifyPatMatch(nm,type_bind,nil,fv union pog_pat_l.pid union pog_pat_l.pid,contxt);
+            ----------------------------------------------------------
+            po_ord      = GEN_PO`VerifyOrderCond (nm,tp,cid,contxt);
+            ----------------------------------------------------------
+            po          = pog_pat_l.po ^ pog_pat_r.po ^ pog_expr.po ^ pog_match_cond ^ po_ord;
+        in return po;
 \end{vdm_al}
 
 \subsection{Traversing function definitions}
