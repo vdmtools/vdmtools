@@ -910,7 +910,11 @@ DISTARCH = Linux-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 
 STRIP = strip -g #otherwise all symbols are removed.
+ifeq ($(strip $(CPUTYPE)),x86_64)
+CXXLIB ?= $(shell ldconfig -p | grep libstdc++ | grep x86-64 | awk -F ' ' '{print $$4}')
+else
 CXXLIB ?= $(shell ldconfig -p | grep libstdc++ | awk -F ' ' '{print $$4}')
+endif
 
 READLINE_LIB += -lreadline
 
