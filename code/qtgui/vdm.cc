@@ -133,8 +133,7 @@ QString getApplicationPath( QApplication& app )
 // for Qt 3.1
 //  QString name( arg0 );
   QString name( app.argv()[0] );
-  if( name.length() > 0 )
-  {
+  if( name.length() > 0 ) {
     if( name.left(1) == "/" )
       return QFileInfo( name ).dirPath();
   }
@@ -218,19 +217,6 @@ void drawVersion( QPixmap * pmap )
 #endif // __linux__
 
   QString title (Qt2TB::GiveToolTitleI());
-  QString add;
-  if( title.endsWith("Academic") )
-  {
-    int len = title.length();
-    title = title.left(len - 9);
-    add = "Academic";
-  }
-  else if( title.endsWith("Lite") )
-  {
-    int len = title.length();
-    title = title.left(len - 5);
-    add = "Lite";
-  }
   QString titlever (title + " " + Qt2TB::GetVersionIdI());   
 
   QPainter paint;
@@ -246,45 +232,21 @@ void drawVersion( QPixmap * pmap )
   paint.drawText(x, y, right - 8, h, Qt::AlignRight, titlever);
 #endif // QTVER >= 4
 
-  if( !add.isEmpty() )
-  {
-    y += 20;
-    paint.setPen( Qt::darkGray ); 
-#if QTVER >= 4
-    paint.drawText(x + 14, y, right - 8, h, Qt::AlignLeft, add);
-#else
-    paint.drawText(x, y, right - 8, h, Qt::AlignRight, add);
-#endif // QTVER >= 4
-  }
-
   y += 20;
-  QString os;
 #ifdef __APPLE_CC__
-  os = "for Mac OS X";
+  QString os("for Mac OS X");
 #endif // __APPLE_CC__
 #ifdef __linux__
-#if QT_VERSION >= 0x040000
-  os = "for Linux 2.6/3";
-#else
-  os = "for Linux 2.4/2.6/3";
-#endif // QT_VERSION >= 0x040000
+  QString os("for Linux");
 #endif //__linux__
-#ifdef __SunOS__
-  os = "for Solaris 10";
-#endif // __SunOS__
 #ifdef _MSC_VER
-#if (_MSC_VER < 1500 )
-  os = "for Windows 2000/XP/Vista/7";
-#else
-#ifdef _WIN64
-  os = "for Windows 7 (64 bit)";
-#else
-  os = "for Windows XP/Vista/7";
-#endif // _WIN64
-#endif // (_MSC_VER < 1500 )
+  QString os("for Windows");
 #endif // _MSC_VER
+#ifdef __SunOS__
+  QString os("for Solaris 10");
+#endif // __SunOS__
 #ifdef __FreeBSD__
-  os = "for FreeBSD";
+  QString os("for FreeBSD");
 #endif // __SunOS__
 
   paint.setFont( f2 ); 
