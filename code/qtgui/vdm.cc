@@ -233,21 +233,25 @@ void drawVersion( QPixmap * pmap )
 #endif // QTVER >= 4
 
   y += 20;
+  QString os("for Unknown");
 #ifdef __APPLE_CC__
-  QString os("for Mac OS X");
+  os = "for Mac OS X";
 #endif // __APPLE_CC__
 #ifdef __linux__
-  QString os("for Linux");
+  os = "for Linux";
 #endif //__linux__
 #ifdef _MSC_VER
-  QString os("for Windows");
+  os = "for Windows";
 #endif // _MSC_VER
 #ifdef __SunOS__
-  QString os("for Solaris 10");
+  os = "for Solaris 10";
 #endif // __SunOS__
 #ifdef __FreeBSD__
-  QString os("for FreeBSD");
+  os = "for FreeBSD";
 #endif // __SunOS__
+#ifdef __CYGWIN__
+  os = "for Cygwin";
+#endif // __CYGWIN__
 
   paint.setFont( f2 ); 
   paint.setPen( Qt::darkBlue ); 
