@@ -42,22 +42,16 @@
 #include "cli_options.h"
 #include "qtInterface.h"
 
-#ifdef __linux__
+#if defined( __APPLE_CC__ )
+#include <unistd.h>
+#elif defined( __linux__ )
 #include <unistd.h>
 #include <stdlib.h>
-#endif // __linux__
-
-#ifdef __APPLE_CC__
-#include <unistd.h>
-#endif // __APPLE_CC__
-
-#ifdef _MSC_VER
+#elif defined( _MSC_VER _
 #include <windows.h>
-#endif // _MSC_VER
-
-#ifdef __CYGWIN__
+#elif deffined( __CYGWIN__ )
 #include <unistd.h>
-#endif // __CYGWIN__
+#endif
 
 #if __cplusplus >= 201103L
 #if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
@@ -75,18 +69,17 @@ static bool quiting = false;
  
 void postGUIEvent(QEvent* ev)
 {
-  if (quiting) return;
-
-  if (mainw != NULL)
-  {
-    mainw->setComplete(false);
-    QApplication::postEvent(mainw, ev);
+  if (!quiting) {
+    if (mainw != NULL) {
+      mainw->setComplete(false);
+      QApplication::postEvent(mainw, ev);
 #if QT_VERSION >= 0x040000
-    QApplication::processEvents();
+      QApplication::processEvents();
 #else
-    mainw->wakeUp();
+      mainw->wakeUp();
 #endif // QT_VERSION >= 0x040000
-    mainw->waitComplete();
+      mainw->waitComplete();
+    }
   }
 }
 
@@ -95,8 +88,9 @@ static int Log_Event(const wchar_t * msg, int n)
   wstring st(msg, n); 
   QString qstr (Qt2TB::wstring2qstring(st));
 #ifdef VDMPP
-  if (mainw->roseIsActive())
+  if (mainw->roseIsActive()) {
     postGUIEvent(new RoseDiffEvent(qstr));
+  }
   else
 #endif // VDMPP
     postGUIEvent(new LogWriteEvent(qstr));
@@ -116,8 +110,9 @@ static int ELog_Event (const wchar_t* msg, int n)
   wstring st (msg, n); 
   QString qstr (Qt2TB::wstring2qstring(st));
 #ifdef VDMPP
-  if (mainw->roseIsAlive())
+  if (mainw->roseIsAlive()) {
     postGUIEvent(new RoseErrorEvent(qstr));
+  }
   else
 #endif // VDMPP
     postGUIEvent(new LogWriteEvent(qstr));
@@ -134,8 +129,9 @@ QString getApplicationPath( QApplication& app )
 //  QString name( arg0 );
   QString name( app.argv()[0] );
   if( name.length() > 0 ) {
-    if( name.left(1) == "/" )
+    if( name.left(1) == "/" ) {
       return QFileInfo( name ).dirPath();
+    }
   }
   char* cwd = getcwd( NULL, 0 );   
   if( cwd == NULL ) return QString( "./" );
@@ -158,8 +154,7 @@ void setTranslation( QApplication& app )
   QString langfile (path + DIRSEP + "vdm_" + lang + ".qm");
   QFileInfo fi( langfile );
 
-  if( !fi.exists() )
-  {
+  if( !fi.exists() ) {
     lang = QTLOCALE::getAltLang( lang );
     if( lang == "" ) return;
     langfile = path + DIRSEP + "vdm_" + lang + ".qm";
@@ -233,25 +228,21 @@ void drawVersion( QPixmap * pmap )
 #endif // QTVER >= 4
 
   y += 20;
+#if defined( __APPLE_CC__ )
+  QString os("for Mac OS X");
+#elif defined( __linux__ )
+  QString os("for Linux");
+#elif defined( _MSC_VER )
+  QString os("for Windows");
+#elif defined( __SunOS__ )
+  QString os("for Solaris");
+#elif defined( __FreeBSD__ )
+  QString os("for FreeBSD");
+#elif defined( __CYGWIN__ )
+  QString os("for Cygwin");
+#else
   QString os("for Unknown");
-#ifdef __APPLE_CC__
-  os = "for Mac OS X";
-#endif // __APPLE_CC__
-#ifdef __linux__
-  os = "for Linux";
-#endif //__linux__
-#ifdef _MSC_VER
-  os = "for Windows";
-#endif // _MSC_VER
-#ifdef __SunOS__
-  os = "for Solaris 10";
-#endif // __SunOS__
-#ifdef __FreeBSD__
-  os = "for FreeBSD";
-#endif // __SunOS__
-#ifdef __CYGWIN__
-  os = "for Cygwin";
-#endif // __CYGWIN__
+#endif
 
   paint.setFont( f2 ); 
   paint.setPen( Qt::darkBlue ); 

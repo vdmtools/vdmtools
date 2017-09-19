@@ -469,10 +469,14 @@ QTVER = -DQTVER=4
 endif
 endif
 
+ifeq ($(strip $(QTVERSION)),3)
 ifeq ($(strip $(OSTYPE)),Darwin)
 QTFLAGS = -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QTVER)
 else
 QTFLAGS = -DQT_THREAD_SUPPORT $(QTVER)
+endif
+else
+QTFLAGS = $(QTVER)
 endif
 
 ifdef QT_IMAGE_FILE
