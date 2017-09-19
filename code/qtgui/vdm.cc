@@ -47,9 +47,9 @@
 #elif defined( __linux__ )
 #include <unistd.h>
 #include <stdlib.h>
-#elif defined( _MSC_VER _
+#elif defined( _MSC_VER _ )
 #include <windows.h>
-#elif deffined( __CYGWIN__ )
+#elif defined( __CYGWIN__ )
 #include <unistd.h>
 #endif
 
