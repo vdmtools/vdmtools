@@ -354,6 +354,7 @@ QAction* mainW::addAction(const actionSpec & as, QMENU* menu, QToolBar* toolbar)
 #if QT_VERSION >= 0x040000
   if (!iconSet.isNull()) {
     newAction->setIcon(iconSet);
+    newAction->setIconVisibleInMenu(true);
   }
 #ifdef __APPLE_CC__
   QString str (as.text);
