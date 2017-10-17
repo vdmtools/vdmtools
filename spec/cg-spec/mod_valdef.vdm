@@ -582,60 +582,58 @@ in
       local_s : set of AS`Name := {};
       
   for mk_AS`ValueDef(pat, -, val, -, -, -) in vd_l do
-   (
-    def vtp = CGAUX`FindType(val);
+   (def vtp = CGAUX`FindType(val);
     in
-      if is_AS`PatternName(pat) and not pat.nm = nil -- and InsertLoc(pat) -- 20110602 test
+      if is_AS`PatternName(pat)
       then
-        def mk_AS`PatternName(nm,-,-) = pat;
-            ptp = CGAUX`FindType(pat)
-        in
-         (if CGAUX`FindScope(nm) >= 0
-          then -- let x = ... (the name of x is already defined)
-            def mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, "tmpVal", vtp);
-                nm_v = BC`Rename(CGAUX`InsertName(nm)); -- must be after CGExprExcl when name already defined
-                stmts = DS`GenConstDeclInit(ptp, nm_v, pat_v);
-            in rb_l := rb_l ^ pat_stmt ^ stmts
-          else -- let x = ... (the name of x is't already defined)
-            def id = BC`Rename(CGAUX`InsertName(nm)); -- must be before CGExprExcl
-                mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, id.id, ptp);
-            --    nm_v = BC`Rename(nm);
-            --    stmts = DS`GenConstDeclInit(ptp, nm_v, pat_v);
-            --in rb_l := rb_l ^ pat_stmt ^ stmts;
-                vt = mk_CGMAIN`VT(pat_v, vtp);
-                decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
-                mk_(pm, -) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false);
-            in rb_l := rb_l ^ pat_stmt ^ CGEXPR`MergeStmts( decls, pm );
-          local_s := local_s union {nm};
-          if CGAUX`PossibleFnType(ptp)
-          then FD`InsertLocFct(nm))
-      elseif is_AS`PatternName(pat) and pat.nm = nil
-      then
-        -- This let ensures that if this is a call to another
-        -- constructor from within a constructor, then the result is
-        -- not cast (since it is just a call to "super")
-       def mk_(expr, stmts) = CGEXPR`CGExprExcl(val, "tmpVal", nil)
-       in
-         cases true:
+        if pat.nm <> nil
+        then
+          def mk_AS`PatternName(nm,-,-) = pat;
+              ptp = CGAUX`FindType(pat)
+          in
+           (if CGAUX`FindScope(nm) >= 0
+            then -- let x = ... (the name of x is already defined)
+              def mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, "tmpVal", vtp);
+                  nm_v = BC`Rename(CGAUX`InsertName(nm)); -- must be after CGExprExcl when name already defined
+                  stmts = DS`GenConstDeclInit(ptp, nm_v, pat_v);
+              in rb_l := rb_l ^ pat_stmt ^ stmts
+            else -- let x = ... (the name of x is't already defined)
+              def id = BC`Rename(CGAUX`InsertName(nm)); -- must be before CGExprExcl
+                  mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, id.id, ptp);
+                  vt = mk_CGMAIN`VT(pat_v, vtp);
+                  decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
+                  mk_(pm, -) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false);
+              in rb_l := rb_l ^ pat_stmt ^ CGEXPR`MergeStmts( decls, pm );
+            local_s := local_s union {nm};
+            if CGAUX`PossibleFnType(ptp)
+            then FD`InsertLocFct(nm)
+           )
+        else -- pat.nm = nil
+          -- This let ensures that if this is a call to another
+          -- constructor from within a constructor, then the result is
+          -- not cast (since it is just a call to "super")
+          def mk_(expr, stmts) = CGEXPR`CGExprExcl(val, "tmpVal", nil)
+          in
+            cases true:
 #ifdef VDMPP
-           (is_AS`ApplyExpr(val)) ->  if CPP`isCPP()
-                                      then rb_l := rb_l ^ stmts ^ [BC`GenExpressionStmt(expr)]
-                                      else
-                                        let e = CGAUX`StripBracketedAndCastExpr(expr)
-                                        in rb_l := rb_l ^ stmts ^ [BC`GenExpressionStmt(e)],
+              (is_AS`ApplyExpr(val)) ->  if CPP`isCPP()
+                                         then rb_l := rb_l ^ stmts ^ [BC`GenExpressionStmt(expr)]
+                                         else
+                                           let e = CGAUX`StripBracketedAndCastExpr(expr)
+                                           in rb_l := rb_l ^ stmts ^ [BC`GenExpressionStmt(e)],
 #endif VDMPP
-           (is_AS`BoolLit(val)),
-           (is_AS`NilLit(val)),
-           (is_AS`RealLit(val)),
-           (is_AS`NumLit(val)),
-           (is_AS`CharLit(val)),
-           (is_AS`TextLit(val)),
-           (is_AS`QuoteLit(val)),
-           (is_AS`Name(val))      -> skip,
-           others                 -> def tmpVal = BC`GiveName("tmpVal");
-                                     in rb_l := rb_l ^ stmts ^ DS`GenConstDeclInit(vtp, tmpVal, expr)
-         end
-      else
+              (is_AS`BoolLit(val)),
+              (is_AS`NilLit(val)),
+              (is_AS`RealLit(val)),
+              (is_AS`NumLit(val)),
+              (is_AS`CharLit(val)),
+              (is_AS`TextLit(val)),
+              (is_AS`QuoteLit(val)),
+              (is_AS`Name(val))      -> skip,
+              others                 -> def tmpVal = BC`GiveName("tmpVal");
+                                        in rb_l := rb_l ^ stmts ^ DS`GenConstDeclInit(vtp, tmpVal, expr)
+            end
+      else -- not is_AS`PatternName(pat)
         def mk_(expr, stmts) = CGEXPR`CGExprExcl(val, "tmpVal", vtp);
             decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
             vt = mk_CGMAIN`VT(expr, vtp);
@@ -650,8 +648,8 @@ in
   if declSuc
   then rb_l := [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))] ^ rb_l;
   PushLoc(local_s);
-  return rb_l);
-
+  return rb_l;
+ );
 operations
 
 --InsertLoc: AS`PatternName ==> bool

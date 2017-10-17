@@ -627,87 +627,87 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
   for (size_t idx = 1; idx <= len_vd_l; idx++) {
     const TYPE_AS_ValueDef & vd (vd_l[idx]);
     const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
-//    const Generic & pattp (vd.GetField(pos_AS_ValueDef_tp));
     const TYPE_AS_Expr & val (vd.GetRecord(pos_AS_ValueDef_val));
 
     TYPE_REP_TypeRep vtp (FindType(val));
 
-    //if ( pat.Is(TAG_TYPE_AS_PatternName) && !pat.GetField(pos_AS_PatternName_nm).IsNil() && InsertLoc( pat ))
-    if ( pat.Is(TAG_TYPE_AS_PatternName) && !pat.GetField(pos_AS_PatternName_nm).IsNil()) {
-      // let x = ... (the name of x is't already defined
-      const TYPE_AS_Name & nm (pat.GetRecord(pos_AS_PatternName_nm) );
-      Generic ptp (FindType(pat));
-
-      if (FindScope(nm) >= 0) {
-        // let x = ... (the name of x is already defined
-        Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), vtp));
-        const TYPE_CPP_Expr & pat_v (cgee.GetRecord(1));
-        const SEQ<TYPE_CPP_Stmt> & pat_stmt (cgee.GetSequence(2));
-
-        TYPE_CPP_Name nm_v (vdm_BC_Rename(InsertName_CGAUX(nm)));
-
-        rb_l.ImpConc(pat_stmt);
-        rb_l.ImpConc(GenConstDeclInit(ptp, nm_v, pat_v));
-      }
-      else {
+    if ( pat.Is(TAG_TYPE_AS_PatternName) ) {
+      if (!pat.GetField(pos_AS_PatternName_nm).IsNil()) {
         // let x = ... (the name of x is't already defined
-        TYPE_CPP_Identifier id (vdm_BC_Rename(InsertName_CGAUX(nm)));
+        const TYPE_AS_Name & nm (pat.GetRecord(pos_AS_PatternName_nm) );
+        Generic ptp (FindType(pat));
 
-        Tuple cgee (CGExprExcl(val, id.GetSequence(pos_CPP_Identifier_id), ptp));
-        const TYPE_CPP_Expr & pat_v (cgee.GetRecord(1));
-        const SEQ<TYPE_CPP_Stmt> & pat_stmt (cgee.GetSequence(2));
+        if (FindScope(nm) >= 0) {
+          // let x = ... (the name of x is already defined
+          Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), vtp));
+          const TYPE_CPP_Expr & pat_v (cgee.GetRecord(1));
+          const SEQ<TYPE_CPP_Stmt> & pat_stmt (cgee.GetSequence(2));
 
-        rb_l.ImpConc(pat_stmt);
-        TYPE_CGMAIN_VT vt (mk_CG_VT(pat_v, vtp));
-        SEQ<TYPE_AS_Stmt> decls (DeclarePatVars(pat)); // must be before CGPatternMatchExcl
-        Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ, Map(), Nil(), false));
-        const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
-        bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
-        rb_l.ImpConc(MergeStmts( decls, pm )); // experimental
+          TYPE_CPP_Name nm_v (vdm_BC_Rename(InsertName_CGAUX(nm)));
+
+          rb_l.ImpConc(pat_stmt);
+          rb_l.ImpConc(GenConstDeclInit(ptp, nm_v, pat_v));
+        }
+        else {
+          // let x = ... (the name of x is't already defined
+          TYPE_CPP_Identifier id (vdm_BC_Rename(InsertName_CGAUX(nm)));
+
+          Tuple cgee (CGExprExcl(val, id.GetSequence(pos_CPP_Identifier_id), ptp));
+          const TYPE_CPP_Expr & pat_v (cgee.GetRecord(1));
+          const SEQ<TYPE_CPP_Stmt> & pat_stmt (cgee.GetSequence(2));
+
+          rb_l.ImpConc(pat_stmt);
+          TYPE_CGMAIN_VT vt (mk_CG_VT(pat_v, vtp));
+          SEQ<TYPE_AS_Stmt> decls (DeclarePatVars(pat)); // must be before CGPatternMatchExcl
+          Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ, Map(), Nil(), false));
+          const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
+          bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
+          rb_l.ImpConc(MergeStmts( decls, pm )); // experimental
+        }
+        local_s.Insert(nm);
+        if (PossibleFnType(ptp)) {
+          InsertLocFct(nm);
+        }
       }
-      local_s.Insert(nm);
-      if (PossibleFnType(ptp)) {
-        InsertLocFct(nm);
-      }
-    }
-    else if (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil()) {
-      Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), nil));
-      const TYPE_CPP_Expr & expr (cgee.GetRecord(1));
-      const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
+      else { // pat.GetField(pos_AS_PatternName_nm).IsNil())
+        Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), nil));
+        const TYPE_CPP_Expr & expr (cgee.GetRecord(1));
+        const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
 
-      switch (val.GetTag()) {
+        switch (val.GetTag()) {
 #ifdef VDMPP
-        case TAG_TYPE_AS_ApplyExpr: {
-          rb_l.ImpConc(stmts);
-          if (vdm_CPP_isCPP()) {
-            rb_l.ImpAppend(vdm_BC_GenExpressionStmt(expr));
+          case TAG_TYPE_AS_ApplyExpr: {
+            rb_l.ImpConc(stmts);
+            if (vdm_CPP_isCPP()) {
+              rb_l.ImpAppend(vdm_BC_GenExpressionStmt(expr));
+            }
+            else {
+              TYPE_CPP_Expr e (StripBracketedAndCastExpr(expr));
+              rb_l.ImpAppend(vdm_BC_GenExpressionStmt(e));
+            }
+            break;
           }
-          else {
-            TYPE_CPP_Expr e (StripBracketedAndCastExpr(expr));
-            rb_l.ImpAppend(vdm_BC_GenExpressionStmt(e));
-          }
-          break;
-        }
 #endif //VDMPP
-        case TAG_TYPE_AS_BoolLit:
-        case TAG_TYPE_AS_NilLit:
-        case TAG_TYPE_AS_RealLit:
-        case TAG_TYPE_AS_NumLit:
-        case TAG_TYPE_AS_CharLit:
-        case TAG_TYPE_AS_TextLit:
-        case TAG_TYPE_AS_QuoteLit:
-        case TAG_TYPE_AS_Name: {
-          break;
-        }
-        default: {
-          TYPE_CPP_Name tmpVal (vdm_BC_GiveName (ASTAUX::MkId(L"tmpVal")));
-          rb_l.ImpConc(stmts);
-          rb_l.ImpConc(GenConstDeclInit(vtp, tmpVal, expr));
-          break;
+          case TAG_TYPE_AS_BoolLit:
+          case TAG_TYPE_AS_NilLit:
+          case TAG_TYPE_AS_RealLit:
+          case TAG_TYPE_AS_NumLit:
+          case TAG_TYPE_AS_CharLit:
+          case TAG_TYPE_AS_TextLit:
+          case TAG_TYPE_AS_QuoteLit:
+          case TAG_TYPE_AS_Name: {
+            break;
+          }
+          default: {
+            TYPE_CPP_Name tmpVal (vdm_BC_GiveName (ASTAUX::MkId(L"tmpVal")));
+            rb_l.ImpConc(stmts);
+            rb_l.ImpConc(GenConstDeclInit(vtp, tmpVal, expr));
+            break;
+          }
         }
       }
     }
-    else {
+    else { // !pat.Is(TAG_TYPE_AS_PatternName)
       Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), vtp));
       const TYPE_CPP_Expr & expr (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
