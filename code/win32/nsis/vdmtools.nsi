@@ -10,7 +10,7 @@
 ;!define TOOLNAME "${TOOLTYPE} Toolbox"
 !define LONGNAME "${TOOLNAME} v${VERSION}"
 !define PACKAGE "The ${LONGNAME}"
-!define APPDIR "./distdir"
+;!define APPDIR "./distdir"
 !define KYUSHU_UNIVERSITY "Kyushu University"
 !define VDM_URL "http://fmvdm.org/"
 !define GROUPNAME "VDMTools"

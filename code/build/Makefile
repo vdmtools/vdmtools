@@ -4109,7 +4109,7 @@ inst%:  inst-%.files print_name_vers.exe $(VDMMANIFEST)
 	VERSION=$(GETVERSION); \
 	NAME=$(SETUPNAME); \
 	echo Creating $$NAME; \
-	$(MAKENSIS) /V4 /DVERSION=$$VERSION /DVERSIONL=0.0.0.0 /DSETUPNAME=$$NAME $(NSISOPTIONS-$*) $(WIN64) $(NSISSCR)
+	$(MAKENSIS) /V4 /DAPPDIR=$(DISTDIR) /DVERSION=$$VERSION /DVERSIONL=0.0.0.0 /DSETUPNAME=$$NAME $(NSISOPTIONS-$*) $(WIN64) $(NSISSCR)
 else # must be WISE
 inst%:  setup.wse instid-%.wse inst-%.files \
 	print_name_vers.exe $(VDMMANIFEST)
