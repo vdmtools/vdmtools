@@ -4835,7 +4835,7 @@ GenSeqMapDynOvwr( mk_CGMAIN`VT( seqmap_v, seqmapType), mk_CGMAIN`VT( modmap_v, m
 #ifdef VDMPP
     if CPP`isJAVA()
     then
-      def rerr = CGAUX`RunTime("Wrong arguments for '++'")
+      def rerr = BC`GenBlock([CGAUX`RunTime("Wrong arguments for '++'")])
       in
         cases seqmapType:
           mk_REP`UnionTypeRep({tp}) -> if is_REP`SeqTypeRep(tp)
@@ -4850,7 +4850,7 @@ GenSeqMapDynOvwr( mk_CGMAIN`VT( seqmap_v, seqmapType), mk_CGMAIN`VT( modmap_v, m
         end
     else
 #endif VDMPP
-      def rerr = CGAUX`RunTime("A map or sequence was expected in sequence or map override expression" );
+      def rerr = BC`GenBlock([CGAUX`RunTime("A map or sequence was expected in sequence or map override expression" )]);
       in
         cases seqmapType:
           mk_REP`UnionTypeRep({tp}) -> if is_REP`SeqTypeRep(tp)

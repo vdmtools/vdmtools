@@ -712,7 +712,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
       const TYPE_CPP_Expr & expr (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
 
-      TYPE_CGMAIN_VT vt (mk_CG_VT(expr, vtp));
+      //TYPE_CGMAIN_VT vt (mk_CG_VT(expr, vtp));
+      TYPE_CGMAIN_VT vt (mk_CG_VT(expr, RemoveInvType(vtp)));
 
       SEQ<TYPE_AS_Stmt> decls (DeclarePatVars(pat)); // must be before CGPatternMatchExcl
 

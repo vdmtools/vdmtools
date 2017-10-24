@@ -5162,11 +5162,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqModifyMapOverrideExpr (const TYPE_AS_SeqModifyMap
       Tuple smcgee (CGExprExcl(mapexp, ASTAUX::MkId(L"tmpmap"), modmapType));
       rb.ImpConc(smcgee.GetSequence(2));
       rb.ImpConc (GenDeclInit_DS (modmapType, tmpmap_v, smcgee.GetRecord(1)));
-      rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (GenIsMap (tmpmap_v)), RunTime (L"A map was expected"), nil));
+      rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (GenIsMap (tmpmap_v)),
+                              vdm_BC_GenBlock(mk_sequence(RunTime (L"A map was expected"))), nil));
       rb.ImpConc (GenDeclInit_DS (tmpmapType, modmap_v, GenCastMap(tmpmap_v)));
     }
   }
-  TYPE_CPP_Stmt rre (RunTime(L"A map or sequence was expected in sequence or map override"));
+  TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"A map or sequence was expected in sequence or map override expression"))));
 
   if (IsPosMapType(seqmapType1) && !IsPosSeqType(seqmapType1))
   {
