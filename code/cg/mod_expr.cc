@@ -7206,7 +7206,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapDistrMergeInner(const TYPE_CPP_Expr & e,
                                                 const TYPE_CPP_Expr & rdmmap_v,
                                                 const TYPE_REP_TypeRep & maptype)
 {
-  TYPE_CPP_Stmt rt (RunTime(L"Duplicate entries for \'merge\' had different values"));
+  TYPE_CPP_Stmt rt (vdm_BC_GenBlock(mk_sequence(RunTime(L"Duplicate entries for \'merge\' had different values"))));
 
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
@@ -7268,7 +7268,7 @@ Tuple vdmcg::GenDynCheckOnSetsValues(const TYPE_CPP_Expr & tmp_v,
   }
   else {
     TYPE_CPP_Expr cond (vdm_BC_GenNot(GenIsMap(e_v)));
-    TYPE_CPP_Stmt rt (RunTime(L"A map was expected"));
+    TYPE_CPP_Stmt rt (vdm_BC_GenBlock(mk_sequence(RunTime(L"A map was expected"))));
     TYPE_CPP_Stmt ifs (vdm_BC_GenIfStmt(cond, rt, nil));
     SEQ<TYPE_CPP_Stmt> decl;
 #ifdef VDMPP
@@ -7811,7 +7811,8 @@ Generic vdmcg::CGNumBinaryExpr(const TYPE_AS_Expr & le, int opr, const TYPE_AS_E
           cond = vdm_BC_GenNot(GenIsInt(v2_v));
         }
 
-        rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, RunTime (L"A integer was expected"), nil));
+        rb_l.ImpAppend(vdm_BC_GenIfStmt(cond,
+                        vdm_BC_GenBlock(mk_sequence(RunTime (L"A integer was expected"))), nil));
       }
       break;
     }
@@ -8509,19 +8510,17 @@ Generic vdmcg::CGIterateExpr(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
       cond = (vdm_BC_GenLogOr(GenIsReal(var1), GenIsReal(var2)));
 
     TYPE_CPP_Stmt th (GenExp(vt1, vt2, resVT));
-    TYPE_CPP_Stmt altn (RunTime(L"Wrong arguments for '**'"));
+    TYPE_CPP_Stmt altn (vdm_BC_GenBlock(mk_sequence(RunTime(L"Wrong arguments for '**'"))));
     TYPE_CPP_Stmt stmt (vdm_BC_GenIfStmt(cond, th, altn));
 
-    if (type1.Is(TAG_TYPE_REP_UnionTypeRep))
-    {
+    if (type1.Is(TAG_TYPE_REP_UnionTypeRep)) {
       SET<TYPE_REP_TypeRep> tp_s (type1.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         exists = IsMapType(tp);
-
-      if (exists)
-      {
+      }
+      if (exists) {
         th = vdm_BC_GenBlock(GenMapIteration(vt1, vt2, resVT));
         stmt = vdm_BC_GenIfStmt(GenIsMap(var1), th, stmt);
       }
@@ -8552,8 +8551,7 @@ Generic vdmcg::CGNewExpr(const TYPE_AS_NewExpr & ns, const TYPE_CGMAIN_VT & vt)
   Sequence l_tmpVarTps;
 
   size_t len_exprs = exprs.Length();
-  for(size_t idx = 1; idx <= len_exprs; idx++)
-  {
+  for(size_t idx = 1; idx <= len_exprs; idx++) {
     l_tmpVars.ImpAppend(vdm_BC_GiveName(ASTAUX::MkId(L"arg")));
     l_tmpVarTps.ImpAppend(FindType(exprs[idx]));
   }
@@ -8568,11 +8566,9 @@ Generic vdmcg::CGNewExpr(const TYPE_AS_NewExpr & ns, const TYPE_CGMAIN_VT & vt)
   Sequence l_prepCode;
   SEQ<TYPE_CPP_Expr> l_argL;
   size_t len_l_cppL = l_cppL.Length();
-  for(size_t j = 1; j <= len_l_cppL; j++)
-  {
+  for(size_t j = 1; j <= len_l_cppL; j++) {
     const Generic & thisVal (l_cppL[j]);
-    if (thisVal.IsSequence())
-    {
+    if (thisVal.IsSequence()) {
       // seq of CPP`Stmt
       SEQ<TYPE_CPP_Stmt> thisDecl;
       thisDecl.ImpConc(GenDecl_DS(l_tmpVarTps[j], l_tmpVars[j], Nil()));
@@ -8581,9 +8577,7 @@ Generic vdmcg::CGNewExpr(const TYPE_AS_NewExpr & ns, const TYPE_CGMAIN_VT & vt)
       l_prepCode.ImpAppend(thisDecl);
       l_argL.ImpAppend(l_tmpVars[j]);
     }
-    else
-    {
-      // CPP`Expr
+    else { // CPP`Expr
       l_argL.ImpAppend(thisVal);
     }
   }
@@ -8597,8 +8591,7 @@ Generic vdmcg::CGNewExpr(const TYPE_AS_NewExpr & ns, const TYPE_CGMAIN_VT & vt)
   if (l_prepCode.IsEmpty()) {
     return constr;
   }
-  else
-  {
+  else {
     TYPE_CPP_Stmt constAsgn (vdm_BC_GenAsgnStmt(resVar, constr));
     result.ImpAppend(constAsgn);
     return result;
@@ -8610,13 +8603,11 @@ Generic vdmcg::CGNewExpr(const TYPE_AS_NewExpr & ns, const TYPE_CGMAIN_VT & vt)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenSelfExpr(const TYPE_CGMAIN_VT & vt)
 {
-  if (vdm_CPP_isCPP())
-  {
+  if (vdm_CPP_isCPP()) {
     TYPE_CPP_Identifier self (vdm_BC_GenIdentifier(ASTAUX::MkId(L"Self")));
     return vdm_BC_GenFctCall(self, SEQ<TYPE_CPP_Expr>());
   }
-  else
-  { // java
+  else { // java
     return GenThis();
   }
 }

@@ -6794,7 +6794,7 @@ GenMapDistrMergeInner( e, rdmmap_v, maptype ) ==
         rb := rb ^ DS`GenIterSet(mk_CGMAIN`VT( eqDom_v, mk_REP`SetTypeRep( mdType ) ), allDupEq_v,
                                  mk_CGMAIN`VT( d_v, mdType ), inner );
         rb := rb ^ [ BC`GenIfStmt( BC`GenNot( allDupEq_v ),
-                                     CGAUX`RunTime( "Duplicate entries for 'merge' had different values" ),
+                  BC`GenBlock([CGAUX`RunTime( "Duplicate entries for 'merge' had different values" )]),
                                      nil )];
         rb := rb ^ [ DS`GenMapOverride( rdmmap_v, e ) ];
         return rb)
@@ -6802,7 +6802,7 @@ GenMapDistrMergeInner( e, rdmmap_v, maptype ) ==
   else
 #endif VDMPP
     let compat = BC`GenFctCallObjMemAcc(rdmmap_v, "IsCompatible", [e]),
-        rt = CGAUX`RunTime("Duplicate entries for 'merge' had different values")
+        rt = BC`GenBlock([CGAUX`RunTime("Duplicate entries for 'merge' had different values")])
     in return [BC`GenIfStmt(BC`GenNot(compat), rt, nil), DS`GenMapOverride(rdmmap_v, e)];
 \end{vdm_al}
 
@@ -6824,7 +6824,8 @@ GenDynCheckOnSetsValues( tmp_v, e_v, type, maptype ) ==
     else
 #endif VDMPP
       decl := DS`GenDecl( maptype, tmp_v, BC`GenAsgnInit( e_v ) );
-    return mk_( [ BC`GenIfStmt( BC`GenNot( DS`GenIsMap( e_v ) ), CGAUX`RunTime("A map was expected"), nil) ] ^
+    return mk_( [ BC`GenIfStmt( BC`GenNot( DS`GenIsMap( e_v ) ),
+                                BC`GenBlock([CGAUX`RunTime("A map was expected")]), nil) ] ^
                                 decl, tmp_v );
    );
 \end{vdm_al}
@@ -7314,7 +7315,8 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
                       elseif not CGAUX`IsNumType(type1)
                       then cond := BC`GenNot(DS`GenIsInt(v1_v))
                       else cond := BC`GenNot(DS`GenIsInt(v2_v));
-                      rb_l := rb_l ^ [BC`GenIfStmt(cond, CGAUX`RunTime("A integer was expected"), nil)];
+                      rb_l := rb_l ^ [BC`GenIfStmt(cond,
+                                  BC`GenBlock([CGAUX`RunTime("A integer was expected")]), nil)];
                       ),
           others     -> error
         end;
@@ -7779,7 +7781,7 @@ CGIterateExpr(le, re, resVT) ==
 #endif VDMPP
            cond := BC`GenLogOr(DS`GenIsReal(var1), DS`GenIsReal(var2)); --!!!!! skulle være GenLogAnd
          def th = DS`GenExp(vt1, vt2, resVT);
-             altn = CGAUX`RunTime("Wrong arguments for '**'")
+             altn = BC`GenBlock([CGAUX`RunTime("Wrong arguments for '**'")])
          in stmt := BC`GenIfStmt(cond, th, altn);
          if is_REP`UnionTypeRep(type1)
          then
