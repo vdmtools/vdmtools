@@ -5185,6 +5185,29 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
           def {e} = posRecTypes;
               getfield = DS`GenRecGetFieldNm (tmpRec, e, fsnm);
           in return [BC`GenAsgnStmt(resVar_v, getfield)]
+--
+        else if CGAUX`IsCompositeType(tmpRecType)
+        then
+         (dcl tmpRec' : CPP`Expr := tmpRec,
+              rb_l : seq of CPP`Stmt := [],
+              case_l : seq of (CPP`CaseStmt | CPP`DefaultStmt) := [];
+          if not is_CPP`Identifier(tmpRec)
+          then
+            def temp : CPP`Name = BC`GenIdentifier("tempRec");
+            in
+             (rb_l :=  DS`GenRecordDecl(nil, temp, BC`GenObjectInit([tmpRec]));
+              tmpRec' := temp);
+
+          for all ctr in set posRecTypes do
+            def getfield = DS`GenRecGetFieldNm (tmpRec', ctr, fsnm);
+                asgn = BC`GenAsgnStmt (resVar_v, getfield);
+            in case_l := case_l ^ [BC`GenCaseStmt(BC`Rename(ctr.nm),
+                                                  BC`GenBlock([asgn, BC`GenBreakStmt(nil)]))];
+          case_l := case_l ^ [BC`GenDefaultStmt(BC`GenBlock(alt ^ [BC`GenBreakStmt(nil)]))];
+          rb_l := rb_l ^ [BC`GenSwitchStmt(DS`GenGetTag(tmpRec'), case_l)];
+          return rb_l;
+         )
+--
         else
           for all t in set posRecTypes do
            (dcl castrec : CPP`Expr := tmpRec;

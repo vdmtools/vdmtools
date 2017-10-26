@@ -5555,35 +5555,37 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGFieldSelectExpr (const TYPE_AS_FieldSelectExpr & rc1
   // let x : T | C = new C()
   // in x.m(3) <-- can't generate correct code
   // 
-  if (!posTypes.IsEmpty())
+  if (!posTypes.IsEmpty()) {
     rb.ImpConc(FindFieldSelApply (nm, vt, mk_CG_VT (tmpRec_v, tmpRecType)));
+  }
 
 #ifdef VDMPP
-    if (IsUnionFunctionType (ti)) {
-      if (vdm_CPP_isCPP()) {
-        if (!ti.Is(TAG_TYPE_REP_OverTypeRep))
-          rb.ImpAppend (vdm_BC_GenIfStmt (GenIsClass (tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
-      }
-      else { // java
-        SET<TYPE_REP_ObjRefTypeRep> ti_s;
-        SET<TYPE_AS_Name> nm_s;
-        SET<TYPE_REP_TypeRep> t_s (tmpRecType.GetSet(1));
-        Generic g;
-        for (bool bb = t_s.First(g); bb; bb = t_s.Next(g)) {
-          TYPE_REP_TypeRep ti2 (g);
-          if (ti2.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
-            TYPE_REP_ObjRefTypeRep ortr (ti2);
-            ti_s.Insert(ortr);
-            ortr = UnQClassType(ortr);
-            TYPE_AS_Name onm (ortr.get_nm());
-            if ( !GetStatSem().LookUpOpOrFnName(onm, nm).IsNil() ) {
-              nm_s.Insert(onm);
-            }
-          }
-        }
-        rb.ImpAppend(vdm_BC_GenIfStmt (GenIsClasses (nm_s,tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
+  if (IsUnionFunctionType (ti)) {
+    if (vdm_CPP_isCPP()) {
+      if (!ti.Is(TAG_TYPE_REP_OverTypeRep)) {
+        rb.ImpAppend (vdm_BC_GenIfStmt (GenIsClass (tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
       }
     }
+    else { // java
+      SET<TYPE_REP_ObjRefTypeRep> ti_s;
+      SET<TYPE_AS_Name> nm_s;
+      SET<TYPE_REP_TypeRep> t_s (tmpRecType.GetSet(1));
+      Generic g;
+      for (bool bb = t_s.First(g); bb; bb = t_s.Next(g)) {
+        TYPE_REP_TypeRep ti2 (g);
+        if (ti2.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
+          TYPE_REP_ObjRefTypeRep ortr (ti2);
+          ti_s.Insert(ortr);
+          ortr = UnQClassType(ortr);
+          TYPE_AS_Name onm (ortr.get_nm());
+          if ( !GetStatSem().LookUpOpOrFnName(onm, nm).IsNil() ) {
+            nm_s.Insert(onm);
+          }
+        }
+      }
+      rb.ImpAppend(vdm_BC_GenIfStmt (GenIsClasses (nm_s,tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
+    }
+  }
 #endif // VDMPP
   return rb;
 }
@@ -5776,6 +5778,33 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
         TYPE_CPP_Expr getfield (GenRecGetFieldNm (tmpRec, posRecTypes.GetElem(), fsnm));
         return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenAsgnStmt (resVar_v, getfield));
       }
+//
+      else if (IsCompositeType(tmpRecType)) {
+        SEQ<TYPE_CPP_Stmt> rb_l;
+        TYPE_CPP_Expr tmpRec_q (tmpRec);
+        if (!tmpRec.Is(TAG_TYPE_CPP_Identifier)) {
+          TYPE_CPP_Name temp (vdm_BC_GenIdentifier(ASTAUX::MkId(L"tempRec")));
+          rb_l.ImpConc(GenRecordDecl(Nil(), temp, vdm_BC_GenObjectInit(mk_sequence(tmpRec))));
+          tmpRec_q = temp;
+        }
+
+        SEQ<TYPE_CPP_CaseStmt> case_l;
+        Generic ctrg;
+        for (bool bb = posRecTypes.First(ctrg); bb; bb = posRecTypes.Next(ctrg)) {
+          TYPE_REP_CompositeTypeRep ctr(ctrg);
+          TYPE_CPP_Expr getfield (GenRecGetFieldNm (tmpRec_q, ctr, fsnm));
+          TYPE_CPP_Stmt asgn (vdm_BC_GenAsgnStmt (resVar_v, getfield));
+          case_l.ImpAppend(vdm_BC_GenCaseStmt(vdm_BC_Rename(ctr.GetRecord(pos_REP_CompositeTypeRep_nm)),
+                                              vdm_BC_GenBlock(SEQ<TYPE_CPP_Stmt>()
+                                                                .ImpAppend(asgn)
+                                                                .ImpAppend(vdm_BC_GenBreakStmt(Nil())))));
+        }
+        case_l.ImpAppend(vdm_BC_GenDefaultStmt(
+                            vdm_BC_GenBlock(alt.Conc(mk_sequence(vdm_BC_GenBreakStmt(Nil()))))));
+        rb_l.ImpAppend(vdm_BC_GenSwitchStmt(GenGetTag(tmpRec_q), case_l));
+        return rb_l;
+      }
+//
       else {
         Generic t;
         for (bool bb = posRecTypes.First(t); bb; bb = posRecTypes.Next(t)) {
