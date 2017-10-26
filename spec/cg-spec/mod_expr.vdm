@@ -2885,8 +2885,8 @@ CGMapApplyExpr(mk_AS`ApplyExpr(expr,[par], -), mk_CGMAIN`VT(resVar_v,-), expr1, 
       )
      else
        def alt2 = DS`GenEmptyMapExpr();
-           asgn1 = BC`GenAsgnStmt(resVar_v, alt1);
-           asgn2 = BC`GenAsgnStmt(resVar_v, alt2)
+           asgn1 = BC`GenBlock([BC`GenAsgnStmt(resVar_v, alt1)]);
+           asgn2 = BC`GenBlock([BC`GenAsgnStmt(resVar_v, alt2)])
        in
          rb := e_stmt ^ par_stmt ^ [ BC`GenIfStmt( cond, asgn1, asgn2) ];
   return rb
@@ -3800,12 +3800,10 @@ CGUnionTypeApply( applexpr, rv, expr1, type1, sd ) ==
         def apex = CGFctApplyExpr(applexpr, rv)
         in
           if is_(apex, seq of CPP`Stmt)
-          then if len apex = 1
-               then alt2 := hd apex
-               else alt2 := BC`GenBlock(apex)
+          then alt2 := BC`GenBlock(apex)
           else if is_REP`UnitTypeRep(restp) -- apex is CPP`Expr
-               then alt2 := BC`GenExpressionStmt(apex)
-               else alt2 := BC`GenAsgnStmt(resVar_v, apex)
+               then alt2 := BC`GenBlock([BC`GenExpressionStmt(apex)])
+               else alt2 := BC`GenBlock([BC`GenAsgnStmt(resVar_v, apex)])
       else
         def parType              = CGAUX`FindType( hd par_l );
             mk_(par_v, par_stmt) = CGExprExcl(hd par_l, "par", nil)
@@ -3817,20 +3815,18 @@ CGUnionTypeApply( applexpr, rv, expr1, type1, sd ) ==
             def apex = CGFctApplyExpr(applexpr,rv)
             in
               if is_(apex, seq of CPP`Stmt)
-              then if len apex = 1
-                   then alt2 := hd apex
-                   else alt2 := BC`GenBlock(apex)
+              then alt2 := BC`GenBlock(apex)
               else if is_REP`UnitTypeRep(restp) -- apex is CPP`Expr
-                   then alt2 := BC`GenExpressionStmt(apex)
-                   else alt2 := BC`GenAsgnStmt(resVar_v, apex);
+                   then alt2 := BC`GenBlock([BC`GenExpressionStmt(apex)])
+                   else alt2 := BC`GenBlock([BC`GenAsgnStmt(resVar_v, apex)]);
 #endif VDMPP
           if mapgens <> nil
           then
-            alt2 := GenUTMapApply(mapgens,tmpRes_v,tmpGen_v,par_v,alt2,sd,resVar_v);
+            alt2 := BC`GenBlock([GenUTMapApply(mapgens,tmpRes_v,tmpGen_v,par_v,alt2,sd,resVar_v)]);
 
           if mapinjs <> nil
           then
-            alt2 := GenUTMapApply(mapinjs,tmpRes_v,tmpGen_v,par_v,alt2,sd,resVar_v);
+            alt2 := BC`GenBlock([GenUTMapApply(mapinjs,tmpRes_v,tmpGen_v,par_v,alt2,sd,resVar_v)]);
 
           --if seqs <> nil -- 20111221
           --if seqs <> nil and CGAUX`IsPosNumType(parType)
@@ -3891,7 +3887,7 @@ GenUnionTypeApply}. The operation computes the code corresponding to
 application of map types.
 
 \begin{vdm_al}
-GenUTMapApply: REP`TypeRep * CPP`Name * CPP`Name * CPP`Expr * [CPP`Stmt] * bool * CPP`Name ==> CPP`Stmt
+GenUTMapApply: REP`TypeRep * CPP`Name * CPP`Name * CPP`Expr * CPP`CompoundStmt * bool * CPP`Name ==> CPP`Stmt
 GenUTMapApply(mapgens, tmpRes_v, tmpGen_v, par_v, alt2, sd, resVar_v ) ==
  (dcl decl : seq of CPP`Stmt;
 #ifdef VDMPP
@@ -3924,10 +3920,9 @@ GenUTMapApply(mapgens, tmpRes_v, tmpGen_v, par_v, alt2, sd, resVar_v ) ==
       else asgn := BC`GenAsgnStmt( resVar_v, mapapply )
     else
       def emptymap = DS`GenEmptyMapExpr();
-          asgn1 = BC`GenAsgnStmt(resVar_v, mapapply);
-          asgn2 = BC`GenAsgnStmt(resVar_v, emptymap)
-      in
-        asgn := BC`GenIfStmt(cond, asgn1, asgn2);
+          asgn1 = BC`GenBlock([BC`GenAsgnStmt(resVar_v, mapapply)]);
+          asgn2 = BC`GenBlock([BC`GenAsgnStmt(resVar_v, emptymap)])
+      in asgn := BC`GenIfStmt(cond, asgn1, asgn2);
     return BC`GenIfStmt( DS`GenIsMap(tmpGen_v), BC`GenBlock( decl ^ [ asgn ] ), alt2 );
    )
  );
@@ -4189,7 +4184,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
          then inner_stmts := inner_stmts ^ [BC`GenAsgnStmt(succ, DS`GenGetValue(res, bt))]
          else def getval = DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), res), bt)
               in inner_stmts := inner_stmts ^ [BC`GenIfStmt(DS`GenIsBool(res),
-                                                            BC`GenAsgnStmt(succ, getval),
+                              BC`GenBlock([BC`GenAsgnStmt(succ, getval)]),
                              BC`GenBlock([CGAUX`RunTime("A boolean was expected")]))];);
 
     for i = len pat_l to 1 by -1 do
@@ -4605,7 +4600,8 @@ CGSeqModifyMapOverrideExpr( mk_AS`SeqModifyMapOverrideExpr( seqmap, mapexp, -),
             mk_(m_v, m_stmt) = CGExprExcl(mapexp, "tmpmap", modmapType)
         in
          (rb := rb ^ m_stmt ^ DS`GenDeclInit(modmapType, tmpmap_v, m_v);
-          rb := rb ^ [BC`GenIfStmt(BC`GenNot (DS`GenIsMap (tmpmap_v)), CGAUX`RunTime ("A map was expected"), nil)];
+          rb := rb ^ [BC`GenIfStmt(BC`GenNot (DS`GenIsMap (tmpmap_v)),
+                            BC`GenBlock([CGAUX`RunTime ("A map was expected")]), nil)];
           rb := rb ^ DS`GenDeclInit(tmpmapType, modmap_v, DS`GenCastMap(tmpmap_v)));
           
     let rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")])
@@ -4655,15 +4651,15 @@ CGSeqModifyMapOverrideExpr( mk_AS`SeqModifyMapOverrideExpr( seqmap, mapexp, -),
             if CGAUX`IsPossibleStringType(seqmapType1)
             then rb := rb ^ [BC`GenIfStmt(DS`GenIsMap(seqmap_v),
                                           BC`GenBlock(mapover),
-                                          BC`GenIfStmt(DS`GenIsString(seqmap_v), BC`GenBlock(seqover), rre))]
+                                          BC`GenBlock([BC`GenIfStmt(DS`GenIsString(seqmap_v), BC`GenBlock(seqover), rre)]))]
             else rb := rb ^ [BC`GenIfStmt(DS`GenIsMap(seqmap_v),
                                           BC`GenBlock(mapover),
-                                          BC`GenIfStmt(DS`GenIsSeq(seqmap_v), BC`GenBlock(seqover), rre))]
+                                          BC`GenBlock([BC`GenIfStmt(DS`GenIsSeq(seqmap_v), BC`GenBlock(seqover), rre)]))]
           else
 #endif VDMPP
             rb := rb ^ [BC`GenIfStmt(DS`GenIsMap(seqmap_v),
                                      BC`GenBlock(mapover),
-                                     BC`GenIfStmt(DS`GenIsSeq(seqmap_v), BC`GenBlock(seqover), rre))];
+                         BC`GenBlock([BC`GenIfStmt(DS`GenIsSeq(seqmap_v), BC`GenBlock(seqover), rre)]))];
     return rb);
 \end{vdm_al}
 
@@ -6591,12 +6587,12 @@ CGUnaryMap( opr, arg, vt ) ==
       <MAPINVERSE>    -> if not CGAUX`IsMapType( argTmpType )
                          then rb_l := rb_l ^
                                     [BC`GenIfStmt( BC`GenNot( DS`GenIsMap( argTmp ) ),
-                                                   CGAUX`RunTime("A map was expected"),
+                                                   BC`GenBlock([CGAUX`RunTime("A map was expected")]),
                                                    nil ) ],
       <MAPDISTRMERGE> -> if not CGAUX`IsSetType( argTmpType )
                          then rb_l := rb_l ^
                                     [BC`GenIfStmt( BC`GenNot( DS`GenIsSet( argTmp ) ),
-                                                   CGAUX`RunTime("A set was expected"),
+                                                   BC`GenBlock([CGAUX`RunTime("A set was expected")]),
                                                    nil ) ],
       others -> error
     end;
@@ -7780,7 +7776,7 @@ CGIterateExpr(le, re, resVT) ==
          else
 #endif VDMPP
            cond := BC`GenLogOr(DS`GenIsReal(var1), DS`GenIsReal(var2)); --!!!!! skulle være GenLogAnd
-         def th = DS`GenExp(vt1, vt2, resVT);
+         def th = BC`GenBlock([DS`GenExp(vt1, vt2, resVT)]);
              altn = BC`GenBlock([CGAUX`RunTime("Wrong arguments for '**'")])
          in stmt := BC`GenIfStmt(cond, th, altn);
          if is_REP`UnionTypeRep(type1)
@@ -7788,7 +7784,7 @@ CGIterateExpr(le, re, resVT) ==
            let mk_REP`UnionTypeRep(tp_s) = type1 in
             if exists tp in set tp_s & CGAUX`IsMapType(tp) then
               def th = BC`GenBlock(DS`GenMapIteration(vt1, vt2, resVT)) in
-                stmt := BC`GenIfStmt(DS`GenIsMap(var1), th, stmt);
+                stmt := BC`GenIfStmt(DS`GenIsMap(var1), th, BC`GenBlock([stmt]));
          return stmt1 ^ stmt2 ^ [stmt]
         )
     end

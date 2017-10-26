@@ -1562,7 +1562,7 @@ CGWhileLoopStmt(mk_AS`WhileLoopStmt(test, body, -), isLast) ==
     then isbool := [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( whCrtl_v ) ),
                       BC`GenBlock([CGAUX`RunTime("A boolean was expected in while loop" )]),
                                    nil ) ];
-    def ifstmt = BC`GenIfStmt(whCrtlval, bodystmt, BC`GenBreakStmt(nil));
+    def ifstmt = BC`GenIfStmt(whCrtlval, bodystmt, BC`GenBlock([BC`GenBreakStmt(nil)]));
     in
      (dcl block : CPP`Stmt,
           rb : seq of CPP`Stmt := [];
@@ -2475,7 +2475,7 @@ CGAlwaysStmt(mk_AS`AlwaysStmt(Post,body,-), p_isLast) ==
           else stmt := BC`GenReturnStmt(l_retValNm);
         if (p_isLast)
         then handlerStmt := handlerStmt ^ [stmt]
-        else handlerStmt := handlerStmt ^ [BC`GenIfStmt(l_retCalledNm, stmt, nil)]);
+        else handlerStmt := handlerStmt ^ [BC`GenIfStmt(l_retCalledNm, BC`GenBlock([stmt]), nil)]);
 
       rb_l := DS`GenDecl(nil, l_excValNm, nil);
       if not CGAUX`NoReturnValue(tpbody)

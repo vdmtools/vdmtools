@@ -4849,7 +4849,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenComposeExpr(const TYPE_CGMAIN_VT & vt1,
       asgn = vdm_BC_GenAsgnStmt(tmpMap2, v2);
 
     rb_l.ImpConc(GenDeclEmptyMap(nil, tmpMap2));
-    rb_l.ImpAppend(vdm_BC_GenIfStmt(GenIsMap(v2), asgn, rti1));
+    rb_l.ImpAppend(vdm_BC_GenIfStmt(GenIsMap(v2), vdm_BC_GenBlock(mk_sequence(asgn)), rti1));
   }
 
   TYPE_CPP_Identifier key (vdm_BC_GiveName(ASTAUX::MkId(L"key")));
@@ -5665,12 +5665,10 @@ TYPE_CPP_Stmt vdmcg::GenSeqOrMapImpModify(const TYPE_CGMAIN_VT & vt,
   if (IsMapType(mt)) {
     return GenMapImpModify(m, e1, e2);
   }
-  else if (IsSeqType(mt))
-  {
+  else if (IsSeqType(mt)) {
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
-      if (IsStringType(mt))
-      {
+      if (IsStringType(mt)) {
         TYPE_CPP_Expr e1_int (IsIntType(e1_tp) ? e1 : vdm_BC_GenCastExpr(GenIntType(), e1));
 
         TYPE_CPP_Expr e1_index (vdm_BC_GenFctCallObjMemAcc(e1_int, ASTAUX::MkId(L"intValue"), SEQ<TYPE_CPP_Expr>()));
@@ -5683,15 +5681,15 @@ TYPE_CPP_Stmt vdmcg::GenSeqOrMapImpModify(const TYPE_CGMAIN_VT & vt,
 
         return vdm_BC_GenAsgnStmt(m, vdm_BC_GenPlus(lhs, vdm_BC_GenPlus(e2, rhs)));
       }
-      else
+      else {
         return GenSeqModify(m, new_e1, e2);
+      }
     }
     else
 #endif // VDMPP
       return GenSeqModify(m, new_e1, e2);
   }
-  else
-  {
+  else {
     TYPE_CPP_Expr cond_m (GenIsMap(m));
     TYPE_CPP_Expr castmap (GenCastMap(m));
     TYPE_CPP_Expr cond_s (GenIsSeq(m));
@@ -5714,9 +5712,8 @@ TYPE_CPP_Stmt vdmcg::GenSeqOrMapImpModify(const TYPE_CGMAIN_VT & vt,
     TYPE_CPP_Stmt alt_rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"Sequence or Map expected in Map or Sequence Designator"))));
     TYPE_CPP_Stmt ifstmt1 (vdm_BC_GenIfStmt(vdm_BC_GenNot(cond_s), alt_rre, nil));
 
-    //TYPE_CPP_Stmt if1(vdm_BC_GenBlock(type_dL().ImpAppend(ifstmt1).ImpAppend(alt_s)));
     TYPE_CPP_Stmt if1(vdm_BC_GenBlock(mk_sequence(ifstmt1, alt_s)));
-    return vdm_BC_GenIfStmt(cond_m, alt_m, if1);
+    return vdm_BC_GenIfStmt(cond_m, vdm_BC_GenBlock(mk_sequence(alt_m)), if1);
   }
 }
 

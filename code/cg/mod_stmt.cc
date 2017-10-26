@@ -1946,7 +1946,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
     cond = whCrtlval;
   SEQ<TYPE_CPP_Stmt> block_l (eval_stmt);
   block_l.ImpConc(isbool);
-  block_l.ImpAppend(vdm_BC_GenIfStmt(whCrtlval, bodystmt, vdm_BC_GenBreakStmt(Nil())));
+  block_l.ImpAppend(vdm_BC_GenIfStmt(whCrtlval, bodystmt,
+                              vdm_BC_GenBlock(mk_sequence(vdm_BC_GenBreakStmt(Nil())))));
   TYPE_CPP_Stmt block (eval_stmt.IsEmpty() && IsBoolType(whCrtlType) ? bodystmt : vdm_BC_GenBlock(block_l));
 
   SEQ<TYPE_CPP_Stmt> rb;
@@ -3300,8 +3301,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGTrapStmt(const TYPE_AS_TrapStmt & p_ts, bool p_isLas
   bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
   SEQ<TYPE_CPP_Stmt> pm1;
-  if (Is_Excl)
+  if (Is_Excl) {
     pm1.ImpConc(pm);
+  }
   else {
     pm1.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), l_matchNm, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(true))));
     pm1.ImpConc(pm);

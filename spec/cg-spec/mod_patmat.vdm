@@ -1059,13 +1059,19 @@ CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_
             in
              if is_REP`ProductTypeRep(tp) and len tp.tps = len p_l
              then return mk_(pm, Is_excl)
-             else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, eq_len), BC`GenBlock(pm), nil)], false)
+             else
+               if pm = []
+               then return mk_([BC`GenAsgnStmt(succ_v, eq_len)], false)
+               else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, eq_len), BC`GenBlock(pm), nil)], false)
           else
             def cond = BC`GenBracketedExpr(BC`GenLogAnd(DS`GenIsTuple(varExpr_v), eq_len))
             in
               if Is_excl and nonstop
               then return mk_([BC`GenIfStmt(cond, BC`GenBlock(pm), nil)], true)
-              else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pm), nil)], false);
+              else
+                if pm = []
+                then return mk_([BC`GenAsgnStmt(succ_v, cond)], false)
+                else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pm), nil)], false);
      );
 
 CGMatchSetUnionPattern: AS`SetUnionPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *

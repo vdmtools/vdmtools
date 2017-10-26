@@ -1176,36 +1176,40 @@ Tuple vdmcg::CGMatchTuplePattern (const TYPE_AS_TuplePattern & pat,
   TYPE_CPP_Expr len_perm_v (GenTupleLength(newVarExpr));
   TYPE_CPP_IntegerLit len_p_l (vdm_BC_GenIntegerLit(p_l.Length()));
   TYPE_CPP_Expr eq_len (vdm_BC_GenBracketedExpr(vdm_BC_GenEq(len_p_l, len_perm_v)));
-  if (IsProductType(varExpr_tp))
-  {
+  if (IsProductType(varExpr_tp)) {
     TYPE_REP_TypeRep tp (varExpr_tp.Is(TAG_TYPE_REP_InvTypeRep)
                                ? Record(varExpr_tp).GetRecord(pos_REP_InvTypeRep_shape)
                                                                 : (Record)varExpr_tp);
     if (tp.Is(TAG_TYPE_REP_ProductTypeRep) && 
-        (tp.GetSequence(pos_REP_ProductTypeRep_tps).Length() == p_l.Length()))
-    {
+        (tp.GetSequence(pos_REP_ProductTypeRep_tps).Length() == p_l.Length())) {
       return mk_(pm, Is_excl);
     }
-    else
-    {
+    else {
       SEQ<TYPE_CPP_Stmt> rb;
-      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, eq_len), vdm_BC_GenBlock(pm), nil));
+      if (pm.IsEmpty()) {
+        rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, eq_len));
+      }
+      else {
+        rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, eq_len), vdm_BC_GenBlock(pm), nil));
+      }
       return mk_(rb, Bool(false));
     }
   }
-  else
-  {
+  else {
     TYPE_CPP_Expr cond (vdm_BC_GenBracketedExpr(vdm_BC_GenLogAnd(GenIsTuple(varExpr_v), eq_len)));
-    if (Is_excl && nonstop)
-    {
+    if (Is_excl && nonstop) {
       SEQ<TYPE_CPP_Stmt> rb;
       rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(pm), nil));
       return mk_(rb, Bool(true));
     }
-    else
-    {
+    else {
       SEQ<TYPE_CPP_Stmt> rb;
-      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, cond), vdm_BC_GenBlock(pm), nil));
+      if (pm.IsEmpty()) {
+        rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, cond));
+      }
+      else {
+        rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, cond), vdm_BC_GenBlock(pm), nil));
+      }
       return mk_(rb, Bool(false));
     }
   }

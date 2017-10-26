@@ -3357,7 +3357,7 @@ composition expressions.
 #endif VDMPP
           asgn := BC`GenAsgnStmt(tmpMap2, v2);
         def cond = GenIsMap(v2);
-        in rb_l := rb_l ^ [BC`GenIfStmt(cond, asgn, rti1)]);
+        in rb_l := rb_l ^ [BC`GenIfStmt(cond, BC`GenBlock([asgn]), rti1)]);
   
       def key = BC`GiveName("key");
           elem = BC`GiveName("elem");
@@ -4193,7 +4193,7 @@ to $GenCGBase$.
                   def alt_rre = BC`GenBlock([CGAUX`RunTime("Sequence or Map expected in Map or Sequence State Designator")]);
                       ifstmt1 = BC`GenIfStmt(BC`GenNot(cond_s), alt_rre, nil);
                       if1 = BC`GenBlock([ifstmt1, alt_s])
-                  in return BC`GenIfStmt(cond_m, alt_m, if1))
+                  in return BC`GenIfStmt(cond_m, BC`GenBlock([alt_m]), if1))
     end;
    );
 \end{vdm_al}

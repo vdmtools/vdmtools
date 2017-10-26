@@ -910,21 +910,18 @@ Case labels and default labels may occur only in switch statements.
    groups : seq of SwitchBlockStmtGrp
    labels : [SwitchLabels]
    CNTXT
-   ISJAVAINV
    ;
 
  SwitchBlockStmtGrp ::
    labels : [SwitchLabels]
    stmt  : [CompoundStmt] -- can this be optional??
    CNTXT
-   ISJAVAINV
    ;
 
  SwitchLabels ::
    stmt   : CaseStmt | DefaultStmt
    labels : [SwitchLabels]
    CNTXT
-   ISJAVAINV
    ;
 
  CaseStmt ::
