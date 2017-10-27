@@ -5783,7 +5783,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
         SEQ<TYPE_CPP_Stmt> rb_l;
         TYPE_CPP_Expr tmpRec_q (tmpRec);
         if (!tmpRec.Is(TAG_TYPE_CPP_Identifier)) {
-          TYPE_CPP_Name temp (vdm_BC_GenIdentifier(ASTAUX::MkId(L"tempRec")));
+          TYPE_CPP_Name temp (vdm_BC_GiveName(ASTAUX::MkId(L"tempRec")));
           rb_l.ImpConc(GenRecordDecl(Nil(), temp, vdm_BC_GenObjectInit(mk_sequence(tmpRec))));
           tmpRec_q = temp;
         }
@@ -5799,8 +5799,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
                                                                 .ImpAppend(asgn)
                                                                 .ImpAppend(vdm_BC_GenBreakStmt(Nil())))));
         }
-        case_l.ImpAppend(vdm_BC_GenDefaultStmt(
-                            vdm_BC_GenBlock(alt.Conc(mk_sequence(vdm_BC_GenBreakStmt(Nil()))))));
+        if (rectypes.Card() != posRecTypes.Card()) {
+          case_l.ImpAppend(vdm_BC_GenDefaultStmt(
+                              vdm_BC_GenBlock(alt.Conc(mk_sequence(vdm_BC_GenBreakStmt(Nil()))))));
+        }
         rb_l.ImpAppend(vdm_BC_GenSwitchStmt(GenGetTag(tmpRec_q), case_l));
         return rb_l;
       }

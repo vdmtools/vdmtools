@@ -5193,7 +5193,7 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
               case_l : seq of (CPP`CaseStmt | CPP`DefaultStmt) := [];
           if not is_CPP`Identifier(tmpRec)
           then
-            def temp : CPP`Name = BC`GenIdentifier("tempRec");
+            def temp : CPP`Name = BC`GiveName("tempRec");
             in
              (rb_l :=  DS`GenRecordDecl(nil, temp, BC`GenObjectInit([tmpRec]));
               tmpRec' := temp);
@@ -5203,7 +5203,8 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
                 asgn = BC`GenAsgnStmt (resVar_v, getfield);
             in case_l := case_l ^ [BC`GenCaseStmt(BC`Rename(ctr.nm),
                                                   BC`GenBlock([asgn, BC`GenBreakStmt(nil)]))];
-          case_l := case_l ^ [BC`GenDefaultStmt(BC`GenBlock(alt ^ [BC`GenBreakStmt(nil)]))];
+          if card rectypes <> card posRecTypes
+          then case_l := case_l ^ [BC`GenDefaultStmt(BC`GenBlock(alt ^ [BC`GenBreakStmt(nil)]))];
           rb_l := rb_l ^ [BC`GenSwitchStmt(DS`GenGetTag(tmpRec'), case_l)];
           return rb_l;
          )
