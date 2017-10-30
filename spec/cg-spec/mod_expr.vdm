@@ -3527,15 +3527,13 @@ CGObjRef (fexpr,par_l, vt) ==
                     else CGAUX`RunTime("Cannot invoke operation in a VDM value")
           in
           ( dcl body1 : [CPP`Stmt] := if card ti_s <> card nm_s
-                                      then CGAUX`RunTime("No member method " ^ mthd'.id)
+                                      then BC`GenBlock([CGAUX`RunTime("No member method " ^ mthd'.id)])
                                       else if ti_s <> t_s'
-                                           then err
+                                           then BC`GenBlock([err])
                                            else nil;
             for idx = len alts_l to 1 by -1 do
               let mk_(cond,stmts) = alts_l(idx),
-                  stmt = if len stmts = 1
-                         then hd stmts
-                         else BC`GenBlock(stmts)
+                  stmt = BC`GenBlock(stmts)
               in
                 if idx = len alts_l and body1 = nil
                 then body1 := stmt
@@ -3543,18 +3541,6 @@ CGObjRef (fexpr,par_l, vt) ==
      
             body := [body1]
           );
---        if ti_s <> t_s
---        then let cond = if CPP`isCPP()
---                        then DS`GenIsClass(oid)
---                        else DS`GenIsClasses(tinm_s,oid),
---                 err = if exists c in set t_s & is_REP`CompositeTypeRep(c)
---                       then CGAUX`RunTime("Cannot apply or invoke operation")
---                       else CGAUX`RunTime("Cannot invoke operation in a VDM value"),
---                 blbd = if len body = 1
---                        then hd body
---                        else BC`GenBlock(body)
---             in
---               body  := [ BC`GenIfStmt(cond, blbd, err)];
       );
       return pdecl_l ^ rv_d ^ body;
     );

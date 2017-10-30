@@ -4229,15 +4229,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
 
     Generic body1 = nil;
     if (t_s_q.Card() != card) {
-      body1 = err;
+      body1 = vdm_BC_GenBlock(mk_sequence(err));
     }
     if (card != nm_s.Card()) {
       wstring m (ASTAUX::Id2String(GiveLastName(mthd)));
       if (vdm_CPP_isCPP()) {
-        body1 = RunTime(L"No member method vdm_" + m);
+        body1 = vdm_BC_GenBlock(mk_sequence(RunTime(L"No member method vdm_" + m)));
       }
       else {
-        body1 = RunTime(L"No member method " + m);
+        body1 = vdm_BC_GenBlock(mk_sequence(RunTime(L"No member method " + m)));
       }
     }
     size_t len_alts_l = alts_l.Length();
@@ -4246,7 +4246,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
       const TYPE_CPP_Expr & cond (alts.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmts (alts.GetSequence(2));
 
-      TYPE_CPP_Stmt stmt (stmts.Length() == 1 ? stmts[1] : vdm_BC_GenBlock (stmts));
+      TYPE_CPP_Stmt stmt (vdm_BC_GenBlock (stmts));
       if ((idx == len_alts_l) && body1.IsNil()) {
         body1 = stmt;
       }
@@ -4256,23 +4256,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
     }
     body = SEQ<TYPE_CPP_Stmt>().ImpAppend(body1);
   }
-
-// 20120509 -->
-/*
-  if (t_s.Card() != card)
-  {
-    TYPE_CPP_Expr cond (vdm_CPP_isCPP() ? GenIsClass(oid) : GenIsClasses(tinm_s, oid));
-
-    TYPE_CPP_Stmt err (IsPosCompositeType (oti) ? RunTime(L"Cannot apply or invoke operation")
-                                                : RunTime(L"Cannot invoke operation in a VDM value"));
-
-    TYPE_CPP_Stmt blbd ((body.Length () == 1) ? body.Hd () : vdm_BC_GenBlock (body));
-
-    body = SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenIfStmt(cond, blbd, err));
-  }
-*/
-// <-- 20120509
-
   pdecl_l.ImpConc(rv_d);
   pdecl_l.ImpConc(body);
   return pdecl_l;
