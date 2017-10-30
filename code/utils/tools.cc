@@ -664,20 +664,27 @@ wstring TOOLS::ExpandCommand (wstring & what_the_user_wrote)
   int start = 0;
   while (start < Max && iswspace(what_the_user_wrote[start])) start++;
   int end = start;
-  while (end < Max && !iswspace(what_the_user_wrote[end])) end++;
+
+  if (what_the_user_wrote[start] == '!') {
+    end++;
+  }
+  else {
+    while (end < Max && !iswspace(what_the_user_wrote[end])) end++;
+  }
 
   wstring cmd (what_the_user_wrote.substr(start, end-start));
   what_the_user_wrote.replace(0, end, L"");
 
-// 20071113 comment
-  if ((cmd.length() > 0) && ((cmd[0] == L'-') || (cmd[0] == L'#')))
+  if ((cmd.length() > 0) && ((cmd[0] == L'-') || (cmd[0] == L'#'))) {
     return L"#";
+  }
 
   if (TOOLS::abbrev.DomExists (Text (cmd))) {
     return (Text (TOOLS::abbrev[Text (cmd)])).GetValue ();
   }
-  else
+  else {
     return L"UNKNOWN";
+  }
 }
 
 // true => success
@@ -706,23 +713,21 @@ bool TOOLS::ReadScriptFile (const wstring & short_name)
   }
 
   bool res = true;
-  while ((sp.peek () != EOF) && res)
-  {
-    while ((sp.peek () != EOF) && ((sp.peek () == '\x0a') || (sp.peek () == '\x0d')))
+  while ((sp.peek () != EOF) && res) {
+    while ((sp.peek () != EOF) && ((sp.peek () == '\x0a') || (sp.peek () == '\x0d'))) {
       sp.get ();
-
+    }
     string input;
-    while ((sp.peek () != EOF) && (sp.peek () != '\x0a') && (sp.peek () != '\x0d'))
+    while ((sp.peek () != EOF) && (sp.peek () != '\x0a') && (sp.peek () != '\x0d')) {
       input += (char) sp.get (); // without cast OS/2 appends ascii: A->L"65"
-
+    }
     if (input.empty()) break;
 
     wstring inputw (TBWSTR::mbstr2wstring(input));
     wstring cmd (inputw);
     wstring command (TOOLS::ExpandCommand (inputw));
 
-    if (!(command == L""))
-    {
+    if (!(command == L"")) {
       vdm_iplog << cmd << endl;
       res = TOOLS::Execute (command, inputw);
     }
@@ -731,17 +736,6 @@ bool TOOLS::ReadScriptFile (const wstring & short_name)
   sp.close();
   TOOLS::setBatchMode(tmpmode);
   TOOLS::SetIsInScript(tmpisinscript);
-
-// 20091102-->
-/*
-  if (!TOOLS::IsInScript())
-  {
-    ToolMediator::Errs()->vdm_AllDone();
-    ToolMediator::Errs()->vdm_ShowMsg();
-  }
-*/
-// <-- 20091102
-
   return res;
 }
 
@@ -764,12 +758,13 @@ bool TOOLS::ReadStartUpFile ()
       sp.close();
       return true ;
     }
-    else
+    else {
       ReadScriptFile (homedotvdm);
+    }
   }
-  else
+  else {
     ReadScriptFile (dotvdm);
-
+  }
   return true;
 }
 
@@ -801,12 +796,13 @@ Tuple ToolMediator::RemoveConstructs (int file_id, const Record & Origin, const 
   MAP<TYPE_AS_Name, TYPE_AS_TypeDef> typem (AST.GetMap(pos_AS_Definitions_typem));
   Map new_types_origin;
   Generic tpnm;
-  for (bool bb = types_origin.First (tpnm); bb; bb = types_origin.Next (tpnm))
-  {
-    if (types_origin[tpnm] == Int (file_id))
+  for (bool bb = types_origin.First (tpnm); bb; bb = types_origin.Next (tpnm)) {
+    if (types_origin[tpnm] == Int (file_id)) {
       typem.RemElem (tpnm);
-    else
+    }
+    else {
       new_types_origin.ImpModify (tpnm, types_origin[tpnm]);
+    }
   }
   NewAST.SetField(pos_AS_Definitions_typem, typem);
   NewOrigin.SetField (OriginTypes, new_types_origin);
@@ -816,8 +812,7 @@ Tuple ToolMediator::RemoveConstructs (int file_id, const Record & Origin, const 
   SEQ<TYPE_AS_ValueDef> new_valuem;
   Map new_values_origin;
   int len_valuem = valuem.Length();
-  for (int idx = 1; idx <= len_valuem; idx++)
-  {
+  for (int idx = 1; idx <= len_valuem; idx++) {
     const TYPE_AS_Pattern & pat (valuem[idx].GetRecord (pos_AS_ValueDef_pat));
     TYPE_AS_Pattern patStrip (PAT::StripPatternTypeInfo (pat));
     if (!(values_origin[patStrip] == Int (file_id))) {
@@ -832,12 +827,13 @@ Tuple ToolMediator::RemoveConstructs (int file_id, const Record & Origin, const 
   MAP<TYPE_AS_Name, TYPE_AS_FnDef> fnm (AST.GetMap(pos_AS_Definitions_fnm));
   Map new_functions_origin;
   Generic fnnm;
-  for (bool dd = functions_origin.First (fnnm); dd; dd = functions_origin.Next (fnnm))
-  {
-    if (functions_origin[fnnm] == Int (file_id))
+  for (bool dd = functions_origin.First (fnnm); dd; dd = functions_origin.Next (fnnm)) {
+    if (functions_origin[fnnm] == Int (file_id)) {
       fnm.RemElem (fnnm);
-    else
+    }
+    else {
       new_functions_origin.ImpModify (fnnm, functions_origin[fnnm]);
+    }
   }
   NewAST.SetField(pos_AS_Definitions_fnm, fnm);
   NewOrigin.SetField (OriginFcts, new_functions_origin);
@@ -846,12 +842,13 @@ Tuple ToolMediator::RemoveConstructs (int file_id, const Record & Origin, const 
   MAP<TYPE_AS_Name, TYPE_AS_OpDef> opm (AST.GetMap(pos_AS_Definitions_opm));
   Map new_operations_origin;
   Generic opnm;
-  for (bool ee = operations_origin.First (opnm); ee; ee = operations_origin.Next (opnm))
-  {
-    if (operations_origin[opnm] == Int (file_id))
+  for (bool ee = operations_origin.First (opnm); ee; ee = operations_origin.Next (opnm)) {
+    if (operations_origin[opnm] == Int (file_id)) {
       opm.RemElem (opnm);
-    else
+    }
+    else {
       new_operations_origin.ImpModify (opnm, operations_origin[opnm]);
+    }
   }
   NewAST.SetField(pos_AS_Definitions_opm, opm);
   NewOrigin.SetField (OriginOps, new_operations_origin);
@@ -868,12 +865,13 @@ Tuple ToolMediator::RemoveConstructs (int file_id, const Record & Origin, const 
   Map tracem (AST.GetMap(pos_AS_Definitions_tracem));
   Map new_traces_origin;
   Generic trnm;
-  for (bool ee = traces_origin.First (trnm); ee; ee = traces_origin.Next (trnm))
-  {
-    if (traces_origin[trnm] == Int (file_id))
+  for (bool ee = traces_origin.First (trnm); ee; ee = traces_origin.Next (trnm)) {
+    if (traces_origin[trnm] == Int (file_id)) {
       tracem.RemElem (trnm);
-    else
+    }
+    else {
       new_traces_origin.ImpModify (trnm, traces_origin[trnm]);
+    }
   }
   NewAST.SetField(pos_AS_Definitions_tracem, tracem);
   NewOrigin.SetField (OriginTraces, new_traces_origin);
@@ -936,16 +934,18 @@ void ToolMediator::UpdateAST (int file_id, const TYPE_AS_Definitions & new_ast, 
   MAP<TYPE_AS_Name,TYPE_AS_TypeDef> tm2 (new_ast.get_typem());
   for (bool bb = tm2.First (g); bb; bb = tm2.Next (g)) {
     types_origin.ImpModify (g, Int (file_id));
-    if (tm1.DomExists (g))
+    if (tm1.DomExists (g)) {
       vdm_log << L"  Type: \"" << ASTAUX::ASName2String (g) << L"\" overwrites previous definition." << endl;
+    }
   }
   tm1.ImpOverride (tm2);
   AST.set_typem(tm1);
 
   if (new_ast.get_State().IsRecord ()) {
     state_origin = Int (file_id);
-    if (AST.get_State().IsRecord ())
+    if (AST.get_State().IsRecord ()) {
       vdm_log << L"  State definition overwrites previous definition." << endl;
+    }
     AST.set_State (new_ast.get_State());
   }
 
@@ -970,8 +970,9 @@ void ToolMediator::UpdateAST (int file_id, const TYPE_AS_Definitions & new_ast, 
   MAP<TYPE_AS_Name,TYPE_AS_FnDef> fm2 (new_ast.get_fnm());
   for (bool dd = fm2.First (g); dd; dd = fm2.Next (g)) {
     functions_origin.ImpModify (g, Int (file_id));
-    if (fm1.DomExists (g))
+    if (fm1.DomExists (g)) {
       vdm_log << L"  Function: \"" << ASTAUX::ASName2String (g) << L"\" overwrites previous definition." << endl;
+    }
   }
   fm1.ImpOverride (fm2);
   AST.set_fnm (fm1);
@@ -980,8 +981,9 @@ void ToolMediator::UpdateAST (int file_id, const TYPE_AS_Definitions & new_ast, 
   MAP<TYPE_AS_Name,TYPE_AS_OpDef> om2 (new_ast.get_opm());
   for (bool ee = om2.First (g); ee; ee = om2.Next (g)) {
     operations_origin.ImpModify (g, Int (file_id));
-    if (om1.DomExists (g))
+    if (om1.DomExists (g)) {
       vdm_log << L"  Operation: \"" << ASTAUX::ASName2String (g) << L"\" overwrites previous definition." << endl;
+    }
   }
   om1.ImpOverride (om2);
   AST.set_opm (om1);
@@ -990,8 +992,9 @@ void ToolMediator::UpdateAST (int file_id, const TYPE_AS_Definitions & new_ast, 
   Map trm2 (new_ast.get_tracem());
   for (bool ff = trm2.First (g); ff; ff = trm2.Next (g)) {
     operations_origin.ImpModify (g, Int (file_id));
-    if (trm1.DomExists (g))
+    if (trm1.DomExists (g)) {
       vdm_log << L"  Trace: \"" << ASTAUX::ASName2String (g) << L"\" overwrites previous definition." << endl;
+    }
   }
   trm1.ImpOverride (trm2);
   AST.set_tracem (trm1);
@@ -1028,41 +1031,7 @@ Set ToolMediator::GetAstsOfFileName (const TYPE_ProjectTypes_FileName & filename
 
 wstring TOOLS::ReadLine ()
 {
-/*
-  if (TOOLS::isBatchMode())
-  {
-#ifdef VDMSL
-    vdm_log << L"vdm> " << flush;
-#endif // VDMSL
-#ifdef VDMPP
-#ifdef VICE
-    vdm_log << L"vice> " << flush;
-#else
-    vdm_log << L"vpp> " << flush;
-#endif // VICE
-#endif // VDPPM
-
-    string st;
-    char ch;
-    ch = cin.get ();
-    while (ch != '\n' && ch != '\f')
-    {
-      if (ch == (char)EOF) {
-        vdm_log << endl << flush;
-        return L"cquit";
-      }
-      else {
-        st += ch;
-        ch = cin.get ();
-      }
-    }
-    return TBWSTR::cinstr2wstring( st );
-  }
-  else
-*/
-  {
-    return TBWSTR::cinstr2wstring(TBReadLine::ReadLine(vdm_log));
-  }
+  return TBWSTR::cinstr2wstring(TBReadLine::ReadLine(vdm_log));
 }
 
 void ToolMediator::PrintAstTuple(ostream & f, const Generic & ast_or_expr, ContextInfo & ci, const Map & fid_m )
@@ -1124,8 +1093,7 @@ void ToolMediator::ResetTestCoverage (ContextInfo & ci)
 void ToolMediator::LoadTestCoverageFile(const wstring & coverage_file, ContextInfo & ci,
                                         const SET< SEQ<Char> > & file_nms, bool all)
 {
-  if (TBUTILS::file_exists(coverage_file))
-  {
+  if (TBUTILS::file_exists(coverage_file)) {
     Tuple gfmnn (GetFileMapNameNum(file_nms, all));
     const Map & long_names (gfmnn.GetMap(1));
     const Map & short_names (gfmnn.GetMap(2));
@@ -1139,8 +1107,7 @@ void ToolMediator::LoadTestCoverageFile(const wstring & coverage_file, ContextIn
 
 void ToolMediator::SaveCoverageCounters (const wstring & coverage_file, ContextInfo & ci)
 {
-  if (!coverage_file.empty())
-  {
+  if (!coverage_file.empty()) {
     // Save coverage counters into coverage_file
     Map m (GetFileMapNumName());
     ci.SaveCounters(coverage_file, m, vdm_err);
@@ -1149,11 +1116,9 @@ void ToolMediator::SaveCoverageCounters (const wstring & coverage_file, ContextI
 
 void ToolMediator::InitCoverageFile(const wstring & coverage_file, ContextInfo & ci)
 {
-  if (!coverage_file.empty())
-  {
+  if (!coverage_file.empty()) {
     // If coverage file exists then read it in so we can accumulate data.
-    if (TBUTILS::file_exists(coverage_file))
-    {
+    if (TBUTILS::file_exists(coverage_file)) {
       Tuple gfmnn (GetFileMapNameNum(SET< SEQ<Char> >(), true));
       const Map & long_names (gfmnn.GetMap(1));
       const Map & short_names (gfmnn.GetMap(2));
@@ -1171,20 +1136,19 @@ Tuple ToolMediator::GetFileMapNameNum(const SET< SEQ<Char> > & file_nms, bool al
   SET<TYPE_ProjectTypes_FileName> files (Repos()->vdm_Files());
   MAP< SEQ<Char>,TYPE_ProjectTypes_FileId > long_map, short_map;
   Generic fnm;
-  for (bool bb = files.First(fnm); bb; bb = files.Next(fnm))
-  {
+  for (bool bb = files.First(fnm); bb; bb = files.Next(fnm)) {
     wstring long_name (PTAUX::ExtractFileName(fnm));
     SEQ<Char> short_name (TBUTILS::tb_getbasename(long_name));
     TYPE_ProjectTypes_FileId fid (Repos()->vdm_GetFileId(fnm));
     if (fid.GetValue() == 0) {
       vdm_err << L"Failed to lookup file name " << long_name << endl;
-      continue;
     }
-
-    if ( all || file_nms.InSet(short_name) ) {
-      long_map.Insert(SEQ<Char>(long_name), fid);
-      // Use ImpModify as some short_name's may be equal.
-      short_map.ImpModify(short_name, fid);
+    else {
+      if ( all || file_nms.InSet(short_name) ) {
+        long_map.Insert(SEQ<Char>(long_name), fid);
+        // Use ImpModify as some short_name's may be equal.
+        short_map.ImpModify(short_name, fid);
+      }
     }
   }
   return mk_(long_map, short_map);
@@ -1196,8 +1160,7 @@ MAP<TYPE_ProjectTypes_FileId, SEQ<Char> > ToolMediator::GetFileMapNumName()
   SET<TYPE_ProjectTypes_FileName> files (Repos()->vdm_Files());
   MAP<TYPE_ProjectTypes_FileId, SEQ<Char> > long_map;
   Generic file;
-  for (bool bb = files.First(file); bb; bb = files.Next(file))
-  {
+  for (bool bb = files.First(file); bb; bb = files.Next(file)) {
     SEQ<Char> long_name (PTAUX::ExtractFileName(file));
     TYPE_ProjectTypes_FileId fid (Repos()->vdm_GetFileId(file));
     if (fid.GetValue() == 0) {
@@ -1212,14 +1175,15 @@ MAP<TYPE_ProjectTypes_FileId, SEQ<Char> > ToolMediator::GetFileMapNumName()
 #ifdef VDMSL
 void TOOLS::EvalModuleStack (wostream & wos)
 {
-  if (ToolMediator::Repos()->vdm_IsSession (struct_session))
-  {
+  if (ToolMediator::Repos()->vdm_IsSession (struct_session)) {
     TBDEBUG::EvalModStack(wos);
   }
-  else if (ToolMediator::Repos()->vdm_IsSession (flat_session))
+  else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
     wos << L"No module stack for definitions" << endl;
-  else
+  }
+  else {
     wos << L"No specification present" << endl;
+  }
 }
 #endif //VDMSL
 
@@ -1227,17 +1191,15 @@ void TOOLS::EvalBreak(const wstring & args, wostream & wos)
 {
   bool initialized = theStackMachine().IsInitialized();
 
-  if (!initialized)
-  {
-//    wos << L"No initialised specification" << endl;
-//    return;
+  if (!initialized) {
     if (ToolMediator::Repos()->vdm_IsSession (none_session)) {
       wos << L"No specification present" << endl << flush;
       return;
     }
     Bool res(TBDEBUG::InitCurrentDefinition (false, vdm_iplog));
-    if (!res)
+    if (!res) {
       return;
+    }
   }
 
   wstring bpkts[20];
@@ -1338,8 +1300,9 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
   }
 
   if (Repos()->vdm_IsSession (none_session)) {
-    if (session == flat_session)
+    if (session == flat_session) {
       init_flat = true;
+    }
   }
   else if (!Repos()->vdm_IsSession (session)) {
     vdm_log << L"Cannot parse modules and definitions in one session" << endl << flush;
@@ -1356,8 +1319,7 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
 
 #ifdef VDMSL
   // A flat specification was parsed.
-  if(session == flat_session)
-  {
+  if(session == flat_session) {
     TYPE_AS_Definitions ast;
     Record Origin;
 
@@ -1392,17 +1354,6 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
 #endif //VDMSL
   {
     // A sequence of modules was parsed.
-//    Generic mod_ast;
-// 20080312 ->
-// Create env for SL
-//#ifdef VMDSL
-//    for (bool cc = astseq.First (mod_ast); cc; cc = astseq.Next (mod_ast))
-//    {
-//      TYPE_AS_Name nm (((Record)(mod_ast)).GetField (1));
-//      GetStatSem().ExpandModule (POS, mod_ast);
-//    }
-//#endif // VDMSL
-// <- 20080312
 #ifdef VDMSL
     Sequence ast_l;
     size_t len_astseq = astseq.Length();
@@ -1427,8 +1378,7 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
     Sequence ast_l;
     if (isJava) {
       size_t len_astseq = astseq.Length();
-      for (size_t idx = 1; idx <= len_astseq; idx++)
-      {
+      for (size_t idx = 1; idx <= len_astseq; idx++) {
         const TYPE_CPP_Module & mod_ast (astseq[idx]);
         const TYPE_AS_Name & nm (mod_ast.GetRecord(pos_CPP_Module_name));
         ast_l.ImpAppend (PTAUX::mk_Module (nm, mod_ast));
@@ -1437,8 +1387,7 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
     }
     else {
       size_t len_astseq = astseq.Length();
-      for (size_t idx = 1; idx <= len_astseq; idx++)
-      {
+      for (size_t idx = 1; idx <= len_astseq; idx++) {
         const TYPE_AS_Class & mod_ast (astseq[idx]);
         const TYPE_AS_Name & nm (mod_ast.GetRecord(pos_AS_Class_nm));
         ast_l.ImpAppend (PTAUX::mk_Module (nm, mod_ast));
@@ -1478,10 +1427,12 @@ bool TOOLS::EvalRead (const TYPE_ProjectTypes_FileName & filename)
   Tuple allowres (ToolMediator::Repos()->vdm_Allowed (filename, action_syntax));
   if (!allowres.GetBoolValue(1)) {
     const SEQ<Char> & mes (allowres.GetSequence (2));
-    if (mes.IsEmpty())
+    if (mes.IsEmpty()) {
       vdm_log << L"Syntax checking is not allowed" << endl << flush;
-    else
+    }
+    else {
       vdm_log << PTAUX::Seq2Str (mes) << endl << flush;
+    }
     return false;
   }
 
@@ -1514,8 +1465,7 @@ bool TOOLS::EvalRead (const TYPE_ProjectTypes_FileName & filename)
     vdm_log << L"done (Errors detected)" << endl << flush;
     return false;
   }
-  else
-  {
+  else {
     Record new_ast (asts.Hd ());
     bool ok = ToolMediator::UpdateRepository (filename, spec_file.get_file_id(), new_ast, asts, false);
     vdm_log << L"done" << endl << flush;
@@ -1543,10 +1493,12 @@ bool TOOLS::EvalLatex (const TYPE_ProjectTypes_FileName & filename)
   Tuple allowres (ToolMediator::Repos()->vdm_Allowed (filename, action_pp));
   if (!allowres.GetBoolValue(1)) {
     const SEQ<Char> & mes (allowres.GetSequence (2));
-    if (mes.IsEmpty())
+    if (mes.IsEmpty()) {
       vdm_log << L"Pretty printing not allowed" << endl << flush;
-    else
+    }
+    else {
       vdm_log << PTAUX::Seq2Str(mes) << endl << flush;
+    }
     return false;
   }
 
@@ -1658,17 +1610,14 @@ bool ToolMediator::EvalInhTree()
 Tuple ToolMediator::GetModulePosInfo(const TYPE_ProjectTypes_ModuleName & modnm)
 {
   Generic astval (Repos()->vdm_GetAST(modnm));
-  if ( !astval.IsNil() )
-  {
+  if ( !astval.IsNil() ) {
     Record ast (PTAUX::ExtractAstOrFlat(astval));
 #ifdef VDMSL
-    if (ast.Is(TAG_TYPE_AS_Module))
-    {
+    if (ast.Is(TAG_TYPE_AS_Module)) {
       const TYPE_AS_Name & nm (ast.GetRecord(pos_AS_Module_nm));
 #endif // VDMSL
 #ifdef VDMPP
-    if (ast.Is(TAG_TYPE_AS_Class))
-    {
+    if (ast.Is(TAG_TYPE_AS_Class)) {
       const TYPE_AS_Name & nm (ast.GetRecord(pos_AS_Class_nm));
 #endif // VDMPP
       return CidToPosInfo(nm.get_cid());
@@ -1682,11 +1631,9 @@ Tuple ToolMediator::GetModulePosInfo(const TYPE_ProjectTypes_ModuleName & modnm)
 // ==> bool * int * int * int
 Tuple ToolMediator::CidToPosInfo(const TYPE_CI_ContextId & cid)
 {
-  if (cid != NilContextId)
-  {
+  if (cid != NilContextId) {
     Tuple gfp (GetCI().GetFilePos(cid));
-    if (gfp.GetBoolValue(1))
-    {
+    if (gfp.GetBoolValue(1)) {
       const TYPE_CI_TokenPos & spos (gfp.GetRecord(4));
       const TYPE_CI_TokenPos & epos (gfp.GetRecord(5));
       const TYPE_CI_Line & sl   (spos.GetInt(pos_CI_TokenPos_abs_uline));
@@ -1876,9 +1823,9 @@ bool ToolMediator::SyntaxCheckOk (const TYPE_ProjectTypes_FileName & filename)
 // ==> bool * seq os AS`Expr
 Tuple TOOLS::ParseExprsString (const string & str)
 {
-  if (!isinscript)
+  if (!isinscript) {
     ToolMediator::ExprErrs()->vdm_ClearAll();
-  
+  } 
   Sequence res_exprs;
   bool parseError = VDMEXPRPARSER::pars_vdm_expr_string(str,
                                                         true,
@@ -1887,9 +1834,9 @@ Tuple TOOLS::ParseExprsString (const string & str)
                                                         GetCI(),
                                                         false,
                                                         TYPE_CI_FileId(CI_FID_CMD_LINE));
-  if (!isinscript)
+  if (!isinscript) {
     ToolMediator::ExprErrs()->vdm_AllDone();
-
+  }
   return mk_(Bool(!parseError), res_exprs);
 }
 
@@ -1933,26 +1880,23 @@ Tuple TOOLS::ParseExprs (const Record & expr, wostream & wos)
 #endif //VDMPP
 
   // 20060310
-  if( not_initialized )
-  {
+  if( not_initialized ) {
     SET<TYPE_ProjectTypes_FileName> files(ToolMediator::Repos()->vdm_Files());
-    if( !files.IsEmpty() )
-    {
+    if( !files.IsEmpty() ) {
       Bool res (TBDEBUG::InitCurrentDefinition (false, vdm_iplog));
-      if (!res)
+      if (!res) {
         return mk_(Bool(false), Sequence());
+      }
     }
   }
 
   try {
-    if (PTAUX::is_ToolCommand (expr))
-    {
+    if (PTAUX::is_ToolCommand (expr)) {
       wstring input (PTAUX::ExtractToolCommand (TYPE_ProjectTypes_ToolCommand(expr)));
       //    source_files.ImpModify (Int (-10), Token (L""));
       return TOOLS::ParseExprsString(TBWSTR::wstring2string(input));
     }
-    else
-    {
+    else {
       wstring filenm (PTAUX::ExtractFileName (TYPE_ProjectTypes_FileName(expr)));
       //    source_files.ImpModify (Int (-10), Token (filenm));
       ifstream istr (TBWSTR::wstring2fsstr(filenm).c_str());
@@ -1963,10 +1907,10 @@ Tuple TOOLS::ParseExprs (const Record & expr, wostream & wos)
       bool parseError = false;
       Sequence res_exprs;
       ostringstream unichar;
-      if(ifstr2ustr( istr, unichar ))
-      {
-        if (!TOOLS::IsInScript())
+      if(ifstr2ustr( istr, unichar )) {
+        if (!TOOLS::IsInScript()) {
           ToolMediator::ExprErrs()->vdm_ClearAll();
+        }
 
         parseError = VDMEXPRPARSER::pars_vdm_expr_string(unichar.str(),
                                                          true,
@@ -1975,11 +1919,11 @@ Tuple TOOLS::ParseExprs (const Record & expr, wostream & wos)
                                                          GetCI(),
                                                          true,
                                                          TYPE_CI_FileId(CI_FID_TMP_FILE));
-        if (!TOOLS::IsInScript())
+        if (!TOOLS::IsInScript()) {
           ToolMediator::ExprErrs()->vdm_AllDone();
+        }
       }
-      else
-      {
+      else {
         vdm_err << L"Invalid multibyte string encounted" << endl;
         parseError = true;
       }
@@ -2004,17 +1948,14 @@ int TOOLS::OutputStatSemErrors(const Generic & modnm)
 
   int noOfErr = 0;
   int len_err_l = err_l.Length();
-  for (int index = 1; index <= len_err_l; index++)
-  {
+  for (int index = 1; index <= len_err_l; index++) {
     const TYPE_ProjectTypes_Message & mes (err_l[index]);
-// 20120517 -->
-    if (!ToolMediator::Errs()->vdm_GetErrors().Elems().InSet(mes))
-    {
+    if (!ToolMediator::Errs()->vdm_GetErrors().Elems().InSet(mes)) {
       ToolMediator::Errs()->vdm_AddMsg(mes);
-      if (PTAUX::is_ErrMsg(mes))
+      if (PTAUX::is_ErrMsg(mes)) {
         noOfErr++;
+      }
     }
-// <-- 20120517
   }
   ToolMediator::Errs()->vdm_Done();
   return noOfErr;
@@ -2047,18 +1988,21 @@ bool TOOLS::LocalEvalTypeCheck (const TYPE_ProjectTypes_ModuleName & modnm, int 
   Tuple allowres (ToolMediator::Repos()->vdm_Allowed (modnm, action_type));
   if (!allowres.GetBoolValue(1)) {
     const SEQ<Char> & mes (allowres.GetSequence (2));
-    if (mes.IsEmpty())
+    if (mes.IsEmpty()) {
       wos << L"Type checking '" + PTAUX::ExtractModuleName(modnm) + L"' is not allowed" << endl << flush;
-    else
+    }
+    else {
       wos << PTAUX::Seq2Str (mes) << endl << flush;
+    }
     ToolMediator::UpdateTC (modnm, Nil());
     return false;
   }
 
   wos << L"Type checking ";
   wstring mnm (PTAUX::ExtractModuleName (modnm));
-  if (mnm != wstring(L"DefaultMod")) 
+  if (mnm != wstring(L"DefaultMod")) {
     wos << mnm << L" ";
+  }
   wos << L"... " << flush;
 
 #ifndef NOSS
@@ -2070,10 +2014,10 @@ bool TOOLS::LocalEvalTypeCheck (const TYPE_ProjectTypes_ModuleName & modnm, int 
   // But I could not imagine all consequences of calling UpdateSS here.
   //  UpdateSS (AstVal.GetField(1));
 
-  if (opt != POS && opt != DEF)
+  if (opt != POS && opt != DEF) {
     // Extract the POS/DEF from the options class
     opt = Settings.TypeCheck();
-
+  }
   // Get ast of the module and the module global module environment
   TYPE_ProjectTypes_AstVal AstVal (ToolMediator::Repos()->vdm_GetAST (modnm));
   Record ast (PTAUX::ExtractAstOrFlat (AstVal));
@@ -2101,8 +2045,7 @@ bool TOOLS::LocalEvalTypeCheck (const TYPE_ProjectTypes_ModuleName & modnm, int 
   // Setting_SEP should be extracted from the Options class
   int noOfErr = OutputStatSemErrors(modnm); // 
 
-  if (noOfErr == 0)
-  {
+  if (noOfErr == 0) {
     wos << L"done" << endl << flush;
 
     Quote tc_type ((opt == POS) ? tc_pos : tc_def);
@@ -2111,8 +2054,7 @@ bool TOOLS::LocalEvalTypeCheck (const TYPE_ProjectTypes_ModuleName & modnm, int 
     ToolMediator::UpdateTC(modnm, tc_type);
     return true;
   }
-  else
-  {
+  else {
     wos << L"done (Errors detected)" << endl << flush;
     ToolMediator::UpdateTC (modnm, Nil());
     return false;
@@ -2122,26 +2064,26 @@ bool TOOLS::LocalEvalTypeCheck (const TYPE_ProjectTypes_ModuleName & modnm, int 
 void TOOLS::api_Periodic()
 {
 #ifdef CORBA_API
-  if( Settings.UsesCorba() )
+  if ( Settings.UsesCorba() ) {
     APICommandQueue::GetInstance ()->ExecuteQueuedCommand ();
+  }
 #endif // CORBA_API
 }
 
 bool TOOLS::EvalTypeCheck (const TYPE_ProjectTypes_ModuleName& modnm, int opt, wostream & wos)
 {
 #ifdef VDMPP
-    if(ToolMediator::CheckModified())
-      ToolMediator::ResetTCStatus();
+  if (ToolMediator::CheckModified()) {
+    ToolMediator::ResetTCStatus();
+  }
 #endif // VDMPP
 
   wstring mnm (PTAUX::ExtractModuleName(modnm));
-  if (mnm == L"*")
-  {
+  if (mnm == L"*") {
     bool res = true;
     SET<TYPE_ProjectTypes_ModuleName> nms (PTAUX::ASNameSet2ModuleNameSet(ToolMediator::GetAllVDMModuleNames()));
     Generic nm;
-    for (bool bb = nms.First(nm); bb; bb = nms.Next(nm))
-    {
+    for (bool bb = nms.First(nm); bb; bb = nms.Next(nm)) {
 #ifdef VDMSL
        res = res & LocalEvalTypeCheck (nm, opt, wos);
 #endif // VDMSL
@@ -2166,8 +2108,7 @@ void ToolMediator::ResetTCStatus()
 {
   SET<TYPE_ProjectTypes_ModuleName> mods (Repos()->vdm_AllModules());
   Generic modnm;
-  for(bool bb = mods.First(modnm); bb; bb = mods.Next(modnm))
-  {
+  for(bool bb = mods.First(modnm); bb; bb = mods.Next(modnm)) {
     UpdateTC(modnm, Quote (L"NONE"));
   }
 }
@@ -2175,13 +2116,12 @@ void ToolMediator::ResetTCStatus()
 bool ToolMediator::CheckModified()
 {
   SET<TYPE_ProjectTypes_FileName> files (Repos()->vdm_Files());
+  bool exists = false;
   Generic filenm;
-  for(bool bb = files.First(filenm); bb; bb = files.Next(filenm))
-  {
-    if (IsFileModified(filenm) )
-      return true;
+  for(bool bb = files.First(filenm); bb && !exists; bb = files.Next(filenm)) {
+    exists = IsFileModified(filenm);
   }
-  return false;
+  return exists;
 }
 
 ////////////////////////////////////
@@ -2211,8 +2151,7 @@ void TOOLS::OutputTimemap(wostream & os, const Map & tm)
   // so we decompose each maplet accordingly
   Set dom_tm (tm.Dom());
   Generic gkey;
-  for (bool ii = dom_tm.First(gkey); ii; ii = dom_tm.Next(gkey))
-  {
+  for (bool ii = dom_tm.First(gkey); ii; ii = dom_tm.Next(gkey)) {
     Generic gval (tm[gkey]);
     Int tval(gval);
     Tuple key(gkey);
@@ -2225,17 +2164,17 @@ void TOOLS::OutputTimemap(wostream & os, const Map & tm)
 
     // Use tabs to line up the output
     os << instrstr << L"\t";
-    if (instrstr.length() < 16)
+    if (instrstr.length() < 16) {
       os << L"\t";
-
-    if (instrstr.length() < 8)
+    }
+    if (instrstr.length() < 8) {
       os << L"\t";
-
+    }
     // The type field may be nil
-    if (tprep.IsNil())
+    if (tprep.IsNil()) {
       os << L"nil";
-    else
-    {
+    }
+    else {
       TYPE_REP_BasicTypeRep btr (tprep);
       switch (btr.GetTag()) {
         case TAG_TYPE_REP_BooleanTypeRep: { os << L": bool"; break; }
@@ -2265,10 +2204,12 @@ void TOOLS::EvalTimefile(const wstring & args)
   int nos = STR_split (args, files, 20, STR_RXwhite_and_comma);
   if (nos == 0) {
     Map timemap (theCompiler().GetTM());
-    if (timemap.IsEmpty())
+    if (timemap.IsEmpty()) {
       vdm_log << L"No time file loaded" << endl << flush;
-    else
+    }
+    else {
       OutputTimemap(vdm_log, timemap);
+    }
     return;
   }
   else if (nos != 1) {
@@ -2292,8 +2233,7 @@ void TOOLS::EvalTimefile(const wstring & args)
   // Parse file
   Set errs;
   TYPE_TIMEMAP_Timemap timemap;
-  if (!tp_main(&vdm_log, fname.c_str(), errs,timemap))
-  {
+  if (!tp_main(&vdm_log, fname.c_str(), errs,timemap)) {
     tp_OutputErrors(vdm_log,errs);
     return;
   }
@@ -2315,22 +2255,22 @@ void TOOLS::DisplayContextInfo(const wstring & args, bool token, bool node, wost
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
     wos << L"contextinfo requires file name" << endl << flush;
     return;
   }
 
   Generic fid (GetCI().GetFidForFile( SEQ<Char>(params[0]) ));
-  if ( fid.IsNil() )
-  {
+  if ( fid.IsNil() ) {
     wos << L"File " << params[0] << L" not defined" << endl << flush;
     return;
   }
-  if ( token )
+  if ( token ) {
     GetCI().DumpTokenList( fid, wos );
-  if ( node )
+  }
+  if ( node ) {
     GetCI().DumpNodeList( fid, wos );
+  }
 }
 
 void TOOLS::DisplayAST(const wstring & args, wostream & wos)
@@ -2338,8 +2278,7 @@ void TOOLS::DisplayAST(const wstring & args, wostream & wos)
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
   wstring modnm (params[0]);
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
 #ifdef VDMSL
     modnm = L"DefaultMod";
 #endif // VDMSL
@@ -2353,13 +2292,11 @@ void TOOLS::DisplayAST(const wstring & args, wostream & wos)
   TYPE_ProjectTypes_ModuleName modulenm (PTAUX::mk_ModuleName (modnm));
   Generic astval (ToolMediator::Repos()->vdm_GetAST(modulenm));
 
-  if (! astval.IsNil() )
-  {
+  if (! astval.IsNil() ) {
     Record ast (PTAUX::ExtractAstOrFlat(astval));
     wos << INT2Q::h2gAS(ast) << endl << flush;
   }
-  else
-  {
+  else {
 #ifdef VDMSL
     wos << L"Module ";
 #endif // VDMSL
@@ -2380,7 +2317,8 @@ void TOOLS::DisplayVersion(wostream & wos)
     if (pos == std::string::npos) {
       wos << credit << endl;
       credit = L"";
-    } else {
+    }
+    else {
       wos << credit.substr(0, pos) << endl;
       credit = credit.substr(pos + 1);
     }
@@ -2395,8 +2333,7 @@ void TOOLS::GoFindType(const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( 2 != nos )
-  {
+  if( 2 != nos ) {
     wos << L"find requires name & class/module name" << endl;
     return;
   }
@@ -2412,66 +2349,56 @@ void TOOLS::GoFindType(const wstring & args, wostream & wos)
 bool TOOLS::ConditionalParse(const TYPE_ProjectTypes_ModuleName & clnm)
 {
   Tuple VdmStatus (ToolMediator::Repos()->vdm_Status(clnm));
-  if ((VdmStatus.GetField(1)).IsNil())
-  {
+  if ((VdmStatus.GetField(1)).IsNil()) {
     vdm_log << L"Class Name \'" << PTAUX::ExtractModuleName(clnm) << L"\' is unknown" << endl << flush;
 //    return false;
   }
+  bool forall = true;
   status_type status = PTAUX::ExtractStatus(VdmStatus);
-  if (status.syntax == status_type::status_none || status.syntax == status_type::status_error)
-  {
+  if (status.syntax == status_type::status_none || status.syntax == status_type::status_error) {
     SET<TYPE_ProjectTypes_FileName> files (ToolMediator::Repos()->vdm_FileOfModule(clnm));
     Generic fnm;
-    for (bool bb = files.First(fnm); bb; bb = files.Next(fnm))
-      if (!EvalRead(fnm))
-        return false;
+    for (bool bb = files.First(fnm); bb && forall; bb = files.Next(fnm)) {
+      forall = EvalRead(fnm);
+    }
   }
-  return true;
+  return forall;
 }
 
 bool TOOLS::ParsAllSupers(const TYPE_ProjectTypes_ModuleName & clnm)
 {
-  if (! ConditionalParse(clnm))
-    return false;
-
-/*
-  if ((ToolMediator::Repos()->vdm_IsCyclic(clnm))) {
-    vdm_log << L"Circular dependency detected for class "
-            << PTAUX::ExtractModuleName(clnm) << endl << flush;
+  if (! ConditionalParse(clnm)) {
     return false;
   }
-  Set supers (ToolMediator::Repos()->vdm_GetSuper(clnm));
-*/
   Set supers;
   if (!ToolMediator::Repos()->vdm_IsCyclic(clnm)) {
     supers = ToolMediator::Repos()->vdm_GetSuper(clnm);
   }
 
+  bool forall = true;
   Generic clsnm;
-  for (bool bb = supers.First(clsnm); bb; bb = supers.Next(clsnm) ) {
-    if (! ConditionalParse(clsnm))
-      return false;
+  for (bool bb = supers.First(clsnm); bb && forall; bb = supers.Next(clsnm) ) {
+    forall = ConditionalParse(clsnm);
   }
-  for (bool cc = supers.First(clsnm); cc; cc = supers.Next(clsnm)) {
-    if (! ParsAllSupers(clsnm))
-      return false;
+  for (bool cc = supers.First(clsnm); cc && forall; cc = supers.Next(clsnm)) {
+    forall = ParsAllSupers(clsnm);
   }
-  return true;
+  return forall;
 }
 
 bool TOOLS::EvalProcessCmd (const TYPE_ProjectTypes_ModuleName & clnm, int opt, wostream & wos)
 {
   // Syntax check all the super classes and clnm
   // if they have been changed or is syntactical incorrect.
-  if (!ParsAllSupers(clnm))
+  if (!ParsAllSupers(clnm)) {
     return false;
+  }
 
   Sequence order;
   if (ToolMediator::Repos()->vdm_IsCyclic(clnm)) {
     order = Sequence().ImpAppend(mk_set(clnm));
   }
-  else
-  {
+  else {
     order = ToolMediator::Repos()->vdm_OrderOfProcess(clnm); // seq of set of AS`Name
   }
 
@@ -2480,35 +2407,31 @@ bool TOOLS::EvalProcessCmd (const TYPE_ProjectTypes_ModuleName & clnm, int opt, 
   bool nothing_changed = true;
   bool result = true;
   size_t len_order = order.Length();
-  for (size_t idx = 1; idx <= len_order; idx++)
-  {
+  for (size_t idx = 1; idx <= len_order; idx++) {
     SET<TYPE_ProjectTypes_ModuleName> nm_s (order[idx]);
     Generic nm;
-    for (bool dd = nm_s.First(nm); dd; dd = nm_s.Next(nm))
-    {
+    for (bool dd = nm_s.First(nm); dd; dd = nm_s.Next(nm)) {
       Tuple VdmStatus (ToolMediator::Repos()->vdm_Status(nm));
       status_type status = PTAUX::ExtractStatus(VdmStatus);
       if (!GetStatSem().namesTypeChecked.nameSeen(nm) &&
           ((status.type == status_type::status_none) ||
            (status.type == status_type::status_error) ||
            ((status.type == status_type::status_pos) && (local_opt != POS)) ||
-           ((status.type == status_type::status_def) && (local_opt != DEF))))
-      {
+           ((status.type == status_type::status_def) && (local_opt != DEF)))) {
         GetStatSem().namesTypeChecked.addName(nm);
         result &= LocalEvalTypeCheck(nm, opt, wos);
         nothing_changed = false;
       }
     }
   }
-  if (nothing_changed)
-  {
-//    wos << L"Class " << PTAUX::ExtractModuleName (clnm) << L" with super classes are "
-//            << ((local_opt == POS) ? L"POS" : L"DEF") << L" type correct" << endl << flush;
+  if (nothing_changed) {
     wos << L"Class " << PTAUX::ExtractModuleName (clnm);
-    if ((order.Length() == 1) && (order[1] == mk_set(clnm)))
+    if ((order.Length() == 1) && (order[1] == mk_set(clnm))) {
       wos << L" is ";
-    else
+    }
+    else {
       wos << L" with super classes are ";
+    }
     wos << ((local_opt == POS) ? L"POS" : L"DEF") << L" type correct" << endl << flush;
   }
   return result;
@@ -2522,20 +2445,24 @@ bool TOOLS::EvalArgsProcess(const wstring & args, wostream & wos)
   TYPE_ProjectTypes_ModuleName nm;
   if (( 0 != params[0].compare(wstring(L""))    ) &&
       ( 0 != params[0].compare(wstring(L"pos")) ) &&
-      ( 0 != params[0].compare(wstring(L"def"))))
+      ( 0 != params[0].compare(wstring(L"def")))) {
         nm = PTAUX::mk_ModuleName (params[0]);
+  }
   else {
     wos << L"Please, specifiy a class to be processed" << endl << flush;
     return false;
   }
 
   GetStatSem().namesTypeChecked.resetInfo();
-  if (params[1] == L"pos")
+  if (params[1] == L"pos") {
     EvalProcessCmd(nm, POS, wos);
-  else if (params[1] == L"def")
+  }
+  else if (params[1] == L"def") {
     EvalProcessCmd(nm, DEF, wos);
-  else
+  }
+  else {
     wos << L"type check must be called with either pos or def option" << endl << flush;
+  }
   return true;
 }
 #endif //VDMPP
@@ -2592,9 +2519,7 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
     if (EvalSet_Check_NoOf_Args(opt, nos, 1, wos)) {
       Settings.InvOn();
       wos << L"inv set" << endl << flush;
-// 20071030
-      if (!Settings.DTC())
-      {
+      if (!Settings.DTC()) {
         Settings.DtcOn();
         wos << L"dtc set" << endl << flush;
       }
@@ -2684,10 +2609,12 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
   else if (opt == L"maxinstr") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int val = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), val))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), val)) {
         Settings.SetMaxInstr (val);
-      else
+      }
+      else {
         vdm_err << L"set maxinstr: expected integer value." << endl;
+      }
     }
   }
   else if (opt == L"hackparser") {
@@ -2700,10 +2627,12 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
   else if (opt == L"taskswitch") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int val = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), val))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), val)) {
         Settings.SetTaskSwitch(val);
-      else
+      }
+      else {
         vdm_err << L"set taskswitch: Expected integer value." << endl;
+      }
     }
   }
   else if (opt == L"logfile") {
@@ -2714,46 +2643,56 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
   else if (opt == L"maxtime") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int maxtime = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), maxtime))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), maxtime)) {
         Settings.SetTimeSlice(maxtime);
-      else
+      }
+      else {
         vdm_err << L"set maxtime: expected integer value." << endl;
+      }
     }
   }
   else if (opt == L"timefactor") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int timefactor = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), timefactor))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), timefactor)) {
         Settings.SetTimeFactor(timefactor);
-      else
+      }
+      else {
         vdm_err << L"set timefactor: expected integer value." << endl;
+      }
     }
   }
   else if (opt == L"stepsize") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int stepsize = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), stepsize))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), stepsize)) {
         Settings.SetStepSize(stepsize);
-      else
+      }
+      else {
         vdm_err << L"set stepsize: expected integer value." << endl;
+      }
     }
   }
   else if (opt == L"cpucap") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int cpucap = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), cpucap))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), cpucap)) {
         Settings.SetDefaultCapacity(cpucap);
-      else
+      }
+      else {
         vdm_err << L"set cpucap: expected integer value." << endl;
+      }
     }
   }
   else if (opt == L"vcpucap") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int vcpucap = 0;
-      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), vcpucap))
+      if(TBUTILS::ExpectNumericArg((opts[1]).c_str(), vcpucap)) {
         Settings.SetVirtualCPUCapacity(Int(vcpucap));
-      else
+      }
+      else {
         vdm_err << L"set vcpucap: expected integer value." << endl;
+      }
     }
   }
 #endif //VICE
@@ -2776,19 +2715,20 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
   else if (opt == L"seed") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 2, wos)) {
       int val = 0;
-      if (TBUTILS::ExpectNumericArg((opts[1]).c_str(), val))
-      {
+      if (TBUTILS::ExpectNumericArg((opts[1]).c_str(), val)) {
         Settings.RandomOn(val);
         wos << L"seed set to " << val << L". " << flush;
         if (val >= 0) {
           theStackMachine().InitRandom((unsigned long)val);
           wos << L"Random number generator restarted." << endl << flush;
-        } else {
+        }
+        else {
           wos << L"Random evaluation disabled." << endl << flush;
         }
       }
-      else
+      else {
         vdm_err << L"set seed: expected integer value." << endl;
+      }
     }
   }
 #ifdef VDMPP
@@ -2816,8 +2756,9 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
       wos << L"profile set" << endl << flush;
     }
   }
-  else
+  else {
     wos << opt << L" is not an internal option" << endl << flush;
+  }
 }
 
 void TOOLS::EvalDir(const wstring & args, wostream & wos)
@@ -2842,17 +2783,16 @@ void TOOLS::EvalUnSet (const wstring & opt, wostream & wos)
     Settings.VDM10Off();
     wos << L"vdm10 unset" << endl << flush;
     SEQ<TYPE_ProjectTypes_FileName> file_l (ToolMediator::Repos()->vdm_Files().ToSequence());
-    if (!file_l.IsEmpty())
+    if (!file_l.IsEmpty()) {
       ToolMediator::BTools ()->vdm_SyntaxCheck (file_l);
+    }
   }
   else if (opt == L"dtc") {
-    if (!Settings.INV())
-    {
+    if (!Settings.INV()) {
       Settings.DtcOff();
       wos << L"dtc unset" << endl << flush;
     }
-    else
-    {    
+    else {    
       wos << L"Can't unset dtc because inv is on." << endl << flush;
     }
   }
@@ -2959,8 +2899,9 @@ void TOOLS::EvalUnSet (const wstring & opt, wostream & wos)
     Settings.ProfileOff();
     wos << L"profile unset" << endl << flush;
   }
-  else
+  else {
     wos << opt << L" is not an internal option" << endl << flush;
+  }
 }
 
 // Infos: Strings in the info table
@@ -3146,25 +3087,26 @@ void TOOLS::EvalHInfo (wostream & wos)
   }
   shown_infos.push_back(HiddenInfos[i]);
 
-  for (i = 0; i<InfoCol; i++)
+  for (i = 0; i<InfoCol; i++) {
     maxlen[i] = 0;
-
-  int N;                        // Number of commands
+  }
   for (i=0; shown_infos[i].str != 0; i++)
     ;
-  N = i;
+  int N = i;                    // Number of commands
   double d = N / InfoCol;
   int n;                        // Column height
   n = (int) floor(d);
-  if (i % InfoCol)
+  if (i % InfoCol) {
     n++;
+  }
 
   for (i=0; i < n; i++) {
     int k=0;
     for (int j=i; j < N; j=j+n) {
       len = wstring (shown_infos[j].str).length ();
-      if (len > maxlen[k])
+      if (len > maxlen[k]) {
         maxlen[k] = len;
+      }
       k++;
     }
   }
@@ -3204,13 +3146,12 @@ void TOOLS::EvalInfo (wostream & wos)
   }
   shown_infos.push_back(Infos[i]);
 
-  for (i = 0; i<InfoCol; i++)
+  for (i = 0; i<InfoCol; i++) {
     maxlen[i] = 0;
-
-  int N;                        // Number of commands
+  }
   for (i=0; shown_infos[i].str != 0; i++)
     ;
-  N = i;
+  int N = i;                    // Number of commands
   double d = N / InfoCol;
   int n;                        // Column height
   n = (int) floor(d);
@@ -3254,7 +3195,7 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
   wstring VDM (L"VDM++");
 #endif
 
-  if (cmd == L"dir")
+  if (cmd == L"dir") {
     wos << endl
     << L"dir [path, ...]" << endl
     << endl
@@ -3265,15 +3206,15 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"of active directories is printed to the screen." << endl
     << L"The directories will be searched in the displayed order." << endl
     << endl;
-
-  else if ((cmd == L"help") || (cmd == L"info"))
+  }
+  else if ((cmd == L"help") || (cmd == L"info")) {
     wos << endl
     << cmd << L" [command]" << endl
     << endl
     <<  L"On-line help." << endl
     << endl;
-
-  else if (cmd == L"init")
+  }
+  else if (cmd == L"init") {
     wos << endl
     << L"init (i)" << endl
     << endl
@@ -3291,8 +3232,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"If a value is multiple defined it will be reported during" << endl
     << L"this initialisation." << endl
     << endl;
-
-  else if (cmd == L"next")
+  }
+  else if (cmd == L"next") {
     wos << endl
     << L"next (n)" << endl
     << endl
@@ -3300,8 +3241,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"position of the next position recorded. This is used" << endl
     << L"to display e.g. syntax and type errors." << endl
     << endl;
-
-  else if (cmd == L"previous")
+  }
+  else if (cmd == L"previous") {
     wos << endl
     << L"previous (pr)" << endl
     << endl
@@ -3309,8 +3250,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"position of the previous position recorded. This is used" << endl
     << L"to display e.g. syntax and type errors." << endl
     << endl;
-
-  else if (cmd == L"first")
+  }
+  else if (cmd == L"first") {
     wos << endl
     << L"first (f)" << endl
     << endl
@@ -3318,8 +3259,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"position of the first position recorded. This is used to" << endl
     << L"display e.g. syntax and type errors." << endl
     << endl;
-
-  else if (cmd == L"last")
+  }
+  else if (cmd == L"last") {
     wos << endl
     << L"last" << endl
     << endl
@@ -3327,7 +3268,7 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"position of the last position recorded. This is used to" << endl
     << L"display e.g. syntax and type errors." << endl
     << endl;
-
+  }
   else if (cmd == L"print") {
     wos << endl
     << L"print (p) expr, ..." << endl
@@ -3347,27 +3288,20 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #endif //VDMSL
     << endl;
   }
-  else if (cmd == L"quit")
+  else if (cmd == L"quit") {
     wos << endl
     << L"quit (q)" << endl
     << endl
     << L"Quits the debugger immediately." << endl
     << endl;
-
-  else if (cmd == L"cquit")
+  }
+  else if (cmd == L"cquit") {
     wos << endl
     << L"cquit" << endl
     << endl
     << L"Quits the debugger immediately." << endl
     << endl;
-
-//  else if (cmd == L"clearerror")
-//    wos << endl
-//    << L"clearerror" << endl
-//    << endl
-//    << L"Clear Runtime Error flag." << endl
-//    << endl;
-
+  }
   else if (cmd == L"tcov") {
     wos << endl
     << L"tcov read file" << endl
@@ -3380,8 +3314,7 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"Reset test coverage counters to zero" << endl
     << endl;
   }
-
-  else if (cmd == L"read")
+  else if (cmd == L"read") {
     wos << endl
     << L"read (r) [file]" << endl
     << endl
@@ -3404,8 +3337,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"reported to the screen. Re-definition of values is only" << endl
     << L"reported by the 'init' command." << endl
     << endl;
-
-  else if (cmd == L"script")
+  }
+  else if (cmd == L"script") {
     wos << endl
     << L"script file" << endl
     << endl
@@ -3413,8 +3346,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"'vdmde' commands. When the script has been executed, the" << endl
     << L"control is returned to the debugger." << endl
     << endl;
-
-  else if (cmd == L"set")
+  }
+  else if (cmd == L"set") {
     wos << endl
     << L"set option [parameter]" << endl
     << endl
@@ -3435,7 +3368,6 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L" 'full'  -- enables extended type checks. This option has effect for" << endl
     << L"            both possibly and definitely well-formedness checks." << endl
     << flush
-
 #ifdef VDMPP
     << L" 'priority'" << endl
     << L"         -- enables priority-based scheduling" << endl
@@ -3484,16 +3416,16 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"All options are per default disabled, except 'ppr' and 'sep'." << endl;
 // context
 // exception
-
-  else if (cmd == L"system")
+  }
+  else if (cmd == L"system") {
     wos << endl
     << L"system (sys) command" << endl
     << endl
     << L"Execute a shell command" << endl
     << endl;
-
+  }
 #ifdef VICE
-  else if (cmd == L"timefile")
+  else if (cmd == L"timefile") {
     wos << endl
     << L"timefile (tf) [filename]" << endl
     << endl
@@ -3502,16 +3434,17 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"default time map. Otherwise, it prints out the timing" << endl
     << L"information currently being used" << endl
     << endl;
-
-  else if (cmd == L"gettime")
+  }
+  else if (cmd == L"gettime") {
     wos << endl
     << L"gettime" << endl
     << endl
     << L"Returns the current time in the interpreter, as computed on" << endl
     << L"the basis of the time file and duration statements." << endl
     << endl;
+  }
 #endif //VICE
-  else if (cmd == L"nocheck")
+  else if (cmd == L"nocheck") {
     wos << endl
     << L"nocheck (nc) add class" << endl
     << endl
@@ -3520,8 +3453,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"If the command is called without parameters"
     << L" it displays the current classes." << endl
     << endl;
-
-  else if (cmd == L"typecheck")
+  }
+  else if (cmd == L"typecheck") {
 #ifdef VDMSL
     wos << endl
     << L"typecheck (tc) [module] option" << endl
@@ -3543,23 +3476,23 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"error in the source window. Succeeding errors can be" << endl
     << L"displayed by the 'next' command." << endl
     << endl;
-
-  else if (cmd == L"unset")
+  }
+  else if (cmd == L"unset") {
     wos << endl
     << L"unset 'option'" << endl
     << endl
     << L"Disables one of vdmde's internal options. See 'set'." << endl
     << endl;
-
-  else if (cmd == L"backtrace")
+  }
+  else if (cmd == L"backtrace") {
     wos << endl
     << L"backtrace (bt)" << endl
     << endl
     << L"Displays the function/operation call stack." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"break")
+  }
+  else if (cmd == L"break") {
     wos << endl
     << L"break (b) name" << endl
     << endl
@@ -3578,8 +3511,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L" it displays the current breakpoints." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"disable")
+  }
+  else if (cmd == L"disable") {
     wos << endl
     << L"disable (dis) breakpoint-number" << endl
     << endl
@@ -3587,8 +3520,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"To see a list of all breakpoints use the break commands"
     << L" without any arguments." << endl
     << endl;
-
-  else if (cmd == L"enable")
+  }
+  else if (cmd == L"enable") {
     wos << endl
     << L"enable (ena) breakpoint-number" << endl
     << endl
@@ -3596,8 +3529,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"To see a list of all breakpoints use the break commands"
     << L" without any arguments." << endl
     << endl;
-
-  else if (cmd == L"condition")
+  }
+  else if (cmd == L"condition") {
     wos << endl
     << L"condition (cond) breakpoint-number,expr" << endl
     << endl
@@ -3611,16 +3544,16 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L" it displays the current conditions." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"cont")
+  }
+  else if (cmd == L"cont") {
     wos << endl
     << L"cont (c)" << endl
     << endl
     << L"Continues the execution after a break point." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"rtinfo")
+  }
+  else if (cmd == L"rtinfo") {
     wos << endl
     << L"rtinfo file" << endl
     << endl
@@ -3632,9 +3565,9 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"within the function/operation have not been evaluated the" << endl
     << L"function/operation is marked with an asterix (*) in the list." << endl
     << endl;
-
+  }
 #ifdef VDMSL
-  else if (cmd == L"curmod")
+  else if (cmd == L"curmod") {
     wos << endl
     << L"curmod" << endl
     << endl
@@ -3642,10 +3575,10 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"command prints the name of the current module." << endl
     << endl << NEED_INIT << endl
     << endl;
+  }
 #endif //VDMSL
-
 #ifdef VDMPP
-  else if (cmd == L"curcls")
+  else if (cmd == L"curcls") {
     wos << endl
     << L"curcls" << endl
     << endl
@@ -3653,9 +3586,9 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"command prints the name of the current class." << endl
     << endl << NEED_INIT << endl
     << endl;
+  }
 #endif //VDMPP
-
-  else if (cmd == L"debug")
+  else if (cmd == L"debug") {
     wos << endl
     << L"debug (d) expr" << endl
     << endl
@@ -3668,8 +3601,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"position of the error is displayed in the source window." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"delete")
+  }
+  else if (cmd == L"delete") {
     wos << endl
     << L"delete breakpoint-number" << endl
     << endl
@@ -3678,8 +3611,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L" without any arguments." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"codegen")
+  }
+  else if (cmd == L"codegen") {
     wos << endl
 #ifdef VDMSL
     << L"codegen (cg) [module] [option]" << endl
@@ -3695,8 +3628,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"generated code, the option 'rti' must be used. The '-P'" << endl
     << L"option generates code that checks pre and post conditions" << endl
     << endl;
-
-  else if (cmd == L"encode")
+  }
+  else if (cmd == L"encode") {
     wos << endl
     << L"encode [encoding]" << endl
     << endl
@@ -3722,9 +3655,9 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"          KOI8-R ISO-8859-8 TSCII-0" << endl
 #endif // _MSC_VER
     << endl;
-
+  }
 #ifdef VDMPP
-  else if (cmd == L"javacg")
+  else if (cmd == L"javacg") {
     wos << endl
     << L"javacg (jcg) class [opt]" << endl
     << endl
@@ -3739,22 +3672,22 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"The 'k' option generates code for pre and post functions." << endl
     << L"The 'P' option generates code that checks pre"
     << L" and post conditions" << endl;
-
-  else if (cmd == L"curthread")
+  }
+  else if (cmd == L"curthread") {
     wos << endl
     << L"curthread" << endl
     << endl
     << L"This command gives the current thread id." << endl
     << endl;
-
-  else if (cmd == L"threads")
+  }
+  else if (cmd == L"threads") {
     wos << endl
     << L"threads" << endl
     << endl
     << L"This command gives information about all the threads." << endl
     << endl;
-
-  else if (cmd == L"priorityfile")
+  }
+  else if (cmd == L"priorityfile") {
     wos << endl
     << L"priorityfile (pf) [filename]" << endl
     << endl
@@ -3765,18 +3698,17 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"it prints out the priority information"
     << L" currently being used" << endl
     << endl;
-
-  else if (cmd == L"selthread")
+  }
+  else if (cmd == L"selthread") {
     wos << endl
     << L"selthread threadid" << endl
     << endl
     << L"With this command the user can force the scheduler to" << endl
     << L"swap in thread number \"threadid\"." << endl
     << endl;
-
+ }
 #endif //VDMPP
-
-  else if (cmd == L"finish")
+  else if (cmd == L"finish") {
     wos << endl
     << L"finish" << endl
     << endl
@@ -3785,8 +3717,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"the caller. The command is used together with 'stepin'." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"functions")
+  }
+  else if (cmd == L"functions") {
     wos << endl
 #ifdef VDMSL
     << L"functions" << endl
@@ -3800,8 +3732,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #endif // VDPPM
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"latex")
+  }
+  else if (cmd == L"latex") {
     wos << endl
     << L"latex (l) [-n|-N|-r] file" << endl
     << endl
@@ -3816,17 +3748,17 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"\\color{not-covered} and \\color{covered}"
     << L" in the generated LaTeX file." << endl
     << endl;
-
+  }
 #ifdef VDMPP
-  else if (cmd == L"classes")
+  else if (cmd == L"classes") {
     wos << endl
     << L"classes" << endl
     << endl
     << L"Displays the names of defined classes." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"create")
+  }
+  else if (cmd == L"create") {
     wos <<endl
     << L"create (cr) name := invoke statement | new statement." << endl
     << endl
@@ -3834,8 +3766,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"The object name is in the scope of the debugger" << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"instvars")
+  }
+  else if (cmd == L"instvars") {
     wos << endl
     << L"instvars class" << endl
     << endl
@@ -3843,8 +3775,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L" of the class 'class'." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"objects")
+  }
+  else if (cmd == L"objects") {
     wos << endl
     << L"objects [-a]" << endl
     << endl
@@ -3852,8 +3784,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"Option -a causes the object table to be printed." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-    else if (cmd == L"destroy")
+  }
+  else if (cmd == L"destroy") {
     wos << endl
     << L"destroy name" << endl
     << endl
@@ -3861,19 +3793,19 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L" in the debugger." << endl
     << endl << NEED_INIT << endl
     << endl;
+  }
 #endif //VDMPP
-
 #ifdef VDMSL
-  else if (cmd == L"modules")
+  else if (cmd == L"modules") {
     wos << endl
     << L"modules" << endl
     << endl
     << L"Displays the names of defined modules." << endl
     << endl << NEED_INIT << endl
     << endl;
+  }
 #endif // VDMSL
-
-  else if (cmd == L"operations")
+  else if (cmd == L"operations") {
     wos << endl
 #ifdef VDMSL
     << L"operations" << endl
@@ -3886,9 +3818,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #endif // VDMSL
     << endl << NEED_INIT << endl
     << endl;
-
-//#ifdef VDMSL
-  else if (cmd == L"pop")
+  }
+  else if (cmd == L"pop") {
     wos << endl
     << L"pop" << endl
     << endl
@@ -3905,8 +3836,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"happens." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"push")
+  }
+  else if (cmd == L"push") {
     wos << endl
     << L"push name" << endl
     << endl
@@ -3922,42 +3853,41 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #endif // VDMPP
     << endl << NEED_INIT << endl
     << endl;
-//#endif //VDMSL
-
-  else if (cmd == L"pwd")
+  }
+  else if (cmd == L"pwd") {
     wos << endl
     << L"pwd" << endl
     << endl
     << L"Print working directory" << endl
     << endl;
-
-  else if (cmd == L"singlestep")
+  }
+  else if (cmd == L"singlestep") {
     wos << endl
     << L"singlestep (g)" << endl
     << endl
     << L"Executes the next expression or statement and then breaks." << endl
     << endl << NEED_INIT << endl
     << endl;
-
+  }
 #ifdef VDMSL
-  else if (cmd == L"stack")
+  else if (cmd == L"stack") {
     wos << endl
     << L"stack" << endl
     << endl
     << L"Displays the names of the pushed modules." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"states")
+  }
+  else if (cmd == L"states") {
     wos << endl
     << L"states" << endl
     << endl
     << L"Displays the names of defined global state names." << endl
     << endl << NEED_INIT << endl
     << endl;
+  }
 #endif //VDMSL
-
-  else if (cmd == L"step")
+  else if (cmd == L"step") {
     wos << endl
     << L"step (s)" << endl
     << endl
@@ -3965,8 +3895,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"will not step into function and operation calls." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"stepin")
+  }
+  else if (cmd == L"stepin") {
     wos << endl
     << L"stepin (si)" << endl
     << endl
@@ -3975,8 +3905,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"will also step into function and operation calls." << endl
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"types")
+  }
+  else if (cmd == L"types") {
     wos << endl
 #ifdef VDMSL
     << L"types" << endl
@@ -3989,8 +3919,8 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #endif //VDMSL
     << endl << NEED_INIT << endl
     << endl;
-
-  else if (cmd == L"values")
+  }
+  else if (cmd == L"values") {
     wos << endl
 #ifdef VDMSL
     << L"values" << endl
@@ -4003,14 +3933,16 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #endif //VDMSL
     << endl << NEED_INIT << endl
     << endl;
-  else if (cmd == L"version")
+  }
+  else if (cmd == L"version") {
     wos << endl
     << L"version" << endl
     << endl
     << L"Displays the VDMTools version." << endl
     << endl;
+  }
 // for special use
-  else if (cmd == L"ast")
+  else if (cmd == L"ast") {
     wos << endl
 #ifdef VDMSL
     << L"ast module" << endl
@@ -4023,19 +3955,23 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"Displays the abstruct syntax tree of class 'class'." << endl
 #endif // VDMPP
     << endl;
-  else if (cmd == L"contextinfo")
+  }
+  else if (cmd == L"contextinfo") {
     wos << endl
     << L"contextinfo filename" << endl
     << endl;
-  else if (cmd == L"tokeninfo")
+  }
+  else if (cmd == L"tokeninfo") {
     wos << endl
     << L"tokeninfo filename" << endl
     << endl;
-  else if (cmd == L"nodeinfo")
+  }
+  else if (cmd == L"nodeinfo") {
     wos << endl
     << L"nodeinfo filename" << endl
     << endl;
-  else if (cmd == L"sigma")
+  }
+  else if (cmd == L"sigma") {
     wos << endl
 #ifdef VDMSL
     << L"sigma [modulename]" << endl
@@ -4044,44 +3980,50 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << L"sigma classname" << endl
 #endif // VDMPP
     << endl;
+  }
 #ifdef VDMPP
-  else if (cmd == L"load")
+  else if (cmd == L"load") {
     wos << endl
     << L"load filename" << endl
     << endl;
-  else if (cmd == L"save")
+  }
+  else if (cmd == L"save") {
     wos << endl
     << L"save filename" << endl
     << endl;
-  else if (cmd == L"state")
+  }
+  else if (cmd == L"state") {
     wos << endl
     << L"state [-cdfnrsu]" << endl
-//    << L"state -c [classname]" << endl
     << L"state -d [oid]" << endl
     << L"state -r [oid]" << endl
     << endl;
-  else if (cmd == L"cpu")
+  }
+  else if (cmd == L"cpu") {
     wos << endl
     << L"cpu" << endl
     << endl;
-  else if (cmd == L"schedule")
+  }
+  else if (cmd == L"schedule") {
     wos << endl
     << L"schedule" << endl
     << endl;
-  else if (cmd == L"threadinfo")
+  }
+  else if (cmd == L"threadinfo") {
     wos << endl
     << L"threadinfo threadid" << endl
     << endl;
+  }
 #endif // VDMPP
-  else if (cmd == L"curstate")
+  else if (cmd == L"curstate") {
     wos << endl
     << L"curstate" << endl
     << endl;
-//
-  else
-    { wos << L"No help available for this command" << endl << flush;
-      return 0;
-    }
+  }
+  else {
+    wos << L"No help available for this command" << endl << flush;
+    return 0;
+  }
   wos << flush;
   return 1;
 }
@@ -4096,7 +4038,8 @@ void TOOLS::cmd_tcov(const wstring & args, wostream & wos)
   else if (params[0] == L"read") {
     if (nos != 2) {
       wos << L"tcov read requires one file name" << endl << flush;
-    } else {
+    }
+    else {
       wstring coverage_file = params[1];
       // If coverage file exists then read it in.
       wifstream f(TBWSTR::wstring2fsstr(coverage_file).c_str());
@@ -4107,7 +4050,8 @@ void TOOLS::cmd_tcov(const wstring & args, wostream & wos)
         const Map & short_names (gfmnn.GetField(2));
 
         GetCI().LoadCounters(coverage_file, long_names, short_names, wos, true);
-      } else {
+      }
+      else {
         wos << L"Could not read test coverage file " << L"'" << coverage_file << L"'" << endl;
       }
     }
@@ -4115,7 +4059,8 @@ void TOOLS::cmd_tcov(const wstring & args, wostream & wos)
   else if (params[0] == L"write") {
     if (nos != 2) {
       wos << L"tcov read requires one file name" << endl;
-    } else {
+    }
+    else {
       wstring coverage_file = params[1];
       // Save coverage counters into coverage_file
       Map m (ToolMediator::GetFileMapNumName());
@@ -4125,7 +4070,8 @@ void TOOLS::cmd_tcov(const wstring & args, wostream & wos)
   else if (params[0] == L"reset") {
     if (nos != 1) {
       wos << L"tcov reset does not take any parameters" << endl;
-    } else {
+    }
+    else {
       GetCI().ResetTestCoverageInfo();
     }
   }
@@ -4170,16 +4116,17 @@ void TOOLS::OpenCallLog()
 
 void TOOLS::CloseCallLog()
 {
-  if (TOOLS::calllogstream.is_open())
+  if (TOOLS::calllogstream.is_open()) {
     TOOLS::calllogstream.close();
+  }
 }
 
 void TOOLS::WriteCallLog(const wstring & id, const Sequence & arg_l, int level)
 {
-  if (TOOLS::calllogstream.good())
-  {
-    for (int i = 0; i < level; i++)
+  if (TOOLS::calllogstream.good()) {
+    for (int i = 0; i < level; i++) {
       TOOLS::calllogstream << " ";
+    }
     TOOLS::calllogstream << TBWSTR::wstring2utf8str(id) << endl;
   }
 }
@@ -4209,13 +4156,11 @@ Tuple TOOLS::GetOperations(const wstring & clsnm)
 {
   TYPE_AS_Name cls (ASTAUX::MkNameFromId(ASTAUX::MkId(clsnm), NilContextId));
   Tuple t (TBDEBUG::GetOperations(cls));
-  if (t.GetBoolValue(1))
-  {
+  if (t.GetBoolValue(1)) {
     Set nm_s (t.GetSet(2));
     Sequence res;
     Generic nm;
-    for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
-    {
+    for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
       res.ImpAppend(Sequence(ASTAUX::ASName2String(nm)));
     }
     return mk_(Bool(false), res);
@@ -4228,22 +4173,21 @@ void TOOLS::EvalNoCheck (const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite);
-  if (nos == 0)
-  {
+  if (nos == 0) {
     SET<TYPE_AS_Name> cl_s (Settings.GetNoCheck());
     Generic cl;
-    for (bool bb = cl_s.First(cl); bb; bb = cl_s.Next(cl))
-    {
+    for (bool bb = cl_s.First(cl); bb; bb = cl_s.Next(cl)) {
       wos << ASTAUX::ASName2String(cl) << endl;
     }
   }
-  else if (nos == 2)
-  {
+  else if (nos == 2) {
     wstring opt (params[0]);
-    if (opt == L"add")
+    if (opt == L"add") {
       Settings.AddNoCheck(ASTAUX::MkNameFromId(ASTAUX::MkId(params[1]), NilContextId));
-    else if (opt == L"del")
+    }
+    else if (opt == L"del") {
       Settings.RemoveNoCheck(ASTAUX::MkNameFromId(ASTAUX::MkId(params[1]), NilContextId));
+    }
   }
 }
 
@@ -4251,16 +4195,13 @@ void TOOLS::EvalSearch (const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite);
-  if (nos > 0)
-  {
+  if (nos > 0) {
     SEQ<TYPE_ProjectTypes_FileName> files (ToolMediator::Repos()->vdm_Files().ToSequence());
     Sequence res (SearchId(files, params[0], false, false));
     size_t len_res = res.Length();
-    for (size_t idx = 1; idx <= len_res; idx++)
-    {
+    for (size_t idx = 1; idx <= len_res; idx++) {
       Tuple t (res[idx]);
       wos << (t.GetBoolValue(5) ? L"+ " : L"  ")
-//          << TBUTILS::tb_getbasename(t.GetSequence(1).GetString())
           << t.GetSequence(1)
           << L", line " << t.GetInt(3)
           << L", col " << t.GetInt(4) << endl;
@@ -4276,8 +4217,9 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
 {
   wstring args (args_);
   try {
-    while (args.length() > 0 && iswspace(args[0]))
+    while (args.length() > 0 && iswspace(args[0])) {
       args.replace(0, 1, L"");
+    }
 
     string sargs = TBWSTR::ConvertToHexquad(args);
     if ((//cmd == L"backtrace" ||
@@ -4324,8 +4266,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
          cmd == L"types" ||
          cmd == L"values") &&
          !theStackMachine().IsInitialized()
-        )
-    {
+        ) {
       vdm_iplog << L"No initialised specification present" << endl << flush;
       return true; // is not considered as an error!!
     }
@@ -4338,33 +4279,36 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       wstring bpkts[20];
       int nos = STR_split (args, bpkts, 20, STR_RXwhite_and_comma);
 
-      if (nos == 0)
+      if (nos == 0) {
         vdm_iplog << L"Specify breakpoints to be deleted" << endl << flush;
-      else
+      }
+      else {
         for (int i = 0; i < nos; TBDEBUG::EvalDeleteBreak (bpkts[i++], vdm_iplog));
-
+      }
       return true;
     }
     else if (cmd == L"enable") {
       wstring bpkts[20];
       int nos = STR_split (args, bpkts, 20, STR_RXwhite_and_comma);
 
-      if (nos == 0)
+      if (nos == 0) {
         vdm_iplog << L"Specify breakpoint numbers to be enabled" << endl << flush;
-      else
+      }
+      else {
         for (int i = 0; i < nos; TBDEBUG::EvalEnableBreak (bpkts[i++], vdm_iplog));
-
+      }
       return true;
     }
     else if (cmd == L"disable") {
       wstring bpkts[20];
       int nos = STR_split (args, bpkts, 20, STR_RXwhite_and_comma);
 
-      if (nos == 0)
+      if (nos == 0) {
         vdm_iplog << L"Specify breakpoint numbers to be disabled" << endl << flush;
-      else
+      }
+      else {
         for (int i = 0; i < nos; TBDEBUG::EvalDisableBreak (bpkts[i++], vdm_iplog));
-
+      }
       return true;
     }
     else if (cmd == L"condition") {
@@ -4378,15 +4322,18 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       TYPE_ProjectTypes_ModuleName nm;
       if (( 0 != params[0].compare(wstring(L""))) &&
           ( 0 != params[0].compare(wstring(L"rti"))) &&
-          ( 0 != params[0].compare(wstring(L"-P"))))
+          ( 0 != params[0].compare(wstring(L"-P")))) {
         nm = PTAUX::mk_ModuleName(params[0]);
-      else if (ToolMediator::Repos()->vdm_IsSession (flat_session))
+      }
+      else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
         nm = PTAUX::mk_ModuleName(L"DefaultMod");
+      }
 #ifdef VDMSL
       else {
         Tuple t (TBDEBUG::GetCurrentModule()); // bool * [ProjectTypes`ModuleName]
-        if (t.GetBoolValue(1))
+        if (t.GetBoolValue(1)) {
           nm = t.GetRecord(2);
+        }
         else {
           vdm_iplog << L"No module is pushed onto the stack" << endl << flush;
           return true; // is not considered as an error!!
@@ -4401,8 +4348,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
 #endif //VDMPP
       Quote kind (L"CPP");
       bool testcond = ((params[0] == L"-P") || (params[1] == L"-P") || (params[2] == L"-P"));
-      if (GetCGTools().ResetCG(kind))
-      {
+      if (GetCGTools().ResetCG(kind)) {
         GetStatSem().namesTypeChecked.resetInfo();
 
         if ((params[0] == L"rti") || (params[1] == L"rti") || (params[2] == L"rti")) {
@@ -4420,7 +4366,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
                                     testcond);
           Settings.SetCGRTI(rti);
         }
-        else
+        else {
           GetCGTools().EvalCodeGen (nm,
                                     kind,        // CPP
                                     Bool(false),
@@ -4430,6 +4376,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
                                     Nil(),
                                     Bool(false),
                                     testcond);
+        }
       }
 #ifdef VDMPP
       ToolMediator::EvalInhTree();
@@ -4469,8 +4416,9 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
           ( 0 != params[0].compare(wstring(L"-m"))) &&
           ( 0 != params[0].compare(wstring(L"-P"))) &&
           ( 0 != params[0].compare(wstring(L"-s"))) &&
-          ( 0 != params[0].compare(wstring(L"-v"))))
+          ( 0 != params[0].compare(wstring(L"-v")))) {
         nm = PTAUX::mk_ModuleName(params[0]);
+      }
       else {
         vdm_iplog << L"Please specify a class to be code generated" << endl << flush;
         EvalHelp(L"javacg", vdm_iplog);
@@ -4487,39 +4435,44 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       bool no_vdm_prefix = false;
       Generic package_name = Nil();
       for (int param_num = 0; param_num < 9; param_num++) {
-        if (params[param_num] == L"-s")
+        if (params[param_num] == L"-s") {
           skeleton_option = true;
-        else if (params[param_num] == L"-e")
+        }
+        else if (params[param_num] == L"-e") {
           conc_option = true;
-        else if (params[param_num] == L"-k")
+        }
+        else if (params[param_num] == L"-k") {
           preandpost_option = true;
-        else if (params[param_num] == L"-u")
+        }
+        else if (params[param_num] == L"-u") {
           onlytypes_option = true;
-        else if (params[param_num] == L"-v")
+        }
+        else if (params[param_num] == L"-v") {
           no_vdm_prefix = true;
-        else if (params[param_num] == L"-m"){
+        }
+        else if (params[param_num] == L"-m") {
           smalltypes_option = true;
           skeleton_option = true;
         }
-        else if (params[param_num] == L"-z"){
+        else if (params[param_num] == L"-z") {
           param_num++;
-          if ( 0 != params[param_num].compare(wstring(L"")))
+          if ( 0 != params[param_num].compare(wstring(L""))) {
             package_name = SEQ<Char>(params[param_num]);
+          }
         }
-        else if (params[param_num] == L"-P"){
+        else if (params[param_num] == L"-P") {
           testpreandpost_option = true;
           preandpost_option = true;
         }
       }
 
-      if (GetCGTools().ResetCG(kind))
-      {
+      if (GetCGTools().ResetCG(kind)) {
         GetStatSem().namesTypeChecked.resetInfo();
 
         bool vp = Settings.GetJCGVDMPrefix();
-        if (no_vdm_prefix)
+        if (no_vdm_prefix) {
           Settings.SetJCGVDMPrefix(false);
-
+        }
         GetCGTools().EvalCodeGen (nm,
                                   kind,             // Java
                                   skeleton_option,
@@ -4592,9 +4545,9 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
         vdm_iplog << L"Specify class to be pushed" << endl << flush;
 #endif // VDMPP
       }
-      else
+      else {
         TBDEBUG::EvalPushModule (PTAUX::mk_ModuleName(bpkts[0]), vdm_iplog);
-
+      }
       return true;
     }
     else if (cmd == L"pop") {
@@ -4603,8 +4556,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
     }
     else if (cmd == L"pe") {
       Tuple t (TOOLS::ParseExprsString(TBWSTR::ConvertToHexquad(args)));
-      if (t.GetBoolValue(1))
-      {
+      if (t.GetBoolValue(1)) {
         vdm_iplog << INT2Q::h2gAS(t.GetField(2)) << endl;
       }
       return true;
@@ -4627,17 +4579,13 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       TBDEBUG::Execute_popd(vdm_iplog);
       return true;
     }
-    else if (cmd == L"print")
-    {
-      if (args.empty())
-      {
-        if (Settings.GetExpression().IsNil())
-        {
+    else if (cmd == L"print") {
+      if (args.empty()) {
+        if (Settings.GetExpression().IsNil()) {
           vdm_log << L"print command must be used with one or more expression(s)." << endl << flush;
           return true;
         }
-        else
-        {
+        else {
           wstring expr (Sequence(Settings.GetExpression()).GetString());
           vdm_iplog << L"print " << expr << endl << flush;
           sargs = TBWSTR::ConvertToHexquad(expr);
@@ -4648,17 +4596,13 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       ToolMediator::Interf()->vdm_EnableUserInput();
       return true;
     } // end of L"print"
-    else if (cmd == L"debug")
-    {
-      if (args.empty())
-      {
-        if (Settings.GetExpression().IsNil())
-        {
+    else if (cmd == L"debug") {
+      if (args.empty()) {
+        if (Settings.GetExpression().IsNil()) {
           vdm_log << L"debug command must be used with one or more expression(s)." << endl << flush;
           return true;
         }
-        else
-        {
+        else {
           wstring expr (Sequence(Settings.GetExpression()).GetString());
           vdm_iplog << L"debug " << expr << endl << flush;
           sargs = TBWSTR::ConvertToHexquad(expr);
@@ -4669,8 +4613,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       ToolMediator::Interf()->vdm_EnableUserInput();
       return true;
     } // end of L"debug"
-    else if (cmd == L"date")
-    {
+    else if (cmd == L"date") {
       Time now;
       vdm_iplog << now << endl;
       return true;
@@ -4772,26 +4715,20 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       return true;
     }
 #endif //VDMPP
-
     else if ((cmd == L"cont") ||
              (cmd == L"finish") ||
              (cmd == L"step") ||
              (cmd == L"stepin") ||
-             (cmd == L"singlestep"))
-    {
+             (cmd == L"singlestep")) {
       // Do nothing as this should be taken care of earlier
       vdm_iplog << L"Evaluation is finished" << endl << flush;
       return true;
     }
-
-    else if ((cmd == L"up") || (cmd == L"down"))
-    {
+    else if ((cmd == L"up") || (cmd == L"down")) {
       TBDEBUG::ExecuteUpDownCommand(cmd, args, vdm_iplog);
       return true;
     }
-
-    else if (cmd == L"typecheck")
-    {
+    else if (cmd == L"typecheck") {
       int tcoption = POS;
       wstring params[20];
       STR_split (args, params, 20, STR_RXwhite_and_comma);
@@ -4799,15 +4736,18 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       TYPE_ProjectTypes_ModuleName nm;
       if ((0 != params[0].compare(wstring(L""))) &&
           (0 != params[0].compare(wstring(L"pos"))) &&
-          (0 != params[0].compare(wstring(L"def"))))
+          (0 != params[0].compare(wstring(L"def")))) {
         nm = PTAUX::mk_ModuleName (params[0]);
-      else if (ToolMediator::Repos()->vdm_IsSession (flat_session))
+      }
+      else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
         nm = PTAUX::mk_ModuleName (L"DefaultMod");
+      }
 #ifdef VDMSL
       else {
         Tuple t (TBDEBUG::GetCurrentModule()); // bool * [ProjectTypes`ModuleName]
-        if (t.GetBoolValue(1))
+        if (t.GetBoolValue(1)) {
           nm = t.GetRecord(2);
+        }
         else {
           vdm_iplog << L"No module is pushed onto the stack" << endl << flush;
           return true; // is not considered as an error!!
@@ -4820,13 +4760,15 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
         return true; // is not considered as an error!!
       }
 #endif //VDMPP
-      if ((params[0] == L"def") || (params[1] == L"def"))
+      if ((params[0] == L"def") || (params[1] == L"def")) {
         tcoption = DEF;
-      else if ((params[0] == L"pos") || (params[1] == L"pos"))
-        ;
-      else
+      }
+      else if ((params[0] == L"pos") || (params[1] == L"pos")) {
+        tcoption = POS;
+      }
+      else {
         vdm_iplog << L"typecheck must be called with either pos or def option" << endl << flush;
-
+      }
       GetStatSem().namesTypeChecked.resetInfo();
       EvalTypeCheck (nm, tcoption, vdm_iplog); //
       //      Set dependupdate;
@@ -4845,26 +4787,27 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       ToolMediator::UpdateSelections();
       return true;
     }
-    else if (cmd == L"latex")
-    {
+    else if (cmd == L"latex") {
       wstring params[20];
       int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
 
-      if (nos == 0)
+      if (nos == 0) {
         vdm_iplog << L"Specify file to be processed" << endl << flush;
-      else
-      {
+      }
+      else {
         bool rti = Settings.GetPrettyPrintRTI();
         int ind = Settings.GetIndex();
         Settings.SetIndex(0);
-        for (int i = 0; i < nos - 1; i++)
-        {
-          if (params[i] == L"-n")
+        for (int i = 0; i < nos - 1; i++) {
+          if (params[i] == L"-n") {
             Settings.SetIndex(1);
-          else if (params[i] == L"-N")
+          }
+          else if (params[i] == L"-N") {
             Settings.SetIndex(2);
-          else if (params[i] == L"-r")
+          }
+          else if (params[i] == L"-r") {
             Settings.SetPrettyPrintRTI(true);
+          }
           else {
             vdm_iplog << L"Valid options: '-n', '-N' and '-r'" << endl << flush;
             Settings.SetPrettyPrintRTI(rti);
@@ -4872,15 +4815,14 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
             return true; // is not considered as an error!!
           }
         }
-        if (params[nos-1] == L"*")
-        {
+        if (params[nos-1] == L"*") {
           SET<TYPE_ProjectTypes_FileName> files (ToolMediator::Repos()->vdm_Files());
           Generic file;
-          for (bool bb = files.First(file); bb; bb = files.Next(file))
+          for (bool bb = files.First(file); bb; bb = files.Next(file)) {
             EvalLatex(file);
+          }
         }
-        else
-        {
+        else {
           EvalLatex(PTAUX::mk_FileName(params[nos-1]));
         }
         Settings.SetIndex(ind);
@@ -4895,18 +4837,15 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       return true;
     }
 #ifdef VDMSL
-    else if (cmd == L"states")
-    {
+    else if (cmd == L"states") {
       TBDEBUG::EvalStates (vdm_iplog);
       return true;
     }
 #endif //VDMSL
-    else if (cmd == L"set")
-    {
+    else if (cmd == L"set") {
       wstring params[20];
       int nos = STR_split (args, params, 20, STR_RXwhite);
-      if (nos == 0)
-      {
+      if (nos == 0) {
         vdm_iplog
          << L"dtc              " << (Settings.DTC() ? L"on" : L"off") << endl
          << L"inv              " << (Settings.INV() ? L"on" : L"off") << endl
@@ -4947,13 +4886,12 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
          << L"setone           " << (Settings.SetOne() ? L"on" : L"off") << endl
          << flush;
       }
-      else
+      else {
         EvalSet (args, vdm_iplog);
-
+      }
       return true;
     }
-    else if (cmd == L"unset")
-    {
+    else if (cmd == L"unset") {
       wstring params[20];
       int nos = STR_split (args, params, 20, STR_RXwhite);
 
@@ -4973,15 +4911,16 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       }
       return true;
     }
-    else if (cmd == L"rtinfo")
-    {
+    else if (cmd == L"rtinfo") {
       wstring params[20];
       int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
 
-      if (nos == 1)
+      if (nos == 1) {
         TestCoverage::EvalListTestSuite (params[0],GetCI());
-      else
+      }
+      else {
         vdm_iplog << L"rtinfo must first be called with 1 parameter" << endl << flush;
+      }
       return true;
     }
     else if (cmd == L"tcov") {
@@ -5011,32 +4950,26 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
 
       SEQ<TYPE_ProjectTypes_FileName> file_l;
       if (nos == 0) {
-        //vdm_log << L"Specify files to read" << endl;
         SET<TYPE_ProjectTypes_FileName> modif_s (ToolMediator::CheckForModifiedFiles ());
-        if (modif_s.IsEmpty())
-        {
+        if (modif_s.IsEmpty()) {
           vdm_iplog << L"No files modified since last parsing" << endl << flush;
           return true;
         }
-
         Generic g;
-        for (bool bb = modif_s.First (g); bb; bb = modif_s.Next (g))
+        for (bool bb = modif_s.First (g); bb; bb = modif_s.Next (g)) {
           file_l.ImpAppend (g);
+        }
       }
-      else
-      {
+      else {
         for (int i = 0; i < nos; i++) {
           TYPE_ProjectTypes_FileName fnm (PTAUX::mk_FileName (files[i]));
           file_l.ImpAppend (fnm);
         }
       }
-      //ToolMediator::BTools ()->vdm_AddFiles (file_l.Elems());
       ToolMediator::BTools ()->vdm_SyntaxCheck (file_l);
       return true;
     } // end of L"read"
-
-    else if (cmd == L"script")
-    {
+    else if (cmd == L"script") {
       wstring files[20];
       int nos = STR_split (args, files, 20, STR_RXwhite_and_comma);
 
@@ -5047,42 +4980,41 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       bool res (ReadScriptFile (files[0]));
       return res;
     }
-    else if (cmd == L"info")
-    {
+    else if (cmd == L"info") {
       wstring topics[10];
       int no_topics = STR_split (args, topics, 10, STR_RXwhite_and_comma);
 
-      if (no_topics != 0)
+      if (no_topics != 0) {
         EvalHelp (topics[0], vdm_iplog);
-      else
+      }
+      else {
         EvalInfo (vdm_iplog);
+      }
       return true;
     }
-    else if (cmd == L"hinfo")
-    {
+    else if (cmd == L"hinfo") {
       wstring topics[10];
       int no_topics = STR_split (args, topics, 10, STR_RXwhite_and_comma);
 
-      if (no_topics != 0)
+      if (no_topics != 0) {
         EvalHelp (topics[0], vdm_iplog);
-      else
+      }
+      else {
         EvalHInfo (vdm_iplog);
+      }
       return true;
     }
-    else if (cmd == L"backtrace")
-    {
+    else if (cmd == L"backtrace") {
       vdm_iplog << L"Currently evaluating:" << endl << flush;
       TBDEBUG::EvalBackTrace (TBDEBUG::BT_PRINT, vdm_iplog);
       vdm_iplog << endl << flush;
       return true;
     }
-    else if (cmd == L"dlclose")
-    {
+    else if (cmd == L"dlclose") {
       theState().dlclose();
       return true;
     }
-    else if (cmd == L"init")
-    {
+    else if (cmd == L"init") {
       if (ToolMediator::Repos()->vdm_IsSession (none_session)) {
         vdm_iplog << L"No specification present" << endl << flush;
         InitToolbox( false );
@@ -5094,8 +5026,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       return true;
     }
     // Test if fast init works
-    else if (cmd == L"ii")
-    {
+    else if (cmd == L"ii") {
       if (ToolMediator::Repos()->vdm_IsSession (none_session)) {
         vdm_iplog << L"No specification present" << endl << flush;
         return true;
@@ -5103,8 +5034,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       TBDEBUG::InitCurrentDefinition (true, vdm_iplog);
       return true;
     }
-    else if ((cmd == L"new") && (cliOpt != NULL) && cliOpt->IsCLI())
-    {
+    else if ((cmd == L"new") && (cliOpt != NULL) && cliOpt->IsCLI()) {
       InitToolbox( false );
       ToolMediator::Repos()->vdm_ClearAll();
       UpdateToolbox();
@@ -5113,213 +5043,200 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       return true;
     }
     // End of fast init
-    else if (cmd == L"pwd")
-    {
+    else if (cmd == L"pwd") {
       vdm_iplog << TBUTILS::tb_getcwd() << endl << flush;
       return true;
     }
-
 #ifdef CORBA_API
-    else if (cmd == L"object-table")
-    {
+    else if (cmd == L"object-table") {
       VDMApplication_i::echo_object();
       return true;
     }
 #endif //CORBA_API
-
-    else if (cmd == L"encode")
-    {
+    else if (cmd == L"encode") {
       // Extract name of time file
       wstring files[20];
       int nos = STR_split (args, files, 20, STR_RXwhite_and_comma);
-      if (nos == 0)
-      {
+      if (nos == 0) {
         wstring encoding (TBWSTR::getIOCharSetEnv());
 #ifdef _MSC_VER
         wstring enc (encoding);
-        if (enc == wstring (L"65001"))
+        if (enc == wstring (L"65001")) {
           encoding = wstring (L"UTF8");
-        else if (enc == wstring (L"28605"))
+        }
+        else if (enc == wstring (L"28605")) {
           encoding = wstring (L"ISO-8859-15");
-        else if (enc == wstring (L"932"))
+        }
+        else if (enc == wstring (L"932")) {
           encoding = wstring(L"SJIS");
-        else if (enc == wstring (L"51932"))
+        }
+        else if (enc == wstring (L"51932")) {
           encoding = wstring(L"eucJP");
-        else if (enc == wstring (L"950"))
+        }
+        else if (enc == wstring (L"950")) {
           encoding = wstring(L"Big5");
-        else if (enc == wstring (L"51949"))
+        }
+        else if (enc == wstring (L"51949")) {
           encoding = wstring(L"eucKR");
-        else if (enc == wstring (L"936"))
+        }
+        else if (enc == wstring (L"936")) {
           encoding = wstring(L"GBK");
-        else if (enc == wstring (L"20866"))
+        }
+        else if (enc == wstring (L"20866")) {
           encoding = wstring(L"KOI8-R");
-        else if (enc == wstring (L"28598"))
+        }
+        else if (enc == wstring (L"28598")) {
           encoding = wstring(L"ISO-8859-8");
+        }
 #endif // _MSC_VER
         vdm_iplog << L"Text Encoding: " << encoding << endl << flush;
       }
-      else
-      {
-        if (nos != 1)
-        {
+      else {
+        if (nos != 1) {
           vdm_iplog << L"Warning: only first encoding in list used - " << files[0] << endl << flush;
         }
         wstring encoding (files[0]);
 #ifdef _MSC_VER
         wstring enc;
-        for( std::string::size_type i = 0; i < encoding.size(); i++ )
-          if ((encoding[i] != L'-') && (encoding[i] != L'_') && (encoding[i] != L' '))
+        for( std::string::size_type i = 0; i < encoding.size(); i++ ) {
+          if ((encoding[i] != L'-') && (encoding[i] != L'_') && (encoding[i] != L' ')) {
             enc += towlower(encoding[i]);
-
-        if (enc == wstring(L"utf8"))
+          }
+        }
+        if (enc == wstring(L"utf8")) {
           encoding = wstring (L"65001");
-        else if (enc == wstring(L"iso885915"))
+        }
+        else if (enc == wstring(L"iso885915")) {
           encoding = wstring (L"28605");
-        else if ((enc == wstring(L"sjis")) || (enc == wstring(L"shiftjis")))
+        }
+        else if ((enc == wstring(L"sjis")) || (enc == wstring(L"shiftjis"))) {
           encoding = wstring (L"932");
-        else if (enc == wstring(L"eucjp"))
+        }
+        else if (enc == wstring(L"eucjp")) {
           encoding = wstring (L"51932");
-        else if (enc == wstring(L"big5"))
+        }
+        else if (enc == wstring(L"big5")) {
           encoding = wstring (L"950");
-        else if (enc == wstring(L"euckr"))
+        }
+        else if (enc == wstring(L"euckr")) {
           encoding = wstring (L"51949");
-        else if (enc == wstring(L"gbk"))
+        }
+        else if (enc == wstring(L"gbk")) {
           encoding = wstring (L"936");
-        else if (enc == wstring(L"koi8r"))
+        }
+        else if (enc == wstring(L"koi8r")) {
           encoding = wstring (L"20866");
-        else if (enc == wstring(L"iso88598"))
+        }
+        else if (enc == wstring(L"iso88598")) {
           encoding = wstring (L"28598");
-        else if (enc == wstring(L"tscii0"))
-        //  encoding = wstring (L"");
+        }
+        else if (enc == wstring(L"tscii0")) {
           encoding = wstring (L"65001");
+        }
 #endif // _MSC_VER
 
         TBWSTR::setIOCharSetEnv( encoding );
       }
       return true;
     }
-    else if (cmd == L"fscode")
-    {
+    else if (cmd == L"fscode") {
       // Extract name of time file
       wstring files[20];
       int nos = STR_split (args, files, 20, STR_RXwhite_and_comma);
-      if (nos == 0)
-      {
+      if (nos == 0) {
         vdm_iplog << L"File System Code Set: " << TBWSTR::getCodePageEnv() << endl << flush;
       }
-      else
-      {
-        if (nos != 1)
-        {
+      else {
+        if (nos != 1) {
           vdm_iplog << L"Warning: only first encoding in list used - " << files[0] << endl << flush;
         }
         TBWSTR::setCodePageEnv( files[0] );
       }
       return true;
     }
-    else if (cmd == L"ast")
-    {
+    else if (cmd == L"ast") {
       DisplayAST( args, vdm_iplog );
       return true;
     }
-    else if (cmd == L"contextinfo")
-    {
+    else if (cmd == L"contextinfo") {
       DisplayContextInfo( args, true, true, vdm_iplog );
       return true;
     }
-    else if (cmd == L"tokeninfo")
-    {
+    else if (cmd == L"tokeninfo") {
       DisplayContextInfo( args, true, false, vdm_iplog );
       return true;
     }
-    else if (cmd == L"nodeinfo")
-    {
+    else if (cmd == L"nodeinfo") {
       DisplayContextInfo( args, false, true, vdm_iplog );
       return true;
     }
-    else if (cmd == L"version")
-    {
+    else if (cmd == L"version") {
       DisplayVersion(vdm_iplog);
       return true;
     }
-    else if (cmd == L"find")
-    {
+    else if (cmd == L"find") {
       GoFindType(args, vdm_iplog);
       return true;
     }
 #ifdef VDMPP
-    else if (cmd == L"cpu")
-    {
+    else if (cmd == L"cpu") {
       TBDEBUG::DisplaySystem(vdm_iplog);
       return true;
     }
-    else if (cmd == L"schedule")
-    {
+    else if (cmd == L"schedule") {
       TBDEBUG::DisplaySchedule(vdm_iplog);
       return true;
     }
-    else if (cmd == L"threadinfo")
-    {
+    else if (cmd == L"threadinfo") {
       TBDEBUG::DisplayThreadInfo( args, vdm_iplog );
       return true;
     }
-
 #ifdef VICE
-    else if (cmd == L"timefile")
-    {
+    else if (cmd == L"timefile") {
       TOOLS::EvalTimefile(args);
       return true;
     }
-    else if (cmd == L"gettime")
-    {
+    else if (cmd == L"gettime") {
       vdm_iplog << L"current time: " << theSystem().GetTime()
                 << endl << flush;
       return true;
     }
 #endif //VICE
 #endif // VDMPP
-    else if (cmd == L"curstate")
-    {
+    else if (cmd == L"curstate") {
       TBDEBUG::DisplayCurrentState(vdm_iplog);
       return true;
     }
-    else if ((cmd == L"#") || (cmd[0] == L'#'))
-    {
+    else if ((cmd == L"#") || (cmd[0] == L'#')) {
       // do nothing
       return true;
     }
-    else if (cmd == L"search")
-    {
+    else if (cmd == L"search") {
       EvalSearch (args, vdm_iplog);
       return true;
     }
-    else if (cmd == L"traces")
-    {
+    else if (cmd == L"traces") {
       TBDEBUG::EvalTraces (args, vdm_iplog);
       return true;
     }
 #ifdef VDMPP
-    else if (cmd == L"nocheck")
-    {
+    else if (cmd == L"nocheck") {
       wstring params[20];
       int nos = STR_split (args, params, 20, STR_RXwhite);
-      if (nos == 0)
-      {
+      if (nos == 0) {
         SET<TYPE_AS_Name> cl_s (Settings.GetNoCheck());
         Generic cl;
-        for (bool bb = cl_s.First(cl); bb; bb = cl_s.Next(cl))
-        {
+        for (bool bb = cl_s.First(cl); bb; bb = cl_s.Next(cl)) {
           vdm_iplog << ASTAUX::ASName2String(cl) << endl;
         }
       }
-      else
+      else {
         EvalNoCheck (args, vdm_iplog);
-
+      }
       return true;
     }
 #endif // VDMPP
-    else
-    {
+    else {
       // command is't unknown
       vdm_iplog << L"Unknown command" << endl << flush;
       return true;
@@ -5329,13 +5246,15 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
   catch (TB_Exception & e) {
     vdm_iplog << L"Catch exception at ParseCommand!!" << endl;
     switch (e.GetExType()) {
-      case ERR_IP:
+      case ERR_IP: {
         TBDEBUG::ProcessRuntimeError(vdm_iplog);
         break;
-      default:
+      }
+      default: {
         // It must not happen
         vdm_err << L"Internal Error" << endl;
         break;
+      }
     }
     return false;
   }
@@ -5347,8 +5266,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
 // ==> bool (true : continue, false : quit)
 bool TOOLS::Execute (const wstring & command, const wstring & args)
 {
-  if (command == L"UNKNOWN")
-  {
+  if (command == L"UNKNOWN") {
     vdm_iplog << L"Unknown command" << endl << flush;
     return true;
   }
@@ -5356,23 +5274,28 @@ bool TOOLS::Execute (const wstring & command, const wstring & args)
             (command == L"step") ||
             (command == L"singlestep") ||
             (command == L"stepin") ||
-            (command == L"finish") )
-  {
-    if (!TOOLS::IsInScript())
+            (command == L"finish") ) {
+    if (!TOOLS::IsInScript()) {
       ToolMediator::Errs()->vdm_ClearAll();
+    }
 
     try {
       Tuple r;
-      if (command == L"cont")
+      if (command == L"cont") {
         r = TBDEBUG::DebugStep(TBDEBUG::CONTINUE);
-      else if (command == L"step")
+      }
+      else if (command == L"step") {
         r = TBDEBUG::DebugStep(TBDEBUG::STEP);
-      else if (command == L"singlestep")
+      }
+      else if (command == L"singlestep") {
         r = TBDEBUG::DebugStep(TBDEBUG::SINGLESTEP);
-      else if (command == L"stepin")
+      }
+      else if (command == L"stepin") {
         r = TBDEBUG::DebugStep(TBDEBUG::STEPIN);
-      else // (command == L"finish")
+      }
+      else { // (command == L"finish")
         r = TBDEBUG::DebugStep(TBDEBUG::FINISH);
+      }
 
       if (r.GetBool(1)) {
         Tuple aie (TBDEBUG::AfterInterpreterEval(r.GetField(2), r.GetField(3), vdm_iplog));
@@ -5387,26 +5310,26 @@ bool TOOLS::Execute (const wstring & command, const wstring & args)
     }
     catch (TB_Exception &e) {
       switch (e.GetExType()) {
-      case ERR_IP:
-        TBDEBUG::ProcessRuntimeError(vdm_iplog);
-        break;
-      default:
-        // It must not happen
-        vdm_err << L"Internal Error" << endl << flush;
-        break;
+        case ERR_IP: {
+          TBDEBUG::ProcessRuntimeError(vdm_iplog);
+          break;
+        }
+        default: {
+          // It must not happen
+          vdm_err << L"Internal Error" << endl << flush;
+          break;
+        }
       }
     }
-    if (!TOOLS::IsInScript())
+    if (!TOOLS::IsInScript()) {
       ToolMediator::Errs()->vdm_AllDone();
-
+    }
     return true;
   }
-  else if (command == L"quit" || command == L"cquit")
-  {
+  else if (command == L"quit" || command == L"cquit") {
     return false;
   }
-  else
-  {
+  else {
     return TOOLS::ParseCommand (command, args);
   }
 }
@@ -5423,8 +5346,7 @@ bool TOOLS::ResetErrors(const wstring & command, const wstring & args)
       command == L"typecheck" ||
       command == L"codegen" ||
       command == L"javacg" ||
-      command == L"latex")
-  {
+      command == L"latex") {
     ToolMediator::Errs()->vdm_ClearAll();
     TOOLS::Execute(command, args);
     ToolMediator::Errs()->vdm_AllDone();
@@ -5438,8 +5360,7 @@ bool TOOLS::ResetErrors(const wstring & command, const wstring & args)
     ToolMediator::Errs()->vdm_AllDone();
     return cont;
   }
-  else
-  {
+  else {
     bool cont = TOOLS::Execute(command, args);
     return cont;
   }
@@ -5456,20 +5377,20 @@ Bool TOOLS::ExecuteCommand (const TYPE_ProjectTypes_ToolCommand & ToolCommand)
 
   wstring input = PTAUX::ExtractToolCommand (ToolCommand);
   /* Skip blank command lines 930415. MIAN */
-//  for (int i = 0; i < (int) input.length(); i++)
-//    if (! iswspace(input[i]))
-//      break;
   int i = 0;
-  while((i < (int) input.length()) && iswspace(input[i]))
+  while((i < (int) input.length()) && iswspace(input[i])) {
     i++;
+  }
 
   bool cont = true;
   if (i != (int) input.length()) {
     wstring command (TOOLS::ExpandCommand (input));
-    if (command == L"UNKNOWN")
+    if (command == L"UNKNOWN") {
       vdm_iplog << L"Unknown command" << endl << flush;
-    else if ( 0 != command.compare(wstring(L"")))
+    }
+    else if ( 0 != command.compare(wstring(L""))) {
       cont = TOOLS::ResetErrors(command, input);
+    }
   }
   return Bool(cont);
 }
@@ -5490,10 +5411,12 @@ Generic TOOLS::DependencyFindType (const TYPE_AS_Name & nm, const TYPE_AS_Name &
   // after the AST is inserted in the Specification Manager.
   // clnm is the name of the parsed class.
   Generic g (GetStatSem().PublicLookUpTypeName (nm, clnm));
-  if (g.IsNil())
+  if (g.IsNil()) {
     return Nil();
-  else
+  }
+  else {
     return Tuple(g).GetField(1);
+  }
 #else
   return Nil ();
 #endif // VDMPP
@@ -5521,13 +5444,16 @@ bool ToolMediator::IsFileModified(const TYPE_ProjectTypes_FileName & fnm)
   if (!s) {
     long newmtime = buf.st_mtime;
     int oldmtime = (Repos ()->vdm_GetFileTimestamp (fnm)).GetValue ();
-    if (int (newmtime) > oldmtime)
+    if (int (newmtime) > oldmtime) {
       return true;
-    else
+    }
+    else {
       return false;
+    }
   }
-  else  // Could not get stat for file
+  else {  // Could not get stat for file
     return false;
+  }
 }
 
 SET<TYPE_ProjectTypes_FileName> ToolMediator::CheckForModifiedFiles ()
@@ -5537,8 +5463,7 @@ SET<TYPE_ProjectTypes_FileName> ToolMediator::CheckForModifiedFiles ()
   SET<TYPE_ProjectTypes_FileName> files_s (Repos ()->vdm_Files ());
   SET<TYPE_ProjectTypes_FileName> modified_s;
   Generic file;
-  for (bool bb = files_s.First (file); bb; bb = files_s.Next (file))
-  {
+  for (bool bb = files_s.First (file); bb; bb = files_s.Next (file)) {
     wstring fn (PTAUX::ExtractFileName (file));
     struct stat buf;
     int s = stat (TBWSTR::wstring2fsstr(fn).c_str (), &buf);
@@ -5549,8 +5474,9 @@ SET<TYPE_ProjectTypes_FileName> ToolMediator::CheckForModifiedFiles ()
         modified_s.Insert (file);
       }
     }
-    else  // Could not get stat for file
+    else { // Could not get stat for file
       modified_s.Insert (file);
+    }
   }
   return modified_s;
 }
@@ -5558,9 +5484,10 @@ SET<TYPE_ProjectTypes_FileName> ToolMediator::CheckForModifiedFiles ()
 #ifdef VDMPP
 void TOOLS::SetPrimarySchedulingAlgorithm(const wstring & algorithm)
 {
-  if (!Settings.SetPrimaryAlgorithmStr(algorithm))
+  if (!Settings.SetPrimaryAlgorithmStr(algorithm)) {
     vdm_err << endl
             << L"Unknown scheduling algorithm - " << algorithm << L" - ignored." << endl << flush;
+  }
 }
 
 #ifdef VICE
@@ -5591,8 +5518,7 @@ void TOOLS::SetInterfacesOption(const wstring & interfacesList)
   wstring classNames[20];
   int numClasses = STR_split(interfacesList, classNames, 20, STR_RXwhite_and_comma);
   SET<TYPE_AS_Name> nm_s;
-  for (int i = 0; i < numClasses; i ++)
-  {
+  for (int i = 0; i < numClasses; i ++) {
     nm_s.Insert(ASTAUX::MkNameFromId(ASTAUX::MkId(classNames[i]), NilContextId));
   }
 
@@ -5600,59 +5526,10 @@ void TOOLS::SetInterfacesOption(const wstring & interfacesList)
   Set unknown (nm_s.Diff(modNames));
   nm_s.ImpIntersect(modNames);
 
-/*
-  Set possibleInterfaces (GetCGTools().EvalPossibleInterfaces());
-  for (int i = 0; i < numClasses; i ++)
-  {
-    if (modNames.InSet(ASTAUX::MkNameFromId(ASTAUX::MkId(classNames[i]), NilContextId)))
-    {
-      TYPE_ProjectTypes_ModuleName modname (PTAUX::mk_ModuleName(classNames[i]));
-      if (possibleInterfaces.InSet(ASTAUX::MkNameFromId(ASTAUX::MkId(classNames[i]), NilContextId)))
-      {
-        SET<TYPE_ProjectTypes_ModuleName> interfaces_s (Settings.GetJCGInterfaces());
-        interfaces_s.Insert(modname);
-        Settings.SetJCGInterfaces(interfaces_s);
-        GetVDMCG().set_interfaces(nm_s); //
-        possibleInterfaces = GetCGTools().EvalPossibleInterfaces();
-        GetVDMCG().set_interfaces(Set()); //
-      }
-      else
-        vdm_log << L"Can not generate class " << classNames[i]
-                << L" as an interface - ignored" << endl << flush;
-    }
-    else
-      vdm_log << L"Unknown class - " << classNames[i]
-              << L" - specified as interface: ignored" << endl << flush;
-  }
-*/
-/*  
-  Set possibleInterfaces (GetCGTools().EvalPossibleInterfaces());
-  SET<TYPE_ProjectTypes_ModuleName> interfaces_s (Settings.GetJCGInterfaces());
-  for (int i = 0; i < numClasses; i ++)
-  {
-    TYPE_AS_Name nm (ASTAUX::MkNameFromId(ASTAUX::MkId(classNames[i]), NilContextId));
-    if (modNames.InSet(nm))
-    {
-      if (possibleInterfaces.InSet(nm))
-      {
-        TYPE_ProjectTypes_ModuleName modname (PTAUX::mk_ModuleName(classNames[i]));
-        interfaces_s.Insert(modname);
-      }
-      else
-        vdm_log << L"Can not generate class " << classNames[i] << L" as an interface - ignored" << endl << flush;
-    }
-    else
-      vdm_log << L"Unknown class - " << classNames[i] << L" - specified as interface: ignored" << endl << flush;
-  }
-  Settings.SetJCGInterfaces(interfaces_s);
-*/
-// <-- 20110603
-
   SET<TYPE_AS_Name> interfaces_s (PTAUX::ModuleNameSet2ASNameSet(Settings.GetJCGInterfaces()));
   Set possibleInterfaces (GetCGTools().EvalPossibleInterfaces());
   Set prevPossibleInterfaces;
-  while (possibleInterfaces != prevPossibleInterfaces)
-  {
+  while (possibleInterfaces != prevPossibleInterfaces) {
     interfaces_s.ImpUnion(possibleInterfaces.Intersect(nm_s));
     Settings.SetJCGInterfaces(PTAUX::ASNameSet2ModuleNameSet(interfaces_s));
     prevPossibleInterfaces = possibleInterfaces;
@@ -5660,20 +5537,16 @@ void TOOLS::SetInterfacesOption(const wstring & interfacesList)
   }
 
   Set nointer (nm_s.Diff(interfaces_s));
-  if (!nointer.IsEmpty())
-  {
+  if (!nointer.IsEmpty()) {
     Generic nm;
-    for (bool bb = nointer.First(nm); bb; bb = nointer.Next(nm))
-    {
+    for (bool bb = nointer.First(nm); bb; bb = nointer.Next(nm)) {
       vdm_log << L"Can not generate class " << ASTAUX::ASName2String (nm)
               << L" as an interface - ignored" << endl << flush;
     }
   }
-  if (!unknown.IsEmpty())
-  {
+  if (!unknown.IsEmpty()) {
     Generic nm;
-    for (bool bb = unknown.First(nm); bb; bb = unknown.Next(nm))
-    {
+    for (bool bb = unknown.First(nm); bb; bb = unknown.Next(nm)) {
       vdm_log << L"Unknown class - " << ASTAUX::ASName2String (nm)
               << L" - specified as interface: ignored" << endl << flush;
     }
@@ -5686,8 +5559,9 @@ wstring TOOLS::GetInterfacesOption()
   wstring interfacesList = L"";
   Generic g;
   for (bool bb = interfaces_s.First(g); bb; bb = interfaces_s.Next(g)) {
-    if (interfacesList != L"")
+    if (interfacesList != L"") {
       interfacesList += L",";
+    }
     interfacesList += PTAUX::Seq2Str(TYPE_ProjectTypes_ModuleName(g).get_nm());
   }
   return interfacesList;
@@ -5719,13 +5593,11 @@ bool TOOLS::ifstr2ufile( ifstream & ifs, string & ufname )
   ofs.open( ufname.c_str() );
 
   bool res = true;
-  if (ofs.good())
-  {
+  if (ofs.good()) {
     res = ifstr2ustr(ifs, ofs);
     ofs.close();
   }
-  else
-  {
+  else {
     res = false;
   }
   return res;
@@ -5734,17 +5606,14 @@ bool TOOLS::ifstr2ufile( ifstream & ifs, string & ufname )
 bool TOOLS::ifstr2ustr( ifstream & ifs, ostream & ostr )
 {
   bool res = true;
-  while ( ifs.peek() != EOF )
-  {
+  while ( ifs.peek() != EOF ) {
     string line (TBWSTR::vdm_getline(ifs) + '\n');
 
-    try
-    {
+    try {
       string converted (TBWSTR::ConvertToHexquad(TBWSTR::mbstr2wstring(line)));
       ostr.write( converted.c_str(), converted.length() );
     }
-    catch (...)
-    {
+    catch (...) {
       res = false;
       break;
     }
@@ -5755,10 +5624,12 @@ bool TOOLS::ifstr2ustr( ifstream & ifs, ostream & ostr )
 void TOOLS::ExecuteMainLoop ()
 {
 #ifdef CORBA_API
-  if( Settings.UsesCorba() )
+  if( Settings.UsesCorba() ) {
     ExecuteMainLoop (true);
-  else
+  }
+  else {
     ExecuteMainLoop (false);
+  }
 #else
   ExecuteMainLoop (false);
 #endif // CORBA_API
@@ -5769,8 +5640,7 @@ void TOOLS::ExecuteMainLoop (bool useCorba)
   vdm_log.flush();
   vdm_err.flush();
 
-  if (useCorba)
-  {
+  if (useCorba) {
 #ifdef CORBA_API
     APICommandQueue* queue = APICommandQueue::GetInstance ();
     queue->StartUserInputLoop ();
@@ -5791,8 +5661,7 @@ void TOOLS::ExecuteMainLoop (bool useCorba)
       vdm_err.flush();
     }//end while
   }
-  else
-  {
+  else {
     bool cont (true);
     while (cont) {
       wstring input (ReadLine ());
@@ -5806,12 +5675,11 @@ void TOOLS::ExecuteMainLoop (bool useCorba)
 bool TOOLS::InitCorbaApi(int argc, char *argv[], wstring &err)
 {
 #ifdef CORBA_API
-  if( Settings.UsesCorba() )
-  {
-    if( VDMCORBA::init_corba_api(argc, argv, err) )
+  if( Settings.UsesCorba() ) {
+    if( VDMCORBA::init_corba_api(argc, argv, err) ) {
       return true;
-    else
-    {
+    }
+    else {
       VDMCORBA::terminate_corba_api();
       return false;
     }
@@ -5825,8 +5693,9 @@ bool TOOLS::InitCorbaApi(int argc, char *argv[], wstring &err)
 void TOOLS::TerminateCorbaApi()
 {
 #ifdef CORBA_API
-  if( Settings.UsesCorba() )
+  if( Settings.UsesCorba() ) {
     VDMCORBA::terminate_corba_api();
+  }
 #endif // CORBA_API
 }
 
@@ -5857,47 +5726,39 @@ void TOOLS::ExternalParseService(const CLIOptions & thisCliOpt)
 Sequence TOOLS::SearchId(const SEQ<TYPE_ProjectTypes_FileName> & files,
                   const wstring & name, bool partial, bool defOnly)
 {
-  if (defOnly)
+  if (defOnly) {
     return SearchIdDef(files, name, partial);
-
+  }
   Sequence res;
-  if (!files.IsEmpty())
-  {
+  if (!files.IsEmpty()) {
     int len_files = files.Length();
-    for (int fc = 1; fc <= len_files; fc++)
-    { 
+    for (int fc = 1; fc <= len_files; fc++) { 
       TYPE_ProjectTypes_FileName fnm (files[fc]);
       wstring filename (PTAUX::ExtractFileName(fnm));
       TYPE_ProjectTypes_FileName tfn (ToolMediator::GetVDMTempFileName (fnm));
       wstring tmpfn (PTAUX::ExtractFileName (tfn));
-      if (tmpfn.empty())
+      if (tmpfn.empty()) {
         tmpfn = filename;
-
+      }
       Sequence fnseq (filename);
       Sequence tfnseq (tmpfn);
 
       Generic tig (GetCI().GetTokenInfos(SEQ<Char>(filename)));
-      if (!tig.IsNil())
-      {
+      if (!tig.IsNil()) {
         Sequence ti_l (tig);
         int len = ti_l.Length();
-        for (int i = 1; i <= len; i++)
-        {
+        for (int i = 1; i <= len; i++) {
           TYPE_CI_TokenInfo ti (ti_l[i]);
-          if (BINOPS::isIdentifier(ti.get_lexid()))
-          {
+          if (BINOPS::isIdentifier(ti.get_lexid())) {
             wstring id (ti.get_text().GetString());
             int line = ti.get_pos_ust ().get_abs_uline();
             int col = ti.get_pos_ust ().get_column();
-            if (id == name)
-            {
+            if (id == name) {
               res.ImpAppend(mk_(fnseq, tfnseq, Int(line), Int(col), Bool(false)));
             }
-            else if (partial)
-            {
+            else if (partial) {
               std::string::size_type index = id.find(name);
-              if (index != string::npos)
-              {
+              if (index != string::npos) {
                 res.ImpAppend(mk_(fnseq, tfnseq, Int(line), Int(col + index), Bool(false)));
               }
             }
@@ -5906,18 +5767,16 @@ Sequence TOOLS::SearchId(const SEQ<TYPE_ProjectTypes_FileName> & files,
       }
     }
   }
-// 20090626 -->
 // mark def
   Set def (SearchIdDef(files, name, partial).Elems());
   int len_res = res.Length();
-  for (int idx = 1; idx <= len_res; idx++)
-  {
+  for (int idx = 1; idx <= len_res; idx++) {
     Tuple t (res[idx]);
     t.SetField(5, Bool(true));
-    if (def.InSet(t))
+    if (def.InSet(t)) {
       res.ImpModify(idx, t);
+    }
   }
-// <-- 20090626
   return res;
 }
 
@@ -5926,19 +5785,15 @@ Tuple CheckName(const TYPE_AS_Name & nm, const wstring & name, bool partial)
   const TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
   const TYPE_CI_ContextId & cid  (nm.GetInt(pos_AS_Name_cid));
 
-  if (!ids.IsEmpty() && (cid != NilContextId))
-  {
+  if (!ids.IsEmpty() && (cid != NilContextId)) {
     wstring id (ids.Index(ids.Length()).GetString());
-    if (id == name)
-    {
+    if (id == name) {
       Tuple t (GetCI().GetFileLineColPos(cid));
       return mk_(Bool(true), t.GetInt(2), t.GetInt(3));
     }
-    else if (partial)
-    {
+    else if (partial) {
       std::string::size_type index = id.find(name);
-      if (index != string::npos)
-      {
+      if (index != string::npos) {
         Tuple t (GetCI().GetFileLineColPos(cid));
         return mk_(Bool(true), t.GetInt(2), Int(t.GetIntValue(3) + index));
       }
@@ -5955,32 +5810,28 @@ Tuple CheckName(const TYPE_AS_Name & nm, const wstring & name, bool partial)
 Sequence TOOLS::SearchIdDef(const SEQ<TYPE_ProjectTypes_FileName> & files, const wstring & name, bool partial)
 {
   Sequence res;
-  if (!files.IsEmpty())
-  {
+  if (!files.IsEmpty()) {
     int len_files = files.Length();
-    for (int fc = 1; fc <= len_files; fc++)
-    { 
+    for (int fc = 1; fc <= len_files; fc++) { 
       TYPE_ProjectTypes_FileName fnm (files[fc]);
       wstring filename (PTAUX::ExtractFileName(fnm));
       TYPE_ProjectTypes_FileName tfn (ToolMediator::GetVDMTempFileName (fnm));
       wstring tmpfn (PTAUX::ExtractFileName (tfn));
-      if (tmpfn.empty())
+      if (tmpfn.empty()) {
         tmpfn = filename;
-
+      }
       Sequence fnseq (filename);
       Sequence tfnseq (tmpfn);
 
       SET<TYPE_ProjectTypes_ModuleName> nm_s (ToolMediator::Repos()->vdm_ModulesInFile(fnm));
       Generic nm;
-      for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
-      {
+      for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
         TYPE_ProjectTypes_AstVal astval (ToolMediator::Repos()->vdm_GetAST(nm));
 #ifdef VDMSL
         TYPE_AS_Module mod (PTAUX::ExtractAstOrFlat(astval));
         // module
         Tuple t (CheckName(mod.GetRecord(pos_AS_Module_nm), name, partial));
-        if (t.GetBool(1))
-        {
+        if (t.GetBool(1)) {
           res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
         }
         // definitions
@@ -5990,15 +5841,13 @@ Sequence TOOLS::SearchIdDef(const SEQ<TYPE_ProjectTypes_FileName> & files, const
         TYPE_AS_Class cls (PTAUX::ExtractAstOrFlat(astval));
         // class
         Tuple t (CheckName(cls.GetRecord(pos_AS_Class_nm), name, partial));
-        if (t.GetBool(1))
-        {
+        if (t.GetBool(1)) {
           res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
         }
         // definitions
         Generic def_g (cls.GetField(pos_AS_Class_defs));
 #endif // VDMPP
-        if (!def_g.IsNil())
-        {
+        if (!def_g.IsNil()) {
           TYPE_AS_Definitions def (def_g);
           const MAP<TYPE_AS_Name,TYPE_AS_TypeDef> & typem (def.GetMap(pos_AS_Definitions_typem));
           const SEQ<TYPE_AS_ValueDef> & valuem (def.GetSequence(pos_AS_Definitions_valuem));
@@ -6011,33 +5860,27 @@ Sequence TOOLS::SearchIdDef(const SEQ<TYPE_ProjectTypes_FileName> & files, const
           // types
           Set dom_typem (typem.Dom());
           Generic id;
-          for (bool cc = dom_typem.First(id); cc; cc = dom_typem.Next(id))
-          {
+          for (bool cc = dom_typem.First(id); cc; cc = dom_typem.Next(id)) {
             Tuple t (CheckName(id, name, partial));
-            if (t.GetBool(1))
-            {
+            if (t.GetBool(1)) {
               res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
             }
           }
           // values
           int len_valuem = valuem.Length();
-          for (int j = 1; j <= len_valuem; j++)
-          {
+          for (int j = 1; j <= len_valuem; j++) {
             const TYPE_AS_ValueDef & vd (valuem[j]);
             const TYPE_AS_Pattern & p (vd.GetRecord(pos_AS_ValueDef_pat));
-            if (p.Is(TAG_TYPE_AS_PatternName))
-            {
+            if (p.Is(TAG_TYPE_AS_PatternName)) {
               Tuple t (CheckName(p.GetRecord(pos_AS_PatternName_nm), name, partial));
-              if (t.GetBool(1))
-              {
+              if (t.GetBool(1)) {
                 res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
               }
             }
           }
           // functions
           Set dom_fnm (fnm.Dom());
-          for (bool dd = dom_fnm.First(id); dd; dd = dom_fnm.Next(id))
-          {
+          for (bool dd = dom_fnm.First(id); dd; dd = dom_fnm.Next(id)) {
 #ifdef VDMSL
             TYPE_AS_Name real_id (id);
 #endif // VDMSL
@@ -6045,15 +5888,13 @@ Sequence TOOLS::SearchIdDef(const SEQ<TYPE_ProjectTypes_FileName> & files, const
             TYPE_AS_Name real_id (MANGLE::IsMangled(id) ? MANGLE::GetUnmangledName(id) : TYPE_AS_Name(id));
 #endif // VDMPP
             Tuple t (CheckName(real_id, name, partial));
-            if (t.GetBoolValue(1))
-            {
+            if (t.GetBoolValue(1)) {
               res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
             }
           }
           // operations
           Set dom_opm (opm.Dom());
-          for (bool ee = dom_opm.First(id); ee; ee = dom_opm.Next(id))
-          {
+          for (bool ee = dom_opm.First(id); ee; ee = dom_opm.Next(id)) {
 #ifdef VDMSL
             TYPE_AS_Name real_id (id);
 #endif // VDMSL
@@ -6061,23 +5902,19 @@ Sequence TOOLS::SearchIdDef(const SEQ<TYPE_ProjectTypes_FileName> & files, const
             TYPE_AS_Name real_id (MANGLE::IsMangled(id) ? MANGLE::GetUnmangledName(id) : TYPE_AS_Name(id));
 #endif // VDMPP
             Tuple t (CheckName(real_id, name, partial));
-            if (t.GetBoolValue(1))
-            {
+            if (t.GetBoolValue(1)) {
               res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
             }
           }
 #ifdef VDMPP
           // instance variables
           int len_instvars = instvars.Length();
-          for (int k = 1; k <= len_instvars; k++)
-          {
+          for (int k = 1; k <= len_instvars; k++) {
             const TYPE_AS_InstanceVarDef & ivd (instvars[k]);
-            if (ivd.Is(TAG_TYPE_AS_InstAssignDef))
-            {
+            if (ivd.Is(TAG_TYPE_AS_InstAssignDef)) {
               const TYPE_AS_AssignDef & ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
               Tuple t (CheckName(ad.GetRecord(pos_AS_AssignDef_var), name, partial));
-              if (t.GetBool(1))
-              {
+              if (t.GetBool(1)) {
                 res.ImpAppend(mk_(fnseq, tfnseq, t.GetInt(2), t.GetInt(3), Bool(true)));
               }
             }
