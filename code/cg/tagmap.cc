@@ -67,13 +67,15 @@ Tags[] = {
   {L"ClassHead_CPP", ClassHead_CPP},
   {L"ClassInstanceCreationExpr_CPP", ClassInstanceCreationExpr_CPP},
   {L"ClassNewDecl_CPP", ClassNewDecl_CPP},
-  {L"ClassResScopeQualifiedClassName_CPP", ClassResScopeQualifiedClassName_CPP},
+//  {L"ClassResScopeQualifiedClassName_CPP", ClassResScopeQualifiedClassName_CPP},
   {L"ClassSpecifier_CPP", ClassSpecifier_CPP},
   {L"CompoundStmt_CPP", CompoundStmt_CPP},
   {L"ConditionalExpr_CPP", ConditionalExpr_CPP},
   {L"Continue_CPP", Continue_CPP},
+#ifdef VDMPP
   {L"ConversionFunctionName_CPP", ConversionFunctionName_CPP},
   {L"ConversionTypeName_CPP", ConversionTypeName_CPP},
+#endif // VDMPP
   {L"CVNewDeclarator_CPP", CVNewDeclarator_CPP},
   {L"DeallocationArrayExpr_CPP", DeallocationArrayExpr_CPP},
   {L"DeallocationExpr_CPP", DeallocationExpr_CPP},
@@ -134,16 +136,22 @@ Tags[] = {
   {L"NullLit_CPP", NullLit_CPP},
   {L"ObjectInit_CPP", ObjectInit_CPP},
   {L"ObjectMemberAccess_CPP", ObjectMemberAccess_CPP},
+#ifdef VDMPP
   {L"Operator_CPP", Operator_CPP},
   {L"OperatorFunctionName_CPP", OperatorFunctionName_CPP},
+#endif // VDMPP
   {L"PackageAndImportDeclarations_CPP", PackageAndImportDeclarations_CPP},
   {L"PackageDeclaration_CPP", PackageDeclaration_CPP},
   {L"PmExpr_CPP", PmExpr_CPP},
   {L"PmOp_CPP", PmOp_CPP},
+#ifdef VDMPP
   {L"PointerDecl_CPP", PointerDecl_CPP},
+#endif // VDMPP
   {L"PointerToMemberAbs_CPP", PointerToMemberAbs_CPP},
   {L"PointerToMember_CPP", PointerToMember_CPP},
+#ifdef VDMPP
   {L"PointerToMemberDecl_CPP", PointerToMemberDecl_CPP},
+#endif // VDMPP
   {L"PointerToObjectMemberAccess_CPP", PointerToObjectMemberAccess_CPP},
   {L"PostFixInDecrementExpr_CPP", PostFixInDecrementExpr_CPP},
   {L"PreDefine_CPP", PreDefine_CPP},
@@ -159,14 +167,16 @@ Tags[] = {
   {L"QuoteIncl_CPP", QuoteIncl_CPP},
   {L"RefAbsDecl_CPP", RefAbsDecl_CPP},
   {L"RefDecl_CPP", RefDecl_CPP},
+#ifdef VDMPP
   {L"RefTypeDecl_CPP", RefTypeDecl_CPP},
+#endif // VDMPP
   {L"RelationalExpr_CPP", RelationalExpr_CPP},
   {L"RelOp_CPP", RelOp_CPP},
   {L"ResScopeQualifiedClassName_CPP", ResScopeQualifiedClassName_CPP},
   {L"Return_CPP", Return_CPP},
-  {L"ScopeResIdentifier_CPP", ScopeResIdentifier_CPP},
-  {L"ScopeResOpFctName_CPP", ScopeResOpFctName_CPP},
-  {L"ScopeResQualifiedName_CPP", ScopeResQualifiedName_CPP},
+//  {L"ScopeResIdentifier_CPP", ScopeResIdentifier_CPP},
+//  {L"ScopeResOpFctName_CPP", ScopeResOpFctName_CPP},
+//  {L"ScopeResQualifiedName_CPP", ScopeResQualifiedName_CPP},
   {L"ShiftExpr_CPP", ShiftExpr_CPP},
   {L"ShOp_CPP", ShOp_CPP},
   {L"Short_CPP", Short_CPP},
@@ -272,6 +282,7 @@ Tags[] = {
   {L"REFERENCE", REFERENCE_CPP},
 
   // Operator
+#ifdef VDMPP
   {L"NEW", NEW_CPP},
   {L"DELETE", DELETE_CPP},
   {L"PLUS", PLUS_CPP},
@@ -312,6 +323,7 @@ Tags[] = {
   {L"ARROW", ARROW_CPP},
   {L"BRACKETS", BRACKETS_CPP},
   {L"SQUAREBRACKETS", SQUAREBRACKETS_CPP},
+#endif // VDMPP
 
   {L"JAVA", JAVA_CPP},
   {L"CPP", CPP_CPP},

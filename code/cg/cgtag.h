@@ -68,13 +68,15 @@ enum {
   ClassHead_CPP = TAG_TYPE_CPP_ClassHead,
   ClassInstanceCreationExpr_CPP = TAG_TYPE_CPP_ClassInstanceCreationExpr,
   ClassNewDecl_CPP = TAG_TYPE_CPP_ClassNewDecl,
-  ClassResScopeQualifiedClassName_CPP = TAG_TYPE_CPP_ClassResScopeQualifiedClassName,
+//  ClassResScopeQualifiedClassName_CPP = TAG_TYPE_CPP_ClassResScopeQualifiedClassName,
   ClassSpecifier_CPP = TAG_TYPE_CPP_ClassSpecifier,
   CompoundStmt_CPP = TAG_TYPE_CPP_CompoundStmt,
   ConditionalExpr_CPP = TAG_TYPE_CPP_ConditionalExpr,
   Continue_CPP = TAG_TYPE_CPP_Continue,
+#ifdef VDMPP
   ConversionFunctionName_CPP = TAG_TYPE_CPP_ConversionFunctionName,
   ConversionTypeName_CPP = TAG_TYPE_CPP_ConversionTypeName,
+#endif // VDMPP
   CVNewDeclarator_CPP = TAG_TYPE_CPP_CVNewDeclarator,
   DeallocationArrayExpr_CPP = TAG_TYPE_CPP_DeallocationArrayExpr,
   DeallocationExpr_CPP = TAG_TYPE_CPP_DeallocationExpr,
@@ -137,16 +139,22 @@ enum {
   NullLit_CPP = TAG_TYPE_CPP_NullLit,
   ObjectInit_CPP = TAG_TYPE_CPP_ObjectInit,
   ObjectMemberAccess_CPP = TAG_TYPE_CPP_ObjectMemberAccess,
+#ifdef VDMPP
   Operator_CPP = TAG_TYPE_CPP_Operator,
   OperatorFunctionName_CPP = TAG_TYPE_CPP_OperatorFunctionName,
+#endif // VDMPP
   PackageAndImportDeclarations_CPP = TAG_TYPE_CPP_PackageAndImportDeclarations,
   PackageDeclaration_CPP = TAG_TYPE_CPP_PackageDeclaration,
   PmExpr_CPP = TAG_TYPE_CPP_PmExpr,
   PmOp_CPP = TAG_TYPE_CPP_PmOp,
+#ifdef VDMPP
   PointerDecl_CPP = TAG_TYPE_CPP_PointerDecl,
+#endif // VDMPP
   PointerToMemberAbs_CPP = TAG_TYPE_CPP_PointerToMemberAbs,
   PointerToMember_CPP = TAG_TYPE_CPP_PointerToMember,
+#ifdef VDMPP
   PointerToMemberDecl_CPP = TAG_TYPE_CPP_PointerToMemberDecl,
+#endif // VDMPP
   PointerToObjectMemberAccess_CPP = TAG_TYPE_CPP_PointerToObjectMemberAccess,
   PostFixInDecrementExpr_CPP = TAG_TYPE_CPP_PostFixInDecrementExpr,
   PreDefine_CPP = TAG_TYPE_CPP_PreDefine,
@@ -162,14 +170,16 @@ enum {
   QuoteIncl_CPP = TAG_TYPE_CPP_QuoteIncl,
   RefAbsDecl_CPP = TAG_TYPE_CPP_RefAbsDecl,
   RefDecl_CPP = TAG_TYPE_CPP_RefDecl,
+#ifdef VDMPP
   RefTypeDecl_CPP = TAG_TYPE_CPP_RefTypeDecl,
+#endif // VDMPP
   RelationalExpr_CPP = TAG_TYPE_CPP_RelationalExpr,
   RelOp_CPP = TAG_TYPE_CPP_RelOp,
   ResScopeQualifiedClassName_CPP = TAG_TYPE_CPP_ResScopeQualifiedClassName,
   Return_CPP = TAG_TYPE_CPP_Return,
-  ScopeResIdentifier_CPP = TAG_TYPE_CPP_ScopeResIdentifier,
-  ScopeResOpFctName_CPP = TAG_TYPE_CPP_ScopeResOpFctName,
-  ScopeResQualifiedName_CPP = TAG_TYPE_CPP_ScopeResQualifiedName,
+//  ScopeResIdentifier_CPP = TAG_TYPE_CPP_ScopeResIdentifier,
+//  ScopeResOpFctName_CPP = TAG_TYPE_CPP_ScopeResOpFctName,
+//  ScopeResQualifiedName_CPP = TAG_TYPE_CPP_ScopeResQualifiedName,
   ShiftExpr_CPP = TAG_TYPE_CPP_ShiftExpr,
   ShOp_CPP = TAG_TYPE_CPP_ShOp,
   Short_CPP = TAG_TYPE_CPP_Short,
@@ -182,7 +192,9 @@ enum {
   StaticInitializer_CPP = TAG_TYPE_CPP_StaticInitializer,
   StorageClassSpecifier_CPP = TAG_TYPE_CPP_StorageClassSpecifier,
   StringLit_CPP = TAG_TYPE_CPP_StringLit,
+#ifdef VDMPP
   Super_CPP = TAG_TYPE_CPP_Super,
+#endif // VDMPP
   SwitchBlock_CPP = TAG_TYPE_CPP_SwitchBlock,
   SwitchBlockStmtGrp_CPP = TAG_TYPE_CPP_SwitchBlockStmtGrp,
   SwitchLabels_CPP = TAG_TYPE_CPP_SwitchLabels,
@@ -288,6 +300,7 @@ enum {
 
 // Operator
 
+#ifdef VDMPP
   NEW_CPP = TAG_quote_NEW,
   DELETE_CPP = TAG_quote_DELETE,
   PLUS_CPP = TAG_quote_PLUS,
@@ -328,7 +341,7 @@ enum {
   ARROW_CPP = TAG_quote_ARROW,
   BRACKETS_CPP = TAG_quote_BRACKETS,
   SQUAREBRACKETS_CPP = TAG_quote_SQUAREBRACKETS,
-
+#endif // VDMPP
   JAVA_CPP = TAG_quote_JAVA,
   CPP_CPP = TAG_quote_CPP,
 // cv-qualitier

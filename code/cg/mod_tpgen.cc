@@ -1173,15 +1173,17 @@ Generic vdmcg::GenQComp(const TYPE_AS_Name & clnm, const Generic & type)
     case TAG_TYPE_AS_TypeName : {
 #ifdef VDMPP
       const TYPE_AS_Name & nm (tp.GetRecord(pos_AS_TypeName_name));
-      if (IsClass(nm))
+      if (IsClass(nm)) {
         return tp;
+      }
 #endif // VDMPP
       TYPE_AS_TypeName res (tp);
       res.SetField(pos_AS_TypeName_name, GenQName2(clnm, tp.GetRecord(pos_AS_TypeName_name)));
       return res;
     }
-    default :
+    default : {
       ReportError(L"GenQComp");
+    }
   }
   return tp; // To keep VC++ happy.
 }
@@ -1206,9 +1208,9 @@ SEQ<TYPE_AS_Type> vdmcg::GenQCompList(const TYPE_AS_Name & clnm, const SEQ<TYPE_
 // -> [REP`TypeRep]
 Generic vdmcg::GenRQComp(const TYPE_AS_Name & clnm, const Generic & type)
 {
-  if (type.IsNil())
+  if (type.IsNil()) {
     return Nil();
-
+  }
   TYPE_REP_TypeRep tp (type);
   switch (tp.GetTag()) {
     case TAG_TYPE_REP_SetTypeRep : {
@@ -1269,8 +1271,9 @@ Generic vdmcg::GenRQComp(const TYPE_AS_Name & clnm, const Generic & type)
     case TAG_TYPE_REP_NumericTypeRep :
     case TAG_TYPE_REP_TokenTypeRep :
     case TAG_TYPE_REP_CharTypeRep :
-    case TAG_TYPE_REP_QuoteTypeRep :
+    case TAG_TYPE_REP_QuoteTypeRep : {
       return tp;
+    }
     case TAG_TYPE_REP_PartialFnTypeRep : {
       const Generic & fndom (tp.GetField(pos_REP_PartialFnTypeRep_fndom));
       Generic new_fndom = Nil();
@@ -1489,23 +1492,25 @@ TYPE_CPP_FunctionDefinition vdmcg::GenGetFunctionDef(const Int &,
                                                      const TYPE_CPP_Identifier & s,
                                                      const TYPE_CPP_Identifier & t,
                                                      int i,
-                                                     const TYPE_CPP_QualifiedClassName& cnm,
+                                                     const TYPE_CPP_Identifier & cnm,
                                                      const TYPE_REP_TypeRep & tp)
 {
   SEQ<Char> meth (GenGetMethod(tp));
 
   // for special care
   SEQ<Char> id (t.GetSequence(pos_CPP_Identifier_id));
-  if (id == ASTAUX::MkId(L"TYPE_STKM_EvaluatorStatus"))
+  if (id == ASTAUX::MkId(L"TYPE_STKM_EvaluatorStatus")) {
     meth = ASTAUX::MkId(L"GetField");
-
+  }
   TYPE_CPP_TypeSpecifier ts (vdm_BC_GenTypeSpecifier(t));
   SEQ<TYPE_CPP_DeclSpecifier> dsl (mk_sequence(ts));
 
-  TYPE_CPP_FctDecl decl (vdm_BC_GenConstFctDecl(vdm_BC_GenQualifiedName2(
-                                                  cnm,
-                                                  vdm_BC_GenIdentifier(ASTAUX::MkId(L"get_").ImpConc(s.get_id()))),
-                                                SEQ<TYPE_CPP_ArgumentDeclaration>()));
+  TYPE_CPP_FctDecl decl (vdm_BC_GenConstFctDecl(
+                            //vdm_BC_GenQualifiedName2(
+                            vdm_BC_GenQualifiedName(
+                                cnm,
+                                vdm_BC_GenIdentifier(ASTAUX::MkId(L"get_").ImpConc(s.get_id()))),
+                            SEQ<TYPE_CPP_ArgumentDeclaration>()));
 
   //SEQ<TYPE_CPP_TypeSpecifier> ds_l (mk_sequence(vdm_BC_GenTypeSpecifier(quote_CONST),
   //                                              ts,
@@ -1524,7 +1529,8 @@ TYPE_CPP_MemberSpecifier vdmcg::GenGetFunctionDecl(const TYPE_CPP_Identifier& s,
 {
   SEQ<TYPE_CPP_DeclSpecifier> cl (mk_sequence(vdm_BC_GenTypeSpecifier(t)));
 
-  TYPE_CPP_FctDecl fctdecl (vdm_BC_GenConstFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"get_").ImpConc(s.get_id())),
+  TYPE_CPP_FctDecl fctdecl (vdm_BC_GenConstFctDecl(
+                             vdm_BC_GenIdentifier(ASTAUX::MkId(L"get_").ImpConc(s.get_id())),
                                                    SEQ<TYPE_CPP_ArgumentDeclaration>()));
   return vdm_BC_GenMemberSpec(cl, fctdecl);
 }
@@ -1533,10 +1539,11 @@ TYPE_CPP_MemberSpecifier vdmcg::GenGetFunctionDecl(const TYPE_CPP_Identifier& s,
 // s : CPP`Identifier
 // t : CPP`Identifier
 // +> CPP`MemberSpecifier
-TYPE_CPP_MemberSpecifier vdmcg::GenSetFunctionDecl(const TYPE_CPP_Identifier &s, const TYPE_CPP_Identifier &t)
+TYPE_CPP_MemberSpecifier vdmcg::GenSetFunctionDecl(const TYPE_CPP_Identifier &s,
+                                                   const TYPE_CPP_Identifier &t)
 {
   SEQ<TYPE_CPP_DeclSpecifier> decl_l (mk_sequence(vdm_BC_GenTypeSpecifier(quote_CONST),
-                                                  vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(t.get_id()))));
+                                             vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(t.get_id()))));
 
   TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(decl_l, vdm_BC_GenRef(vdm_BC_GenIdentifier(ASTAUX::MkId(L"p")))));
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"set_").ImpConc(s.get_id())),
@@ -1552,10 +1559,10 @@ TYPE_CPP_MemberSpecifier vdmcg::GenSetFunctionDecl(const TYPE_CPP_Identifier &s,
 // i : FieldTag
 // cnm : CPP`QualifiedClassName
 // +> CPP`FunctionDefinition
-TYPE_CPP_FunctionDefinition vdmcg::GenSetFunctionDef(const TYPE_CPP_Identifier& s,
-                                                     const TYPE_CPP_Identifier& t,
+TYPE_CPP_FunctionDefinition vdmcg::GenSetFunctionDef(const TYPE_CPP_Identifier & s,
+                                                     const TYPE_CPP_Identifier & t,
                                                      int i,
-                                                     const TYPE_CPP_QualifiedClassName& cnm)
+                                                     const TYPE_CPP_Identifier & cnm)
 {
   SEQ<TYPE_CPP_DeclSpecifier> dsl (mk_sequence(vdm_BC_GenTypeSpecifier(vdm_BC_GenVoid())));
 
@@ -1565,7 +1572,8 @@ TYPE_CPP_FunctionDefinition vdmcg::GenSetFunctionDef(const TYPE_CPP_Identifier& 
   TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(decl_l, vdm_BC_GenRef(vdm_BC_GenIdentifier(ASTAUX::MkId(L"p")))));
 
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(
-                           vdm_BC_GenQualifiedName2(cnm,
+                           //vdm_BC_GenQualifiedName2(cnm,
+                           vdm_BC_GenQualifiedName(cnm,
                                                     vdm_BC_GenIdentifier(ASTAUX::MkId(L"set_").ImpConc(s.get_id()))),
                            mk_sequence(arg)));
 
@@ -1608,11 +1616,12 @@ TYPE_CPP_FunctionDefinition vdmcg::GenCommonConstrDecl(const TYPE_CPP_Identifier
   TYPE_CPP_Identifier id (vdm_BC_GenIdentifier(ASTAUX::MkId(L"c")));
 
   TYPE_CPP_Declarator idref;
-  if (vdm_CPP_isCPP())
+  if (vdm_CPP_isCPP()) {
     idref = vdm_BC_GenRef(id);
-  else
+  }
+  else {
     idref = id;
-
+  }
   TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(arg_l, idref));
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(cnm, mk_sequence(arg)));
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(SEQ<TYPE_CPP_Stmt>()));
@@ -1663,12 +1672,12 @@ TYPE_CPP_FunctionDefinition vdmcg::GenDefaultConstrDecl(const TYPE_CPP_Identifie
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(cnm, SEQ<TYPE_CPP_ArgumentDeclaration>()));
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(SEQ<TYPE_CPP_Stmt>()));
 
-  if (vdm_CPP_isCPP())
+  if (vdm_CPP_isCPP()) {
     return vdm_BC_GenConstructorDef(SEQ<TYPE_CPP_Annotation>(),
                                     SEQ<TYPE_CPP_DeclSpecifier>(),
                                     decl, vdm_BC_GenInitBaseN(supid, type_dL()), body);
-  else
-  { // java
+  }
+  else { // java
     SEQ<TYPE_CPP_DeclSpecifier> dsl (mk_sequence(vdm_BC_GenModifier(quote_PUBLIC)));
     return vdm_BC_GenConstructorDef(SEQ<TYPE_CPP_Annotation>(), dsl, decl, nil, body);
   }
@@ -2027,7 +2036,7 @@ TYPE_CPP_MemberSpecifier vdmcg::GenInitFunctionDecl(const TYPE_CPP_Identifier & 
 // sl : TagList   (seq of CPP`Identifier)
 // tenv : TagEnv  (map CPP`Identifier to CPP`Name);
 // ==> CPP`FunctionDefinition
-TYPE_CPP_FunctionDefinition vdmcg::GenInitFunctionDef(const TYPE_CPP_QualifiedClassName & cnm,
+TYPE_CPP_FunctionDefinition vdmcg::GenInitFunctionDef(const TYPE_CPP_Identifier & cnm,
                                                       const SEQ<TYPE_CPP_Identifier> & sl,
                                                       const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> & tenv)
 {
@@ -2050,21 +2059,11 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInitFunctionDef(const TYPE_CPP_QualifiedCl
   }
   stmtl.ImpAppend (vdm_BC_GenReturnStmt (vdm_BC_GenIndirection (GenThis())));
 
-  TYPE_CPP_FctDecl decl(vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName2(cnm, vdm_BC_GenIdentifier(ASTAUX::MkId(L"Init"))),
+  //TYPE_CPP_FctDecl decl(vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName2(cnm, vdm_BC_GenIdentifier(ASTAUX::MkId(L"Init"))),
+  TYPE_CPP_FctDecl decl(vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName(cnm, vdm_BC_GenIdentifier(ASTAUX::MkId(L"Init"))),
                                           arglist));
 
-  TYPE_CPP_Expr id;
-  if (cnm.Is(TAG_TYPE_CPP_Identifier)) {
-    id = cnm;
-  }
-  else if (cnm.Is(TAG_TYPE_CPP_TemplateClassName)) {
-    id = TYPE_CPP_TemplateClassName(cnm).get_nm().get_id();
-  }
-  else {
-    id = TYPE_CPP_ClassResScopeQualifiedClassName(cnm).get_cn();
-  }
-
-  return vdm_BC_GenFctDef(type_dL().ImpAppend(vdm_BC_GenTypeSpecifier (id)),
+  return vdm_BC_GenFctDef(type_dL().ImpAppend(vdm_BC_GenTypeSpecifier (cnm)),
                           vdm_BC_GenRef (decl), nil,
                           vdm_BC_GenBlock(stmtl));
 }

@@ -140,14 +140,14 @@ private:
                                                 const TYPE_CPP_Identifier&,
                                                 const TYPE_CPP_Identifier&,
                                                 int,
-                                                const TYPE_CPP_QualifiedClassName &,
+                                                const TYPE_CPP_Identifier&,
                                                 const TYPE_REP_TypeRep &);
   TYPE_CPP_MemberSpecifier GenGetFunctionDecl(const TYPE_CPP_Identifier&, const TYPE_CPP_Identifier&);
   TYPE_CPP_MemberSpecifier GenSetFunctionDecl(const TYPE_CPP_Identifier &, const TYPE_CPP_Identifier &);
   TYPE_CPP_FunctionDefinition GenSetFunctionDef(const TYPE_CPP_Identifier&,
                                                 const TYPE_CPP_Identifier&,
                                                 int,
-                                                const TYPE_CPP_QualifiedClassName&);
+                                                const TYPE_CPP_Identifier&);
   TYPE_CPP_FunctionDefinition GenGetTypeNameDecl(const TYPE_CPP_Identifier &);
   TYPE_CPP_FunctionDefinition GenCommonConstrDecl(const TYPE_CPP_Identifier &, const Record&);
   TYPE_CPP_FunctionDefinition GenVDMBasePConstrDecl(const TYPE_CPP_Identifier &, const Record &);
@@ -178,13 +178,10 @@ private:
                                             const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &,
                                             const MAP<TYPE_CPP_Identifier,Bool> &);
 #endif // VDMPP
-//TYPE_CPP_FunctionDefinition GenLengthMethod(const TYPE_CPP_Identifier&,
-//                                            const Sequence &,
-//                                            const Map &);
   TYPE_CPP_MemberSpecifier GenInitFunctionDecl(const TYPE_CPP_Identifier&,
                                                const SEQ<TYPE_CPP_Identifier> &,
                                                const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
-  TYPE_CPP_FunctionDefinition GenInitFunctionDef(const TYPE_CPP_QualifiedClassName&,
+  TYPE_CPP_FunctionDefinition GenInitFunctionDef(const TYPE_CPP_Identifier&,
                                                  const SEQ<TYPE_CPP_Identifier> &,
                                                  const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
   TYPE_CPP_Identifier GenCompositeTypeTagId(const TYPE_AS_Name &);

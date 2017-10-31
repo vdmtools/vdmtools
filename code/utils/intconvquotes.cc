@@ -104,7 +104,7 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_FunctionDefinition:
     case TAG_TYPE_CPP_MemInitializer:
     case TAG_TYPE_CPP_FctBody:
-    case TAG_TYPE_CPP_ClassResScopeQualifiedClassName:
+//    case TAG_TYPE_CPP_ClassResScopeQualifiedClassName:
     case TAG_TYPE_CPP_ResScopeQualifiedClassName:
     case TAG_TYPE_CPP_Char:
     case TAG_TYPE_CPP_Short:
@@ -174,9 +174,9 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_ArrayApply:
     case TAG_TYPE_CPP_ExplTypeConv:
     case TAG_TYPE_CPP_ObjectMemberAccess:
-    case TAG_TYPE_CPP_ScopeResIdentifier:
-    case TAG_TYPE_CPP_ScopeResOpFctName:
-    case TAG_TYPE_CPP_ScopeResQualifiedName:
+//    case TAG_TYPE_CPP_ScopeResIdentifier:
+//    case TAG_TYPE_CPP_ScopeResOpFctName:
+//    case TAG_TYPE_CPP_ScopeResQualifiedName:
     case TAG_TYPE_CPP_Identifier:
     case TAG_TYPE_CPP_QualifiedName:
     case TAG_TYPE_CPP_Destructor:
@@ -198,15 +198,19 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_PointerToObjectMemberAccess:
     case TAG_TYPE_CPP_ClassInstanceCreationExpr:
     case TAG_TYPE_CPP_ClassExpr:
+#ifdef VDMPP
     case TAG_TYPE_CPP_ConversionFunctionName:
     case TAG_TYPE_CPP_ConversionTypeName:
     case TAG_TYPE_CPP_PointerDecl:
     case TAG_TYPE_CPP_RefTypeDecl:
     case TAG_TYPE_CPP_PointerToMemberDecl:
     case TAG_TYPE_CPP_Super:
+#endif // VDMPP
     case TAG_TYPE_CPP_NullLit:
+#ifdef VDMPP
     case TAG_TYPE_CPP_OperatorFunctionName:
     case TAG_TYPE_CPP_Operator:
+#endif // VDMPP
     case TAG_TYPE_CPP_TryBlock:
     case TAG_TYPE_CPP_Handler:
     case TAG_TYPE_CPP_All:

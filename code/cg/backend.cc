@@ -1491,20 +1491,21 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
-    case TAG_TYPE_CPP_ClassResScopeQualifiedClassName:
+//    case TAG_TYPE_CPP_ClassResScopeQualifiedClassName:
     case TAG_TYPE_CPP_IndirectionDecl:
     case TAG_TYPE_CPP_IndirectionAbsDecl: {
       const Generic & cvlist (rc.GetField(1));
       const Generic & decl (rc.GetField(2));
 
-      if (isJAVA())
+      if (isJAVA()) {
         m4code << "*???";
-      else
+      }
+      else {
         m4code << "*";
-
-      if (!cvlist.IsNil())
+      }
+      if (!cvlist.IsNil()) {
         GenCodeSeq(cvlist, " ");
-
+      }
       if (!decl.IsNil()) {
         m4code << " ";
         GenCode(decl);
@@ -1517,16 +1518,16 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & cvlist (rc.GetField(1));
       const Generic & decl (rc.GetField(2));
 
-      if (isCPP())
+      if (isCPP()) {
         m4code << "&";
-
+      }
       if (!cvlist.IsNil()) {
         GenCodeSeq(cvlist, " ");
         m4code << " ";
       }
-
-      if (!decl.IsNil())
+      if (!decl.IsNil()) {
         GenCode(decl);
+      }
       break;
     }
 
@@ -1537,11 +1538,12 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Record & decl (rc.GetField(3));
 
       GenCode(ccn);
-      if (isJAVA())
+      if (isJAVA()) {
         m4code << "::* does not exist in JAVA";
-      else
+      }
+      else {
         m4code << "::*";
-
+      }
       if (!cvlist.IsNil()) {
         GenCodeSeq(cvlist, " ");
         m4code << " ";
@@ -1562,12 +1564,10 @@ void CGBackEnd::GenCode(const Generic & ast)
         GenCode(arg);
         m4code <<  ")";
       }
-
       if (!cvlist.IsNil()) {
         m4code <<  " ";
         GenCodeSeq(cvlist, " ");
       }
-
       SetContext(BE_DECL);
       break;
     }
@@ -1610,15 +1610,16 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & arg (rc.GetField(pos_CPP_ArgumentDeclarationList_arg));
       const Generic & ellipsis (rc.GetField(pos_CPP_ArgumentDeclarationList_ellipsis));
 
-      if (!arg.IsNil())
+      if (!arg.IsNil()) {
         GenCodeSeq(arg, ", ");
-
-      if (!ellipsis.IsNil())
-      {
-        if (isJAVA())
+      }
+      if (!ellipsis.IsNil()) {
+        if (isJAVA()) {
           m4code << "... not possible in JAVA";
-        else
+        }
+        else {
           m4code << " " + Quote2String(Quote(ellipsis));
+        }
       }
       break;
     }
@@ -1701,8 +1702,9 @@ void CGBackEnd::GenCode(const Generic & ast)
 
       GenCode(decl);
 
-      if (!pure.IsNil())
+      if (!pure.IsNil()) {
         m4code << "=0";
+      }
       break;
     }
 
@@ -1713,11 +1715,12 @@ void CGBackEnd::GenCode(const Generic & ast)
 
       m4code << "virtual";
 
-      if (isJAVA())
+      if (isJAVA()) {
         m4code << "????";
-
-      if (!a.IsNil())
+      }
+      if (!a.IsNil()) {
         m4code << " " << Quote2String(Quote(a));
+      }
       m4code << " ";
 
       GenCode(cen);
@@ -1747,12 +1750,12 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_CompleteClassName & ccn (rc.GetRecord(pos_CPP_AccCompleteClassSpecifier_ccn));
 
       m4code << Quote2String(a); // <PRIVATE> | <PROTECTED> | <PUBLIC>
-      if (!v.IsNil())
-      {
+      if (!v.IsNil()) {
         m4code << " virtual";
 
-        if (isJAVA())
+        if (isJAVA()) {
           m4code << "????";
+        }
       }
       m4code << " ";
 
@@ -1835,9 +1838,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_Expr & expr (rc.GetRecord(pos_CPP_SwitchStmt_expr));
       const TYPE_CPP_SwitchBlock & block (rc.GetRecord(pos_CPP_SwitchStmt_block));
 
-      if (isJAVA())          // 20120926
-        GenNewLine(m4code);  // 20120926
-
+      if (isJAVA()) {
+        GenNewLine(m4code);
+      }
       IND(m4code);
       m4code << "switch(";
       GenCode(expr);
@@ -1852,9 +1855,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const SEQ<TYPE_CPP_SwitchBlockStmtGrp> & groups (rc.GetSequence(pos_CPP_SwitchBlock_groups));
       const Generic & labels (rc.GetField(pos_CPP_SwitchBlock_labels));
 
-      if (isJAVA())          // 20120926
-        GenNewLine(m4code);  // 20120926
-
+      if (isJAVA()) {
+        GenNewLine(m4code);
+      }
       IND(m4code);
 
       OpenBlock();
@@ -1863,9 +1866,9 @@ void CGBackEnd::GenCode(const Generic & ast)
 
       GenCodeSeq(groups, "");
 
-      if (!labels.IsNil())
+      if (!labels.IsNil()) {
         GenCode(labels);
-
+      }
       GenNewLine(m4code);
       CloseBlock();
 
@@ -1877,11 +1880,12 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & labels (rc.GetField(pos_CPP_SwitchBlockStmtGrp_labels));
       const Generic & stmt (rc.GetField(pos_CPP_SwitchBlockStmtGrp_stmt));
 
-      if (!labels.IsNil())
+      if (!labels.IsNil()) {
         GenCode(labels);
-
-      if (!stmt.IsNil())
+      }
+      if (!stmt.IsNil()) {
         GenCode(stmt);
+      }
       break;
     }
 
@@ -1890,8 +1894,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & labels (rc.GetField(pos_CPP_SwitchLabels_labels));
 
       GenCode(stmt);
-      if (!labels.IsNil())
+      if (!labels.IsNil()) {
         GenCode(labels);
+      }
       break;
     }
 
@@ -1902,11 +1907,12 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_Stmt & stmt (rc.GetRecord(pos_CPP_WhileStmt_stmt));
 
       TYPE_CPP_Expr expr (expr_);
-      while (expr.Is(TAG_TYPE_CPP_BracketedExpr))
+      while (expr.Is(TAG_TYPE_CPP_BracketedExpr)) {
         expr = expr.GetRecord(pos_CPP_BracketedExpr_expr);
-
-      if (isJAVA()) // 20120419
+      }
+      if (isJAVA()) {
         GenNewLine(m4code);
+      }
       IND(m4code);
 
       m4code << "while (";
@@ -1949,9 +1955,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const SEQ<TYPE_CPP_Expr> & expr2 (rc.GetSequence(pos_CPP_ForStmt_expr2));
       const TYPE_CPP_Stmt & stmt (rc.GetRecord(pos_CPP_ForStmt_stmt));
 
-      if (isJAVA()) // 20120315
+      if (isJAVA()) {
         GenNewLine(m4code);
-
+      }
       IND(m4code);
       m4code << "for (";
       SetContext(FOR);
@@ -2000,9 +2006,9 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     case TAG_TYPE_CPP_Break: {
 
-      if (isJAVA())
+      if (isJAVA()) {
         GenNewLine(m4code);
-
+      }
       IND(m4code);
       m4code << "break;" << flush;
       SetContext(CSTMT);
@@ -2011,9 +2017,9 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     case TAG_TYPE_CPP_Continue: {
 
-      if (isJAVA())
+      if (isJAVA()) {
         GenNewLine(m4code);
-
+      }
       IND(m4code);
       m4code << "continue;" << flush;
       SetContext(CSTMT);
@@ -2023,16 +2029,16 @@ void CGBackEnd::GenCode(const Generic & ast)
     case TAG_TYPE_CPP_Return: {
       const Generic & expr (rc.GetField(pos_CPP_Return_expr));
 
-      if (isJAVA())
+      if (isJAVA()) {
         GenNewLine(m4code);
-      else if (GetContext() == BE_DECL)
+      }
+      else if (GetContext() == BE_DECL) {
         GenNewLine(m4code);
-
+      }
       IND(m4code);
       m4code << "return";
 
-      if (!expr.IsNil())
-      {
+      if (!expr.IsNil()) {
         m4code << " ";
         GenCode(expr);
       }
@@ -2044,10 +2050,10 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     /** goto statement not supported in Java **/
     case TAG_TYPE_CPP_Goto: {
-      if (isJAVA())
+      if (isJAVA()) {
         m4code << "goto statement not supported!!!!!";
-      else
-      { // C++
+      }
+      else { // C++
         TYPE_CPP_Identifier id (rc.GetRecord(pos_CPP_Goto_id));
 
         IND(m4code);
@@ -2066,9 +2072,9 @@ void CGBackEnd::GenCode(const Generic & ast)
 
       if (GetContext() != FOR) {
 
-        if(isCPP())
+        if(isCPP()) {
           IND(m4code);
-
+        }
         SetContext(CSTMT);
       }
       GenCode(decl);
@@ -2801,25 +2807,26 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     /** Scope syntax for Java is slightly different **/
 
-    case TAG_TYPE_CPP_ScopeResIdentifier: {
-      const TYPE_CPP_Name & id (rc.GetRecord(pos_CPP_ScopeResIdentifier_id));
-      m4code << (isJAVA() ? "." : "::"); 
-      GenCode(id);
-      break;
-    }
-    case TAG_TYPE_CPP_ScopeResOpFctName: {
-      const TYPE_CPP_Name & opfctname (rc.GetRecord(pos_CPP_ScopeResOpFctName_opfctname));
-      m4code << (isJAVA() ? "." : "::"); 
-      GenCode(opfctname);
-      break;
-    }
-    case TAG_TYPE_CPP_ScopeResQualifiedName: {
-      const TYPE_CPP_Name & qualname (rc.GetRecord(pos_CPP_ScopeResQualifiedName_qualname));
-      m4code << (isJAVA() ? "." : "::"); 
-      GenCode(qualname);
-      break;
-    }
+//    case TAG_TYPE_CPP_ScopeResIdentifier: {
+//      const TYPE_CPP_Name & id (rc.GetRecord(pos_CPP_ScopeResIdentifier_id));
+//      m4code << (isJAVA() ? "." : "::"); 
+//      GenCode(id);
+//      break;
+//    }
+//    case TAG_TYPE_CPP_ScopeResOpFctName: {
+//      const TYPE_CPP_Name & opfctname (rc.GetRecord(pos_CPP_ScopeResOpFctName_opfctname));
+//      m4code << (isJAVA() ? "." : "::"); 
+//      GenCode(opfctname);
+//      break;
+//    }
+//    case TAG_TYPE_CPP_ScopeResQualifiedName: {
+//      const TYPE_CPP_Name & qualname (rc.GetRecord(pos_CPP_ScopeResQualifiedName_qualname));
+//      m4code << (isJAVA() ? "." : "::"); 
+//      GenCode(qualname);
+//      break;
+//    }
 
+#ifdef VDMPP
     case TAG_TYPE_CPP_OperatorFunctionName: {
       const TYPE_CPP_Operator & opr (rc.GetRecord(pos_CPP_OperatorFunctionName_op));
       Quote op (opr.GetField(pos_CPP_Operator_op));
@@ -2827,6 +2834,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       m4code << "operator " << Quote2String(op);
       break;
     }
+#endif // VDMPP
 
     case TAG_TYPE_CPP_QualifiedPackageName: {
       const TYPE_CPP_Expr & pn (rc.GetRecord(pos_CPP_QualifiedPackageName_pn));
@@ -2848,6 +2856,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
+#ifdef VDMPP
     case TAG_TYPE_CPP_ConversionFunctionName: {
       const TYPE_CPP_ConversionTypeName & ctn (rc.GetRecord(pos_CPP_ConversionFunctionName_ctn));
 
@@ -2861,10 +2870,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & ptr (rc.GetField(pos_CPP_ConversionTypeName_ptr));
 
       size_t len_ts = ts.Length();
-      for (size_t idx = 1; idx <= len_ts; idx++)
-//        GenCode(ts); // 20090812
+      for (size_t idx = 1; idx <= len_ts; idx++) {
         GenCode(ts[idx]);
-
+      }
       GenCode(ptr);
       break;
     }
@@ -2873,12 +2881,6 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     case TAG_TYPE_CPP_PointerDecl: {
       const Generic & cvl (rc.GetField(pos_CPP_PointerDecl_cvl)); // [CVQualifierList]
-
-//      if (isJAVA())
-//        m4code << "pointer not defined in Java";
-//      else
-//        m4code << "*";
-
       m4code << (isJAVA() ? "pointer not defined in Java" : "*");
       GenCode(cvl);
       break;
@@ -2886,12 +2888,6 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     case TAG_TYPE_CPP_RefTypeDecl: {
       const Generic & cvl (rc.GetField(pos_CPP_RefTypeDecl_cvl)); // [CVQualifierList]
-
-//      if (isJAVA())
-//        m4code << "pointer not defined in Java";
-//      else
-//        m4code << "&";
-
       m4code << (isJAVA() ? "pointer not defined in Java" : "&");
       GenCode(cvl);
       break;
@@ -2902,14 +2898,11 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & cvl (rc.GetField(pos_CPP_PointerToMemberDecl_cvl));  // [CVQualifierList]
 
       GenCode(ccn);
-//      if (isJAVA())
-//        m4code << "pointer not defined in Java";
-//      else
-//        m4code << "::*";
       m4code << (isJAVA() ? "pointer not defined in Java" : "::*");
       GenCode(cvl);
       break;
     }
+#endif // VDMPP
 
     case TAG_TYPE_CPP_Destructor: {
       const TYPE_CPP_Identifier & id (rc.GetRecord(pos_CPP_Destructor_id));
@@ -2926,8 +2919,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const SEQ<TYPE_CPP_Handler> & handlers (rc.GetSequence(pos_CPP_TryBlock_hdl));
       const Generic & fin (rc.GetField(pos_CPP_TryBlock_fin));
 
-      if (isJAVA()) // 20120419
+      if (isJAVA()) {
         GenNewLine(m4code);
+      }
       IND(m4code);
       m4code << "try ";
 
@@ -2935,25 +2929,26 @@ void CGBackEnd::GenCode(const Generic & ast)
 
       GenCode(id);
       GenNewLine(m4code);
-      if (!handlers.IsEmpty())
+      if (!handlers.IsEmpty()) {
         GenCodeSeq(handlers, "\n");
-
+      }
       if (!fin.IsNil()) {
-        if (!handlers.IsEmpty())
+        if (!handlers.IsEmpty()) {
           GenNewLine(m4code);
-        if (isJAVA ())
-        {
+        }
+        if (isJAVA ()) {
           IND(m4code);
           m4code << "finally ";
           GenCode(fin);
         }
-        else
-        {
+        else {
           SEQ<TYPE_CPP_Stmt> stmts (Record(fin).GetSequence(pos_CPP_CompoundStmt_stms));
-          if (stmts.Length() == 1)
+          if (stmts.Length() == 1) {
             GenCode(stmts[1]);
-          else
+          }
+          else {
             GenCodeSeq(stmts, "\n");
+          }
         }
       }
       break;
@@ -2975,8 +2970,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       m4code << " ";
 
       SetContext(BLOCK);
-      if (!stmt.Is(TAG_TYPE_CPP_CompoundStmt))
-      {
+      if (!stmt.Is(TAG_TYPE_CPP_CompoundStmt)) {
         OpenBlock();
 
         GenCode(stmt);
@@ -2984,9 +2978,9 @@ void CGBackEnd::GenCode(const Generic & ast)
         GenNewLine(m4code);
         CloseBlock();
       }
-      else
+      else {
         GenCode(stmt);
-
+      }
       break;
     }
 
@@ -3565,128 +3559,72 @@ int CGBackEnd::Quote2Int(const Quote & op)
   int res = 0;
   if (q == L"ASEQUAL")
     res = TAG_quote_ASEQUAL;
-  else if (q == L"OPEQUAL")
-    res = TAG_quote_OPEQUAL;
   else if (q == L"ASMULT")
     res = TAG_quote_ASMULT;
-  else if (q == L"STAREQUAL")
-    res = TAG_quote_STAREQUAL;
   else if (q == L"ASDIV")
     res = TAG_quote_ASDIV;
-  else if (q == L"BACKSLASHEQUAL")
-    res = TAG_quote_BACKSLASHEQUAL;
   else if (q == L"ASMOD")
     res = TAG_quote_ASMOD;
-  else if (q == L"PERCENTAGEMARKEQUAL")
-    res = TAG_quote_PERCENTAGEMARKEQUAL;
   else if (q == L"ASPLUS")
     res = TAG_quote_ASPLUS;
-  else if (q == L"PLUSEQUAL")
-    res = TAG_quote_PLUSEQUAL;
   else if (q == L"ASMINUS")
     res = TAG_quote_ASMINUS;
-  else if (q == L"MINUSEQUAL")
-    res = TAG_quote_MINUSEQUAL;
   else if (q == L"ASRIGHTSHIFT")
     res = TAG_quote_ASRIGHTSHIFT;
-  else if (q == L"DOUBLEGREATEREQUAL")
-    res = TAG_quote_DOUBLEGREATEREQUAL;
   else if (q == L"ASLEFTSHIFT")
     res = TAG_quote_ASLEFTSHIFT;
-  else if (q == L"DOUBLELESSEQUAL")
-    res = TAG_quote_DOUBLELESSEQUAL;
   else if (q == L"ASBITWISEAND")
     res = TAG_quote_ASBITWISEAND;
-  else if (q == L"ANDEQUAL")
-    res = TAG_quote_ANDEQUAL;
   else if (q == L"ASBITWISEEXOR")
     res = TAG_quote_ASBITWISEEXOR;
-  else if (q == L"CIRCUMFLEXEQUAL")
-    res = TAG_quote_CIRCUMFLEXEQUAL;
   else if (q == L"ASBITWISEINCLOR")
     res = TAG_quote_ASBITWISEINCLOR;
-  else if (q == L"VERTICALLINEEQUAL")
-    res = TAG_quote_VERTICALLINEEQUAL;
   else if (q == L"OR")
     res = TAG_quote_OR;
-  else if (q == L"DOUBLEVERTICALLINE")
-    res = TAG_quote_DOUBLEVERTICALLINE;
   else if (q == L"AND")
     res = TAG_quote_AND;
-  else if (q == L"DOUBLEAND")
-    res = TAG_quote_DOUBLEAND;
   else if (q == L"EXCLOR")
     res = TAG_quote_EXCLOR;
-  else if (q == L"CIRCUMFEX")
-    res = TAG_quote_CIRCUMFEX;
-  else if (q == L"BITAND")
-    res = TAG_quote_BITAND;
-  else if (q == L"AMPERSAND")
-    res = TAG_quote_AMPERSAND;
   else if (q == L"REFERENCE")
     res = TAG_quote_REFERENCE;
+  else if (q == L"BITAND")
+    res = TAG_quote_BITAND;
   else if (q == L"BITOR")
     res = TAG_quote_BITOR;
-  else if (q == L"VERTICALLINE")
-    res = TAG_quote_VERTICALLINE;
   else if (q == L"EQ")
     res = TAG_quote_EQ;
-  else if (q == L"DOUBLEEQUAL")
-    res = TAG_quote_DOUBLEEQUAL;
   else if (q == L"NEQ")
     res = TAG_quote_NEQ;
-  else if (q == L"EXCLAMATIONMARKEQUAL")
-    res = TAG_quote_EXCLAMATIONMARKEQUAL;
   else if (q == L"LT")
     res = TAG_quote_LT;
-  else if (q == L"LESS")
-    res = TAG_quote_LESS;
   else if (q == L"GT")
     res = TAG_quote_GT;
-  else if (q == L"GREATER")
-    res = TAG_quote_GREATER;
   else if (q == L"LEQ")
     res = TAG_quote_LEQ;
-  else if (q == L"LESSEQUAL")
-    res = TAG_quote_LESSEQUAL;
   else if (q == L"GEQ")
     res = TAG_quote_GEQ;
-  else if (q == L"GREATEREQUAL")
-    res = TAG_quote_GREATEREQUAL;
   else if (q == L"LEFTSHIFT")
     res = TAG_quote_LEFTSHIFT;
-  else if (q == L"DOUBLELESS")
-    res = TAG_quote_DOUBLELESS;
   else if (q == L"RIGHTSHIFT")
     res = TAG_quote_RIGHTSHIFT;
-  else if (q == L"DOUBLEGREATER")
-    res = TAG_quote_DOUBLEGREATER;
   else if (q == L"PLUS")
     res = TAG_quote_PLUS;
   else if (q == L"MINUS")
     res = TAG_quote_MINUS;
   else if (q == L"MULT")
     res = TAG_quote_MULT;
-  else if (q == L"STAR")
-    res = TAG_quote_STAR;
   else if (q == L"DIV")
     res = TAG_quote_DIV;
   else if (q == L"MOD")
     res = TAG_quote_MOD;
-  else if (q == L"PRECENTAGEMARK")
-    res = TAG_quote_PRECENTAGEMARK;
   else if (q == L"DOTSTAR")
     res = TAG_quote_DOTSTAR;
   else if (q == L"ARROWSTAR")
     res = TAG_quote_ARROWSTAR;
   else if (q == L"PPLUS")
     res = TAG_quote_PPLUS;
-  else if (q == L"DOUBLEPLUS")
-    res = TAG_quote_DOUBLEPLUS;
   else if (q == L"PMINUS")
     res = TAG_quote_PMINUS;
-  else if (q == L"DOUBLEMINUS")
-    res = TAG_quote_DOUBLEMINUS;
   else if (q == L"ISINSTANCEOF")
     res = TAG_quote_ISINSTANCEOF;
   else if (q == L"INDIRECTION")
@@ -3695,10 +3633,67 @@ int CGBackEnd::Quote2Int(const Quote & op)
     res = TAG_quote_ADDROP;
   else if (q == L"NEG")
     res = TAG_quote_NEG;
-  else if (q == L"EXCLAMATIONMARK")
-    res = TAG_quote_EXCLAMATIONMARK;
   else if (q == L"COMPL")
     res = TAG_quote_COMPL;
+#ifdef VDMPP
+  else if (q == L"OPEQUAL")
+    res = TAG_quote_OPEQUAL;
+  else if (q == L"STAREQUAL")
+    res = TAG_quote_STAREQUAL;
+  else if (q == L"BACKSLASHEQUAL")
+    res = TAG_quote_BACKSLASHEQUAL;
+  else if (q == L"PERCENTAGEMARKEQUAL")
+    res = TAG_quote_PERCENTAGEMARKEQUAL;
+  else if (q == L"PLUSEQUAL")
+    res = TAG_quote_PLUSEQUAL;
+  else if (q == L"MINUSEQUAL")
+    res = TAG_quote_MINUSEQUAL;
+  else if (q == L"DOUBLEGREATEREQUAL")
+    res = TAG_quote_DOUBLEGREATEREQUAL;
+  else if (q == L"DOUBLELESSEQUAL")
+    res = TAG_quote_DOUBLELESSEQUAL;
+  else if (q == L"ANDEQUAL")
+    res = TAG_quote_ANDEQUAL;
+  else if (q == L"CIRCUMFLEXEQUAL")
+    res = TAG_quote_CIRCUMFLEXEQUAL;
+  else if (q == L"VERTICALLINEEQUAL")
+    res = TAG_quote_VERTICALLINEEQUAL;
+  else if (q == L"DOUBLEAND")
+    res = TAG_quote_DOUBLEAND;
+  else if (q == L"DOUBLEVERTICALLINE")
+    res = TAG_quote_DOUBLEVERTICALLINE;
+  else if (q == L"CIRCUMFEX")
+    res = TAG_quote_CIRCUMFEX;
+  else if (q == L"AMPERSAND")
+    res = TAG_quote_AMPERSAND;
+  else if (q == L"VERTICALLINE")
+    res = TAG_quote_VERTICALLINE;
+  else if (q == L"DOUBLEEQUAL")
+    res = TAG_quote_DOUBLEEQUAL;
+  else if (q == L"EXCLAMATIONMARKEQUAL")
+    res = TAG_quote_EXCLAMATIONMARKEQUAL;
+  else if (q == L"LESS")
+    res = TAG_quote_LESS;
+  else if (q == L"GREATER")
+    res = TAG_quote_GREATER;
+  else if (q == L"LESSEQUAL")
+    res = TAG_quote_LESSEQUAL;
+  else if (q == L"GREATEREQUAL")
+    res = TAG_quote_GREATEREQUAL;
+  else if (q == L"DOUBLELESS")
+    res = TAG_quote_DOUBLELESS;
+  else if (q == L"DOUBLEGREATER")
+    res = TAG_quote_DOUBLEGREATER;
+  else if (q == L"STAR")
+    res = TAG_quote_STAR;
+  else if (q == L"PRECENTAGEMARK")
+    res = TAG_quote_PRECENTAGEMARK;
+  else if (q == L"DOUBLEPLUS")
+    res = TAG_quote_DOUBLEPLUS;
+  else if (q == L"DOUBLEMINUS")
+    res = TAG_quote_DOUBLEMINUS;
+  else if (q == L"EXCLAMATIONMARK")
+    res = TAG_quote_EXCLAMATIONMARK;
   else if (q == L"TILDE")
     res = TAG_quote_TILDE;
   else if (q == L"NEW")
@@ -3713,6 +3708,7 @@ int CGBackEnd::Quote2Int(const Quote & op)
     res = TAG_quote_BRACKETS;
   else if (q == L"SQUAREBRACKETS")
     res = TAG_quote_SQUAREBRACKETS;
+#endif // VDMPP
   else if (q == L"CONST")
     res = TAG_quote_CONST;
   else if (q == L"VOLATILE")
@@ -3759,79 +3755,109 @@ string CGBackEnd::Quote2String(const Quote & op)
 
     // AssignOp -- the same for Java and C++
   case TAG_quote_ASEQUAL:
+#ifdef VDMPP
   case TAG_quote_OPEQUAL:
+#endif // VDMPP
     res = "=";
     break;
 
   case TAG_quote_ASMULT:
+#ifdef VDMPP
   case TAG_quote_STAREQUAL:
+#endif // VDMPP
     res = "*=";
     break;
 
   case TAG_quote_ASDIV:
+#ifdef VDMPP
   case TAG_quote_BACKSLASHEQUAL:
+#endif // VDMPP
     res = "/=";
     break;
 
   case TAG_quote_ASMOD:
+#ifdef VDMPP
   case TAG_quote_PERCENTAGEMARKEQUAL:
+#endif // VDMPP
     res = "%=";
     break;
 
   case TAG_quote_ASPLUS:
+#ifdef VDMPP
   case TAG_quote_PLUSEQUAL:
+#endif // VDMPP
     res = "+=";
     break;
 
   case TAG_quote_ASMINUS:
+#ifdef VDMPP
   case TAG_quote_MINUSEQUAL:
+#endif // VDMPP
     res = "-=";
     break;
 
   case TAG_quote_ASRIGHTSHIFT:
+#ifdef VDMPP
   case TAG_quote_DOUBLEGREATEREQUAL:
+#endif // VDMPP
     res = ">>=";
     break;
 
   case TAG_quote_ASLEFTSHIFT:
+#ifdef VDMPP
   case TAG_quote_DOUBLELESSEQUAL:
+#endif // VDMPP
     res = "<<=";
     break;
 
   case TAG_quote_ASBITWISEAND:
+#ifdef VDMPP
   case TAG_quote_ANDEQUAL:
+#endif // VDMPP
     res = "&=";
     break;
 
   case TAG_quote_ASBITWISEEXOR:
+#ifdef VDMPP
   case TAG_quote_CIRCUMFLEXEQUAL:
+#endif // VDMPP
     res = "^=";
     break;
 
   case TAG_quote_ASBITWISEINCLOR:
+#ifdef VDMPP
   case TAG_quote_VERTICALLINEEQUAL:
+#endif // VDMPP
     res = "|=";
     break;
 
     // LogOp -- the same for Java and C++
   case TAG_quote_OR:
+#ifdef VDMPP
   case TAG_quote_DOUBLEVERTICALLINE:
+#endif // VDMPP
     res = "||";
     break;
 
   case TAG_quote_AND:
+#ifdef VDMPP
   case TAG_quote_DOUBLEAND:
+#endif // VDMPP
     res = "&&";
     break;
 
     // BitOp -- the same for Java and C++
   case TAG_quote_EXCLOR:
+#ifdef VDMPP
   case TAG_quote_CIRCUMFEX:
+#endif // VDMPP
     res = "^";
     break;
 
   case TAG_quote_BITAND:
+#ifdef VDMPP
   case TAG_quote_AMPERSAND:
+#endif // VDMPP
     res = "&";
     break;
 
@@ -3843,50 +3869,68 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_BITOR:
+#ifdef VDMPP
   case TAG_quote_VERTICALLINE:
+#endif // VDMPP
     res = "|";
     break;
 
     // EqOp  -- the same for Java and C++
   case TAG_quote_EQ:
+#ifdef VDMPP
   case TAG_quote_DOUBLEEQUAL:
+#endif // VDMPP
     res = "==";
     break;
 
   case TAG_quote_NEQ:
+#ifdef VDMPP
   case TAG_quote_EXCLAMATIONMARKEQUAL:
+#endif // VDMPP
     res = "!=";
     break;
 
     // RelOp -- the same for Java and C++
   case TAG_quote_LT:
+#ifdef VDMPP
   case TAG_quote_LESS:
+#endif // VDMPP
     res = "<";
     break;
 
   case TAG_quote_GT:
+#ifdef VDMPP
   case TAG_quote_GREATER:
+#endif // VDMPP
     res = ">";
     break;
 
   case TAG_quote_LEQ:
+#ifdef VDMPP
   case TAG_quote_LESSEQUAL:
+#endif // VDMPP
     res = "<=";
     break;
 
   case TAG_quote_GEQ:
+#ifdef VDMPP
   case TAG_quote_GREATEREQUAL:
+#endif // VDMPP
     res = ">=";
     break;
 
     // ShOp -- the same for Java and C++
   case TAG_quote_LEFTSHIFT:
+#ifdef VDMPP
   case TAG_quote_DOUBLELESS:
+#endif // VDMPP
     res = "<<";
     break;
 
   case TAG_quote_RIGHTSHIFT:
+#ifdef VDMPP
   case TAG_quote_DOUBLEGREATER:
+#endif // VDMPP
     res = ">>";
     break;
 
@@ -3900,7 +3944,9 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_MULT:
+#ifdef VDMPP
   case TAG_quote_STAR:
+#endif // VDMPP
     res = "*";
     break;
 
@@ -3909,34 +3955,44 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_MOD:
+#ifdef VDMPP
   case TAG_quote_PRECENTAGEMARK:
+#endif // VDMPP
     res = "%";
     break;
 
     // PmOp -- does not exist for Java
   case TAG_quote_DOTSTAR:
+#ifdef VDMPP
     if (isJAVA())
       res = "???";
     else
+#endif // VDMPP
       res = ".* ";
     break;
 
   case TAG_quote_ARROWSTAR:
+#ifdef VDMPP
     if (isJAVA())
       res = "???";
     else
+#endif // VDMPP
       res = "->*";
     break;
 
   // IncDecOp -- the same for Java and C++
 
   case TAG_quote_PPLUS:
+#ifdef VDMPP
   case TAG_quote_DOUBLEPLUS:
+#endif // VDMPP
     res = "++";
     break;
 
   case TAG_quote_PMINUS:
+#ifdef VDMPP
   case TAG_quote_DOUBLEMINUS:
+#endif // VDMPP
     res = "--";
     break;
 
@@ -3946,9 +4002,11 @@ string CGBackEnd::Quote2String(const Quote & op)
 
   // UnaryOp -- indirection op not supported by Java (because no pointers)
   case TAG_quote_INDIRECTION:
+#ifdef VDMPP
     if (isJAVA())
       res = "???";
     else
+#endif // VDMPP
       res = "*";
     break;
 
@@ -3957,16 +4015,21 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_NEG:
+#ifdef VDMPP
   case TAG_quote_EXCLAMATIONMARK:
+#endif // VDMPP
     res = "!";
     break;
 
   case TAG_quote_COMPL:
+#ifdef VDMPP
   case TAG_quote_TILDE:
+#endif // VDMPP
     res = "~";
     break;
 
     // Operator -- delete operator not supported by Java
+#ifdef VDMPP
   case TAG_quote_NEW:
     res = "new";
     break;
@@ -3993,12 +4056,15 @@ string CGBackEnd::Quote2String(const Quote & op)
   case TAG_quote_SQUAREBRACKETS:
     res = "[]";
     break;
+#endif // VDMPP
 
     // cv-qualitier
   case TAG_quote_CONST: //constants in Java has to be declared final
+#ifdef VDMPP
     if (isJAVA())
       res = "final";
     else
+#endif // VDMPP
       res = "const";
     break;
 
@@ -4259,9 +4325,9 @@ int CGBackEnd::OpPrec(const Generic & g)
       prec = 17;
       break;
     }
-    case TAG_TYPE_CPP_ScopeResIdentifier:
-    case TAG_TYPE_CPP_ScopeResOpFctName:
-    case TAG_TYPE_CPP_ScopeResQualifiedName:
+//    case TAG_TYPE_CPP_ScopeResIdentifier:
+//    case TAG_TYPE_CPP_ScopeResOpFctName:
+//    case TAG_TYPE_CPP_ScopeResQualifiedName:
     case TAG_TYPE_CPP_QualifiedName: {
       prec = 18;
       break;

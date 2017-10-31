@@ -665,18 +665,17 @@ by any of the code generators.
 
 \begin{vdm_al}
 
+#ifdef VDMPP
   GenClass2Package: CPP`Identifier -> CPP`PackageName
   GenClass2Package(id) ==
     mk_CPP`SimplePackageName(id,id.cid);
-
-  GenQualifiedName2: CPP`QualifiedClassName * CPP`Name -> CPP`QualifiedName
-  GenQualifiedName2(qnm,nm) == BCCI`GenQualifiedName2(qnm,nm,CI`NilContextId);
+#endif VDMPP
 
   GenTemplateClassName: CPP`Identifier * seq of CPP`Identifier -> CPP`TemplateClassName
   GenTemplateClassName(tnm,args) ==
     BCCI`GenTemplateClassName(tnm,args,CI`NilContextId);
 
-  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Name -> CPP`QualifiedName
+  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Identifier -> CPP`QualifiedName
   GenQualifiedName(cnm,nm) ==
     BCCI`GenQualifiedName(cnm,nm,CI`NilContextId);
 
@@ -684,7 +683,7 @@ by any of the code generators.
   GenDest: CPP`Identifier -> CPP`Destructor
   GenDest(id) ==
     BCCI`GenDest(id,CI`NilContextId);
-#endif
+#endif VDMPP
 \end{vdm_al}
 
 \subsection{Interfaces}
@@ -706,6 +705,7 @@ by any of the code generators.
     GenInclusion: CPP`FileName -> CPP`QuoteIncl
     GenInclusion( fn ) == BCCI`GenInclusion( fn,CI`NilContextId );
 
+#ifdef VDMPP
     GenSimplePackageName: seq of char -> CPP`PackageName
     GenSimplePackageName(cs) == BCCI`GenSimplePackageName(cs,CI`NilContextId);
 
@@ -729,6 +729,7 @@ by any of the code generators.
     GenSingleTypeImportDeclaration: CPP`Identifier -> CPP`SingleTypeImportDeclaration
     GenSingleTypeImportDeclaration( id ) ==
       BCCI`GenSingleTypeImportDeclaration( id,CI`NilContextId );
+#endif VDMPP
 
     GenSqIncl: CPP`FileName -> CPP`SquareIncl
     GenSqIncl(fn) ==

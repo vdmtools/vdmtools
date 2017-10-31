@@ -736,12 +736,11 @@ functions
     mk_CPP`ArrayApply(e1, GenCastExpr(GenGeneric(cid),e2,cid),cid);
 
 operations
-  --GenGeneric: CI`ContextId ==> CPP`DeclSpecifier
   GenGeneric: CI`ContextId ==> CPP`TypeSpecifier
   GenGeneric(cid) ==
     if CPP`isCPP()
-    then return GenTypeSpecifier(GenClassName(GenIdentifier("Generic", cid), cid), cid)
-    else return GenTypeSpecifier(GenClassName(GenIdentifier("Object", cid), cid), cid);
+    then return GenTypeSpecifier(GenIdentifier("Generic", cid), cid)
+    else return GenTypeSpecifier(GenIdentifier("Object", cid), cid);
 
 functions
   GenAsgnExpr: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
@@ -760,8 +759,10 @@ functions
   GenBracketedExpr( e, cid ) ==
     cases true:
       (is_CPP`Identifier(e)),
+#ifdef VDMPP
       (is_CPP`QualifiedPackageName(e)),
       (is_CPP`SimplePackageName(e)),
+#endif VDMPP
       (is_CPP`IntegerLit(e)),
       (is_CPP`CharacterLit(e)),
       (is_CPP`FloatingLit(e)),
@@ -836,15 +837,15 @@ functions
 \subsection{Classes}
 
 \begin{vdm_al}
-  GenClassName: CPP`Name * CI`ContextId -> CPP`CompleteClassName
-  GenClassName(name,cid) ==
-    if is_CPP`Identifier(name)
-    then name
-    else mk_CPP`ResScopeQualifiedClassName(mk_CPP`ClassResScopeQualifiedClassName(name.qcn,name,cid),cid);
+--  GenClassName: CPP`Name * CI`ContextId -> CPP`CompleteClassName
+--  GenClassName(name,cid) ==
+--    if is_CPP`Identifier(name)
+--    then name
+--    else mk_CPP`ResScopeQualifiedClassName(mk_CPP`ClassResScopeQualifiedClassName(name.qcn,name,cid),cid);
 
-  GenQualifiedName2: CPP`QualifiedClassName * CPP`Name * CI`ContextId -> CPP`QualifiedName
-  GenQualifiedName2(qnm,nm,cid) ==
-    mk_CPP`QualifiedName(qnm,nm,cid);
+--  GenQualifiedName2: CPP`Identifier * CPP`Identifier * CI`ContextId -> CPP`QualifiedName
+--  GenQualifiedName2(qnm,nm,cid) ==
+--    mk_CPP`QualifiedName(qnm,nm,cid);
 
   GenTemplateClassName: CPP`Identifier * seq of CPP`Identifier * CI`ContextId -> CPP`TemplateClassName
   GenTemplateClassName(tnm,args,cid) ==
@@ -853,13 +854,14 @@ functions
             [ mk_CPP`TypeName([mk_CPP`TypeSpecifier(args(i),cid)],nil,cid) | i in set inds args],
             cid);
 
-  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Name * CI`ContextId -> CPP`QualifiedName
+  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Identifier * CI`ContextId -> CPP`QualifiedName
   GenQualifiedName(cnm,nm,cid) ==
-    cases nm:
-      mk_CPP`Identifier (-,-)        -> mk_CPP`QualifiedName(cnm,nm,cid),
-      mk_CPP`QualifiedName (-,nm2,-) -> mk_CPP`QualifiedName(cnm,nm2,cid),
-      others -> undefined
-    end;
+    --cases nm:
+    --  mk_CPP`Identifier (-,-)        -> mk_CPP`QualifiedName(cnm,nm,cid),
+    --  mk_CPP`QualifiedName (-,nm2,-) -> mk_CPP`QualifiedName(cnm,nm2,cid),
+    --  others -> undefined
+    --end;
+    mk_CPP`QualifiedName(cnm,nm,cid);
 
 #ifdef VDMPP
   GenDest: CPP`Identifier * CI`ContextId -> CPP`Destructor
@@ -887,6 +889,7 @@ functions
   GenInclusion: CPP`FileName * CI`ContextId -> CPP`QuoteIncl
   GenInclusion( fn, cid ) == mk_CPP`QuoteIncl( fn, cid );
 
+#ifdef VDMPP
   GenSimplePackageName: seq of char * CI`ContextId -> CPP`PackageName
   GenSimplePackageName(cs, cid) ==
     mk_CPP`SimplePackageName(mk_CPP`Identifier(cs,cid),cid);
@@ -911,6 +914,7 @@ functions
   GenSingleTypeImportDeclaration: CPP`Identifier * CI`ContextId -> CPP`SingleTypeImportDeclaration
   GenSingleTypeImportDeclaration( id, cid ) ==
      mk_CPP`SingleTypeImportDeclaration(mk_CPP`SimplePackageName(id,id.cid),cid);
+#endif VDMPP
 
   GenSqIncl: CPP`FileName * CI`ContextId -> CPP`SquareIncl
   GenSqIncl(fn,cid) ==

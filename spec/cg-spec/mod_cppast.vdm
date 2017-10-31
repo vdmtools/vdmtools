@@ -821,17 +821,17 @@ TemplateClassName has only been introduced as a QualifiedClassName.
      QualifiedClassName | ResScopeQualifiedClassName;
 
  QualifiedClassName =   Identifier |
-                        TemplateClassName |
-                        ClassResScopeQualifiedClassName
+                        TemplateClassName --|
+                        --ClassResScopeQualifiedClassName
 #ifdef VDMPP
  inv name == isJAVA() => not (is_TemplateClassName(name))
 #endif VDMPP
 ;
 
- ClassResScopeQualifiedClassName ::
-    cn : Identifier
-    qcn : QualifiedClassName
-    CNTXT;
+-- ClassResScopeQualifiedClassName ::
+--    cn : Identifier
+--    qcn : QualifiedClassName
+--    CNTXT;
 
  ResScopeQualifiedClassName ::
    qcn : QualifiedClassName
@@ -1053,7 +1053,9 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         SizeOfType |
         Literal |
         This |
+#ifdef VDMPP
         Super |
+#endif VDMPP
         BracketedExpr |
         DeallocationExpr |
         DeallocationArrayExpr |
@@ -1066,9 +1068,9 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         PointerToObjectMemberAccess |
         PostFixInDecrementExpr |
         ThrowExpression |
-        ScopeResIdentifier |
-        ScopeResOpFctName |
-        ScopeResQualifiedName |
+--        ScopeResIdentifier |
+--        ScopeResOpFctName |
+--        ScopeResQualifiedName |
         ArrayInitializer |
         Name 
 #ifdef VDMPP
@@ -1080,7 +1082,7 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
                                or is_DeallocationArrayExpr(expr)
                                or is_SizeOfExpr(expr)
                                or is_SizeOfType(expr)
-                                 or is_AllocationNewTypeExpr(expr)
+                               or is_AllocationNewTypeExpr(expr)
                                or is_AllocationTypeExpr(expr)
                                or is_PointerToObjectMemberAccess(expr)))
                                and
@@ -1265,18 +1267,24 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
       name   : Expr
       CNTXT;
 
-  ScopeResIdentifier ::
-    id : Identifier
-    CNTXT;
+--  ScopeResIdentifier ::
+--    id : Identifier
+--    CNTXT;
+--
+--  ScopeResOpFctName ::
+--    opfctname : OperatorFunctionName
+--    CNTXT;
+--
+--  ScopeResQualifiedName ::
+--    qualname : QualifiedName
+--    CNTXT;
 
-  ScopeResOpFctName ::
-    opfctname : OperatorFunctionName
-    CNTXT;
-
-  ScopeResQualifiedName ::
-    qualname : QualifiedName
-    CNTXT;
-
+#ifdef VDMSL
+  Name = Identifier |
+         QualifiedName |
+         Destructor;
+#endif VDMSL
+#ifdef VDMPP
   Name = Identifier |
          OperatorFunctionName |
          ConversionFunctionName |
@@ -1287,13 +1295,14 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
   inv n == (isJAVA() => not (is_ConversionFunctionName(n) or
                              is_OperatorFunctionName(n))) and
            isCPP() => not is_(n,PackageName);
+#endif VDMPP
 
   Identifier ::
       id : seq1 of char
       CNTXT;
 
   QualifiedName ::
-      qcn : QualifiedClassName | Expr
+      qcn : QualifiedClassName -- | Expr
       id  : Name
       CNTXT;
 
@@ -1428,6 +1437,7 @@ inside Java.
 \subsubsection{Conversion Functions (C++)}
 
 \begin{vdm_al}
+#ifdef VDMPP
 ConversionFunctionName ::
    ctn : ConversionTypeName
    CNTXT;
@@ -1451,11 +1461,13 @@ ConversionFunctionName ::
    CNTXT;
 
   Super :: CNTXT;
+#endif VDMPP
 
   NullLit :: CNTXT;
 
 \end{vdm_al}
 
+#ifdef VDMPP
 \subsubsection{Overloaded Operators}
 
 \begin{vdm_al}
@@ -1477,6 +1489,7 @@ ConversionFunctionName ::
          <BRACKETS> | <SQUAREBRACKETS>
     CNTXT;
 \end{vdm_al}
+#endif VDMPP
 
 \subsection{Exception Handling}
 The exception handling in Java is similar, but not quite the same as in C++.

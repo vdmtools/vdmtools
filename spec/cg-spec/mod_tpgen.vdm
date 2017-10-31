@@ -1428,7 +1428,8 @@ The \verb+GenGetFunctionDef+ and \verb+GenGetFunctionDef+ functions takes the fo
 functions
 
 GenGetFunctionDef : (<PRODUCT> | <COMPOSITE>) * CPP`Identifier *
-                    CPP`Identifier * FieldTag * CPP`QualifiedClassName * REP`TypeRep +>
+                    --CPP`Identifier * FieldTag * CPP`QualifiedClassName * REP`TypeRep +>
+                    CPP`Identifier * FieldTag * CPP`Identifier * REP`TypeRep +>
                     CPP`FunctionDefinition
 GenGetFunctionDef(-,s,t,i,cnm,tp) ==
   def meth = DS`GenGetMethod(tp); -- "GetField";
@@ -1436,7 +1437,8 @@ GenGetFunctionDef(-,s,t,i,cnm,tp) ==
   let ts   = BC`GenTypeSpecifier(t),
       dsl  = [ts],
       --ds_l = [BC`GenTypeSpecifier(<CONST>), ts, BC`GenTypeSpecifier(<REFERENCE>)],
-      decl = BC`GenConstFctDecl( BC`GenQualifiedName2(cnm,BC`GenIdentifier("get_"^s.id)), []),
+      --decl = BC`GenConstFctDecl( BC`GenQualifiedName2(cnm,BC`GenIdentifier("get_"^s.id)), []),
+      decl = BC`GenConstFctDecl( BC`GenQualifiedName(cnm,BC`GenIdentifier("get_"^s.id)), []),
       fcall = BC`GenFctCall(BC`GenIdentifier(meth), [BC`GenIntegerLit(i)]),
       body = BC`GenBlock([ BC`GenReturnStmt( fcall ) ])
   in BC`GenFctDef(dsl,decl,nil,body);
@@ -1480,13 +1482,15 @@ GenSetFunctionDecl(s,t) ==
      BC`GenMemberSpec([BC`GenTypeSpecifier(BC`GenVoid())],decl)
 );
 
-GenSetFunctionDef : CPP`Identifier * CPP`Identifier * FieldTag * CPP`QualifiedClassName +> CPP`FunctionDefinition
+--GenSetFunctionDef : CPP`Identifier * CPP`Identifier * FieldTag * CPP`QualifiedClassName +> CPP`FunctionDefinition
+GenSetFunctionDef : CPP`Identifier * CPP`Identifier * FieldTag * CPP`Identifier +> CPP`FunctionDefinition
 GenSetFunctionDef(s, t, i, cnm) ==
 (
   let dsl = [BC`GenTypeSpecifier(BC`GenVoid())],
       arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier(t.id))],
                           BC`GenRef(BC`GenIdentifier("p"))),
-      decl = BC`GenFctDecl(BC`GenQualifiedName2(cnm, BC`GenIdentifier("set_" ^ s.id)),[arg]),
+      --decl = BC`GenFctDecl(BC`GenQualifiedName2(cnm, BC`GenIdentifier("set_" ^ s.id)),[arg]),
+      decl = BC`GenFctDecl(BC`GenQualifiedName(cnm, BC`GenIdentifier("set_" ^ s.id)),[arg]),
       body = BC`GenBlock([BC`GenExpressionStmt(
                             BC`GenFctCall(BC`GenIdentifier("SetField"), [BC`GenIntegerLit(i), BC`GenIdentifier("p")])) ])
   in BC`GenFctDef(dsl, decl, nil, body)
@@ -1659,12 +1663,11 @@ GenInitFunctionDecl(cnm,sl,tenv) ==
                             BC`GenRef(BC`GenIdentifier("p" ^ CGAUX`StringNumber(j))))
     in arglist := arglist ^ [arg];
   );
-
   return BC`GenMemberSpec([BC`GenTypeSpecifier(cnm)],
                           BC`GenRef(BC`GenFctDecl(BC`GenIdentifier("Init"), arglist)))
  );
 
-GenInitFunctionDef : CPP`QualifiedClassName * TagList * TagEnv ==> CPP`FunctionDefinition
+GenInitFunctionDef : CPP`Identifier * TagList * TagEnv ==> CPP`FunctionDefinition
 GenInitFunctionDef(cnm,sl,tenv) ==
  (dcl  arglist : seq of CPP`ArgDecl := [],
        stmtl   : seq of CPP`Stmt    := [];
@@ -1685,11 +1688,9 @@ GenInitFunctionDef(cnm,sl,tenv) ==
   stmtl := stmtl ^ [BC`GenReturnStmt(BC`GenIndirectionExpr(DS`GenThis()))];
 
   -- Generate function definition
-  let decl = BC`GenFctDecl(BC`GenQualifiedName2(cnm,BC`GenIdentifier("Init")),arglist),
-      id = if is_CPP`Identifier(cnm)
-           then cnm
-           else cnm.qcn.id
-  in return BC`GenFctDef([BC`GenTypeSpecifier(id)],BC`GenRef(decl),nil,BC`GenBlock(stmtl))
+  --let decl = BC`GenFctDecl(BC`GenQualifiedName2(cnm,BC`GenIdentifier("Init")),arglist)
+  let decl = BC`GenFctDecl(BC`GenQualifiedName(cnm,BC`GenIdentifier("Init")),arglist)
+  in return BC`GenFctDef([BC`GenTypeSpecifier(cnm)],BC`GenRef(decl),nil,BC`GenBlock(stmtl))
  );
 
 \end{vdm_al}
@@ -1764,15 +1765,13 @@ GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
    (dcl pub_ml : seq of CPP`MemberDeclaration := [], -- public member functions
         priv_ml :seq of CPP`MemberDeclaration := [], -- privat member functions
         fctdef  :CPP`CPPAS := [];                    -- function definitions
-        --i : int := 1;
 
     def cnm = cpptpid;
         cn =  DS`GenRecordType(nil).tp;
         bs = [ BC`GenAccBaseSpec(cn)];
         ch = BC`GenClassHead(cpptpid,bs)
     in
-     (
-      if taglist <> []
+     (if taglist <> []
       then fctdef := fctdef ^ [GenInitFunctionDef(cnm,taglist,tagenv)];
 
       pub_ml := pub_ml ^ [ GenClassDefaultConstructorDecl(<COMPOSITE>,cpptpid,taglist) ];
@@ -1783,7 +1782,6 @@ GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
       pub_ml := pub_ml ^ [ GenCommonConstrDecl(cpptpid,cn), GenGetTypeNameDecl(cpptpid) ]
                        ^ GenMemFctMacros(<COMPOSITE>);
 
-      --for id in taglist do
       for i = 1 to len taglist do
         let id = taglist(i)
         in
@@ -1792,8 +1790,6 @@ GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
 
         fctdef := fctdef ^ [GenGetFunctionDef(<COMPOSITE>,id,tagenv(id),i,cnm,tps(i))];
         fctdef := fctdef ^ [GenSetFunctionDef(id,tagenv(id),i,cnm)];
-
-        --i := i+1;
        );
 
 #ifdef VDMSL

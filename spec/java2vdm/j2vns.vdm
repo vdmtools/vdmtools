@@ -362,7 +362,7 @@ ClassName2Ids: CPP`CompleteClassName +> seq1 of CPP`Identifier
 ClassName2Ids(p_name) ==
   cases true:
     (is_CPP`Identifier(p_name)) -> [p_name],
-    (is_CPP`ClassResScopeQualifiedClassName(p_name))  -> ClassName2Ids(p_name.qcn) ^ [p_name.cn],
+--    (is_CPP`ClassResScopeQualifiedClassName(p_name))  -> ClassName2Ids(p_name.qcn) ^ [p_name.cn],
     (is_CPP`ResScopeQualifiedClassName(p_name))  -> ClassName2Ids(p_name.qcn),
     others -> undefined
   end;
