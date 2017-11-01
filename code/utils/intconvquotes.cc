@@ -49,12 +49,14 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_PreElse:
     case TAG_TYPE_CPP_PreEndIf:
     case TAG_TYPE_CPP_PreMacro:
+#ifdef VDMPP
     case TAG_TYPE_CPP_PackageAndImportDeclarations:
     case TAG_TYPE_CPP_PackageDeclaration:
     case TAG_TYPE_CPP_QualifiedPackageName:
     case TAG_TYPE_CPP_SimplePackageName:
     case TAG_TYPE_CPP_SingleTypeImportDeclaration:
     case TAG_TYPE_CPP_TypeImportOnDemandDeclaration:
+#endif // VDMPP
     case TAG_TYPE_CPP_IdentDeclaration:
     case TAG_TYPE_CPP_StorageClassSpecifier:
     case TAG_TYPE_CPP_TypeSpecifier:
@@ -99,8 +101,10 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_StaticInitializer:
     case TAG_TYPE_CPP_TemplateName:
     case TAG_TYPE_CPP_TemplateClassName:
+#ifdef VDMPP
     case TAG_TYPE_CPP_InterfaceSpecifier:
     case TAG_TYPE_CPP_InterfaceHead:
+#endif // VDMPP
     case TAG_TYPE_CPP_FunctionDefinition:
     case TAG_TYPE_CPP_MemInitializer:
     case TAG_TYPE_CPP_FctBody:
@@ -196,21 +200,21 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_ArrayNewDecl:
     case TAG_TYPE_CPP_NewInitializer:
     case TAG_TYPE_CPP_PointerToObjectMemberAccess:
-    case TAG_TYPE_CPP_ClassInstanceCreationExpr:
-    case TAG_TYPE_CPP_ClassExpr:
 #ifdef VDMPP
-    case TAG_TYPE_CPP_ConversionFunctionName:
-    case TAG_TYPE_CPP_ConversionTypeName:
-    case TAG_TYPE_CPP_PointerDecl:
-    case TAG_TYPE_CPP_RefTypeDecl:
-    case TAG_TYPE_CPP_PointerToMemberDecl:
+    case TAG_TYPE_CPP_ClassInstanceCreationExpr:
+#endif // VDMPP
+    case TAG_TYPE_CPP_ClassExpr:
+//    case TAG_TYPE_CPP_ConversionFunctionName:
+//    case TAG_TYPE_CPP_ConversionTypeName:
+//    case TAG_TYPE_CPP_PointerDecl:
+//    case TAG_TYPE_CPP_RefTypeDecl:
+//    case TAG_TYPE_CPP_PointerToMemberDecl:
+#ifdef VDMPP
     case TAG_TYPE_CPP_Super:
 #endif // VDMPP
     case TAG_TYPE_CPP_NullLit:
-#ifdef VDMPP
-    case TAG_TYPE_CPP_OperatorFunctionName:
-    case TAG_TYPE_CPP_Operator:
-#endif // VDMPP
+//    case TAG_TYPE_CPP_OperatorFunctionName:
+//    case TAG_TYPE_CPP_Operator:
     case TAG_TYPE_CPP_TryBlock:
     case TAG_TYPE_CPP_Handler:
     case TAG_TYPE_CPP_All:
@@ -222,8 +226,9 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_EndOfLineComments:
     case TAG_TYPE_CPP_DocComments:
       return true;
-   default:
-     return false;
+    default: {
+      return false;
+    }
   }
 } 
 

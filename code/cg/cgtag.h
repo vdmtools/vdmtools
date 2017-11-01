@@ -66,17 +66,17 @@ enum {
   CharacterLit_CPP = TAG_TYPE_CPP_CharacterLit,
   Char_CPP = TAG_TYPE_CPP_Char,
   ClassHead_CPP = TAG_TYPE_CPP_ClassHead,
+#ifdef VDMPP
   ClassInstanceCreationExpr_CPP = TAG_TYPE_CPP_ClassInstanceCreationExpr,
+#endif // VDMPP
   ClassNewDecl_CPP = TAG_TYPE_CPP_ClassNewDecl,
 //  ClassResScopeQualifiedClassName_CPP = TAG_TYPE_CPP_ClassResScopeQualifiedClassName,
   ClassSpecifier_CPP = TAG_TYPE_CPP_ClassSpecifier,
   CompoundStmt_CPP = TAG_TYPE_CPP_CompoundStmt,
   ConditionalExpr_CPP = TAG_TYPE_CPP_ConditionalExpr,
   Continue_CPP = TAG_TYPE_CPP_Continue,
-#ifdef VDMPP
-  ConversionFunctionName_CPP = TAG_TYPE_CPP_ConversionFunctionName,
-  ConversionTypeName_CPP = TAG_TYPE_CPP_ConversionTypeName,
-#endif // VDMPP
+//  ConversionFunctionName_CPP = TAG_TYPE_CPP_ConversionFunctionName,
+//  ConversionTypeName_CPP = TAG_TYPE_CPP_ConversionTypeName,
   CVNewDeclarator_CPP = TAG_TYPE_CPP_CVNewDeclarator,
   DeallocationArrayExpr_CPP = TAG_TYPE_CPP_DeallocationArrayExpr,
   DeallocationExpr_CPP = TAG_TYPE_CPP_DeallocationExpr,
@@ -124,8 +124,10 @@ enum {
   InitializerList_CPP = TAG_TYPE_CPP_InitializerList,
   Int_CPP = TAG_TYPE_CPP_Int,
   IntegerLit_CPP = TAG_TYPE_CPP_IntegerLit,
+#ifdef VDMPP
   InterfaceHead_CPP = TAG_TYPE_CPP_InterfaceHead,
   InterfaceSpecifier_CPP = TAG_TYPE_CPP_InterfaceSpecifier,
+#endif // VDMPP
   LabelStmt_CPP = TAG_TYPE_CPP_LabelStmt,
   LogicalExpr_CPP = TAG_TYPE_CPP_LogicalExpr,
   LogOp_CPP = TAG_TYPE_CPP_LogOp,
@@ -139,22 +141,18 @@ enum {
   NullLit_CPP = TAG_TYPE_CPP_NullLit,
   ObjectInit_CPP = TAG_TYPE_CPP_ObjectInit,
   ObjectMemberAccess_CPP = TAG_TYPE_CPP_ObjectMemberAccess,
+//  Operator_CPP = TAG_TYPE_CPP_Operator,
+//  OperatorFunctionName_CPP = TAG_TYPE_CPP_OperatorFunctionName,
 #ifdef VDMPP
-  Operator_CPP = TAG_TYPE_CPP_Operator,
-  OperatorFunctionName_CPP = TAG_TYPE_CPP_OperatorFunctionName,
-#endif // VDMPP
   PackageAndImportDeclarations_CPP = TAG_TYPE_CPP_PackageAndImportDeclarations,
   PackageDeclaration_CPP = TAG_TYPE_CPP_PackageDeclaration,
+#endif // VDMPP
   PmExpr_CPP = TAG_TYPE_CPP_PmExpr,
   PmOp_CPP = TAG_TYPE_CPP_PmOp,
-#ifdef VDMPP
-  PointerDecl_CPP = TAG_TYPE_CPP_PointerDecl,
-#endif // VDMPP
+//  PointerDecl_CPP = TAG_TYPE_CPP_PointerDecl,
   PointerToMemberAbs_CPP = TAG_TYPE_CPP_PointerToMemberAbs,
   PointerToMember_CPP = TAG_TYPE_CPP_PointerToMember,
-#ifdef VDMPP
-  PointerToMemberDecl_CPP = TAG_TYPE_CPP_PointerToMemberDecl,
-#endif // VDMPP
+//  PointerToMemberDecl_CPP = TAG_TYPE_CPP_PointerToMemberDecl,
   PointerToObjectMemberAccess_CPP = TAG_TYPE_CPP_PointerToObjectMemberAccess,
   PostFixInDecrementExpr_CPP = TAG_TYPE_CPP_PostFixInDecrementExpr,
   PreDefine_CPP = TAG_TYPE_CPP_PreDefine,
@@ -166,13 +164,13 @@ enum {
   PreInDecrementExpr_CPP = TAG_TYPE_CPP_PreInDecrementExpr,
   PreMacro_CPP = TAG_TYPE_CPP_PreMacro,
   QualifiedName_CPP = TAG_TYPE_CPP_QualifiedName,
+#ifdef VDMPP
   QualifiedPackageName_CPP = TAG_TYPE_CPP_QualifiedPackageName,
+#endif // VDMPP
   QuoteIncl_CPP = TAG_TYPE_CPP_QuoteIncl,
   RefAbsDecl_CPP = TAG_TYPE_CPP_RefAbsDecl,
   RefDecl_CPP = TAG_TYPE_CPP_RefDecl,
-#ifdef VDMPP
-  RefTypeDecl_CPP = TAG_TYPE_CPP_RefTypeDecl,
-#endif // VDMPP
+//  RefTypeDecl_CPP = TAG_TYPE_CPP_RefTypeDecl,
   RelationalExpr_CPP = TAG_TYPE_CPP_RelationalExpr,
   RelOp_CPP = TAG_TYPE_CPP_RelOp,
   ResScopeQualifiedClassName_CPP = TAG_TYPE_CPP_ResScopeQualifiedClassName,
@@ -184,8 +182,10 @@ enum {
   ShOp_CPP = TAG_TYPE_CPP_ShOp,
   Short_CPP = TAG_TYPE_CPP_Short,
   Signed_CPP = TAG_TYPE_CPP_Signed,
+#ifdef VDMPP
   SimplePackageName_CPP = TAG_TYPE_CPP_SimplePackageName,
   SingleTypeImportDeclaration_CPP = TAG_TYPE_CPP_SingleTypeImportDeclaration,
+#endif // VDMPP
   SizeOfExpr_CPP = TAG_TYPE_CPP_SizeOfExpr,
   SizeOfType_CPP = TAG_TYPE_CPP_SizeOfType,
   SquareIncl_CPP = TAG_TYPE_CPP_SquareIncl,
@@ -209,7 +209,9 @@ enum {
   TypeCompExpr_CPP = TAG_TYPE_CPP_TypeCompExpr,
   TypeDef_CPP = TAG_TYPE_CPP_TypeDef,
   TypeDefName_CPP = TAG_TYPE_CPP_TypeDefName,
+#ifdef VDMPP
   TypeImportOnDemandDeclaration_CPP = TAG_TYPE_CPP_TypeImportOnDemandDeclaration,
+#endif // VDMPP
   TypeName_CPP = TAG_TYPE_CPP_TypeName,
   TypeSpecifier_CPP = TAG_TYPE_CPP_TypeSpecifier,
   UnaryOp_CPP = TAG_TYPE_CPP_UnaryOp,
@@ -300,54 +302,55 @@ enum {
 
 // Operator
 
-#ifdef VDMPP
-  NEW_CPP = TAG_quote_NEW,
-  DELETE_CPP = TAG_quote_DELETE,
-  PLUS_CPP = TAG_quote_PLUS,
-  MINUS_CPP = TAG_quote_MINUS,
-  STAR_CPP = TAG_quote_STAR,
-  DIV_CPP = TAG_quote_DIV,
-  PRECENTAGEMARK_CPP = TAG_quote_PRECENTAGEMARK,
-  CIRCUMFEX_CPP = TAG_quote_CIRCUMFEX,
-  AMPERSAND_CPP = TAG_quote_AMPERSAND,
-  VERTICALLINE_CPP = TAG_quote_VERTICALLINE,
-  TILDE_CPP = TAG_quote_TILDE,
-  EXCLAMATIONMARK_CPP = TAG_quote_EXCLAMATIONMARK,
-  OPEQUAL_CPP = TAG_quote_OPEQUAL,
-  LESS_CPP = TAG_quote_LESS,
-  GREATER_CPP = TAG_quote_GREATER,
-  PLUSEQUAL_CPP = TAG_quote_PLUSEQUAL,
-  MINUSEQUAL_CPP = TAG_quote_MINUSEQUAL,
-  STAREQUAL_CPP = TAG_quote_STAREQUAL,
-  BACKSLASHEQUAL_CPP = TAG_quote_BACKSLASHEQUAL,
-  PERCENTAGEMARKEQUAL_CPP = TAG_quote_PERCENTAGEMARKEQUAL,
-  CIRCUMFLEXEQUAL_CPP = TAG_quote_CIRCUMFLEXEQUAL,
-  ANDEQUAL_CPP = TAG_quote_ANDEQUAL,
-  VERTICALLINEEQUAL_CPP = TAG_quote_VERTICALLINEEQUAL,
-  DOUBLELESS_CPP = TAG_quote_DOUBLELESS,
-  DOUBLEGREATER_CPP = TAG_quote_DOUBLEGREATER,
-  DOUBLELESSEQUAL_CPP = TAG_quote_DOUBLELESSEQUAL,
-  DOUBLEGREATEREQUAL_CPP = TAG_quote_DOUBLEGREATEREQUAL,
-  DOUBLEEQUAL_CPP = TAG_quote_DOUBLEEQUAL,
-  EXCLAMATIONMARKEQUAL_CPP = TAG_quote_EXCLAMATIONMARKEQUAL,
-  LESSEQUAL_CPP = TAG_quote_LESSEQUAL,
-  GREATEREQUAL_CPP = TAG_quote_GREATEREQUAL,
-  DOUBLEAND_CPP = TAG_quote_DOUBLEAND,
-  DOUBLEVERTICALLINE_CPP = TAG_quote_DOUBLEVERTICALLINE,
-  DOUBLEPLUS_CPP = TAG_quote_DOUBLEPLUS,
-  DOUBLEMINUS_CPP = TAG_quote_DOUBLEMINUS,
-  COMMA_CPP = TAG_quote_COMMA,
-  ARROWSTAR_CPP = TAG_quote_ARROWSTAR,
-  ARROW_CPP = TAG_quote_ARROW,
-  BRACKETS_CPP = TAG_quote_BRACKETS,
-  SQUAREBRACKETS_CPP = TAG_quote_SQUAREBRACKETS,
-#endif // VDMPP
+//  NEW_CPP = TAG_quote_NEW,
+//  DELETE_CPP = TAG_quote_DELETE,
+//  PLUS_CPP = TAG_quote_PLUS,
+//  MINUS_CPP = TAG_quote_MINUS,
+//  STAR_CPP = TAG_quote_STAR,
+//  DIV_CPP = TAG_quote_DIV,
+//  PRECENTAGEMARK_CPP = TAG_quote_PRECENTAGEMARK,
+//  CIRCUMFEX_CPP = TAG_quote_CIRCUMFEX,
+//  AMPERSAND_CPP = TAG_quote_AMPERSAND,
+//  VERTICALLINE_CPP = TAG_quote_VERTICALLINE,
+//  TILDE_CPP = TAG_quote_TILDE,
+//  EXCLAMATIONMARK_CPP = TAG_quote_EXCLAMATIONMARK,
+//  OPEQUAL_CPP = TAG_quote_OPEQUAL,
+//  LESS_CPP = TAG_quote_LESS,
+//  GREATER_CPP = TAG_quote_GREATER,
+//  PLUSEQUAL_CPP = TAG_quote_PLUSEQUAL,
+//  MINUSEQUAL_CPP = TAG_quote_MINUSEQUAL,
+//  STAREQUAL_CPP = TAG_quote_STAREQUAL,
+//  BACKSLASHEQUAL_CPP = TAG_quote_BACKSLASHEQUAL,
+//  PERCENTAGEMARKEQUAL_CPP = TAG_quote_PERCENTAGEMARKEQUAL,
+//  CIRCUMFLEXEQUAL_CPP = TAG_quote_CIRCUMFLEXEQUAL,
+//  ANDEQUAL_CPP = TAG_quote_ANDEQUAL,
+//  VERTICALLINEEQUAL_CPP = TAG_quote_VERTICALLINEEQUAL,
+//  DOUBLELESS_CPP = TAG_quote_DOUBLELESS,
+//  DOUBLEGREATER_CPP = TAG_quote_DOUBLEGREATER,
+//  DOUBLELESSEQUAL_CPP = TAG_quote_DOUBLELESSEQUAL,
+//  DOUBLEGREATEREQUAL_CPP = TAG_quote_DOUBLEGREATEREQUAL,
+//  DOUBLEEQUAL_CPP = TAG_quote_DOUBLEEQUAL,
+//  EXCLAMATIONMARKEQUAL_CPP = TAG_quote_EXCLAMATIONMARKEQUAL,
+//  LESSEQUAL_CPP = TAG_quote_LESSEQUAL,
+//  GREATEREQUAL_CPP = TAG_quote_GREATEREQUAL,
+//  DOUBLEAND_CPP = TAG_quote_DOUBLEAND,
+//  DOUBLEVERTICALLINE_CPP = TAG_quote_DOUBLEVERTICALLINE,
+//  DOUBLEPLUS_CPP = TAG_quote_DOUBLEPLUS,
+//  DOUBLEMINUS_CPP = TAG_quote_DOUBLEMINUS,
+//  COMMA_CPP = TAG_quote_COMMA,
+//  ARROWSTAR_CPP = TAG_quote_ARROWSTAR,
+//  ARROW_CPP = TAG_quote_ARROW,
+//  BRACKETS_CPP = TAG_quote_BRACKETS,
+//  SQUAREBRACKETS_CPP = TAG_quote_SQUAREBRACKETS,
+
   JAVA_CPP = TAG_quote_JAVA,
   CPP_CPP = TAG_quote_CPP,
+
 // cv-qualitier
 
   CONST_CPP = TAG_quote_CONST,
   VOLATILE_CPP = TAG_quote_VOLATILE,
+
 // ellipsis
 
   ELLIPSIS_CPP = TAG_quote_ELLIPSIS,

@@ -1506,7 +1506,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenGetFunctionDef(const Int &,
   SEQ<TYPE_CPP_DeclSpecifier> dsl (mk_sequence(ts));
 
   TYPE_CPP_FctDecl decl (vdm_BC_GenConstFctDecl(
-                            //vdm_BC_GenQualifiedName2(
                             vdm_BC_GenQualifiedName(
                                 cnm,
                                 vdm_BC_GenIdentifier(ASTAUX::MkId(L"get_").ImpConc(s.get_id()))),
@@ -1572,7 +1571,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenSetFunctionDef(const TYPE_CPP_Identifier &
   TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(decl_l, vdm_BC_GenRef(vdm_BC_GenIdentifier(ASTAUX::MkId(L"p")))));
 
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(
-                           //vdm_BC_GenQualifiedName2(cnm,
                            vdm_BC_GenQualifiedName(cnm,
                                                     vdm_BC_GenIdentifier(ASTAUX::MkId(L"set_").ImpConc(s.get_id()))),
                            mk_sequence(arg)));
@@ -2059,7 +2057,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInitFunctionDef(const TYPE_CPP_Identifier 
   }
   stmtl.ImpAppend (vdm_BC_GenReturnStmt (vdm_BC_GenIndirection (GenThis())));
 
-  //TYPE_CPP_FctDecl decl(vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName2(cnm, vdm_BC_GenIdentifier(ASTAUX::MkId(L"Init"))),
   TYPE_CPP_FctDecl decl(vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName(cnm, vdm_BC_GenIdentifier(ASTAUX::MkId(L"Init"))),
                                           arglist));
 

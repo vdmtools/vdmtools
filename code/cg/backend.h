@@ -95,7 +95,9 @@ private:
   wstring GetMangleName(const Generic & decl);
   string StartKeepTag(const Generic & decl, bool override = false, bool keep = false);
   string EndKeepTag(const Generic & decl, bool override = false);
+#ifdef VDMPP
   Set GetHeadEntities(const TYPE_CPP_PackageAndImportDeclarations & head);
+#endif // VDMPP
   Set GetASTEntities(const Generic & ast, bool inClass);
 
 #ifdef TESTSPEC
@@ -112,10 +114,12 @@ private:
   void CloseBlock();
   void GenFile(const TYPE_CPP_File & rc);
   void GenTypeSpecifier(const TYPE_CPP_TypeSpecifier & rc);
+#ifdef VDMPP
   void GenPackageAndImportDeclarations(const TYPE_CPP_PackageAndImportDeclarations & rc);
   void GenPackageDeclaration(const TYPE_CPP_PackageDeclaration & rc);
   void GenTypeImportOnDemandDeclaration(const TYPE_CPP_TypeImportOnDemandDeclaration & rc);
   void GenSingleTypeImportDeclaration(const TYPE_CPP_SingleTypeImportDeclaration &rc);
+#endif // VDMPP
   void GenIdMacroDef(const TYPE_CPP_IdMacroDef & rc);
   void GenFctMacroDef(const TYPE_CPP_FctMacroDef & rc);
   void GenSquareIncl(const TYPE_CPP_SquareIncl& rc);
@@ -141,8 +145,10 @@ private:
   void GenClassHead(const TYPE_CPP_ClassHead & rc);
   void GenMemberList(const TYPE_CPP_MemberList & rc);
   void GenMemberSpecifier(const TYPE_CPP_MemberSpecifier & rc);
+#ifdef VDMPP
   void GenInterfaceSpecifier(const TYPE_CPP_InterfaceSpecifier & rc);
   void GenInterfaceHead(const TYPE_CPP_InterfaceHead & rc);
+#endif // VDMPP
   void GenIfStmt(const TYPE_CPP_IfStmt & rc);
   void GenExpressionStmt(const TYPE_CPP_ExpressionStmt & rc);
   void GenCompoundStmt(const TYPE_CPP_CompoundStmt & rc);

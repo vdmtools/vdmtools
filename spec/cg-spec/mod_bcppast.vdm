@@ -325,9 +325,11 @@ GenCPPMemberList (cppacc,md_l,cid) ==
   GenStorageClassSpecifier(arg,cid) ==
     mk_CPP`StorageClassSpecifier(arg,cid);
 
+#ifdef VDMPP
   GenInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration * CI`ContextId -> CPP`InterfaceSpecifier
   GenInterfaceSpecifier(head,member_l,cid) ==
     mk_CPP`InterfaceSpecifier(head,member_l,cid);
+#endif VDMPP
 \end{vdm_al}
 
 
@@ -843,10 +845,6 @@ functions
 --    then name
 --    else mk_CPP`ResScopeQualifiedClassName(mk_CPP`ClassResScopeQualifiedClassName(name.qcn,name,cid),cid);
 
---  GenQualifiedName2: CPP`Identifier * CPP`Identifier * CI`ContextId -> CPP`QualifiedName
---  GenQualifiedName2(qnm,nm,cid) ==
---    mk_CPP`QualifiedName(qnm,nm,cid);
-
   GenTemplateClassName: CPP`Identifier * seq of CPP`Identifier * CI`ContextId -> CPP`TemplateClassName
   GenTemplateClassName(tnm,args,cid) ==
     mk_CPP`TemplateClassName(
@@ -854,13 +852,8 @@ functions
             [ mk_CPP`TypeName([mk_CPP`TypeSpecifier(args(i),cid)],nil,cid) | i in set inds args],
             cid);
 
-  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Identifier * CI`ContextId -> CPP`QualifiedName
+  GenQualifiedName: CPP`Identifier * CPP`Identifier * CI`ContextId -> CPP`QualifiedName
   GenQualifiedName(cnm,nm,cid) ==
-    --cases nm:
-    --  mk_CPP`Identifier (-,-)        -> mk_CPP`QualifiedName(cnm,nm,cid),
-    --  mk_CPP`QualifiedName (-,nm2,-) -> mk_CPP`QualifiedName(cnm,nm2,cid),
-    --  others -> undefined
-    --end;
     mk_CPP`QualifiedName(cnm,nm,cid);
 
 #ifdef VDMPP
@@ -873,10 +866,12 @@ functions
 \subsection{Interfaces}
 
 \begin{vdm_al}
+#ifdef VDMPP
   GenInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier  * CPP`InterSpec *
                     [seq of CPP`Identifier] * CI`ContextId -> CPP`InterfaceHead
   GenInterfaceHead(anno_l, ms, cls, interspec, tp_l, cid) ==
     mk_CPP`InterfaceHead(ms, cls, interspec, tp_l, anno_l, cid);
+#endif VDMPP
 
   GenModifier: CPP`ModifierAccess * CI`ContextId -> CPP`Modifier
   GenModifier(ma,cid) ==

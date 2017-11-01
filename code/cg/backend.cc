@@ -107,12 +107,13 @@ wstring CGBackEnd::GetName(const Generic & decl)
         declval = TYPE_CPP_Identifier(declRec.GetRecord(pos_CPP_ClassHead_name));
         break;
       }
+#ifdef VDMPP
       case TAG_TYPE_CPP_InterfaceHead: {
         declval = TYPE_CPP_Identifier(declRec.GetRecord(pos_CPP_InterfaceHead_name));
         break;
       }
+#endif // VDMPP
     }
-
       // Extract the identifier from the declarator
     switch(declval.GetTag()){
       case TAG_TYPE_CPP_Identifier:
@@ -301,6 +302,7 @@ void CGBackEnd::GenFiles(const Generic & ast, enum cg_backend_kind kind)
 #endif // TESTSPEC
 }
 
+#ifdef VDMPP
 // GetHeadEntities - extracts the set of entities from the class header.
 Set CGBackEnd::GetHeadEntities(const TYPE_CPP_PackageAndImportDeclarations& head)
 {
@@ -309,6 +311,7 @@ Set CGBackEnd::GetHeadEntities(const TYPE_CPP_PackageAndImportDeclarations& head
   result.Insert(Sequence(L"imports"));
   return result;
 }
+#endif // VDMPP
 
 // GetASTEntities - recursively traverses the ast and extracts the set of
 // entities. The parameter inClass is used to indicate whether the
@@ -362,7 +365,9 @@ Set CGBackEnd::GetASTEntities(const Generic & ast, bool inClass)
         break;
       }
       case TAG_TYPE_CPP_ClassSpecifier:
+#ifdef VDMPP
       case TAG_TYPE_CPP_InterfaceSpecifier:
+#endif // VDMPP
       {
         Record ch (rc.GetRecord(1));
         Sequence ml (rc.GetSequence(2));
@@ -764,12 +769,12 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
 #endif // TESTSPEC
 // <--20120522
 
-  if (isCPP())
+  if (isCPP()) {
     OutputLog(id + L"...");
+  }
 
   int len = id.length()-2;
-  if (len >= 0 && id.substr(len) == L".h")
-  {
+  if (len >= 0 && id.substr(len) == L".h") {
     string def ("_" + TBWSTR::wstring2mbstr(id.substr(0, len)) + "_h");
 
     m4code << "#ifndef " << def;
@@ -777,8 +782,7 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
     m4code << "#define " << def;
     GenNewLine(m4code);
 
-    if (!head.IsNil() || (head.IsSequence() && !Sequence(head).IsEmpty()))
-    {
+    if (!head.IsNil() || (head.IsSequence() && !Sequence(head).IsEmpty())) {
       GenCode(head);
       GenNewLine(m4code);
 //      GenNewLine(m4code);
@@ -791,10 +795,12 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
     m4code << "#endif // " << def;
     GenNewLine(m4code);
   }
-  else
-  {
-    if (isJAVA())
+  else {
+#ifdef VDMPP
+    if (isJAVA()) {
       generatedEntities = GetHeadEntities(head);
+    }
+#endif // VDMPP
 
     GenCode(head);
     GenNewLine(m4code);
@@ -826,6 +832,7 @@ void CGBackEnd::GenTypeSpecifier(const TYPE_CPP_TypeSpecifier & rc)
   GenCode(rc.GetField(pos_CPP_TypeSpecifier_tp));
 }
 
+#ifdef VDMPP
 void CGBackEnd::GenPackageAndImportDeclarations(const TYPE_CPP_PackageAndImportDeclarations & rc)
 {
   string existingCode;
@@ -890,23 +897,24 @@ void CGBackEnd::GenSingleTypeImportDeclaration(const TYPE_CPP_SingleTypeImportDe
 {
   const TYPE_CPP_PackageName & stn (rc.GetRecord(pos_CPP_SingleTypeImportDeclaration_name));
 
-  if (GetContext() != IMPORT)
+  if (GetContext() != IMPORT) {
     GenNewLine(m4code);
-
+  }
   m4code << "import ";
   GenCode(stn);
   m4code << ";";
   SetContext(IMPORT);
 }
+#endif // VDMPP
 
 void CGBackEnd::GenIdMacroDef(const TYPE_CPP_IdMacroDef & rc)
 {
   wstring id (PTAUX::Seq2Str(rc.GetSequence(pos_CPP_IdMacroDef_id)));
   wstring ts (PTAUX::Seq2Str(rc.GetSequence(pos_CPP_IdMacroDef_ts)));
 
-  if (GetContext() != MACRO)
+  if (GetContext() != MACRO) {
     GenNewLine(m4code);
-
+  }
   GenNewLine(m4code);
   m4code << "#define " << TBWSTR::wstring2mbstr(id) << " ";
   m4code << TBWSTR::wstring2mbstr(ts);
@@ -1322,6 +1330,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
+#ifdef VDMPP
     // ******* JAVA TAGS ************************************//
 
     case TAG_TYPE_CPP_PackageAndImportDeclarations: {
@@ -1343,6 +1352,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       GenSingleTypeImportDeclaration(ast);
       break;
     }
+#endif // VDMPP
 
     // ******* CPP TAGS ************************************//
 
@@ -1686,6 +1696,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
+#ifdef VDMPP
     case TAG_TYPE_CPP_InterfaceSpecifier: {
       GenInterfaceSpecifier(rc);
       break;
@@ -1695,6 +1706,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       GenInterfaceHead(rc);
       break;
     }
+#endif // VDMPP
 
     case TAG_TYPE_CPP_DeclPureSpec: {
       const Record & decl (rc.GetRecord(pos_CPP_DeclPureSpec_decl));
@@ -2392,11 +2404,12 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_TypeName & nt (rc.GetRecord(pos_CPP_AllocationNewTypeExpr_typename));
       const Generic & ni (rc.GetField(pos_CPP_AllocationNewTypeExpr_newinit));
 
-      if (!sc.IsNil())
+      if (!sc.IsNil()) {
         m4code << "::new ";
-      else
+      }
+      else {
         m4code << "new ";
-
+      }
       if (!place.IsEmpty()) {
         m4code << "(";
         GenCodeSeq(place, ", ");
@@ -2411,8 +2424,9 @@ void CGBackEnd::GenCode(const Generic & ast)
         m4code << ")";
       //}
 
-      if (!ni.IsNil())
+      if (!ni.IsNil()) {
         GenCode(ni);
+      }
       break;
     }
 
@@ -2730,6 +2744,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
+#ifdef VDMPP
     case TAG_TYPE_CPP_ClassInstanceCreationExpr: {
       const Record & cn (rc.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype));
       const Generic & somethingDotNew (rc.GetField(pos_CPP_ClassInstanceCreationExpr_somethingDotNew));
@@ -2757,6 +2772,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       }
       break;
     }
+#endif // VDMPP
 
     /** Templates do not exist in Java **/
 
@@ -2776,11 +2792,12 @@ void CGBackEnd::GenCode(const Generic & ast)
     }
 
     /** Syntax of C++ and Java is the same for names and identifiers **/
-
+#ifdef VDMPP
     case TAG_TYPE_CPP_SimplePackageName: {
       GenCode(rc.GetRecord(pos_CPP_SimplePackageName_id));
       break;
     }
+#endif // VDMPP
 
     case TAG_TYPE_CPP_EnumName: {
       GenCode(rc.GetRecord(pos_CPP_EnumName_id));
@@ -2826,16 +2843,15 @@ void CGBackEnd::GenCode(const Generic & ast)
 //      break;
 //    }
 
+//    case TAG_TYPE_CPP_OperatorFunctionName: {
+//      const TYPE_CPP_Operator & opr (rc.GetRecord(pos_CPP_OperatorFunctionName_op));
+//      Quote op (opr.GetField(pos_CPP_Operator_op));
+//
+//      m4code << "operator " << Quote2String(op);
+//      break;
+//    }
+
 #ifdef VDMPP
-    case TAG_TYPE_CPP_OperatorFunctionName: {
-      const TYPE_CPP_Operator & opr (rc.GetRecord(pos_CPP_OperatorFunctionName_op));
-      Quote op (opr.GetField(pos_CPP_Operator_op));
-
-      m4code << "operator " << Quote2String(op);
-      break;
-    }
-#endif // VDMPP
-
     case TAG_TYPE_CPP_QualifiedPackageName: {
       const TYPE_CPP_Expr & pn (rc.GetRecord(pos_CPP_QualifiedPackageName_pn));
       const TYPE_CPP_Name & id (rc.GetRecord(pos_CPP_QualifiedPackageName_id));
@@ -2845,6 +2861,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       GenCode(id);
       break;
     }
+#endif // VDMPP
 
     case TAG_TYPE_CPP_QualifiedName: {
       const TYPE_CPP_Expr & qcn (rc.GetRecord(pos_CPP_QualifiedName_qcn));
@@ -2856,53 +2873,51 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
-#ifdef VDMPP
-    case TAG_TYPE_CPP_ConversionFunctionName: {
-      const TYPE_CPP_ConversionTypeName & ctn (rc.GetRecord(pos_CPP_ConversionFunctionName_ctn));
+//    case TAG_TYPE_CPP_ConversionFunctionName: {
+//      const TYPE_CPP_ConversionTypeName & ctn (rc.GetRecord(pos_CPP_ConversionFunctionName_ctn));
+//
+//      m4code <<  "operator ";
+//      GenCode(ctn);
+//      break;
+//    }
 
-      m4code <<  "operator ";
-      GenCode(ctn);
-      break;
-    }
-
-    case TAG_TYPE_CPP_ConversionTypeName: {
-      const SEQ<TYPE_CPP_TypeSpecifier> & ts (rc.GetSequence(pos_CPP_ConversionTypeName_ts));
-      const Generic & ptr (rc.GetField(pos_CPP_ConversionTypeName_ptr));
-
-      size_t len_ts = ts.Length();
-      for (size_t idx = 1; idx <= len_ts; idx++) {
-        GenCode(ts[idx]);
-      }
-      GenCode(ptr);
-      break;
-    }
+//    case TAG_TYPE_CPP_ConversionTypeName: {
+//      const SEQ<TYPE_CPP_TypeSpecifier> & ts (rc.GetSequence(pos_CPP_ConversionTypeName_ts));
+//      const Generic & ptr (rc.GetField(pos_CPP_ConversionTypeName_ptr));
+//
+//      size_t len_ts = ts.Length();
+//      for (size_t idx = 1; idx <= len_ts; idx++) {
+//        GenCode(ts[idx]);
+//      }
+//      GenCode(ptr);
+//      break;
+//    }
 
     /** Pointers do not exist for Java **/
 
-    case TAG_TYPE_CPP_PointerDecl: {
-      const Generic & cvl (rc.GetField(pos_CPP_PointerDecl_cvl)); // [CVQualifierList]
-      m4code << (isJAVA() ? "pointer not defined in Java" : "*");
-      GenCode(cvl);
-      break;
-    }
+//    case TAG_TYPE_CPP_PointerDecl: {
+//      const Generic & cvl (rc.GetField(pos_CPP_PointerDecl_cvl)); // [CVQualifierList]
+//      m4code << (isJAVA() ? "pointer not defined in Java" : "*");
+//      GenCode(cvl);
+//      break;
+//    }
 
-    case TAG_TYPE_CPP_RefTypeDecl: {
-      const Generic & cvl (rc.GetField(pos_CPP_RefTypeDecl_cvl)); // [CVQualifierList]
-      m4code << (isJAVA() ? "pointer not defined in Java" : "&");
-      GenCode(cvl);
-      break;
-    }
+//    case TAG_TYPE_CPP_RefTypeDecl: {
+//      const Generic & cvl (rc.GetField(pos_CPP_RefTypeDecl_cvl)); // [CVQualifierList]
+//      m4code << (isJAVA() ? "pointer not defined in Java" : "&");
+//      GenCode(cvl);
+//      break;
+//    }
 
-    case TAG_TYPE_CPP_PointerToMemberDecl: {
-      const TYPE_CPP_CompleteClassName & ccn (rc.GetRecord(pos_CPP_PointerToMemberDecl_ccn));
-      const Generic & cvl (rc.GetField(pos_CPP_PointerToMemberDecl_cvl));  // [CVQualifierList]
-
-      GenCode(ccn);
-      m4code << (isJAVA() ? "pointer not defined in Java" : "::*");
-      GenCode(cvl);
-      break;
-    }
-#endif // VDMPP
+//    case TAG_TYPE_CPP_PointerToMemberDecl: {
+//      const TYPE_CPP_CompleteClassName & ccn (rc.GetRecord(pos_CPP_PointerToMemberDecl_ccn));
+//      const Generic & cvl (rc.GetField(pos_CPP_PointerToMemberDecl_cvl));  // [CVQualifierList]
+//
+//      GenCode(ccn);
+//      m4code << (isJAVA() ? "pointer not defined in Java" : "::*");
+//      GenCode(cvl);
+//      break;
+//    }
 
     case TAG_TYPE_CPP_Destructor: {
       const TYPE_CPP_Identifier & id (rc.GetRecord(pos_CPP_Destructor_id));
@@ -3041,6 +3056,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       break;
     }
 
+#ifdef VDMPP
     case TAG_TYPE_CPP_GenericsSpec: {
       const SEQ<TYPE_CPP_GenericsClasses> & defs (rc.GetSequence(pos_CPP_GenericsSpec_defs));
       m4code << "<";
@@ -3063,6 +3079,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       }
       break;
     }
+#endif // VDMPP
 
     default:
       OutputErr(L"Internal error in the code generator backend (2).");
@@ -3278,6 +3295,7 @@ void CGBackEnd::GenMemberSpecifier(const TYPE_CPP_MemberSpecifier & rc)
     GenCode(mdl);
 }
 
+#ifdef VDMPP
 void CGBackEnd::GenInterfaceSpecifier(const TYPE_CPP_InterfaceSpecifier & rc)
 {
   const TYPE_CPP_InterfaceHead & ih (rc.GetRecord(pos_CPP_InterfaceSpecifier_ih));
@@ -3329,6 +3347,7 @@ void CGBackEnd::GenInterfaceHead(const TYPE_CPP_InterfaceHead & rc)
     GenCodeSeq(ispec, ", ");
   }
 }
+#endif // VDMPP
 
 void CGBackEnd::GenIfStmt(const TYPE_CPP_IfStmt & rc)
 {
@@ -3336,62 +3355,51 @@ void CGBackEnd::GenIfStmt(const TYPE_CPP_IfStmt & rc)
   const TYPE_CPP_Stmt & alt1 (rc.GetRecord(pos_CPP_IfStmt_alt1));
   const Generic & alt2 (rc.GetRecord(pos_CPP_IfStmt_alt2));
 
-// 20091125 -->
-  if (GetContext() == ELSE)
-  {
+  if (GetContext() == ELSE) {
     SetContext(BLOCK);
   }
-  else
-  {
-    if (isJAVA()) // 20120315
+  else {
+    if (isJAVA()) {
       GenNewLine(m4code);
+    }
     IND(m4code);
     SetContext(BLOCK);
   }
 
-  while (expr.Is(TAG_TYPE_CPP_BracketedExpr))
+  while (expr.Is(TAG_TYPE_CPP_BracketedExpr)) {
     expr = expr.GetRecord(pos_CPP_BracketedExpr_expr);
-
+  }
   m4code << "if (";
-//
-  if (expr.Is(TAG_TYPE_CPP_AssignExpr) && isCPP())
-  {
+  if (expr.Is(TAG_TYPE_CPP_AssignExpr) && isCPP()) {
     m4code << "(";
     GenCode(expr);
     m4code << ")";
   }
-  else
+  else {
     GenCode(expr);
-//
+  }
   m4code << ") " << flush;
 
   SetContext(BLOCK);
-// 20100616 -->
-  if (alt1.Is(TAG_TYPE_CPP_IfStmt) && alt1.GetRecord(pos_CPP_IfStmt_alt2).IsNil())
-  {
+  if (alt1.Is(TAG_TYPE_CPP_IfStmt) && alt1.GetRecord(pos_CPP_IfStmt_alt2).IsNil()) {
     TYPE_CPP_CompoundStmt cs;
     cs.Init(SEQ<TYPE_CPP_Stmt>().ImpAppend(alt1), -1);
     GenStmt(cs);
   }
-// <-- 20100616
-  else
+  else {
     GenStmt(alt1);
+  }
   m4code << flush;
 
-  if (!alt2.IsNil())
-  {
+  if (!alt2.IsNil()) {
     GenNewLine(m4code);
     IND(m4code);
 
     m4code << "else ";
 
-// 20091125 -->
-    if (alt2.Is(TAG_TYPE_CPP_IfStmt))
-    {
+    if (alt2.Is(TAG_TYPE_CPP_IfStmt)) {
       SetContext(ELSE);
-// 20100617 -->
-      if (Record(alt2).GetRecord(pos_CPP_IfStmt_alt2).IsNil())
-      {
+      if (Record(alt2).GetRecord(pos_CPP_IfStmt_alt2).IsNil()) {
         TYPE_CPP_CompoundStmt cs;
         cs.Init(SEQ<TYPE_CPP_Stmt>().ImpAppend(alt2), -1);
         SetContext(BLOCK);
@@ -3399,21 +3407,17 @@ void CGBackEnd::GenIfStmt(const TYPE_CPP_IfStmt & rc)
         GenStmt(cs, true);
         CloseScope();
       }
-      else
+      else {
         GenStmt(alt2, true);
-// <-- 20100617
+      }
     }
-    else
-// <-- 20091125
-    {
+    else {
       SetContext(BLOCK);
       GenStmt(alt2);
     }
     m4code << flush;
   }
-// 20110908 -->
   SetContext(CSTMT);
-// <-- 20110908
 }
 
 void CGBackEnd::GenExpressionStmt(const TYPE_CPP_ExpressionStmt & rc)
@@ -3635,80 +3639,78 @@ int CGBackEnd::Quote2Int(const Quote & op)
     res = TAG_quote_NEG;
   else if (q == L"COMPL")
     res = TAG_quote_COMPL;
-#ifdef VDMPP
-  else if (q == L"OPEQUAL")
-    res = TAG_quote_OPEQUAL;
-  else if (q == L"STAREQUAL")
-    res = TAG_quote_STAREQUAL;
-  else if (q == L"BACKSLASHEQUAL")
-    res = TAG_quote_BACKSLASHEQUAL;
-  else if (q == L"PERCENTAGEMARKEQUAL")
-    res = TAG_quote_PERCENTAGEMARKEQUAL;
-  else if (q == L"PLUSEQUAL")
-    res = TAG_quote_PLUSEQUAL;
-  else if (q == L"MINUSEQUAL")
-    res = TAG_quote_MINUSEQUAL;
-  else if (q == L"DOUBLEGREATEREQUAL")
-    res = TAG_quote_DOUBLEGREATEREQUAL;
-  else if (q == L"DOUBLELESSEQUAL")
-    res = TAG_quote_DOUBLELESSEQUAL;
-  else if (q == L"ANDEQUAL")
-    res = TAG_quote_ANDEQUAL;
-  else if (q == L"CIRCUMFLEXEQUAL")
-    res = TAG_quote_CIRCUMFLEXEQUAL;
-  else if (q == L"VERTICALLINEEQUAL")
-    res = TAG_quote_VERTICALLINEEQUAL;
-  else if (q == L"DOUBLEAND")
-    res = TAG_quote_DOUBLEAND;
-  else if (q == L"DOUBLEVERTICALLINE")
-    res = TAG_quote_DOUBLEVERTICALLINE;
-  else if (q == L"CIRCUMFEX")
-    res = TAG_quote_CIRCUMFEX;
-  else if (q == L"AMPERSAND")
-    res = TAG_quote_AMPERSAND;
-  else if (q == L"VERTICALLINE")
-    res = TAG_quote_VERTICALLINE;
-  else if (q == L"DOUBLEEQUAL")
-    res = TAG_quote_DOUBLEEQUAL;
-  else if (q == L"EXCLAMATIONMARKEQUAL")
-    res = TAG_quote_EXCLAMATIONMARKEQUAL;
-  else if (q == L"LESS")
-    res = TAG_quote_LESS;
-  else if (q == L"GREATER")
-    res = TAG_quote_GREATER;
-  else if (q == L"LESSEQUAL")
-    res = TAG_quote_LESSEQUAL;
-  else if (q == L"GREATEREQUAL")
-    res = TAG_quote_GREATEREQUAL;
-  else if (q == L"DOUBLELESS")
-    res = TAG_quote_DOUBLELESS;
-  else if (q == L"DOUBLEGREATER")
-    res = TAG_quote_DOUBLEGREATER;
-  else if (q == L"STAR")
-    res = TAG_quote_STAR;
-  else if (q == L"PRECENTAGEMARK")
-    res = TAG_quote_PRECENTAGEMARK;
-  else if (q == L"DOUBLEPLUS")
-    res = TAG_quote_DOUBLEPLUS;
-  else if (q == L"DOUBLEMINUS")
-    res = TAG_quote_DOUBLEMINUS;
-  else if (q == L"EXCLAMATIONMARK")
-    res = TAG_quote_EXCLAMATIONMARK;
-  else if (q == L"TILDE")
-    res = TAG_quote_TILDE;
-  else if (q == L"NEW")
-    res = TAG_quote_NEW;
-  else if (q == L"DELETE")
-    res = TAG_quote_DELETE;
-  else if (q == L"COMMA")
-    res = TAG_quote_COMMA;
-  else if (q == L"ARROW")
-    res = TAG_quote_ARROW;
-  else if (q == L"BRACKETS")
-    res = TAG_quote_BRACKETS;
-  else if (q == L"SQUAREBRACKETS")
-    res = TAG_quote_SQUAREBRACKETS;
-#endif // VDMPP
+//  else if (q == L"OPEQUAL")
+//    res = TAG_quote_OPEQUAL;
+//  else if (q == L"STAREQUAL")
+//    res = TAG_quote_STAREQUAL;
+//  else if (q == L"BACKSLASHEQUAL")
+//    res = TAG_quote_BACKSLASHEQUAL;
+//  else if (q == L"PERCENTAGEMARKEQUAL")
+//    res = TAG_quote_PERCENTAGEMARKEQUAL;
+//  else if (q == L"PLUSEQUAL")
+//    res = TAG_quote_PLUSEQUAL;
+//  else if (q == L"MINUSEQUAL")
+//    res = TAG_quote_MINUSEQUAL;
+//  else if (q == L"DOUBLEGREATEREQUAL")
+//    res = TAG_quote_DOUBLEGREATEREQUAL;
+//  else if (q == L"DOUBLELESSEQUAL")
+//    res = TAG_quote_DOUBLELESSEQUAL;
+//  else if (q == L"ANDEQUAL")
+//    res = TAG_quote_ANDEQUAL;
+//  else if (q == L"CIRCUMFLEXEQUAL")
+//    res = TAG_quote_CIRCUMFLEXEQUAL;
+//  else if (q == L"VERTICALLINEEQUAL")
+//    res = TAG_quote_VERTICALLINEEQUAL;
+//  else if (q == L"DOUBLEAND")
+//    res = TAG_quote_DOUBLEAND;
+//  else if (q == L"DOUBLEVERTICALLINE")
+//    res = TAG_quote_DOUBLEVERTICALLINE;
+//  else if (q == L"CIRCUMFEX")
+//    res = TAG_quote_CIRCUMFEX;
+//  else if (q == L"AMPERSAND")
+//    res = TAG_quote_AMPERSAND;
+//  else if (q == L"VERTICALLINE")
+//    res = TAG_quote_VERTICALLINE;
+//  else if (q == L"DOUBLEEQUAL")
+//    res = TAG_quote_DOUBLEEQUAL;
+//  else if (q == L"EXCLAMATIONMARKEQUAL")
+//    res = TAG_quote_EXCLAMATIONMARKEQUAL;
+//  else if (q == L"LESS")
+//    res = TAG_quote_LESS;
+//  else if (q == L"GREATER")
+//    res = TAG_quote_GREATER;
+//  else if (q == L"LESSEQUAL")
+//    res = TAG_quote_LESSEQUAL;
+//  else if (q == L"GREATEREQUAL")
+//    res = TAG_quote_GREATEREQUAL;
+//  else if (q == L"DOUBLELESS")
+//    res = TAG_quote_DOUBLELESS;
+//  else if (q == L"DOUBLEGREATER")
+//    res = TAG_quote_DOUBLEGREATER;
+//  else if (q == L"STAR")
+//    res = TAG_quote_STAR;
+//  else if (q == L"PRECENTAGEMARK")
+//    res = TAG_quote_PRECENTAGEMARK;
+//  else if (q == L"DOUBLEPLUS")
+//    res = TAG_quote_DOUBLEPLUS;
+//  else if (q == L"DOUBLEMINUS")
+//    res = TAG_quote_DOUBLEMINUS;
+//  else if (q == L"EXCLAMATIONMARK")
+//    res = TAG_quote_EXCLAMATIONMARK;
+//  else if (q == L"TILDE")
+//    res = TAG_quote_TILDE;
+//  else if (q == L"NEW")
+//    res = TAG_quote_NEW;
+//  else if (q == L"DELETE")
+//    res = TAG_quote_DELETE;
+//  else if (q == L"COMMA")
+//    res = TAG_quote_COMMA;
+//  else if (q == L"ARROW")
+//    res = TAG_quote_ARROW;
+//  else if (q == L"BRACKETS")
+//    res = TAG_quote_BRACKETS;
+//  else if (q == L"SQUAREBRACKETS")
+//    res = TAG_quote_SQUAREBRACKETS;
   else if (q == L"CONST")
     res = TAG_quote_CONST;
   else if (q == L"VOLATILE")
@@ -3755,182 +3757,131 @@ string CGBackEnd::Quote2String(const Quote & op)
 
     // AssignOp -- the same for Java and C++
   case TAG_quote_ASEQUAL:
-#ifdef VDMPP
-  case TAG_quote_OPEQUAL:
-#endif // VDMPP
+//  case TAG_quote_OPEQUAL:
     res = "=";
     break;
 
   case TAG_quote_ASMULT:
-#ifdef VDMPP
-  case TAG_quote_STAREQUAL:
-#endif // VDMPP
+//  case TAG_quote_STAREQUAL:
     res = "*=";
     break;
 
   case TAG_quote_ASDIV:
-#ifdef VDMPP
-  case TAG_quote_BACKSLASHEQUAL:
-#endif // VDMPP
+//  case TAG_quote_BACKSLASHEQUAL:
     res = "/=";
     break;
 
   case TAG_quote_ASMOD:
-#ifdef VDMPP
-  case TAG_quote_PERCENTAGEMARKEQUAL:
-#endif // VDMPP
+//  case TAG_quote_PERCENTAGEMARKEQUAL:
     res = "%=";
     break;
 
   case TAG_quote_ASPLUS:
-#ifdef VDMPP
-  case TAG_quote_PLUSEQUAL:
-#endif // VDMPP
+//  case TAG_quote_PLUSEQUAL:
     res = "+=";
     break;
 
   case TAG_quote_ASMINUS:
-#ifdef VDMPP
-  case TAG_quote_MINUSEQUAL:
-#endif // VDMPP
+//  case TAG_quote_MINUSEQUAL:
     res = "-=";
     break;
 
   case TAG_quote_ASRIGHTSHIFT:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEGREATEREQUAL:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEGREATEREQUAL:
     res = ">>=";
     break;
 
   case TAG_quote_ASLEFTSHIFT:
-#ifdef VDMPP
-  case TAG_quote_DOUBLELESSEQUAL:
-#endif // VDMPP
+//  case TAG_quote_DOUBLELESSEQUAL:
     res = "<<=";
     break;
 
   case TAG_quote_ASBITWISEAND:
-#ifdef VDMPP
-  case TAG_quote_ANDEQUAL:
-#endif // VDMPP
+//  case TAG_quote_ANDEQUAL:
     res = "&=";
     break;
 
   case TAG_quote_ASBITWISEEXOR:
-#ifdef VDMPP
-  case TAG_quote_CIRCUMFLEXEQUAL:
-#endif // VDMPP
+//  case TAG_quote_CIRCUMFLEXEQUAL:
     res = "^=";
     break;
 
   case TAG_quote_ASBITWISEINCLOR:
-#ifdef VDMPP
-  case TAG_quote_VERTICALLINEEQUAL:
-#endif // VDMPP
+//  case TAG_quote_VERTICALLINEEQUAL:
     res = "|=";
     break;
 
     // LogOp -- the same for Java and C++
   case TAG_quote_OR:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEVERTICALLINE:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEVERTICALLINE:
     res = "||";
     break;
 
   case TAG_quote_AND:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEAND:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEAND:
     res = "&&";
     break;
 
     // BitOp -- the same for Java and C++
   case TAG_quote_EXCLOR:
-#ifdef VDMPP
-  case TAG_quote_CIRCUMFEX:
-#endif // VDMPP
+//  case TAG_quote_CIRCUMFEX:
     res = "^";
     break;
 
   case TAG_quote_BITAND:
-#ifdef VDMPP
-  case TAG_quote_AMPERSAND:
-#endif // VDMPP
+//  case TAG_quote_AMPERSAND:
     res = "&";
     break;
 
   case TAG_quote_REFERENCE:
-    if (isJAVA())
-      res = "";
-    else
-      res = "&";
+    res = (isJAVA() ? "" : "&");
     break;
 
   case TAG_quote_BITOR:
-#ifdef VDMPP
-  case TAG_quote_VERTICALLINE:
-#endif // VDMPP
+//  case TAG_quote_VERTICALLINE:
     res = "|";
     break;
 
     // EqOp  -- the same for Java and C++
   case TAG_quote_EQ:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEEQUAL:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEEQUAL:
     res = "==";
     break;
 
   case TAG_quote_NEQ:
-#ifdef VDMPP
-  case TAG_quote_EXCLAMATIONMARKEQUAL:
-#endif // VDMPP
+//  case TAG_quote_EXCLAMATIONMARKEQUAL:
     res = "!=";
     break;
 
     // RelOp -- the same for Java and C++
   case TAG_quote_LT:
-#ifdef VDMPP
-  case TAG_quote_LESS:
-#endif // VDMPP
+//  case TAG_quote_LESS:
     res = "<";
     break;
 
   case TAG_quote_GT:
-#ifdef VDMPP
-  case TAG_quote_GREATER:
-#endif // VDMPP
+//  case TAG_quote_GREATER:
     res = ">";
     break;
 
   case TAG_quote_LEQ:
-#ifdef VDMPP
-  case TAG_quote_LESSEQUAL:
-#endif // VDMPP
+//  case TAG_quote_LESSEQUAL:
     res = "<=";
     break;
 
   case TAG_quote_GEQ:
-#ifdef VDMPP
-  case TAG_quote_GREATEREQUAL:
-#endif // VDMPP
+//  case TAG_quote_GREATEREQUAL:
     res = ">=";
     break;
 
     // ShOp -- the same for Java and C++
   case TAG_quote_LEFTSHIFT:
-#ifdef VDMPP
-  case TAG_quote_DOUBLELESS:
-#endif // VDMPP
+//  case TAG_quote_DOUBLELESS:
     res = "<<";
     break;
 
   case TAG_quote_RIGHTSHIFT:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEGREATER:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEGREATER:
     res = ">>";
     break;
 
@@ -3944,9 +3895,7 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_MULT:
-#ifdef VDMPP
-  case TAG_quote_STAR:
-#endif // VDMPP
+//  case TAG_quote_STAR:
     res = "*";
     break;
 
@@ -3955,9 +3904,7 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_MOD:
-#ifdef VDMPP
-  case TAG_quote_PRECENTAGEMARK:
-#endif // VDMPP
+//  case TAG_quote_PRECENTAGEMARK:
     res = "%";
     break;
 
@@ -3983,16 +3930,12 @@ string CGBackEnd::Quote2String(const Quote & op)
   // IncDecOp -- the same for Java and C++
 
   case TAG_quote_PPLUS:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEPLUS:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEPLUS:
     res = "++";
     break;
 
   case TAG_quote_PMINUS:
-#ifdef VDMPP
-  case TAG_quote_DOUBLEMINUS:
-#endif // VDMPP
+//  case TAG_quote_DOUBLEMINUS:
     res = "--";
     break;
 
@@ -4015,48 +3958,42 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_NEG:
-#ifdef VDMPP
-  case TAG_quote_EXCLAMATIONMARK:
-#endif // VDMPP
+//  case TAG_quote_EXCLAMATIONMARK:
     res = "!";
     break;
 
   case TAG_quote_COMPL:
-#ifdef VDMPP
-  case TAG_quote_TILDE:
-#endif // VDMPP
+//  case TAG_quote_TILDE:
     res = "~";
     break;
 
     // Operator -- delete operator not supported by Java
-#ifdef VDMPP
-  case TAG_quote_NEW:
-    res = "new";
-    break;
+//  case TAG_quote_NEW:
+//    res = "new";
+//    break;
 
-  case TAG_quote_DELETE:
-    if (isJAVA())
-      res = "???";
-    else
-      res = "delete";
-    break;
+//  case TAG_quote_DELETE:
+//    if (isJAVA())
+//      res = "???";
+//    else
+//      res = "delete";
+//    break;
 
-  case TAG_quote_COMMA:
-    res = ",";
-    break;
+//  case TAG_quote_COMMA:
+//    res = ",";
+//    break;
 
-  case TAG_quote_ARROW:
-    res = "->";
-    break;
+//  case TAG_quote_ARROW:
+//    res = "->";
+//    break;
 
-  case TAG_quote_BRACKETS:
-    res = "()";
-    break;
+//  case TAG_quote_BRACKETS:
+//    res = "()";
+//    break;
 
-  case TAG_quote_SQUAREBRACKETS:
-    res = "[]";
-    break;
-#endif // VDMPP
+//  case TAG_quote_SQUAREBRACKETS:
+//    res = "[]";
+//    break;
 
     // cv-qualitier
   case TAG_quote_CONST: //constants in Java has to be declared final
@@ -4081,16 +4018,20 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_STRUCT: // struct type not supported in Java should be a class instead....
+#ifdef VDMPP
     if (isJAVA())
       res = "struct-class";
     else
+#endif // VDMPP
       res = "struct";
     break;
 
   case TAG_quote_UNION:  // union type not supported in Java, simulate by subclassing
+#ifdef VDMPP
     if (isJAVA())
       res = "union(should be simulated by subclassing)";
     else
+#endif // VDMPP
       res = "union";
     break;
 
@@ -4115,30 +4056,38 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_INLINE:
+#ifdef VDMPP
     if (isJAVA())
       res = "inline???";
     else
+#endif // VDMPP
       res = "inline";
     break;
 
   case TAG_quote_VIRTUAL:
+#ifdef VDMPP
     if (isJAVA())
       res = "virtual???";
     else
+#endif // VDMPP
       res = "virtual";
     break;
 
   case TAG_quote_AUTO:
+#ifdef VDMPP
     if (isJAVA())
       res = "auto???";
     else
+#endif // VDMPP
       res = "auto";
     break;
 
   case TAG_quote_REGISTER:
+#ifdef VDMPP
     if (isJAVA())
       res = "register???";
     else
+#endif // VDMPP
       res = "register";
     break;
 
@@ -4147,13 +4096,14 @@ string CGBackEnd::Quote2String(const Quote & op)
     break;
 
   case TAG_quote_EXTERN:
-    if (isJAVA())
-    {
+#ifdef VDMPP
+    if (isJAVA()) {
       OutputErr(L"Internal error in the code generator backend (1).");
       OutputErr(L"Please report this error.");
       res = "\n// This part is not implemented (internal error).\n";
     }
     else
+#endif // VDMPP
       res = "extern";
     break;
 

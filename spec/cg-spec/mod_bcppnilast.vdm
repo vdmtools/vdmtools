@@ -288,9 +288,11 @@ GenCPPMemberList (cppacc,md_l) ==
   GenStorageClassSpecifier(arg) ==
     BCCI`GenStorageClassSpecifier(arg,CI`NilContextId);
 
+#ifdef VDMPP
   GenInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration -> CPP`InterfaceSpecifier
   GenInterfaceSpecifier(head,member_l) ==
     BCCI`GenInterfaceSpecifier(head,member_l,CI`NilContextId);
+#endif VDMPP
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -675,7 +677,7 @@ by any of the code generators.
   GenTemplateClassName(tnm,args) ==
     BCCI`GenTemplateClassName(tnm,args,CI`NilContextId);
 
-  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Identifier -> CPP`QualifiedName
+  GenQualifiedName: CPP`Identifier * CPP`Identifier -> CPP`QualifiedName
   GenQualifiedName(cnm,nm) ==
     BCCI`GenQualifiedName(cnm,nm,CI`NilContextId);
 
@@ -689,10 +691,12 @@ by any of the code generators.
 \subsection{Interfaces}
 
 \begin{vdm_al}
+#ifdef VDMPP
   GenInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier * CPP`InterSpec *
                     [seq of CPP`Identifier] -> CPP`InterfaceHead
   GenInterfaceHead(anno_l, ms, cls, interspec, tp_l) ==
     BCCI`GenInterfaceHead(anno_l, ms, cls, interspec, tp_l, CI`NilContextId);
+#endif VDMPP
 
   GenModifier: CPP`ModifierAccess -> CPP`Modifier
   GenModifier(ma) ==

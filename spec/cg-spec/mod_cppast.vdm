@@ -136,6 +136,7 @@ AstCI ::
 ;
 \end{vdm_al}
 
+#ifdef VDMPP
 The following type is defined to be the main entry point for the Java
 to VDM++ conversion. It is essentially a wrapper for a Java class,
 with the file name and header for the file from which the class
@@ -145,6 +146,7 @@ originates.
           header : [PackageAndImportDeclarations]
           ast    : IdentDeclaration;             -- class decl
 \end{vdm_al}
+#endif VDMPP
 
 \subsubsection{Preprocessors (C++)}
 \begin{vdm_al}
@@ -272,6 +274,10 @@ statement corresponds to a quote include preprocessor.
 \subsubsection{Package and Import Declarations (Java)}
 
 \begin{vdm_al}
+#ifdef VDMSL
+ PackageName = token; -- dummy
+#endif VDMSL
+#ifdef VDMPP
  PackageAndImportDeclarations ::
    pd: [PackageDeclaration]
    ims: ImportDeclarations
@@ -323,7 +329,7 @@ statement corresponds to a quote include preprocessor.
    CNTXT
  ISJAVAINV
  ;
-
+#endif VDMPP
 \end{vdm_al}
 
 \subsection{Declarations}
@@ -648,10 +654,14 @@ A C++ Class Declaration has no modifiers.
 
  BaseSpec = seq of BaseSpecifier;
 
+#ifdef VDMSL
+ BaseSpecifier = VirCompleteClassSpecifier |
+                 AccCompleteClassSpecifier
+#endif VDMSL
+#ifdef VDMPP
  BaseSpecifier = PackageName |
                  VirCompleteClassSpecifier |
                  AccCompleteClassSpecifier
-#ifdef VDMPP
  inv bs == isJAVA() => is_(bs,PackageName)
 #endif VDMPP
 ;
@@ -740,6 +750,10 @@ TemplateClassName has only been introduced as a QualifiedClassName.
 \subsubsection{Interface Declarations (Java)}
 
 \begin{vdm_al}
+#ifdef VDMSL
+ InterSpec = seq of token;  -- dummy
+#endif VDMSL
+#ifdef VDMPP
  InterfaceSpecifier::
     ih : InterfaceHead
     ml : InterfaceBody
@@ -757,7 +771,7 @@ TemplateClassName has only been introduced as a QualifiedClassName.
 
  InterSpec = seq of PackageName;
 
-
+#endif VDMPP
 \end{vdm_al}
 
 \subsection{Function Definition}
@@ -798,7 +812,9 @@ TemplateClassName has only been introduced as a QualifiedClassName.
 \begin{vdm_al}
 
  SimpleTypeName =
+#ifdef VDMPP
      PackageName |
+#endif VDMPP
      CompleteClassName |  -- what is the difference here?
      QualifiedName |
      Bool |
@@ -1286,15 +1302,15 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
 #endif VDMSL
 #ifdef VDMPP
   Name = Identifier |
-         OperatorFunctionName |
-         ConversionFunctionName |
+--         OperatorFunctionName |
+--         ConversionFunctionName |
          Destructor |
          QualifiedName |
          PackageName
-
-  inv n == (isJAVA() => not (is_ConversionFunctionName(n) or
-                             is_OperatorFunctionName(n))) and
-           isCPP() => not is_(n,PackageName);
+--  inv n == (isJAVA() => not (is_ConversionFunctionName(n) or
+--                             is_OperatorFunctionName(n))) and
+--           isCPP() => not is_(n,PackageName);
+  inv n == isCPP() => not is_(n,PackageName);
 #endif VDMPP
 
   Identifier ::
@@ -1302,7 +1318,7 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
       CNTXT;
 
   QualifiedName ::
-      qcn : QualifiedClassName -- | Expr
+      qcn : QualifiedClassName
       id  : Name
       CNTXT;
 
@@ -1415,12 +1431,14 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
       name     : Expr
       CNTXT;
 
+#ifdef VDMPP
   ClassInstanceCreationExpr::
     classtype       : CompleteClassName | PackageName | QualifiedName
     somethingDotNew : [Expr]
     arg             : seq of Expr
     ml              : [seq of MemberDeclaration]
     CNTXT;
+#endif VDMPP
 \end{vdm_al}
 
 The ClassExpr construct correspond to using the .class literal selection
@@ -1437,29 +1455,29 @@ inside Java.
 \subsubsection{Conversion Functions (C++)}
 
 \begin{vdm_al}
+--ConversionFunctionName ::
+--   ctn : ConversionTypeName
+--   CNTXT;
+
+-- ConversionTypeName::
+--   ts : seq of TypeSpecifier
+--   ptr : [ PointerDecl | RefTypeDecl | PointerToMemberDecl ]
+--   CNTXT;
+
+-- PointerDecl ::
+--   cvl : [CVQualifierList]
+--   CNTXT;
+
+-- RefTypeDecl ::
+--   cvl : [CVQualifierList]
+--   CNTXT;
+
+-- PointerToMemberDecl ::
+--   ccn : CompleteClassName
+--   cvl : [CVQualifierList]
+--   CNTXT;
+
 #ifdef VDMPP
-ConversionFunctionName ::
-   ctn : ConversionTypeName
-   CNTXT;
-
- ConversionTypeName::
-   ts : seq of TypeSpecifier
-   ptr : [ PointerDecl | RefTypeDecl | PointerToMemberDecl ]
-   CNTXT;
-
- PointerDecl ::
-   cvl : [CVQualifierList]
-   CNTXT;
-
- RefTypeDecl ::
-   cvl : [CVQualifierList]
-   CNTXT;
-
- PointerToMemberDecl ::
-   ccn : CompleteClassName
-   cvl : [CVQualifierList]
-   CNTXT;
-
   Super :: CNTXT;
 #endif VDMPP
 
@@ -1467,29 +1485,27 @@ ConversionFunctionName ::
 
 \end{vdm_al}
 
-#ifdef VDMPP
-\subsubsection{Overloaded Operators}
-
-\begin{vdm_al}
-  OperatorFunctionName ::
-      op : Operator
-      CNTXT;
-
-  Operator ::
-    op : <NEW> | <DELETE> | <PLUS> | <MINUS> | <STAR> | <DIV> |
-         <PRECENTAGEMARK> | <CIRCUMFEX> | <AMPERSAND> | <VERTICALLINE> |
-         <TILDE> | <EXCLAMATIONMARK> | <OPEQUAL> | <LESS> | <GREATER> |
-         <PLUSEQUAL> | <MINUSEQUAL> | <STAREQUAL> | <BACKSLASHEQUAL> |
-         <PERCENTAGEMARKEQUAL> | <CIRCUMFLEXEQUAL> | <ANDEQUAL> |
-         <VERTICALLINEEQUAL> | <DOUBLELESS> | <DOUBLEGREATER> |
-         <DOUBLELESSEQUAL> | <DOUBLEGREATEREQUAL> | <DOUBLEEQUAL> |
-         <EXCLAMATIONMARKEQUAL> | <LESSEQUAL> | <GREATEREQUAL> |
-         <DOUBLEAND> | <DOUBLEVERTICALLINE> | <DOUBLEPLUS> |
-         <DOUBLEMINUS> | <COMMA> | <ARROWSTAR> | <ARROW> |
-         <BRACKETS> | <SQUAREBRACKETS>
-    CNTXT;
-\end{vdm_al}
-#endif VDMPP
+--\subsubsection{Overloaded Operators}
+--
+--\begin{vdm_al}
+--  OperatorFunctionName ::
+--      op : Operator
+--      CNTXT;
+--
+--  Operator ::
+--    op : <NEW> | <DELETE> | <PLUS> | <MINUS> | <STAR> | <DIV> |
+--         <PRECENTAGEMARK> | <CIRCUMFEX> | <AMPERSAND> | <VERTICALLINE> |
+--         <TILDE> | <EXCLAMATIONMARK> | <OPEQUAL> | <LESS> | <GREATER> |
+--         <PLUSEQUAL> | <MINUSEQUAL> | <STAREQUAL> | <BACKSLASHEQUAL> |
+--         <PERCENTAGEMARKEQUAL> | <CIRCUMFLEXEQUAL> | <ANDEQUAL> |
+--         <VERTICALLINEEQUAL> | <DOUBLELESS> | <DOUBLEGREATER> |
+--         <DOUBLELESSEQUAL> | <DOUBLEGREATEREQUAL> | <DOUBLEEQUAL> |
+--         <EXCLAMATIONMARKEQUAL> | <LESSEQUAL> | <GREATEREQUAL> |
+--         <DOUBLEAND> | <DOUBLEVERTICALLINE> | <DOUBLEPLUS> |
+--         <DOUBLEMINUS> | <COMMA> | <ARROWSTAR> | <ARROW> |
+--         <BRACKETS> | <SQUAREBRACKETS>
+--    CNTXT;
+--\end{vdm_al}
 
 \subsection{Exception Handling}
 The exception handling in Java is similar, but not quite the same as in C++.
@@ -1551,6 +1567,8 @@ The exception handling in Java is similar, but not quite the same as in C++.
    CNTXT;
 \end{vdm_al}
 
+#ifdef VDMPP
+
 \begin{vdm_al}
  GenericsSpec ::
    defs : seq of GenericsClasses
@@ -1565,6 +1583,8 @@ The exception handling in Java is similar, but not quite the same as in C++.
  ISJAVAINV
  ;
 \end{vdm_al}
+
+#endif VDMPP
 
 \begin{vdm_al}
 end CPP
