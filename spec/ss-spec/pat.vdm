@@ -248,7 +248,6 @@ operations
         (is_AS`SetUnionPattern (pat)) -> wf_SetUnionPattern (i, pat, tp),
         (is_AS`SeqEnumPattern (pat))  -> wf_SeqEnumPattern (i, pat, tp),
         (is_AS`SeqConcPattern (pat))  -> wf_SeqConcPattern (i, pat, tp),
-        (is_AS`MapletPattern (pat))   -> wf_MapletPattern (i, pat, tp),
         (is_AS`MapEnumPattern (pat))  -> wf_MapEnumPattern (i, pat, tp),
         (is_AS`MapMergePattern (pat)) -> wf_MapMergePattern (i, pat, tp),
         (is_AS`RecordPattern (pat))   -> wf_RecordPattern (i, pat, tp),
@@ -965,27 +964,6 @@ full standard VDM-SL functions can also be locally defined.
 
   functions
 
---    ExtractPatternName: AS`Pattern -> set of AS`Name --OK
---    ExtractPatternName (pat) ==
---      cases pat :
---        mk_AS`PatternName(nm,-,-)       -> if nm = nil then {} else {nm},
---        mk_AS`MatchVal(-,-)             -> {},
---        mk_AS`SetEnumPattern (pats,-)   -> dunion {ExtractPatternName(p) | p in set elems pats},
---        mk_AS`SetUnionPattern (lp,rp,-) -> ExtractPatternName(lp) union ExtractPatternName(rp),
---        mk_AS`SeqEnumPattern (pats,-)   -> dunion {ExtractPatternName(p) | p in set elems pats},
---        mk_AS`SeqConcPattern (lp,rp,-)  -> ExtractPatternName(lp) union ExtractPatternName(rp),
---        mk_AS`MapletPattern (dp,rp,-)   -> ExtractPatternName(dp) union ExtractPatternName(rp),
---        mk_AS`MapEnumPattern (pats,-)   -> dunion {ExtractPatternName(p) | p in set elems pats},
---        mk_AS`MapMergePattern (lp,rp,-) -> ExtractPatternName(lp) union ExtractPatternName(rp),
---        mk_AS`RecordPattern (-,flds,-)  -> dunion {ExtractPatternName(p) | p in set elems flds},
---        mk_AS`TuplePattern (flds,-)     -> dunion {ExtractPatternName(p) | p in set elems flds},
---#ifdef VDMPP
---        mk_AS`ObjectPattern (-,flds,-)  -> dunion {ExtractPatternName(p) | p in set elems flds},
---        mk_AS`FieldPattern (-,p,-)      -> ExtractPatternName(p),
---#endif VDMPP
---        others -> undefined
---      end;
-
     ExtractPatternName: AS`Pattern -> map AS`Name to nat1 --OK
     ExtractPatternName (pat) ==
       cases pat :
@@ -995,14 +973,17 @@ full standard VDM-SL functions can also be locally defined.
         mk_AS`SetUnionPattern (lp,rp,-) -> MergePatternName([ExtractPatternName(lp),ExtractPatternName(rp)]),
         mk_AS`SeqEnumPattern (pats,-)   -> MergePatternName([ExtractPatternName(pats(i)) | i in set inds pats]),
         mk_AS`SeqConcPattern (lp,rp,-)  -> MergePatternName([ExtractPatternName(lp),ExtractPatternName(rp)]),
-        mk_AS`MapletPattern (dp,rp,-)   -> MergePatternName([ExtractPatternName(dp),ExtractPatternName(rp)]),
-        mk_AS`MapEnumPattern (pats,-)   -> MergePatternName([ExtractPatternName(pats(i)) | i in set inds pats]),
+        mk_AS`MapEnumPattern (pats,-)   -> 
+           MergePatternName([let mk_AS`MapletPattern (dp,rp,-) = pats(i)
+                             in ExtractPatternName(dp) ++ ExtractPatternName(rp)
+                             | i in set inds pats]),
         mk_AS`MapMergePattern (lp,rp,-) -> MergePatternName([ExtractPatternName(lp),ExtractPatternName(rp)]),
         mk_AS`RecordPattern (-,flds,-)  -> MergePatternName([ExtractPatternName(flds(i)) | i in set inds flds]),
         mk_AS`TuplePattern (flds,-)     -> MergePatternName([ExtractPatternName(flds(i)) | i in set inds flds]),
 #ifdef VDMPP
-        mk_AS`ObjectPattern (-,flds,-)  -> MergePatternName([ExtractPatternName(flds(i)) | i in set inds flds]),
-        mk_AS`FieldPattern (-,p,-)      -> ExtractPatternName(p),
+        mk_AS`ObjectPattern (-,flds,-)  ->
+           MergePatternName([let mk_AS`FieldPattern (-,p,-) = flds(i)
+                             in ExtractPatternName(p) | i in set inds flds]),
 #endif VDMPP
         others -> undefined
       end;
@@ -1044,8 +1025,7 @@ full standard VDM-SL functions can also be locally defined.
         mk_AS`RecordPattern(-,p_l,-),
         mk_AS`TuplePattern(p_l,-) -> forall p in set elems p_l & SimplePatterns(p),
 #ifdef VDMPP
-        mk_AS`ObjectPattern(-,p_l,-) -> forall p in set elems p_l & SimplePatterns(p),
-        mk_AS`FieldPattern(-,p,-) -> SimplePatterns(p),
+        mk_AS`ObjectPattern(-,p_l,-) -> forall p in set elems p_l & SimplePatterns(p.pat),
 #endif VDMPP
         others ->undefined
       end;

@@ -54,14 +54,17 @@ IdentInPattern(pat) ==
     mk_AS`SetUnionPattern(lp,rp,-)  -> IdentInPattern(lp) union IdentInPattern(rp),
     mk_AS`SeqEnumPattern(els,-)     -> dunion {IdentInPattern(els(i)) | i in set inds els},
     mk_AS`SeqConcPattern(lp,rp,-)   -> IdentInPattern(lp) union IdentInPattern(rp),
-    mk_AS`MapEnumPattern(mls,-)     -> dunion {IdentInPattern(mls(i)) | i in set inds mls},
+    mk_AS`MapEnumPattern(mls,-)     ->
+       dunion {let mk_AS`MapletPattern(dp,rp,-) = mls(i)
+               in IdentInPattern(dp) union IdentInPattern(rp) | i in set inds mls},
     mk_AS`MapMergePattern(lp,rp,-)  -> IdentInPattern(lp) union IdentInPattern(rp),
     mk_AS`RecordPattern(-,fields,-) -> dunion {IdentInPattern(fields(i)) | i in set inds fields},
     mk_AS`TuplePattern(fields,-)    -> dunion {IdentInPattern(fields(i)) | i in set inds fields},
 #ifdef VDMPP
-    mk_AS`ObjectPattern(-,fields,-) -> dunion {IdentInPattern(fields(i).pat) | i in set inds fields},
+    mk_AS`ObjectPattern(-,fields,-) ->
+       dunion {let mk_AS`FieldPattern(-,p,-) = fields(i)
+               in IdentInPattern(p) | i in set inds fields},
 #endif VDMPP
-    mk_AS`MapletPattern(dp,rp,-)    -> IdentInPattern(dp) union IdentInPattern(rp),
     mk_AS`SetBind(-,-,-)            -> IdentInBind(pat),
     mk_AS`TypeBind(-,-,-)           -> IdentInBind(pat),
     others                          -> undefined

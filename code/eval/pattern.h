@@ -48,7 +48,6 @@ private:
   static SET<TYPE_SEM_BlkEnv> MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & pat, const TYPE_SEM_VAL & val_v);
   static SET<TYPE_SEM_BlkEnv> MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & pat, const TYPE_SEM_VAL & val_v);
   static SET<TYPE_SEM_BlkEnv> MatchMapMergePattern (const TYPE_STKM_MapMergePattern & pat, const TYPE_SEM_VAL & val_v);
-  static SET<TYPE_SEM_BlkEnv> MatchMapletPattern (const TYPE_STKM_MapletPattern & pat, const TYPE_SEM_VAL & val_v);
   static SET<TYPE_SEM_BlkEnv> MatchTuplePattern (const TYPE_STKM_TuplePattern & pat, const TYPE_SEM_VAL & val_v);
   static SET<TYPE_SEM_BlkEnv> MatchRecordPattern (const TYPE_STKM_RecordPattern & pat, const TYPE_SEM_VAL & val_v);
 #ifdef VDMPP

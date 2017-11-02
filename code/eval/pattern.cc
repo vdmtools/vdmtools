@@ -60,7 +60,6 @@ SET<TYPE_SEM_BlkEnv> PAT::PatternMatch (const TYPE_STKM_Pattern & pat_p, const T
     case TAG_TYPE_STKM_SeqConcPattern:  { return MatchSeqConcPattern (pat_p, val_v); }
     case TAG_TYPE_STKM_MapEnumPattern:  { return MatchMapEnumPattern (pat_p, val_v); }
     case TAG_TYPE_STKM_MapMergePattern: { return MatchMapMergePattern (pat_p, val_v); }
-    case TAG_TYPE_STKM_MapletPattern:   { return MatchMapletPattern (pat_p, val_v); }
     case TAG_TYPE_STKM_TuplePattern:    { return MatchTuplePattern (pat_p, val_v); }
     case TAG_TYPE_STKM_RecordPattern:   { return MatchRecordPattern (pat_p, val_v); }
 
@@ -460,17 +459,23 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
 SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & pat, const TYPE_SEM_VAL & val_v)
 {
   if (val_v.Is(TAG_TYPE_SEM_MAP)) {
-    const SEQ<TYPE_STKM_MapletPattern> & elems_lp (pat.GetSequence (pos_STKM_MapEnumPattern_mls));
+    const SEQ<TYPE_STKM_MapletPattern> & mls_lp (pat.GetSequence (pos_STKM_MapEnumPattern_mls));
     const Map & val_mv (val_v.GetMap(pos_SEM_MAP_v));
-    if (val_mv.Size () == elems_lp.Length ()) {
+    if (val_mv.Size () == mls_lp.Length ()) {
+      SEQ<TYPE_AS_Pattern> pat_l;
+      size_t len_mls_lp = mls_lp.Length();
+      for (size_t idx = 1; idx <= len_mls_lp; idx++) {
+        const TYPE_STKM_MapletPattern & mp (mls_lp[idx]);
+        pat_l.ImpAppend(mp.GetRecord(pos_AS_MapletPattern_dp));
+        pat_l.ImpAppend(mp.GetRecord(pos_AS_MapletPattern_rp));
+      }
       switch(val_mv.Size()) {
         case 0: {
-          //return eset;
           return mk_set(AUX::MkEmptyBlkEnv (sem_read_only));
         }
         case 1: {
-          //return PatternMatch(elems_lp[1], mk_SEM_MAP(val_mv));
-          return PatternMatch(elems_lp[1], val_v);
+          TYPE_SEM_VAL dv (val_mv.Dom().GetElem());
+          return MatchLists (pat_l, mk_sequence(dv, val_mv[dv]));
         }
         default: {
 //          SET<Sequence> perm_slv (AUX::AUX_Permute (AUX::ValSetToSeq (val_sv)));
@@ -483,9 +488,10 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & 
             SEQ<TYPE_SEM_MAP> tmp_ml;
             size_t len_l = l.Length();
             for (size_t i = 1; i<= len_l; i++) {
-              tmp_ml.ImpAppend(mk_SEM_MAP(Map().Insert(l[i], val_mv[l[i]])));
+              tmp_ml.ImpAppend(l[i]);
+              tmp_ml.ImpAppend(val_mv[l[i]]);
             }
-            res_s.ImpUnion (MatchLists (elems_lp, tmp_ml));
+            res_s.ImpUnion (MatchLists (pat_l, tmp_ml));
           }
           return (res_s);
         }
@@ -494,30 +500,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & 
     else {
       return eset;
     }
-  }
-  else {
-    return eset;
-  }
-}
-
-// MatchMapletPattern
-// PAT : STKM`MapltPattern
-// val_v : SEM`VAL
-// ==> set of SEM`BlkEnv
-SET<TYPE_SEM_BlkEnv> PAT::MatchMapletPattern (const TYPE_STKM_MapletPattern & pat, const TYPE_SEM_VAL & val_v)
-{
-  if (val_v.Is(TAG_TYPE_SEM_MAP)) {
-    const Map & val_mv (val_v.GetMap(pos_SEM_MAP_v));
-    switch (val_mv.Size()) {
-      case 0: { return eset; }
-      case 1: {
-        TYPE_SEM_VAL e (val_mv.Dom().GetElem());
-        return MatchLists(mk_sequence(pat.GetRecord(pos_AS_MapletPattern_dp),
-                                      pat.GetRecord(pos_AS_MapletPattern_rp)),
-                          mk_sequence(e, val_mv[e]));
-      }
-      default: { return eset; }
-    } 
   }
   else {
     return eset;
@@ -1053,6 +1035,25 @@ TYPE_AS_Expr PAT::GetExpr (const TYPE_AS_Pattern & pat_p)
                                        GetExpr (pat_p.GetRecord(pos_AS_SeqConcPattern_rp)),
                                        pat_p.GetInt(pos_AS_SeqConcPattern_cid));
     }
+
+    case TAG_TYPE_AS_MapEnumPattern: {
+      const SEQ<TYPE_AS_MapletPattern> & mls (pat_p.GetSequence(pos_AS_MapEnumPattern_mls));
+      SEQ<TYPE_AS_Expr> e_l;
+      size_t len_mls = mls.Length();
+      for (size_t i = 1; i <= len_mls; i++) {
+        const TYPE_AS_MapletPattern & mp(mls[i]);
+        e_l.ImpAppend (TYPE_AS_Maplet().Init(GetExpr(mp.GetRecord(pos_AS_MapletPattern_dp)),
+                                             GetExpr(mp.GetRecord(pos_AS_MapletPattern_rp)),
+                                             mp.GetInt(pos_AS_MapletPattern_cid)));
+      }
+      return TYPE_AS_MapEnumerationExpr().Init(e_l, pat_p.GetInt(pos_AS_SetEnumPattern_cid));
+    }
+    case TAG_TYPE_AS_MapMergePattern: {
+      return TYPE_AS_BinaryExpr().Init(GetExpr (pat_p.GetRecord(pos_AS_MapMergePattern_lp)),
+                                       Int(MAPMERGE),
+                                       GetExpr (pat_p.GetRecord(pos_AS_MapMergePattern_rp)),
+                                       pat_p.GetInt(pos_AS_MapMergePattern_cid));
+    }
     case TAG_TYPE_AS_TuplePattern: {
       const SEQ<TYPE_AS_Pattern> & fields (pat_p.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_AS_Expr> e_l;
@@ -1168,17 +1169,15 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       const SEQ<TYPE_AS_MapletPattern> & mls (pat_p.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_AS_MapletPattern> m_l;
       size_t len_mls = mls.Length();
-      for (size_t i = 1; i <= len_mls; i++)
-        m_l.ImpAppend (DoCarePattern (mls[i], NewBase (id_base, i)));
-
+      for (size_t i = 1; i <= len_mls; i++) {
+        const TYPE_AS_MapletPattern & mp (mls[i]);
+        TYPE_AS_MapletPattern mp_res (mp);
+        mp_res.set_dp(DoCarePattern (mp.GetRecord(pos_AS_MapletPattern_dp), NewBase (id_base, 1)));
+        mp_res.set_rp(DoCarePattern (mp.GetRecord(pos_AS_MapletPattern_rp), NewBase (id_base, 2)));
+        m_l.ImpAppend (mp_res);
+      }
       TYPE_AS_MapEnumPattern res_v (pat_p);
       res_v.SetField(pos_AS_MapEnumPattern_mls, m_l);
-      return res_v;
-    }
-    case TAG_TYPE_AS_MapletPattern: {
-      TYPE_AS_MapletPattern res_v (pat_p);
-      res_v.set_dp(DoCarePattern (pat_p.GetRecord(pos_AS_MapletPattern_dp), NewBase (id_base, 1)));
-      res_v.set_rp(DoCarePattern (pat_p.GetRecord(pos_AS_MapletPattern_rp), NewBase (id_base, 2)));
       return res_v;
     }
     case TAG_TYPE_AS_MapMergePattern: {
@@ -1191,9 +1190,9 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       const SEQ<TYPE_AS_Pattern> & p_l (pat_p.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_AS_Pattern> e_l;
       size_t len_p_l = p_l.Length();
-      for (size_t i = 1; i <= len_p_l; i++)
+      for (size_t i = 1; i <= len_p_l; i++) {
         e_l.ImpAppend (DoCarePattern (p_l[i], NewBase (id_base, i)));
-
+      }
       TYPE_AS_TuplePattern res_v (pat_p);
       res_v.SetField(pos_AS_TuplePattern_fields, e_l);
       return res_v;
@@ -1202,9 +1201,9 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       const SEQ<TYPE_AS_Pattern> & p_l (pat_p.GetSequence(pos_AS_RecordPattern_fields));
       SEQ<TYPE_AS_Pattern> e_l;
       size_t len_p_l = p_l.Length();
-      for (size_t i = 1; i <= len_p_l; i++)
+      for (size_t i = 1; i <= len_p_l; i++) {
         e_l.ImpAppend (DoCarePattern (p_l[i], NewBase (id_base, i)));
-
+      }
       TYPE_AS_RecordPattern res_v (pat_p);
       res_v.SetField(pos_AS_RecordPattern_fields, e_l);
       return res_v;
@@ -1214,16 +1213,14 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       const SEQ<TYPE_AS_FieldPattern> & fields (pat_p.GetSequence(pos_AS_ObjectPattern_fields));
       SEQ<TYPE_AS_FieldPattern> new_fields;
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++)
-        new_fields.ImpAppend (DoCarePattern (fields[i], NewBase (id_base, i)));
-
+      for (size_t i = 1; i <= len_fields; i++) {
+        const TYPE_AS_FieldPattern & field (fields[i]);
+        TYPE_AS_FieldPattern fd_res (field);
+        fd_res.set_pat(DoCarePattern (field.GetRecord(pos_AS_FieldPattern_pat), NewBase (id_base, 1)));
+        new_fields.ImpAppend (fd_res);
+      }
       TYPE_AS_ObjectPattern res_v (pat_p);
       res_v.SetField(pos_AS_ObjectPattern_fields, new_fields);
-      return res_v;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      TYPE_AS_FieldPattern res_v (pat_p);
-      res_v.set_pat(DoCarePattern (pat_p.GetRecord(pos_AS_FieldPattern_pat), NewBase (id_base, 1)));
       return res_v;
     }
 #endif // VDMPP

@@ -78,8 +78,13 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       const SEQ<TYPE_AS_MapletPattern> & mls_l (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_AS_Pattern> l;
       size_t len_mls_l = mls_l.Length();
-      for (size_t index = 1; index <= len_mls_l; index++)
-        l.ImpAppend (OldNameInPattern (mls_l[index]));
+      for (size_t index = 1; index <= len_mls_l; index++) {
+        const TYPE_AS_MapletPattern & mp (mls_l[index]);
+        TYPE_AS_MapletPattern mp_res (mp);
+        mp_res.SetField(pos_AS_MapletPattern_dp, OldNameInPattern (mp.GetRecord(pos_AS_MapletPattern_dp)));
+        mp_res.SetField(pos_AS_MapletPattern_rp, OldNameInPattern (mp.GetRecord(pos_AS_MapletPattern_rp)));
+        l.ImpAppend (mp_res);
+      }
       res_pat.SetField(pos_AS_MapEnumPattern_mls, l);
       return (res_pat);
     }
@@ -101,19 +106,14 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       res_pat.SetField(pos_AS_MapMergePattern_rp, OldNameInPattern (pat.GetRecord(pos_AS_MapMergePattern_rp)));
       return (res_pat);
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      TYPE_AS_MapletPattern res_pat (pat);
-      res_pat.SetField(pos_AS_MapletPattern_dp, OldNameInPattern (pat.GetRecord(pos_AS_MapletPattern_dp)));
-      res_pat.SetField(pos_AS_MapletPattern_rp, OldNameInPattern (pat.GetRecord(pos_AS_MapletPattern_rp)));
-      return (res_pat);
-    }
     case TAG_TYPE_AS_RecordPattern: {
       TYPE_AS_RecordPattern res_pat (pat);
       const SEQ<TYPE_AS_Pattern> & fields (pat.GetSequence(pos_AS_RecordPattern_fields));
       SEQ<TYPE_AS_Pattern> l;
       size_t len_fields = fields.Length();
-      for (size_t index = 1; index <= len_fields; index++)
+      for (size_t index = 1; index <= len_fields; index++) {
         l.ImpAppend (OldNameInPattern (fields[index]));
+      }
       res_pat.SetField(pos_AS_RecordPattern_fields, l);
       return (res_pat);
     }
@@ -122,8 +122,9 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       const SEQ<TYPE_AS_Pattern> & fields (pat.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_AS_Pattern> l;
       size_t len_fields = fields.Length();
-      for (size_t index = 1; index <= len_fields; index++)
+      for (size_t index = 1; index <= len_fields; index++) {
         l.ImpAppend (OldNameInPattern (fields[index]));
+      }
       res_pat.SetField(pos_AS_TuplePattern_fields, l);
       return (res_pat);
     }
@@ -133,14 +134,13 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       TYPE_AS_ObjectPattern res_pat (pat);
       SEQ<TYPE_AS_FieldPattern> l;
       size_t len_fields = fields.Length();
-      for (size_t index = 1; index <= len_fields; index++)
-        l.ImpAppend (OldNameInPattern (fields[index]));
+      for (size_t index = 1; index <= len_fields; index++) {
+        const TYPE_AS_FieldPattern & field (fields[index]);
+        TYPE_AS_ObjectPattern field_res (field);
+        field_res.SetField(pos_AS_FieldPattern_pat, OldNameInPattern(field.GetRecord(pos_AS_FieldPattern_pat)));
+        l.ImpAppend (field_res);
+      }
       res_pat.SetField(pos_AS_ObjectPattern_fields, l);
-      return (res_pat);
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      TYPE_AS_ObjectPattern res_pat (pat);
-      res_pat.SetField(pos_AS_FieldPattern_pat, OldNameInPattern(pat.GetRecord(pos_AS_FieldPattern_pat)));
       return (res_pat);
     }
 #endif // VDMPP

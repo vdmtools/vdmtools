@@ -482,6 +482,17 @@ wstring MPP::Type2Ascii (const Record & tp)
   case TAG_TYPE_AS_MapEnumPattern: {
     str += L"{";
     str += PatternList2Ascii(tp.GetSequence(pos_AS_MapEnumPattern_mls));
+    const SEQ<TYPE_AS_MapletPattern> & mls(tp.GetSequence(pos_AS_MapEnumPattern_mls));
+    size_t len_mls = mls.Length();
+    for (size_t i = 1; i <= len_mls; i++) {
+      const TYPE_AS_MapletPattern & mp (mls[i]);
+      str += Type2Ascii(mp.GetRecord(pos_AS_MapletPattern_dp));
+      str += L" |-> ";
+      str += Type2Ascii(mp.GetRecord(pos_AS_MapletPattern_rp));
+      if (i < len_mls) {
+        str += L", ";
+      }
+    }
     str += L"}";
     break;
   }
@@ -503,12 +514,6 @@ wstring MPP::Type2Ascii (const Record & tp)
     str += Type2Ascii(tp.GetField(pos_AS_MapMergePattern_rp));
     break;
   }
-  case TAG_TYPE_AS_MapletPattern: {
-    str += Type2Ascii(tp.GetField(pos_AS_MapletPattern_dp));
-    str += L" |-> ";
-    str += Type2Ascii(tp.GetField(pos_AS_MapletPattern_rp));
-    break;
-  }
   case TAG_TYPE_AS_TuplePattern: {
     str += L"mk_(";
     str += PatternList2Ascii(tp.GetSequence(pos_AS_TuplePattern_fields));
@@ -525,17 +530,21 @@ wstring MPP::Type2Ascii (const Record & tp)
   }
 #ifdef VDMPP
   case TAG_TYPE_AS_ObjectPattern: {
+    const SEQ<TYPE_AS_FieldPattern> & fields(tp.GetSequence(pos_AS_RecordPattern_fields));
     str += L"obj_";
     str += PrintNameCharSeq(tp.GetRecord(pos_AS_ObjectPattern_cls));
     str += L"(";
-    str += PatternList2Ascii(tp.GetSequence(pos_AS_RecordPattern_fields));
+    size_t len_fields = fields.Length();
+    for (size_t i = 1; i <= len_fields; i++) {
+      const TYPE_AS_FieldPattern & field(fields[i]);
+      str += PrintNameCharSeq(field.GetRecord(pos_AS_FieldPattern_nm));
+      str += L" |-> ";
+      str += Type2Ascii(field.GetRecord(pos_AS_FieldPattern_pat));
+      if (i < len_fields) {
+        str += L", ";
+      }
+    }
     str += L")";
-    break;
-  }
-  case TAG_TYPE_AS_FieldPattern: {
-    str += PrintNameCharSeq(tp.GetField(pos_AS_FieldPattern_nm));
-    str += L" |-> ";
-    str += Type2Ascii(tp.GetField(pos_AS_FieldPattern_pat));
     break;
   }
 #endif // VDMPP

@@ -594,7 +594,13 @@ void RTINFO::Calc_Coverage_Aux(const Generic & ast, ContextInfo & ci)
       break;
     }
     case TAG_TYPE_AS_MapEnumPattern: {
-      Calc_Coverage_Aux(expr.GetRecord(pos_AS_SeqEnumPattern_els), ci);
+      const SEQ<TYPE_AS_MapletPattern> & mls (expr.GetSequence(pos_AS_MapEnumPattern_mls));
+      size_t len_mls = mls.Length();
+      for (size_t i = 1; i <= len_mls; i++) {
+        const TYPE_AS_MapletPattern & mp (mls[i]);
+        Calc_Coverage_Aux(mp.GetRecord(pos_AS_MapletPattern_dp), ci);
+        Calc_Coverage_Aux(mp.GetRecord(pos_AS_MapletPattern_rp), ci);
+      }
       break;
     }
     case TAG_TYPE_AS_RecordPattern: {
@@ -616,18 +622,13 @@ void RTINFO::Calc_Coverage_Aux(const Generic & ast, ContextInfo & ci)
       Calc_Coverage_Aux(expr.GetRecord(pos_AS_MapMergePattern_rp), ci);
       break;
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      Calc_Coverage_Aux(expr.GetRecord(pos_AS_MapletPattern_dp), ci);
-      Calc_Coverage_Aux(expr.GetRecord(pos_AS_MapletPattern_rp), ci);
-      break;
-    }
 #ifdef VDMPP
     case TAG_TYPE_AS_ObjectPattern: {
-      Calc_Coverage_Aux(expr.GetSequence(pos_AS_ObjectPattern_fields), ci);
-      break;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      Calc_Coverage_Aux(expr.GetRecord(pos_AS_FieldPattern_pat), ci);
+      const SEQ<TYPE_AS_FieldPattern> fields (expr.GetSequence(pos_AS_ObjectPattern_fields));
+      size_t len_fields = fields.Length();
+      for (size_t i = 1; i <= len_fields; i++) {
+        Calc_Coverage_Aux(fields[i].GetRecord(pos_AS_FieldPattern_pat), ci);
+      }
       break;
     }
 #endif // VDMPP

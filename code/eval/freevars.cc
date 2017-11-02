@@ -74,11 +74,14 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
       return (res_set);
     }
     case TAG_TYPE_AS_MapEnumPattern: {
-      const SEQ<TYPE_AS_Pattern> & mls (patbind.GetSequence(pos_AS_MapEnumPattern_mls));
+      const SEQ<TYPE_AS_MapletPattern> & mls (patbind.GetSequence(pos_AS_MapEnumPattern_mls));
       SET<TYPE_AS_Name> res_set (eset);
       size_t len_mls = mls.Length();
-      for (size_t i = 1; i <= len_mls; i++ )
-        res_set.ImpUnion (IdentInPattern (mls[i]));
+      for (size_t i = 1; i <= len_mls; i++ ) {
+        const TYPE_AS_MapletPattern & mp(mls[i]);
+        res_set.ImpUnion (IdentInPattern (mp.GetRecord(pos_AS_MapletPattern_dp)));
+        res_set.ImpUnion (IdentInPattern (mp.GetRecord(pos_AS_MapletPattern_rp)));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_MapMergePattern: {
@@ -86,17 +89,13 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
       res_set.ImpUnion (IdentInPattern (patbind.GetRecord(pos_AS_MapMergePattern_rp)));
       return (res_set);
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      SET<TYPE_AS_Name> res_set (IdentInPattern (patbind.GetRecord(pos_AS_MapletPattern_dp)));
-      res_set.ImpUnion (IdentInPattern (patbind.GetRecord(pos_AS_MapletPattern_rp)));
-      return (res_set);
-    }
     case TAG_TYPE_AS_RecordPattern: {
       const SEQ<TYPE_AS_Pattern> & fields (patbind.GetSequence(pos_AS_RecordPattern_fields));
       SET<TYPE_AS_Name> res_set (eset);
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++ )
+      for (size_t i = 1; i <= len_fields; i++ ) {
         res_set.ImpUnion (IdentInPattern (fields[i]));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_TuplePattern: {
@@ -112,8 +111,9 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
       const SEQ<TYPE_AS_FieldPattern> & fields (patbind.GetSequence(pos_AS_ObjectPattern_fields));
       SET<TYPE_AS_Name> res_set (eset);
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++ )
+      for (size_t i = 1; i <= len_fields; i++ ) {
         res_set.ImpUnion (IdentInPattern (fields[i].GetRecord(pos_AS_FieldPattern_pat)));
+      }
       return (res_set);
     }
 #endif // VDMPP

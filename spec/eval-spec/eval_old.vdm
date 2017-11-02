@@ -39,17 +39,22 @@ OldNameInPattern(pat) ==
     mk_AS`SeqEnumPattern(els_l,cid)     -> def l = [ OldNameInPattern (els_l(i)) | i in set inds els_l ]
                                            in mk_AS`SeqEnumPattern (l,cid),
     mk_AS`SeqConcPattern(lp,rp,cid)     -> mk_AS`SeqConcPattern(OldNameInPattern(lp), OldNameInPattern(rp), cid),
-    mk_AS`MapEnumPattern(mls_l,cid)     -> def l = [ OldNameInPattern (mls_l(i)) | i in set inds mls_l ]
-                                           in mk_AS`MapEnumPattern (l,cid),
+    mk_AS`MapEnumPattern(mls_l,cid)     ->
+       def l = [let mk_AS`MapletPattern(dp,rp,mcid) = mls_l(i)
+                in mk_AS`MapletPattern(OldNameInPattern(dp), OldNameInPattern(rp), mcid)
+                | i in set inds mls_l ]
+       in mk_AS`MapEnumPattern (l,cid),
     mk_AS`MapMergePattern(lp,rp,cid)    -> mk_AS`MapMergePattern(OldNameInPattern(lp), OldNameInPattern(rp), cid),
-    mk_AS`MapletPattern(dp,rp,cid)      -> mk_AS`MapletPattern(OldNameInPattern(dp), OldNameInPattern(rp), cid),
     mk_AS`RecordPattern(tag,fields,cid) -> def l = [ OldNameInPattern (fields(i)) | i in set inds fields ]
                                            in mk_AS`RecordPattern (tag, l, cid),
     mk_AS`TuplePattern(fields,cid)      -> def l = [ OldNameInPattern (fields(i)) | i in set inds fields ]
                                            in mk_AS`TuplePattern (l, cid),
 #ifdef VDMPP
-    mk_AS`ObjectPattern(cls,fields,cid) -> def l = [ OldNameInPattern (fields(i)) | i in set inds fields ]
-                                           in mk_AS`ObjectPattern (cls, l, cid),
+    mk_AS`ObjectPattern(cls,fields,cid) ->
+       def l = [let  mk_AS`FieldPattern(nm,p,fcid) = fields(i)
+                in mk_AS`FieldPattern(nm, OldNameInPattern(p), fcid)
+                | i in set inds fields ]
+       in mk_AS`ObjectPattern (cls, l, cid),
     mk_AS`FieldPattern(nm,p,cid)        -> mk_AS`FieldPattern(nm, OldNameInPattern(p), cid),
 #endif VDMPP
     mk_AS`SetBind(pat,set_e,cid)        -> mk_AS`SetBind(OldNameInPattern(pat), OldNameInExpr(set_e),cid),

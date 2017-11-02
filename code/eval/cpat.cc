@@ -133,19 +133,13 @@ TYPE_STKM_SubProgram StackCompiler::PStack2I(const TYPE_AS_Pattern & pat)
         .ImpAppend(TYPE_INSTRTP_MATCHVAL());
       return sp;
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      TYPE_STKM_SubProgram sp;
-      sp.ImpConc(P2I(pat.GetRecord(pos_AS_MapletPattern_dp)))
-        .ImpConc(P2I(pat.GetRecord(pos_AS_MapletPattern_rp)))
-        .ImpAppend(TYPE_INSTRTP_MAPLET());
-      return sp;
-    }
     case TAG_TYPE_AS_SetEnumPattern: {
       TYPE_STKM_SubProgram sp;
       const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       size_t len_elems = elems.Length();
-      for (size_t idx = 1; idx <= len_elems; idx++)
+      for (size_t idx = 1; idx <= len_elems; idx++) {
         sp.ImpConc(P2I(elems[idx]));
+      }
       sp.ImpAppend(TYPE_INSTRTP_SETENUM().Init(Int(len_elems)));
       return sp;
     }
@@ -153,8 +147,9 @@ TYPE_STKM_SubProgram StackCompiler::PStack2I(const TYPE_AS_Pattern & pat)
       TYPE_STKM_SubProgram sp;
       const SEQ<TYPE_AS_Pattern> & els (pat.GetSequence(pos_AS_SeqEnumPattern_els));
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         sp.ImpConc(P2I(els[idx]));
+      }
       sp.ImpAppend(TYPE_INSTRTP_SEQENUM().Init(Int(len_els)));
       return sp;
     }
@@ -162,8 +157,12 @@ TYPE_STKM_SubProgram StackCompiler::PStack2I(const TYPE_AS_Pattern & pat)
       TYPE_STKM_SubProgram sp;
       const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       size_t len_mls = mls.Length();
-      for (size_t idx = 1; idx <= len_mls; idx++)
-        sp.ImpConc(P2I(mls[idx]));
+      for (size_t idx = 1; idx <= len_mls; idx++) {
+        const TYPE_AS_MapletPattern & mp (mls[idx]);
+        sp.ImpConc(P2I(mp.GetRecord(pos_AS_MapletPattern_dp)))
+          .ImpConc(P2I(mp.GetRecord(pos_AS_MapletPattern_rp)))
+          .ImpAppend(TYPE_INSTRTP_MAPLET());
+      }
       sp.ImpAppend(TYPE_INSTRTP_MAPENUM().Init(Int(len_mls)));
       return sp;
     }
@@ -371,24 +370,19 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
                                              P2P(pat.GetRecord(pos_AS_SeqConcPattern_rp)));
     }
 
-    case TAG_TYPE_AS_MapletPattern: {
-      return TYPE_STKM_MapletPattern().Init(P2P(pat.GetRecord(pos_AS_MapletPattern_dp)),
-                                            P2P(pat.GetRecord(pos_AS_MapletPattern_rp)));
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_STKM_Pattern> els;
       SET<TYPE_STKM_Pattern> p_s;
       size_t len_mls = mls.Length();
       for (size_t i = 1; i <= len_mls; i++) {
-// 20140303 -->
-        //els.ImpAppend(P2P(mls[i]));
-        TYPE_STKM_Pattern p (P2P(mls[i]));
+        const TYPE_AS_MapletPattern & mp(mls[i]);
+        TYPE_STKM_Pattern p (TYPE_STKM_MapletPattern().Init(P2P(mp.GetRecord(pos_AS_MapletPattern_dp)),
+                                                            P2P(mp.GetRecord(pos_AS_MapletPattern_rp))));
         if (!p_s.InSet(p)) {
           els.ImpAppend(p);
           p_s.Insert(p);
         }
-// <--20140303
       }
       return TYPE_STKM_MapEnumPattern().Init(els);
     }
@@ -423,13 +417,11 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
       SEQ<TYPE_STKM_FieldPattern> els;
       size_t len_fields = fields.Length();
       for (size_t i = 1; i <= len_fields; i++) {
-        els.ImpAppend(P2P(fields[i]));
+        const TYPE_AS_FieldPattern & field (fields[i]);
+        els.ImpAppend(TYPE_STKM_FieldPattern().Init(field.GetRecord(pos_AS_FieldPattern_nm),
+                                                    P2P(field.GetRecord(pos_AS_FieldPattern_pat))));
       }
       return TYPE_STKM_ObjectPattern().Init(pat.GetRecord(pos_AS_ObjectPattern_cls), els);
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      return TYPE_STKM_FieldPattern().Init(pat.GetRecord(pos_AS_FieldPattern_nm),
-                                           P2P(pat.GetRecord(pos_AS_FieldPattern_pat)));
     }
 #endif // VDMPP
     default: {
@@ -485,17 +477,13 @@ bool StackCompiler::AnyMatchVals(const TYPE_AS_Pattern & pat)
              AnyMatchVals(pat.GetRecord(pos_AS_SeqConcPattern_rp));
     }
 
-    case TAG_TYPE_AS_MapletPattern: {
-      return AnyMatchVals(pat.GetRecord(pos_AS_MapletPattern_dp)) ||
-             AnyMatchVals(pat.GetRecord(pos_AS_MapletPattern_rp));
-    }
-
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       bool exists (false);
       size_t len_mls = mls.Length();
       for (size_t idx = 1; (idx <= len_mls) && !exists; idx++)
-        exists = AnyMatchVals(mls[idx]);
+        exists = AnyMatchVals(mls[idx].GetRecord(pos_AS_MapletPattern_dp)) ||
+                 AnyMatchVals(mls[idx].GetRecord(pos_AS_MapletPattern_rp));
       return exists;
     }
 
@@ -529,11 +517,8 @@ bool StackCompiler::AnyMatchVals(const TYPE_AS_Pattern & pat)
       bool exists (false);
       size_t len_fields = fields.Length();
       for (size_t idx = 1; (idx <= len_fields) && !exists; idx++)
-        exists = AnyMatchVals(fields[idx]);
+        exists = AnyMatchVals(fields[idx].GetRecord(pos_AS_FieldPattern_pat));
       return exists;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      return AnyMatchVals(pat.GetRecord(pos_AS_FieldPattern_pat));
     }
 #endif // VDMPP
     default: {
@@ -748,19 +733,18 @@ TYPE_AS_Expr StackCompiler::P2E (const TYPE_AS_Pattern & pat)
       const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_SeqConcPattern_cid));
       return TYPE_AS_BinaryExpr().Init(P2E(lp), Int(SEQCONC), P2E(rp), cid);
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      const TYPE_AS_Pattern & dp (pat.GetRecord(pos_AS_MapletPattern_dp));
-      const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_MapletPattern_rp));
-      const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_MapletPattern_cid));
-      return TYPE_AS_Maplet().Init(P2E(dp), P2E(rp), cid);
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & p_l (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_MapEnumPattern_cid));
       int len_p_l = p_l.Length();
       SEQ<TYPE_AS_Maplet> mls;
-      for (int index = 1; index <= len_p_l; index++)
-        mls.ImpAppend(P2E(p_l[index]));
+      for (int index = 1; index <= len_p_l; index++) {
+        const TYPE_AS_MapletPattern & mp(p_l[index]);
+        const TYPE_AS_Pattern & dp (mp.GetRecord(pos_AS_MapletPattern_dp));
+        const TYPE_AS_Pattern & rp (mp.GetRecord(pos_AS_MapletPattern_rp));
+        const TYPE_CI_ContextId & mcid (pat.GetInt(pos_AS_MapletPattern_cid));
+        mls.ImpAppend(TYPE_AS_Maplet().Init(P2E(dp), P2E(rp), mcid));
+      }
       return TYPE_AS_MapEnumerationExpr().Init(mls, cid);
     }
     case TAG_TYPE_AS_MapMergePattern: {

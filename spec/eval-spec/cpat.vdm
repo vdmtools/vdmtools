@@ -115,20 +115,24 @@ operations
                                                     [mk_INSTRTP`SETENUM(len els)],
       mk_AS`SeqEnumPattern(els,-)       -> return conc [ P2I(els(i)) | i in set inds els ] ^
                                                     [mk_INSTRTP`SEQENUM(len els)],
-      mk_AS`MapEnumPattern(mls,-)       -> return conc [ P2I(mls(i)) | i in set inds mls ] ^
-                                                    [mk_INSTRTP`MAPENUM(len mls)],
+      mk_AS`MapEnumPattern(mls,-)       ->
+            return conc [let mk_AS`MapletPattern(dp,rp,-) = mls(i)
+                         in P2I(dp) ^ P2I(rp) ^ [mk_INSTRTP`MAPLET()] | i in set inds mls ] ^
+                   [mk_INSTRTP`MAPENUM(len mls)],
       mk_AS`SetUnionPattern(lp,rp,-)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SETUNION()],
       mk_AS`SeqConcPattern(lp,rp,-)     -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SEQCONC()],
       mk_AS`MapMergePattern(lp,rp,-)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`MAPMERGE()],
-      mk_AS`MapletPattern(dp,rp,-)      -> return P2I(dp) ^ P2I(rp) ^ [mk_INSTRTP`MAPLET()],
+--      mk_AS`MapletPattern(dp,rp,-)      -> return P2I(dp) ^ P2I(rp) ^ [mk_INSTRTP`MAPLET()],
       mk_AS`TuplePattern(fields,-)      -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
                                                     [mk_INSTRTP`TUPPATCONS(len fields)],
       mk_AS`RecordPattern(nm,fields,-)  -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
                                                     [mk_INSTRTP`RECPATCONS(nm, len fields)],
 #ifdef VDMPP
-      mk_AS`ObjectPattern(cls,fields,-) -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
-                                                    [mk_INSTRTP`OBJECTPAT(cls, len fields)],
-      mk_AS`FieldPattern(nm,fp,-)       -> return P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm)],
+      mk_AS`ObjectPattern(cls,fields,-) ->
+            return conc [let mk_AS`FieldPattern(nm,fp,-) = fields(i)
+                         in P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm)] | i in set inds fields ] ^
+                   [mk_INSTRTP`OBJECTPAT(cls, len fields)],
+--      mk_AS`FieldPattern(nm,fp,-)       -> return P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm)],
 #endif VDMPP
       others -> error
     end;
@@ -173,20 +177,22 @@ operations
       mk_AS`SeqEnumPattern(els,-)    -> def e_l = [P2P(els(i)) | i in set inds els]
                                           in return mk_STKM`SeqEnumPattern(e_l),
       mk_AS`SeqConcPattern(lp,rp,-)  -> return mk_STKM`SeqConcPattern(P2P(lp), P2P(rp)),
-      mk_AS`MapletPattern(dp,rp,-)   -> return mk_STKM`MapletPattern(P2P(dp), P2P(rp)),
-      mk_AS`MapEnumPattern(mls,-)    -> def m_l = [P2P(mls(i)) | i in set inds mls];
-                                              m_l' = [ m_l(i) | i in set inds m_l &
-                                                       m_l(i) not in set { m_l(j) | j in set inds m_l & j < i } ]
-                                          in return mk_STKM`MapEnumPattern(m_l'),
+      mk_AS`MapEnumPattern(mls,-)    ->
+            def m_l = [let mk_AS`MapletPattern(dp,rp,-) = mls(i)
+                       in mk_STKM`MapletPattern(P2P(dp), P2P(rp)) | i in set inds mls];
+                m_l' = [ m_l(i) | i in set inds m_l &
+                            m_l(i) not in set { m_l(j) | j in set inds m_l & j < i } ]
+            in return mk_STKM`MapEnumPattern(m_l'),
       mk_AS`MapMergePattern(lp,rp,-) -> return mk_STKM`MapMergePattern(P2P(lp), P2P(rp)),
       mk_AS`TuplePattern(p_l,-)      -> def els = [P2P(p_l(i)) | i in set inds p_l]
-                                          in return mk_STKM`TuplePattern(els),
+                                        in return mk_STKM`TuplePattern(els),
       mk_AS`RecordPattern(nm,p_l,-)  -> def els = [P2P(p_l(i)) | i in set inds p_l]
-                                          in return mk_STKM`RecordPattern(nm, els),
+                                        in return mk_STKM`RecordPattern(nm, els),
 #ifdef VDMPP
-      mk_AS`ObjectPattern(cls,fields,-) -> def f_l = [P2P(fields(i)) | i in set inds fields]
-                                             in return mk_STKM`ObjectPattern(cls, f_l),
-      mk_AS`FieldPattern(nm,fp,-)    -> return mk_STKM`FieldPattern(nm, P2P(fp)),
+      mk_AS`ObjectPattern(cls,fields,-) ->
+            def f_l = [let mk_AS`FieldPattern(nm,fp,-) = fields(i)
+                       in mk_STKM`FieldPattern(nm, P2P(fp)) | i in set inds fields]
+            in return mk_STKM`ObjectPattern(cls, f_l),
 #endif VDMPP
       others -> error
     end;
@@ -201,14 +207,13 @@ functions
       mk_AS`SetUnionPattern(lp,rp,-) -> AnyMatchVals(lp) or AnyMatchVals(rp),
       mk_AS`SeqEnumPattern(els,-)    -> exists p in set elems els & AnyMatchVals(p),
       mk_AS`SeqConcPattern(lp,rp,-)  -> AnyMatchVals(lp) or AnyMatchVals(rp),
-      mk_AS`MapEnumPattern(mls,-)    -> exists p in set elems mls & AnyMatchVals(p),
+      mk_AS`MapEnumPattern(mls,-)    -> exists p in set elems mls &
+                                           AnyMatchVals(p.dp) or AnyMatchVals(p.rp),
       mk_AS`MapMergePattern(lp,rp,-) -> AnyMatchVals(lp) or AnyMatchVals(rp),
-      mk_AS`MapletPattern(dp,rp,-)   -> AnyMatchVals(dp) or AnyMatchVals(rp),
       mk_AS`TuplePattern(p_l,-)      -> exists p in set elems p_l & AnyMatchVals(p),
       mk_AS`RecordPattern(-,p_l,-)   -> exists p in set elems p_l & AnyMatchVals(p),
 #ifdef VDMPP
-      mk_AS`ObjectPattern(-,f_l,-)   -> exists p in set elems f_l & AnyMatchVals(p),
-      mk_AS`FieldPattern(-,p,-)      -> AnyMatchVals(p),
+      mk_AS`ObjectPattern(-,f_l,-)   -> exists p in set elems f_l & AnyMatchVals(p.pat),
 #endif VDMPP
       others -> undefined
     end;
@@ -301,9 +306,10 @@ functions
       mk_AS`SeqEnumPattern(p_l,cid)     -> let els = [ P2E(p_l(i)) | i in set inds p_l ]
                                            in mk_AS`SeqEnumerationExpr(els, cid),
       mk_AS`SeqConcPattern(lp,rp,cid)   -> mk_AS`BinaryExpr(P2E(lp), <SEQCONC>, P2E(rp), cid),
-      mk_AS`MapletPattern(dp,rp,cid)    -> mk_AS`Maplet(P2E(dp), P2E(rp), cid),
-      mk_AS`MapEnumPattern(p_l,cid)     -> let mls = [ P2E(p_l(i)) | i in set inds p_l ]
-                                           in mk_AS`MapEnumerationExpr(mls, cid),
+      mk_AS`MapEnumPattern(p_l,cid)     ->
+            let mls = [let mk_AS`MapletPattern(dp,rp,mcid) = p_l(i)
+                       in mk_AS`Maplet(P2E(dp), P2E(rp), mcid) | i in set inds p_l ]
+            in mk_AS`MapEnumerationExpr(mls, cid),
       mk_AS`MapMergePattern(lp,rp,cid)  -> mk_AS`BinaryExpr(P2E(lp), <MAPMERGE>, P2E(rp), cid),
       mk_AS`RecordPattern(nm,p_l,cid)   -> let fields = [ P2E(p_l(i)) | i in set inds p_l ]
                                            in mk_AS`RecordConstructorExpr(nm, fields, cid),
@@ -311,7 +317,6 @@ functions
                                            in mk_AS`TupleConstructorExpr(fields, cid),
 #ifdef VDMPP
       mk_AS`ObjectPattern(-,-,-)        -> undefined,
-      mk_AS`FieldPattern(-,-,-)         -> undefined,
 #endif VDMPP
       others                            -> undefined
     end;

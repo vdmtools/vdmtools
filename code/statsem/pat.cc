@@ -160,7 +160,6 @@ Tuple StatSem::wf_Pattern (const Int & i, const TYPE_AS_Pattern & pat, const TYP
     case TAG_TYPE_AS_SetUnionPattern: { return wf_SetUnionPattern (i, pat, tp); }
     case TAG_TYPE_AS_SeqEnumPattern:  { return wf_SeqEnumPattern (i, pat, tp); }
     case TAG_TYPE_AS_SeqConcPattern:  { return wf_SeqConcPattern (i, pat, tp); }
-    case TAG_TYPE_AS_MapletPattern:   { return wf_MapletPattern (i, pat, tp); }
     case TAG_TYPE_AS_MapEnumPattern:  { return wf_MapEnumPattern (i, pat, tp); }
     case TAG_TYPE_AS_MapMergePattern: { return wf_MapMergePattern (i, pat, tp); }
     case TAG_TYPE_AS_RecordPattern:   { return wf_RecordPattern (i, pat, tp); }
@@ -907,13 +906,11 @@ Tuple StatSem::wf_ObjectPattern (const Int & i, const TYPE_AS_ObjectPattern & pa
   const TYPE_AS_Name & cls (pat.GetRecord(pos_AS_ObjectPattern_cls));
   const SEQ<TYPE_AS_FieldPattern> & fields (pat.GetSequence(pos_AS_ObjectPattern_fields));
 
-  if (CheckClassName (cls))
-  {
+  if (CheckClassName (cls)) {
     Set wf;
     Sequence b_s;
     size_t len_fields = fields.Length();
-    for (size_t idx = 1; idx <= len_fields; idx++)
-    {
+    for (size_t idx = 1; idx <= len_fields; idx++) {
       const TYPE_AS_FieldPattern & fp (fields[idx]);
       const TYPE_AS_Name & field (fp.GetRecord(pos_AS_FieldPattern_nm));
       const TYPE_AS_Pattern & p (fp.GetRecord(pos_AS_FieldPattern_pat));
@@ -1586,19 +1583,16 @@ MAP<TYPE_AS_Name, Int> StatSem::ExtractPatternName (const TYPE_AS_Pattern & pat)
       st.ImpAppend (ExtractPatternName (pat.GetRecord(pos_AS_SeqConcPattern_rp)));
       return MergePatternName(st);
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      SEQ<Map> st;
-      st.ImpAppend (ExtractPatternName (pat.GetRecord(pos_AS_MapletPattern_dp)));
-      st.ImpAppend (ExtractPatternName (pat.GetRecord(pos_AS_MapletPattern_rp)));
-      return MergePatternName(st);
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & pats (pat.GetSequence(pos_AS_MapEnumPattern_mls));
 
       SEQ<Map> st;
       size_t len_pats = pats.Length();
-      for (size_t idx = 1; idx <= len_pats; idx++)
-        st.ImpAppend (ExtractPatternName (pats[idx]));
+      for (size_t idx = 1; idx <= len_pats; idx++) {
+        const TYPE_AS_MapletPattern & mp (pats[idx]);
+        st.ImpAppend (ExtractPatternName (mp.GetRecord(pos_AS_MapletPattern_dp)));
+        st.ImpAppend (ExtractPatternName (mp.GetRecord(pos_AS_MapletPattern_rp)));
+      }
       return MergePatternName(st);
     }
     case TAG_TYPE_AS_MapMergePattern: {
@@ -1628,12 +1622,11 @@ MAP<TYPE_AS_Name, Int> StatSem::ExtractPatternName (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_FieldPattern> & pats (pat.GetSequence(pos_AS_ObjectPattern_fields));
       SEQ<Map> st;
       size_t len_pats = pats.Length();
-      for (size_t idx = 1; idx <= len_pats; idx++)
-        st.ImpAppend (ExtractPatternName (pats[idx]));
+      for (size_t idx = 1; idx <= len_pats; idx++) {
+        const TYPE_AS_FieldPattern & fp (pats[idx]);
+        st.ImpAppend (ExtractPatternName (pat.GetRecord(pos_AS_FieldPattern_pat)));
+      }
       return MergePatternName(st);
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      return ExtractPatternName (pat.GetRecord(pos_AS_FieldPattern_pat));
     }
 #endif // VDMPP
     default: {
@@ -1722,16 +1715,18 @@ bool StatSem::SimplePatterns (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_RecordPattern_fields));
       bool forall = true;
       size_t len_p_l = p_l.Length();
-      for (size_t idx = 1; (idx <= len_p_l) && forall; idx++)
+      for (size_t idx = 1; (idx <= len_p_l) && forall; idx++) {
         forall = SimplePatterns (p_l[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_TuplePattern: {
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_TuplePattern_fields));
       bool forall = true;
       size_t len_p_l = p_l.Length();
-      for (size_t idx = 1; (idx <= len_p_l) && forall; idx++)
+      for (size_t idx = 1; (idx <= len_p_l) && forall; idx++) {
         forall = SimplePatterns (p_l[idx]);
+      }
       return forall;
     }
 #ifdef VDMPP
@@ -1739,12 +1734,10 @@ bool StatSem::SimplePatterns (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_FieldPattern> & p_l (pat.GetSequence(pos_AS_ObjectPattern_fields));
       bool forall = true;
       size_t len_p_l = p_l.Length();
-      for (size_t idx = 1; (idx <= len_p_l) && forall; idx++)
-        forall = SimplePatterns (p_l[idx]);
+      for (size_t idx = 1; (idx <= len_p_l) && forall; idx++) {
+        forall = SimplePatterns (p_l[idx].GetRecord(pos_AS_FieldPattern_pat));
+      }
       return forall;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      return SimplePatterns (pat.GetRecord(pos_AS_FieldPattern_pat));
     }
 #endif // VDMPP
     default:

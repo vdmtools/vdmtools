@@ -2886,15 +2886,19 @@ void AS2ASCII::Pattern2ASCII(const TYPE_AS_Pattern & pat, wostream & result)
       RecordPattern2ASCII(pat, result);
       break;
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      Pattern2ASCII(pat.GetRecord(pos_AS_MapletPattern_dp), result);
-      result << L" |-> ";
-      Pattern2ASCII(pat.GetRecord(pos_AS_MapletPattern_rp), result);
-      break;
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       result << L"{";
-      PatternSequence2ASCII(pat.GetSequence(pos_AS_MapEnumPattern_mls), result);
+      const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
+      size_t len_mls = mls.Length();
+      for (size_t idx = 1; idx <= len_mls; idx++) {
+        const TYPE_AS_MapletPattern & mp (mls[idx]);
+        Pattern2ASCII(mp.GetRecord(pos_AS_MapletPattern_dp), result);
+        result << L" |-> ";
+        Pattern2ASCII(mp.GetRecord(pos_AS_MapletPattern_rp), result);
+        if (idx < len_mls) {
+          result << L",";
+        }
+      }
       result << L"}";
       break;
     }
@@ -3094,8 +3098,9 @@ void AS2ASCII::ParameterTypes2ASCII(const TYPE_AS_ParameterTypes & partps, wostr
       PatternSequence2ASCII(ptp.GetSequence(pos_AS_PatTypePair_pats), result);
       result << L" : ";
       Type2ASCII(ptp.GetRecord(pos_AS_PatTypePair_tp), result);
-      if (idx < len_partps)
+      if (idx < len_partps) {
         result << L",";
+      }
     }
   }
 }
@@ -3103,11 +3108,11 @@ void AS2ASCII::ParameterTypes2ASCII(const TYPE_AS_ParameterTypes & partps, wostr
 void AS2ASCII::PatternSequence2ASCII(const SEQ<TYPE_AS_Pattern> & pats, wostream & result)
 {
   size_t len_pats = pats.Length();
-  for (size_t idx = 1; idx <= len_pats; idx++)
-  {
+  for (size_t idx = 1; idx <= len_pats; idx++) {
     Pattern2ASCII(pats[idx], result);
-    if (idx < len_pats)
+    if (idx < len_pats) {
       result << L",";
+    }
   }
 }
 

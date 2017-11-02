@@ -169,8 +169,9 @@ TYPE_AS_MapEnumerationExpr CAST::MapEnumPattern2Expr (const TYPE_AS_MapEnumPatte
   const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_MapEnumPattern_cid));
   int len_mls = mls.Length();
   SEQ<TYPE_AS_Maplet> expr_mls;
-  for (int index = 1; index <= len_mls; index++)
+  for (int index = 1; index <= len_mls; index++) {
     expr_mls.ImpAppend(Pattern2Expr(mls[index]));
+  }
   return TYPE_AS_MapEnumerationExpr().Init(expr_mls, cid); 
 }
 
@@ -195,8 +196,9 @@ TYPE_AS_RecordConstructorExpr CAST::RecordPattern2Expr (const TYPE_AS_RecordPatt
   const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_RecordPattern_cid));
   int len_els = els.Length();
   SEQ<TYPE_AS_Expr> expr_els;
-  for (int index = 1; index <= len_els; index++)
+  for (int index = 1; index <= len_els; index++) {
     expr_els.ImpAppend(Pattern2Expr(els[index]));
+  }
   return TYPE_AS_RecordConstructorExpr().Init(nm, expr_els, cid); 
 }
 
@@ -209,8 +211,9 @@ TYPE_AS_TupleConstructorExpr CAST::TuplePattern2Expr (const TYPE_AS_TuplePattern
   const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_TuplePattern_cid));
   int len_els = els.Length();
   SEQ<TYPE_AS_Expr> expr_els;
-  for (int index = 1; index <= len_els; index++)
+  for (int index = 1; index <= len_els; index++) {
     expr_els.ImpAppend(Pattern2Expr(els[index]));
+  }
   return TYPE_AS_TupleConstructorExpr().Init(expr_els, cid); 
 }
 

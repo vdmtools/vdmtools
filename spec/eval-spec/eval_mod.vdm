@@ -401,11 +401,12 @@ IsAllPatternName (pat_p) ==
     mk_AS`SetUnionPattern(lp, rp,-) -> IsAllPatternName(lp) and IsAllPatternName(rp),
     mk_AS`SeqEnumPattern(els,-)     -> forall i in set inds els & IsAllPatternName(els(i)),
     mk_AS`SeqConcPattern(lp, rp,-)  -> IsAllPatternName(lp) and IsAllPatternName(rp),
-    mk_AS`MapEnumPattern(mls,-)     -> forall i in set inds mls & IsAllPatternName(mls(i)),
+    mk_AS`MapEnumPattern(mls,-)     ->
+        forall i in set inds mls & let mk_AS`MapletPattern(dp, rp,-) = mls(i)
+                                   in IsAllPatternName(dp) and IsAllPatternName(rp),
     mk_AS`MapMergePattern(lp, rp,-) -> IsAllPatternName(lp) and IsAllPatternName(rp),
     mk_AS`RecordPattern(-, els,-)   -> forall i in set inds els & IsAllPatternName(els(i)),
     mk_AS`TuplePattern(els,-)       -> forall i in set inds els & IsAllPatternName(els(i)),
-    mk_AS`MapletPattern(dp, rp,-)   -> IsAllPatternName(dp) and IsAllPatternName(rp),
     others                          -> false
   end;
 

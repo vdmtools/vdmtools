@@ -501,8 +501,11 @@ bool MOD::IsAllPatternName (const TYPE_AS_PatternBind & pat_p)
       const SEQ<TYPE_AS_MapletPattern> & mls (pat_p.GetSequence(pos_AS_MapEnumPattern_mls));
       bool forall = true;
       size_t len_mls = mls.Length();
-      for (size_t idx = 1; (idx <= len_mls) && forall; idx++)
-        forall = IsAllPatternName (mls[idx]);
+      for (size_t idx = 1; (idx <= len_mls) && forall; idx++) {
+        const TYPE_AS_MapletPattern & mp(mls[idx]);
+        forall = (IsAllPatternName (mp.GetRecord(pos_AS_MapletPattern_dp)) &&
+                  IsAllPatternName (mp.GetRecord(pos_AS_MapletPattern_rp)));
+      }
       return forall;
     }
     case TAG_TYPE_AS_SetUnionPattern: {
@@ -517,24 +520,22 @@ bool MOD::IsAllPatternName (const TYPE_AS_PatternBind & pat_p)
       return (IsAllPatternName (pat_p.GetRecord(pos_AS_MapMergePattern_lp)) &&
               IsAllPatternName (pat_p.GetRecord(pos_AS_MapMergePattern_rp)));
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      return (IsAllPatternName (pat_p.GetRecord(pos_AS_MapletPattern_dp)) &&
-              IsAllPatternName (pat_p.GetRecord(pos_AS_MapletPattern_rp)));
-    }
     case TAG_TYPE_AS_TuplePattern: {
       const SEQ<TYPE_AS_Pattern> & pat_lp (pat_p.GetSequence(pos_AS_TuplePattern_fields));
       bool forall = true;
       size_t len_pat_lp = pat_lp.Length();
-      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++)
+      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++) {
         forall = IsAllPatternName (pat_lp[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_RecordPattern: {
       const SEQ<TYPE_AS_Pattern> & pat_lp (pat_p.GetSequence(pos_AS_RecordPattern_fields));
       bool forall = true;
       size_t len_pat_lp = pat_lp.Length();
-      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++)
+      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++) {
         forall = IsAllPatternName (pat_lp[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_SetBind:

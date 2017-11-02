@@ -137,10 +137,6 @@ Tuple vdmcg::CGPatternMatch (const TYPE_AS_Pattern & p,
       res = CGMatchSeqEnumPattern (p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
       break;
     }
-//    case TAG_TYPE_AS_MapletPattern: {
-//      res = CGMatchMapletPattern (p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
-//      break;
-//    }
     case TAG_TYPE_AS_MapEnumPattern: {
       res = CGMatchMapEnumPattern (p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
       break;

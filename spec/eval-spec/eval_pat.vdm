@@ -95,7 +95,6 @@ PatternMatch (pat_p, val_v) ==
     (is_STKM`MapMergePattern(pat_p)) -> MatchMapMergePattern(pat_p, val_v),
     (is_STKM`TuplePattern(pat_p))    -> MatchTuplePattern(pat_p, val_v),
     (is_STKM`RecordPattern(pat_p))   -> MatchRecordPattern(pat_p, val_v),
-    (is_STKM`MapletPattern(pat_p))   -> MatchMapletPattern(pat_p, val_v),
 #ifdef VDMPP
     (is_STKM`ObjectPattern(pat_p))   -> MatchObjectPattern(pat_p, val_v),
 #endif VDMPP
@@ -375,28 +374,22 @@ operations
 MatchMapEnumPattern : STKM`MapEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
 MatchMapEnumPattern (mk_STKM`MapEnumPattern(mls_lp),val_v) ==
   cases val_v:
-    mk_SEM`MAP(val_mv) -> if card dom val_mv = len mls_lp
-                          then
-                             cases mls_lp:
-                               []     -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
-                               [pat]  -> return PatternMatch(pat, val_v),
-                               others -> def perm_slv = AUX`Permute(AUX`ValSetToSeq(dom val_mv));
-                                             perm_slv2 = { [ mk_SEM`MAP({ tmp_lv(i) |-> val_mv(tmp_lv(i)) })
-                                              | i in set inds tmp_lv ] | tmp_lv in set perm_slv }
-                                         in return dunion { MatchLists(mls_lp, tmp_lv) | tmp_lv in set perm_slv2 }
-                             end
-                          else return {},
-    others -> return {}
-  end;
-
-MatchMapletPattern : STKM`MapletPattern * SEM`VAL ==> set of SEM`BlkEnv
-MatchMapletPattern (mk_STKM`MapletPattern(dp_p, rp_p),val_v) ==
-  cases val_v:
-    mk_SEM`MAP(val_mv) -> cases val_mv:
-                            {|->}     -> return {},
-                            {d |-> r} -> return MatchLists([dp_p, rp_p], [d, r]),
-                            others    -> return {}
-                          end,
+    mk_SEM`MAP(val_mv) ->
+       if card dom val_mv = len mls_lp
+       then
+         let pat_l = conc [ let mk_STKM`MapletPattern(dp_p, rp_p) = mls_lp(i)
+                            in [ dp_p, rp_p ] | i in set inds mls_lp ]
+         in 
+         cases mls_lp:
+           []     -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
+           [-]  -> let {dp} = dom val_mv
+                   in return MatchLists( pat_l, [ dp, val_mv(dp) ] ),
+           others -> def perm_slv = AUX`Permute(AUX`ValSetToSeq(dom val_mv));
+                         perm_slv2 = { conc [ [ tmp_lv(i), val_mv(tmp_lv(i)) ]
+                                        | i in set inds tmp_lv ] | tmp_lv in set perm_slv };
+                     in return dunion { MatchLists(pat_l, tmp_lv) | tmp_lv in set perm_slv2 }
+         end
+       else return {},
     others -> return {}
   end;
 
@@ -742,10 +735,12 @@ This function returns the pattern from a bind.
       mk_AS`SeqEnumPattern(els,cid)    -> let e_l = [ GetExpr(els(i)) | i in set inds els ]
                                           in mk_AS`SeqEnumerationExpr(e_l, cid),
       mk_AS`SeqConcPattern(lp,rp,cid)  -> mk_AS`BinaryExpr(GetExpr(lp), <SEQCONC>, GetExpr(rp), cid),
-      mk_AS`MapEnumPattern(mls,cid)    -> let e_l = [ GetExpr(mls(i)) | i in set inds mls ]
-                                          in mk_AS`MapEnumerationExpr(e_l, cid),
+      mk_AS`MapEnumPattern(mls,cid)    ->
+         let e_l = [ let mk_AS`MapletPattern(dp,rp,mcid) = mls(i)
+                     in mk_AS`Maplet(GetExpr(dp), GetExpr(rp), mcid)
+                     | i in set inds mls ]
+         in mk_AS`MapEnumerationExpr(e_l, cid),
       mk_AS`MapMergePattern(lp,rp,cid) -> mk_AS`BinaryExpr(GetExpr(lp), <MAPMERGE>, GetExpr(rp), cid),
-      mk_AS`MapletPattern(dp,rp,cid)   -> mk_AS`Maplet(GetExpr(dp), GetExpr(rp), cid),
       mk_AS`RecordPattern(nm,p_l,cid)  -> let e_l = [ GetExpr(p_l(i)) | i in set inds p_l ]
                                           in mk_AS`RecordConstructorExpr(nm, e_l, cid),
       mk_AS`TuplePattern(p_l,cid)      -> let e_l = [ GetExpr(p_l(i)) | i in set inds p_l ]
@@ -802,21 +797,26 @@ functions
     mk_AS`SeqConcPattern(lp,rp,cid)  -> mk_AS`SeqConcPattern(DoCarePattern(lp, NewBase(id_base, 1)),
                                                              DoCarePattern(rp, NewBase(id_base, 2)),
                                                              cid),
-    mk_AS`MapEnumPattern(mls,cid)    -> let e_l = [ DoCarePattern(mls(i), NewBase(id_base, i)) | i in set inds mls ]
-                                        in mk_AS`MapEnumPattern(e_l,cid),
+    mk_AS`MapEnumPattern(mls,cid)    ->
+       let e_l = [ let mk_AS`MapletPattern(dp,rp,mcid) = mls(i)
+                   in mk_AS`MapletPattern(DoCarePattern(dp, NewBase(id_base, 1)),
+                                          DoCarePattern(rp, NewBase(id_base, 2)),
+                                          mcid)
+                   | i in set inds mls ]
+       in mk_AS`MapEnumPattern(e_l,cid),
     mk_AS`MapMergePattern(lp,rp,cid) -> mk_AS`MapMergePattern(DoCarePattern(lp, NewBase(id_base, 1)),
                                                               DoCarePattern(rp, NewBase(id_base, 2)),
                                                               cid),
-    mk_AS`MapletPattern(dp,rp,cid)   -> mk_AS`MapletPattern(DoCarePattern(dp, NewBase(id_base, 1)),
-                                                            DoCarePattern(rp, NewBase(id_base, 2)),
-                                                            cid),
     mk_AS`RecordPattern(nm,p_l,cid)  -> let e_l = [ DoCarePattern(p_l(i), NewBase(id_base, i)) | i in set inds p_l ]
                                         in mk_AS`RecordPattern(nm, e_l, cid),
     mk_AS`TuplePattern(p_l,cid)      -> let e_l = [ DoCarePattern(p_l(i), NewBase(id_base, i)) | i in set inds p_l ]
                                         in mk_AS`TuplePattern(e_l, cid),
 #ifdef VDMPP
-    mk_AS`ObjectPattern(cls,p_l,cid) -> let e_l = [ DoCarePattern(p_l(i), NewBase(id_base, i)) | i in set inds p_l ]
-                                        in mk_AS`ObjectPattern(cls, e_l, cid),
+    mk_AS`ObjectPattern(cls,p_l,cid) ->
+       let e_l = [ let mk_AS`FieldPattern(nm,p,fcid) = p_l(i)
+                   in mk_AS`FieldPattern(nm, DoCarePattern(p, NewBase(id_base, 1)), fcid)
+                   | i in set inds p_l ]
+       in mk_AS`ObjectPattern(cls, e_l, cid),
     mk_AS`FieldPattern(nm,p,cid)     -> mk_AS`FieldPattern(nm, DoCarePattern(p, NewBase(id_base, 1)), cid),
 #endif VDMPP
     mk_AS`SetBind(pat,Set,cid)       -> let new_pat = DoCarePattern(pat, NewBase(id_base, 1))
