@@ -1599,95 +1599,98 @@ CGSeqComprehensionSetBind(rc1, vt) ==
                     in CGAUX`CleanFlatType(type);
         mk_(rb_expr, rb_stmt) = CGExprExcl(expr, "resBind_s", resSType)
     in
-      (dcl predType : [REP`TypeRep] := nil,
-           sort_f : CPP`Identifier,
-           rb : seq of CPP`Stmt := [],
-           resS_v : CPP`Expr := rb_expr;
+     (dcl predType : [REP`TypeRep] := nil,
+          rb : seq of CPP`Stmt := [],
+          resS_v : CPP`Expr := rb_expr;
 
-       if pred <> nil
-       then predType := CGAUX`FindType( pred );
+      if pred <> nil
+      then predType := CGAUX`FindType( pred );
+
+      rb := rb ^ rb_stmt;
+      if not is_CPP`Identifier(rb_expr)
+      then
+       (resS_v := BC`GiveName( "resBind_s" );
+        rb := rb ^ DS`GenDeclInit(resSType, resS_v, rb_expr);
+       );
+
+      CGAUX`PushEnv();
+      def - = CGAUX`InsertNamesinEnv(dom pid_m) in skip;
+      def mk_(elemExpr, e_stmt) = CGExprExcl(elem, "reselem", nil);
+          impappend = DS`GenImpAppend(resL_v, elemExpr);
+          elemStmt = e_stmt ^ [impappend];
+          decls = DeclPatVars( pid_m );
+      in
+       (dcl succbody : seq of CPP`Stmt;
+        if pred = mk_AS`BoolLit(true, CI`NilContextId) or pred = nil
+        then succbody := elemStmt
+        else
+          def mk_(pred_v, pred_stmt) = CGExprExcl(pred, "pred", nil);
+          in
+           (dcl cond : CPP`Expr;
+#ifdef VDMPP
+            if CPP`isJAVA()
+            then
+              cond := DS`GenGetValue(pred_v, mk_REP`BooleanTypeRep())
+            else
+#endif VDMPP
+              cond := DS`GenGetValue(pred_v, predType);
+            succbody := pred_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(elemStmt), nil)]
+           );
+        def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, mk_CGMAIN`VT(e_v, eType), {},
+                                                     succ_v, pid_m, succbody, false);
+            pm' = (if not Is_excl
+                   then [BC`GenDecl( DS`GenSmallBoolType(), succ_v,
+                                     BC`GenAsgnInit( BC`GenBoolLit(false) ) )]
+                   else []) ^ pm;
+        in
+         (dcl cast : CPP`Expr,
+              rb_inner : seq of CPP`Stmt := [],
+              todo : seq of CPP`Stmt := [],
+              sort_f : CPP`Expr;
 
 #ifdef VDMPP
-       if CPP`isJAVA()
-       then sort_f := BC`GenIdentifier( "UTIL.Sort" )
-       else
+          if CPP`isJAVA()
+          then
+            if CGAUX`IsSubType(bindLType, rType)
+            then cast := resL_v
+            else cast := DS`GenExplicitCast(rType, resL_v, bindLType)
+          else
 #endif VDMPP
-         sort_f := BC`GenIdentifier( "CGUTIL::Sort" );
+            cast := resL_v;
 
-       rb := rb ^ rb_stmt;
-       if not is_CPP`Identifier(rb_expr)
-       then
-         (resS_v := BC`GiveName( "resBind_s" );
-          rb := rb ^ DS`GenDecl(resSType, resS_v, BC`GenAsgnInit(rb_expr)););
-       rb := rb ^ DS`GenDeclEmptySeq(resL_v);
-
-       CGAUX`PushEnv();
-       def - = CGAUX`InsertNamesinEnv(dom pid_m) in skip;
-       def mk_(elemExpr, e_stmt) = CGExprExcl(elem, "reselem", nil);
-           impappend = DS`GenImpAppend(resL_v, elemExpr);
-           elemStmt = e_stmt ^ [impappend];
-           decls = DeclPatVars( pid_m );
-       in
-        (dcl succbody : seq of CPP`Stmt;
-         if pred = mk_AS`BoolLit(true, CI`NilContextId) or pred = nil
-         then succbody := elemStmt
-         else
-           def mk_(pred_v, pred_stmt) = CGExprExcl(pred, "pred", nil);
-           in
-            (dcl cond : CPP`Expr;
-#ifdef VDMPP
-             if CPP`isJAVA()
-             then
-               cond := DS`GenGetValue(pred_v, mk_REP`BooleanTypeRep())
-             else
-#endif VDMPP
-               cond := DS`GenGetValue(pred_v, predType);
-             succbody := pred_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(elemStmt), nil)]);
-         def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, mk_CGMAIN`VT(e_v, eType), {},
-                                                      succ_v, pid_m, succbody, false);
-             pm' = (if not Is_excl
-                    then [BC`GenDecl( DS`GenSmallBoolType(), succ_v,
-                                      BC`GenAsgnInit( BC`GenBoolLit(false) ) )]
-                    else []) ^ pm;
-       in
-        (dcl cast : CPP`Expr,
-             rb_inner : seq of CPP`Stmt := [],
-             todo : seq of CPP`Stmt := [];
-
-#ifdef VDMPP
-         if CPP`isJAVA()
-         then
-           if CGAUX`IsSubType(bindLType, rType)
-           then cast := resL_v
-           else cast := DS`GenExplicitCast(rType, resL_v, bindLType)
-         else
-#endif VDMPP
-           cast := resL_v;
-
-         rb_inner := rb_inner ^ DS`GenDecl (bindLType, bindL_v,
-                                   BC`GenAsgnInit(BC`GenFctCall (sort_f, [resS_v])));
-         rb_inner := rb_inner ^ decls;
-        
-         if not CGAUX`IsIntType( eType )
-         then
-           todo := [ BC`GenIfStmt( BC`GenNot(DS`GenIsInt(e_v)),
-                  BC`GenBlock([CGAUX`RunTime("The binding set must only contain integers")]),
+          if not CGAUX`IsIntType( eType )
+          then
+            todo := [ BC`GenIfStmt( BC`GenNot(DS`GenIsInt(e_v)),
+                   BC`GenBlock([CGAUX`RunTime("The binding set must only contain integers")]),
                                    nil ) ];
-         todo := todo ^ pm';
+          todo := todo ^ pm';
 
-         rb_inner := rb_inner ^ DS`GenIterSeq( mk_CGMAIN`VT( bindL_v,bindLType ),
-                                               nil,
-                                               mk_CGMAIN`VT( e_v, eType ),
-                                               todo);
+#ifdef VDMPP
+          if CPP`isJAVA()
+          then sort_f := BC`GenFctCall(BC`GenIdentifier( "UTIL.Sort" ), [resS_v])
+          else
+#endif VDMPP
+            sort_f := BC`GenFctCall(BC`GenIdentifier( "CGUTIL::Sort" ), [resS_v]);
 
-         rb := rb ^ [ BC`GenIfStmt(BC`GenNot(DS`GenSetIsEmpty(resS_v)),
-                                   BC`GenBlock(rb_inner), nil) ];
-         rb := rb ^ [ BC`GenAsgnStmt( resVar_v, cast ) ];
+          rb_inner := rb_inner ^ DS`GenDeclInit (bindLType, bindL_v, sort_f);
+          rb_inner := rb_inner ^ decls;
+          rb_inner := rb_inner ^ DS`GenIterSeq( mk_CGMAIN`VT( bindL_v,bindLType ),
+                                                nil,
+                                                mk_CGMAIN`VT( e_v, eType ),
+                                                todo);
 
-         FD`PopEnv();
-         CGAUX`PopEnv();
-         VD`DeleteLoc();
-         return [BC`GenBlock(rb)])))
+          rb := rb ^ DS`GenDeclEmptySeq(resL_v);
+          rb := rb ^ [ BC`GenIfStmt(BC`GenNot(DS`GenSetIsEmpty(resS_v)),
+                                    BC`GenBlock(rb_inner), nil) ];
+          rb := rb ^ [ BC`GenAsgnStmt( resVar_v, cast ) ];
+
+          FD`PopEnv();
+          CGAUX`PopEnv();
+          VD`DeleteLoc();
+          return [BC`GenBlock(rb)];
+         )
+       )
+     )
    );
 
 CGSeqComprehensionSeqBind: AS`SeqComprehensionExpr * CGMAIN`VT ==> seq of CPP`Stmt
@@ -1726,8 +1729,7 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
        if not is_CPP`Identifier(rb_expr)
        then
          (resS_v := BC`GiveName( "resBind_s" );
-          rb := rb ^ DS`GenDecl(resSType, resS_v, BC`GenAsgnInit(rb_expr)););
-       rb := rb ^ DS`GenDeclEmptySeq(resL_v);
+          rb := rb ^ DS`GenDeclInit(resSType, resS_v, rb_expr););
 
        CGAUX`PushEnv();
        def - = CGAUX`InsertNamesinEnv(dom pid_m) in skip;
@@ -1772,7 +1774,7 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
 #endif VDMPP
            cast := resL_v;
 
-         rb_inner := rb_inner ^ DS`GenDecl (bindLType, bindL_v, BC`GenAsgnInit(resS_v));
+         rb_inner := rb_inner ^ DS`GenDeclInit (bindLType, bindL_v, resS_v);
         
          todo := todo ^ MergeStmts( decls, pm');
 
@@ -1781,6 +1783,7 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
                                                mk_CGMAIN`VT( e_v, eType ),
                                                todo);
 
+         rb := rb ^ DS`GenDeclEmptySeq(resL_v);
          rb := rb ^ [ BC`GenIfStmt(BC`GenNot(DS`GenSeqIsEmpty(resS_v)),
                                    BC`GenBlock(rb_inner), nil) ];
          rb := rb ^ [ BC`GenAsgnStmt( resVar_v, cast ) ];
