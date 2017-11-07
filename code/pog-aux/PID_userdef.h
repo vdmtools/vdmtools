@@ -30,14 +30,12 @@ private:
   static SET<TYPE_AS_PatternName> SetUnionPattern2Pids (const TYPE_AS_SetUnionPattern & pat);
   static SET<TYPE_AS_PatternName> SeqEnumPattern2Pids (const TYPE_AS_SeqEnumPattern & pat);
   static SET<TYPE_AS_PatternName> SeqConcPattern2Pids (const TYPE_AS_SeqConcPattern & pat);
-  static SET<TYPE_AS_PatternName> MapletPattern2Pids (const TYPE_AS_MapletPattern & pat);
   static SET<TYPE_AS_PatternName> MapEnumPattern2Pids (const TYPE_AS_MapEnumPattern & pat);
   static SET<TYPE_AS_PatternName> MapMergePattern2Pids (const TYPE_AS_MapMergePattern & pat);
   static SET<TYPE_AS_PatternName> RecordPattern2Pids (const TYPE_AS_RecordPattern & pat);
   static SET<TYPE_AS_PatternName> TuplePattern2Pids (const TYPE_AS_TuplePattern & pat);
 #ifdef VDMPP
   static SET<TYPE_AS_PatternName> ObjectPattern2Pids (const TYPE_AS_ObjectPattern & pat);
-  static SET<TYPE_AS_PatternName> FieldPattern2Pids (const TYPE_AS_FieldPattern & pat);
 #endif // VDMPP
 
   static bool NameInPatternBind (const TYPE_AS_Name & nm, const TYPE_AS_PatternBind & patbind);

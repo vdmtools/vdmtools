@@ -211,16 +211,13 @@ TYPE_STKM_SubProgram StackCompiler::PStack2I(const TYPE_AS_Pattern & pat)
       TYPE_STKM_SubProgram sp;
       const SEQ<TYPE_AS_FieldPattern> & fields (pat.GetSequence(pos_AS_ObjectPattern_fields));
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-        sp.ImpConc(P2I(fields[idx]));
+      for (size_t idx = 1; idx <= len_fields; idx++) {
+        const TYPE_AS_FieldPattern & fp (fields[idx]);
+        sp.ImpConc(P2I(fp.GetRecord(pos_AS_FieldPattern_pat)))
+          .ImpAppend(TYPE_INSTRTP_FIELDPAT().Init(fp.GetRecord(pos_AS_FieldPattern_nm)));
+      }
       sp.ImpAppend(TYPE_INSTRTP_OBJECTPAT().Init(pat.GetRecord(pos_AS_ObjectPattern_cls),
                                                  Int(len_fields)));
-      return sp;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      TYPE_STKM_SubProgram sp;
-      sp.ImpConc(P2I(pat.GetRecord(pos_AS_FieldPattern_pat)))
-        .ImpAppend(TYPE_INSTRTP_FIELDPAT().Init(pat.GetRecord(pos_AS_FieldPattern_nm)));
       return sp;
     }
 #endif // VDMPP

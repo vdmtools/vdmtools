@@ -49,33 +49,20 @@ Tuple PUREPAT::Pattern2PurePatternSeq (const SEQ<TYPE_AS_Pattern> & pats, const 
 Tuple PUREPAT::Pattern2PurePattern (const TYPE_AS_Pattern & pat, const SET<TYPE_AS_Name> & ids)
 {
   switch(pat.GetTag()) {
-    case TAG_TYPE_AS_PatternName:
-      return PatternName2PurePattern(pat, ids);
-    case TAG_TYPE_AS_MatchVal:
-      return MatchVal2PurePattern(pat, ids);
-    case TAG_TYPE_AS_SetEnumPattern:
-      return SetEnumPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_SetUnionPattern:
-      return SetUnionPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_SeqEnumPattern:
-      return SeqEnumPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_SeqConcPattern:
-      return SeqConcPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_MapletPattern:
-      return MapletPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_MapEnumPattern:
-      return MapEnumPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_MapMergePattern:
-      return MapMergePattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_RecordPattern:
-      return RecordPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_TuplePattern:
-      return TuplePattern2PurePattern(pat, ids);
+    case TAG_TYPE_AS_PatternName:     { return PatternName2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_MatchVal:        { return MatchVal2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_SetEnumPattern:  { return SetEnumPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_SetUnionPattern: { return SetUnionPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_SeqEnumPattern:  { return SeqEnumPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_SeqConcPattern:  { return SeqConcPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_MapletPattern:   { return MapletPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_MapEnumPattern:  { return MapEnumPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_MapMergePattern: { return MapMergePattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_RecordPattern:   { return RecordPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_TuplePattern:    { return TuplePattern2PurePattern(pat, ids); }
 #ifdef VDMPP
-    case TAG_TYPE_AS_ObjectPattern:
-      return ObjectPattern2PurePattern(pat, ids);
-    case TAG_TYPE_AS_FieldPattern:
-      return FieldPattern2PurePattern(pat, ids);
+    case TAG_TYPE_AS_ObjectPattern:   { return ObjectPattern2PurePattern(pat, ids); }
+    case TAG_TYPE_AS_FieldPattern:    { return FieldPattern2PurePattern(pat, ids); }
 #endif // VDMPP
     default: {
       wcout << L"unknown pattern" << endl;

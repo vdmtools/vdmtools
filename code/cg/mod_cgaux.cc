@@ -3236,23 +3236,19 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       scp.SetField(pos_AS_SeqConcPattern_rp, QuotePMExprWithClNm(rp, clnm, lb));
       return scp;
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      const TYPE_AS_Pattern & dp (pat.GetRecord(pos_AS_MapletPattern_dp));
-      const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_MapletPattern_rp));
-
-      TYPE_AS_MapletPattern mlp (pat);
-      mlp.SetField(pos_AS_MapletPattern_dp, QuotePMExprWithClNm(dp, clnm, lb));
-      mlp.SetField(pos_AS_MapletPattern_rp, QuotePMExprWithClNm(rp, clnm, lb));
-      return mlp;
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_AS_MapletPattern> new_mls;
       size_t len_mls = mls.Length();
       for (size_t i = 1; i <= len_mls; i++) {
-        new_mls.ImpAppend(QuotePMExprWithClNm(mls[i], clnm, lb));
+        const TYPE_AS_MapletPattern & mp (mls[i]);
+        const TYPE_AS_Pattern & dp (mp.GetRecord(pos_AS_MapletPattern_dp));
+        const TYPE_AS_Pattern & rp (mp.GetRecord(pos_AS_MapletPattern_rp));
+        TYPE_AS_MapletPattern new_mp(mp);
+        new_mp.SetField(pos_AS_MapletPattern_dp, QuotePMExprWithClNm(dp, clnm, lb));
+        new_mp.SetField(pos_AS_MapletPattern_rp, QuotePMExprWithClNm(rp, clnm, lb));
+        new_mls.ImpAppend(new_mp);
       }
-
       TYPE_AS_MapEnumPattern mep (pat);
       mep.SetField(pos_AS_MapEnumPattern_mls, new_mls);
       return mep;
@@ -3298,17 +3294,15 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SEQ<TYPE_AS_FieldPattern> newfields;
       size_t len_fields = fields.Length();
       for (size_t i = 1; i<= len_fields; i++) {
-        newfields.ImpAppend(QuotePMExprWithClNm(fields[i], clnm, lb));
+        const TYPE_AS_FieldPattern & fp (fields[i]);
+        const TYPE_AS_Pattern & p (fp.GetRecord(pos_AS_FieldPattern_pat));
+        TYPE_AS_FieldPattern new_fp (fp);
+        new_fp.SetField(pos_AS_FieldPattern_pat, QuotePMExprWithClNm(p, clnm, lb));
+        newfields.ImpAppend(new_fp);
       }
       TYPE_AS_ObjectPattern rp (pat);
       rp.SetField(pos_AS_ObjectPattern_fields, newfields);
       return rp;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      const TYPE_AS_Pattern & fp (pat.GetRecord(pos_AS_FieldPattern_pat));
-      TYPE_AS_FieldPattern flp (pat);
-      flp.SetField(pos_AS_FieldPattern_pat, QuotePMExprWithClNm(fp, clnm, lb));
-      return flp;
     }
 #endif // VDMPP
     case TAG_TYPE_AS_BracketedExpr: {
@@ -4028,21 +4022,19 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       scp.SetField(pos_AS_SeqConcPattern_rp, QuotePMExprWithTemp(rp, clnm, lb));
       return scp;
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      const TYPE_AS_Pattern & dp (pat.GetRecord(pos_AS_MapletPattern_dp));
-      const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_MapletPattern_rp));
-      TYPE_AS_MapletPattern mlp (pat);
-      mlp.SetField(pos_AS_MapletPattern_dp, QuotePMExprWithTemp(dp, clnm, lb));
-      mlp.SetField(pos_AS_MapletPattern_rp, QuotePMExprWithTemp(rp, clnm, lb));
-      return mlp;
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_AS_MapletPattern> new_mls;
       size_t len_mls = mls.Length();
-      for (size_t idx = 1; idx <= len_mls; idx++)
-        new_mls.ImpAppend(QuotePMExprWithTemp(mls[idx], clnm, lb));
-
+      for (size_t idx = 1; idx <= len_mls; idx++) {
+        const TYPE_AS_MapletPattern & mp (mls[idx]);
+        const TYPE_AS_Pattern & dp (mp.GetRecord(pos_AS_MapletPattern_dp));
+        const TYPE_AS_Pattern & rp (mp.GetRecord(pos_AS_MapletPattern_rp));
+        TYPE_AS_MapletPattern new_mp (mp);
+        new_mp.SetField(pos_AS_MapletPattern_dp, QuotePMExprWithTemp(dp, clnm, lb));
+        new_mp.SetField(pos_AS_MapletPattern_rp, QuotePMExprWithTemp(rp, clnm, lb));
+        new_mls.ImpAppend(new_mp);
+      }
       TYPE_AS_MapEnumPattern mep(pat);
       mep.SetField(pos_AS_MapEnumPattern_mls, new_mls);
       return mep;
@@ -4084,18 +4076,16 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_FieldPattern> & fields (pat.GetSequence(pos_AS_ObjectPattern_fields));
       SEQ<TYPE_AS_FieldPattern> newfields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-        newfields.ImpAppend(QuotePMExprWithTemp(fields[idx], clnm, lb));
-
+      for (size_t idx = 1; idx <= len_fields; idx++) {
+        const TYPE_AS_FieldPattern & fp (fields[idx]);
+        const TYPE_AS_Pattern & p (fp.GetRecord(pos_AS_FieldPattern_pat));
+        TYPE_AS_FieldPattern new_fp (fp);
+        new_fp.SetField(pos_AS_FieldPattern_pat, QuotePMExprWithTemp(p, clnm, lb));
+        newfields.ImpAppend(new_fp);
+      }
       TYPE_AS_ObjectPattern rp (pat);
       rp.SetField(pos_AS_RecordPattern_fields, newfields);
       return rp;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      const TYPE_AS_Pattern & fp (pat.GetRecord(pos_AS_FieldPattern_pat));
-      TYPE_AS_FieldPattern flp (pat);
-      flp.SetField(pos_AS_FieldPattern_pat, QuotePMExprWithTemp(fp, clnm, lb));
-      return flp;
     }
 #endif // VDMPP
     case TAG_TYPE_AS_BracketedExpr: {

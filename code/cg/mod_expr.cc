@@ -866,8 +866,12 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_MapletPattern> & pat_l (pat.GetSequence (pos_AS_MapEnumPattern_mls));
       Map pid_m; // map AS`Name to set of REP`TypeRep
       size_t len_pat_l = pat_l.Length();
-      for (size_t idx = 1; idx <= len_pat_l; idx++)
-        pid_m = MergePidM(FindPatternId (pat_l[idx]), pid_m);
+      for (size_t idx = 1; idx <= len_pat_l; idx++) {
+        const TYPE_AS_MapletPattern & mp (pat_l[idx]);
+        Map tmp_pid_m (FindPatternId(mp.GetRecord(pos_AS_MapletPattern_dp)));
+        tmp_pid_m.ImpOverride(FindPatternId(mp.GetRecord(pos_AS_MapletPattern_rp)));
+        pid_m = MergePidM(tmp_pid_m, pid_m);
+      }
       return pid_m; 
       break;
     }
@@ -907,24 +911,15 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
       return pid_m; 
       break;
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      Map pid_m (FindPatternId(pat.GetRecord(pos_AS_MapletPattern_dp)));
-      pid_m.ImpOverride(FindPatternId(pat.GetRecord(pos_AS_MapletPattern_rp)));
-      return pid_m; 
-      break;
-    }
 #ifdef VDMPP
     case TAG_TYPE_AS_ObjectPattern: {
       const SEQ<TYPE_AS_FieldPattern> & pat_l (pat.GetSequence(pos_AS_ObjectPattern_fields));
       Map pid_m; // map AS`Name to set of REP`TypeRep
       size_t len_pat_l = pat_l.Length();
-      for (size_t idx = 1; idx <= len_pat_l; idx++)
-        pid_m = MergePidM(FindPatternId (pat_l[idx]), pid_m);
+      for (size_t idx = 1; idx <= len_pat_l; idx++) {
+        pid_m = MergePidM(FindPatternId (pat_l[idx].GetRecord(pos_AS_FieldPattern_pat)), pid_m);
+      }
       return pid_m; 
-      break;
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      return FindPatternId(pat.GetRecord(pos_AS_FieldPattern_pat));
       break;
     }
 #endif // VDMPP

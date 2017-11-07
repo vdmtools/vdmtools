@@ -122,7 +122,6 @@ operations
       mk_AS`SetUnionPattern(lp,rp,-)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SETUNION()],
       mk_AS`SeqConcPattern(lp,rp,-)     -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`SEQCONC()],
       mk_AS`MapMergePattern(lp,rp,-)    -> return P2I(lp) ^ P2I(rp) ^ [mk_INSTRTP`MAPMERGE()],
---      mk_AS`MapletPattern(dp,rp,-)      -> return P2I(dp) ^ P2I(rp) ^ [mk_INSTRTP`MAPLET()],
       mk_AS`TuplePattern(fields,-)      -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
                                                     [mk_INSTRTP`TUPPATCONS(len fields)],
       mk_AS`RecordPattern(nm,fields,-)  -> return conc [ P2I(fields(i)) | i in set inds fields ] ^
@@ -132,7 +131,6 @@ operations
             return conc [let mk_AS`FieldPattern(nm,fp,-) = fields(i)
                          in P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm)] | i in set inds fields ] ^
                    [mk_INSTRTP`OBJECTPAT(cls, len fields)],
---      mk_AS`FieldPattern(nm,fp,-)       -> return P2I(fp) ^ [mk_INSTRTP`FIELDPAT(nm)],
 #endif VDMPP
       others -> error
     end;

@@ -63,24 +63,19 @@ operations
         mk_AS`SeqEnumPattern (pats,-),
         mk_AS`RecordPattern (-,pats,-),
         mk_AS`TuplePattern (pats,-)         -> pog_PatternSequence(pats,contxt),
-        mk_AS`MapEnumPattern (pats,-)       -> pog_PatternSequence(pats,contxt),
-        mk_AS`MapletPattern(dp, rp, -)      -> pog_PatternSequence([dp,rp],contxt),
+        mk_AS`MapEnumPattern (pats,-) 
+          -> pog_PatternSequence( conc [ let mk_AS`MapletPattern(dp, rp, -) = pats(i)
+                                         in [ dp, rp ] | i in set inds pats ],contxt),
 #ifdef VDMPP
-        mk_AS`ObjectPattern (-,fields,-)    -> pog_PatternSequence(fields,contxt),
-        mk_AS`FieldPattern(-, p, -)         -> pog_PatternSequence([p],contxt),
+        mk_AS`ObjectPattern (-,fields,-)
+          -> pog_PatternSequence([ let mk_AS`FieldPattern(-, p, -) = fields(i)
+                                   in p | i in set inds fields ] ,contxt),
 #endif VDMPP
         others -> error
       end;
 
   pog_MatchVal: AS`MatchVal * POGTP`Context ==> POG
   pog_MatchVal (mk_AS`MatchVal(val,-),contxt) ==
-    --let pog_expr = POG_EXPR`pog_Expr(val,contxt),
-    --    -----------------------------------------
-    --    po       = pog_expr.po,
-    --    fv       = pog_expr.fv,
-    --    pid      = {}
-    --in
-    --    mk_POG(po,fv,pid);
     def mk_POG_EXPR`POG(po,fv) = POG_EXPR`pog_Expr(val,contxt)
     in return mk_POG(po,fv,{});
 

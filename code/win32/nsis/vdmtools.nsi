@@ -71,6 +71,10 @@ LicenseLangString license ${LANG_ENGLISH} "gplv3.rtf"
 Section
   SectionIn RO
 
+!ifdef WIN64
+  SetRegView 64
+!endif
+
   SetShellVarContext all
 
   SetOutPath $INSTDIR
@@ -154,6 +158,11 @@ Section
 SectionEnd
 
 Section Uninstall
+
+!ifdef WIN64
+  SetRegView 64
+!endif
+
   DeleteRegKey HKLM "${UNINSTALL_KEY}\${PACKAGE}"
   DeleteRegKey HKLM "SOFTWARE\${PACKAGE}"
 

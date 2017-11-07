@@ -61,33 +61,18 @@ SEQ<TYPE_AS_MultBind> PID::Pattern2BindList (const TYPE_AS_Pattern & pat)
 SET<TYPE_AS_PatternName> PID::Pattern2Pids (const TYPE_AS_Pattern & pat)
 {
   switch(pat.GetTag()) {
-    case TAG_TYPE_AS_PatternName:
-      return PatternName2Pids(pat);
-    case TAG_TYPE_AS_MatchVal:
-      return MatchVal2Pids(pat);
-    case TAG_TYPE_AS_SetEnumPattern:
-      return SetEnumPattern2Pids(pat);
-    case TAG_TYPE_AS_SetUnionPattern:
-      return SetUnionPattern2Pids(pat);
-    case TAG_TYPE_AS_SeqEnumPattern:
-      return SeqEnumPattern2Pids(pat);
-    case TAG_TYPE_AS_SeqConcPattern:
-      return SeqConcPattern2Pids(pat);
-    case TAG_TYPE_AS_MapletPattern:
-      return MapletPattern2Pids(pat);
-    case TAG_TYPE_AS_MapEnumPattern:
-      return MapEnumPattern2Pids(pat);
-    case TAG_TYPE_AS_MapMergePattern:
-      return MapMergePattern2Pids(pat);
-    case TAG_TYPE_AS_RecordPattern:
-      return RecordPattern2Pids(pat);
-    case TAG_TYPE_AS_TuplePattern:
-      return TuplePattern2Pids(pat);
+    case TAG_TYPE_AS_PatternName:     { return PatternName2Pids(pat); }
+    case TAG_TYPE_AS_MatchVal:        { return MatchVal2Pids(pat); }
+    case TAG_TYPE_AS_SetEnumPattern:  { return SetEnumPattern2Pids(pat); }
+    case TAG_TYPE_AS_SetUnionPattern: { return SetUnionPattern2Pids(pat); }
+    case TAG_TYPE_AS_SeqEnumPattern:  { return SeqEnumPattern2Pids(pat); }
+    case TAG_TYPE_AS_SeqConcPattern:  { return SeqConcPattern2Pids(pat); }
+    case TAG_TYPE_AS_MapEnumPattern:  { return MapEnumPattern2Pids(pat); }
+    case TAG_TYPE_AS_MapMergePattern: { return MapMergePattern2Pids(pat); }
+    case TAG_TYPE_AS_RecordPattern:   { return RecordPattern2Pids(pat); }
+    case TAG_TYPE_AS_TuplePattern:    { return TuplePattern2Pids(pat); }
 #ifdef VDMPP
-    case TAG_TYPE_AS_ObjectPattern:
-      return ObjectPattern2Pids(pat);
-    case TAG_TYPE_AS_FieldPattern:
-      return FieldPattern2Pids(pat);
+    case TAG_TYPE_AS_ObjectPattern:   { return ObjectPattern2Pids(pat); }
 #endif // VDMPP
     default: {
       wcout << L"pattern unknown" << endl;
@@ -167,17 +152,6 @@ SET<TYPE_AS_PatternName> PID::SeqConcPattern2Pids (const TYPE_AS_SeqConcPattern 
   return p_s;
 }
 
-// MapletPattern2Pids
-// pat : AS`MapletPattern
-// -> set of AS`PatternName
-SET<TYPE_AS_PatternName> PID::MapletPattern2Pids (const TYPE_AS_MapletPattern & pat)
-{
-  SET<TYPE_AS_PatternName> p_s;
-  p_s.ImpUnion(Pattern2Pids(pat.GetRecord(pos_AS_MapletPattern_dp)));
-  p_s.ImpUnion(Pattern2Pids(pat.GetRecord(pos_AS_MapletPattern_rp)));
-  return p_s;
-}
-
 // MapEnumPattern2Pids
 // pat : AS`MapEnumPattern
 // -> set of AS`PatternName
@@ -186,9 +160,10 @@ SET<TYPE_AS_PatternName> PID::MapEnumPattern2Pids (const TYPE_AS_MapEnumPattern 
   const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
   SET<TYPE_AS_PatternName> p_s;
   int len_mls = mls.Length();
-  for (int index = 1; index <= len_mls; index++)
-  {
-    p_s.ImpUnion(Pattern2Pids(mls[index]));
+  for (int index = 1; index <= len_mls; index++) {
+    const TYPE_AS_MapletPattern & mp(mls[index]);
+    p_s.ImpUnion(Pattern2Pids(mp.GetRecord(pos_AS_MapletPattern_dp)));
+    p_s.ImpUnion(Pattern2Pids(mp.GetRecord(pos_AS_MapletPattern_rp)));
   }
   return p_s;
 }
@@ -212,8 +187,7 @@ SET<TYPE_AS_PatternName> PID::RecordPattern2Pids (const TYPE_AS_RecordPattern & 
   const SEQ<TYPE_AS_Pattern> & els (pat.GetSequence(pos_AS_RecordPattern_fields));
   SET<TYPE_AS_PatternName> p_s;
   int len_els = els.Length();
-  for (int index = 1; index <= len_els; index++)
-  {
+  for (int index = 1; index <= len_els; index++) {
     p_s.ImpUnion(Pattern2Pids(els[index]));
   }
   return p_s;
@@ -227,8 +201,7 @@ SET<TYPE_AS_PatternName> PID::TuplePattern2Pids (const TYPE_AS_TuplePattern & pa
   const SEQ<TYPE_AS_Pattern> & els (pat.GetSequence(pos_AS_TuplePattern_fields));
   SET<TYPE_AS_PatternName> p_s;
   size_t len_els = els.Length();
-  for (size_t index = 1; index <= len_els; index++)
-  {
+  for (size_t index = 1; index <= len_els; index++) {
     p_s.ImpUnion(Pattern2Pids(els[index]));
   }
   return p_s;
@@ -243,19 +216,10 @@ SET<TYPE_AS_PatternName> PID::ObjectPattern2Pids (const TYPE_AS_ObjectPattern & 
   const SEQ<TYPE_AS_FieldPattern> & fields (pat.GetSequence(pos_AS_ObjectPattern_fields));
   SET<TYPE_AS_PatternName> p_s;
   size_t len_fields = fields.Length();
-  for (size_t index = 1; index <= len_fields; index++)
-  {
-    p_s.ImpUnion(Pattern2Pids(fields[index]));
+  for (size_t index = 1; index <= len_fields; index++) {
+    p_s.ImpUnion(Pattern2Pids(fields[index].GetRecord(pos_AS_FieldPattern_pat)));
   }
   return p_s;
-}
-
-// FieldPattern2Pids
-// pat : AS`FieldPattern
-// -> set of AS`PatternName
-SET<TYPE_AS_PatternName> PID::FieldPattern2Pids (const TYPE_AS_FieldPattern & pat)
-{
-  return Pattern2Pids(pat.GetRecord(pos_AS_FieldPattern_pat));
 }
 #endif // VDMPP
 
@@ -306,14 +270,16 @@ bool PID::NameInPattern (const TYPE_AS_Name & nm, const TYPE_AS_Pattern & pat)
       p_l.ImpAppend(pat.GetRecord(pos_AS_SeqConcPattern_rp));
       return NameInPatternSequence(nm, p_l);
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      SEQ<TYPE_AS_Pattern> p_l;
-      p_l.ImpAppend(pat.GetRecord(pos_AS_MapletPattern_dp));
-      p_l.ImpAppend(pat.GetRecord(pos_AS_MapletPattern_rp));
-      return NameInPatternSequence(nm, p_l);
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
-      return NameInPatternSequence(nm, pat.GetSequence(pos_AS_MapEnumPattern_mls));
+      const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
+      size_t len_mls = mls.Length();
+      SEQ<TYPE_AS_Pattern> p_l;
+      for (size_t i = 1; i <= len_mls; i++) {
+        const TYPE_AS_MapletPattern & mp (mls[i]);
+        p_l.ImpAppend(mp.GetRecord(pos_AS_MapletPattern_dp));
+        p_l.ImpAppend(mp.GetRecord(pos_AS_MapletPattern_rp));
+      }
+      return NameInPatternSequence(nm, p_l);
     }
     case TAG_TYPE_AS_MapMergePattern: {
       SEQ<TYPE_AS_Pattern> p_l;
@@ -329,11 +295,12 @@ bool PID::NameInPattern (const TYPE_AS_Name & nm, const TYPE_AS_Pattern & pat)
     }
 #ifdef VDMPP
     case TAG_TYPE_AS_ObjectPattern: {
-      return NameInPatternSequence(nm, pat.GetSequence(pos_AS_ObjectPattern_fields));
-    }
-    case TAG_TYPE_AS_FieldPattern: {
+      const SEQ<TYPE_AS_FieldPattern> & fields (pat.GetSequence(pos_AS_ObjectPattern_fields));
+      size_t len_fields = fields.Length();
       SEQ<TYPE_AS_Pattern> p_l;
-      p_l.ImpAppend(pat.GetRecord(pos_AS_FieldPattern_pat));
+      for (size_t i = 1; i <= len_fields; i++) {
+        p_l.ImpAppend(fields[i].GetRecord(pos_AS_FieldPattern_pat));
+      }
       return NameInPatternSequence(nm, p_l);
     }
 #endif // VDMPP

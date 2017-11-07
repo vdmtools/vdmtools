@@ -924,8 +924,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppPattern(const TYPE_AS_Pattern & pat, const SE
       const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_SeqEnumPattern_els));
       SET<TYPE_AS_Name> res_set;
       size_t len = elems.Length();
-      for (size_t i = 1; i <= len; i++ )
+      for (size_t i = 1; i <= len; i++ ) {
         res_set.ImpUnion (getFuncAppPattern(elems[i], sn));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_SeqConcPattern: {
@@ -933,17 +934,15 @@ SET<TYPE_AS_Name> SSREC::getFuncAppPattern(const TYPE_AS_Pattern & pat, const SE
       res_set.ImpUnion (getFuncAppPattern(pat.GetRecord(pos_AS_SeqConcPattern_rp), sn));
       return (res_set);
     }
-    case TAG_TYPE_AS_MapletPattern: {
-      SET<TYPE_AS_Name> res_set (getFuncAppPattern(pat.GetRecord(pos_AS_MapletPattern_dp), sn));
-      res_set.ImpUnion (getFuncAppPattern(pat.GetRecord(pos_AS_MapletPattern_rp), sn));
-      return (res_set);
-    }
     case TAG_TYPE_AS_MapEnumPattern: {
       const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
       SET<TYPE_AS_Name> res_set;
       size_t len = mls.Length();
-      for (size_t i = 1; i <= len; i++ )
-        res_set.ImpUnion (getFuncAppPattern(mls[i], sn));
+      for (size_t i = 1; i <= len; i++ ) {
+        const TYPE_AS_MapletPattern & mp(mls[i]);
+        res_set.ImpUnion (getFuncAppPattern(mp.GetRecord(pos_AS_MapletPattern_dp), sn));
+        res_set.ImpUnion (getFuncAppPattern(mp.GetRecord(pos_AS_MapletPattern_rp), sn));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_MapMergePattern: {
@@ -955,29 +954,29 @@ SET<TYPE_AS_Name> SSREC::getFuncAppPattern(const TYPE_AS_Pattern & pat, const SE
       const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_TuplePattern_fields));
       SET<TYPE_AS_Name> res_set;
       size_t len = elems.Length();
-      for (size_t i = 1; i <= len; i++ )
+      for (size_t i = 1; i <= len; i++ ) {
         res_set.ImpUnion (getFuncAppPattern(elems[i], sn));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_RecordPattern: {
       const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_RecordPattern_fields));
       SET<TYPE_AS_Name> res_set;
       size_t len = elems.Length();
-      for (size_t i = 1; i <= len; i++ )
+      for (size_t i = 1; i <= len; i++ ) {
         res_set.ImpUnion (getFuncAppPattern(elems[i], sn));
+      }
       return (res_set);
     }
 #ifdef VDMPP
     case TAG_TYPE_AS_ObjectPattern: {
-      const SEQ<TYPE_AS_FieldPattern> & elems (pat.GetSequence(pos_AS_ObjectPattern_fields));
+      const SEQ<TYPE_AS_FieldPattern> & fields (pat.GetSequence(pos_AS_ObjectPattern_fields));
       SET<TYPE_AS_Name> res_set;
-      size_t len = elems.Length();
-      for (size_t i = 1; i <= len; i++ )
-        res_set.ImpUnion (getFuncAppPattern(elems[i], sn));
+      size_t len = fields.Length();
+      for (size_t i = 1; i <= len; i++ ) {
+        res_set.ImpUnion (getFuncAppPattern(fields[i].GetRecord(pos_AS_FieldPattern_pat), sn));
+      }
       return (res_set);
-    }
-    case TAG_TYPE_AS_FieldPattern: {
-      return getFuncAppPattern(pat.GetRecord(pos_AS_FieldPattern_pat), sn);
     }
 #endif // VDMPP
     default: {

@@ -1559,10 +1559,11 @@ cases pat:
         return mk_AS`SeqEnumPattern([QuotePMExprWithClNm(els(i),clnm, lb) | i in set inds els], cid),
   mk_AS`SeqConcPattern(lp, rp, cid) ->
         return mk_AS`SeqConcPattern(QuotePMExprWithClNm(lp,clnm, lb), QuotePMExprWithClNm(rp,clnm, lb), cid),
-  mk_AS`MapletPattern(dp, rp, cid) ->
-        return mk_AS`MapletPattern(QuotePMExprWithClNm(dp,clnm, lb), QuotePMExprWithClNm(rp,clnm, lb), cid),
   mk_AS`MapEnumPattern(mls, cid) ->
-        return mk_AS`MapEnumPattern([QuotePMExprWithClNm(mls(i),clnm, lb) | i in set inds mls], cid),
+        return mk_AS`MapEnumPattern([ let mk_AS`MapletPattern(dp, rp, cid) = mls(i)
+                                      in mk_AS`MapletPattern(QuotePMExprWithClNm(dp,clnm, lb),
+                                                             QuotePMExprWithClNm(rp,clnm, lb), cid)
+                                      | i in set inds mls], cid),
   mk_AS`MapMergePattern(lp, rp, cid) ->
         return mk_AS`MapMergePattern(QuotePMExprWithClNm(lp,clnm, lb), QuotePMExprWithClNm(rp,clnm, lb), cid),
   mk_AS`TuplePattern(fields, cid) ->
@@ -1572,8 +1573,10 @@ cases pat:
                            [QuotePMExprWithClNm(fields(i),clnm, lb) | i in set inds fields], cid),
 #ifdef VDMPP
   mk_AS`ObjectPattern(cls, fields, cid) ->
-        return mk_AS`ObjectPattern(cls, [QuotePMExprWithClNm(fields(i),clnm, lb) | i in set inds fields], cid),
-  mk_AS`FieldPattern(nm, pat, cid) -> return mk_AS`FieldPattern(nm, QuotePMExprWithClNm(pat,clnm, lb), cid),
+        return mk_AS`ObjectPattern(cls,
+                      [ let mk_AS`FieldPattern(nm, pat, cid) = fields(i)
+                        in mk_AS`FieldPattern(nm, QuotePMExprWithClNm(pat,clnm, lb), cid)
+                        | i in set inds fields ], cid),
 #endif VDMPP
   mk_AS`BracketedExpr(expr, cid) -> return mk_AS`BracketedExpr(QuotePMExprWithClNm(expr, clnm, lb), cid),
   mk_AS`DefExpr(def_l, expr, cid) ->
@@ -1913,10 +1916,11 @@ cases pat:
        return mk_AS`SeqEnumPattern([QuotePMExprWithTemp(els(i),clnm, lb) | i in set inds els], cid),
   mk_AS`SeqConcPattern(lp, rp, cid) ->
        return mk_AS`SeqConcPattern(QuotePMExprWithTemp(lp,clnm, lb), QuotePMExprWithTemp(rp,clnm, lb), cid),
-  mk_AS`MapletPattern(dp, rp, cid) ->
-       return mk_AS`MapletPattern(QuotePMExprWithTemp(dp,clnm, lb), QuotePMExprWithTemp(rp,clnm, lb), cid),
   mk_AS`MapEnumPattern(mls, cid) ->
-       return mk_AS`MapEnumPattern([QuotePMExprWithTemp(mls(i),clnm, lb) | i in set inds mls], cid),
+       return mk_AS`MapEnumPattern([ let mk_AS`MapletPattern(dp, rp, cid) = mls(i)
+                                     in mk_AS`MapletPattern(QuotePMExprWithTemp(dp,clnm, lb),
+                                                            QuotePMExprWithTemp(rp,clnm, lb), cid)
+                                     | i in set inds mls], cid),
   mk_AS`MapMergePattern(lp, rp, cid) ->
        return mk_AS`MapMergePattern(QuotePMExprWithTemp(lp,clnm, lb), QuotePMExprWithTemp(rp,clnm, lb), cid),
   mk_AS`TuplePattern(fields, cid) ->
@@ -1929,8 +1933,10 @@ cases pat:
 #ifdef VDMPP
   mk_AS`ObjectPattern(cls, fields, cid) ->
        return
-        mk_AS`ObjectPattern(cls, [QuotePMExprWithTemp(fields(i),clnm, lb) | i in set inds fields], cid),
-  mk_AS`FieldPattern(nm, pat, cid) -> return mk_AS`FieldPattern(nm, QuotePMExprWithTemp(pat,clnm, lb), cid),
+        mk_AS`ObjectPattern(cls,
+              [ let mk_AS`FieldPattern(nm, pat, cid) = fields(i)
+                in mk_AS`FieldPattern(nm, QuotePMExprWithTemp(pat,clnm, lb), cid)
+                | i in set inds fields], cid),
 #endif VDMPP
   mk_AS`BracketedExpr(expr, cid) -> 
        return

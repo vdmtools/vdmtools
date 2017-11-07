@@ -33,14 +33,12 @@ functions
       mk_AS`SetUnionPattern (-,-,-) -> SetUnionPattern2Expr(pat),
       mk_AS`SeqEnumPattern (-,-)    -> SeqEnumPattern2Expr(pat),
       mk_AS`SeqConcPattern (-,-,-)  -> SeqConcPattern2Expr(pat),
-      mk_AS`MapletPattern (-,-,-)   -> MapletPattern2Expr(pat),
       mk_AS`MapEnumPattern (-,-)    -> MapEnumPattern2Expr(pat),
       mk_AS`MapMergePattern (-,-,-) -> MapMergePattern2Expr(pat),
       mk_AS`RecordPattern (-,-,-)   -> RecordPattern2Expr(pat),
       mk_AS`TuplePattern (-,-)      -> TuplePattern2Expr(pat),
 #ifdef VDMPP
       mk_AS`ObjectPattern (-,-,-)   -> ObjectPattern2Expr(pat),
-      mk_AS`FieldPattern (-,-,-)    -> FieldPattern2Expr(pat),
 #endif VDMPP
       others -> undefined
     end;
@@ -88,7 +86,7 @@ functions
 
   MapEnumPattern2Expr: AS`MapEnumPattern -> AS`MapEnumerationExpr
   MapEnumPattern2Expr (mk_AS`MapEnumPattern(mls,cid)) ==
-    let expr_mls = [Pattern2Expr(mls(i)) | i in set inds mls]
+    let expr_mls = [MapletPattern2Expr(mls(i)) | i in set inds mls]
     in mk_AS`MapEnumerationExpr(expr_mls, cid);
 
   MapMergePattern2Expr: AS`MapMergePattern ->  AS`BinaryExpr

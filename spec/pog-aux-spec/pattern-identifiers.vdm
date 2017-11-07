@@ -43,27 +43,23 @@ functions
       mk_AS`SetUnionPattern (-,-,-) -> SetUnionPattern2Pids(pat),
       mk_AS`SeqEnumPattern (-,-)    -> SeqEnumPattern2Pids(pat),
       mk_AS`SeqConcPattern (-,-,-)  -> SeqConcPattern2Pids(pat),
-      mk_AS`MapletPattern (-,-,-)   -> MapletPattern2Pids(pat),
       mk_AS`MapEnumPattern (-,-)    -> MapEnumPattern2Pids(pat),
       mk_AS`MapMergePattern (-,-,-) -> MapMergePattern2Pids(pat),
       mk_AS`RecordPattern (-,-,-)   -> RecordPattern2Pids(pat),
       mk_AS`TuplePattern (-,-)      -> TuplePattern2Pids(pat),
 #ifdef VDMPP
       mk_AS`ObjectPattern (-,-,-)   -> ObjectPattern2Pids(pat),
-      mk_AS`FieldPattern (-,-,-)    -> FieldPattern2Pids(pat),
 #endif VDMPP
       others -> undefined
     end;
 
   PatternName2Pids: AS`PatternName -> set of AS`PatternName
   PatternName2Pids (pat) ==
-    if pat.nm = nil then 
-      {} 
-    else 
-      {pat};
+    if pat.nm = nil
+    then {} 
+    else {pat};
 
   MatchVal2Pids: AS`MatchVal -> set of AS`PatternName
-  --MatchVal2Pids (mk_AS`MatchVal(val,-)) ==
   MatchVal2Pids (mk_AS`MatchVal(-,-)) ==
     {};
 
@@ -83,13 +79,10 @@ functions
   SeqConcPattern2Pids (mk_AS`SeqConcPattern(lp,rp,-)) ==
     Pattern2Pids(lp) union Pattern2Pids(rp);
 
-  MapletPattern2Pids: AS`MapletPattern -> set of AS`PatternName
-  MapletPattern2Pids (mk_AS`MapletPattern(dp,rp,-)) ==
-    Pattern2Pids(dp) union Pattern2Pids(rp);
-
   MapEnumPattern2Pids: AS`MapEnumPattern -> set of AS`PatternName
   MapEnumPattern2Pids (mk_AS`MapEnumPattern(mls,-)) ==
-    dunion {Pattern2Pids(mls(i)) | i in set inds mls};
+    dunion { let mk_AS`MapletPattern(dp,rp,-) = mls(i)
+             in Pattern2Pids(dp) union Pattern2Pids(rp) | i in set inds mls };
 
   MapMergePattern2Pids: AS`MapMergePattern -> set of AS`PatternName
   MapMergePattern2Pids (mk_AS`MapMergePattern(lp,rp,-)) ==
@@ -106,11 +99,8 @@ functions
 #ifdef VDMPP
   ObjectPattern2Pids: AS`ObjectPattern -> set of AS`PatternName
   ObjectPattern2Pids (mk_AS`ObjectPattern(-,fields,-)) ==
-    dunion {Pattern2Pids(fields(i)) | i in set inds fields};
-
-  FieldPattern2Pids: AS`FieldPattern -> set of AS`PatternName
-  FieldPattern2Pids (mk_AS`FieldPattern(-,pat,-)) ==
-    Pattern2Pids(pat);
+    dunion { let mk_AS`FieldPattern(-,pat,-) = fields(i)
+             in Pattern2Pids(pat) | i in set inds fields };
 #endif VDMPP
 
 -- unused
@@ -132,10 +122,11 @@ functions
         mk_AS`MapMergePattern (pat1,pat2,-)   -> NameInPatternSequence(nm,[pat1,pat2]),
         mk_AS`SetEnumPattern (pats,-),    
         mk_AS`SeqEnumPattern (pats,-),    
-        mk_AS`MapEnumPattern (pats,-),    
         mk_AS`RecordPattern (-,pats,-),   
         mk_AS`TuplePattern (pats,-)           -> NameInPatternSequence(nm,pats),
-        mk_AS`MapletPattern(dp,rp,-)          -> NameInPatternSequence(nm,[dp,rp]),
+        mk_AS`MapEnumPattern (pats,-)    
+           -> NameInPatternSequence(nm, conc [ let mk_AS`MapletPattern(dp,rp,-) = pats(i)
+                                               in [ dp, rp ] | i in set inds pats ]),
         others -> false
       end;
 

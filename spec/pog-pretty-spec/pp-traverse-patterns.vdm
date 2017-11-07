@@ -58,10 +58,8 @@ functions
         mk_AS`MapMergePattern (-,-,-) -> trv_MapMergePattern(pat),
         mk_AS`RecordPattern (-,-,-)   -> trv_RecordPattern(pat),
         mk_AS`TuplePattern (-,-)      -> trv_TuplePattern(pat),
-        mk_AS`MapletPattern (-,-,-)   -> trv_MapletPattern(pat),
 #ifdef VDMPP
         mk_AS`ObjectPattern (-,-,-)   -> trv_ObjectPattern(pat),
-        mk_AS`FieldPattern (-,-,-)    -> trv_FieldPattern(pat),
 #endif VDMPP
         others -> undefined
       end;
@@ -102,7 +100,7 @@ as the empty sequence is represented using $AS`MatchVal$.
 
   trv_MapEnumPattern: AS`MapEnumPattern -> PP_TAR_PAT`MapEnumPattern
   trv_MapEnumPattern (mk_AS`MapEnumPattern(mls,cid)) ==
-    PP_TAR_PAT`tar_MapEnumPattern([trv_Pattern(mls(i)) | i in set inds mls], cid);
+    PP_TAR_PAT`tar_MapEnumPattern([trv_MapletPattern(mls(i)) | i in set inds mls], cid);
 
   trv_MapMergePattern: AS`MapMergePattern -> PP_TAR_PAT`MapMergePattern
   trv_MapMergePattern (mk_AS`MapMergePattern(lp,rp,cid)) ==
@@ -123,7 +121,7 @@ as the empty sequence is represented using $AS`MatchVal$.
 #ifdef VDMPP
   trv_ObjectPattern: AS`ObjectPattern -> PP_TAR_PAT`ObjectPattern
   trv_ObjectPattern (mk_AS`ObjectPattern(cls,flds,cid)) ==
-    PP_TAR_PAT`tar_ObjectPattern(PP_TRA_EXPR`trv_NameExpr(cls), [trv_Pattern(flds(i)) | i in set inds flds], cid);
+    PP_TAR_PAT`tar_ObjectPattern(PP_TRA_EXPR`trv_NameExpr(cls), [trv_FieldPattern(flds(i)) | i in set inds flds], cid);
 
   trv_FieldPattern: AS`FieldPattern -> PP_TAR_PAT`FieldPattern
   trv_FieldPattern (mk_AS`FieldPattern(nm,pat,cid)) ==

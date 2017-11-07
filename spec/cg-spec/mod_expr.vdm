@@ -736,14 +736,9 @@ FindPatternId( pat ) ==
     mk_AS`PatternName(nil, -, -)    -> return {|->},
     mk_AS`PatternName(name, -, -)   -> def tp = CGAUX`FindType(pat)
                                        in return { name |-> { if tp <> nil then tp else mk_REP`AllTypeRep() } },
-#ifdef VDMPP
-    mk_AS`FieldPattern(-,p,-)       -> return FindPatternId(p),
-    mk_AS`ObjectPattern(-,pat_l, -),
-#endif VDMPP
     mk_AS`SetEnumPattern(pat_l, -),
     mk_AS`SeqEnumPattern(pat_l,-),
     mk_AS`TuplePattern(pat_l, -),
-    mk_AS`MapEnumPattern(pat_l,-),
     mk_AS`RecordPattern(-,pat_l,-)  -> (dcl pid_m : map (AS`Name | AS`OldName) to set of REP`TypeRep := {|->};
                                         for tmp in pat_l do
                                           pid_m := MergePidM(FindPatternId( tmp ), pid_m);
@@ -751,7 +746,18 @@ FindPatternId( pat ) ==
     mk_AS`SeqConcPattern(lp, rp,-),
     mk_AS`SetUnionPattern(lp, rp,-),
     mk_AS`MapMergePattern(lp, rp,-) -> return FindPatternId(lp) ++ FindPatternId(rp),
-    mk_AS`MapletPattern(dp,rp,-)    -> return FindPatternId(dp) ++ FindPatternId(rp),
+    mk_AS`MapEnumPattern(pat_l,-)
+          -> (dcl pid_m : map (AS`Name | AS`OldName) to set of REP`TypeRep := {|->};
+              for mk_AS`MapletPattern(dp,rp,-) in pat_l do
+                pid_m := MergePidM(FindPatternId(dp) ++ FindPatternId(rp), pid_m);
+              return pid_m),
+#ifdef VDMPP
+    mk_AS`ObjectPattern(-,pat_l, -)
+          -> (dcl pid_m : map (AS`Name | AS`OldName) to set of REP`TypeRep := {|->};
+              for mk_AS`FieldPattern(-,p,-) in pat_l do
+                pid_m := MergePidM(FindPatternId( p ), pid_m);
+              return pid_m),
+#endif VDMPP
     others -> error
   end;
 

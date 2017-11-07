@@ -32,8 +32,6 @@ TYPE_AS_Expr CAST::Pattern2Expr (const TYPE_AS_Pattern & pat)
       return SeqEnumPattern2Expr(pat);
     case TAG_TYPE_AS_SeqConcPattern:
       return SeqConcPattern2Expr(pat);
-    case TAG_TYPE_AS_MapletPattern:
-      return MapletPattern2Expr(pat);
     case TAG_TYPE_AS_MapEnumPattern:
       return MapEnumPattern2Expr(pat);
     case TAG_TYPE_AS_MapMergePattern:
@@ -45,8 +43,6 @@ TYPE_AS_Expr CAST::Pattern2Expr (const TYPE_AS_Pattern & pat)
 #ifdef VDMPP
     case TAG_TYPE_AS_ObjectPattern:
       return ObjectPattern2Expr(pat);
-    case TAG_TYPE_AS_FieldPattern:
-      return FieldPattern2Expr(pat);
 #endif // VDMPP
     default:
       return TYPE_AS_Expr();
@@ -170,7 +166,7 @@ TYPE_AS_MapEnumerationExpr CAST::MapEnumPattern2Expr (const TYPE_AS_MapEnumPatte
   int len_mls = mls.Length();
   SEQ<TYPE_AS_Maplet> expr_mls;
   for (int index = 1; index <= len_mls; index++) {
-    expr_mls.ImpAppend(Pattern2Expr(mls[index]));
+    expr_mls.ImpAppend(MapletPattern2Expr(mls[index]));
   }
   return TYPE_AS_MapEnumerationExpr().Init(expr_mls, cid); 
 }
