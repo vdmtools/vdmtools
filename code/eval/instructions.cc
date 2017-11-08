@@ -2783,7 +2783,7 @@ SET<TYPE_AS_Name> StackEval::NameInPattern(const TYPE_STKM_Pattern & pat)
       return SET<TYPE_AS_Name>();
     }
     case TAG_TYPE_STKM_SetEnumPattern: {
-      const SEQ<TYPE_AS_Pattern> & els_l (pat.GetSequence(pos_STKM_SetEnumPattern_els));
+      const SEQ<TYPE_STKM_Pattern> & els_l (pat.GetSequence(pos_STKM_SetEnumPattern_els));
       SET<TYPE_AS_Name> res;
       size_t len_els_l = els_l.Length();
       for (size_t index = 1; index <= len_els_l; index++)
@@ -2796,7 +2796,7 @@ SET<TYPE_AS_Name> StackEval::NameInPattern(const TYPE_STKM_Pattern & pat)
       return res;
     }
     case TAG_TYPE_STKM_SeqEnumPattern: {
-      const SEQ<TYPE_AS_Pattern> & els_l (pat.GetSequence(pos_STKM_SeqEnumPattern_els));
+      const SEQ<TYPE_STKM_Pattern> & els_l (pat.GetSequence(pos_STKM_SeqEnumPattern_els));
       SET<TYPE_AS_Name> res;
       size_t len_els_l = els_l.Length();
       for (size_t index = 1; index <= len_els_l; index++)
@@ -2809,11 +2809,14 @@ SET<TYPE_AS_Name> StackEval::NameInPattern(const TYPE_STKM_Pattern & pat)
       return res;
     }
     case TAG_TYPE_STKM_MapEnumPattern: {
-      const SEQ<TYPE_AS_MapletPattern> & mls_l (pat.GetSequence(pos_STKM_MapEnumPattern_mls));
+      const SEQ<TYPE_STKM_MapletPattern> & mls_l (pat.GetSequence(pos_STKM_MapEnumPattern_mls));
       SET<TYPE_AS_Name> res;
       size_t len_mls_l = mls_l.Length();
-      for (size_t index = 1; index <= len_mls_l; index++)
-        res.ImpUnion(NameInPattern(mls_l[index]));
+      for (size_t index = 1; index <= len_mls_l; index++) {
+        const TYPE_STKM_MapletPattern & mp (mls_l[index]);
+        res.ImpUnion(NameInPattern(mp.GetRecord(pos_STKM_MapletPattern_dp)));
+        res.ImpUnion(NameInPattern(mp.GetRecord(pos_STKM_MapletPattern_rp)));
+      }
       return res;
     }
     case TAG_TYPE_STKM_MapMergePattern: {
@@ -2821,34 +2824,32 @@ SET<TYPE_AS_Name> StackEval::NameInPattern(const TYPE_STKM_Pattern & pat)
       res.ImpUnion(NameInPattern(pat.GetRecord(pos_STKM_MapMergePattern_rp)));
       return res;
     }
-    case TAG_TYPE_STKM_MapletPattern: {
-      SET<TYPE_AS_Name> res (NameInPattern(pat.GetRecord(pos_STKM_MapletPattern_dp)));
-      res.ImpUnion(NameInPattern(pat.GetRecord(pos_STKM_MapletPattern_rp)));
-      return res;
-    }
     case TAG_TYPE_STKM_RecordPattern: {
-      const SEQ<TYPE_AS_Pattern> & field_l (pat.GetSequence(pos_STKM_RecordPattern_fields));
+      const SEQ<TYPE_STKM_Pattern> & field_l (pat.GetSequence(pos_STKM_RecordPattern_fields));
       SET<TYPE_AS_Name> res;
       size_t len_field_l = field_l.Length();
-      for (size_t index = 1; index <= len_field_l; index++)
+      for (size_t index = 1; index <= len_field_l; index++) {
         res.ImpUnion(NameInPattern(field_l[index]));
+      }
       return res;
     }
     case TAG_TYPE_STKM_TuplePattern: {
-      const SEQ<TYPE_AS_Pattern> & field_l (pat.GetSequence(pos_STKM_TuplePattern_fields));
+      const SEQ<TYPE_STKM_Pattern> & field_l (pat.GetSequence(pos_STKM_TuplePattern_fields));
       SET<TYPE_AS_Name> res;
       size_t len_field_l = field_l.Length();
-      for (size_t index = 1; index <= len_field_l; index++)
+      for (size_t index = 1; index <= len_field_l; index++) {
         res.ImpUnion(NameInPattern(field_l[index]));
+      }
       return res;
     }
 #ifdef VDMPP
     case TAG_TYPE_STKM_ObjectPattern: {
-      const SEQ<TYPE_AS_FieldPattern> & field_l (pat.GetSequence(pos_STKM_ObjectPattern_fields));
+      const SEQ<TYPE_STKM_FieldPattern> & field_l (pat.GetSequence(pos_STKM_ObjectPattern_fields));
       SET<TYPE_AS_Name> res;
       size_t len_field_l = field_l.Length();
-      for (size_t index = 1; index <= len_field_l; index++)
+      for (size_t index = 1; index <= len_field_l; index++) {
         res.ImpUnion(NameInPattern(field_l[index].GetRecord(pos_AS_FieldPattern_pat)));
+      }
       return res;
     }
 #endif // VDMPP

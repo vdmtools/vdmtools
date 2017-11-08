@@ -358,17 +358,16 @@ getFuncAppPattern(pat,sn) ==
     mk_AS`SetUnionPattern(l,r,-)    -> return getFuncAppPattern(l,sn) union getFuncAppPattern(r,sn),
     mk_AS`SeqEnumPattern(els,-)     ->  return dunion {getFuncAppPattern(e,sn) | e in set elems els},
     mk_AS`SeqConcPattern(l,r,-)     -> return getFuncAppPattern(l,sn) union getFuncAppPattern(r,sn),
-    mk_AS`MapEnumPattern(mls,-)     -> 
-       return dunion { let mk_AS`MapletPattern(d,r,-) = e
-                       in getFuncAppPattern(d,sn) union getFuncAppPattern(r,sn)
-                       | e in set elems mls},
+    mk_AS`MapEnumPattern(mls,-)
+          -> return dunion { getFuncAppPattern(d,sn) union getFuncAppPattern(r,sn)
+                             | mk_AS`MapletPattern(d,r,-) in set elems mls},
     mk_AS`MapMergePattern(l,r,-)    -> return getFuncAppPattern(l,sn) union getFuncAppPattern(r,sn),
     mk_AS`TuplePattern(fields,-)    -> return dunion {getFuncAppPattern(e,sn) | e in set elems fields},
     mk_AS`RecordPattern(-,fields,-) -> return dunion {getFuncAppPattern(e,sn) | e in set elems fields},
 #ifdef VDMPP
-    mk_AS`ObjectPattern(-,fields,-) -> return dunion { let mk_AS`FieldPattern(-,p,-) = e
-                                                       in getFuncAppPattern(p,sn)
-                                                       | e in set elems fields},
+    mk_AS`ObjectPattern(-,fields,-)
+          -> return dunion { getFuncAppPattern(p,sn)
+                             | mk_AS`FieldPattern(-,p,-) in set elems fields},
 #endif VDMPP
     others -> return {} 
   end;

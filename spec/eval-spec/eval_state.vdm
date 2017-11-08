@@ -1438,16 +1438,20 @@ ConvertPattern(pat, tm) ==
     mk_STKM`SeqEnumPattern(els)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
     mk_STKM`SeqConcPattern(lp, rp)  -> return mu(pat, lp |-> ConvertPattern(lp, tm),
                                                  rp |-> ConvertPattern(rp, tm)),
-    mk_STKM`MapEnumPattern(mls)     -> return mu(pat, mls |-> [ ConvertPattern(mls(i), tm) | i in set inds mls ]),
-    mk_STKM`MapletPattern(dp,rp)    -> return mu(pat, dp |-> ConvertPattern(dp, tm),
-                                                 rp |-> ConvertPattern(rp, tm)),
+    mk_STKM`MapEnumPattern(mls)
+       -> return mu(pat, mls |-> [ let mk_STKM`MapletPattern(dp,rp) = mls(i)
+                                   in mk_STKM`MapletPattern(ConvertPattern(dp, tm),
+                                                          ConvertPattern(rp, tm))
+                                   | i in set inds mls ] ),
     mk_STKM`MapMergePattern(lp, rp) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
                                                  rp |-> ConvertPattern(rp, tm)),
     mk_STKM`TuplePattern(flds)      -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
     mk_STKM`RecordPattern(-,flds)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
 #ifdef VDMPP
-    mk_STKM`ObjectPattern(-,flds)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
-    mk_STKM`FieldPattern(-,fp)      -> return mu(pat, pat |-> ConvertPattern(fp, tm)),
+    mk_STKM`ObjectPattern(-,flds)
+       -> return mu(pat, fields |-> [ let mk_STKM`FieldPattern(nm,p) = flds(i)
+                                      in mk_STKM`FieldPattern(nm,ConvertPattern(p, tm))
+                                      | i in set inds flds ] ),
 #endif VDMPP
     others -> error
   end;

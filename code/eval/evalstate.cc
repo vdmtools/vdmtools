@@ -2090,10 +2090,10 @@ TYPE_STKM_Pattern EvalState::ConvertPattern(const TYPE_STKM_Pattern & pat, const
 {
   switch (pat.GetTag()) {
     case TAG_TYPE_STKM_PatternName: {
-      if (pat.GetField (pos_STKM_PatternName_tp).IsNil())
+      if (pat.GetField (pos_STKM_PatternName_tp).IsNil()) {
         return pat;
-      else
-      {
+      }
+      else {
         TYPE_AS_Type new_tp (ConvertTypeVarType(pat.GetField (pos_STKM_PatternName_tp), tm));
         TYPE_STKM_PatternName res (pat);
         res.SetField(pos_STKM_PatternName_tp, new_tp);
@@ -2104,8 +2104,7 @@ TYPE_STKM_Pattern EvalState::ConvertPattern(const TYPE_STKM_Pattern & pat, const
       const SEQ<TYPE_STKM_Pattern> & els (pat.GetSequence (pos_STKM_SetEnumPattern_els));
       size_t len_els = els.Length();
       SEQ<TYPE_STKM_Pattern> new_els;
-      for (size_t i = 1; i <= len_els; i++)
-      {
+      for (size_t i = 1; i <= len_els; i++) {
         new_els.ImpAppend(ConvertPattern(els[i], tm));
       }
       TYPE_STKM_SetEnumPattern res (pat);
@@ -2144,20 +2143,15 @@ TYPE_STKM_Pattern EvalState::ConvertPattern(const TYPE_STKM_Pattern & pat, const
       const SEQ<TYPE_STKM_MapletPattern> & mls (pat.GetSequence (pos_STKM_MapEnumPattern_mls));
       size_t len_mls = mls.Length();
       SEQ<TYPE_STKM_MapletPattern> new_mls;
-      for (size_t i = 1; i <= len_mls; i++)
-      {
-        new_mls.ImpAppend(ConvertPattern(mls[i], tm));
+      for (size_t i = 1; i <= len_mls; i++) {
+        const TYPE_STKM_MapletPattern & mp (mls[i]);
+        const TYPE_STKM_Pattern & dp (mp.GetRecord(pos_STKM_MapletPattern_dp));
+        const TYPE_STKM_Pattern & rp (mp.GetRecord(pos_STKM_MapletPattern_rp));
+        new_mls.ImpAppend(TYPE_STKM_MapletPattern().Init(ConvertPattern(dp, tm),
+                                                         ConvertPattern(rp, tm)));
       }
       TYPE_STKM_MapEnumPattern res (pat);
       res.SetField(pos_STKM_MapEnumPattern_mls, new_mls);
-      return res;
-    }
-    case TAG_TYPE_STKM_MapletPattern: {
-      const TYPE_STKM_Pattern & dp (pat.GetRecord(pos_STKM_MapletPattern_dp));
-      const TYPE_STKM_Pattern & rp (pat.GetRecord(pos_STKM_MapletPattern_rp));
-      TYPE_STKM_MapletPattern res (pat);
-      res.SetField(pos_STKM_MapletPattern_dp, ConvertPattern(dp, tm));
-      res.SetField(pos_STKM_MapletPattern_rp, ConvertPattern(rp, tm));
       return res;
     }
     case TAG_TYPE_STKM_MapMergePattern: {
@@ -2172,8 +2166,7 @@ TYPE_STKM_Pattern EvalState::ConvertPattern(const TYPE_STKM_Pattern & pat, const
       const SEQ<TYPE_STKM_Pattern> & fields (pat.GetSequence (pos_STKM_TuplePattern_fields));
       size_t len_fields = fields.Length();
       SEQ<TYPE_STKM_Pattern> new_fields;
-      for (size_t i = 1; i <= len_fields; i++)
-      {
+      for (size_t i = 1; i <= len_fields; i++) {
         new_fields.ImpAppend(ConvertPattern(fields[i], tm));
       }
       TYPE_STKM_TuplePattern res (pat);
@@ -2184,8 +2177,7 @@ TYPE_STKM_Pattern EvalState::ConvertPattern(const TYPE_STKM_Pattern & pat, const
       const SEQ<TYPE_STKM_Pattern> & fields (pat.GetSequence (pos_STKM_RecordPattern_fields));
       size_t len_fields = fields.Length();
       SEQ<TYPE_STKM_Pattern> new_fields;
-      for (size_t i = 1; i <= len_fields; i++)
-      {
+      for (size_t i = 1; i <= len_fields; i++) {
         new_fields.ImpAppend(ConvertPattern(fields[i], tm));
       }
       TYPE_STKM_RecordPattern res (pat);
@@ -2197,8 +2189,7 @@ TYPE_STKM_Pattern EvalState::ConvertPattern(const TYPE_STKM_Pattern & pat, const
       const SEQ<TYPE_STKM_FieldPattern> & fields (pat.GetSequence (pos_STKM_ObjectPattern_fields));
       size_t len_fields = fields.Length();
       SEQ<TYPE_STKM_FieldPattern> new_fields;
-      for (size_t i = 1; i <= len_fields; i++)
-      {
+      for (size_t i = 1; i <= len_fields; i++) {
         const TYPE_STKM_FieldPattern & fp (fields[i]);
         TYPE_STKM_FieldPattern new_fp (fp);
         new_fp.SetField(pos_AS_FieldPattern_pat, ConvertPattern(fp.GetRecord(pos_AS_FieldPattern_pat), tm));

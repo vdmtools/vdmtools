@@ -101,18 +101,16 @@ applyEXFInvt(p_invt, p_ids) ==
 applyEXFPat : AS`Pattern * set of XF`EXFId -> AS`Pattern
 applyEXFPat(p_pat, p_ids) == 
   cases true:
-    (is_AS`MatchVal(p_pat))         -> applyEXFMatchVal(p_pat, p_ids),
-    (is_AS`SetEnumPattern(p_pat)) -> applyEXFSetEnumPat(p_pat, p_ids),
-    (is_AS`SeqEnumPattern(p_pat)) -> applyEXFSeqEnumPat(p_pat, p_ids),
-    (is_AS`MapEnumPattern(p_pat)) -> applyEXFMapEnumPat(p_pat, p_ids),
-    (is_AS`RecordPattern(p_pat)) -> applyEXFRecordPat(p_pat, p_ids),
-    (is_AS`TuplePattern (p_pat))    -> applyEXFTuplePat(p_pat, p_ids),
-    (is_AS`SetUnionPattern(p_pat))   -> applyEXFSetUnionPat(p_pat, p_ids),
-    (is_AS`SeqConcPattern(p_pat))   -> applyEXFSeqConcPat(p_pat, p_ids),
-    (is_AS`MapMergePattern(p_pat))   -> applyEXFMapMergePat(p_pat, p_ids),
-    (is_AS`MapletPattern(p_pat))   -> applyEXFMapletPat(p_pat, p_ids),
-    (is_AS`ObjectPattern(p_pat)) -> applyEXFObjectPat(p_pat, p_ids),
-    (is_AS`FieldPattern(p_pat))   -> applyEXFFieldPat(p_pat, p_ids),
+    (is_AS`MatchVal(p_pat))        -> applyEXFMatchVal(p_pat, p_ids),
+    (is_AS`SetEnumPattern(p_pat))  -> applyEXFSetEnumPat(p_pat, p_ids),
+    (is_AS`SeqEnumPattern(p_pat))  -> applyEXFSeqEnumPat(p_pat, p_ids),
+    (is_AS`MapEnumPattern(p_pat))  -> applyEXFMapEnumPat(p_pat, p_ids),
+    (is_AS`RecordPattern(p_pat))   -> applyEXFRecordPat(p_pat, p_ids),
+    (is_AS`TuplePattern (p_pat))   -> applyEXFTuplePat(p_pat, p_ids),
+    (is_AS`SetUnionPattern(p_pat)) -> applyEXFSetUnionPat(p_pat, p_ids),
+    (is_AS`SeqConcPattern(p_pat))  -> applyEXFSeqConcPat(p_pat, p_ids),
+    (is_AS`MapMergePattern(p_pat)) -> applyEXFMapMergePat(p_pat, p_ids),
+    (is_AS`ObjectPattern(p_pat))   -> applyEXFObjectPat(p_pat, p_ids),
     others -> mu(p_pat, cid |-> nilCid)
   end ;
 
@@ -128,18 +126,21 @@ applyEXFSetEnumPat(p_pat, p_ids) ==
 
 applyEXFSeqEnumPat : AS`SeqEnumPattern * set of XF`EXFId -> AS`SeqEnumPattern
 applyEXFSeqEnumPat(p_pat, p_ids) == 
-  let l_newEls = applyEXFPatList(p_pat.els, p_ids) in
-  mk_AS`SeqEnumPattern(l_newEls, nilCid) ;
+  let l_newEls = applyEXFPatList(p_pat.els, p_ids)
+  in mk_AS`SeqEnumPattern(l_newEls, nilCid) ;
 
 applyEXFMapEnumPat : AS`MapEnumPattern * set of XF`EXFId -> AS`MapEnumPattern
 applyEXFMapEnumPat(p_pat, p_ids) == 
-  let l_newEls = applyEXFPatList(p_pat.mls, p_ids) in
-  mk_AS`MapEnumPattern(l_newEls, nilCid) ;
+  let l_newEls = [ let mk_AS`MapletPattern(dp,rp,-) = p_pat.mls(i)
+                   in mk_AS`MapletPattern(applyEXFPat(dp, p_ids),
+                                          applyEXFPat(rp, p_ids), nilCid)
+                   | i in set inds p_pat.mls ]
+  in mk_AS`MapEnumPattern(l_newEls, nilCid) ;
 
 applyEXFRecordPat : AS`RecordPattern * set of XF`EXFId -> AS`RecordPattern
 applyEXFRecordPat(p_pat, p_ids) ==
-  let l_newFields = applyEXFPatList(p_pat.fields, p_ids) in
-  mk_AS`RecordPattern(p_pat.nm, l_newFields, nilCid) ;
+  let l_newFields = applyEXFPatList(p_pat.fields, p_ids)
+  in mk_AS`RecordPattern(p_pat.nm, l_newFields, nilCid) ;
 
 applyEXFTuplePat : AS`TuplePattern * set of XF`EXFId -> AS`TuplePattern
 applyEXFTuplePat(p_pat, p_ids) ==
@@ -149,37 +150,27 @@ applyEXFTuplePat(p_pat, p_ids) ==
 applyEXFSetUnionPat : AS`SetUnionPattern * set of XF`EXFId -> AS`SetUnionPattern
 applyEXFSetUnionPat(p_pat, p_ids) ==
   let l_newLeft = applyEXFPat(p_pat.lp, p_ids),
-      l_newRight = applyEXFPat(p_pat.rp, p_ids) in
-  mk_AS`SetUnionPattern(l_newLeft, l_newRight, nilCid) ;
+      l_newRight = applyEXFPat(p_pat.rp, p_ids)
+  in mk_AS`SetUnionPattern(l_newLeft, l_newRight, nilCid) ;
 
 applyEXFSeqConcPat : AS`SeqConcPattern * set of XF`EXFId -> AS`SeqConcPattern
 applyEXFSeqConcPat(p_pat, p_ids) ==
   let l_newLeft = applyEXFPat(p_pat.lp, p_ids),
-      l_newRight = applyEXFPat(p_pat.rp, p_ids) in
-  mk_AS`SeqConcPattern(l_newLeft, l_newRight, nilCid) ;
+      l_newRight = applyEXFPat(p_pat.rp, p_ids)
+  in mk_AS`SeqConcPattern(l_newLeft, l_newRight, nilCid) ;
 
 applyEXFMapMergePat : AS`MapMergePattern * set of XF`EXFId -> AS`MapMergePattern
 applyEXFMapMergePat(p_pat, p_ids) ==
   let l_newLeft = applyEXFPat(p_pat.lp, p_ids),
-      l_newRight = applyEXFPat(p_pat.rp, p_ids) in
-  mk_AS`MapMergePattern(l_newLeft, l_newRight, nilCid) ;
-
-applyEXFMapletPat : AS`MapletPattern * set of XF`EXFId -> AS`MapletPattern
-applyEXFMapletPat(p_pat, p_ids) ==
-  let l_newDom = applyEXFPat(p_pat.dp, p_ids),
-      l_newRng = applyEXFPat(p_pat.rp, p_ids) in
-  mk_AS`MapletPattern(l_newDom, l_newRng, nilCid) ;
+      l_newRight = applyEXFPat(p_pat.rp, p_ids)
+  in mk_AS`MapMergePattern(l_newLeft, l_newRight, nilCid) ;
 
 applyEXFObjectPat : AS`ObjectPattern * set of XF`EXFId -> AS`ObjectPattern
 applyEXFObjectPat(p_pat, p_ids) ==
-  let l_newFields = applyEXFPatList(p_pat.fields, p_ids) in
-  mk_AS`ObjectPattern(p_pat.cls, l_newFields, nilCid) ;
-
-applyEXFFieldPat : AS`FieldPattern * set of XF`EXFId -> AS`FieldPattern
-applyEXFFieldPat(p_pat, p_ids) ==
-  let l_newPat = applyEXFPat(p_pat.pat, p_ids)
-  in
-  mk_AS`FieldPattern(p_pat.nm, l_newPat, nilCid) ;
+  let l_newFields = [ let mk_AS`FieldPattern(nm,pat,-) = p_pat.fields(i)
+                      in mk_AS`FieldPattern(nm, applyEXFPat(pat, p_ids), nilCid)
+                      | i in set inds p_pat.fields ]
+  in mk_AS`ObjectPattern(p_pat.cls, l_newFields, nilCid) ;
 
 applyEXFPatList : seq of AS`Pattern * set of XF`EXFId -> seq of AS`Pattern
 applyEXFPatList(p_list, p_ids) == 

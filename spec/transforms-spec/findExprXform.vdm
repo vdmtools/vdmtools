@@ -146,15 +146,17 @@ exfsPat(p_pat, p_ids) ==
     mk_AS`MatchVal(l_val, -)             -> exfsExpr(l_val, p_ids),
     mk_AS`SetEnumPattern (l_patList, -) ,
     mk_AS`SeqEnumPattern (l_patList, -) ,
-    mk_AS`MapEnumPattern (l_patList, -) ,
     mk_AS`RecordPattern (-, l_patList, -) ,
     mk_AS`TuplePattern (l_patList, -)    -> exfsPatList(l_patList, p_ids),
     mk_AS`SetUnionPattern (l_lp, l_rp, -) ,
     mk_AS`SeqConcPattern (l_lp, l_rp, -) ,
     mk_AS`MapMergePattern (l_lp, l_rp, -)   -> exfsPatList ( [ l_lp, l_rp ], p_ids),
-    mk_AS`MapletPattern(l_dp, l_rp, -)      -> exfsPatList ( [ l_dp, l_rp ], p_ids),
-    mk_AS`ObjectPattern (-, l_patList, -)   -> exfsPatList(l_patList, p_ids),
-    mk_AS`FieldPattern(-, l_p, -)      -> exfsPatList ( [ l_p ], p_ids),
+    mk_AS`MapEnumPattern (l_patList, -)
+       -> exfsPatList( conc [ let mk_AS`MapletPattern(l_dp, l_rp, -) = l_patList(i)
+                              in [ l_dp, l_rp ] | i in set inds l_patList ], p_ids),
+    mk_AS`ObjectPattern (-, l_patList, -) 
+       -> exfsPatList( [ let mk_AS`FieldPattern(-, l_p, -) = l_patList(i)
+                         in l_p | i in set inds l_patList ], p_ids),
     others -> emptyXFExpr(p_ids)
   end ;
 

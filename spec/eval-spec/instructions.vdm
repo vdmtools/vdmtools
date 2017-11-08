@@ -1834,14 +1834,15 @@ functions
       mk_STKM`SetUnionPattern(lp,rp)  -> NameInPattern(lp) union NameInPattern(rp),
       mk_STKM`SeqEnumPattern(els)     -> dunion {NameInPattern(p) | p in set elems els},
       mk_STKM`SeqConcPattern(lp,rp)   -> NameInPattern(lp) union NameInPattern(rp),
-      mk_STKM`MapEnumPattern(mls)     -> dunion {NameInPattern(p) | p in set elems mls},
+      mk_STKM`MapEnumPattern(mls)
+         -> dunion { NameInPattern(dp) union NameInPattern(rp)
+                     | mk_STKM`MapletPattern(dp,rp) in set elems mls},
       mk_STKM`MapMergePattern(lp,rp)  -> NameInPattern(lp) union NameInPattern(rp),
       mk_STKM`RecordPattern(-,fields) -> dunion {NameInPattern(p) | p in set elems fields},
       mk_STKM`TuplePattern(fields)    -> dunion {NameInPattern(p) | p in set elems fields},
-      mk_STKM`MapletPattern(dp,rp)    -> NameInPattern(dp) union NameInPattern(rp),
 #ifdef VDMPP
-      mk_STKM`ObjectPattern(-,fields) -> dunion {NameInPattern(p) | p in set elems fields},
-      mk_STKM`FieldPattern(-,p)       -> NameInPattern(p),
+      mk_STKM`ObjectPattern(-,fields)
+         -> dunion { NameInPattern(p) | mk_STKM`FieldPattern(-,p) in set elems fields },
 #endif VDMPP
       others                          -> undefined
   end;
