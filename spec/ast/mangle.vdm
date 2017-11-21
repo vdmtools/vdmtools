@@ -31,28 +31,25 @@ definitions
 functions
 
 Mangle : AS`Name * seq of AS`Type +> AS`Name
-Mangle(p_nm, p_tps) == 
-  let l_idx = len p_nm.ids, 
-      l_arity = UTIL`itoa(len p_tps),
-      l_stringRep = stringifyTypeSeq(p_tps, '-'),
-      l_newId = p_nm.ids(l_idx) ^ "#" ^ l_arity ^ "|" ^ l_stringRep,
-      l_newIds = p_nm.ids ++ {l_idx |-> l_newId}
-  in
-    mu(p_nm, ids |-> l_newIds);
+Mangle(mk_AS`Name(cids ^ [id],cid), p_tps) == 
+  def l_arity = UTIL`itoa(len p_tps);
+      l_stringRep = stringifyTypeSeq(p_tps, '-');
+      l_newId = id ^ "#" ^ l_arity ^ "|" ^ l_stringRep;
+  in mk_AS`Name(cids ^ [l_newId], cid);
 
 UnMangle : AS`Name -> AS`Name * nat * seq of AS`Type
 UnMangle(p_nm) ==
-  def l_idx = len p_nm.ids;
-      mk_(l_id,l_arit,l_tpL) = UnMangleTypeSeq(p_nm.ids(l_idx))
-  in
-    mk_(mk_AS`Name(p_nm.ids ++ {l_idx |-> l_id},CI`NilContextId), l_arit, l_tpL)
+  def mk_AS`Name(cids ^ [id], cid) = p_nm;
+      mk_(l_id,l_arit,l_tpL) = UnMangleTypeSeq(id);
+  in mk_(mk_AS`Name(cids ^ [l_id], cid), l_arit, l_tpL)
 pre IsMangled(p_nm);
 
 IsMangled: AS`Name +> bool
-IsMangled(p_nm) ==
-  let l_idx = len p_nm.ids
-  in
-    '#' in set elems p_nm.ids(l_idx);
+IsMangled(mk_AS`Name(- ^ [id],-)) ==
+  cases id:
+    - ^ "#" ^ - -> true,
+    others      -> false
+  end;
 
 MethType2Seq : AS`OpType | AS`FnType | AS`ParameterTypes +> seq of AS`Type
 MethType2Seq(p_tp) ==
@@ -65,10 +62,8 @@ MethType2Seq(p_tp) ==
 
 GetUnmangledName : AS`Name -> AS`Name
 GetUnmangledName(p_nm) ==
-  let l_idx = len p_nm.ids,
-      l_unmangled ^ "#" ^ - = p_nm.ids(l_idx)
-  in
-    mu(p_nm, ids |-> p_nm.ids ++ {l_idx |-> l_unmangled})
+  let mk_AS`Name(cids ^ [l_unmangled ^ "#" ^ -], cid) = p_nm
+  in mk_AS`Name(cids ^ [l_unmangled], cid )
 pre IsMangled(p_nm);
 
 \end{vdm_al}
