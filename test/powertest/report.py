@@ -1,6 +1,6 @@
 true, false = 1,0
 
-import sys, time, getpass, socket, cmdline,os
+import sys, time, getpass, socket, cmdline, os, platform
 import cmdline, util
 
 #--------------------------------------------------------------------------------
@@ -216,6 +216,8 @@ def genReport():
   
   reportStream.write("User: " + getpass.getuser()+"\n")
   reportStream.write("Host: " + socket.gethostname()+"\n")
+  major, minor, patchlevel = platform.python_version_tuple()
+  reportStream.write("Python: " + major + "." + minor + "." + patchlevel + "\n")
 
   tot = int(time.time() - startSec);
   reportStream.write("Total time: " + PrintTime(tot) +"\n")
