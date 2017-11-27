@@ -7,7 +7,7 @@ if [[ -z "${OMNIORBDIR}" ]]; then
   OMNIORBDIR=/usr/local/omniORB
 fi
 PYVERSION=$(${PYTHON} -V 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1 "." $2}')
-PYVERSION_MAJOR=$(${PYTHON} -V 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
+#PYVERSION_MAJOR=$(${PYTHON} -V 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
 SITEPACKAGES=${OMNIORBDIR}/lib/python${PYVERSION}/site-packages
 SITEPACKAGES64=${OMNIORBDIR}/lib64/python${PYVERSION}/site-packages
 PYTHONPATH=${SITEPACKAGES}/omniORB:${SITEPACKAGES}
@@ -25,8 +25,9 @@ IFS_BACKUP=${IFS}
 IFS=$'\n'
 DIR=`dirname $0`
 IFS=${IFS_BACKUP}
-if [ "2" = ${PYVERSION_MAJOR} ]; then
-  "${DIR}/powertest.script" "$@"
-else
-  "${DIR}/powertest3.script" "$@"
-fi
+#if [ "2" = ${PYVERSION_MAJOR} ]; then
+#  "${DIR}/powertest.script" "$@"
+#else
+#  "${DIR}/powertest3.script" "$@"
+#fi
+${PYTHON} "${DIR}/powertest.py" "$@"
