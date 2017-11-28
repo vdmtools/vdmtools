@@ -1799,8 +1799,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
 
   TYPE_REP_SetTypeRep exprType (FindType (expr)); //
   TYPE_CPP_Identifier resL_v (vdm_BC_GiveName(ASTAUX::MkId(L"res_l")));
-  TYPE_CPP_Identifier bindL_v (vdm_BC_GiveName(ASTAUX::MkId(L"bind_l")));
-  TYPE_REP_SeqTypeRep bindLType (exprType);
   TYPE_REP_TypeRep resSType (exprType);
   TYPE_CPP_Identifier succ_v (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
 
@@ -1882,11 +1880,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
   TYPE_CPP_Expr cast;
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
-    if (IsSubType(bindLType, rType)) {
+    if (IsSubType(exprType, rType)) {
       cast = resL_v;
     }
     else {
-      cast = GenExplicitCast(rType, resL_v, bindLType);
+      cast = GenExplicitCast(rType, resL_v, exprType);
     }
   }
   else
@@ -1896,8 +1894,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
   }
 
   SEQ<TYPE_CPP_Stmt> rb_inner;
-  rb_inner.ImpConc (GenDeclInit_DS (bindLType, bindL_v, resS_v));
-  rb_inner.ImpConc(GenIterSeq(mk_CG_VT(bindL_v, bindLType), nil, mk_CG_VT(e_v, eType), todo));
+  rb_inner.ImpConc(GenIterSeq(mk_CG_VT(resS_v, exprType), nil, mk_CG_VT(e_v, eType), todo));
 
   rb.ImpConc (GenDeclEmptySeq (resL_v));
   rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot(GenSeqIsEmpty(resS_v)), vdm_BC_GenBlock(rb_inner), nil));

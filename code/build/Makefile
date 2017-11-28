@@ -4576,7 +4576,7 @@ distclean:
 distall:
 	rm -rf tools-*.o vdm-*.o vdmde-*.o
 	$(MAKE) distcm
-	$(MAKE) be_ip-sl be_spec-sl
+	$(MAKE) be_ip-sl be_spec-sl be_spec-pp
 
 distcm:
 	rm -rf vdmde vdmqt vppde vppqt vicede viceqt j2vdll.so

@@ -1715,8 +1715,8 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
     VD`PushFctLoc(dom pid_m);
     def exprType = CGAUX`FindType(expr);
         resL_v = BC`GiveName( "res_l" );
-        bindL_v   = BC`GiveName( "bind_l" );
-        bindLType = exprType;
+        --bindL_v   = BC`GiveName( "bind_l" );
+        --bindLType = exprType;
         resSType  = exprType;
         succ_v    = BC`GiveName( "succ" );
         e_v       = BC`GiveName( "e" );
@@ -1768,23 +1768,19 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
        in
         (dcl cast : CPP`Expr,
              rb_inner : seq of CPP`Stmt := [],
-             todo : seq of CPP`Stmt := [];
+             todo : seq of CPP`Stmt := MergeStmts( decls, pm');
 
 #ifdef VDMPP
          if CPP`isJAVA()
          then
-           if CGAUX`IsSubType(bindLType, rType)
+           if CGAUX`IsSubType(exprType, rType)
            then cast := resL_v
-           else cast := DS`GenExplicitCast(rType, resL_v, bindLType)
+           else cast := DS`GenExplicitCast(rType, resL_v, exprType)
          else
 #endif VDMPP
            cast := resL_v;
 
-         rb_inner := rb_inner ^ DS`GenDeclInit (bindLType, bindL_v, resS_v);
-        
-         todo := todo ^ MergeStmts( decls, pm');
-
-         rb_inner := rb_inner ^ DS`GenIterSeq( mk_CGMAIN`VT( bindL_v,bindLType ),
+         rb_inner := rb_inner ^ DS`GenIterSeq( mk_CGMAIN`VT( resS_v, exprType ),
                                                nil,
                                                mk_CGMAIN`VT( e_v, eType ),
                                                todo);
