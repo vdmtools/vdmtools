@@ -1937,9 +1937,9 @@ GenEqualsMethod(cn,sl,tenv, dcenv) ==
             then
              (dcl new_expr : CPP`Expr;
               if CGMAIN`get_smalltypes_option() and tenv(s) in set basic
-              then new_expr := BC`GenEq(s,BC`GenQualifiedName(temp,s))
+              then new_expr := BC`GenEq(s,BC`GenObjectMemberAccess(temp,s))
               else new_expr := BC`GenFctCall(BC`GenIdentifier("UTIL.equals"),
-                                             [s,BC`GenQualifiedName(temp,s)]);
+                                             [s,BC`GenObjectMemberAccess(temp,s)]);
               if expr = nil
               then expr := new_expr
               else expr := BC`GenLogAnd(expr, new_expr)

@@ -5121,7 +5121,7 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
          (dcl rec : CPP`Expr := tmpRec;
           if is_CPP`CastExpr(tmpRec)
           then rec := BC`GenBracketedExpr(tmpRec);
-          def getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm));
+          def getfield = BC`GenObjectMemberAccess(rec, BC`Rename2(fsnm));
           in
            (dcl cast : CPP`Expr := getfield;
             if not CGAUX`IsSubType(type, resTp)
@@ -5133,7 +5133,7 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
               mk_REP`CompositeTypeRep(-, fields) = ctr;
               i = FindField(fields, fsnm);
               mk_REP`FieldRep(-, type, -) = fields(i);
-              getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm));
+              getfield = BC`GenObjectMemberAccess(rec, BC`Rename2(fsnm));
           in
            (dcl cast : CPP`Expr := getfield;
             if not CGAUX`IsSubType(type, resTp)
@@ -5152,14 +5152,14 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
             def rec = if is_CPP`CastExpr(tmpRec)
                       then BC`GenBracketedExpr(tmpRec)
                       else tmpRec;
-                getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm))
+                getfield = BC`GenObjectMemberAccess(rec, BC`Rename2(fsnm))
             in
               return [BC`GenAsgnStmt(resVar_v, getfield)]
           else
             for all otr in set posORefTypes do
               def clnm = otr.nm;
                   rec = BC`GenBracketedExpr(DS`GenCastType( otr, tmpRec ));
-                  getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm));
+                  getfield = BC`GenObjectMemberAccess(rec, BC`Rename2(fsnm));
                   l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
                   if_cond = BC`GenTypeComp(BC`Rename(clnm), tmpRec)
               in
@@ -5431,7 +5431,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                         if not CGAUX`IsCompositeType(recTp)
                         then cast := BC`GenBracketedExpr(DS`GenCastRecord(rec,tagnm));
                         stmt_l := stmt_l ^ val_stmt;
-                        stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenQualifiedName(cast,BC`Rename2(nm)),
+                        stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenObjectMemberAccess(cast,BC`Rename2(nm)),
                                                 DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];);
                   return stmt_l;
                  )
@@ -5463,7 +5463,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                             cast = BC`GenBracketedExpr(DS`GenCastRecord(rec,tagnm))
                         in
                          (stmt_l := stmt_l ^ val_stmt;
-                          stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenQualifiedName(cast,BC`Rename2(nm)),
+                          stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenObjectMemberAccess(cast,BC`Rename2(nm)),
                                                         DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];
                          );
                       ifs := BC`GenIfStmt(isRecord, BC`GenBlock(stmt_l), ifs);

@@ -4167,10 +4167,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
   for (bool cc = nm_s.First(nm); cc; cc = nm_s.Next(nm)) {
     TYPE_CPP_Expr cast (CastToClassPtr(nm, oid_));
 
-    //  // In addition to the specification:
-    //  Record df( ss->LookUpDefClassForMethod(nm,mthd) );
-    //  Record mthd2( vdm_BC_GenQualifiedName(vdm_BC_Rename(df), vdm_BC_Rename(mthd)) );
-
     if (vdm_CPP_isCPP()) {
       TYPE_CPP_Expr fcall (vdm_BC_GenFctCallPtrToObjMemAcc(cast, mthd2, id_l));
       SEQ<TYPE_CPP_Stmt> estmt (GenInvoke(res, false, fcall, last));
@@ -5682,7 +5678,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
       const TYPE_REP_FieldRep & fi (fields[i]);
       const TYPE_REP_TypeRep & type (fi.GetRecord(pos_REP_FieldRep_tp));
       TYPE_CPP_Expr rec (tmpRec.Is(TAG_TYPE_CPP_CastExpr) ? vdm_BC_GenBracketedExpr(tmpRec) : tmpRec);
-      TYPE_CPP_QualifiedName getfield (vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)));
+      TYPE_CPP_Expr getfield (vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(fsnm)));
       TYPE_CPP_Expr cast (IsSubType(type, resTp) ? getfield : GenExplicitCast(resTp, getfield, type));
       return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, cast));
     }
@@ -5698,7 +5694,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
         const TYPE_REP_FieldRep & fi (fields[i]);
         const TYPE_REP_TypeRep & type (fi.GetRecord(pos_REP_FieldRep_tp));
 
-        TYPE_CPP_QualifiedName getfield (vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)));
+        TYPE_CPP_Expr getfield (vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(fsnm)));
         TYPE_CPP_Expr cast (IsSubType(type, resTp) ? getfield : GenExplicitCast(resTp, getfield, type));
         TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, cast));
         if (alt.IsEmpty()) {
@@ -5712,7 +5708,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
       if (!posORefTypes.IsEmpty()) {
         if (tmpRecType.Is(TAG_TYPE_REP_ObjRefTypeRep) && (posORefTypes.Card() == 1)) {
           TYPE_CPP_Expr rec (tmpRec.Is(TAG_TYPE_CPP_CastExpr) ? vdm_BC_GenBracketedExpr(tmpRec) : tmpRec);
-          TYPE_CPP_QualifiedName getfield (vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)));
+          TYPE_CPP_Expr getfield (vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(fsnm)));
           return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, getfield));
         }
         else {
@@ -5721,7 +5717,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
             TYPE_REP_ObjRefTypeRep otr (t);
             TYPE_CPP_Expr rec (vdm_BC_GenBracketedExpr(GenCastType(otr, tmpRec)));
             const TYPE_AS_Name & clnm (otr.GetRecord(pos_REP_ObjRefTypeRep_nm));
-            TYPE_CPP_QualifiedName getfield (vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)));
+            TYPE_CPP_Expr getfield (vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(fsnm)));
             TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, getfield));
             TYPE_CPP_Expr if_cond (vdm_BC_GenTypeComp(vdm_BC_Rename(clnm), tmpRec));
             if (alt.IsEmpty()) {
@@ -5992,7 +5988,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
 
           const TYPE_CPP_Expr cast (IsCompositeType(recTp) ? rec : vdm_BC_GenBracketedExpr(GenCastRecord(rec, tagnm)));
           stmt_l.ImpConc(val_stmt);
-          stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename2(nm)),
+          stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(cast, vdm_BC_Rename2(nm)),
                                               GenExplicitCast(type, val, FindType(newval))));
         }
         return stmt_l;
@@ -6040,7 +6036,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
 
             TYPE_CPP_Expr cast (vdm_BC_GenBracketedExpr(GenCastRecord(rec, tagnm)));
             stmt_l.ImpConc(val_stmt);
-            stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename2(nm)),
+            stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(cast, vdm_BC_Rename2(nm)),
                                                 GenExplicitCast(type, val, FindType(newval))));
           }
           ifs = vdm_BC_GenIfStmt(isRecord, vdm_BC_GenBlock(stmt_l), ifs);

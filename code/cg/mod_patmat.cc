@@ -2115,7 +2115,7 @@ Tuple vdmcg::CGMatchObjectPattern (const TYPE_AS_ObjectPattern & pat,
       TYPE_CPP_Expr getfield;
       if (vdm_CPP_isJAVA()) {
         cast = (type.Is(TAG_TYPE_REP_ObjRefTypeRep) ? varExpr_v : CastToClassPtr(cls, varExpr_v));
-        getfield = vdm_BC_GenQualifiedName(vdm_BC_GenBracketedExpr(cast), vdm_BC_Rename2(nm));
+        getfield = vdm_BC_GenObjectMemberAccess(vdm_BC_GenBracketedExpr(cast), vdm_BC_Rename2(nm));
       }
       else
       {
@@ -2159,7 +2159,7 @@ Tuple vdmcg::CGMatchObjectPattern (const TYPE_AS_ObjectPattern & pat,
         const TYPE_AS_Pattern p (fp.GetRecord(pos_AS_FieldPattern_pat));
         TYPE_REP_TypeRep f_type (FindType(p));
         TYPE_CPP_Expr getfield (vdm_CPP_isJAVA()
-                    ? vdm_BC_GenQualifiedName(vdm_BC_GenBracketedExpr(cast), vdm_BC_Rename2(nm))
+                    ? vdm_BC_GenObjectMemberAccess(vdm_BC_GenBracketedExpr(cast), vdm_BC_Rename2(nm))
                     : vdm_BC_GenPointerToObjectMemberAccess(cast, vdm_BC_Rename(nm)));
         p_l.ImpAppend(p);
         tp_l.ImpAppend(f_type);

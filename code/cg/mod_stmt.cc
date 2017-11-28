@@ -792,7 +792,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
       TYPE_CPP_Expr rec (level.Is(TAG_TYPE_CPP_CastExpr) ? vdm_BC_GenBracketedExpr(level) : level);
-      TYPE_CPP_Stmt setfield (vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)), val));
+      TYPE_CPP_Stmt setfield (vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(fsnm)), val));
       alt.ImpAppend(setfield);
     }
     else
@@ -809,7 +809,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
     if(vdm_CPP_isJAVA()) {
       TYPE_REP_TypeRep tp (GetStatSem().LookUpInstanceVar(ASTAUX::Combine2Names(clnm, fsnm)));
       TYPE_CPP_Expr rec (level.Is(TAG_TYPE_CPP_CastExpr) ? vdm_BC_GenBracketedExpr(level) : level);
-      TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(rec, vdm_BC_Rename(fsnm)),
+      TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename(fsnm)),
                                                                GenExplicitCast(tp, val, nil)));
       alt.ImpAppend(l_asgn);
     }
@@ -844,7 +844,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
         TYPE_CPP_Expr rec (vdm_BC_GenBracketedExpr(GenCastType(ctr, level)));
-        setfield = vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)), val);
+        setfield = vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(fsnm)), val);
       }
       else
 #endif // VDMPP
@@ -871,7 +871,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
           TYPE_CPP_Expr if_cond (vdm_BC_GenTypeComp(vdm_BC_Rename(clnm), level));
           TYPE_REP_TypeRep tp (GetStatSem().LookUpInstanceVar(ASTAUX::Combine2Names(clnm, fsnm)));
           TYPE_CPP_Expr cast (vdm_BC_GenBracketedExpr(GenCastType(otr, level)));
-          TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename(fsnm)),
+          TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(cast, vdm_BC_Rename(fsnm)),
                                                    GenExplicitCast(tp, val, nil)));
           if (alt.IsEmpty()) {
             alt.ImpAppend(l_asgn);

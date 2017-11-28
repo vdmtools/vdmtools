@@ -1919,11 +1919,11 @@ TYPE_CPP_FunctionDefinition vdmcg::GenEqualsMethod(const TYPE_CPP_Identifier & c
       if (!dcenv[s].GetValue()) {
         TYPE_CPP_Expr new_expr;
         if ((get_smalltypes_option()) && (basic.InSet(tenv[s]))) {
-          new_expr = vdm_BC_GenEq(s, vdm_BC_GenQualifiedName(temp, s));
+          new_expr = vdm_BC_GenEq(s, vdm_BC_GenObjectMemberAccess(temp, s));
         }
         else {
           new_expr = vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.equals")),
-                                type_dL().ImpAppend(s).ImpAppend(vdm_BC_GenQualifiedName(temp, s)));
+                                type_dL().ImpAppend(s).ImpAppend(vdm_BC_GenObjectMemberAccess(temp, s)));
         }
         if (expr.IsNil()) {
           expr = new_expr;

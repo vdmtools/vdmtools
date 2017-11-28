@@ -1698,7 +1698,7 @@ CGMatchObjectPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                  (if is_REP`ObjRefTypeRep(type)
                   then cast := varExpr_v
                   else cast := DS`CastToClassPtr(cls, varExpr_v);
-                  getfield := BC`GenQualifiedName(BC`GenBracketedExpr(cast), BC`Rename2(nm)))
+                  getfield := BC`GenObjectMemberAccess(BC`GenBracketedExpr(cast), BC`Rename2(nm)))
                 else
                  (cast := DS`CastToClassPtr(cls, varExpr_v);
                   getfield := BC`GenPointerToObjectMemberAccess(cast, BC`Rename(nm)));
@@ -1730,7 +1730,7 @@ CGMatchObjectPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                     in
                      (dcl name : CPP`Expr;
                       if CPP`isJAVA() 
-                      then name := BC`GenQualifiedName(BC`GenBracketedExpr(cast), BC`Rename2(nm))
+                      then name := BC`GenObjectMemberAccess(BC`GenBracketedExpr(cast), BC`Rename2(nm))
                       else name := BC`GenPointerToObjectMemberAccess( cast, BC`Rename(nm) );
                       p_l := p_l ^ [p];
                       tp_l := tp_l ^ [f_type];

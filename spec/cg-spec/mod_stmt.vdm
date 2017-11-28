@@ -643,7 +643,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
           def rec = if is_CPP`CastExpr(level)
                     then BC`GenBracketedExpr(level)
                     else level;
-              setfield = BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename2(fsnm)), val);
+              setfield = BC`GenAsgnStmt(BC`GenObjectMemberAccess(rec, BC`Rename2(fsnm)), val);
           in alt := [setfield]
         else
 #endif VDMPP
@@ -660,7 +660,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               rec = if is_CPP`CastExpr(level)
                     then BC`GenBracketedExpr(level)
                     else level;
-              l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename(fsnm)),
+              l_asgn = BC`GenAsgnStmt(BC`GenObjectMemberAccess(rec, BC`Rename(fsnm)),
                                                      DS`GenExplicitCast(tp, val, nil))
           in alt := [l_asgn]
         else
@@ -688,7 +688,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
           if CPP`isJAVA()
           then
             def rec = BC`GenBracketedExpr(DS`GenCastType(ctr, level));
-            in setfield := BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename2(fsnm)), val)
+            in setfield := BC`GenAsgnStmt(BC`GenObjectMemberAccess(rec, BC`Rename2(fsnm)), val)
           else
 #endif VDMPP
             def rec = DS`GenCastRecordTypeForModify( level, rec_nm );
@@ -710,7 +710,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               def if_cond = BC`GenTypeComp(BC`Rename(clnm), level);
                   tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
                   cast = BC`GenBracketedExpr(DS`GenCastType(otr, level));
-                  l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
+                  l_asgn = BC`GenAsgnStmt(BC`GenObjectMemberAccess(cast, BC`Rename(fsnm)),
                                                        DS`GenExplicitCast(tp, val, nil))
               in
                 if alt = []
