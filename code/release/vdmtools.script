@@ -4,8 +4,8 @@ IFS_BACKUP=${IFS}
 IFS=$'\n'
 DIR=`dirname $0`
 IFS=${IFS_BACKUP}
+BINARY=${DIR}/%%BINNAME%%
 if [ "Linux" = $(uname) ]; then
-  BINARY=${DIR}/%%BINNAME%%
   LINKEDLIB=$(ldd ${BINARY} | grep libstdc++ | awk -F ' ' '{print $1}')
   STDCPPLIB=$(ldconfig -p | grep libstdc++ | awk -F ' ' '{print $1}')
   if [ ${LINKEDLIB} = ${STDCPPLIB} ]; then
@@ -16,5 +16,5 @@ if [ "Linux" = $(uname) ]; then
 else
   export LD_LIBRARY_PATH="${DIR}/../lib":${LD_LIBRARY_PATH}
 fi
-"${DIR}/%%BINNAME%%" "$@"
+"${BINARY}" "$@"
 
