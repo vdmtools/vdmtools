@@ -152,13 +152,13 @@ Generic vdm_JNIEnv::CreateJavaVM(const Sequence & p)
   int len_optionSeq = optionSeq.Length();
   JavaVMOption * options = new JavaVMOption[len_optionSeq];
   vector<string> ops;
-  for (int i = 1; i <= len_optionSeq; i++)
-  {
+  for (int i = 1; i <= len_optionSeq; i++) {
     ops.push_back(wstring2string(optionSeq[i].GetString()));
     options[i-1].optionString = (char *)((*ops.rbegin()).c_str());
   }
   vm_args.options = options;
   vm_args.nOptions = len_optionSeq;
+  vm_args.ignoreUnrecognized = true;
 
   /* Java VM の作成 */
   jint res = JNI_CreateJavaVM(&this->jvm, (void **)&this->env, &vm_args);
