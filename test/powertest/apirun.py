@@ -53,7 +53,7 @@ def execute(lang, testType):
       return false
       _exit (-1)
     
-    waittime = 2 
+    waittime = 5 
     print ("Waiting " + str(waittime) + " seconds for " + lang + "-server to start up...")
     time.sleep (waittime)
     
