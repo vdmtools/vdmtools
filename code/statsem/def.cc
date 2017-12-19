@@ -2864,8 +2864,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
         }
       }
     }
-    else
-    {
+    else {
       //-----------------------------------------------------------
       // Error message #275
       // Operation applied with wrong number of arguments
@@ -2874,8 +2873,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
       reswf = false;
     }
   }
-  else if (oprep.Is(TAG_TYPE_REP_TotalFnTypeRep) || oprep.Is(TAG_TYPE_REP_PartialFnTypeRep))
-  {
+  else if (oprep.Is(TAG_TYPE_REP_TotalFnTypeRep) || oprep.Is(TAG_TYPE_REP_PartialFnTypeRep)) {
     TYPE_REP_FnTypeRep ftr (oprep);
     SEQ<TYPE_REP_TypeRep> fndomtpl;
     switch(ftr.GetTag()) {
@@ -2888,16 +2886,13 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
         break;
       }
     }
-    if (fndomtpl.Length() == args.Length())
-    {
+    if (fndomtpl.Length() == args.Length()) {
       size_t len = args.Length();
-      for (size_t i = 1; i <= len; i++)
-      {
+      for (size_t i = 1; i <= len; i++) {
         Tuple infer (wf_Expr(POS, args[i], fndomtpl[i]));
 //        const Bool & arg_ok (infer.GetBool(1)); // unused
         const TYPE_REP_TypeRep & arg_tp (infer.GetRecord(2));
-        if (!IsCompatible(POS, arg_tp, fndomtpl[i]))
-        {
+        if (!IsCompatible(POS, arg_tp, fndomtpl[i])) {
           //-----------------------------------------------------------
           // Error message #272
           // Function is not applied with parameters
@@ -2908,8 +2903,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
         }
       }
     }
-    else
-    {
+    else {
       //-----------------------------------------------------------
       // Error message #273
       // Function applied with wrong number of arguments
@@ -3494,8 +3488,7 @@ bool StatSem::VerifyRng(const TYPE_REP_TypeRep & tp)
       const SEQ<TYPE_REP_TypeRep> & tps (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       bool forall = true;
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; (idx <= len_tps) && forall; idx++)
-      {
+      for (size_t idx = 1; (idx <= len_tps) && forall; idx++) {
         const TYPE_REP_TypeRep & t (tps[idx]);
         forall = (t.Is(TAG_TYPE_REP_NumericTypeRep) && ((t.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT))));
       }
@@ -3602,10 +3595,10 @@ bool StatSem::NameInSet(const TYPE_AS_Name & n, const SET<TYPE_AS_Name> & sn)
 // tp : AS`FnType
 // ==> bool
 bool StatSem::wf_Measure(const Int & i,
-                              const TYPE_AS_Name & nmq,
-                              const Generic & measu,
-                              const SEQ<TYPE_REP_TypeRep> & fndom,
-                              const TYPE_AS_FnType & tp)
+                         const TYPE_AS_Name & nmq,
+                         const Generic & measu,
+                         const SEQ<TYPE_REP_TypeRep> & fndom,
+                         const TYPE_AS_FnType & tp)
 {
   bool ok_out = true;
 //  Set tpset;
@@ -3619,12 +3612,9 @@ bool StatSem::wf_Measure(const Int & i,
 #endif // VDMPP
   TYPE_AS_Name nm (ExtName(clnm, nmq));
 
-  if (NameInSet(nm, recMap.Dom()))
-  {
-    if (measu.IsNil())
-    {
-      if (Settings.ErrorLevel() >= PRF)
-      {
+  if (NameInSet(nm, recMap.Dom())) {
+    if (measu.IsNil()) {
+      if (Settings.ErrorLevel() >= PRF) {
         //----------------------------------------------------
         // Error message #412
         // "%1" is recursive but does not have a measure defined
@@ -3633,80 +3623,105 @@ bool StatSem::wf_Measure(const Int & i,
       }
       ok_out = false;
     }
-    else
-    {
-      Tuple infer (wf_Name(i, measu));
+    else if (measu == Int(NOTYETSPEC)) {
+      return true;
+    }
+    else {
+      Tuple infer (wf_Expr(i, measu, rep_alltp));
       const Bool & ok_id (infer.GetBool(1));
-      if (!ok_id)
-      {
+
+      if (!ok_id) {
         return ok_out && ok_id; // false 
       }
-      else
-      {
-        TYPE_AS_Name measuq (ExtName(clnm, measu));
-        Generic measdef_ (GetFuncDefWOCtxt(measuq));
-        if (!measdef_.IsNil())
-        {
-          TYPE_AS_FnDef measdef (measdef_);
-          SEQ<TYPE_REP_TypeRep> rfndt (TransTypeList(Nil(), tp.GetSequence(1)));
-          TYPE_REP_TypeRep rfnrt (TransType(Nil(), tp.GetRecord(2)));
-          SEQ<TYPE_REP_TypeRep> mfndt (TransTypeList(Nil(), ASTAUX::GetFnParms(measdef)));
-          TYPE_REP_TypeRep mfnrt (TransType(Nil(), ASTAUX::GetFnRestype(measdef)));
-
-          if (!EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt))
-          {
-            //----------------------------------------------------
-            // Error message #413
-            // "%1" and its measure do not have the same domain
-            //----------------------------------------------------
-            GenErr(nm, WRN1, 413, mk_sequence(PrintName(nmq)));
-            ok_out = false;
+      else {
+// 20171219 -->
+        const TYPE_REP_TypeRep & mtp (infer.GetRecord(2));
+        switch (mtp.GetTag()) {
+          case TAG_TYPE_REP_NumericTypeRep:
+          case TAG_TYPE_REP_ProductTypeRep: {
+            if (!VerifyRng(mtp)) {
+              //----------------------------------------------------
+              // Error message #414
+              // "%1" measure range is not nat or a tuple of nat
+              //----------------------------------------------------
+              GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
+              ok_out = false;
+            }
+            break; 
           }
+          case TAG_TYPE_REP_TotalFnTypeRep:
+          case TAG_TYPE_REP_PartialFnTypeRep:
+          case TAG_TYPE_REP_PolyTypeRep: {
+// <- 20171219
+            TYPE_AS_Name measuq (ExtName(clnm, measu));
+            Generic measdef_ (GetFuncDefWOCtxt(measuq));
+            if (!measdef_.IsNil()) {
+              TYPE_AS_FnDef measdef (measdef_);
+              SEQ<TYPE_REP_TypeRep> rfndt (TransTypeList(Nil(), tp.GetSequence(1)));
+              TYPE_REP_TypeRep rfnrt (TransType(Nil(), tp.GetRecord(2)));
+              SEQ<TYPE_REP_TypeRep> mfndt (TransTypeList(Nil(), ASTAUX::GetFnParms(measdef)));
+              TYPE_REP_TypeRep mfnrt (TransType(Nil(), ASTAUX::GetFnRestype(measdef)));
 
-// 20130703 -->
-          if (mfnrt.Is(TAG_TYPE_REP_PartialFnTypeRep) || mfnrt.Is(TAG_TYPE_REP_TotalFnTypeRep))
-          {
-            //----------------------------------------------------
-            // Error message #449
-            // measure "%1" must not be curry function
-            //----------------------------------------------------
-            GenErr(measu, ERR, 449, mk_sequence(PrintName(measu)));
-            ok_out = false;
+              if (!EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)) {
+                //----------------------------------------------------
+                // Error message #413
+                // "%1" and its measure do not have the same domain
+                //----------------------------------------------------
+                GenErr(nm, WRN1, 413, mk_sequence(PrintName(nmq)));
+                ok_out = false;
+              }
+
+              if (mfnrt.Is(TAG_TYPE_REP_PartialFnTypeRep) || mfnrt.Is(TAG_TYPE_REP_TotalFnTypeRep)) {
+                //----------------------------------------------------
+                // Error message #449
+                // measure "%1" must not be curry function
+                //----------------------------------------------------
+                GenErr(measu, ERR, 449, mk_sequence(PrintName(measu)));
+                ok_out = false;
+              }
+              if (!VerifyRng(mfnrt)) {
+                //----------------------------------------------------
+                // Error message #414
+                // "%1" measure range is not nat or a tuple of nat
+                //----------------------------------------------------
+                GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
+                ok_out = false;
+              }
+
+              TYPE_SSENV_FunctionInfo fi (recMap[nm]);
+              Set mutRec (fi.GetSet(pos_SSENV_FunctionInfo_rec));
+              if (mutRec.InSet(nm)) {
+                mutRec.RemElem(nm);
+              }
+              if (!mutRec.IsEmpty()) {
+                ok_out = VerifyMutRec(mutRec, measdef, nmq) && ok_out;
+              }
+            }
+            else {
+              ok_out = false;
+            }
+            break;
           }
-// <-- 20130703
-          if (!VerifyRng(mfnrt))
-          {
+          default: {
             //----------------------------------------------------
             // Error message #414
             // "%1" measure range is not nat or a tuple of nat
             //----------------------------------------------------
             GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
-            ok_out = false;
+            return false;
           }
-
-          TYPE_SSENV_FunctionInfo fi (recMap[nm]);
-          Set mutRec (fi.GetSet(pos_SSENV_FunctionInfo_rec));
-          if (mutRec.InSet(nm))
-            mutRec.RemElem(nm);
-          if (!mutRec.IsEmpty())
-            ok_out = VerifyMutRec(mutRec, measdef, nmq) && ok_out;
-        }
-        else
-          ok_out = false;
+        } // 1219 switch
       }
     }
-    if (ok_out)
-    {
+    if (ok_out) {
       TYPE_SSENV_FunctionInfo fi (recMap[nm]);
       fi.SetField(pos_SSENV_FunctionInfo_printPO,Bool(true));
       recMap.ImpModify(nm, fi);
       setRecMap(recMap);
     }
   }
-  else
-  {
-    if (!measu.IsNil())
-    {
+  else {
+    if (!measu.IsNil()) {
       //----------------------------------------------------
       // Error message #417
       // "%1" has a measure but it is not recursive

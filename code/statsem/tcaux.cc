@@ -653,26 +653,30 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
                            // It was 2 before!!! Why?
         Generic fndomtp;
         if (LhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = rep_alltp;
-           else
+          }
+          else {
             fndomtp = RhsDom;
-        } else {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          }
+        }
+        else {
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = LhsDom;
-          else
-          {
+          }
+          else {
             SEQ<TYPE_REP_TypeRep> LhsDomS(LhsDom), RhsDomS(RhsDom);
-            if (LhsDomS.Length() == RhsDomS.Length())
-            {
+            if (LhsDomS.Length() == RhsDomS.Length()) {
               SEQ<TYPE_REP_TypeRep> domseq;
               size_t len_LhsDomS = LhsDomS.Length();
-              for (size_t i = 1; i <= len_LhsDomS; i++)
+              for (size_t i = 1; i <= len_LhsDomS; i++) {
                 domseq.ImpAppend(IntersectTypeReps(LhsDomS[i], RhsDomS[i]));
+              }
               fndomtp = domseq;
             }
-            else
+            else {
               fndomtp = rep_alltp;
+            }
           }
         }
         return mk_set(mk_REP_PartialFnTypeRep(fndomtp,

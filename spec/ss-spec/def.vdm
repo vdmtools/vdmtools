@@ -192,10 +192,10 @@ imports
     ConstructImplParms : AS`ParameterTypes -> seq of AS`Pattern
 
     types
-    --AUGUSTO
     FunctionInfo :: 
     rec   : set of AS`Name
-    meas  : [AS`Name] 
+--    meas  : [AS`Name] 
+    meas  : [AS`Expr | <NOTYETSPEC>] 
     printPO: bool; 
    
 #ifdef VDMPP
@@ -242,7 +242,6 @@ imports
 #ifdef VICE
     CpuOrBusOutSideSys: AS`Name ==> bool;
 #endif VICE
-    wf_Name : TYPE`Ind * AS`Name ==> bool * REP`TypeRep;
     wf_Expr : TYPE`Ind * AS`Expr * REP`TypeRep ==> bool * REP`TypeRep,
 
   from STMT operations
@@ -1118,131 +1117,136 @@ functions
 
 operations 
 
-  wf_Measure : TYPE`Ind * AS`Name * [AS`Name] * seq of REP`TypeRep * AS`FnType ==> bool
-  --wf_Measure(i,nm',measu,fndom,tp) == 
+  wf_Measure : TYPE`Ind * AS`Name * [AS`Expr | <NOTYETSPEC> ] * seq of REP`TypeRep * AS`FnType ==> bool
   wf_Measure(i,nm',measu,-,tp) == 
-    ( dcl ok_out : bool := true;
---#ifdef VDMPP
---          tpset : set of (REP`TypeRep | ENV`AccessType  | 
---            set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep) | 
---            set of REP`TypeRep),
---#endif VDMPP
---#ifdef VDMSL
---          tpset : set of REP`TypeRep,
---#endif VDMSL
---          tpdomrng : seq of REP`TypeRep * REP`TypeRep;
-
-      def recMap = ENV`getRecMap();
+   (dcl ok_out : bool := true;
+    def recMap = ENV`getRecMap();
 #ifdef VDMPP
-          clnm   = ENV`GetCurClass();
+        clnm   = ENV`GetCurClass();
 #endif VDMPP
 #ifdef VDMSL
-          clnm   = ENV`GetCurMod();
+        clnm   = ENV`GetCurMod();
 #endif VDMSL
-          nm     = AUX`ExtName(clnm,nm')
-      in 
-      
+        nm     = AUX`ExtName(clnm,nm')
+    in 
       if NameInSet(nm,dom recMap)
       then 
-      (
-        if measu = nil 
+       (if measu = nil 
         then 
-          (
-            ----------------------------------------------------------------
-            -- Error message #412
-            -- "%1" is recursive but does not have a measure defined
-            ----------------------------------------------------------------
-            ERR`GenErr (nm, <WARNING>,412,[ENV`PrintName (nm)]);
-            ok_out := false; -- it is not fatal
+         (----------------------------------------------------------------
+           -- Error message #412
+           -- "%1" is recursive but does not have a measure defined
+           ----------------------------------------------------------------
+           ERR`GenErr (nm, <WARNING>,412,[ENV`PrintName (nm)]);
+           ok_out := false; -- it is not fatal
           )
+        elseif measu = <NOTYETSPEC>
+        then return true
         else   
-          ( -- 1st is the measure identifier defined?
-            def ok_id = EXPR`wf_Name(i,measu).#1
-            in 
-              if not ok_id 
-              then 
-              (
-                ok_out := ok_out and ok_id;
-                return ok_out;
-              )
-              else    
-                def 
-                  measu' = if len measu.ids = 1 then mk_AS`Name(clnm.ids^measu.ids,0) else measu;
-                  measdef = VCM`GetFuncDefWOCtxt(measu') 
-                  -- LookUp might create problems when measure is on other class (because ENV has not been created)
+         (-- 1st is the measure identifier defined?
+          def mk_(ok_id,mtp) = EXPR`wf_Expr(i,measu,mk_REP`AllTypeRep())
+          in 
+            if not ok_id 
+            then 
+             (ok_out := ok_out and ok_id; -- false
+              return ok_out;
+             )
+            else    
+              cases mtp:
+                mk_REP`NumericTypeRep(-),
+                mk_REP`ProductTypeRep(-) ->
+                   if not VerifyRng(mtp)
+                   then 
+                    (----------------------------------------------------------------
+                     -- Error message #414
+                     -- "%1" measure range is not nat or a tuple of nat
+                     ----------------------------------------------------------------
+                     ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                     ok_out := false;
+                    ),
+                mk_REP`TotalFnTypeRep(-,-),
+                mk_REP`PartialFnTypeRep(-,-),
+                mk_REP`PolyTypeRep(-,-) ->
+                   def measu' = if len measu.ids = 1 then mk_AS`Name(clnm.ids^measu.ids,0) else measu;
+                       measdef = VCM`GetFuncDefWOCtxt(measu') 
+                  -- LookUp might create problems when measure is on other class
+                  -- (because ENV has not been created)
                   -- Switch to find in FnDef table
-                in  
-                  if measdef <> nil
-                  then
-                    def rfndt = ENV`TransTypeList(nil, tp.fndom);
-                        rfnrt = ENV`TransType(nil, tp.fnrng);
-                        mfndt = ENV`TransTypeList(nil, measdef.tp.fndom);
-                        mfnrt = ENV`TransType(nil, measdef.tp.fnrng)
-                    in
-                     (
-                       --After get type compare with functions dom
-                       if not EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)
-                       then 
-                        (
-                         ----------------------------------------------------------------
-                         -- Error message #413
-                         -- "%1" and its measure do not have the same domain
-                         ----------------------------------------------------------------
-                         ERR`GenErr (nm, <WARNING>,413,[ENV`PrintName (nm)]);
-                         ok_out := ok_out and false 
-                        );
+                   in  
+                     if measdef <> nil
+                     then
+                       def rfndt = ENV`TransTypeList(nil, tp.fndom);
+                           rfnrt = ENV`TransType(nil, tp.fnrng);
+                           mfndt = ENV`TransTypeList(nil, measdef.tp.fndom);
+                           mfnrt = ENV`TransType(nil, measdef.tp.fnrng)
+                       in
+                        (--After get type compare with functions dom
+                         if not EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)
+                         then 
+                          (----------------------------------------------------------------
+                           -- Error message #413
+                           -- "%1" and its measure do not have the same domain
+                           ----------------------------------------------------------------
+                           ERR`GenErr (nm, <WARNING>,413,[ENV`PrintName (nm)]);
+                           ok_out := ok_out and false 
+                          );
 
-                       if is_REP`PartialFnTypeRep(mfnrt) or is_REP`TotalFnTypeRep(mfnrt) 
-                       then 
-                        (
-                         ----------------------------------------------------------------
-                         -- Error message #449
-                         -- measure "%1" must not be curry function1
-                         ----------------------------------------------------------------
-                         ERR`GenErr (measu, <ERROR>,449,[ENV`PrintName (measu)]);
-                         ok_out := ok_out and false 
-                        );
+                         if is_REP`PartialFnTypeRep(mfnrt) or is_REP`TotalFnTypeRep(mfnrt) 
+                         then 
+                          (----------------------------------------------------------------
+                           -- Error message #449
+                           -- measure "%1" must not be curry function1
+                           ----------------------------------------------------------------
+                           ERR`GenErr (measu, <ERROR>,449,[ENV`PrintName (measu)]);
+                           ok_out := ok_out and false 
+                          );
 
-                       --After compare range of measure with nat
-                       if not VerifyRng(mfnrt)
-                       then 
-                        (
-                          ----------------------------------------------------------------
-                          -- Error message #414
-                          -- "%1" measure range is not nat or a tuple of nat
-                          ----------------------------------------------------------------
-                          ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
-                          ok_out := false;
-                        );
+                         --After compare range of measure with nat
+                         if not VerifyRng(mfnrt)
+                         then 
+                          (----------------------------------------------------------------
+                           -- Error message #414
+                           -- "%1" measure range is not nat or a tuple of nat
+                           ----------------------------------------------------------------
+                           ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                           ok_out := false;
+                          );
 
-                      -- for mutual recursion check other functions measure presence and range  
-                      let mutRec = recMap(nm).rec \ {nm}
-                      in 
-                        if mutRec <> {}
-                        then ok_out := VerifyMutRec(mutRec,measdef,nm') and ok_out;
-                     )
-                  else ok_out := ok_out and false;
-          
-          );
+                          -- for mutual recursion check other functions measure presence and range  
+                          let mutRec = recMap(nm).rec \ {nm}
+                          in 
+                            if mutRec <> {}
+                            then ok_out := VerifyMutRec(mutRec,measdef,nm') and ok_out;
+                         )
+                      else ok_out := ok_out and false,
+                others ->
+                    (----------------------------------------------------------------
+                     -- Error message #414
+                     -- "%1" measure range is not nat or a tuple of nat
+                     ----------------------------------------------------------------
+                     ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                     ok_out := false;
+                    )
+              end;
+         );
         if ok_out 
-          then
-          ( 
-            let newrecMap = recMap ++ { mk_AS`Name(nm.ids,0) |-> mk_ENV`FunctionInfo(recMap(nm).rec,recMap(nm).meas,true)}
-            in ENV`setRecMap(newrecMap)
-          )
-      )
-      else if measu <> nil 
-           then 
-           (
-             ----------------------------------------------------------------
-             -- Error message #417
-             -- "%1" has a measure but it is not recursive
-             ----------------------------------------------------------------
-             ERR`GenErr (nm', <WARNING>,417,[ENV`PrintName (nm')]);      
-           );
+        then
+         (let newrecMap = recMap ++ { mk_AS`Name(nm.ids,0) |-> mk_ENV`FunctionInfo(recMap(nm).rec,recMap(nm).meas,true)}
+          in ENV`setRecMap(newrecMap)
+         )
+       )
+      else
+        if measu <> nil 
+        then 
+         (----------------------------------------------------------------
+          -- Error message #417
+          -- "%1" has a measure but it is not recursive
+          ----------------------------------------------------------------
+          ERR`GenErr (nm', <WARNING>,417,[ENV`PrintName (nm')]);      
+          );
         -- could also check if fn has measure and doesn't need it
 
-      return ok_out
+      return ok_out;
     );
 
 EquivDomFn: TYPE`Ind * seq of REP`TypeRep * seq of REP`TypeRep * REP`TypeRep * REP`TypeRep ==> bool

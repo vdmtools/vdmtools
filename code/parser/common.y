@@ -5862,9 +5862,12 @@ Measure
         : /* empty */
         { $$ = new Generic (Nil());
         }
-        | LEX_MEASURE Name
+        | LEX_MEASURE Expression
         { $$ = new Generic (*$2);
           delete $2;
+        }
+        | LEX_MEASURE LEX_IS LEX_NOT LEX_YET LEX_SPECIFIED
+        { $$ = new Generic (Int(NOTYETSPEC));
         }
         ;
 IdentifierTypePairList

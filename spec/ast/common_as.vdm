@@ -524,7 +524,7 @@ ExplFnDef :: nm      : Name
              fnpost  : [Expr]
              access  : Access
              stat    : bool
-             measu   : [Name]
+             measu   : [Expr | <NOTYETSPEC>]
              CNTXT
 inv fndef == len fndef.nm.ids = 1;
 
@@ -548,7 +548,7 @@ ExtExplFnDef :: nm       : Name
                 fnpost   : [Expr]
                 access   : Access
                 stat     : bool
-                measu   : [Name]
+                measu   : [Expr]
                 CNTXT
 inv fndef == len fndef.nm.ids = 1;
 
