@@ -1215,24 +1215,37 @@ Patterns2Exprs(pat)==
       others                    -> CAST`Pattern2Expr(pat(i))
     end | i in set inds pat ];
 
-GenerateTPO : AS`Name * AS`Name * AS`Name * seq of AS`Expr *  CI`ContextId * POGTP`Context -> [AS`Expr]
+--GenerateTPO : AS`Name * AS`Name * AS`Name * seq of AS`Expr *  CI`ContextId * POGTP`Context -> [AS`Expr]
+GenerateTPO : AS`Name * (AS`Expr | <NOTYETSPEC>) * (AS`Expr | <NOTYETSPEC>) * seq of AS`Expr *  CI`ContextId * POGTP`Context -> [AS`Expr]
 GenerateTPO(-,m1,m2,arg,cid,ctxt) ==
-  def paramete = ExtractParamsCtxt(ctxt.expr); -- TODO: PATCH -- ATTENTION curried functions
-      arg_meas = conc [ Patterns2Exprs(paramete(i).pat) | i in set inds paramete ];
-      app_meas = mk_AS`ApplyExpr(m1, arg_meas, CI`NilContextId);
-      app_meas2 = if m1 = m2
-                  then mk_AS`ApplyExpr(m1,arg,cid)
-                  else mk_AS`ApplyExpr(m2,arg,cid);
-      tpm1 = ENV`LookUp(m1,false);
-      mk_(-,m1rng) = DEF`extractDomRng(tpm1);
-  in
-    cases m1rng:
-      mk_REP`ProductTypeRep(t) ->
-                mk_AS`BinaryExpr( app_meas, mk_(<LEXORD>,len t), app_meas2, CI`NilContextId),
-      others -> mk_AS`BinaryExpr( app_meas, <NUMGT>, app_meas2, CI`NilContextId)
-    end;
+  if m1 = <NOTYETSPEC> or m2 = <NOTYETSPEC>
+  then nil
+  else
+    if is_AS`Name(m1) and is_AS`Name(m2)
+    then 
+      let tpm1 = ENV`LookUp(m1,false),
+          tpm2 = ENV`LookUp(m2,false)
+      in
+        if tpm1 <> nil and tpm2 <> nil
+        then
+          def paramete = ExtractParamsCtxt(ctxt.expr); -- TODO: PATCH -- ATTENTION curried functions
+              arg_meas = conc [ Patterns2Exprs(paramete(i).pat) | i in set inds paramete ];
+              app_meas = mk_AS`ApplyExpr(m1, arg_meas, CI`NilContextId);
+              app_meas2 = if m1 = m2
+                          then mk_AS`ApplyExpr(m1,arg,cid)
+                          else mk_AS`ApplyExpr(m2,arg,cid);
+              --tpm1 = ENV`LookUp(m1,false);
+              mk_(-,m1rng) = DEF`extractDomRng(tpm1);
+          in
+            cases m1rng:
+              mk_REP`ProductTypeRep(t) ->
+                        mk_AS`BinaryExpr( app_meas, mk_(<LEXORD>,len t), app_meas2, CI`NilContextId),
+              others -> mk_AS`BinaryExpr( app_meas, <NUMGT>, app_meas2, CI`NilContextId)
+            end
+        else nil -- TODO
+    else nil; -- TODO
 
-VerifyRecFunApplication : AS`Expr * seq of AS`Expr * CI`ContextId *  POGTP`Context
+VerifyRecFunApplication : AS`Expr * seq of AS`Expr * CI`ContextId * POGTP`Context
                           -> seq of POGTP`ProofObligation
 VerifyRecFunApplication(fct,arg,cid,contxt) ==
   cases fct:
