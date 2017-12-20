@@ -93,7 +93,7 @@ environments improved with the closure environment.
   CASES :: ;
   MEASURE :: ;
   MEASURETPINST :: tpparms : seq of AS`TypeVar;
-  MEASURECHECK :: measu : AS`Name;
+  MEASURECHECK :: ;
   POSTENV :: resnmtps : seq of AS`NameType
              ci :- CI`ContextId;
 

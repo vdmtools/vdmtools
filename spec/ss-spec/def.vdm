@@ -978,7 +978,6 @@ known "feature" that we do not!!!!
       -- static env. etc
       ENV`SetStatic(stat);
 #endif VDMPP
----- AUGUSTO ----   
       def mk_(wf_body, tpe) = wf_Body(i,fnbody,fnrng, dom bindings) in
         def ok_measu = wf_Measure(i,nm,measu,fndom(1),tp) --TODO: ATTENTION !! PATCH !!
         in 
@@ -1161,7 +1160,7 @@ operations
                      -- Error message #414
                      -- "%1" measure range is not nat or a tuple of nat
                      ----------------------------------------------------------------
-                     ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                     ERR`GenErr (measu, <WARNING>,414,[ENV`PrintName (nm)]);
                      ok_out := false;
                     ),
                 mk_REP`TotalFnTypeRep(-,-),
@@ -1224,7 +1223,7 @@ operations
                      -- Error message #414
                      -- "%1" measure range is not nat or a tuple of nat
                      ----------------------------------------------------------------
-                     ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                     ERR`GenErr (measu, <WARNING>,414,[ENV`PrintName (nm)]);
                      ok_out := false;
                     )
               end;

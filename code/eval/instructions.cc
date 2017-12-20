@@ -225,28 +225,12 @@ void StackEval::ExeMEASURETPINST(const SEQ<TYPE_AS_TypeVar> & tpparms)
 
 // ExeMEASURECHECK
 // ==> ()
-void StackEval::ExeMEASURECHECK(const TYPE_AS_Name & measu)
+void StackEval::ExeMEASURECHECK()
 {
   TYPE_SEM_VAL curr_mv (POP());
-//
-  TYPE_SEM_VAL meas_fn (POP()); //
-  if (meas_fn.Is(TAG_TYPE_SEM_CompExplFN)) {
-    const SEQ<TYPE_SEM_ExplFN> & f_l (meas_fn.GetSequence(pos_SEM_CompExplFN_fl));
-    const TYPE_SEM_ExplFN & efn (f_l[1]);
-    const TYPE_AS_FnType & ftp (efn.GetRecord(pos_SEM_ExplFN_tp));
-    TYPE_AS_Type fnrng (ftp.Is(TAG_TYPE_AS_PartialFnType) ? ftp.GetRecord(pos_AS_PartialFnType_fnrng)
-                                                          : ftp.GetRecord(pos_AS_TotalFnType_fnrng));
-//  while(fnrng.Is(TAG_TYPE_AS_PartialFnType) || fnrng.Is(TAG_TYPE_AS_TotalFnType)) {
-//    fnrng = (fnrng.Is(TAG_TYPE_AS_PartialFnType) ? fnrng.GetRecord(pos_AS_PartialFnType_fnrng)
-//                                                 : fnrng.GetRecord(pos_AS_TotalFnType_fnrng));
-//  }
-//wcout << INT2Q::h2gAS(fnrng) << endl;
-//wcout << INT2Q::h2gAS(curr_mv) << endl;
-//
-    // TODO: check data
-    if (curr_mv.Is(TAG_TYPE_SEM_NUM) || curr_mv.Is(TAG_TYPE_SEM_TUPLE)) {
-      theStackMachine().MeasureCheck(curr_mv, measu);
-    }
+  // TODO: check data
+  if (curr_mv.Is(TAG_TYPE_SEM_NUM) || curr_mv.Is(TAG_TYPE_SEM_TUPLE)) {
+    theStackMachine().MeasureCheck(curr_mv);
   }
 }
 

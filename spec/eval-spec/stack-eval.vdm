@@ -3614,9 +3614,9 @@ they were in when the handler was pushed.
 \subsection{Measure Check}
 
 \begin{vdm_al}
-  MeasureCheck: SEM`VAL * AS`Name ==> ()
-  MeasureCheck(curr_mv,-) ==
-     (
+  MeasureCheck: SEM`VAL ==> ()
+  MeasureCheck(curr_mv) ==
+   (
 #ifdef VDMPP
       dcl curr_state : EvaluatorStatus := let curthread = cpustate(curcpu).curthread
                                           in cpustate(curcpu).threadstate(curthread);
@@ -4330,7 +4330,7 @@ operations
     mk_INSTRTP`CASES()                      -> INSTR`ExeCASES(),
     mk_INSTRTP`MEASURE()                    -> INSTR`ExeMEASURE(),
     mk_INSTRTP`MEASURETPINST(tpparams)      -> INSTR`ExeMEASURETPINST(tpparams),
-    mk_INSTRTP`MEASURECHECK(measu)          -> INSTR`ExeMEASURECHECK(measu),
+    mk_INSTRTP`MEASURECHECK()               -> INSTR`ExeMEASURECHECK(),
     mk_INSTRTP`POSTENV(resnmtps,ci)         -> INSTR`ExePOSTENV(resnmtps,ci),
     mk_INSTRTP`DTC(tp)                      -> INSTR`ExeDTC(tp),
     mk_INSTRTP`DTCSET()                     -> INSTR`ExeDTCSET(),

@@ -1555,7 +1555,7 @@ public:
   TYPE_STKM_ProgramCounter FindTrapHandler(const Int & handid, int lengthcallstack);
 
   // measure
-  void MeasureCheck(const TYPE_SEM_VAL & mv, const TYPE_AS_Name & measu);
+  void MeasureCheck(const TYPE_SEM_VAL & mv);
 
   // pc
   void IncrPC(const Int & n);
@@ -1620,7 +1620,7 @@ public:
   void ExeCASES();
   void ExeMEASURE();
   void ExeMEASURETPINST(const SEQ<TYPE_AS_TypeVar> & tpparms);
-  void ExeMEASURECHECK(const TYPE_AS_Name & measu);
+  void ExeMEASURECHECK();
   void ExePOSTENV(const SEQ<TYPE_AS_NameType> & resnmtps, const TYPE_CI_ContextId & ci);
   void ExeNOBODY(const TYPE_RTERR_ERR & err,
                  const TYPE_AS_Name & modname,

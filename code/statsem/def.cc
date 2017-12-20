@@ -3634,7 +3634,6 @@ bool StatSem::wf_Measure(const Int & i,
         return ok_out && ok_id; // false 
       }
       else {
-// 20171219 -->
         const TYPE_REP_TypeRep & mtp (infer.GetRecord(2));
         switch (mtp.GetTag()) {
           case TAG_TYPE_REP_NumericTypeRep:
@@ -3644,7 +3643,7 @@ bool StatSem::wf_Measure(const Int & i,
               // Error message #414
               // "%1" measure range is not nat or a tuple of nat
               //----------------------------------------------------
-              GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
+              GenErr(measu, WRN1, 414, mk_sequence(PrintName(nmq)));
               ok_out = false;
             }
             break; 
@@ -3652,7 +3651,6 @@ bool StatSem::wf_Measure(const Int & i,
           case TAG_TYPE_REP_TotalFnTypeRep:
           case TAG_TYPE_REP_PartialFnTypeRep:
           case TAG_TYPE_REP_PolyTypeRep: {
-// <- 20171219
             TYPE_AS_Name measuq (ExtName(clnm, measu));
             Generic measdef_ (GetFuncDefWOCtxt(measuq));
             if (!measdef_.IsNil()) {
@@ -3707,7 +3705,7 @@ bool StatSem::wf_Measure(const Int & i,
             // Error message #414
             // "%1" measure range is not nat or a tuple of nat
             //----------------------------------------------------
-            GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
+            GenErr(measu, WRN1, 414, mk_sequence(PrintName(nmq)));
             return false;
           }
         } // 1219 switch

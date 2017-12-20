@@ -1224,7 +1224,7 @@ TYPE_STKM_ProgramCounter StackEval::FindTrapHandler(const Int & handid, int leng
 
 // }}}
 // {{{ Measure
-void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv, const TYPE_AS_Name & measu)
+void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv)
 {
   EvaluatorStatus & state (*this->cs_shared_p);
   size_t len_cs = state.call_stack.Length();
@@ -1233,12 +1233,10 @@ void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv, const TYPE_AS_Name & 
   const TYPE_AS_Name & fnnm (curcsi.GetRecord(pos_STKM_CallStackItem_nmOrDesc));
   //size_t len_cs = theStackMachine().CallStackLevel();
   bool found = false;
-  for (size_t idx = 2; (idx <= len_cs) && !found; idx++)
-  {
+  for (size_t idx = 2; (idx <= len_cs) && !found; idx++) {
     //TYPE_STKM_CallStackItem csi (GetCS(Int(idx)));
     const TYPE_STKM_CallStackItem & csi (state.call_stack[idx]);
-    if (csi.GetIntValue(pos_STKM_CallStackItem_type) == CallStackItemType::CS_FNOP)
-    {
+    if (csi.GetIntValue(pos_STKM_CallStackItem_type) == CallStackItemType::CS_FNOP) {
       if (fnnm == csi.GetField(pos_STKM_CallStackItem_nmOrDesc)) {
         const Generic & prev_mv (csi.GetField(pos_STKM_CallStackItem_measu));
         switch (curr_mv.GetTag()) {
@@ -1247,7 +1245,7 @@ void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv, const TYPE_AS_Name & 
               const Real & prev_v (Record(prev_mv).GetReal(pos_SEM_NUM_v));
               const Real & curr_v (curr_mv.GetReal(pos_SEM_NUM_v));
               if (prev_v.LessEqual(curr_v)) {
-                vdm_iplog << L"measure: " << ASTAUX::ASName2String(measu) << L" current: "
+                vdm_iplog << L"measure: " << ASTAUX::ASName2String(fnnm) << L" current: "
                           << curr_v << L" previous: " << prev_v << endl;
                   RTERR::Error(L"MeasureCheck",RTERR_MEASURE_ERROR, Nil(), Nil(), Sequence());
               }
@@ -1274,7 +1272,7 @@ void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv, const TYPE_AS_Name & 
                   }
                 }
                 if (!(forall_ge && (prev_sv_l != curr_sv_l))) {
-                  vdm_iplog << L"measure: " << ASTAUX::ASName2String(measu) << L" current: "
+                  vdm_iplog << L"measure: " << ASTAUX::ASName2String(fnnm) << L" current: "
                             << EvalState::Convert2M4(curr_mv, NULL)
                             << L" previous: " << EvalState::Convert2M4(prev_mv, NULL) << endl;
                   RTERR::Error(L"MeasureCheck",RTERR_MEASURE_ERROR, Nil(), Nil(), Sequence());
@@ -1801,29 +1799,32 @@ TYPE_STKM_EvaluationState StackEval::MainLoopState()
   if(this->cs_shared_p->pc >= this->curr_program_length)
   {
 //    if ( !program.IsEmpty() && !RunTimeError() )
-    if ( !this->curr_program.IsEmpty() && !RunTimeError() )
+    if ( !this->curr_program.IsEmpty() && !RunTimeError() ) {
       this->lastres = Generic(Head());
-
+    }
     return TYPE_STKM_Success();
   }
 #ifdef VDMPP
 #ifdef VICE
   if(theSystem().CPUSwapNeeded(theSystem().GetCurCPU()) || 
-     theScheduler().GetThreadStatus(theScheduler().CurThreadId()).Is(TAG_TYPE_SCHDTP_SyncOp))
-  {
-    if( theSystem().MultCPUs() )
+     theScheduler().GetThreadStatus(theScheduler().CurThreadId()).Is(TAG_TYPE_SCHDTP_SyncOp)) {
+    if( theSystem().MultCPUs() ) {
       return TYPE_STKM_EndOfCPUSlice();
-    else
+    }
+    else {
       return TYPE_STKM_EndOfSlice();
+    }
   }
 #endif // VICE
 //  if(theScheduler().EndOfSliceReached(state))
-  if(theScheduler().EndOfSliceReached(*this->cs_shared_p))
+  if(theScheduler().EndOfSliceReached(*this->cs_shared_p)) {
     return TYPE_STKM_EndOfSlice();
+  }
 #endif //VDMPP
 #ifdef VICE
-  if(theScheduler().ASyncOpThread(theScheduler().CurThreadId()))
+  if(theScheduler().ASyncOpThread(theScheduler().CurThreadId())) {
     return TYPE_STKM_Success();
+  }
 #endif // VICE
   // Default
   return TYPE_STKM_Interrupt();
@@ -1924,7 +1925,7 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
     }
 
     case TAG_TYPE_INSTRTP_MEASURECHECK: {
-      ExeMEASURECHECK(i.GetRecord(pos_INSTRTP_MEASURECHECK_measu));
+      ExeMEASURECHECK();
       break;
     }
 

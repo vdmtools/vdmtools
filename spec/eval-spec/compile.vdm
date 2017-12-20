@@ -281,38 +281,89 @@ index of the table entry.
     in 
       if measu <> nil and not is_(fnbody, AS`NoBody)
       then
-       (dcl tsp : STKM`SubProgram := CEXPR`E2I(measu),
-            count : nat := 0;
-        cases fndef:
-          mk_AS`ExplFnDef(-,tpparms,-,parms,-,-,-,-,-,-,-) ->
-              (if tpparms <> []
-               then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(tpparms) ];
-               tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
-               for pat_l in parms do
-                 if pat_l <> []
-                 then 
-                  (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
-                   count := count + len pat_l);
-              ),
-          mk_AS`ExtExplFnDef(-,params,parml,-,-,-,-,-,-,-,-) ->
-              (if params <> []
-               then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(params) ];
-               tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
-               for mk_AS`PatTypePair(pat_l,-,-) in parml do
-                (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
-                 count := count + len pat_l);
-              )
-        end;
-        tsp := tsp ^ [ mk_INSTRTP`PUSHLIST(count) ];
+        if measu <> <NOTYETSPEC>
+        then
+         (dcl tsp : STKM`SubProgram := CEXPR`E2I(measu);
+          if MeasureIsId(fndef)
+          then
+           (dcl count : nat := 0;
+              cases fndef:
+                mk_AS`ExplFnDef(-,tpparms,-,parms,-,-,-,-,-,-,-) ->
+                    (if tpparms <> []
+                     then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(tpparms) ];
+                     tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
+                     for pat_l in parms do
+                       if pat_l <> []
+                       then 
+                        (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
+                         count := count + len pat_l);
+                    ),
+                mk_AS`ExtExplFnDef(-,params,parml,-,-,-,-,-,-,-,-) ->
+                    (if params <> []
+                     then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(params) ];
+                     tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
+                     for mk_AS`PatTypePair(pat_l,-,-) in parml do
+                      (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
+                       count := count + len pat_l);
+                    )
+              end;
+            tsp := tsp ^ [ mk_INSTRTP`PUSHLIST(count) ];
 #ifdef VDMPP
-        tsp := tsp ^ [ mk_INSTRTP`GUARD(true) ];
+            tsp := tsp ^ [ mk_INSTRTP`GUARD(true) ];
 #endif VDMPP
-        tsp := tsp ^ SetContext(measu.cid, false)
-                   ^ [ mk_INSTRTP`APPLY(), mk_INSTRTP`MEASURECHECK(measu) ];
-        sp := CEXPR`ConcIfThenElse( [ mk_INSTRTP`MEASURE() ], tsp, [] );
-       );
+            tsp := tsp ^ SetContext(measu.cid, false)
+                       ^ [ mk_INSTRTP`APPLY(), mk_INSTRTP`REMSTACKELEM(2) ];
+           );
+          tsp := tsp ^ [ mk_INSTRTP`MEASURECHECK() ];
+          sp := CEXPR`ConcIfThenElse( [ mk_INSTRTP`MEASURE() ], tsp, [] );
+         );
     return sp;
    );
+
+functions
+  MeasureIsId: AS`FnDef -> bool
+  MeasureIsId(fndef) ==
+    let measu = fndef.measu
+    in 
+      cases measu:
+        nil             -> false,
+        <NOTYETSPEC>    -> false,
+        mk_AS`Name(-,-) ->
+          cases fndef:
+            mk_AS`ExplFnDef(-,-,-,parms,-,-,-,-,-,-,-) ->
+              let nm_s = dunion { NamesInPatternList(pat_l) | pat_l in set elems parms }
+              in measu not in set nm_s,
+            mk_AS`ExtExplFnDef(-,-,parml,-,-,-,-,-,-,-,-) ->
+              let nm_s = dunion { NamesInPatternList(pat_l)
+                                   | mk_AS`PatTypePair(pat_l,-,-) in set elems parml }
+              in measu not in set nm_s,
+            others -> undefined
+          end,
+        others          -> false
+      end;
+
+  NamesInPatternList: seq of AS`Pattern -> set of AS`Name
+  NamesInPatternList(pat_l) ==
+     dunion { NamesInPattern(pat) | pat in set elems pat_l };
+
+  NamesInPattern: AS`Pattern -> set of AS`Name
+  NamesInPattern(pat) ==
+    cases pat:
+      mk_AS`PatternName(nm,-,-)      -> if nm = nil
+                                        then {}
+                                        else {nm},
+      mk_AS`MatchVal(-,-)            -> {},
+      mk_AS`SetEnumPattern(p_l,-)    -> NamesInPatternList(p_l),
+      mk_AS`SetUnionPattern(lp,rp,-) -> NamesInPattern(lp) union NamesInPattern(rp),
+      mk_AS`SeqEnumPattern(p_l,-)    -> NamesInPatternList(p_l),
+      mk_AS`SeqConcPattern(lp,rp,-)  -> NamesInPattern(lp) union NamesInPattern(rp),
+      mk_AS`MapEnumPattern(p_l,-)    -> dunion { NamesInPattern(dp) union NamesInPattern(rp)
+                                                 | mk_AS`MapletPattern(dp,rp,mcid) in set elems p_l },
+      mk_AS`MapMergePattern(lp,rp,-) -> NamesInPattern(lp) union NamesInPattern(rp),
+      mk_AS`RecordPattern(-,p_l,-)   -> NamesInPatternList(p_l),
+      mk_AS`TuplePattern(p_l,-)      -> NamesInPatternList(p_l),
+      others                         -> {}
+    end;
 \end{vdm_al}
 
 When lambda expressions are handled by the compiler, the instruction
@@ -324,12 +375,11 @@ will translate the expression passed to it (the body of the lambda
 function) and insert the instruction sequence in the program table.
 
 \begin{vdm_al}
-
+operations
   CompileLambdaBody : AS`Expr ==> STKM`SubProgramId
   CompileLambdaBody(e) ==
     def instr = CEXPR`E2I(e) ^ [mk_INSTRTP`RETURN()]
-    in
-      return InsertProgram(GetClMod(), instr);
+    in return InsertProgram(GetClMod(), instr);
 \end{vdm_al}
 
 The function {\em FnDef2I} compiles the pre- and postcondition and the

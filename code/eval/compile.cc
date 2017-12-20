@@ -263,61 +263,175 @@ TYPE_STKM_SubProgram StackCompiler::Mease2I(const TYPE_AS_FnDef& fndef)
   const Generic & fnbody (ASTAUX::GetFnBody(fndef));
   TYPE_STKM_SubProgram sp;
   if (!measu.IsNil() && !fnbody.IsInt()) {
-    TYPE_STKM_SubProgram tsp;
-    tsp.ImpConc(E2I(measu)); 
-
-    int count = 0;
+    if (measu != Int(NOTYETSPEC)) {
+      TYPE_STKM_SubProgram tsp;
+      tsp.ImpConc(E2I(measu)); 
+      
+      if (MeasureIsId(fndef)) {
+        int count = 0;
     
-    if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
-      if (!fndef.GetSequence(pos_AS_ExplFnDef_tpparms).IsEmpty()) {
-        tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExplFnDef_tpparms)));
-      }
-      tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
-
-      const SEQ< SEQ<TYPE_AS_Pattern> > & pat_l_l (fndef.GetSequence(pos_AS_ExplFnDef_parms));
-      size_t len_pat_l_l = pat_l_l.Length();
-      for (size_t idx1 = 1; idx1 <= len_pat_l_l; idx1++) {
-        SEQ<TYPE_AS_Pattern> pat_l (pat_l_l[idx1]);
-        if (!pat_l.IsEmpty()) {
-          size_t len_pat_l = pat_l.Length();
-          for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++) {
-            tsp.ImpConc(E2I(P2E(pat_l[idx2])));
+        if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
+          if (!fndef.GetSequence(pos_AS_ExplFnDef_tpparms).IsEmpty()) {
+            tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExplFnDef_tpparms)));
           }
-          count += len_pat_l;
-        }
-      }
-    }
-    else if (fndef.Is(TAG_TYPE_AS_ExtExplFnDef)) {
-      if (!fndef.GetSequence(pos_AS_ExtExplFnDef_params).IsEmpty()) {
-        tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExtExplFnDef_params)));
-      }
-      tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
+          tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
 
-      const SEQ<TYPE_AS_PatTypePair> & parml (fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
-      size_t len_parml = parml.Length(); 
-      for (size_t idx1 = 1; idx1 <= len_parml; idx1++) {
-        SEQ<TYPE_AS_Pattern> pat_l (parml[idx1].GetSequence(pos_AS_PatTypePair_pats));
-        if (!pat_l.IsEmpty()) {
-          size_t len_pat_l = pat_l.Length();
-          for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++) {
-            tsp.ImpConc(E2I(P2E(pat_l[idx2])));
+          const SEQ< SEQ<TYPE_AS_Pattern> > & pat_l_l (fndef.GetSequence(pos_AS_ExplFnDef_parms));
+          size_t len_pat_l_l = pat_l_l.Length();
+          for (size_t idx1 = 1; idx1 <= len_pat_l_l; idx1++) {
+            SEQ<TYPE_AS_Pattern> pat_l (pat_l_l[idx1]);
+            if (!pat_l.IsEmpty()) {
+              size_t len_pat_l = pat_l.Length();
+              for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++) {
+                tsp.ImpConc(E2I(P2E(pat_l[idx2])));
+              }
+              count += len_pat_l;
+            }
           }
-          count += len_pat_l;
         }
-      }
-    }
+        else if (fndef.Is(TAG_TYPE_AS_ExtExplFnDef)) {
+          if (!fndef.GetSequence(pos_AS_ExtExplFnDef_params).IsEmpty()) {
+            tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExtExplFnDef_params)));
+          }
+          tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
 
-    tsp.ImpAppend(TYPE_INSTRTP_PUSHLIST().Init(Int(count)));
+          const SEQ<TYPE_AS_PatTypePair> & parml (fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
+          size_t len_parml = parml.Length(); 
+          for (size_t idx1 = 1; idx1 <= len_parml; idx1++) {
+            SEQ<TYPE_AS_Pattern> pat_l (parml[idx1].GetSequence(pos_AS_PatTypePair_pats));
+            if (!pat_l.IsEmpty()) {
+              size_t len_pat_l = pat_l.Length();
+              for (size_t idx2 = 1; idx2 <= len_pat_l; idx2++) {
+                tsp.ImpConc(E2I(P2E(pat_l[idx2])));
+              }
+              count += len_pat_l;
+            }
+          }
+        }
+        tsp.ImpAppend(TYPE_INSTRTP_PUSHLIST().Init(Int(count)));
 #ifdef VDMPP
-    tsp.ImpAppend(TYPE_INSTRTP_GUARD().Init(Bool(true)));
+        tsp.ImpAppend(TYPE_INSTRTP_GUARD().Init(Bool(true)));
 #endif //VDMPP
-    tsp.ImpConc(SetContext(ASTAUX::GetCid(measu), false))
-       .ImpAppend(TYPE_INSTRTP_APPLY())
-       .ImpAppend(TYPE_INSTRTP_MEASURECHECK().Init(measu));
-    sp.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_MEASURE()),
-                              tsp, TYPE_STKM_SubProgram()));
+        tsp.ImpConc(SetContext(ASTAUX::GetCid(measu), false))
+           .ImpAppend(TYPE_INSTRTP_APPLY())
+           .ImpAppend(TYPE_INSTRTP_REMSTACKELEM().Init(Int(2)));
+      }
+      tsp.ImpAppend(TYPE_INSTRTP_MEASURECHECK());
+      sp.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_MEASURE()),
+                                tsp, TYPE_STKM_SubProgram()));
+    }
   }
   return sp;
+}
+
+// MeasureIsId
+// fndef : AS`FnDef
+// -> bool
+bool StackCompiler::MeasureIsId(const TYPE_AS_FnDef & fndef)
+{
+  const Generic & measu (ASTAUX::GetFnMeasu(fndef));
+  if (measu.IsNil()) {
+    return false;
+  }
+  else if (measu == Int(NOTYETSPEC)) {
+    return false;
+  }
+  else if (measu.Is(TAG_TYPE_AS_Name)) {
+    if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
+      const SEQ< SEQ<TYPE_AS_Pattern> > & parms (fndef.GetSequence(pos_AS_ExplFnDef_parms));
+      size_t len_parms = parms.Length();
+      SET<TYPE_AS_Name> nm_s;
+      for (size_t i = 1; i <= len_parms; i++) {
+        nm_s.ImpUnion(NamesInPatternList(parms[i]));
+      }
+      return !nm_s.InSet(measu);
+    }
+    else if (fndef.Is(TAG_TYPE_AS_ExtExplFnDef)) {
+      const SEQ<TYPE_AS_PatTypePair> & partps (fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
+      size_t len_partps = partps.Length(); 
+      SET<TYPE_AS_Name> nm_s;
+      for (size_t i = 1; i <= len_partps; i++) {
+        nm_s.ImpUnion(NamesInPatternList(partps[i].GetSequence(pos_AS_PatTypePair_pats)));
+      }
+      return !nm_s.InSet(measu);
+    }
+    else {
+      return false; // not occur
+    }
+  }
+  else {
+    return false;
+  }
+}
+
+SET<TYPE_AS_Name> StackCompiler::NamesInPatternList(const SEQ<TYPE_AS_Pattern> & pat_l)
+{
+  size_t len_pat_l = pat_l.Length(); 
+  SET<TYPE_AS_Name> nm_s;
+  for (size_t i = 1; i <= len_pat_l; i++) {
+    nm_s.ImpUnion(NamesInPattern(pat_l[i]));
+  }
+  return nm_s;
+}
+
+SET<TYPE_AS_Name> StackCompiler::NamesInPattern(const TYPE_AS_Pattern & pat)
+{
+  switch(pat.GetTag()) {
+    case TAG_TYPE_AS_PatternName: {
+      const Generic & nm (pat.GetField(pos_AS_PatternName_nm));
+      SET<TYPE_AS_Name> nm_s;
+      if (!nm.IsNil()) {
+        nm_s.Insert(nm);
+      }
+      return nm_s;
+    }
+    case TAG_TYPE_AS_MatchVal: {
+      return SET<TYPE_AS_Name>();
+    }
+    case TAG_TYPE_AS_SetEnumPattern: {
+      return NamesInPatternList(pat.GetSequence(pos_AS_SetEnumPattern_Elems));
+    }
+    case TAG_TYPE_AS_SetUnionPattern: {
+      SET<TYPE_AS_Name> nm_s;
+      nm_s.ImpUnion(NamesInPattern(pat.GetRecord(pos_AS_SetUnionPattern_lp)));
+      nm_s.ImpUnion(NamesInPattern(pat.GetRecord(pos_AS_SetUnionPattern_rp)));
+      return nm_s;
+    }
+    case TAG_TYPE_AS_SeqEnumPattern: {
+      return NamesInPatternList(pat.GetSequence(pos_AS_SeqEnumPattern_els));
+    }
+    case TAG_TYPE_AS_SeqConcPattern: {
+      SET<TYPE_AS_Name> nm_s;
+      nm_s.ImpUnion(NamesInPattern(pat.GetRecord(pos_AS_SeqConcPattern_lp)));
+      nm_s.ImpUnion(NamesInPattern(pat.GetRecord(pos_AS_SeqConcPattern_rp)));
+      return nm_s;
+    }
+    case TAG_TYPE_AS_MapEnumPattern: {
+      const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
+      int len_mls = mls.Length();
+      SET<TYPE_AS_Name> nm_s;
+      for (int i = 1; i <= len_mls; i++) {
+        nm_s.ImpUnion(NamesInPattern(mls[i].GetRecord(pos_AS_MapletPattern_dp)));
+        nm_s.ImpUnion(NamesInPattern(mls[i].GetRecord(pos_AS_MapletPattern_rp)));
+      }
+      return nm_s;
+    }
+    case TAG_TYPE_AS_MapMergePattern: {
+      SET<TYPE_AS_Name> nm_s;
+      nm_s.ImpUnion(NamesInPattern(pat.GetRecord(pos_AS_MapMergePattern_lp)));
+      nm_s.ImpUnion(NamesInPattern(pat.GetRecord(pos_AS_MapMergePattern_rp)));
+      return nm_s;
+    }
+    case TAG_TYPE_AS_RecordPattern: {
+      return NamesInPatternList(pat.GetSequence(pos_AS_RecordPattern_fields));
+    }
+    case TAG_TYPE_AS_TuplePattern: {
+      return NamesInPatternList(pat.GetSequence(pos_AS_TuplePattern_fields));
+    }
+    default: {
+      return SET<TYPE_AS_Name>();
+    }
+  }
 }
 
 // CompileLambdaBody

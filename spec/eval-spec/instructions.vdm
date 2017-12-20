@@ -117,17 +117,13 @@ ExeMEASURETPINST(tpparms) ==
         STKM`Push(val');
        );
 
-ExeMEASURECHECK: AS`Name ==> ()
-ExeMEASURECHECK(measu) ==
-  def [meas_fn,curr_mv] = STKM`Pop(2)
+ExeMEASURECHECK: () ==> ()
+ExeMEASURECHECK() ==
+  def [curr_mv] = STKM`Pop(1)
   in
-    cases meas_fn:
-      mk_SEM`CompExplFN([mk_SEM`ExplFN(-,-,-,-,-,-,-,-,-,-)],-) ->
-               if is_SEM`NUM(curr_mv) or is_SEM`TUPLE(curr_mv)
-               then STKM`MeasureCheck(curr_mv, measu)
-               else skip,
-      others -> skip
-    end;
+    if is_SEM`NUM(curr_mv) or is_SEM`TUPLE(curr_mv)
+    then STKM`MeasureCheck(curr_mv)
+    else skip;
 
 ExePOSTENV: seq of AS`NameType * CI`ContextId ==> ()
 ExePOSTENV(resnmtps,ci) ==
