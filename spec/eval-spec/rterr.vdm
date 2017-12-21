@@ -366,7 +366,7 @@ GetErrorMessage(err) ==
     (DLMODULE_LOAD_ERROR) -> "Dlmodule loading failed",
     (MEASURE_ERROR) -> "Measure error",
     (NO_RUNNING_THREAD) -> "Thread is't started or is already dead",
-    (NAT_OR_TUPLE_OF_NAT_EXPECTED) -> "A natural number or a Tuple of natural number was expected",
+    (NAT_OR_TUPLE_OF_NAT_EXPECTED) -> "A natural number or a tuple of natural numbers was expected",
     (PURE_OP_EXIT) -> "Pure operation exited",
     (PURE_OP_CALL) -> "Pure operation call impure operation",
   

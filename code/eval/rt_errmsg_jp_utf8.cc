@@ -464,7 +464,7 @@ string RTERR::GetErrorMessageJP(int num)
     case RTERR_MEASURE_ERROR:         return "Measure 関数のエラーです";
 //    case RTERR_NO_RUNNING_THREAD:    return wstring(L"Thread is't started or is already dead");
     case RTERR_NO_RUNNING_THREAD:    return "スレッドは開始していないか終了しています";
-//    case RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED: return wstring(L"A natural number or a Tuple of natural number was expected");
+//    case RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED: return wstring(L"A natural number or a tuple of natural numbers was expected");
     case RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED: return "1個の自然数か自然数の組が必要です";
 //    case RTERR_PURE_OP_EXIT_CONT:    return wstring(L"Pure operation exited or returned no result");
     case RTERR_PURE_OP_EXIT:         return "純操作が例外を発生しました";

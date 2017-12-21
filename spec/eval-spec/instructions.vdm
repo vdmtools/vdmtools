@@ -121,9 +121,18 @@ ExeMEASURECHECK: () ==> ()
 ExeMEASURECHECK() ==
   def [curr_mv] = STKM`Pop(1)
   in
-    if is_SEM`NUM(curr_mv) or is_SEM`TUPLE(curr_mv)
-    then STKM`MeasureCheck(curr_mv)
-    else skip;
+    cases curr_mv:
+      mk_SEM`NUM(v)     -> if is_nat(v)
+                           then STKM`MeasureCheck(curr_mv)
+                           else RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, []),
+      mk_SEM`TUPLE(v_l) -> if forall i in set inds v_l & cases v_l(i):
+                                                           mk_SEM`NUM(v) -> is_nat(v),
+                                                           others        -> false
+                                                         end
+                           then STKM`MeasureCheck(curr_mv)
+                           else RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, []),
+      others            -> RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, [])
+    end;
 
 ExePOSTENV: seq of AS`NameType * CI`ContextId ==> ()
 ExePOSTENV(resnmtps,ci) ==

@@ -358,7 +358,7 @@ functions
       mk_AS`SeqEnumPattern(p_l,-)    -> NamesInPatternList(p_l),
       mk_AS`SeqConcPattern(lp,rp,-)  -> NamesInPattern(lp) union NamesInPattern(rp),
       mk_AS`MapEnumPattern(p_l,-)    -> dunion { NamesInPattern(dp) union NamesInPattern(rp)
-                                                 | mk_AS`MapletPattern(dp,rp,mcid) in set elems p_l },
+                                                 | mk_AS`MapletPattern(dp,rp,-) in set elems p_l },
       mk_AS`MapMergePattern(lp,rp,-) -> NamesInPattern(lp) union NamesInPattern(rp),
       mk_AS`RecordPattern(-,p_l,-)   -> NamesInPatternList(p_l),
       mk_AS`TuplePattern(p_l,-)      -> NamesInPatternList(p_l),

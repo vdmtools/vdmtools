@@ -228,9 +228,36 @@ void StackEval::ExeMEASURETPINST(const SEQ<TYPE_AS_TypeVar> & tpparms)
 void StackEval::ExeMEASURECHECK()
 {
   TYPE_SEM_VAL curr_mv (POP());
-  // TODO: check data
-  if (curr_mv.Is(TAG_TYPE_SEM_NUM) || curr_mv.Is(TAG_TYPE_SEM_TUPLE)) {
-    theStackMachine().MeasureCheck(curr_mv);
+  switch (curr_mv.GetTag()) {
+    case TAG_TYPE_SEM_NUM: {
+      if (curr_mv.GetReal(pos_SEM_NUM_v).IsNat() ) {
+        theStackMachine().MeasureCheck(curr_mv);
+      }
+      else {
+        RTERR::Error(L"ExeMEASURECHECK", RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      }
+      break;
+    }
+    case TAG_TYPE_SEM_TUPLE: {
+      const SEQ<TYPE_SEM_VAL> & v_l (curr_mv.GetSequence(pos_SEM_TUPLE_v));
+      size_t len_v_l = v_l.Length ();
+      bool forall = true;
+      for (size_t i = 1; (i <= len_v_l) && forall; i++) {
+        const TYPE_SEM_VAL & v (v_l[i]);
+        forall = (v.Is(TAG_TYPE_SEM_NUM) ? v.GetReal(pos_SEM_NUM_v).IsNat() : false);
+      }
+      if (forall) {
+        theStackMachine().MeasureCheck(curr_mv);
+      }
+      else {
+        RTERR::Error(L"ExeMEASURECHECK", RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      }
+      break;
+    }
+    default: {
+      RTERR::Error(L"ExeMEASURECHECK", RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      break;
+    }
   }
 }
 
