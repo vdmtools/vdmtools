@@ -152,7 +152,7 @@ public class ToolboxClient
       @return a VDMApplication (CORBA proxy) object reference to the Toolbox.
       The result is null if the method could not establish a connection
       the Toolbox.
-      @throws CouldNotResolveObjectException
+      @throws CouldNotResolveObjectException If object not found in NameService.
   */
   public VDMApplication getVDMApplication(String[] args, ToolType toolType)
       throws CouldNotResolveObjectException
@@ -170,7 +170,7 @@ public class ToolboxClient
       @return a VDMApplication (CORBA proxy) object reference to the Toolbox.
       The result is null if the method could not establish a connection
       the Toolbox.
-      @throws CouldNotResolveObjectException
+      @throws CouldNotResolveObjectException If object not found in NameService.
   */
   public VDMApplication getVDMApplication(String[] args, ToolType toolType, boolean useNs)
       throws CouldNotResolveObjectException
@@ -272,7 +272,7 @@ public class ToolboxClient
    *  <p>
    *  The result of this evaluation will be printed to standard output.
    *
-   * @param args
+   * @param args Arguments
    */
   public static void main(String args[])
   {
