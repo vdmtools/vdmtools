@@ -284,7 +284,7 @@ index of the table entry.
         if measu <> <NOTYETSPEC>
         then
          (dcl tsp : STKM`SubProgram := CEXPR`E2I(measu);
-          if MeasureIsId(fndef)
+          if MeasureIsId(measu, fndef)
           then
            (dcl count : nat := 0;
               cases fndef:
@@ -321,13 +321,12 @@ index of the table entry.
    );
 
 functions
-  MeasureIsId: AS`FnDef -> bool
-  MeasureIsId(fndef) ==
-    let measu = fndef.measu
-    in 
+  MeasureIsId: [AS`Expr | <NOTYETSPEC>] * AS`FnDef -> bool
+  MeasureIsId(measu, fndef) ==
       cases measu:
         nil             -> false,
         <NOTYETSPEC>    -> false,
+        mk_AS`BracketedExpr(expr,-) -> MeasureIsId(expr, fndef),
         mk_AS`Name(-,-) ->
           cases fndef:
             mk_AS`ExplFnDef(-,-,-,parms,-,-,-,-,-,-,-) ->

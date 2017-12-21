@@ -267,7 +267,7 @@ TYPE_STKM_SubProgram StackCompiler::Mease2I(const TYPE_AS_FnDef& fndef)
       TYPE_STKM_SubProgram tsp;
       tsp.ImpConc(E2I(measu)); 
       
-      if (MeasureIsId(fndef)) {
+      if (MeasureIsId(measu, fndef)) {
         int count = 0;
     
         if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
@@ -325,16 +325,20 @@ TYPE_STKM_SubProgram StackCompiler::Mease2I(const TYPE_AS_FnDef& fndef)
 }
 
 // MeasureIsId
+// measu : [AS`Expr |  <NOTYETSPEC>]
 // fndef : AS`FnDef
 // -> bool
-bool StackCompiler::MeasureIsId(const TYPE_AS_FnDef & fndef)
+bool StackCompiler::MeasureIsId(const Generic & measu, const TYPE_AS_FnDef & fndef)
 {
-  const Generic & measu (ASTAUX::GetFnMeasu(fndef));
   if (measu.IsNil()) {
     return false;
   }
   else if (measu == Int(NOTYETSPEC)) {
     return false;
+  }
+  else if (measu.Is(TAG_TYPE_AS_BracketedExpr)) {
+    const TYPE_AS_Expr & expr (Record(measu).GetRecord(pos_AS_BracketedExpr_expr));
+    return MeasureIsId(expr, fndef);
   }
   else if (measu.Is(TAG_TYPE_AS_Name)) {
     if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
