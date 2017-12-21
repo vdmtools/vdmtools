@@ -1256,27 +1256,30 @@ void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv)
             if (prev_mv.Is(TAG_TYPE_SEM_TUPLE)) {
               SEQ<TYPE_SEM_VAL> prev_sv_l (Record(prev_mv).GetSequence(pos_SEM_TUPLE_v));
               SEQ<TYPE_SEM_VAL> curr_sv_l (curr_mv.GetSequence(pos_SEM_TUPLE_v));
-              if (prev_sv_l.Length() == curr_sv_l.Length()) {
-                bool forall_ge = true;
-                size_t len_prev_sv_l = prev_sv_l.Length();
-                for (size_t i = 1; (i <= len_prev_sv_l) && forall_ge; i++) {
-                  const TYPE_SEM_VAL & prev_sv (prev_sv_l[i]);
-                  const TYPE_SEM_VAL & curr_sv (curr_sv_l[i]);
-                  if (prev_sv.Is(TAG_TYPE_SEM_NUM) && curr_sv.Is(TAG_TYPE_SEM_NUM)) {
-                    const Real & prev_v (prev_sv.GetReal(pos_SEM_NUM_v));
-                    const Real & curr_v (curr_sv.GetReal(pos_SEM_NUM_v));
-                    forall_ge = prev_v.GreaterEqual(curr_v);
+              bool check_ok = (prev_sv_l.Length() == curr_sv_l.Length());
+              size_t len_prev_sv_l = prev_sv_l.Length();
+              for (size_t i = 1; (i <= len_prev_sv_l) && check_ok; i++) {
+                const TYPE_SEM_VAL & prev_sv (prev_sv_l[i]);
+                const TYPE_SEM_VAL & curr_sv (curr_sv_l[i]);
+                if (prev_sv.Is(TAG_TYPE_SEM_NUM) && curr_sv.Is(TAG_TYPE_SEM_NUM)) {
+                  const Real & prev_v (prev_sv.GetReal(pos_SEM_NUM_v));
+                  const Real & curr_v (curr_sv.GetReal(pos_SEM_NUM_v));
+                  if (prev_v.GreaterThan(curr_v)) {
+                    break;
                   }
                   else {
-                    RTERR::Error(L"MeasureCheck",RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+                    check_ok = (prev_v == curr_v);
                   }
                 }
-                if (!(forall_ge && (prev_sv_l != curr_sv_l))) {
-                  vdm_iplog << L"measure: " << ASTAUX::ASName2String(fnnm) << L" current: "
-                            << EvalState::Convert2M4(curr_mv, NULL)
-                            << L" previous: " << EvalState::Convert2M4(prev_mv, NULL) << endl;
-                  RTERR::Error(L"MeasureCheck",RTERR_MEASURE_ERROR, Nil(), Nil(), Sequence());
+                else {
+                  RTERR::Error(L"MeasureCheck",RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
                 }
+              }
+              if (!check_ok) {
+                vdm_iplog << L"measure: " << ASTAUX::ASName2String(fnnm) << L" current: "
+                          << EvalState::Convert2M4(curr_mv, NULL)
+                          << L" previous: " << EvalState::Convert2M4(prev_mv, NULL) << endl;
+                RTERR::Error(L"MeasureCheck",RTERR_MEASURE_ERROR, Nil(), Nil(), Sequence());
               }
             }
             break;

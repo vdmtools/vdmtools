@@ -3639,22 +3639,23 @@ they were in when the handler was pushed.
                    mk_(mk_SEM`TUPLE(curr_sv_l), mk_SEM`TUPLE(prev_sv_l)) ->
                        if not (len curr_sv_l = len prev_sv_l
                                and
-                               forall i in set inds curr_sv_l &
-                                 cases mk_(curr_sv_l(i), prev_sv_l(i)):
-                                   mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) -> curr_v <= prev_v,
-                                   others -> false
-                                 end
-                               and
                                exists i in set inds curr_sv_l &
                                  cases mk_(curr_sv_l(i), prev_sv_l(i)):
-                                   mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) -> curr_v < prev_v,
+                                   mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) ->
+                                     curr_v < prev_v and
+                                     forall j in set inds curr_sv_l &
+                                       cases mk_(curr_sv_l(j), prev_sv_l(j)):
+                                         mk_(mk_SEM`NUM(curr_v2), mk_SEM`NUM(prev_v2)) ->
+                                           j < i => curr_v2 = prev_v2,
+                                         others -> false
+                                       end,
                                    others -> false
                                  end)
-                           then RTERR`Error(RTERR`MEASURE_ERROR, nil, nil, []),
-                       others -> RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, [])
-                     end;
-                     found := true;
-                    ),
+                       then RTERR`Error(RTERR`MEASURE_ERROR, nil, nil, []),
+                   others -> RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, [])
+                 end;
+                 found := true;
+                ),
               others -> skip
             end;
           index := index + 1;
