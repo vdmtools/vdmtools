@@ -479,7 +479,7 @@ wstring RTERR::GetErrorMessage(int num)
     case RTERR_TAG_CYCLIC:           return wstring(L"Circular defined tag detected");
     case RTERR_MULTIPLE_PATTERN:     return wstring(L"Pattern may match multiply");
     case RTERR_DLMODULE_LOAD_ERROR:   return wstring(L"Dlmodule loading failed");
-    case RTERR_MEASURE_ERROR:         return wstring(L"Measure error");
+    case RTERR_MEASURE_ERROR:         return wstring(L"Current measure value isn't smaller than previous value");
     case RTERR_NO_RUNNING_THREAD:    return wstring(L"Thread is't started or is already dead");
     case RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED: return wstring(L"A natural number or a tuple of natural numbers was expected");
     case RTERR_PURE_OP_EXIT:         return wstring(L"Pure operation exited");

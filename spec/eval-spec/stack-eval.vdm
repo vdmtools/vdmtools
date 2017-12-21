@@ -3643,10 +3643,9 @@ they were in when the handler was pushed.
                                  cases mk_(curr_sv_l(i), prev_sv_l(i)):
                                    mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) ->
                                      curr_v < prev_v and
-                                     forall j in set inds curr_sv_l &
+                                     forall j in set {1,...,i-1} &
                                        cases mk_(curr_sv_l(j), prev_sv_l(j)):
-                                         mk_(mk_SEM`NUM(curr_v2), mk_SEM`NUM(prev_v2)) ->
-                                           j < i => curr_v2 = prev_v2,
+                                         mk_(mk_SEM`NUM(v), mk_SEM`NUM(v)) -> true,
                                          others -> false
                                        end,
                                    others -> false

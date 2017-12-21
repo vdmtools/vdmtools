@@ -460,8 +460,8 @@ string RTERR::GetErrorMessageJP(int num)
     case RTERR_MULTIPLE_PATTERN:     return "パターンが複数マッチします";
 //    case RTERR_DLMODULE_LOAD_ERROR:   return "dlmodule loading failed";
     case RTERR_DLMODULE_LOAD_ERROR:   return "ダイナミックリンクモジュール（dlmodule）のロードに失敗しました";
-//    case RTERR_MEASURE_ERROR:         return wstring(L"Measure error");
-    case RTERR_MEASURE_ERROR:         return "Measure 関数のエラーです";
+//    case RTERR_MEASURE_ERROR:         return wstring(L"Current measure value isn't smaller than previous value");
+    case RTERR_MEASURE_ERROR:         return "Measure値が減少していません";
 //    case RTERR_NO_RUNNING_THREAD:    return wstring(L"Thread is't started or is already dead");
     case RTERR_NO_RUNNING_THREAD:    return "スレッドは開始していないか終了しています";
 //    case RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED: return wstring(L"A natural number or a tuple of natural numbers was expected");

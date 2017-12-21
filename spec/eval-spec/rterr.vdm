@@ -364,7 +364,7 @@ GetErrorMessage(err) ==
     (TAG_CYCLIC) -> "Circular defined tag detected",
     (MULTIPLE_PATTERN) -> "Pattern may match multiply",
     (DLMODULE_LOAD_ERROR) -> "Dlmodule loading failed",
-    (MEASURE_ERROR) -> "Measure error",
+    (MEASURE_ERROR) -> "Current measure value isn't smaller than previous value",
     (NO_RUNNING_THREAD) -> "Thread is't started or is already dead",
     (NAT_OR_TUPLE_OF_NAT_EXPECTED) -> "A natural number or a tuple of natural numbers was expected",
     (PURE_OP_EXIT) -> "Pure operation exited",
