@@ -42,6 +42,7 @@ public:
   const QString & getWindowName() { return this->windowName; }
   void setBusy(bool flg);
   void setMaxLogLines(int num);
+  void setTextFont(const QFont & font);
 
 protected:
   virtual bool event ( QEvent * e );

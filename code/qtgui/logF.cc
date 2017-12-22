@@ -138,3 +138,7 @@ void logW::setMaxLogLines(int num)
   this->logML->repaint();
 }
 
+void logW::setTextFont(const QFont & font) {
+  this->logML->setFont(font);
+}
+

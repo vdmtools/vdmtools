@@ -3412,13 +3412,16 @@ void mainW::setFont(QFont newFont)
 {
   this->logWrite("Setting font to be " + newFont.family());
 
-#if QT_VERSION < 0x040000
+#if QT_VERSION >= 0x040000
+  this->codew->setTextFont(newFont);
+  this->logw->setTextFont(newFont);
+#else
   QApplication::setFont(newFont, true); // Set the font for existing windows
-#endif // QT_VERSION < 0x040000
   QApplication::setFont(newFont);       // Set the font for future windows
   this->codew->setFont(font());
-  this->errorw->setFont(font());
   this->logw->setFont(font());
+#endif // QT_VERSION >= 0x040000
+  this->errorw->setFont(font());
   this->browserw->setFont(font());
   this->interpreterw->setFont(font());
   this->pogw->setFont(font());

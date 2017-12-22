@@ -37,15 +37,7 @@ class MyTextEdit : public QTextEdit
   Q_OBJECT
 
 public:
-  MyTextEdit(QWidget * parent) : QTextEdit(parent) {
-#if QTVER >= 4
-    int fontSize = 12;
-    QFont font = QFont("monospace", fontSize);
-    font.setStyleHint(QFont::TypeWriter);
-    int fontPxSize = QFontMetrics(font).width('0');
-    this->setFont(font);
-#endif // QTVER >= 4
-  };
+  MyTextEdit(QWidget * parent) : QTextEdit(parent) { };
 
 public slots:
   void contextMenuTriggered(QAction *);
@@ -94,6 +86,7 @@ public:
   void setWindowName(const char* name) { this->windowName = name; }
   const QString & getWindowName() { return this->windowName; }
   void setBusy(bool flg);
+  void setTextFont(const QFont & font);
 
 protected:
   virtual void changeEvent(QEvent *);
@@ -146,6 +139,8 @@ private:
   int oldLine;
   int oldCol;
   int oldLength;
+
+  QFont currentFont;
 
 protected:
 // QDict ( int size=17, bool caseSensitive=TRUE, bool)

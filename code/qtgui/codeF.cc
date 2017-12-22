@@ -71,6 +71,14 @@ codeW::codeW( QWidget* parent,  const char* name, WFlags fl )
   this->openAtMinimized = false;
 
   this->pcount = 0;
+
+#if QTVER >= 4
+    int fontSize = 12;
+    QFont font = QFont("monospace", fontSize);
+    font.setStyleHint(QFont::TypeWriter);
+    int fontPxSize = QFontMetrics(font).width('0');
+    this->currentFont = font;
+#endif // QTVER >= 4
 }
 
 /*
@@ -177,6 +185,7 @@ MyTextEdit * codeW::createEdit(QWidget * parent)
 {
   MyTextEdit* edit = new MyTextEdit(parent);
 #if QT_VERSION >= 0x040000
+  edit->setFont(this->currentFont);
   edit->setAcceptRichText( false );
   edit->setReadOnly(true);
   edit->ensureCursorVisible();
@@ -1131,3 +1140,13 @@ QString codeW::ConvertToShortPathName(const QString path)
   return Qt2TB::wstring2qstring(newpath);  
 }
 #endif // _MSC_VER
+
+void codeW::setTextFont(const QFont & font) {
+  this->currentFont = font;
+#if QT_VERSION >= 0x040000
+  QMap <QString, MyTextEdit*>::iterator i;
+  for (i = this->editMap.begin(); i != this->editMap.end(); ++i) {
+    i.value()->setFont(font);
+  }
+#endif // QT_VERSION >= 0x040000
+}
