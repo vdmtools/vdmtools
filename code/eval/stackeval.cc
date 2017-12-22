@@ -1245,8 +1245,8 @@ void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv)
               const Real & prev_v (Record(prev_mv).GetReal(pos_SEM_NUM_v));
               const Real & curr_v (curr_mv.GetReal(pos_SEM_NUM_v));
               if (prev_v.LessEqual(curr_v)) {
-                vdm_iplog << L"measure: " << ASTAUX::ASName2String(fnnm) << L" current: "
-                          << curr_v << L" previous: " << prev_v << endl;
+                vdm_iplog << L"Measure value of " << ASTAUX::ASName2String(fnnm) << L": current("
+                          << curr_v << L") previous(" << prev_v << L")"<< endl;
                   RTERR::Error(L"MeasureCheck",RTERR_MEASURE_ERROR, Nil(), Nil(), Sequence());
               }
             }
@@ -1276,9 +1276,9 @@ void StackEval::MeasureCheck(const TYPE_SEM_VAL & curr_mv)
                 }
               }
               if (!check_ok) {
-                vdm_iplog << L"measure: " << ASTAUX::ASName2String(fnnm) << L" current: "
+                vdm_iplog << L"Measure value of " << ASTAUX::ASName2String(fnnm) << L": current("
                           << EvalState::Convert2M4(curr_mv, NULL)
-                          << L" previous: " << EvalState::Convert2M4(prev_mv, NULL) << endl;
+                          << L") previous(" << EvalState::Convert2M4(prev_mv, NULL) << L")"<< endl;
                 RTERR::Error(L"MeasureCheck",RTERR_MEASURE_ERROR, Nil(), Nil(), Sequence());
               }
             }
