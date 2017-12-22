@@ -183,6 +183,7 @@ private:
   QCheckBox* ip_dynInvCheck;
   QCheckBox* ip_preCheck;
   QCheckBox* ip_postCheck;
+  QCheckBox* ip_measureCheck;
   QCheckBox* ip_prioritySchd;
   QCheckBox* ip_ppValues;
   QCheckBox* ip_exception;

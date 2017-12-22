@@ -883,221 +883,265 @@ void Qt2TB::SetOptions(const QMap<QString, QString> & optionMap)
 {
 //
 //
-  if( optionMap.contains( "DTC" ) )
-  {
-    if(String2Bool(optionMap[ "DTC" ]))
+  if( optionMap.contains( "DTC" ) ) {
+    if(String2Bool(optionMap[ "DTC" ])) {
       Settings.DtcOn();
-    else
-      Settings.DtcOff();
-  }
-  if( optionMap.contains( "PRE" ) )
-  {
-    if(String2Bool(optionMap[ "PRE" ]))
-      Settings.PreOn();
-    else
-      Settings.PreOff();
-  }
-  if( optionMap.contains( "POST" ) )
-  {
-    if(String2Bool(optionMap[ "POST" ]))
-      Settings.PostOn();
-    else
-      Settings.PostOff();
-  }
-  if( optionMap.contains( "INV" ) )
-  {
-    if(String2Bool(optionMap[ "INV" ]))
-    {
-      Settings.InvOn();
-      if (!Settings.DTC())
-        Settings.DtcOn();
     }
-    else
+    else {
+      Settings.DtcOff();
+    }
+  }
+  if( optionMap.contains( "PRE" ) ) {
+    if(String2Bool(optionMap[ "PRE" ])) {
+      Settings.PreOn();
+    }
+    else {
+      Settings.PreOff();
+    }
+  }
+  if( optionMap.contains( "POST" ) ) {
+    if(String2Bool(optionMap[ "POST" ])) {
+      Settings.PostOn();
+    }
+    else {
+      Settings.PostOff();
+    }
+  }
+  if( optionMap.contains( "MEASURE" ) ) {
+    if(String2Bool(optionMap[ "MEASURE" ])) {
+      Settings.MeasureOn();
+    }
+    else {
+      Settings.MeasureOff();
+    }
+  }
+  if( optionMap.contains( "INV" ) ) {
+    if(String2Bool(optionMap[ "INV" ])) {
+      Settings.InvOn();
+      if (!Settings.DTC()) {
+        Settings.DtcOn();
+      }
+    }
+    else {
       Settings.InvOff();
+    }
   }
-  if( optionMap.contains( "SEP" ) )
-  {
-    if(String2Bool(optionMap[ "SEP" ]))
+  if( optionMap.contains( "SEP" ) ) {
+    if(String2Bool(optionMap[ "SEP" ])) {
       Settings.SepOn();
-    else
+    }
+    else {
       Settings.SepOff();
+    }
   }
-  if( optionMap.contains( "CONTEXT" ) )
-  {
-    if(String2Bool(optionMap[ "CONTEXT" ]))
+  if( optionMap.contains( "CONTEXT" ) ) {
+    if(String2Bool(optionMap[ "CONTEXT" ])) {
       Settings.ContextOn();
-    else
+    }
+    else {
       Settings.ContextOff();
+    }
   }
 #ifdef VDMPP
-  if( optionMap.contains( "MAXINSTR" ) )
+  if( optionMap.contains( "MAXINSTR" ) ) {
     Settings.SetMaxInstr(optionMap[ "MAXINSTR" ].toInt());
-  if( optionMap.contains( "PRIORITY" ) )
-  {
-    if(String2Bool(optionMap[ "PRIORITY" ]))
+  }
+  if( optionMap.contains( "PRIORITY" ) ) {
+    if(String2Bool(optionMap[ "PRIORITY" ])) {
       Settings.PriorityBasedOn();
-    else
+    }
+    else {
       Settings.PriorityBasedOff();
+    }
   }
-  if( optionMap.contains( "PRIMARYALGORITHM" ) )
-  {
+  if( optionMap.contains( "PRIMARYALGORITHM" ) ) {
     QString algorithm (optionMap[ "PRIMARYALGORITHM" ]);
-    if( algorithm == "pure_cooperative" )
+    if( algorithm == "pure_cooperative" ) {
       Settings.SetPureCooperative();
-    else if( algorithm == "instruction_number_slice" )
+    }
+    else if( algorithm == "instruction_number_slice" ) {
       Settings.SetInstrnumSlice();
+    }
 #ifdef VISE
-    else if( algorithm == "timeslice" )
+    else if( algorithm == "timeslice" ) {
       Settings.SetTimeSlice();
+    }
 #endif // VICE
-    else
+    else {
       Settings.SetPureCooperative();
+    }
   }
-  if( optionMap.contains( "TASKSWITCH" ) )
+  if( optionMap.contains( "TASKSWITCH" ) ) {
     Settings.SetTaskSwitch(optionMap[ "TASKSWITCH" ].toInt());
-  if( optionMap.contains( "MAXTIME" ) )
-    Settings.SetTimeSlice(optionMap[ "MAXTIME" ].toInt());
-  if( optionMap.contains( "TIMEFACTOR" ) )
-    Settings.SetTimeFactor(optionMap[ "TIMEFACTOR" ].toInt());
-  if( optionMap.contains( "STEPSIZE" ) )
-    Settings.SetStepSize(optionMap[ "STEPSIZE" ].toInt());
-  if( optionMap.contains( "JITTERMODE" ) )
-    Settings.SetJitterModeStr(Qt2TB::qstring2wstring(optionMap[ "JITTERMODE" ]));
-  if( optionMap.contains( "DEFAULTCPUCAPACITY" ) )
-    Settings.SetDefaultCapacity(optionMap[ "DEFAULTCPUCAPACITY" ].toInt());
-  if( optionMap.contains( "DEFAULTVCPUCAPACITY" ) )
-    Settings.SetVirtualCPUCapacityStr(Qt2TB::qstring2wstring(optionMap[ "DEFAULTVCPUCAPACITY" ]));
-  if( optionMap.contains( "LOGARGS" ) )
-    Settings.SetLogArgsStr(Qt2TB::qstring2wstring(optionMap[ "LOGARGS" ]));
-#endif // VDMPP
-  if( optionMap.contains( "VDMSLMODE" ) )
-  {
-    if(String2Bool(optionMap[ "VDMSLMODE" ]))
-      Settings.VDMSLmodeOn();
-    else
-      Settings.VDMSLmodeOff();
   }
-  if( optionMap.contains( "VDM10" ) )
-  {
+  if( optionMap.contains( "MAXTIME" ) ) {
+    Settings.SetTimeSlice(optionMap[ "MAXTIME" ].toInt());
+  }
+  if( optionMap.contains( "TIMEFACTOR" ) ) {
+    Settings.SetTimeFactor(optionMap[ "TIMEFACTOR" ].toInt());
+  }
+  if( optionMap.contains( "STEPSIZE" ) ) {
+    Settings.SetStepSize(optionMap[ "STEPSIZE" ].toInt());
+  }
+  if( optionMap.contains( "JITTERMODE" ) ) {
+    Settings.SetJitterModeStr(Qt2TB::qstring2wstring(optionMap[ "JITTERMODE" ]));
+  }
+  if( optionMap.contains( "DEFAULTCPUCAPACITY" ) ) {
+    Settings.SetDefaultCapacity(optionMap[ "DEFAULTCPUCAPACITY" ].toInt());
+  }
+  if( optionMap.contains( "DEFAULTVCPUCAPACITY" ) ) {
+    Settings.SetVirtualCPUCapacityStr(Qt2TB::qstring2wstring(optionMap[ "DEFAULTVCPUCAPACITY" ]));
+  }
+  if( optionMap.contains( "LOGARGS" ) ) {
+    Settings.SetLogArgsStr(Qt2TB::qstring2wstring(optionMap[ "LOGARGS" ]));
+  }
+#endif // VDMPP
+  if( optionMap.contains( "VDMSLMODE" ) ) {
+    if(String2Bool(optionMap[ "VDMSLMODE" ])) {
+      Settings.VDMSLmodeOn();
+    }
+    else {
+      Settings.VDMSLmodeOff();
+    }
+  }
+  if( optionMap.contains( "VDM10" ) ) {
     if(String2Bool(optionMap[ "VDM10" ])) {
       if (!Settings.VDM10()) {
         Settings.VDM10On();
         SEQ<TYPE_ProjectTypes_FileName> file_l (ToolMediator::Repos()->vdm_Files().ToSequence());
-        if (!file_l.IsEmpty())
+        if (!file_l.IsEmpty()) {
           ToolMediator::BTools ()->vdm_SyntaxCheck (file_l);
+        }
       }
     }
     else {
       if (Settings.VDM10()) {
         Settings.VDM10Off();
         SEQ<TYPE_ProjectTypes_FileName> file_l (ToolMediator::Repos()->vdm_Files().ToSequence());
-        if (!file_l.IsEmpty())
+        if (!file_l.IsEmpty()) {
           ToolMediator::BTools ()->vdm_SyntaxCheck (file_l);
+        }
       }
     }
   }
-  if( optionMap.contains( "errlevel" ) )
-  {
-    if(String2Bool(optionMap[ "errlevel" ]))
+  if( optionMap.contains( "errlevel" ) ) {
+    if(String2Bool(optionMap[ "errlevel" ])) {
       Settings.ErrorLevelPRF();
-    else
+    }
+    else {
       Settings.ErrorLevelWRN1();
+    }
   }
-  if( optionMap.contains( "PRINT_FORMAT" ) )
-  {
-    if(String2Bool(optionMap[ "PRINT_FORMAT" ]))
+  if( optionMap.contains( "PRINT_FORMAT" ) ) {
+    if(String2Bool(optionMap[ "PRINT_FORMAT" ])) {
       Settings.PrintFormatOn();
-    else
+    }
+    else {
       Settings.PrintFormatOff();
+    }
   }
-  if( optionMap.contains( "RTERR_EXCEPTION" ))
-  {
-    if(String2Bool(optionMap[ "RTERR_EXCEPTION" ]))
+  if( optionMap.contains( "RTERR_EXCEPTION" )) {
+    if(String2Bool(optionMap[ "RTERR_EXCEPTION" ])) {
       Settings.RTErrExceptionOn();
-    else
+    }
+    else {
       Settings.RTErrExceptionOff();
+    }
   }
-  if( optionMap.contains( "EXPRESSION" ) )
-  {
+  if( optionMap.contains( "EXPRESSION" ) ) {
     QString expr = optionMap[ "EXPRESSION" ];
     Qt2TB::setExpression(expr);
   }
-  if( optionMap.contains( "CG_RTI" ) )
+  if( optionMap.contains( "CG_RTI" ) ) {
     Settings.SetCGRTI(optionMap[ "CG_RTI" ] == "1");
-  if( optionMap.contains( "CG_CHECKPREPOST" ) )
-    Settings.SetCGCheckPrePost(optionMap[ "CG_CHECKPREPOST" ] == "1");
-  if( optionMap.contains( "DEF" ) )
-  {
-    if( optionMap[ "DEF" ] == "def" )
-      Settings.DefOn();
-    else
-      Settings.DefOff();
   }
-  if( optionMap.contains( "INDEX" ) )
+  if( optionMap.contains( "CG_CHECKPREPOST" ) ) {
+    Settings.SetCGCheckPrePost(optionMap[ "CG_CHECKPREPOST" ] == "1");
+  }
+  if( optionMap.contains( "DEF" ) ) {
+    if( optionMap[ "DEF" ] == "def" ) {
+      Settings.DefOn();
+    }
+    else {
+      Settings.DefOff();
+    }
+  }
+  if( optionMap.contains( "INDEX" ) ) {
     Settings.SetIndex(optionMap[ "INDEX" ].toInt());
-  if( optionMap.contains( "PrettyPrint_RTI" ) )
+  }
+  if( optionMap.contains( "PrettyPrint_RTI" ) ) {
     Settings.SetPrettyPrintRTI(optionMap[ "PrettyPrint_RTI" ] == "1");
-  if( optionMap.contains( "C_flag" ) )
+  }
+  if( optionMap.contains( "C_flag" ) ) {
     Settings.SetCFlag(optionMap[ "C_flag" ].toInt());
-  if( optionMap.contains( "JCG_SKEL" ) )
+  }
+  if( optionMap.contains( "JCG_SKEL" ) ) {
     Settings.SetJCGSkel(optionMap[ "JCG_SKEL" ] == "1");
-  if( optionMap.contains( "JCG_GENPREPOST" ) )
+  }
+  if( optionMap.contains( "JCG_GENPREPOST" ) ) {
     Settings.SetJCGGenPrePost(optionMap[ "JCG_GENPREPOST" ] == "1");
-  if( optionMap.contains( "JCG_TYPES" ) )
+  }
+  if( optionMap.contains( "JCG_TYPES" ) ) {
     Settings.SetJCGTypes(optionMap[ "JCG_TYPES" ] == "1");
-  if( optionMap.contains( "JCG_SMALLTYPES" ) )
+  }
+  if( optionMap.contains( "JCG_SMALLTYPES" ) ) {
     Settings.SetJCGSmallTypes(optionMap[ "JCG_SMALLTYPES" ] == "1");
-  if( optionMap.contains( "JCG_LONGS" ) )
+  }
+  if( optionMap.contains( "JCG_LONGS" ) ) {
     Settings.SetJCGLongs(optionMap[ "JCG_LONGS" ] == "1");
-  if( optionMap.contains( "JCG_PACKAGE" ) )
-  {
+  }
+  if( optionMap.contains( "JCG_PACKAGE" ) ) {
     QString package = optionMap[ "JCG_PACKAGE" ];
     Qt2TB::setJavaCGPackage(package);
   }
-  if( optionMap.contains( "JCG_CONCUR" ) )
+  if( optionMap.contains( "JCG_CONCUR" ) ) {
     Settings.SetJCGConcur(optionMap[ "JCG_CONCUR" ] == "1");
-  if( optionMap.contains( "JCG_CHECKPREPOST" ) )
+  }
+  if( optionMap.contains( "JCG_CHECKPREPOST" ) ) {
     Settings.SetJCGCheckPrePost(optionMap[ "JCG_CHECKPREPOST" ] == "1");
-  if( optionMap.contains( "JCG_INTERFACES" ) )
-  {
+  }
+  if( optionMap.contains( "JCG_INTERFACES" ) ) {
     QStringList s;
     QString interfaces (optionMap[ "JCG_INTERFACES" ]);
-    if( !interfaces.isEmpty() )
-    {
+    if( !interfaces.isEmpty() ) {
 #if QT_VERSION >= 0x040000
       QStringList list (interfaces.split( ',' ));
 #else
       QStringList list (QStringList::split( ',', interfaces ));
 #endif // QT_VERSION >= 0x040000
-      for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it )
-      {
+      for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it ) {
         s.append(*it);
       }
     }
     Qt2TB::setSelectedInterfacesI(s);
   }
-  if( optionMap.contains( "JCG_VDMPREFIX" ) )
+  if( optionMap.contains( "JCG_VDMPREFIX" ) ) {
     Settings.SetJCGVDMPrefix(optionMap[ "JCG_VDMPREFIX" ] == "1");
-  if( optionMap.contains( "Seed_nondetstmt" ) )
-  {
+  }
+  if( optionMap.contains( "Seed_nondetstmt" ) ) {
     int seed = optionMap[ "Seed_nondetstmt" ].toInt();
-    if(seed == -1)
+    if(seed == -1) {
       Settings.RandomOff();
-    else
+    }
+    else {
       Settings.RandomOn(seed);
+    }
   }
-  if( optionMap.contains( "JCG_USEDIRNAME" ) )
+  if( optionMap.contains( "JCG_USEDIRNAME" ) ) {
     Settings.SetJCGUseCodeDir(optionMap[ "JCG_USEDIRNAME" ] == "1");
-  if( optionMap.contains( "JCG_DIRNAME" ) )
-  {
-    QString dirname = optionMap[ "JCG_DIRNAME" ];
-    if(dirname.isEmpty())
-      Settings.SetJCGCodeDir(Nil());
-    else
-      Settings.SetJCGCodeDir(Sequence(Qt2TB::qstring2wstring(dirname)));
   }
-  if( optionMap.contains( "JCG_NEEDBACKUP" ) )
+  if( optionMap.contains( "JCG_DIRNAME" ) ) {
+    QString dirname = optionMap[ "JCG_DIRNAME" ];
+    if(dirname.isEmpty()) {
+      Settings.SetJCGCodeDir(Nil());
+    }
+    else {
+      Settings.SetJCGCodeDir(Sequence(Qt2TB::qstring2wstring(dirname)));
+    }
+  }
+  if( optionMap.contains( "JCG_NEEDBACKUP" ) ) {
     Settings.SetJCGNeedBackup(optionMap[ "JCG_NEEDBACKUP" ] == "1");
+  }
 }
 
 QMap<QString, QString> Qt2TB::GetOptions()
@@ -1107,6 +1151,7 @@ QMap<QString, QString> Qt2TB::GetOptions()
   optionMap[ "PRE" ] = (Settings.PreCheck() ? "1" : "0");
   optionMap[ "POST" ] = (Settings.PostCheck() ? "1" : "0");
   optionMap[ "INV" ] = (Settings.INV() ? "1" : "0");
+  optionMap[ "MEASURE" ] = (Settings.Measure() ? "1" : "0");
   optionMap[ "CONTEXT" ] = (Settings.Context() ? "1" : "0");
 #ifdef VDMPP
   optionMap[ "MAXINSTR" ] = wstring2qstring(Int(Settings.GetMaxInstr()).ascii());
@@ -1147,14 +1192,15 @@ QMap<QString, QString> Qt2TB::GetOptions()
   SET<TYPE_ProjectTypes_ModuleName> actualInterfaces (Settings.GetJCGInterfaces());
   QStringList interfaces_l;
   Generic mn;
-  for (bool bb = actualInterfaces.First(mn); bb; bb = actualInterfaces.Next(mn))
+  for (bool bb = actualInterfaces.First(mn); bb; bb = actualInterfaces.Next(mn)) {
     interfaces_l.append(wstring2qstring(PTAUX::ExtractModuleName(mn)));
+  }
   QString interfaces;
-  if( !interfaces_l.isEmpty() )
-  {
-    for (QStringList::const_iterator it = interfaces_l.begin(); it != interfaces_l.end(); ++it)
-    {
-      if( interfaces.length() > 0 ) interfaces += ",";
+  if( !interfaces_l.isEmpty() ) {
+    for (QStringList::const_iterator it = interfaces_l.begin(); it != interfaces_l.end(); ++it) {
+      if( interfaces.length() > 0 ) {
+        interfaces += ",";
+      }
       interfaces += (*it);
     }
   }
@@ -1162,17 +1208,14 @@ QMap<QString, QString> Qt2TB::GetOptions()
   optionMap[ "Seed_nondetstmt" ] = wstring2qstring(Int(Settings.Random()).ascii());
   optionMap[ "JCG_USEDIRNAME" ] = (Settings.GetJCGUseCodeDir() ? "1" : "0");
   QString dirname;
-  if (!Settings.GetJCGCodeDir().IsNil())
-  {
+  if (!Settings.GetJCGCodeDir().IsNil()) {
     Sequence dirnameSeq (Settings.GetJCGCodeDir());
     QString dir = Qt2TB::wstring2qstring(dirnameSeq.GetString());
     QFileInfo fi (dir);
-    if (fi.exists())
-    {
+    if (fi.exists()) {
       optionMap[ "JCG_DIRNAME" ] = Qt2TB::wstring2qstring(dirnameSeq.GetString());
     }
-    else
-    {
+    else {
       optionMap[ "JCG_USEDIRNAME" ] = "0";
       optionMap[ "JCG_DIRNAME" ] = "";
       Settings.SetJCGUseCodeDir(false);
@@ -1200,10 +1243,12 @@ bool Qt2TB::GetJCGHackParser()
 
 bool Qt2TB::String2Bool(const QString & str)
 {
-  if( str == "0" || str == "false" || str == "off" )
+  if( str == "0" || str == "false" || str == "off" ) {
     return false;
-  else if( str == "1" || str == "true" || str == "on" )
+  }
+  else if( str == "1" || str == "true" || str == "on" ) {
     return true;
+  }
   return false;
 }
 
@@ -1293,8 +1338,7 @@ GUITokenList Qt2TB::getGUITokenListI( const QString & filename )
   Sequence s (TOOLS::getGUITokenInfo( file ));
   GUITokenList list;
   size_t len_s = s.Length();
-  for (size_t idx = 1; idx <= len_s; idx++)
-  {
+  for (size_t idx = 1; idx <= len_s; idx++) {
     Tuple t (s[idx]);
     GUITokenInfo gti (t.GetIntValue(1), t.GetIntValue(2), t.GetIntValue(3), t.GetIntValue(4));
     list.append(gti);
@@ -1305,16 +1349,14 @@ GUITokenList Qt2TB::getGUITokenListI( const QString & filename )
 GUIOccurenceList Qt2TB::SearchIdI(const QStringList & files, const QString & id, bool partial, bool defOnly)
 {
   SEQ<TYPE_ProjectTypes_FileName> file_l;
-  for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it)
-  {
+  for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it) {
     file_l.ImpAppend(PTAUX::mk_FileName(qstring2wstring(*it)));
   }
   Sequence s (TOOLS::SearchId(file_l, qstring2wstring(id), partial, defOnly));
 
   GUIOccurenceList res;
   size_t len_s = s.Length();
-  for (size_t idx = 1; idx <= len_s; idx++)
-  {
+  for (size_t idx = 1; idx <= len_s; idx++) {
     const Tuple & t (s[idx]);
     GUIOccurenceInfo oi (wstring2qstring(t.GetSequence(1).GetString()),
                          wstring2qstring(t.GetSequence(2).GetString()),

@@ -291,6 +291,14 @@ QWidget* optionsW::createRuntimeCheckingGroupBox( QWidget * parent )
   layout->add( ip_postCheck );
 #endif // QT_VERSION >= 0x040000
 
+  this->ip_measureCheck = new QCheckBox( parent );
+  this->ip_measureCheck->setText( mainW::mf(tr( "Check of &measures" )) );
+#if QT_VERSION >= 0x040000
+  layout->addWidget( this->ip_measureCheck );
+#else
+  layout->add( this->ip_measureCheck );
+#endif // QT_VERSION >= 0x040000
+
   return gbox;
 }
 
@@ -1177,6 +1185,7 @@ void optionsW::setOptions()
   this->ip_dynInvCheck->setChecked(String2Bool(optionMap[ "INV" ]));
   this->ip_preCheck->setChecked(String2Bool(optionMap[ "PRE" ]));
   this->ip_postCheck->setChecked(String2Bool(optionMap[ "POST" ]));
+  this->ip_measureCheck->setChecked(String2Bool(optionMap[ "MEASURE" ]));
 #ifdef VDMPP
   this->ip_prioritySchd->setChecked(String2Bool(optionMap[ "PRIORITY" ]));
 
@@ -1309,6 +1318,7 @@ void optionsW::putOptions()
   optionMap[ "INV" ] = (this->ip_dynInvCheck->isChecked() ? "1" : "0");
   optionMap[ "PRE" ] = (this->ip_preCheck->isChecked() ? "1" : "0");
   optionMap[ "POST" ] = (this->ip_postCheck->isChecked() ? "1" : "0");
+  optionMap[ "MEASURE" ] = (this->ip_measureCheck->isChecked() ? "1" : "0");
 
 #ifdef VDMPP
   optionMap[ "PRIORITY" ] = (this->ip_prioritySchd->isChecked() ? "1" : "0");

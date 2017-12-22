@@ -690,6 +690,10 @@
         <translation type="unfinished">Check of p&amp;ost-conditions</translation>
     </message>
     <message>
+        <source>Check of &amp;measures</source>
+        <translation type="unfinished">Check of &amp;measures</translation>
+    </message>
+    <message>
         <source>Enable priority-based &amp;scheduling</source>
         <translation type="unfinished">Enable priority-based &amp;scheduling</translation>
     </message>

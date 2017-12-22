@@ -690,6 +690,10 @@
         <translation type="finished">事後条件をチェックする(&amp;o)</translation>
     </message>
     <message>
+        <source>Check of &amp;measures</source>
+        <translation type="finished">measureをチェックする(&amp;m)</translation>
+    </message>
+    <message>
         <source>Enable priority-based &amp;scheduling</source>
         <translation type="finished">優先権スケジュールを有効にする(&amp;s)</translation>
     </message>
