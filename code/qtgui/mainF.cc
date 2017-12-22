@@ -3415,16 +3415,20 @@ void mainW::setFont(QFont newFont)
 #if QT_VERSION >= 0x040000
   this->codew->setTextFont(newFont);
   this->logw->setTextFont(newFont);
+  this->errorw->setTextFont(newFont);
+  this->browserw->setTextFont(newFont);
+  this->interpreterw->setTextFont(newFont);
+  this->pogw->setTextFont(newFont);
 #else
   QApplication::setFont(newFont, true); // Set the font for existing windows
   QApplication::setFont(newFont);       // Set the font for future windows
   this->codew->setFont(font());
   this->logw->setFont(font());
-#endif // QT_VERSION >= 0x040000
   this->errorw->setFont(font());
   this->browserw->setFont(font());
   this->interpreterw->setFont(font());
   this->pogw->setFont(font());
+#endif // QT_VERSION >= 0x040000
 }
 
 QString mainW::getTextCodecName()

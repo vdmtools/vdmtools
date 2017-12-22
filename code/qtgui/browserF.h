@@ -95,6 +95,7 @@ public:
   void setWindowName(const char* name) { this->windowName = name; }
   const QString & getWindowName() { return this->windowName; }
   void setBusy(bool flg);
+  void setTextFont(const QFont & font);
 
 protected:
   virtual bool event ( QEvent * e );

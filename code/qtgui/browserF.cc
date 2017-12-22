@@ -169,13 +169,6 @@ QTREEWIDGET * browserW::createProjectListView( QWidget * parent )
   hlabels.append(tr("Files"));
 
   QTreeWidget* listview = new QTreeWidget( parent );
-
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  listview->setFont(font);
-
   listview->setColumnCount (1);
   listview->setHeaderLabels(hlabels);
   listview->setRootIsDecorated(false);
@@ -259,13 +252,6 @@ QTREEWIDGET * browserW::createClassListView( QWidget * parent )
   hlabels.append(tr("Pretty Print"));
 
   QTreeWidget* listview = new QTreeWidget( parent );
-
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  listview->setFont(font);
-
   listview->setColumnCount (6);
   listview->setHeaderLabels(hlabels);
 
@@ -342,13 +328,6 @@ QTREEWIDGET * browserW::createJavaListView( QWidget * parent )
   hlabels.append(tr("VDM"));
 
   QTreeWidget* listview = new QTreeWidget( parent );
-
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  listview->setFont(font);
-
   listview->setColumnCount (4);
   listview->setHeaderLabels(hlabels);
 
@@ -2316,3 +2295,11 @@ void browserW::contextMenuTriggered(QAction * a)
 #endif // QT_VERSION >= 0x040000
 }
 
+void browserW::setTextFont(const QFont & font)
+{
+  this->projectLV->setFont(font);
+  this->classLV->setFont(font);
+#ifdef VDMPP
+  this->javaLV->setFont(font);
+#endif // VDMPP
+}

@@ -68,11 +68,6 @@ QWidget* logW::createLog( QWidget* parent )
   QTextEdit* te = new QTextEdit( this );
 
 #if QT_VERSION >= 0x040000
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  te->setFont(font);
   te->setAcceptRichText(false);
   te->document()->setMaximumBlockCount(1000);
   te->setLineWrapMode(QTextEdit::WidgetWidth);

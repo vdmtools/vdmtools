@@ -110,6 +110,7 @@ public:
                     int length,
                     const QString & pogDesc);
     void cleanupFilter();
+    void setTextFont(const QFont & font);
 
 public slots:
     void nextMessage();
@@ -191,6 +192,7 @@ public:
 
   void setWindowName(const char* name) { this->windowName = name; }
   const QString & getWindowName() { return this->windowName; }
+  void setTextFont(const QFont & font);
 
 public slots:
   void add();

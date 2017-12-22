@@ -71,14 +71,6 @@ codeW::codeW( QWidget* parent,  const char* name, WFlags fl )
   this->openAtMinimized = false;
 
   this->pcount = 0;
-
-#if QTVER >= 4
-    int fontSize = 12;
-    QFont font = QFont("monospace", fontSize);
-    font.setStyleHint(QFont::TypeWriter);
-    int fontPxSize = QFontMetrics(font).width('0');
-    this->currentFont = font;
-#endif // QTVER >= 4
 }
 
 /*

@@ -138,13 +138,6 @@ pogW::pogW( mainW * mainw, QWidget* parent, const char* name, WFlags fl )
     }
 
     QTreeWidget * lv = new QTreeWidget( pogList );
-
-    int fontSize = 12;
-    QFont font = QFont("monospace", fontSize);
-    font.setStyleHint(QFont::TypeWriter);
-    int fontPxSize = QFontMetrics(font).width('0');
-    lv->setFont(font);
-
     lv->setColumnCount (numof(columns));
     lv->setColumnWidth(0, 40);
     lv->setColumnWidth(4, 40);
@@ -209,12 +202,6 @@ pogW::pogW( mainW * mainw, QWidget* parent, const char* name, WFlags fl )
     
     this->pogDescription = new QTextEdit( this );
 #if QT_VERSION >= 0x040000
-    int fontSize2 = 12;
-    QFont font2 = QFont("monospace", fontSize2);
-    font2.setStyleHint(QFont::TypeWriter);
-    int fontPxSize2 = QFontMetrics(font2).width('0');
-    this->pogDescription->setFont(font2);
-
     this->pogDescription->setAcceptRichText(false);
     this->pogDescription->setSizePolicy( 
                         QSizePolicy( QSizePolicy::Expanding,
@@ -677,13 +664,6 @@ pogFilterW::pogFilterW(const QICON & selectIcon,
   alabels.append(tr( "Available" ));
 
   QTreeWidget* alv = new QTreeWidget( this );
-
-  int fontSize3 = 12;
-  QFont font3= QFont("monospace", fontSize3);
-  font3.setStyleHint(QFont::TypeWriter);
-  int fontPxSize3= QFontMetrics(font3).width('0');
-  alv->setFont(font3);
-
   alv->setColumnCount (1);
   alv->setHeaderLabels(alabels);
   alv->setRootIsDecorated(false);
@@ -707,13 +687,6 @@ pogFilterW::pogFilterW(const QICON & selectIcon,
   slabels.append(tr( "Selected" ));
 
   QTreeWidget* slv = new QTreeWidget( this );
-
-  int fontSize4 = 12;
-  QFont font4 = QFont("monospace", fontSize4);
-  font4.setStyleHint(QFont::TypeWriter);
-  int fontPxSize4 = QFontMetrics(font4).width('0');
-  slv->setFont(font4);
-
   slv->setColumnCount (1);
   slv->setHeaderLabels(slabels);
   slv->setRootIsDecorated(false);
@@ -736,6 +709,17 @@ pogFilterW::pogFilterW(const QICON & selectIcon,
 
 void pogW::setBusy(bool busy)
 {
+}
+
+void pogW::setTextFont(const QFont & font)
+{
+  this->pogMessageList->setFont(font);
+  this->pogDescription->setFont(font);
+#if QT_VERSION >= 0x040000
+  for (int i = 0; i < this->pogFilters->count(); i++) {
+    ((pogFilterW *)(this->pogFilters->widget(i)))->setTextFont(font);
+  }
+#endif // QT_VERSION >= 0x040000
 }
 
 pogFilterW::~pogFilterW()
@@ -861,6 +845,12 @@ void pogFilterW::remove()
   this->updateFilter();
 }
 
+void pogFilterW::setTextFont(const QFont & font)
+{
+  this->availableList->setFont(font);
+  this->selectedList->setFont(font);
+}
+
 //
 // Custom list view item
 //
@@ -911,3 +901,5 @@ POGQListViewItem::POGQListViewItem(pogW * pogw,
   this->setSelectable(true);
 #endif // QT_VERSION >= 0x040000
 }
+
+

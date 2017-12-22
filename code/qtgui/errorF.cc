@@ -51,15 +51,14 @@ bool errorW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
 #ifdef __APPLE_CC__
-  if (e->type() == QEvent::Paint)
-  {
-    if (this->pcount < 2)
-    {
+  if (e->type() == QEvent::Paint) {
+    if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
     }
-    else
+    else {
       this->pcount = 0;
+    }
   }
 #endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
@@ -122,13 +121,6 @@ QWidget* errorW::createErrorList(QWidget* parent)
 {
 #if QT_VERSION >= 0x040000
   QListWidget* lb = new QListWidget(parent);
-
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  lb->setFont(font);
-
   QObject::connect(lb, SIGNAL(currentRowChanged(int)), this, SLOT(errorMessageSelected(int)));
 #else
   QListBox* lb = new QListBox( parent );
@@ -145,11 +137,6 @@ QWidget* errorW::createErrorDescription( QWidget* parent )
   QTextEdit* te = new QTextEdit(parent);
 
 #if QT_VERSION >= 0x040000
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  te->setFont(font);
   te->setReadOnly(true);
   te->setMinimumHeight(100);
   te->setMaximumHeight(150);
@@ -407,3 +394,8 @@ void errorW::setBusy(bool busy)
 {
 }
 
+void errorW::setTextFont(const QFont & font)
+{
+  this->errorMessageList->setFont(font);
+  this->errorDescription->setFont(font);
+}

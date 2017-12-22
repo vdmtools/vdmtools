@@ -119,6 +119,14 @@ toolOptionsDialog::toolOptionsDialog( QWidget* parent,  const char* name,
   this->autoSyntaxChecking = true;
 
 #if QT_VERSION >= 0x040000
+  int fontSize = 12;
+  QFont font = QFont("monospace", fontSize);
+  font.setStyleHint(QFont::TypeWriter);
+  int fontPxSize = QFontMetrics(font).width('0');
+  this->currentFont = font;
+#endif // QT_VERSION >= 0x040000
+
+#if QT_VERSION >= 0x040000
   this->currentStyle = QApplication::style()->objectName();
 #else
   this->currentStyle = QApplication::style().name();
@@ -134,8 +142,7 @@ toolOptionsDialog::toolOptionsDialog( QWidget* parent,  const char* name,
 
   // set editor
   const char* edName = getenv("EDITOR");
-  if ( NULL != edName )
-  {
+  if ( NULL != edName ) {
     this->editorName = edName;
     this->useExternalEditor = true;
   }
@@ -553,15 +560,25 @@ QLayout* toolOptionsDialog::createEncodingLayout( QWidget* parent )
   cbox->setSizeLimit( 20 );
 #endif // QT_VERSION >= 0x040000
 
+  int count = 0;
+  int defaultIndex = 0;
   QStringList menulist (QTLOCALE::getMenuList());
-  for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++)
-  {
+  for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++) {
+    if (itr->indexOf("UTF-8") > 0) {
+      defaultIndex = count;
+    }
 #if QT_VERSION >= 0x040000
     cbox->addItem(*itr);
 #else
     cbox->insertItem(*itr);
 #endif // QT_VERSION >= 0x040000
+    count++;
   }
+#if QT_VERSION >= 0x040000
+    cbox->setCurrentIndex(defaultIndex);
+#else
+    cbox->setCurrentItem(defaultIndex);
+#endif // QT_VERSION >= 0x040000
 
   this->encodingList = cbox;
   layout->addWidget( cbox );
@@ -1107,22 +1124,20 @@ bool toolOptionsDialog::loadOptionsV2()
   this->currentFont = QFont(fontFamily, fontPtSize, fontWeight, fontItalic);
 
   // Get codec index
-  if( initMap.contains( "TextCodecName" ) )
-  {
+  if( initMap.contains( "TextCodecName" ) ) {
     QString codecname = initMap[ "TextCodecName" ];
     int num = codecname.toInt();
-    if ( num > 0 || codecname == "0" )
+    if ( num > 0 || codecname == "0" ) {
       codecname = QTLOCALE::NumberToMenuName( num );
+    }
 
     QString menuname (QTLOCALE::Q3CodecNameToMenuName(codecname));
 
     QStringList menulist (QTLOCALE::getMenuList());
     this->currentTextCodec = 0;
     int index = 0;
-    for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++)
-    {
-      if( menuname == *itr )
-      {
+    for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++) {
+      if( menuname == *itr ) {
         this->currentTextCodec = index;
         break;
       }
@@ -1131,63 +1146,66 @@ bool toolOptionsDialog::loadOptionsV2()
   }
 
   // Get interface settings
-  if( initMap.contains( "UseExternalEditor" ) )
-  {
+  if( initMap.contains( "UseExternalEditor" ) ) {
     if( initMap[ "UseExternalEditor" ] == "1" ||
         initMap[ "UseExternalEditor" ] == "true" )
       this->useExternalEditor = true;
     else
       this->useExternalEditor = false;
   }
-  if( initMap.contains( "EditorName" ) )
+  if( initMap.contains( "EditorName" ) ) {
     this->editorName = initMap[ "EditorName" ];
-  if( initMap.contains( "SingleLoadFormat" ) )
-    this->singleLoadFormat = initMap[ "SingleLoadFormat" ];
-  if( initMap.contains( "MultiFilesSupported" ) )
-  {
-    if( initMap[ "MultiFilesSupported" ] == "1"  ||
-        initMap[ "MultiFilesSupported" ] == "true" )
-      this->multiFilesSupported = true;
-    else
-      this->multiFilesSupported = false;
   }
-  if( initMap.contains( "MultiLoadFormat" ) )
+  if( initMap.contains( "SingleLoadFormat" ) ) {
+    this->singleLoadFormat = initMap[ "SingleLoadFormat" ];
+  }
+  if( initMap.contains( "MultiFilesSupported" ) ) {
+    if( initMap[ "MultiFilesSupported" ] == "1"  ||
+        initMap[ "MultiFilesSupported" ] == "true" ) {
+      this->multiFilesSupported = true;
+    }
+    else {
+      this->multiFilesSupported = false;
+    }
+  }
+  if( initMap.contains( "MultiLoadFormat" ) ) {
     this->multiLoadFormat = initMap[ "MultiLoadFormat" ];
-  if( initMap.contains( "PrintCommand" ) )
+  }
+  if( initMap.contains( "PrintCommand" ) ) {
     this->printCommand = initMap[ "PrintCommand" ];
-  if( initMap.contains( "Style" ) )
-  {
+  }
+  if( initMap.contains( "Style" ) ) {
     QString style = initMap[ "Style" ];
     QStringList list = QStyleFactory::keys();
     bool found = false;
-    for (QStringList::const_iterator itr = list.begin(); (itr != list.end()) && !found; itr++)
-    {
+    for (QStringList::const_iterator itr = list.begin(); (itr != list.end()) && !found; itr++) {
       QString st(*itr);
 #if QT_VERSION >= 0x040000
-      if (st.toLower() == style.toLower())
+      if (st.toLower() == style.toLower()) {
 #else
-      if (st.lower() == style.lower())
+      if (st.lower() == style.lower()) {
 #endif // QT_VERSION >= 0x040000
-      {
         this->selectStyle( st );
         this->currentStyle = style;
         found = true;
       }
     }
   }
-  if( initMap.contains( "SyntaxColoring" ) )
-  {
-    if( initMap[ "SyntaxColoring" ] == "true" )
+  if( initMap.contains( "SyntaxColoring" ) ) {
+    if( initMap[ "SyntaxColoring" ] == "true" ) {
       this->syntaxColoring = true;
-    else
+    }
+    else {
       this->syntaxColoring = false;
+    }
   }
-  if( initMap.contains( "AutoSyntaxChecking" ) )
-  {
-    if( initMap[ "AutoSyntaxChecking" ] == "true" )
+  if( initMap.contains( "AutoSyntaxChecking" ) ) {
+    if( initMap[ "AutoSyntaxChecking" ] == "true" ) {
       this->autoSyntaxChecking = true;
-    else
+    }
+    else {
       this->autoSyntaxChecking = false;
+    }
   }
 
 #ifdef VDMPP
@@ -1362,8 +1380,7 @@ void toolOptionsDialog::selectUMLNewFile()
                                            tr("Select Template File..."),
                                            this->getHome(),
                                            filter));
-  if (! file.isEmpty()) //at least one item
-  {
+  if (! file.isEmpty()) { //at least one item
     this->newFileName = file;
     this->if_newFileName->setText(this->newFileName);
   }
@@ -1382,8 +1399,7 @@ void toolOptionsDialog::applyDialog()
 #else
   int selectedCodec = this->encodingList->currentItem();
 #endif // QT_VERSION >= 0x040000
-  if (selectedCodec != this->currentTextCodec)
-  {
+  if (selectedCodec != this->currentTextCodec) {
     QStringList menulist (QTLOCALE::getMenuList());
     this->currentTextCodec = selectedCodec;
     emit setTextCodec(menulist[this->currentTextCodec]);
@@ -1399,8 +1415,7 @@ void toolOptionsDialog::applyDialog()
   this->autoSyntaxChecking = this->if_autoSyntaxChecking->isChecked();
 
   if( (this->useExternalEditor != this->if_useExternalEditor->isChecked()) ||
-      (this->editorName != this->if_editorName->text()) )
-  {
+      (this->editorName != this->if_editorName->text()) ) {
     this->useExternalEditor = this->if_useExternalEditor->isChecked();
     this->editorName = this->if_editorName->text();
     this->setEditor();

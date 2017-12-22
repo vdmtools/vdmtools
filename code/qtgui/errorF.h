@@ -85,6 +85,7 @@ public:
   void setInfo(int, int);
   void removeMessagesOfFile(const QString & removedFile);
   void setBusy(bool flg);
+  void setTextFont(const QFont & font);
 
 signals:
   void resetFilePosition(QString, QString, int, int, int);

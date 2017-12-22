@@ -94,6 +94,7 @@ public:
   void setWindowName(const char* name) { this->windowName = name; }
   const QString & getWindowName() { return this->windowName; }
   QString getLog();
+  void setTextFont(const QFont & font);
 
 signals:
   void updateButtons();
