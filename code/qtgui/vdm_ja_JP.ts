@@ -702,8 +702,8 @@
         <translation type="finished">値を清書する(&amp;v)</translation>
     </message>
     <message>
-        <source>Catch RunTime Error as exception</source>
-        <translation type="finished">実行時エラーを例外として捕捉する</translation>
+        <source>Catch RunTime Error as &amp;exception</source>
+        <translation type="finished">実行時エラーを例外として捕捉する(&amp;e)</translation>
     </message>
     <message>
         <source>Expression: </source>

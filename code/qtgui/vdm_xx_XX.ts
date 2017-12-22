@@ -702,8 +702,8 @@
         <translation type="unfinished">Pretty printing of &amp;values</translation>
     </message>
     <message>
-        <source>Catch RunTime Error as exception</source>
-        <translation type="unfinished">Catch RunTime Error as exception</translation>
+        <source>Catch RunTime Error as &apm;exception</source>
+        <translation type="unfinished">Catch RunTime Error as &apm;exception</translation>
     </message>
     <message>
         <source>Expression: </source>

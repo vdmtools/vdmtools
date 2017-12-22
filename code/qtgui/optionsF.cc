@@ -240,7 +240,7 @@ QLayout* optionsW::createInterpreterLayout1( QWidget* parent )
   layout->addWidget( ip_ppValues );
 
   ip_exception = new QCheckBox( parent );
-  ip_exception->setText( mainW::mf(tr( "Catch RunTime Error as exception" )) );
+  ip_exception->setText( mainW::mf(tr( "Catch RunTime Error as &exception" )) );
   layout->addWidget( ip_exception );
 
 #ifdef VDMPP
@@ -259,36 +259,36 @@ QWidget* optionsW::createRuntimeCheckingGroupBox( QWidget * parent )
 
   QLayout* layout = gbox->layout(); 
 
-  ip_dynTypeCheck = new QCheckBox( parent );
-  ip_dynTypeCheck->setText( mainW::mf(tr( "&Dynamic type check" )) );
+  this->ip_dynTypeCheck = new QCheckBox( parent );
+  this->ip_dynTypeCheck->setText( mainW::mf(tr( "&Dynamic type check" )) );
 #if QT_VERSION >= 0x040000
-  layout->addWidget( ip_dynTypeCheck );
+  layout->addWidget( this->ip_dynTypeCheck );
 #else
-  layout->add( ip_dynTypeCheck );
+  layout->add( this->ip_dynTypeCheck );
 #endif // QT_VERSION >= 0x040000
 
-  ip_dynInvCheck = new QCheckBox( parent );
-  ip_dynInvCheck->setText( mainW::mf(tr( "Dynamic checks of &invariants" )) );
+  this->ip_dynInvCheck = new QCheckBox( parent );
+  this->ip_dynInvCheck->setText( mainW::mf(tr( "Dynamic checks of &invariants" )) );
 #if QT_VERSION >= 0x040000
-  layout->addWidget( ip_dynInvCheck );
+  layout->addWidget( this->ip_dynInvCheck );
 #else
-  layout->add( ip_dynInvCheck );
+  layout->add( this->ip_dynInvCheck );
 #endif // QT_VERSION >= 0x040000
 
-  ip_preCheck = new QCheckBox( parent );
-  ip_preCheck->setText( mainW::mf(tr( "Check of &pre-conditions" )) );
+  this->ip_preCheck = new QCheckBox( parent );
+  this->ip_preCheck->setText( mainW::mf(tr( "Check of &pre-conditions" )) );
 #if QT_VERSION >= 0x040000
-  layout->addWidget( ip_preCheck );
+  layout->addWidget( this->ip_preCheck );
 #else
-  layout->add( ip_preCheck );
+  layout->add( this->ip_preCheck );
 #endif // QT_VERSION >= 0x040000
 
-  ip_postCheck = new QCheckBox( parent );
-  ip_postCheck->setText( mainW::mf(tr( "Check of p&ost-conditions" )) );
+  this->ip_postCheck = new QCheckBox( parent );
+  this->ip_postCheck->setText( mainW::mf(tr( "Check of p&ost-conditions" )) );
 #if QT_VERSION >= 0x040000
-  layout->addWidget( ip_postCheck );
+  layout->addWidget( this->ip_postCheck );
 #else
-  layout->add( ip_postCheck );
+  layout->add( this->ip_postCheck );
 #endif // QT_VERSION >= 0x040000
 
   this->ip_measureCheck = new QCheckBox( parent );
