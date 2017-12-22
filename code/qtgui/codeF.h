@@ -37,7 +37,15 @@ class MyTextEdit : public QTextEdit
   Q_OBJECT
 
 public:
-  MyTextEdit(QWidget * parent) : QTextEdit(parent) {};
+  MyTextEdit(QWidget * parent) : QTextEdit(parent) {
+#if QTVER >= 4
+    int fontSize = 12;
+    QFont font = QFont("monospace", fontSize);
+    font.setStyleHint(QFont::TypeWriter);
+    int fontPxSize = QFontMetrics(font).width('0');
+    this->setFont(font);
+#endif // QTVER >= 4
+  };
 
 public slots:
   void contextMenuTriggered(QAction *);

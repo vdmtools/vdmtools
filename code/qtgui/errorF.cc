@@ -122,6 +122,13 @@ QWidget* errorW::createErrorList(QWidget* parent)
 {
 #if QT_VERSION >= 0x040000
   QListWidget* lb = new QListWidget(parent);
+
+  int fontSize = 12;
+  QFont font = QFont("monospace", fontSize);
+  font.setStyleHint(QFont::TypeWriter);
+  int fontPxSize = QFontMetrics(font).width('0');
+  lb->setFont(font);
+
   QObject::connect(lb, SIGNAL(currentRowChanged(int)), this, SLOT(errorMessageSelected(int)));
 #else
   QListBox* lb = new QListBox( parent );
@@ -138,8 +145,12 @@ QWidget* errorW::createErrorDescription( QWidget* parent )
   QTextEdit* te = new QTextEdit(parent);
 
 #if QT_VERSION >= 0x040000
+  int fontSize = 12;
+  QFont font = QFont("monospace", fontSize);
+  font.setStyleHint(QFont::TypeWriter);
+  int fontPxSize = QFontMetrics(font).width('0');
+  te->setFont(font);
   te->setReadOnly(true);
-//  te->setMaximumHeight(100);
   te->setMinimumHeight(100);
   te->setMaximumHeight(150);
   te->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum));

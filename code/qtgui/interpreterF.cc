@@ -40,6 +40,11 @@ BufferedQTextEdit::BufferedQTextEdit(QWidget *parent, const char * name)
 #endif // QT_VERSION >= 0x040000
 {
 #if QT_VERSION >= 0x040000
+  int fontSize = 12;
+  QFont font = QFont("monospace", fontSize);
+  font.setStyleHint(QFont::TypeWriter);
+  int fontPxSize = QFontMetrics(font).width('0');
+  this->setFont(font);
 #else
   this->setTextFormat( Qt::PlainText );
 #endif // QT_VERSION >= 0x040000
@@ -238,10 +243,14 @@ QWidget* interpreterW::createInterpreterLE( QWidget* parent )
 {
   QTextEdit* te = new QTextEdit( parent );
 #if QT_VERSION >= 0x040000
+  int fontSize = 12;
+  QFont font = QFont("monospace", fontSize);
+  font.setStyleHint(QFont::TypeWriter);
+  int fontPxSize = QFontMetrics(font).width('0');
+  te->setFont(font);
   te->setAcceptRichText(false);
   te->document()->setMaximumBlockCount(1000);
   te->setSizePolicy(QSizePolicy( QSizePolicy::Expanding, QSizePolicy::MinimumExpanding ));
-                        
 #else
   te->setTextFormat(Qt::PlainText);
   this->maxlines = 1000;
