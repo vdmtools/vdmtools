@@ -575,10 +575,11 @@ QLayout* toolOptionsDialog::createEncodingLayout( QWidget* parent )
 #endif // QT_VERSION >= 0x040000
     count++;
   }
+  this->currentTextCodec = defaultIndex;
 #if QT_VERSION >= 0x040000
-    cbox->setCurrentIndex(defaultIndex);
+  cbox->setCurrentIndex(defaultIndex);
 #else
-    cbox->setCurrentItem(defaultIndex);
+  cbox->setCurrentItem(defaultIndex);
 #endif // QT_VERSION >= 0x040000
 
   this->encodingList = cbox;
