@@ -119,11 +119,12 @@ toolOptionsDialog::toolOptionsDialog( QWidget* parent,  const char* name,
   this->autoSyntaxChecking = true;
 
 #if QT_VERSION >= 0x040000
-  int fontSize = 12;
+  int fontSize = 11;
   QFont font = QFont("monospace", fontSize);
   font.setStyleHint(QFont::TypeWriter);
   int fontPxSize = QFontMetrics(font).width('0');
   this->currentFont = font;
+  this->selectedFont = font;
 #endif // QT_VERSION >= 0x040000
 
 #if QT_VERSION >= 0x040000
