@@ -1036,6 +1036,10 @@
         <translation type="finished">現在のフォント:</translation>
     </message>
     <message>
+        <source>Font size:</source>
+        <translation type="finished">サイズ:</translation>
+    </message>
+    <message>
         <source>Select Font</source>
         <translation type="finished">フォント選択</translation>
     </message>

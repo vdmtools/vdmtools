@@ -524,6 +524,14 @@ QLayout* toolOptionsDialog::createFontLayout( QWidget* parent )
   this->currentFontName = flabel;
   layout->addWidget( flabel );
 
+  QLabel* label2 = new QLabel( parent );
+  label2->setText( tr( "Font size:" ) );
+  layout->addWidget( label2 );
+
+  QLabel* slabel = new QLabel( parent );
+  this->currentFontSize = slabel;
+  layout->addWidget( slabel );
+
   return layout;
 }
 
@@ -1359,6 +1367,7 @@ void toolOptionsDialog::selectFont()
 {
   this->selectedFont = QFontDialog::getFont( 0, this->currentFont );
   this->currentFontName->setText( selectedFont.family() );
+  this->currentFontSize->setText( QString::number(selectedFont.pointSize()) );
 }
 
 void toolOptionsDialog::selectEditor()
@@ -1568,6 +1577,7 @@ void toolOptionsDialog::setOptions()
   }
 #endif // QT_VERSION >= 0x040000
   this->currentFontName->setText( this->currentFont.family() );
+  this->currentFontSize->setText( QString::number(this->currentFont.pointSize()) );
   this->selectStyle( this->currentStyle );
   this->currentStyle = style;
 

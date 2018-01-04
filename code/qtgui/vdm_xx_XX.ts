@@ -1036,6 +1036,10 @@
         <translation type="unfinished">Current font is:</translation>
     </message>
     <message>
+        <source>Font size:</source>
+        <translation type="unfinished">Font size:</translation>
+    </message>
+    <message>
         <source>Select Font</source>
         <translation type="unfinished">Select Font</translation>
     </message>

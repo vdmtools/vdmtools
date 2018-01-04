@@ -153,6 +153,7 @@ private:
   QComboBox* fsencodingList;
   QComboBox* styleList;
   QLabel* currentFontName;
+  QLabel* currentFontSize;
   QCheckBox* if_syntaxColoring;
   QCheckBox* if_autoSyntaxChecking;
 
