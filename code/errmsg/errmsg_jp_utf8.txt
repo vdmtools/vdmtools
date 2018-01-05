@@ -1405,18 +1405,26 @@ delay引数は、"%1"中のperiodより小さくなければなりません
 非同期操作"%1"は値を返すことができません
 #Asynchronous operation %1 cannot return a value
 454
-Pure operation "%1" must return a value
+純粋操作"%1"は値を返さなければなりません
+#Pure operation "%1" must return a value
 455
-Constructors like "%1" cannot be defined pure
+コンストラクタ"%1"はpureと定義できません
+#Constructors like "%1" cannot be defined pure
 456
-Pure operation "%1" used in permission guard
+純粋操作"%1"がガードに使用されています
+#Pure operation "%1" used in permission guard
 457
-History counters cannot be used for pure operation like "%1"
+純粋操作"%1"には履歴カウンタは使用できません
+#History counters cannot be used for pure operation like "%1"
 458
-Function or pure operation "%1" used in thread
+スレッドに関数か純粋操作が使用されています
+#Function or pure operation "%1" used in thread
 459
-Pure operation cannot exit
+純粋操作"%1"はexitを使用できません
+#Pure operation cannot exit
 460
-Impure operation call "%1" in pure operation
+純粋操作から非純粋操作"%1"が呼ばれています
+#Impure operation call "%1" in pure operation
 461
-Impure operation "%1" override pure operation 
+純粋操作が非純粋操作"%1"でオーバーライドされています
+#Impure operation "%1" override pure operation 
