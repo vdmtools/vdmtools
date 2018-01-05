@@ -49,17 +49,14 @@ imports
     EnterLocalScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
     LeaveLocalScope : () ==> ();
     UpdateLocalScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
+    LookUpState: AS`Name * bool * (<CUR>|<OLD>) ==> ENV`State;
+    UsedStateIds: set of AS`Name ==> set of AS`Name;
 #ifdef VDMSL
-    LookUpState: AS`Name * bool * (<OLD>|<CUR>) ==> [REP`TypeRep];
     LookUp: AS`Name * bool ==> [REP`TypeRep];
 #endif VDMSL
 #ifdef VDMPP
-    LookUpState: AS`Name * bool * (<OLD>|<CUR>) ==> [REP`TypeRep|ENV`AccessType];
     LookUpInObject: AS`Name * AS`Name * bool * bool
                   ==> [ENV`AccessType| set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)];
-#endif VDMPP
-    UsedStateIds: set of AS`Name ==> set of AS`Name;
-#ifdef VDMPP
     HasThread: AS`Name ==> bool;
     GetCurClass: () ==> AS`Name;
     CheckAccessCurClass: [ENV`AccessType |
@@ -70,15 +67,11 @@ imports
                                                       ENV`AccessPolyTypeRep)]
                ==> [REP`TypeRep|ENV`TagRepElem  | 
                   set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
+    LookUpOperationName : [AS`Name] * AS`Name * [AS`Expr] ==> set of ENV`AccessType;
 #endif VDMPP
     CheckOperationName: AS`Name ==> bool;
-#ifdef VDMSL
-    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<IMPL>|<VALUE> ==> ();
-#endif VDMSL
-#ifdef VDMPP
-    LookUpOperationName : [AS`Name] * AS`Name * [AS`Expr] ==> set of ENV`AccessType;
-    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<IMPL>|<VALUE>|<PERM>|<PTHREAD> ==> ();
-#endif VDMPP
+    PushContext: ENV`Context ==> ();
+    GetContext: () ==> ENV`Context;
     PopContext: () ==> ();
     SetExt: seq of AS`ExtInf * set of AS`Name ==> bool;
     TransType: [AS`Name] * AS`Type ==> REP`TypeRep;
@@ -86,9 +79,8 @@ imports
     functions
     PrintName : AS`Name -> seq of char
 
-#ifdef VDMPP
   types
-
+#ifdef VDMPP
     AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  | ENV`AccessPolyTypeRep
 		 | ENV`AccessOpTypeRep | ENV`AccessFieldRep;
 
@@ -100,8 +92,10 @@ imports
                        stat : bool
                        oppure : bool;
     AccessFieldRep;
-    TagRepElem = seq of REP`FieldRep
+    TagRepElem = seq of REP`FieldRep;
 #endif VDMPP
+    Context;
+    State
 ,
 
   from DEF operations
@@ -1423,17 +1417,30 @@ handler.
          return mk_(wfpost and wfstmt and reswf, AUX`AlwaysType(tppost,tpstmt)))));
 
    wf_ExitStmt : TYPE`Ind * AS`ExitStmt * REP`TypeRep ==> bool * REP`TypeRep
-   wf_ExitStmt (i,mk_AS`ExitStmt(e,cid), -) ==
-     if e = nil
-     then (InsertExitType(mk_REP`UnitTypeRep());
-           CI`SetTypeInfo(cid, mk_REP`ExitTypeRep(mk_REP`UnitTypeRep()));
-           return mk_(true,mk_REP`ExitTypeRep(mk_REP`UnitTypeRep())))
-     else def mk_(wf,tp) = EXPR`wf_Expr(i,e,mk_REP`AllTypeRep())
+   wf_ExitStmt (i,stmt, -) ==
+     let mk_AS`ExitStmt(e,cid) = stmt
+     in
+     if ENV`GetContext () = <PUREOP>
+       -------------------------------------------
+       -- Error message #459
+       -- Pure operation cannot exit
+       -------------------------------------------
+     then
+      (ERR`GenErr(stmt,<ERROR>,459,[]);
+       return mk_(false, mk_REP`AllTypeRep());
+      )
+     elseif e = nil
+     then
+      (InsertExitType(mk_REP`UnitTypeRep());
+       CI`SetTypeInfo(cid, mk_REP`ExitTypeRep(mk_REP`UnitTypeRep()));
+       return mk_(true,mk_REP`ExitTypeRep(mk_REP`UnitTypeRep())))
+     else
+       def mk_(wf,tp) = EXPR`wf_Expr(i,e,mk_REP`AllTypeRep())
           -- QUESTION: Is this correct ????
-          in
-            (InsertExitType(tp);
-             CI`SetTypeInfo(cid, mk_REP`ExitTypeRep(tp));
-             return mk_(wf, mk_REP`ExitTypeRep(tp)));
+       in
+        (InsertExitType(tp);
+         CI`SetTypeInfo(cid, mk_REP`ExitTypeRep(tp));
+         return mk_(wf, mk_REP`ExitTypeRep(tp)));
 
    wf_TrapStmt : TYPE`Ind * AS`TrapStmt * REP`TypeRep ==> bool * REP`TypeRep
    wf_TrapStmt (i,mk_AS`TrapStmt(patbind,Post,stmt,cid),exptp) ==

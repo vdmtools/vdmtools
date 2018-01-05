@@ -2332,16 +2332,14 @@ Tuple StatSem::wf_AlwaysStmt (const Int & i, const TYPE_AS_AlwaysStmt & astmt, c
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_ExitStmt (const Int & i, const TYPE_AS_ExitStmt & stmt, const TYPE_REP_TypeRep & exptp)
 {
-// TODO:
-//  if (GetContext() == PUREOP)
-//  {
-//    //-----------------------------------------
-//    // Error message #459
-//    // Pure operation cannot exit
-//    //-----------------------------------------
-//    GenErr(stmt, ERR, 459, Sequence());
-//    return mk_(Bool(false), rep_alltp);
-//  }
+  if (GetContext() == PUREOP) {
+    //-----------------------------------------
+    // Error message #459
+    // Pure operation cannot exit
+    //-----------------------------------------
+    GenErr(stmt, ERR, 459, Sequence());
+    return mk_(Bool(false), rep_alltp);
+  }
 
   const Generic & e (stmt.GetRecord(pos_AS_ExitStmt_expr));
 
@@ -2349,8 +2347,7 @@ Tuple StatSem::wf_ExitStmt (const Int & i, const TYPE_AS_ExitStmt & stmt, const 
     GetCI().SetTypeInfo(ASTAUX::GetCid(stmt), mk_REP_ExitTypeRep(rep_unittp));
     return mk_(Bool (true), mk_REP_ExitTypeRep(rep_unittp));
   }
-  else
-  {
+  else {
     Tuple infer (wf_Expr(i, e, rep_alltp));
     const Bool & wf (infer.GetBool (1));
     const TYPE_REP_TypeRep & tp (infer.GetRecord (2));

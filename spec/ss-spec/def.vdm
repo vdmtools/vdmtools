@@ -142,7 +142,6 @@ imports
     SetStatic : bool ==> ();
     UnsetStatic : () ==> ();
 #endif VDMPP
-    --AUGUSTO
     setRecMap : map AS`Name to ENV`FunctionInfo ==> ();
     getRecMap : () ==> map AS`Name to ENV`FunctionInfo;
     
@@ -165,11 +164,8 @@ imports
     TransTypeList: [AS`Name] * seq of AS`Type ==> seq of REP`TypeRep;
     PushTypeVarContext: seq of REP`TypeVarRep ==> ();
     PopTypeVarContext: () ==> ();
-#ifdef VDMSL      
-    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<VALUE>|<IMPL> ==> ();
-#endif VDMSL
+    PushContext: ENV`Context ==> ();
 #ifdef VDMPP
-    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<VALUE>|<IMPL>|<PERM>|<PTHREAD> ==> ();
     CheckParmsInHierarchy: AS`Name * seq of REP`TypeRep * AS`Access * bool ==> bool;
     CheckAccessCurClass: [ENV`AccessType |
                           REP`TypeRep    | 
@@ -223,10 +219,8 @@ imports
                       a  : AS`Access;
     TagRepElem = seq of REP`FieldRep;
 #endif VDMPP
+    Context;
 ,
---  from AUX
---  functions
---    MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep,
 
   from PAT
   functions
@@ -857,8 +851,6 @@ known "feature" that we do not!!!!
                          wf_dom and wf_rng and
                          ok_bd and wf_pre and wf_post))));
           
-          -------- AUGUSTO ----------
-          
   wf_ExplFunction : TYPE`Ind * AS`ExplFnDef ==> bool
 #ifdef VDMSL
   wf_ExplFunction(i,mk_AS`ExplFnDef(nm,tv_l,tp,parms,fnbody,fnpre,fnpost, -, -, measu, -)) ==
@@ -867,7 +859,6 @@ known "feature" that we do not!!!!
   wf_ExplFunction(i,mk_AS`ExplFnDef(nm,tv_l,tp,parms,fnbody,fnpre,fnpost, access, stat, measu, -)) ==
 #endif VDMPP
    (dcl fndom : seq of seq of REP`TypeRep := [];
-    --dcl bindings : map AS`Name to REP`TypeRep := {|->};
     dcl bindings : map AS`Name to (REP`TypeRep * nat1) := {|->};
     dcl ok_in : bool := true;
     dcl fnrng : REP`TypeRep := ENV`TransType(nil,tp);
@@ -1025,7 +1016,6 @@ known "feature" that we do not!!!!
                          ok_measu and
                          ok_out and wf_pre and wf_tp and wf_post)))));
 
---- AUGUSTO
 functions
 
 #ifdef VDMPP
@@ -2772,12 +2762,6 @@ wf_LetBeTraceBind(i, vLetBeTraceBind) ==
     return reswf)
        
 #endif VDMSL
-
---AUGUSTO --
-#ifdef VDMPP
-functions
--- ExplFnDef | ImplFnDef | ExtExplFnDef
-#endif VDMPP
 
 end DEF
 \end{vdm_al}

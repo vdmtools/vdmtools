@@ -145,7 +145,6 @@ imports
                                      set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)
                       thread  : <NONE> | <PER> | <DECL>
                       constructors : set of ENV`AccessOpTypeRep
-                        -- AUGUSTO
                       fndefs : map AS`Name to AS`FnDef -- function name to definition
                       subresps : map AS`Name to (ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep | ENV`AccessOpTypeRep |
                                     set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep))
@@ -247,7 +246,7 @@ values
                                       CPUDeployOperation(),
                                       <NONE>,
                                       CPUConstructor(), --,
-                                      {|->}, -- AUGUSTO
+                                      {|->},
                                       {|->},
                                       false
                                      ),
@@ -265,7 +264,7 @@ values
                                       {|->},
                                       <NONE>,
                                       BUSConstructor(),--,
-                                      {|->}, -- AUGUSTO
+                                      {|->},
                                       {|->},
                                       false
                                      )
@@ -344,7 +343,7 @@ values
        polyfns = ExportPolyFns(modid,pfm);
        expops = ExportSimple(modid,ops);
        implops = ExportPrePostOps(modid,nop,State);
-       fnm' = {mk_AS`Name(modid.ids^x.ids,CI`NilContextId) |-> fnm(x) | x in set dom fnm}; --AUGUSTO
+       fnm' = {mk_AS`Name(modid.ids^x.ids,CI`NilContextId) |-> fnm(x) | x in set dom fnm};
        allfns = invs munion expfns munion implfns munion implops;
        newexp = mk_ExpSigRep(exptps,expval,allfns,polyfns,expops,exptag,fnm');
        finalexp = UseRenamedTypes(newexp,bind)
@@ -363,7 +362,7 @@ values
        polyfns = ExportPolyFns(modid,pfm);
        ops = ExportOperations(modid,opm);
        implops = ExportPrePostOps(modid,opm,State);
-       fnm' = {mk_AS`Name(modid.ids^x.ids,CI`NilContextId) |-> fnm(x) | x in set dom fnm}; --AUGUSTO
+       fnm' = {mk_AS`Name(modid.ids^x.ids,CI`NilContextId) |-> fnm(x) | x in set dom fnm};
        allfns = invs munion fns munion implfns munion implops;
        newexp = mk_ExpSigRep(tps,val,allfns,polyfns,ops,tag,fnm');
        finalexp = UseRenamedTypes(newexp,bind)

@@ -46,11 +46,11 @@ imports
     UpdateScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
     TransType: [AS`Name] * AS`Type ==> REP`TypeRep;
     TransTypeList: [AS`Name] * seq of AS`Type ==> seq of REP`TypeRep;
+    GetContext: () ==> ENV`Context;
+    LookUpState: AS`Name * bool * (<CUR>|<OLD>) ==> ENV`State;
 #ifdef VDMSL
     LookUp: AS`Name * bool ==> [REP`TypeRep];
     LookUpTag : TYPE`Ind * AS`Name * set of AS`Name ==> [AS`Name * seq of REP`FieldRep];
-    GetContext: () ==> <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<IMPL>|<VALUE>;
-    LookUpState: AS`Name * bool * (<OLD> | <CUR>) ==> [REP`TypeRep];
     LookUpPolyFn: AS`Name ==> [seq of REP`TypeVarRep * REP`FnTypeRep];
     LookUpTypeName : AS`Name ==> [REP`TypeRep];
 #endif VDMSL
@@ -65,7 +65,6 @@ imports
                                 set of REP`TypeRep];
     
     LookUpTag : TYPE`Ind * AS`Name * set of AS`Name ==> [AS`Name * (ENV`AccessFieldRep|ENV`TagRepElem)];
-    GetContext: () ==> <PURE>|<IMPL>|<ALL>|<PRE>|<POST>|<PUREOP>|<VALUE>|<PERM>|<PTHREAD>;
     LookUpOperationName : [AS`Name] * AS`Name * [AS`Expr] ==> set of ENV`AccessType;
     LookUpInObject: AS`Name * AS`Name * bool * bool
                   ==> [ENV`AccessType| set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)];
@@ -83,7 +82,6 @@ imports
                     ENV`TagRepElem  | 
                     set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
     CheckSubRespIsImplemented : TYPE`Ind * AS`Name ==> bool;
-    LookUpState: AS`Name * bool * (<OLD> | <CUR>) ==> [ENV`AccessType|REP`TypeRep];
     GetCurClass : () ==> AS`Name;
     CheckClassName: AS`Name ==> bool;
     ExpandClassName: AS`Name * set of AS`Name ==> bool * AS`Name;
@@ -111,8 +109,8 @@ imports
   
     PrintName : AS`Name -> seq of char
 
-#ifdef VDMPP
   types
+#ifdef VDMPP
 
     AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  | ENV`AccessPolyTypeRep
                  | ENV`AccessOpTypeRep | ENV`AccessFieldRep;
@@ -122,8 +120,10 @@ imports
     AccessPolyTypeRep;
     AccessOpTypeRep;
     AccessFieldRep;
-    TagRepElem = seq of REP`FieldRep
+    TagRepElem = seq of REP`FieldRep;
 #endif VDMPP
+    Context;
+    State
     ,
 
   from TYPE operations
