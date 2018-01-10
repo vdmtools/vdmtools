@@ -2506,19 +2506,21 @@ Tuple EvalState::GetCachedTypeDef(const TYPE_AS_Name & name)
 }
 #endif // VDMPP
 
+Map SubTypeCache;
+
 // SubType
 // val_v : SEM`VAL
 // gtp : GLOBAL`Type
 // ==> bool
 bool EvalState::SubType (const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type & gtp)
 {
-// 20140903 -->
   //if (!Settings.DTC() && !this->isTypeJudgement)
-  if (!Settings.DTC())
-// <-- 20140903
+  if (!Settings.DTC()) {
     return true;
-  else
+  }
+  else {
     return RealSubType(val_v, gtp, Settings.INV());
+  }
 }
 
 // SetTypeJudgement
@@ -2540,13 +2542,13 @@ void EvalState::UnsetTypeJudgement()
 // ==> bool
 bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type & gtp, bool checkinv) /*notconst*/
 {
-  if (val_v.Is(TAG_TYPE_SEM_EXIT) || val_v.Is(TAG_TYPE_SEM_UNDEF))
+  if (val_v.Is(TAG_TYPE_SEM_EXIT) || val_v.Is(TAG_TYPE_SEM_UNDEF)) {
     return true;
+  }
 
   TYPE_GLOBAL_Type tp (gtp);
 
-  switch (tp.GetTag())
-  {
+  switch (tp.GetTag()) {
     case TAG_TYPE_AS_TypeName: { return IsSubTypeName(val_v, tp, checkinv); }
     case TAG_TYPE_AS_BracketedType: { return RealSubType (val_v, tp.GetRecord(pos_AS_BracketedType_tp), checkinv); }
     case TAG_TYPE_AS_OptionalType: {
@@ -2556,8 +2558,9 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_UnionType_tps));
       bool exists = false;
       size_t len_tp_l = tp_l.Length();
-      for (size_t i = 1; (i <= len_tp_l) && !exists; i++)
+      for (size_t i = 1; (i <= len_tp_l) && !exists; i++) {
         exists = RealSubType (val_v, tp_l[i], checkinv);
+      }
       return exists;
     }
     case TAG_TYPE_AS_VoidType: { return val_v.Is(TAG_TYPE_SEM_CONT) || val_v.Is(TAG_TYPE_SEM_RETURN); }
@@ -2575,8 +2578,9 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
           default:      { return false; } // should never happen
         }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_CharType: { return val_v.Is(TAG_TYPE_SEM_CHAR); }
 
@@ -2586,12 +2590,12 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
         const type_cL & tmp2_l (val_v.GetSequence(pos_SEM_QUOTE_v));
         return (tmp1_l == tmp2_l);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_CompositeType: {
-      if (val_v.Is(TAG_TYPE_DYNSEM_SEM_REC))
-      {
+      if (val_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
         const TYPE_AS_Name & tag (tp.GetRecord(pos_AS_CompositeType_name));
         const TYPE_AS_Name & rtag (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
 //        Tuple etn (AUX::ExtractTagName(tag, Set())); // [AS`Name] * bool
@@ -2603,14 +2607,14 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
           const TYPE_AS_Name & the_tag (etn.GetRecord(1));
           const TYPE_AS_Name & the_rtag (the_etn.GetRecord(1));
           bool forall = (the_tag == the_rtag);
-          if (!val_v.GetBoolValue(pos_DYNSEM_SEM_SemRecord_checked))
-          {
+          if (!val_v.GetBoolValue(pos_DYNSEM_SEM_SemRecord_checked)) {
             const SEQ<TYPE_AS_Field> & fields_l (tp.GetSequence(pos_AS_CompositeType_fields));
             SEQ<TYPE_SEM_VAL> val_rec (val_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
             size_t len_val_rec = val_rec.Length();
             forall = (len_val_rec == (size_t)(fields_l.Length()));
-            for (size_t i = 1; (i <= len_val_rec) && forall; i++)
+            for (size_t i = 1; (i <= len_val_rec) && forall; i++) {
               forall = RealSubType(val_rec[i], fields_l[i].GetRecord(pos_AS_Field_type), checkinv);
+            }
           }
           return forall;
         }
@@ -2619,59 +2623,62 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
           return false;
         }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_ProductType: {
-      if (val_v.Is(TAG_TYPE_SEM_TUPLE))
-      {
+      if (val_v.Is(TAG_TYPE_SEM_TUPLE)) {
         const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_ProductType_tps));
         const SEQ<TYPE_SEM_VAL> & v_tup (val_v.GetSequence(pos_SEM_TUPLE_v));
         size_t len_tp_l = tp_l.Length ();
         //bool forall = ((v_tup.Length () >= 2) && (len_tp_l >= 2) && ((size_t)(v_tup.Length ()) == len_tp_l));
         bool forall = ((size_t)(v_tup.Length ()) == len_tp_l);
-        for (size_t i = 1; (i <= len_tp_l) && forall; i++)
+        for (size_t i = 1; (i <= len_tp_l) && forall; i++) {
           forall = RealSubType (v_tup[i], tp_l[i], checkinv);
+        }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_Set0Type:
     case TAG_TYPE_AS_Set1Type: {
-      if (val_v.Is(TAG_TYPE_SEM_SET))
-      {
+      if (val_v.Is(TAG_TYPE_SEM_SET)) {
         const TYPE_AS_Type & ttp (tp.GetRecord(pos_AS_Set1Type_elemtp));
         SET<TYPE_SEM_VAL> val_sv (val_v.GetSet(pos_SEM_SET_v));
         bool forall = tp.Is(TAG_TYPE_AS_Set0Type) || !val_sv.IsEmpty();
         Generic elm;
-        for (bool bb = val_sv.First (elm); bb && forall; bb = val_sv.Next (elm))
+        for (bool bb = val_sv.First (elm); bb && forall; bb = val_sv.Next (elm)) {
           forall = RealSubType (elm, ttp, checkinv);
+        }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_Seq0Type:
     case TAG_TYPE_AS_Seq1Type: {
-      if (val_v.Is(TAG_TYPE_SEM_SEQ))
-      {
+      if (val_v.Is(TAG_TYPE_SEM_SEQ)) {
         const TYPE_AS_Type & ttp (tp.GetRecord(pos_AS_Seq1Type_elemtp));
         const SEQ<TYPE_SEM_VAL> & v_seq (val_v.GetSequence(pos_SEM_SEQ_v));
 
         bool forall = tp.Is(TAG_TYPE_AS_Seq0Type) || !v_seq.IsEmpty();
         size_t len_v_seq = v_seq.Length();
-        for (size_t i = 1; (i <= len_v_seq) && forall; i++)
+        for (size_t i = 1; (i <= len_v_seq) && forall; i++) {
           forall = RealSubType (v_seq[i], ttp, checkinv);
+        }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_GeneralMap0Type:
     case TAG_TYPE_AS_GeneralMap1Type: {
-      if (val_v.Is(TAG_TYPE_SEM_MAP))
-      {
+      if (val_v.Is(TAG_TYPE_SEM_MAP)) {
         const MAP<TYPE_SEM_VAL, TYPE_SEM_VAL> & val (val_v.GetMap(pos_SEM_MAP_v));
         const TYPE_AS_Type & dtp (tp.GetRecord(pos_AS_GeneralMap1Type_mapdom));
         const TYPE_AS_Type & rtp (tp.GetRecord(pos_AS_GeneralMap1Type_maprng));
@@ -2679,8 +2686,9 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
 
         bool forall = tp.Is(TAG_TYPE_AS_GeneralMap0Type) || !val.IsEmpty();
         Generic elm;
-        for (bool bb = dom_val.First (elm); bb && forall; bb = dom_val.Next (elm))
+        for (bool bb = dom_val.First (elm); bb && forall; bb = dom_val.Next (elm)) {
           forall = RealSubType (elm, dtp, checkinv) && RealSubType (val[elm], rtp, checkinv);
+        }
         return forall;
       }
       else
@@ -2688,8 +2696,7 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
     }
     case TAG_TYPE_AS_InjectiveMap0Type:
     case TAG_TYPE_AS_InjectiveMap1Type: {
-      if (val_v.Is(TAG_TYPE_SEM_MAP))
-      {
+      if (val_v.Is(TAG_TYPE_SEM_MAP)) {
         const MAP<TYPE_SEM_VAL, TYPE_SEM_VAL> & val (val_v.GetMap(pos_SEM_MAP_v));
         const TYPE_AS_Type & dtp (tp.GetRecord(pos_AS_InjectiveMap1Type_mapdom));
         const TYPE_AS_Type & rtp (tp.GetRecord(pos_AS_InjectiveMap1Type_maprng));
@@ -2698,8 +2705,9 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
         bool forall = (tp.Is(TAG_TYPE_AS_InjectiveMap0Type) || !val.IsEmpty() )
                                  && (dom_val.Card () == val.Rng ().Card ());
         Generic dval_v;
-        for (bool bb = dom_val.First (dval_v); bb && forall; bb = dom_val.Next (dval_v))
+        for (bool bb = dom_val.First (dval_v); bb && forall; bb = dom_val.Next (dval_v)) {
           forall = RealSubType (dval_v, dtp, checkinv) && RealSubType (val[dval_v], rtp, checkinv);
+        }
         return forall;
       }
       else
@@ -2707,19 +2715,18 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
     }
 #ifdef VDMPP
     case TAG_TYPE_GLOBAL_ObjRefType: {
-      if (val_v.Is(TAG_TYPE_SEM_OBJ_uRef))
-      {
+      if (val_v.Is(TAG_TYPE_SEM_OBJ_uRef)) {
         const TYPE_AS_Name & nm (tp.GetRecord(pos_GLOBAL_ObjRefType_nm));
         const TYPE_AS_Name & nm_v (val_v.GetRecord(pos_SEM_OBJ_uRef_tp));
         return ((nm_v == nm) || IsSubClass(nm_v, nm));
       }
-      else
+      else {
         return false;
+      }
     }
 #endif // VDMPP
     case TAG_TYPE_AS_PartialFnType:
     case TAG_TYPE_AS_TotalFnType: {
-// 20150227 -->
       switch (val_v.GetTag()) {
         case TAG_TYPE_SEM_CompExplFN: {
           const SEQ<TYPE_SEM_ExplFN> & fl (val_v.GetSequence(pos_SEM_CompExplFN_fl));
@@ -2762,20 +2769,16 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
           return SubTypeAS(ftp, tp);
         }
         case TAG_TYPE_SEM_ExplPOLY: {
-// 20150302 -->
           //const TYPE_AS_Type & ptp (val_v.GetRecord(pos_SEM_ExplPOLY_tp));
           TYPE_AS_Type ptp (theStackMachine().UpdateTypeInfo(val_v.GetRecord(pos_SEM_ExplPOLY_tp),
                                                              val_v.GetRecord(pos_SEM_ExplPOLY_modName)));
-// <-- 20150302
           return SubTypeAS(ptp, tp);
         }
         default: {
           return false;
         }
       }
-// <-- 20150227
     }
-// 20150304 -->
     case TAG_TYPE_AS_OpType: {
       switch (val_v.GetTag()) {
         case TAG_TYPE_SEM_ExplOP: {
@@ -2789,7 +2792,6 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
       }
       break;
     }
-// <-- 20150304
     case TAG_TYPE_AS_TypeVar: {
       Map tm (theStackMachine().HdTypeInst());
       return (tm.DomExists(tp) ? RealSubType (val_v, tm[tp], checkinv) : false);
@@ -2810,8 +2812,9 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 {
 //wcout << theStackMachine().GetCurCl() << endl;
 //wcout << L"SubTypeAS: " << INT2Q::h2gAS(ltp) << L" : " << INT2Q::h2gAS(rtp) << endl;
-  if (ltp == rtp)
+  if (ltp == rtp) {
     return true;
+  }
   else {
     switch (ltp.GetTag()) {
       case TAG_TYPE_AS_BracketedType: {
@@ -2834,8 +2837,9 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 #ifdef VDMSL
         TYPE_AS_Name name (ltp.GetRecord(pos_AS_TypeName_name));
         Tuple t (AUX::LookUpRename(name));
-        if (t.GetBoolValue(1))
+        if (t.GetBoolValue(1)) {
           name = t.GetRecord(2);
+        }
 
 //        Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
         Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
@@ -2852,14 +2856,15 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 
         if (!itd.GetBoolValue(1)) {
           const Generic & access (itd.GetField(7)); // [AS`Access]
-          if (access.IsNil())
+          if (access.IsNil()) {
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_UNKNOWN, Nil(), ltp, Sequence());
-          else
+          }
+          else {
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_NOT_IN_SCOPE, Nil(), ltp, Sequence());
+          }
           return false; // dummy
         }
-        else
-        {
+        else {
           const Generic & typedef1 (itd.GetField(2));   // [GLOBAL`Type]
           //const TYPE_AS_Name & defcl (itd.GetRecord(6)); // [AS`Name]
           //const Generic & Inv (itd.GetField(3));        // [AS`Invariant]
@@ -2873,9 +2878,9 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 #ifdef VDMSL
         TYPE_AS_Name name (rtp.GetRecord(pos_AS_TypeName_name));
         Tuple t (AUX::LookUpRename(name));
-        if (t.GetBoolValue(1))
+        if (t.GetBoolValue(1)) {
           name = t.GetRecord(2);
-
+        }
 //        Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
         Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
         if (!itd.GetBoolValue(1)) {
@@ -2890,10 +2895,12 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
         Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
         if (!itd.GetBoolValue(1)) {
           const Generic & access (itd.GetField(7)); // [AS`Access]
-          if (access.IsNil())
+          if (access.IsNil()) {
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_UNKNOWN, Nil(), rtp, Sequence());
-          else
+          }
+          else {
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_NOT_IN_SCOPE, Nil(), rtp, Sequence());
+          }
           return false; // dummy
         }
         else {
@@ -2924,13 +2931,13 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
             default:      { return false; } // should never happen
           }
         }
-        else
+        else {
           return false;
+        }
         break;
       }
       case TAG_TYPE_AS_CompositeType: {
-        if (ltp.Is(TAG_TYPE_AS_CompositeType))
-        {
+        if (ltp.Is(TAG_TYPE_AS_CompositeType)) {
           const TYPE_AS_Name & rtag (ltp.GetRecord(pos_AS_CompositeType_name));
           const TYPE_AS_Name & tag (rtp.GetRecord(pos_AS_CompositeType_name));
 //          Tuple etn (AUX::ExtractTagName(tag, Set())); // [AS`Name] * bool
@@ -2948,8 +2955,9 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
             return false;
           }
         }
-        else
+        else {
           return false;
+        }
         break;
       }
       case TAG_TYPE_AS_UnionType: {
@@ -2963,18 +2971,19 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
         break;
       }
       case TAG_TYPE_AS_ProductType: {
-        if (ltp.Is(TAG_TYPE_AS_ProductType))
-        {
+        if (ltp.Is(TAG_TYPE_AS_ProductType)) {
           const SEQ<TYPE_AS_Type> & ltp_l (ltp.GetSequence(pos_AS_ProductType_tps));
           const SEQ<TYPE_AS_Type> & rtp_l (rtp.GetSequence(pos_AS_ProductType_tps));
           size_t len_ltp_l = ltp_l.Length ();
           bool forall = ((size_t)(rtp_l.Length ()) == len_ltp_l);
-          for (size_t i = 1; (i <= len_ltp_l) && forall; i++)
+          for (size_t i = 1; (i <= len_ltp_l) && forall; i++) {
             forall = SubTypeAS (ltp_l[i], rtp_l[i]);
+          }
           return forall;
         }
-        else
+        else {
           return false;
+        }
         break;
       }
       case TAG_TYPE_AS_OptionalType: {
@@ -2982,175 +2991,235 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
         break;
       }
       case TAG_TYPE_AS_Set0Type: {
-        if (ltp.Is(TAG_TYPE_AS_Set0Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_Set0Type_elemtp), rtp.GetRecord(pos_AS_Set0Type_elemtp));
-        else if (ltp.Is(TAG_TYPE_AS_Set1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_Set0Type_elemtp), rtp.GetRecord(pos_AS_Set0Type_elemtp));
-        else
-          return false;
+        switch(ltp.GetTag()) {
+          case TAG_TYPE_AS_Set0Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_Set0Type_elemtp),
+                             rtp.GetRecord(pos_AS_Set0Type_elemtp));
+          }
+          case TAG_TYPE_AS_Set1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_Set1Type_elemtp),
+                             rtp.GetRecord(pos_AS_Set0Type_elemtp));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_Set1Type: {
-        if (ltp.Is(TAG_TYPE_AS_Set1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_Set0Type_elemtp), rtp.GetRecord(pos_AS_Set0Type_elemtp));
-        else
-          return false;
+        switch(ltp.GetTag()) {
+          case TAG_TYPE_AS_Set1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_Set1Type_elemtp),
+                             rtp.GetRecord(pos_AS_Set1Type_elemtp));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_Seq0Type: {
-        if (ltp.Is(TAG_TYPE_AS_Seq0Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_Seq0Type_elemtp), rtp.GetRecord(pos_AS_Seq0Type_elemtp));
-        else if (ltp.Is(TAG_TYPE_AS_Seq1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_Seq0Type_elemtp), rtp.GetRecord(pos_AS_Seq0Type_elemtp));
-        else
-          return false;
+        switch(ltp.GetTag()) {
+          case TAG_TYPE_AS_Seq0Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_Seq0Type_elemtp),
+                             rtp.GetRecord(pos_AS_Seq0Type_elemtp));
+          }
+          case TAG_TYPE_AS_Seq1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_Seq1Type_elemtp),
+                             rtp.GetRecord(pos_AS_Seq0Type_elemtp));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_Seq1Type: {
-        if (ltp.Is(TAG_TYPE_AS_Seq1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_Seq0Type_elemtp), rtp.GetRecord(pos_AS_Seq0Type_elemtp));
-        else
-          return false;
+        switch(ltp.GetTag()) {
+          case TAG_TYPE_AS_Seq1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_Seq1Type_elemtp),
+                             rtp.GetRecord(pos_AS_Seq1Type_elemtp));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_GeneralMap0Type: {
-        if (ltp.Is(TAG_TYPE_AS_GeneralMap0Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap0Type_mapdom),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap0Type_maprng),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
-        else if (ltp.Is(TAG_TYPE_AS_GeneralMap1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_mapdom),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_maprng),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
-        else if (ltp.Is(TAG_TYPE_AS_InjectiveMap0Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_mapdom),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_maprng),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
-        else if (ltp.Is(TAG_TYPE_AS_InjectiveMap1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
-                           rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
-        else
-          return false;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_GeneralMap0Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap0Type_mapdom),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap0Type_maprng),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
+          }
+          case TAG_TYPE_AS_GeneralMap1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_mapdom),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_maprng),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
+          }
+          case TAG_TYPE_AS_InjectiveMap0Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_mapdom),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_maprng),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
+          }
+          case  TAG_TYPE_AS_InjectiveMap1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
+                             rtp.GetRecord(pos_AS_GeneralMap0Type_maprng));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_GeneralMap1Type: {
-        if (ltp.Is(TAG_TYPE_AS_GeneralMap1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_mapdom),
-                           rtp.GetRecord(pos_AS_GeneralMap1Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_maprng),
-                           rtp.GetRecord(pos_AS_GeneralMap1Type_maprng));
-        else if (ltp.Is(TAG_TYPE_AS_InjectiveMap1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
-                           rtp.GetRecord(pos_AS_GeneralMap1Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
-                           rtp.GetRecord(pos_AS_GeneralMap1Type_maprng));
-        else
-          return false;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_GeneralMap1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_mapdom),
+                             rtp.GetRecord(pos_AS_GeneralMap1Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_GeneralMap1Type_maprng),
+                             rtp.GetRecord(pos_AS_GeneralMap1Type_maprng));
+          }
+          case TAG_TYPE_AS_InjectiveMap1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
+                             rtp.GetRecord(pos_AS_GeneralMap1Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
+                             rtp.GetRecord(pos_AS_GeneralMap1Type_maprng));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_InjectiveMap0Type: {
-        if (ltp.Is(TAG_TYPE_AS_InjectiveMap0Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_mapdom),
-                           rtp.GetRecord(pos_AS_InjectiveMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_maprng),
-                           rtp.GetRecord(pos_AS_InjectiveMap0Type_maprng));
-        else if (ltp.Is(TAG_TYPE_AS_InjectiveMap1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
-                           rtp.GetRecord(pos_AS_InjectiveMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
-                           rtp.GetRecord(pos_AS_InjectiveMap0Type_maprng));
-        else
-          return false;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_InjectiveMap0Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_mapdom),
+                             rtp.GetRecord(pos_AS_InjectiveMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap0Type_maprng),
+                             rtp.GetRecord(pos_AS_InjectiveMap0Type_maprng));
+          }
+          case TAG_TYPE_AS_InjectiveMap1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
+                             rtp.GetRecord(pos_AS_InjectiveMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
+                             rtp.GetRecord(pos_AS_InjectiveMap0Type_maprng));
+          }
+          default: {
+             return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_InjectiveMap1Type: {
-        if (ltp.Is(TAG_TYPE_AS_InjectiveMap1Type))
-          return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
-                           rtp.GetRecord(pos_AS_InjectiveMap0Type_mapdom)) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
-                           rtp.GetRecord(pos_AS_InjectiveMap0Type_maprng));
-        else
-          return false;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_InjectiveMap1Type: {
+            return SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_mapdom),
+                             rtp.GetRecord(pos_AS_InjectiveMap0Type_mapdom)) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_InjectiveMap1Type_maprng),
+                             rtp.GetRecord(pos_AS_InjectiveMap0Type_maprng));
+          }
+          default: {
+            return false;
+          }
+        }
         break;
       }
       case TAG_TYPE_AS_PartialFnType: {
-        if (ltp.Is(TAG_TYPE_AS_PartialFnType)) {
-          const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_PartialFnType_fndom));
-          const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_PartialFnType_fndom));
-          bool forall = (ldtp.Length() == rdtp.Length()) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_PartialFnType_fnrng), rtp.GetRecord(pos_AS_PartialFnType_fnrng));
-          size_t len_ldtp = ldtp.Length();
-          for (size_t i = 1; (i <= len_ldtp) && forall; i++)
-            forall = SubTypeAS (ldtp[i], rdtp[i]);
-          return forall;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_PartialFnType: {
+            const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_PartialFnType_fndom));
+            const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_PartialFnType_fndom));
+            bool forall = (ldtp.Length() == rdtp.Length()) &&
+                   SubTypeAS(ltp.GetRecord(pos_AS_PartialFnType_fnrng),
+                             rtp.GetRecord(pos_AS_PartialFnType_fnrng));
+            size_t len_ldtp = ldtp.Length();
+            for (size_t i = 1; (i <= len_ldtp) && forall; i++) {
+              forall = SubTypeAS (ldtp[i], rdtp[i]);
+            }
+            return forall;
+          }
+          case TAG_TYPE_AS_TotalFnType: {
+            const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_TotalFnType_fndom));
+            const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_PartialFnType_fndom));
+            bool forall = (ldtp.Length() == rdtp.Length()) &&
+                  (ltp.GetRecord(pos_AS_TotalFnType_fnrng).Is(TAG_TYPE_AS_AllType) || // LabmdaExpr
+                   SubTypeAS(ltp.GetRecord(pos_AS_TotalFnType_fnrng),
+                             rtp.GetRecord(pos_AS_PartialFnType_fnrng)));
+            size_t len_ldtp = ldtp.Length();
+            for (size_t i = 1; (i <= len_ldtp) && forall; i++) {
+              forall = SubTypeAS (ldtp[i], rdtp[i]);
+            }
+            return forall;
+          }
+          default: {
+            return false;
+          }
         }
-        else if (ltp.Is(TAG_TYPE_AS_TotalFnType)) {
-          const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_TotalFnType_fndom));
-          const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_PartialFnType_fndom));
-          bool forall = (ldtp.Length() == rdtp.Length()) &&
-                (ltp.GetRecord(pos_AS_TotalFnType_fnrng).Is(TAG_TYPE_AS_AllType) || // LabmdaExpr
-                 SubTypeAS(ltp.GetRecord(pos_AS_TotalFnType_fnrng), rtp.GetRecord(pos_AS_PartialFnType_fnrng)));
-          size_t len_ldtp = ldtp.Length();
-          for (size_t i = 1; (i <= len_ldtp) && forall; i++)
-            forall = SubTypeAS (ldtp[i], rdtp[i]);
-          return forall;
-        }
-        else
-          return false;
         break;
       }
       case TAG_TYPE_AS_TotalFnType: {
-        if (ltp.Is(TAG_TYPE_AS_TotalFnType)) {
-          const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_TotalFnType_fndom));
-          const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_TotalFnType_fndom));
-          bool forall = (ldtp.Length() == rdtp.Length()) &&
-                (ltp.GetRecord(pos_AS_TotalFnType_fnrng).Is(TAG_TYPE_AS_AllType) || // LabmdaExpr
-                 SubTypeAS(ltp.GetRecord(pos_AS_TotalFnType_fnrng), rtp.GetRecord(pos_AS_TotalFnType_fnrng)));
-          size_t len_ldtp = ldtp.Length();
-          for (size_t i = 1; (i <= len_ldtp) && forall; i++)
-            forall = SubTypeAS (ldtp[i], rdtp[i]);
-          return forall;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_TotalFnType: {
+            const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_TotalFnType_fndom));
+            const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_TotalFnType_fndom));
+            bool forall = (ldtp.Length() == rdtp.Length()) &&
+                  (ltp.GetRecord(pos_AS_TotalFnType_fnrng).Is(TAG_TYPE_AS_AllType) || // LabmdaExpr
+                   SubTypeAS(ltp.GetRecord(pos_AS_TotalFnType_fnrng),
+                             rtp.GetRecord(pos_AS_TotalFnType_fnrng)));
+            size_t len_ldtp = ldtp.Length();
+            for (size_t i = 1; (i <= len_ldtp) && forall; i++) {
+              forall = SubTypeAS (ldtp[i], rdtp[i]);
+            }
+            return forall;
+          }
+          default: {
+            return false;
+          }
         }
-        else
-          return false;
         break;
       }
-// 20150304 -->
       case TAG_TYPE_AS_OpType: {
-        if (ltp.Is(TAG_TYPE_AS_OpType)) {
-          const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_OpType_opdom));
-          const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_OpType_opdom));
-          bool forall = (ldtp.Length() == rdtp.Length()) &&
-                 SubTypeAS(ltp.GetRecord(pos_AS_OpType_oprng), rtp.GetRecord(pos_AS_OpType_oprng));
-          size_t len_ldtp = ldtp.Length();
-          for (size_t i = 1; (i <= len_ldtp) && forall; i++)
-            forall = SubTypeAS (ldtp[i], rdtp[i]);
-          return forall;
+        switch (ltp.GetTag()) {
+          case TAG_TYPE_AS_OpType: {
+            const SEQ<TYPE_AS_Type> & ldtp (ltp.GetSequence(pos_AS_OpType_opdom));
+            const SEQ<TYPE_AS_Type> & rdtp (rtp.GetSequence(pos_AS_OpType_opdom));
+            bool forall = (ldtp.Length() == rdtp.Length()) &&
+                           SubTypeAS(ltp.GetRecord(pos_AS_OpType_oprng),
+                                     rtp.GetRecord(pos_AS_OpType_oprng));
+            size_t len_ldtp = ldtp.Length();
+            for (size_t i = 1; (i <= len_ldtp) && forall; i++) {
+              forall = SubTypeAS (ldtp[i], rdtp[i]);
+            }
+            return forall;
+          }
+          default: {
+            return false;
+          }
         }
-        else
-          return false;
         break;
       }
-// <-- 20150304
       case TAG_TYPE_AS_TypeVar: {
         Map tm (theStackMachine().HdTypeInst());
         return (tm.DomExists(rtp) ? SubType (ltp, tm[rtp]) : false);
       }
 #ifdef VDMPP
       case TAG_TYPE_GLOBAL_ObjRefType: {
-        if (ltp.Is(TAG_TYPE_GLOBAL_ObjRefType))
-        {
+        if (ltp.Is(TAG_TYPE_GLOBAL_ObjRefType)) {
           const TYPE_AS_Name & nm (rtp.GetRecord(pos_GLOBAL_ObjRefType_nm));
           const TYPE_AS_Name & lnm (ltp.GetRecord(pos_GLOBAL_ObjRefType_nm));
           return ((lnm == nm) || IsSubClass(lnm, nm));
         }
-        else
+        else {
           return false;
+        }
       }
 #endif // VDMPP
       case TAG_TYPE_AS_AllType: { return true; }
@@ -3167,8 +3236,7 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 // ==> bool * [GLOBAL`RecSel]
 Tuple EvalState::GetCachedRecSel(const TYPE_AS_Name & name)
 {
-  if (!this->recSelCache.DomExists(name))
-  {
+  if (!this->recSelCache.DomExists(name)) {
     this->recSelCache.ImpModify(name, AUX::LookUpRecSel(name));
   } 
   return this->recSelCache[name];
@@ -3180,8 +3248,7 @@ Tuple EvalState::GetCachedRecSel(const TYPE_AS_Name & name)
 // ==> bool * [(GLOBAL`RecSel * AS`Name * AS`Name)]
 Tuple EvalState::GetCachedRenRecSel(const TYPE_AS_Name & name)
 {
-  if (!this->renRecSelCache.DomExists(name))
-  {
+  if (!this->renRecSelCache.DomExists(name)) {
     this->renRecSelCache.ImpModify(name, AUX::LookUpRenRecSel(name));
   } 
   return this->renRecSelCache[name];
@@ -3193,16 +3260,19 @@ Tuple EvalState::GetCachedRenRecSel(const TYPE_AS_Name & name)
 Tuple EvalState::GetCachedFunOpPolyVal(const TYPE_AS_Name & name, const TYPE_AS_Name & modnm)
 {
   Tuple key (mk_(name, modnm));
-  if (!this->funOpPolyCache.DomExists(key))
-  {
-    if (EXPR::IsFunction(name, modnm))
+  if (!this->funOpPolyCache.DomExists(key)) {
+    if (EXPR::IsFunction(name, modnm)) {
       this->funOpPolyCache.ImpModify(key, mk_(Bool(true), EXPR::GetFunctionVal(name, modnm)));
-    else if (EXPR::IsOperation(name, modnm))
+    }
+    else if (EXPR::IsOperation(name, modnm)) {
       this->funOpPolyCache.ImpModify(key, mk_(Bool(true), EXPR::GetOperationVal(name, modnm)));
-    else if (EXPR::IsPoly(name, modnm))
+    }
+    else if (EXPR::IsPoly(name, modnm)) {
       this->funOpPolyCache.ImpModify(key, mk_(Bool(true), EXPR::GetPolyVal(name, modnm)));
-    else
+    }
+    else {
       this->funOpPolyCache.ImpModify(key, mk_(Bool(false), Nil()));
+    }
   }
   return this->funOpPolyCache[key];
 }
@@ -3213,8 +3283,7 @@ Tuple EvalState::GetCachedFunOpPolyVal(const TYPE_AS_Name & name, const TYPE_AS_
 Tuple EvalState::GetCachedGlobalVal(const TYPE_AS_Name & name, const TYPE_AS_Name & modnm)
 {
   Tuple key (mk_(name, modnm));
-  if (!this->globalValCache.DomExists(key))
-  {
+  if (!this->globalValCache.DomExists(key)) {
     this->globalValCache.ImpModify(key, IsGlobalVal(name, modnm));
   }
   return this->globalValCache[key];
@@ -3285,7 +3354,6 @@ TYPE_SEM_ValTp EvalState::LookUp (const TYPE_AS_Name & name)
     }
   }
 
-// 20101105 -->
 //  if (EXPR::IsFunction (loc_nm, mod_nm))
 //    return EXPR::GetFunctionVal (loc_nm, mod_nm);
 //  if(EXPR::IsOperation (loc_nm, mod_nm))
@@ -3296,7 +3364,6 @@ TYPE_SEM_ValTp EvalState::LookUp (const TYPE_AS_Name & name)
   if (gfopv.GetBoolValue(1)) {
     return TYPE_SEM_ValTp().Init(gfopv.GetRecord(2), Nil());
   }
-// <-- 20101105
 
   //Tuple igv (IsGlobalVal(loc_nm, mod_nm));
   Tuple igv (GetCachedGlobalVal(loc_nm, mod_nm));
