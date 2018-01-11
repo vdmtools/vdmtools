@@ -380,15 +380,10 @@ private:
                                  QStringList & moduleStrings,
                                  QStringList & absStrings);
 #ifdef VDMPP
-//  static Tuple ConvertMapAction(MAP_ACTION a, CLASS_STATUS vdm, CLASS_STATUS uml);
-  static CLASS_STATUS ConvertStatusStr(const std::wstring & st);
+  static CLASS_STATUS ConvertStatusStr(int sttag);
   static MAP_ACTION ConvertDefaultAction(bool l, bool r);
 #endif // VDMPP
 
-  //static Set existingJavaPackages;
-  //static Set existingVDMPackages;
-  //static Set oldJavaPackages;
-  //static Set oldVDMPackages;
   static std::set<std::wstring> existingJavaPackages;
   static std::set<std::wstring> existingVDMPackages;
   static std::set<std::wstring> oldJavaPackages;

@@ -52,6 +52,7 @@ public:
   const QString & getWindowName() { return this->windowName; }
   bool isRoseMode();
   void setCurrentCodec(const QString & cnm);
+  const QFont & getCurrentFont();
 
 public slots:
   void show();

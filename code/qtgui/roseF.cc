@@ -596,30 +596,26 @@ QGroupBox * roseW::createVGroupBox( QWidget* parent )
 bool roseW::AddAllClasses()
 {
 //
-  if(!IsRoseMode())
-  {
+  if(!IsRoseMode()) {
     Qt2TB::setBlock( false );
     QString prjnm (Qt2TB::getProjectNameI());
     Qt2TB::setBlock( true );
 
-    if (prjnm.isNull())
-    {
+    if (prjnm.isNull()) {
       Qt2TB::setBlock( false );
       QStringList files(Qt2TB::getProjectFilesI());
       Qt2TB::setBlock( true );
-      if (files.empty())
-      {
+      if (files.empty()) {
         QString file (mw->getXMIFile());
-        if (!file.isEmpty()) //at least one item 
-        {
+        if (!file.isEmpty())  {//at least one item 
           Qt2TB::SetModelNamesI(file, QString(""));
         }
-        else
+        else {
           return false;
+        }
       }
     }
-    else
-    {
+    else {
       Qt2TB::SetModelNamesI(QString(""), QString(""));
     }
   }
@@ -632,8 +628,7 @@ bool roseW::AddAllClasses()
 
   this->SetMapperEnabled(st);
 
-  if (this->MapperEnabled())
-  {
+  if (this->MapperEnabled()) {
     this->classes->clear();
 #if QT_VERSION >= 0x040000
     QList<UMLClassState> cls_l;
@@ -648,8 +643,9 @@ bool roseW::AddAllClasses()
     InitWindow(cls_l);
     return true;
   }
-  else
+  else {
     return false;
+  }
 }
 
 #if QT_VERSION >= 0x040000
@@ -1039,10 +1035,12 @@ void roseW::SetRoseMode(bool b)
 void roseW::show()
 {
   string title;
-  if (this->rosemode)
+  if (this->rosemode) {
     title = "Rose Link Window (VDM++ <-> UML)";
-  else
+  }
+  else {
     title = "UML Link Window (VDM++ <-> UML)";
+  }
 
 #if QT_VERSION >= 0x040000
   this->setWindowTitle( tr( title.c_str() ) );
@@ -1050,5 +1048,10 @@ void roseW::show()
   this->setCaption( tr( title.c_str() ) );
 #endif // QT_VERSION >= 0x040000
   QDialog::show();
+}
+
+void roseW::setTextFont(const QFont & font) {
+  this->classes->setFont(font);
+  this->outputW->setFont(font);
 }
 

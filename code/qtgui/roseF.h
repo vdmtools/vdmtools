@@ -64,6 +64,7 @@ public:
   const QString & getWindowName() { return this->windowName; }
   bool IsRoseMode();
   void SetRoseMode(bool b);
+  void setTextFont(const QFont & font);
 
 signals:
   void refreshFiles();

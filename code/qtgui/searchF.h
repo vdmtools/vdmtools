@@ -91,6 +91,7 @@ public:
   void occurencesAllDone();
   void setInfo(int);
   void setBusy(bool flg);
+  void setTextFont(const QFont & font);
 
 protected:
   virtual bool event ( QEvent * e );

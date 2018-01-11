@@ -1220,19 +1220,17 @@ bool toolOptionsDialog::loadOptionsV2()
 
 #ifdef VDMPP
   this->umlinterface = 0;
-  if( initMap.contains( "UMLInterface" ) )
-  {
+  if( initMap.contains( "UMLInterface" ) ) {
     QString umlinterfaceStr = initMap[ "UMLInterface" ];
 
-    if ((umlinterfaceStr == UML_JUDE_XMI) || (umlinterfaceStr == UML_ASTAH_XMI))
+    if ((umlinterfaceStr == UML_JUDE_XMI) || (umlinterfaceStr == UML_ASTAH_XMI)) {
       umlinterfaceStr = UML_ASTAH_PRO_XMI;
-
+    }
     int index = 0;
     while(true) {
       QString item (umlInterfaces[index]);
       if (item == "") break;
-      if (item == umlinterfaceStr)
-      {
+      if (item == umlinterfaceStr) {
         this->umlinterface = index;
         break;
       }
@@ -1240,23 +1238,20 @@ bool toolOptionsDialog::loadOptionsV2()
     }
   }
   this->umlnewfiletype = 0;
-  if( initMap.contains( "UMLFileType" ) )
-  {
+  if( initMap.contains( "UMLFileType" ) ) {
     QString umlnewfiletypeStr = initMap[ "UMLFileType" ];
     int index = 0;
     while(true) {
       QString item (umlNewFileTypes[index]);
       if (item == "") break;
-      if (item == umlnewfiletypeStr)
-      {
+      if (item == umlnewfiletypeStr) {
         this->umlnewfiletype = index;
         break;
       }
       index++;
     }
   }
-  if( initMap.contains( "UseNewFile" ) )
-  {
+  if( initMap.contains( "UseNewFile" ) ) {
     if( initMap[ "UseNewFile" ] == "true" )
       this->useNewFile = true;
     else
@@ -1266,8 +1261,7 @@ bool toolOptionsDialog::loadOptionsV2()
     this->newFileName = initMap[ "NewFileName" ];
 #endif // VDMPP
 
-  if (initMap.contains( "MaxLogLines" ))
-  {
+  if (initMap.contains( "MaxLogLines" )) {
     int max = initMap[ "MaxLogLines" ].toInt();
 #if QT_VERSION >= 0x040000
     if (max < 0 ) max = 0;
@@ -1277,8 +1271,7 @@ bool toolOptionsDialog::loadOptionsV2()
     this->if_logMax->setValue(max);
   }
 
-  if (initMap.contains( "MaxInterpreterLogLines" ))
-  {
+  if (initMap.contains( "MaxInterpreterLogLines" )) {
     int max = initMap[ "MaxInterpreterLogLines" ].toInt();
 #if QT_VERSION >= 0x040000
     if (max < 0 ) max = 0;
@@ -1488,14 +1481,12 @@ void toolOptionsDialog::selectStyle( const QString& style )
 {
 #if QT_VERSION >= 0x040000
   QString st = QApplication::style()->objectName();
-  if(st.toLower() != style.toLower())
-  {
+  if(st.toLower() != style.toLower()) {
     QApplication::setStyle( style );
   }
 #else
   QString st = QApplication::style().name();
-  if(st.lower() != style.lower())
-  {
+  if(st.lower() != style.lower()) {
     QApplication::setStyle( style );
   }
 #endif // QT_VERSION >= 0x040000
@@ -1516,6 +1507,11 @@ void toolOptionsDialog::setFontAndCodec()
 
   emit setMaxLogLines(this->if_logMax->value());
   emit setMaxInterpreterLogLines(this->if_interpreterLogMax->value());
+}
+
+const QFont & toolOptionsDialog::getCurrentFont()
+{
+  return this->currentFont;
 }
 
 bool toolOptionsDialog::doSyntaxColoring() const
@@ -1551,11 +1547,9 @@ void toolOptionsDialog::setOptions()
   QString style = QApplication::style()->objectName();
   int count = this->styleList->count();
   bool found = false;
-  for (int idx = 1; (idx <= count) && ! found; idx++)
-  {
+  for (int idx = 1; (idx <= count) && ! found; idx++) {
     QString st (this->styleList->itemText(idx));
-    if (st.toLower() == style.toLower())
-    {
+    if (st.toLower() == style.toLower()) {
       this->styleList->setCurrentIndex(idx);
       found = true;
     }
@@ -1566,11 +1560,9 @@ void toolOptionsDialog::setOptions()
   QString style = QApplication::style().name();
   int count = this->styleList->count();
   bool found = false;
-  for (int idx = 1; (idx <= count) && ! found; idx++)
-  {
+  for (int idx = 1; (idx <= count) && ! found; idx++) {
     QString st (this->styleList->text(idx));
-    if (st.lower() == style.lower())
-    {
+    if (st.lower() == style.lower()) {
       this->styleList->setCurrentItem(idx);
       found = true;
     }

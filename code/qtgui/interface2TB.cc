@@ -22,6 +22,10 @@
 #include "projectval.h"
 #include "pog-interface.h"
 
+#ifdef VDMPP
+#include "MERGE.h"
+#endif // VDMPP
+
 #if QT_VERSION < 0x040000
 #include <qthread.h>
 #include <qtextcodec.h>
@@ -408,10 +412,10 @@ bool Qt2TB::syntaxCheck(const QString & filename)
 bool Qt2TB::CPPGenerate(const QStringList & modules)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_s;
-  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-  {
-    if ((*it) != "")
+  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    if ((*it) != "") {
       module_s.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
+    }
   }
 
   return ToolMediator::BTools()->vdm_CodeGenerate(module_s,
@@ -428,10 +432,10 @@ bool Qt2TB::CPPGenerate(const QStringList & modules)
 bool Qt2TB::JavaGenerate(const QStringList & modules)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_s;
-  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-  {
-    if ((*it) != "")
+  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    if ((*it) != "") {
       module_s.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
+    }
   }
 
   return ToolMediator::BTools()->vdm_CodeGenerate(module_s,
@@ -452,14 +456,12 @@ void Qt2TB::LoadProject(const QString & project)
 
 void Qt2TB::SyntaxCheck(const QStringList & files)
 {
-  if(ToolMediator::CheckModified())
+  if(ToolMediator::CheckModified()) {
     ToolMediator::ResetTCStatus();
-
-  if (!files.isEmpty())
-  {
+  }
+  if (!files.isEmpty()) {
     SEQ<TYPE_ProjectTypes_FileName> fileList;
-    for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it)
-    {
+    for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it) {
       fileList.ImpAppend(PTAUX::mk_FileName(Qt2TB::qstring2wstring(*it)));
     }
     ToolMediator::BTools()->vdm_SyntaxCheck(fileList);
@@ -472,11 +474,9 @@ void Qt2TB::JavaSyntaxCheck(const QStringList & files)
   if(ToolMediator::CheckModified())
     ToolMediator::ResetTCStatus();
 
-  if (!files.isEmpty())
-  {
+  if (!files.isEmpty()) {
     SEQ<TYPE_ProjectTypes_FileName> fileList;
-    for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it)
-    {
+    for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it) {
       fileList.ImpAppend(PTAUX::mk_FileName(Qt2TB::qstring2wstring(*it)));
     }
     ToolMediator::BTools()->vdm_JavaSyntaxCheck(fileList);
@@ -486,28 +486,27 @@ void Qt2TB::JavaSyntaxCheck(const QStringList & files)
 
 void Qt2TB::TypeCheck(const QStringList & modules)
 {
-  if (!modules.isEmpty())
-  {
+  if (!modules.isEmpty()) {
     SEQ<TYPE_ProjectTypes_ModuleName> module_l;
-    for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-    {
-      if ((*it) != "")
+    for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+      if ((*it) != "") {
         module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
+      }
     }
-    if (!module_l.IsEmpty())
+    if (!module_l.IsEmpty()) {
       ToolMediator::BTools()->vdm_TypeCheck(module_l);
+    }
   }
 }
 
 void Qt2TB::JavaTypeCheck(const QStringList & modules)
 {
-  if (!modules.isEmpty())
-  {
+  if (!modules.isEmpty()) {
     SEQ<TYPE_ProjectTypes_ModuleName> module_l;
-    for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-    {
-      if ((*it) != "")
+    for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+      if ((*it) != "") {
         module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
+      }
     }
     if (!module_l.IsEmpty())
       ToolMediator::BTools()->vdm_JavaTypeCheck(module_l);
@@ -516,11 +515,9 @@ void Qt2TB::JavaTypeCheck(const QStringList & modules)
 
 void Qt2TB::PrettyPrint(const QStringList & files)
 {
-  if (!files.isEmpty())
-  {
+  if (!files.isEmpty()) {
     SEQ<TYPE_ProjectTypes_FileName> file_l;
-    for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it)
-    {
+    for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it) {
       file_l.ImpAppend(PTAUX::mk_FileName(Qt2TB::qstring2wstring(*it)));
     }
     ToolMediator::BTools()->vdm_PrettyPrint(file_l);
@@ -530,10 +527,10 @@ void Qt2TB::PrettyPrint(const QStringList & files)
 void Qt2TB::JavaGenerateVDM(const QStringList & modules, bool stubOnly, bool autoRenaming, bool transforms)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_l;
-  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-  {
-    if ((*it) != "")
+  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    if ((*it) != "") {
       module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
+    }
   }
   ToolMediator::BTools()->vdm_JavaGenerateVDM(module_l, Bool(stubOnly), Bool(autoRenaming), Bool(transforms));
 }
@@ -547,8 +544,7 @@ bool Qt2TB::ExecuteCommand(const QString & cmd)
 void Qt2TB::AddFiles(const QStringList & files)
 {
   SET<TYPE_ProjectTypes_FileName> file_s;
-  for (QStringList::const_iterator it = files.begin();it != files.end(); ++it)
-  {
+  for (QStringList::const_iterator it = files.begin();it != files.end(); ++it) {
     file_s.Insert(PTAUX::mk_FileName(Qt2TB::qstring2wstring(*it)));
   }
   ToolMediator::BTools()->vdm_AddFiles(file_s);
@@ -557,8 +553,7 @@ void Qt2TB::AddFiles(const QStringList & files)
 void Qt2TB::RemoveFiles(const QStringList & files)
 {
   SET<TYPE_ProjectTypes_FileName> file_s;
-  for (QStringList::const_iterator it = files.begin();it != files.end(); ++it)
-  {
+  for (QStringList::const_iterator it = files.begin();it != files.end(); ++it) {
     file_s.Insert(PTAUX::mk_FileName(Qt2TB::qstring2wstring(*it)));
   }
   ToolMediator::BTools()->vdm_RemoveFiles(file_s);
@@ -577,10 +572,10 @@ void Qt2TB::NewUnnamedProject()
 void Qt2TB::PogGenerate(const QStringList & modules)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_l;
-  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-  {
-    if ((*it) != "")
+  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    if ((*it) != "") {
       module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
+    }
   }
   ToolMediator::BTools()->vdm_PogGenerate(module_l);
 }
@@ -599,10 +594,8 @@ int Qt2TB::saveProjectI()
  
 QString Qt2TB::getProjectNameI()
 {
-  Generic g (ToolMediator::BTools()->vdm_GetProjectName());
-  wstring nm;
-  if (!g.IsNil())
-    nm = PTAUX::ExtractFileName(g);
+  Generic pnm (ToolMediator::BTools()->vdm_GetProjectName());
+  wstring nm (pnm.IsNil() ? L"" : PTAUX::ExtractFileName(pnm));
   return wstring2qstring(nm);
 }
 
@@ -624,8 +617,7 @@ void Qt2TB::SetModelNamesI(const QString & pnm, const QString & fnm)
 bool Qt2TB::MapUMLI(QLIST<UMLClassState> & settings)
 {
   Map guiSettings;
-  for (int i = 0; i < (int)settings.count(); i++) 
-  {
+  for (int i = 0; i < (int)settings.count(); i++) {
     SEQ<Char> className (qstring2wstring(settings[i].name));
     switch(settings[i].action) {
       case ACTION_DEFAULT: {
@@ -659,30 +651,32 @@ bool Qt2TB::MapUMLI(QLIST<UMLClassState> & settings)
   return (ToolMediator::UMLT()->vdm_MapUML(guiSettings)).IsEmpty();
 }
 
-CLASS_STATUS Qt2TB::ConvertStatusStr(const wstring & st)
+CLASS_STATUS Qt2TB::ConvertStatusStr(int sttag)
 {
-  if (st == L"-")
-    return STATUS_UNCHANGED;
-  else if (st == L"M")
-    return STATUS_MODIFIED;
-  else if (st == L"A")
-    return STATUS_ADDED;
-  else if (st == L"D")
-    return STATUS_DELETED;
-  else
-    return STATUS_UNKNOWN;
+  switch (sttag) {
+    case TAG_TYPE_MERGE_None:     { return STATUS_UNCHANGED; }
+    case TAG_TYPE_MERGE_Added:    { return STATUS_ADDED; }
+    case TAG_TYPE_MERGE_Modified: { return STATUS_MODIFIED; }
+    case TAG_TYPE_MERGE_Deleted:  { return STATUS_DELETED; }
+    case TAG_TYPE_MERGE_Unknown:
+    default:                      { return STATUS_UNKNOWN; }
+  }
 }
 
 MAP_ACTION Qt2TB::ConvertDefaultAction(bool l, bool r)
 {
-  if (l && r)
+  if (l && r) {
     return ACTION_DEFAULT;
-  else if (l)
+  }
+  else if (l) {
     return ACTION_VDM2UML;
-  else if (r)
+  }
+  else if (r) {
     return ACTION_UML2VDM;
-  else
+  }
+  else {
     return ACTION_DELETE;
+  }
 }
 
 int Qt2TB::GetClassStatusI(QLIST<UMLClassState> & classes)
@@ -697,8 +691,10 @@ int Qt2TB::GetClassStatusI(QLIST<UMLClassState> & classes)
     thisState.name = wstring2qstring(PTAUX::Seq2Str(fn));
 
     Tuple t (stat[fn]);     // (BUILD`State * BUILD`State)
-    thisState.vdmStatus = ConvertStatusStr(PTAUX::Seq2Str(t.GetRecord(1).GetSequence(1)));
-    thisState.umlStatus = ConvertStatusStr(PTAUX::Seq2Str(t.GetRecord(2).GetSequence(1)));
+    //thisState.vdmStatus = ConvertStatusStr(PTAUX::Seq2Str(t.GetRecord(1).GetSequence(1)));
+    thisState.vdmStatus = ConvertStatusStr(t.GetRecord(1).GetTag());
+    //thisState.umlStatus = ConvertStatusStr(PTAUX::Seq2Str(t.GetRecord(2).GetSequence(1)));
+    thisState.umlStatus = ConvertStatusStr(t.GetRecord(2).GetTag());
 
     Tuple d (defaults[fn]);  // (bool * bool)
     Bool vp (d.GetBool(1)), um (d.GetBool(2));

@@ -2282,16 +2282,21 @@ void browserW::contextMenuEvent ( QContextMenuEvent * event )
 void browserW::contextMenuTriggered(QAction * a)
 {
 #if QT_VERSION >= 0x040000
-  if (a->text() == tr("Type Check"))
+  if (a->text() == tr("Type Check")) {
     emit br_typecheck(false);
-  else if (a->text() == tr("Integrity Check"))
+  }
+  else if (a->text() == tr("Integrity Check")) {
     emit br_integrity(false);
-  else if (a->text() == tr("Pretty Print"))
+  }
+  else if (a->text() == tr("Pretty Print")) {
     emit br_pretty(false);
-  else if (a->text() == tr("Project Option"))
+  }
+  else if (a->text() == tr("Project Option")) {
     emit br_option(false);
-  else if (a->text() == tr("Select All"))
+  }
+  else if (a->text() == tr("Select All")) {
     emit br_selectAll(false);
+  }
 #endif // QT_VERSION >= 0x040000
 }
 

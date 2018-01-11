@@ -120,13 +120,6 @@ QWidget* searchW::createOccurenceList( QWidget* parent )
 {
 #if QT_VERSION >= 0x040000
   QListWidget* lb = new QListWidget( parent );
-
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  lb->setFont(font);
-
   QObject::connect(lb, SIGNAL(currentRowChanged(int)), this, SLOT(occurenceSelected(int)));
 #else
   QListBox* lb = new QListBox( parent );
@@ -148,13 +141,6 @@ QLayout* searchW::createSearchInputPart( QWidget* parent )
   layout->addWidget( label );
 
   QLineEdit* le = new QLineEdit( parent );
-#if QT_VERSION >= 0x040000
-  int fontSize = 12;
-  QFont font = QFont("monospace", fontSize);
-  font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
-  le->setFont(font);
-#endif // QT_VERSION >= 0x040000
   layout->addWidget( le );
   this->if_searchId = le;
 
@@ -379,5 +365,11 @@ void searchW::search()
 
 void searchW::setBusy(bool busy)
 {
+}
+
+void searchW::setTextFont(const QFont & font)
+{
+  this->occurenceList->setFont(font);
+  this->if_searchId->setFont(font);
 }
 

@@ -2395,10 +2395,10 @@ void mainW::rose_qt3()
   }
   if (this->rosew == NULL) {
     this->rosew = new roseW(this, this, "", true, 0);
+//    this->rosew->setTextFont(this->tw->getCurrentFont());
     QObject::connect(this->rosew, SIGNAL(sendUMLDiffCommand(QStringList)),
                      this, SLOT(sendUMLDiffCommand(QStringList)));
   }
-
 #ifdef _MSC_VER
   if (this->tw != NULL) {
     this->rosew->SetRoseMode(this->tw->isRoseMode());
@@ -3419,6 +3419,7 @@ void mainW::setFont(QFont newFont)
   this->browserw->setTextFont(newFont);
   this->interpreterw->setTextFont(newFont);
   this->pogw->setTextFont(newFont);
+  this->searchw->setTextFont(newFont);
 #else
   QApplication::setFont(newFont, true); // Set the font for existing windows
   QApplication::setFont(newFont);       // Set the font for future windows
