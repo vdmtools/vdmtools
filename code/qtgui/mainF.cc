@@ -3420,6 +3420,11 @@ void mainW::setFont(QFont newFont)
   this->interpreterw->setTextFont(newFont);
   this->pogw->setTextFont(newFont);
   this->searchw->setTextFont(newFont);
+#ifdef VDMPP
+  if (this->rosew != NULL) {
+    this->rosew->setTextFont(newFont);
+  }
+#endif // VDMPP
 #else
   QApplication::setFont(newFont, true); // Set the font for existing windows
   QApplication::setFont(newFont);       // Set the font for future windows
