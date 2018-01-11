@@ -3700,6 +3700,46 @@ bool StatSem::wf_Measure(const Int & i,
             }
             break;
           }
+#ifdef VDMPP
+          case TAG_TYPE_REP_OverTypeRep: {
+            SET<TYPE_REP_TypeRep> tps (mtp.GetSet(pos_REP_OverTypeRep_tps));
+            SET<TYPE_REP_TypeRep> metps;
+            SEQ<TYPE_REP_TypeRep> rfndt (TransTypeList(Nil(), tp.GetSequence(1)));
+            TYPE_REP_TypeRep rfnrt (TransType(Nil(), tp.GetRecord(2)));
+            Generic t;
+            for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
+
+              SEQ<TYPE_REP_TypeRep> mfndt (Record(t).GetSequence(1));
+              TYPE_REP_TypeRep mfnrt (Record(t).GetRecord(2));
+              if (EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)) {
+                if (VerifyRng(mfnrt)) {
+                  if (mfnrt.Is(TAG_TYPE_REP_PartialFnTypeRep) || mfnrt.Is(TAG_TYPE_REP_TotalFnTypeRep)) {
+                    //----------------------------------------------------
+                    // Error message #449
+                    // measure "%1" must not be curry function
+                    //----------------------------------------------------
+                    GenErr(measu, ERR, 449, mk_sequence(PrintName(measu)));
+                    ok_out = false;
+                  }
+                  else {
+                    metps.Insert(t);
+                  }
+                }
+              }
+            }
+            if (metps.Card() == 1) {
+            }
+            else {
+              //----------------------------------------------------
+              // Error message #414
+              // "%1" measure range is not nat or a tuple of nat
+              //----------------------------------------------------
+              GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
+              ok_out = false;
+            }
+            break;
+          }
+#endif // VDMPP
           default: {
             //----------------------------------------------------
             // Error message #414
