@@ -2395,7 +2395,7 @@ void mainW::rose_qt3()
   }
   if (this->rosew == NULL) {
     this->rosew = new roseW(this, this, "", true, 0);
-//    this->rosew->setTextFont(this->tw->getCurrentFont());
+    this->rosew->setTextFont(this->tw->getCurrentFont());
     QObject::connect(this->rosew, SIGNAL(sendUMLDiffCommand(QStringList)),
                      this, SLOT(sendUMLDiffCommand(QStringList)));
   }
