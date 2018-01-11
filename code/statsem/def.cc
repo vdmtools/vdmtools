@@ -3737,10 +3737,10 @@ bool StatSem::wf_Measure(const Int & i,
             }
             else {
               //----------------------------------------------------
-              // Error message #414
-              // "%1" measure range is not nat or a tuple of nat
+              // Error message #413
+              // "%1" and its measure do not have the same domain
               //----------------------------------------------------
-              GenErr(nm, WRN1, 414, mk_sequence(PrintName(nmq)));
+              GenErr(nm, WRN1, 413, mk_sequence(PrintName(nmq)));
               ok_out = false;
             }
             break;
