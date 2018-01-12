@@ -148,9 +148,11 @@ getFuncAppExpr(expr,sn) ==
     mk_AS`SetRangeExpr(l,r,-) -> return getFuncAppExpr(l,sn) union getFuncAppExpr(r,sn),
     mk_AS`SeqEnumerationExpr(seqe,-) -> return dunion {getFuncAppExpr(x,sn) | x in set elems seqe},
     mk_AS`SeqComprehensionExpr(e1,bind,e2,-) 
-      -> if e2 = nil 
-         then return getFuncAppExpr(e1,sn)
-         else return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn) union getFuncAppBind(bind,sn),
+      -> (dcl res : set of AS`Name := getFuncAppExpr(e1,sn);
+          if e2 <> nil 
+          then res := res union getFuncAppExpr(e2,sn);
+          res := res union getFuncAppBind(bind,sn);
+          return res),
     mk_AS`SubSequenceExpr(e1,e2,e3,-) 
       -> return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn) union getFuncAppExpr(e3,sn),
     mk_AS`SeqModifyMapOverrideExpr(e1,e2,-)  -> return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn),
@@ -324,10 +326,11 @@ getFuncAppRecordModification : AS`RecordModification * set of AS`Name ==> set of
 getFuncAppRecordModification(mk_AS`RecordModification(-,new,-),sn) ==
   getFuncAppExpr(new,sn);
   
-getFuncAppBind : AS`Bind * set of AS`Name ==> set of AS`Name
+getFuncAppBind : (AS`Bind | AS`SeqBind) * set of AS`Name ==> set of AS`Name
 getFuncAppBind(bind,sn) ==
   cases true:
    (is_AS`SetBind(bind))  -> getFuncAppSetBind(bind,sn),
+   (is_AS`SeqBind(bind))  -> getFuncAppSeqBind(bind,sn),
    (is_AS`TypeBind(bind)) -> getFuncAppTypeBind(bind,sn)
   end;
 

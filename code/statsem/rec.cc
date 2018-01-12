@@ -360,8 +360,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
 
       SET<TYPE_AS_Name> res;
       size_t len_els_l = els_l.Length();
-      for (size_t idx = 1; idx <= len_els_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_els_l; idx++) {
         res.ImpUnion(getFuncAppExpr(els_l[idx], sn));
       }
       return res;
@@ -370,8 +369,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const Generic & pred_e (expr.GetField(pos_AS_SeqComprehensionExpr_pred));
  
       SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_SeqComprehensionExpr_elem), sn));
-      if (!pred_e.IsNil())
+      if (!pred_e.IsNil()) {
         res.ImpUnion(getFuncAppExpr(pred_e, sn));
+      }
       res.ImpUnion(getFuncAppBind(expr.GetRecord(pos_AS_SeqComprehensionExpr_bind), sn));
       return res;
     }
@@ -819,13 +819,14 @@ SET<TYPE_AS_Name> SSREC::getFuncAppRecordModification(const TYPE_AS_RecordModifi
 }
 
 // getFuncAppBind
-// bind : AS`Bind
+// bind : AS`Bind | AS`SeqBind
 // sn : set of AS`Name
 // -> set of AS`Name
 SET<TYPE_AS_Name> SSREC::getFuncAppBind(const TYPE_AS_Bind & bind, const SET<TYPE_AS_Name> & sn)
 {
   switch(bind.GetTag()){
     case TAG_TYPE_AS_SetBind:  { return getFuncAppSetBind(bind, sn); }
+    case TAG_TYPE_AS_SeqBind:  { return getFuncAppSeqBind(bind, sn); }
     case TAG_TYPE_AS_TypeBind: { return getFuncAppTypeBind(bind, sn); }
     default: { return eset; }
   }
