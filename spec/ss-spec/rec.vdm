@@ -140,10 +140,11 @@ getFuncAppExpr(expr,sn) ==
     mk_AS`ExistsUniqueExpr(bind,e,-) -> return getFuncAppExpr(e,sn) union getFuncAppBind(bind,sn),
     mk_AS`SetEnumerationExpr(exprs,-) -> return dunion {getFuncAppExpr(e,sn) | e in set elems exprs},
     mk_AS`SetComprehensionExpr(e1,bind,e2,-) 
-      -> if e2 = nil 
-         then return getFuncAppExpr(e1,sn)
-         else return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn) union 
-                                            dunion {getFuncAppMultBind(b,sn) | b in set elems bind},
+      -> (dcl res : set of AS`Name := getFuncAppExpr(e1,sn);
+          if e2 <> nil 
+          then res := res union getFuncAppExpr(e2,sn);
+          res := res union dunion {getFuncAppMultBind(b,sn) | b in set elems bind};
+          return res),
     mk_AS`SetRangeExpr(l,r,-) -> return getFuncAppExpr(l,sn) union getFuncAppExpr(r,sn),
     mk_AS`SeqEnumerationExpr(seqe,-) -> return dunion {getFuncAppExpr(x,sn) | x in set elems seqe},
     mk_AS`SeqComprehensionExpr(e1,bind,e2,-) 

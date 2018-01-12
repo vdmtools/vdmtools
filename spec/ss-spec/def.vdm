@@ -1184,7 +1184,7 @@ operations
                          then 
                           (----------------------------------------------------------------
                            -- Error message #449
-                           -- measure "%1" must not be curry function1
+                           -- measure "%1" must not be curry function
                            ----------------------------------------------------------------
                            ERR`GenErr (measu, <ERROR>,449,[ENV`PrintName (measu)]);
                            ok_out := ok_out and false 
@@ -1208,6 +1208,58 @@ operations
                             then ok_out := VerifyMutRec(mutRec,measdef,nm') and ok_out;
                          )
                       else ok_out := ok_out and false,
+#ifdef VDMPP
+                mk_REP`OverTypeRep(tps) ->
+                  def rfndt = ENV`TransTypeList(nil, tp.fndom);
+                      rfnrt = ENV`TransType(nil, tp.fnrng);
+                  in
+                   (dcl metps : set of REP`TypeRep := {};
+                    for all t in set tps do
+                      cases t:
+                        mk_REP`TotalFnTypeRep(mfndt,mfnrt),
+                        mk_REP`PartialFnTypeRep(mfndt,mfnrt) ->
+                          if EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)
+                          then metps := metps union {t},
+                        others -> skip
+                      end;
+                    cases metps:
+                      {t} -> cases t:
+                               mk_REP`TotalFnTypeRep(-,mfnrt),
+                               mk_REP`PartialFnTypeRep(-,mfnrt) ->
+                                (if is_REP`PartialFnTypeRep(mfnrt) or is_REP`TotalFnTypeRep(mfnrt) 
+                                 then 
+                                  (----------------------------------------------------------------
+                                   -- Error message #449
+                                   -- measure "%1" must not be curry function
+                                   ----------------------------------------------------------------
+                                   ERR`GenErr (measu, <ERROR>,449,[ENV`PrintName (measu)]);
+                                   ok_out := ok_out and false 
+                                  );
+
+                                 --After compare range of measure with nat
+                                 if not VerifyRng(mfnrt)
+                                 then 
+                                  (----------------------------------------------------------------
+                                   -- Error message #414
+                                   -- "%1" measure range is not nat or a tuple of nat
+                                   ----------------------------------------------------------------
+                                   ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                                   ok_out := false;
+                                  )
+                                 ),
+                               others -> skip
+                              end,
+                      others -> 
+                       (----------------------------------------------------------------
+                        -- Error message #413
+                        -- "%1" and its measure do not have the same domain
+                        ----------------------------------------------------------------
+                        ERR`GenErr (nm, <WARNING>,413,[ENV`PrintName (nm)]);
+                        ok_out := ok_out and false 
+                       )
+                     end;
+                   ),
+#endif VDMPP
                 others ->
                     (----------------------------------------------------------------
                      -- Error message #414

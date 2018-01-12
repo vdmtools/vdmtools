@@ -317,8 +317,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
 
       SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_AllOrExistsExpr_pred), sn));
       size_t len_bind_l = bind_l.Length();
-      for (size_t idx = 1; idx <= len_bind_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind_l; idx++) {
         res.ImpUnion(getFuncAppMultBind(bind_l[idx], sn));
       }
       return res;
@@ -332,8 +331,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const SEQ<TYPE_AS_Expr> & elm_le (expr.GetSequence(pos_AS_SetEnumerationExpr_els));
       SET<TYPE_AS_Name> res;
       size_t len_elm_le = elm_le.Length();
-      for (size_t idx = 1; idx <= len_elm_le; idx++)
-      {
+      for (size_t idx = 1; idx <= len_elm_le; idx++) {
         res.ImpUnion(getFuncAppExpr(elm_le[idx], sn));
       }
       return res;
@@ -343,11 +341,11 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const Generic & pred_e (expr.GetField(pos_AS_SetComprehensionExpr_pred));
 
       SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_SetComprehensionExpr_elem), sn));
-      if (!pred_e.IsNil())
+      if (!pred_e.IsNil()) {
         res.ImpUnion(getFuncAppExpr(pred_e, sn));
+      }
       size_t len_bind_l = bind_l.Length();
-      for (size_t idx = 1; idx <= len_bind_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind_l; idx++) {
         res.ImpUnion(getFuncAppMultBind(bind_l[idx], sn));
       }
       return res;
@@ -1047,14 +1045,14 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
   Map recMap; // map AS`Name to ENV`FunctionInfo
   Set nm_s (fnm.Dom());
   Generic nm;
-  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
-  {
+  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
+//wcout << L"clnm: " << clnm << endl;
+//wcout << L"nm: " << nm << endl;
     SET<TYPE_AS_Name> allfns_q;
 #ifdef VDMSL
     SET<TYPE_SSENV_ExpSigRep> esr_s (GetStatSem().GetModuleEnv().Rng());
     Generic g;
-    for (bool cc = esr_s.First(g); cc; cc = esr_s.Next(g))
-    {
+    for (bool cc = esr_s.First(g); cc; cc = esr_s.Next(g)) {
       TYPE_SSENV_ExpSigRep esr (g);
       allfns_q.ImpUnion(esr.get_fcts().Dom());
       allfns_q.ImpUnion(esr.get_polys().Dom()); // 20080827
@@ -1063,8 +1061,7 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
 #ifdef VDMPP
     SET<TYPE_SSENV_ParseTypeInfo> pti_s (GetStatSem().GetParseEnv().Rng());
     Generic g;
-    for (bool cc = pti_s.First(g); cc; cc = pti_s.Next(g))
-    {
+    for (bool cc = pti_s.First(g); cc; cc = pti_s.Next(g)) {
       TYPE_SSENV_ParseTypeInfo pti (g);
       //allfns_q.ImpUnion(pti.get_fndefs().Dom());
       allfns_q.ImpUnion(pti.get_fcts().Dom());
@@ -1075,14 +1072,12 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
 
     SET<TYPE_AS_Name> allfns;
     Generic x;
-    for (bool dd = allfns_q.First(x); dd; dd = allfns_q.Next(x))
-    {
+    for (bool dd = allfns_q.First(x); dd; dd = allfns_q.Next(x)) {
       allfns.Insert(DestroyCid(x));
     }
 
     SET<TYPE_AS_Name> allapps;
-    for (bool dd = allapps_q.First(x); dd; dd = allapps_q.Next(x))
-    {
+    for (bool dd = allapps_q.First(x); dd; dd = allapps_q.Next(x)) {
       allapps.Insert(DestroyCid(x));
     }
 
@@ -1090,10 +1085,10 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
 //wcout << L"allapps: " << allapps << endl;
 
     SET<TYPE_AS_Name> normout;
-    for (bool ee = allapps.First(x); ee; ee = allapps.Next(x))
-    {
-      if (OtherClassApp(clnm, x) && allfns.InSet(x))
+    for (bool ee = allapps.First(x); ee; ee = allapps.Next(x)) {
+      if (OtherClassApp(clnm, x) && allfns.InSet(x)) {
         normout.Insert(x);
+      }
     }
 
     SET<TYPE_AS_Name> inapps (allapps);
@@ -1102,12 +1097,13 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
 //wcout << L"inapps: " << inapps << endl;
 
     SET<TYPE_AS_Name> normin;
-    for (bool ff = inapps.First(x); ff; ff = inapps.Next(x))
-    {
-      if (allfns.InSet(x))
+    for (bool ff = inapps.First(x); ff; ff = inapps.Next(x)) {
+      if (allfns.InSet(x)) {
         normin.Insert(NormalizeName(clnm, x));
-      else if (allfns.InSet(NormalizeName(clnm, x)))
+      }
+      else if (allfns.InSet(NormalizeName(clnm, x))) {
         normin.Insert(NormalizeName(clnm, x));
+      }
 /*
       else
       {
@@ -1125,6 +1121,7 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
     }
 
 //wcout << L"normin: " << normin << endl;
+//wcout << L"normout: " << normout << endl;
 
     SET<TYPE_AS_Name> norm (normin);
     norm.ImpUnion(normout);
@@ -1139,8 +1136,7 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
   SET<TYPE_AS_Name> toVisit;
   SET<TYPE_SSENV_FunctionInfo> fi_s (recMap.Rng());
   Generic x;
-  for (bool gg = fi_s.First(x); gg; gg = fi_s.Next(x))
-  {
+  for (bool gg = fi_s.First(x); gg; gg = fi_s.Next(x)) {
     TYPE_SSENV_FunctionInfo fi (x);
     toVisit.ImpUnion(fi.get_rec());
   }
