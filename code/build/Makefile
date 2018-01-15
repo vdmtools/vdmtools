@@ -5212,7 +5212,7 @@ bin_clean:
 	rm -f vdmde$(EXE) vdmqt$(EXE)
 	rm -f vppde$(EXE) vppqt$(EXE) vppumlqt$(EXE)
 	rm -f vicede$(EXE) viceqt$(EXE) viceumlqt$(EXE)
-	rm -f be_spec-sl$(EXE) be_ip-sl$(EXE)
+	rm -f be_spec-sl$(EXE) be_ip-sl$(EXE) be_spec-pp$(EXE)
 	rm -f print_name_vers$(EXE)
 	rm -f j2vdll.so
 	rm -f *.exe.manifest
