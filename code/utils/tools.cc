@@ -3947,12 +3947,12 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 #ifdef VDMSL
     << L"ast module" << endl
     << endl
-    << L"Displays the abstruct syntax tree of module 'module'." << endl
+    << L"Displays the abstract syntax tree of module 'module'." << endl
 #endif // VDMSL
 #ifdef VDMPP
     << L"ast class" << endl
     << endl
-    << L"Displays the abstruct syntax tree of class 'class'." << endl
+    << L"Displays the abstract syntax tree of class 'class'." << endl
 #endif // VDMPP
     << endl;
   }
