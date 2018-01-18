@@ -12,12 +12,13 @@ export EDITOR=vim
 
 export PATH=/sbin:/usr/sbin:${PATH}:.
 
-export JDKHOME=/usr
+#export JDKHOME=/usr
+export JDKHOME=$(readlink -f $(which javac) | xargs dirname | xargs dirname)
 export ANTHOME=/usr
 
 export JAVACCHOME=/usr/local/javacc-5.0
 
-export PLATFORM=`uname -i`
+export PLATFORM=$(uname -i)
 
 if [ "x86_64" = ${PLATFORM} ]; then
     export USERLIBDIR=/usr/lib64
@@ -38,7 +39,7 @@ fi
 export CORBAHOME=/usr/local/omniORB
 export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
 
-export OSTYPE=`uname`
+export OSTYPE=$(uname)
 export YACC=bison
 
 export TBDIR=${HOME}/vdmtools

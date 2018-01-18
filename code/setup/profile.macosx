@@ -67,7 +67,7 @@ export DYLD_LIBRARY_PATH=${QT4DIR}/lib:${DYLD_LIBRARY_PATH}
 export CORBADIR=/usr/local/omniORB
 export DYLD_LIBRARY_PATH=${CORBADIR}/lib:${DYLD_LIBRARY_PATH}
 
-export OSTYPE=`uname`
+export OSTYPE=$(uname)
 export YACC=bison
 
 export TBDIR=/Users/drk/vdmtools

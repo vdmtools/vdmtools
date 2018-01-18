@@ -221,8 +221,8 @@ export CORBADIR=/usr/local/omniORB
 export CORBABIN=${CORBADIR}/bin
 export PATH=${PATH}:${CORBABIN}
 
-export OSTYPE=CYGWIN_NT
-export WHOME="`cygpath -w -m ${HOME}`"
+export OSTYPE=$(uname | awk -F '-' '{print $1}')
+export WHOME="$(cygpath -w -m ${HOME})"
 export PYVERSION=2.7
 
 export TBDIR=${HOME}/vdmtools

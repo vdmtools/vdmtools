@@ -127,9 +127,17 @@ fi
 export CORBAHOME=/usr/local/omniORB
 export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
 
-#ARFLAGS=rvU
+if [ -f /etc/os-release ]; then
+  ID=$(grep -e '^ID=' /etc/os-release | awk -F '=' '{print $2}' | sed -e 's:"::g')
+  VERSION=$(grep -e '^VERSION_ID=' /etc/os-release | awk -F '=' '{print $2}'| sed -e 's:"::g')
+  if [ ${ID} == "ubuntu" ]; then
+    export ARFLAGS=rv
+  else
+    export ARFLAGS=rvU
+  fi
+fi
 
-export OSTYPE=`uname`
+export OSTYPE=$(uname)
 export YACC=bison
 
 export TBDIR=${HOME}/vdmtools
