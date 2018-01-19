@@ -3030,7 +3030,14 @@ Generic vdmcg::CGApplyExpr (const TYPE_AS_ApplyExpr & rc1,
                             const Generic & type1,
                             bool sd)
 {
-  Generic ti = (expr1.IsNil() ? FindType (rc1.get_fct()) : type1);
+  const TYPE_AS_Expr & expr (rc1.GetRecord(pos_AS_ApplyExpr_fct));
+  if (expr.Is(TAG_TYPE_AS_BracketedExpr)) {
+    TYPE_AS_Expr e (rc1);
+    e.SetField(pos_AS_ApplyExpr_fct, expr.GetRecord(pos_AS_BracketedExpr_expr));
+    return CGApplyExpr(e, vt, expr1, type1, sd);
+  }
+
+  Generic ti = (expr1.IsNil() ? FindType (expr) : type1);
 // 20110626 -->
   if (ti.IsRecord()) {
     if (ti.Is(TAG_TYPE_REP_InvTypeRep)) {

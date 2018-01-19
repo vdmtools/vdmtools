@@ -2825,23 +2825,26 @@ CGApplyExpr: AS`ApplyExpr * CGMAIN`VT * [CPP`Name] * [REP`TypeRep | set of REP`T
 CGApplyExpr(ae, resVar_v, expr1, type1, sd) ==
   let mk_AS`ApplyExpr(expr, -, -) = ae
   in
-   (dcl ti : [REP`TypeRep] := type1;
-    if expr1 = nil
-    then ti := CGAUX`FindType(expr);
-    cases true:
-     (is_REP`GeneralMapTypeRep(ti)),
-     (is_REP`InjectiveMapTypeRep(ti)) -> CGMapApplyExpr(ae, resVar_v, expr1, type1, sd),
-     (is_REP`SeqTypeRep(ti))          -> CGSeqApplyExpr(ae, resVar_v, expr1, type1),
-     (is_REP`OpTypeRep(ti)),
-     (is_REP`PartialFnTypeRep(ti)),
-     (is_REP`TotalFnTypeRep(ti))      -> CGFctApplyExpr(ae, resVar_v),
-     (is_REP`UnionTypeRep(ti))        -> CGUnionTypeApply(ae, resVar_v, expr1, type1, sd),
+    if is_AS`BracketedExpr(expr)
+    then CGApplyExpr(mu(ae, fct |-> expr), resVar_v, expr1, type1, sd)
+    else
+     (dcl ti : [REP`TypeRep] := type1;
+      if expr1 = nil
+      then ti := CGAUX`FindType(expr);
+      cases true:
+       (is_REP`GeneralMapTypeRep(ti)),
+       (is_REP`InjectiveMapTypeRep(ti)) -> CGMapApplyExpr(ae, resVar_v, expr1, type1, sd),
+       (is_REP`SeqTypeRep(ti))          -> CGSeqApplyExpr(ae, resVar_v, expr1, type1),
+       (is_REP`OpTypeRep(ti)),
+       (is_REP`PartialFnTypeRep(ti)),
+       (is_REP`TotalFnTypeRep(ti))      -> CGFctApplyExpr(ae, resVar_v),
+       (is_REP`UnionTypeRep(ti))        -> CGUnionTypeApply(ae, resVar_v, expr1, type1, sd),
 #ifdef VDMPP
-     (is_REP`OverTypeRep(ti))         -> CGFctApplyExpr(ae, resVar_v),
+       (is_REP`OverTypeRep(ti))         -> CGFctApplyExpr(ae, resVar_v),
 #endif VDMPP
-     others -> error
-    end;
-   );
+       others -> error
+      end;
+     );
 
 \end{vdm_al}
 
