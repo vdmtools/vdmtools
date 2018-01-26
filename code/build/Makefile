@@ -391,40 +391,18 @@ CFLAGS-libvdm_shared.a += -fPIC
 CFLAGS-libCG_shared.a += -fPIC
 
 ifeq ($(strip $(OSTYPE)),Darwin)
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.12)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
+ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.3)
 else
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.11)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
-else
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.10)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
-else
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.9)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
-else
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.8)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
-else
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.7)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
-else
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.6)
-CFLAGS-libvdm_fat.a += -arch i386
-CFLAGS-libCG_fat.a += -arch i386
-else
+ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.4)
 CFLAGS-libvdm_fat.a += -arch x86_64 -arch ppc64
 CFLAGS-libCG_fat.a += -arch x86_64 -arch ppc64
-endif
-endif
-endif
-endif
+else
+ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
+CFLAGS-libvdm_fat.a += -arch x86_64 -arch ppc64
+CFLAGS-libCG_fat.a += -arch x86_64 -arch ppc64
+else
+CFLAGS-libvdm_fat.a += -arch i386
+CFLAGS-libCG_fat.a += -arch i386
 endif
 endif
 endif
