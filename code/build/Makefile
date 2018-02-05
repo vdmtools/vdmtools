@@ -4081,13 +4081,22 @@ clean-distdir:
 
 # instsl instpp instrt
 ifeq ($(strip $(INSTALLER)),NSIS)
+#
+# the verbosity of output
+# 0: no output
+# 1: errors only
+# 2: warnings and errors
+# 3: info, warnings, and errors
+# 4: all output
+#
+VERBOSITY=3
 inst%:  inst-%.files print_name_vers.exe $(VDMMANIFEST)
 	cp $(VPATH)/license/* .
 	cp $(VPATH)/$(NSISSCR) .
 	VERSION=$(GETVERSION); \
 	NAME=$(SETUPNAME); \
 	echo Creating $$NAME; \
-	$(MAKENSIS) /V4 /DAPPDIR=$(DISTDIR) /DVERSION=$$VERSION /DVERSIONL=0.0.0.0 /DSETUPNAME=$$NAME $(NSISOPTIONS-$*) $(WIN64) $(NSISSCR)
+	$(MAKENSIS) /V$(VERBOSITY) /DAPPDIR=$(DISTDIR) /DVERSION=$$VERSION /DVERSIONL=0.0.0.0 /DSETUPNAME=$$NAME $(NSISOPTIONS-$*) $(WIN64) $(NSISSCR)
 else # must be WISE
 inst%:  setup.wse instid-%.wse inst-%.files \
 	print_name_vers.exe $(VDMMANIFEST)
