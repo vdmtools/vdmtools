@@ -54,7 +54,7 @@ wstring ASTAUX::GetDefaultModName()
 TYPE_AS_Name ASTAUX::GetDefaultModASName()
 {
   if (ASTAUX::DefaultModASName.IsNil()) {
-    ASTAUX::DefaultModASName = ASTAUX::MkName(DefaultModName);
+    ASTAUX::DefaultModASName = ASTAUX::MkName(ASTAUX::GetDefaultModName());
   }
   return DefaultModASName;
 }
