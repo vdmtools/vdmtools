@@ -31,7 +31,6 @@
 #include "UTIL.h"
 
 #ifdef VDMSL
-wstring ASTAUX::DefaultModName = L"DefaultMod";
 Generic ASTAUX::DefaultModASName = Nil();
 #endif // VDMSL
 
@@ -49,7 +48,7 @@ TYPE_AS_Name ASTAUX::MkName (const wstring & tag)
 // 
 wstring ASTAUX::GetDefaultModName()
 {
-  return ASTAUX::DefaultModName;
+  return L"DefaultMod";
 }
 
 TYPE_AS_Name ASTAUX::GetDefaultModASName()

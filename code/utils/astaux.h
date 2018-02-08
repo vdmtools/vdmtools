@@ -93,7 +93,6 @@ public:
 #ifdef VDMSL
   static wstring GetDefaultModName();
   static TYPE_AS_Name GetDefaultModASName();
-  static wstring DefaultModName;
   static Generic DefaultModASName;
 #endif // VDMSL
 #ifdef VDMPP
