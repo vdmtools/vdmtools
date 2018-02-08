@@ -563,11 +563,11 @@ SEQ<TYPE_AS_Type> MANGLE::ParseMangle(const SEQ<TYPE_MANGLE_MangleToken> & p_man
         return mk_sequence(TYPE_AS_GeneralMap0Type().Init(tpsd.Hd(), tpsr.Hd(), NilContextId)).ImpConc(ParseMangle(et2.GetSequence(2)));
       }
       case L'n': {
-        TYPE_AS_Name nm (ASTAUX::MkNameFromStr(Sequence(l_rest.Hd()).GetString(), NilContextId));
+        TYPE_AS_Name nm (ASTAUX::MkName(Sequence(l_rest.Hd()).GetString()));
         return mk_sequence(TYPE_AS_TypeName().Init(nm, NilContextId)).ImpConc(ParseMangle(l_rest.Tl()));
       }
       case L'v': {
-        TYPE_AS_Name nm (ASTAUX::MkNameFromStr(Sequence(l_rest.Hd()).GetString(), NilContextId));
+        TYPE_AS_Name nm (ASTAUX::MkName(Sequence(l_rest.Hd()).GetString()));
         return mk_sequence(TYPE_AS_TypeVar().Init(nm, NilContextId)).ImpConc(ParseMangle(l_rest.Tl()));
       }
       case L'f': {

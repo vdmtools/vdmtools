@@ -93,8 +93,7 @@ void vdmcg::cg(const TYPE_AS_Document & ast,
   SET<TYPE_CPP_File> ProgAS (cg_CG(ast, tc_state, testcond));
 #endif // VDMSL
 
-  if (!ProgAS.IsEmpty())
-  {
+  if (!ProgAS.IsEmpty()) {
     CGBackEnd be;
     be.GenFiles(ProgAS, ((kind == ((Quote) L"CPP")) ? CGBackEnd::CPP : CGBackEnd::JAVA));
   }
@@ -108,15 +107,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUpdatePosInfo(const Record & rc)
   SEQ<TYPE_CPP_Stmt> res;
   int no_of_fields = rc.Length ();
 
-  if (no_of_fields < 1)
+  if (no_of_fields < 1) {
     return res;
+  }
 
 #ifdef VDMSL
   int f = -1;
 #endif //VDMSL
   Tuple gfp (GetCI().GetFilePos(ASTAUX::GetCid(rc)));
-  if (gfp.GetBoolValue(1))
-  {
+  if (gfp.GetBoolValue(1)) {
 #ifdef VDMSL
     const TYPE_CI_FileId & fid (gfp.GetInt(2)); 
     f = fid.GetValue();
@@ -132,14 +131,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUpdatePosInfo(const Record & rc)
   
 #ifdef VDMSL
   /* -1 signals unknown position so dont change the last position */
-  if (f != this->cur_file)
-  {
+  if (f != this->cur_file) {
     this->cur_file = f;
     std::wstring file (GetSourceFile(this->cur_file));
-    if (file == L"") 
+    if (file == L"") {
       SetCurFileName(vdm_BC_GenStringLit(GiveCurCName()));
-    else
+    }
+    else {
       SetCurFileName(vdm_BC_GenStringLit(SEQ<Char>(file)));
+    }
   }
 #endif //VDMSL
 
@@ -199,22 +199,20 @@ void vdmcg::Reset(const TYPE_AS_Document & doc_l)
   InitState_TPGEN(Nil());
 
   TYPE_AS_Document mod_l;  // seq of (AS`Module | AS`DLModule)
-  if ((doc_l.Length() == 1) && doc_l[1].Is(TAG_TYPE_AS_Definitions))
-  {
+  if ((doc_l.Length() == 1) && doc_l[1].Is(TAG_TYPE_AS_Definitions)) {
     TYPE_AS_Module mod;
-    mod.Init(ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), NilContextId),
+    mod.Init(ASTAUX::GetDefaultModASName(),
              TYPE_AS_Interface().Init(type_7AS_NameCUM(), Nil(), NilContextId),
              doc_l[1],
              NilContextId);
 
     mod_l.ImpAppend(mod);
   }
-  else
+  else {
     mod_l.ImpConc(doc_l);
-
+  }
   size_t len_mod_l = mod_l.Length();
-  for (size_t idx = 1; idx <= len_mod_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_mod_l; idx++) {
     const Record & md (mod_l[idx]);
     if (md.Is (TAG_TYPE_AS_Module))
       AddModuleTypes(md);

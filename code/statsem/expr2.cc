@@ -3204,8 +3204,7 @@ Tuple StatSem::wf_SelfExpr (const Int &, const TYPE_AS_SelfExpr & selexp, const 
 // ==> bool
 bool StatSem::CpuOrBusOutSideSys(const TYPE_AS_Name & nm)
 {
-  return (((nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)) ||
-           (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId))) &&
+  return (((nm == ASTAUX::MkName(L"CPU")) || (nm == ASTAUX::MkName(L"BUS"))) &&
            !IsSysClass(GetCurClass()));
 }
 #endif // VICE
@@ -3245,13 +3244,10 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
   SET<TYPE_AS_Name> s;
   s.Insert(nm);
 
-  if (CheckClassName (nm))
-  {
+  if (CheckClassName (nm)) {
 #ifdef VICE
-    if (CpuOrBusOutSideSys(nm))
-    {
-      if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId))
-      {
+    if (CpuOrBusOutSideSys(nm)) {
+      if (nm == ASTAUX::MkName(L"CPU")) {
         //--------------------------------------------
         // -- Error message #408
         //-- Instances of CPU can only be made in a system class
@@ -3259,8 +3255,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         GenErr(nm, ERR, 408, Sequence());
         return mk_(Bool(false), tprep);
       }
-      else
-      {
+      else {
         //--------------------------------------------
         //-- Error message #409
         //-- Instances of BUS can only be made in a system class

@@ -315,12 +315,18 @@ QStringList Qt2TB::getModulesI()
   SET<TYPE_ProjectTypes_ModuleName> modules (ToolMediator::AllModules());
   QStringList qsl;
   Generic mn;
-  for (bool bb = modules.First(mn); bb; bb = modules.Next(mn))
-  {
+  for (bool bb = modules.First(mn); bb; bb = modules.Next(mn)) {
     qsl.append(wstring2qstring(PTAUX::ExtractModuleName(mn)));
   }
   return qsl;
 }
+
+#ifdef VDMSL
+QString Qt2TB::GetDefaultModName()
+{
+  return wstring2qstring(ASTAUX::GetDefaultModName());
+}
+#endif // VDMSL
 
 void Qt2TB::GetModulePosInfoI(const QString & modnm, int * line, int * col, int * len)
 {
@@ -1375,8 +1381,7 @@ QStringList Qt2TB::getChckMarks()
   Set s (PogInterface::getChckMarks());
   QStringList list;
   Generic g;
-  for (bool bb = s.First(g); bb; bb = s.Next(g))
-  {
+  for (bool bb = s.First(g); bb; bb = s.Next(g)) {
     list.append(wstring2qstring(PogInterface::printBool(g)));
   }
   return list;
@@ -1387,8 +1392,7 @@ QStringList Qt2TB::getModnms()
   Set s (PogInterface::getModnms());
   QStringList list;
   Generic g;
-  for (bool bb = s.First(g); bb; bb = s.Next(g))
-  {
+  for (bool bb = s.First(g); bb; bb = s.Next(g)) {
     list.append(wstring2qstring(PogInterface::printName(g)));
   }
   return list;
@@ -1399,8 +1403,7 @@ QStringList Qt2TB::getMemnms()
   Set s (PogInterface::getMemnms());
   QStringList list;
   Generic g;
-  for (bool bb = s.First(g); bb; bb = s.Next(g))
-  {
+  for (bool bb = s.First(g); bb; bb = s.Next(g)) {
     list.append(wstring2qstring(PogInterface::printName(g)));
   }
   return list;
@@ -1411,8 +1414,7 @@ QStringList Qt2TB::getLocs()
   Set s (PogInterface::getLocs());
   QStringList list;
   Generic g;
-  for (bool bb = s.First(g); bb; bb = s.Next(g))
-  {
+  for (bool bb = s.First(g); bb; bb = s.Next(g)) {
     list.append(wstring2qstring(PogInterface::printPOLocClassification(g)));
   }
   return list;
@@ -1423,8 +1425,7 @@ QStringList Qt2TB::getKinds()
   Set s (PogInterface::getKinds());
   QStringList list;
   Generic g;
-  for (bool bb = s.First(g); bb; bb = s.Next(g))
-  {
+  for (bool bb = s.First(g); bb; bb = s.Next(g)) {
     list.append(wstring2qstring(PogInterface::printPOKind(g)));
   }
   return list;
@@ -1433,8 +1434,7 @@ QStringList Qt2TB::getKinds()
 void Qt2TB::setChckMarks(const QStringList & l)
 {
   Set s;
-  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it )
-  {
+  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it ) {
     QString str (*it);
     s.Insert(str == "Yes" ? Bool(true) : Bool(false));
   }
@@ -1444,12 +1444,12 @@ void Qt2TB::setChckMarks(const QStringList & l)
 void Qt2TB::setModnms(const QStringList & l)
 {
   Set s;
-  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it )
-  {
+  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it ) {
     QString str (*it);
     Generic modName = Nil();
-    if (!str.isEmpty())
-      modName = ASTAUX::MkNameFromId(ASTAUX::MkId(qstring2wstring(str)), NilContextId);
+    if (!str.isEmpty()) {
+      modName = ASTAUX::MkName(qstring2wstring(str));
+    }
     s.Insert(modName);
   }
   PogInterface::setModnms(s);
@@ -1458,12 +1458,12 @@ void Qt2TB::setModnms(const QStringList & l)
 void Qt2TB::setMemnms(const QStringList & l)
 {
   Set s;
-  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it )
-  {
+  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it ) {
     QString str (*it);
     Generic memName = Nil();
-    if (!str.isEmpty())
-      memName = ASTAUX::MkNameFromId(ASTAUX::MkId(qstring2wstring(str)), NilContextId);
+    if (!str.isEmpty()) {
+      memName = ASTAUX::MkName(qstring2wstring(str));
+    }
     s.Insert(memName);
   }
   PogInterface::setMemnms(s);
@@ -1472,8 +1472,7 @@ void Qt2TB::setMemnms(const QStringList & l)
 void Qt2TB::setLocs(const QStringList & l)
 {
   Set s;
-  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it )
-  {
+  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it ) {
     s.Insert(PogInterface::toLocs(qstring2wstring(*it)));
   }
   PogInterface::setLocs(s);
@@ -1482,8 +1481,7 @@ void Qt2TB::setLocs(const QStringList & l)
 void Qt2TB::setKinds(const QStringList & l)
 {
   Set s;
-  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it )
-  {
+  for( QStringList::const_iterator it = l.begin(); it != l.end(); ++it ) {
     s.ImpUnion(PogInterface::toKind(qstring2wstring(*it)));
   }
   PogInterface::setKinds(s);
@@ -1494,8 +1492,7 @@ PogList Qt2TB::applyFilters()
   Sequence pos (GetPogInterface().applyFiltersText());
   PogList res;
   size_t len_pos = pos.Length();
-  for (size_t idx = 1; idx <= len_pos; idx++)
-  {
+  for (size_t idx = 1; idx <= len_pos; idx++) {
     Tuple t (pos[idx]);
 
     PogInfo pi (Qt2TB::wstring2qstring(t.GetSequence(1).GetString()), // checked
@@ -1520,11 +1517,13 @@ QString Qt2TB::setCheckMark(const QString & modnm, const QString  & memnm,
                             const QString & kind, int no)
 {
   Generic modName = Nil();
-  if (!modnm.isEmpty())
-    modName = ASTAUX::MkNameFromId(ASTAUX::MkId(qstring2wstring(modnm)), NilContextId);
+  if (!modnm.isEmpty()) {
+    modName = ASTAUX::MkName(qstring2wstring(modnm));
+  }
   Generic memName = Nil();
-  if (!memnm.isEmpty())
-    memName = ASTAUX::MkNameFromId(ASTAUX::MkId(qstring2wstring(memnm)), NilContextId);
+  if (!memnm.isEmpty()) {
+    memName = ASTAUX::MkName(qstring2wstring(memnm));
+  }
 
   TYPE_POGTP_LocContext loc;
   loc.Init(PogInterface::toLocs(qstring2wstring(kind)), modName, memName);

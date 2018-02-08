@@ -164,19 +164,24 @@ SEQ<Char> UTIL::ReplacePercent(const SEQ<Char> & err, const SEQ< SEQ<Char> > & T
 // ch : @T
 // -> seq of seq of @T
 Sequence UTIL::split(const Sequence & l, const Common & sep) {
-  Sequence seq = l;
-  Sequence res;
-  while (!seq.IsEmpty()) {
-    size_t index = seq.Find(sep);
-    if (index == 0 ) {
-      res.ImpAppend(seq);
-      seq.Clear();
-    }
-    else {
-      res.ImpAppend(seq.SubSequence( 1, index - 1 ));
-      seq = seq.SubSequence( index + 1, seq.Length() );
-    }
+  if ( 0 == l.Find(sep)) {
+    return mk_sequence(l);
   }
-  return res;
+  else {
+    Sequence seq = l;
+    Sequence res;
+    while (!seq.IsEmpty()) {
+      size_t index = seq.Find(sep);
+      if ( 0 == index ) {
+        res.ImpAppend(seq);
+        seq.Clear();
+      }
+      else {
+        res.ImpAppend(seq.SubSequence( 1, index - 1 ));
+        seq = seq.SubSequence( index + 1, seq.Length() );
+      }
+    }
+    return res;
+  }
 }
 

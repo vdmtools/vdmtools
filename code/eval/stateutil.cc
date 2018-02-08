@@ -61,23 +61,27 @@ bool EvalState::UserPushModule(const TYPE_AS_Name & mod_name, wostream & wos)
     wos << L"Current module is now: " << ASTAUX::ASName2String (mod_name)<< endl;
     return true;
   }
-  else if ( this->imods.DomExists ( mod_name ) )
+  else if ( this->imods.DomExists ( mod_name ) ) {
     wos << L"Cannot push dl module"<< endl;
-  else
+  }
+  else {
     wos << L"No such module is defined: " << ASTAUX::ASName2String (mod_name)<< endl;
+  }
   return false;
 }
 
 void EvalState::DumpSigmaModule( const Generic & modnm, wostream & wos )
 {
-  TYPE_AS_Name mod_nm ( modnm.IsNil() ? ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId)
+  TYPE_AS_Name mod_nm ( modnm.IsNil() ? ASTAUX::GetDefaultModASName()
                                       : (const TYPE_AS_Name &)modnm );
 
   Record sigmamo (GetAnyModule(mod_nm));
-  if (sigmamo.Length() > 0 )
+  if (sigmamo.Length() > 0 ) {
     wos << INT2Q::h2gAS(sigmamo) << endl;
-  else
+  }
+  else {
     wos << L"No such module is defined: " << ASTAUX::ASName2String (mod_nm) << endl;
+  }
 }
 #endif // VDMSL
 

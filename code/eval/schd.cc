@@ -245,10 +245,10 @@ Tuple SCHD::EvalScheduler()
 #ifdef VICE
 //wcout << evalres << endl;
 //wcout << L"#######################################################" << endl;
-//  if( theSystem().GetTime(MkNameFromId(MkId(L"vCPU"), NilContextId)) > 500 )
+//  if( theSystem().GetTime(MkName(L"vCPU")) > 500 )
 //  if( theSystem().GetTime(Nil()) > 500 )
 //    return mk_(TYPE_STKM_Interrupt(), Nil());
-//wcout << theSystem().GetTime(MkNameFromId(MkId(L"vCPU"), NilContextId)) << endl;
+//wcout << theSystem().GetTime(MkName(L"vCPU")) << endl;
 
 //    SaveCurThreadState(evalres.GetField(1));
     SaveCurThreadState();

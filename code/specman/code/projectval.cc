@@ -129,18 +129,6 @@ public:
     return f;
   }
 
-//  static TYPE_ProjectTypes_ModuleName mk_ModuleName (const TYPE_AS_Name & asName)
-//  {
-//    TYPE_AS_Ids nm_l (asName.get_ids ());
-//    std::wstring s;
-//    if (nm_l.Hd().IsSequence())
-//      Sequence(nm_l.Hd()).GetString(s);
-//    else
-//      s = Token(nm_l.Hd()).GetString(); // 20100616
-//    
-//    return mk_ModuleName (s);
-//  }
-
   static Record ExtractDepGraph (const TYPE_ProjectTypes_DepGraph & gr)
   {
     return gr.GetField (pos_DepGraph_g);
@@ -176,7 +164,6 @@ public:
   static TYPE_ProjectTypes_AstVal mk_AstVal (const Record & AST)
   {
     TYPE_ProjectTypes_AstVal astval;
-//    astval.set_val( AST );
     astval.SetField (pos_AstVal_val, AST); // Token in spec
     return astval;
   }
@@ -188,7 +175,6 @@ public:
   static TYPE_ProjectTypes_Module mk_Module (const TYPE_AS_Name & AsName, const Record & AsModule)
   {
     TYPE_ProjectTypes_Module mod;
-    //mod.Init( mk_ModuleName (AsName), mk_AstVal(AsModule) );
     mod.Init( PTAUX::ASName2ModuleName (AsName), mk_AstVal(AsModule) );
     return mod;
   }
@@ -296,7 +282,7 @@ public:
                                                        const Int & num)
   {
     TYPE_ProjectTypes_BreakPosSet bs;
-    bs.SetField (pos_BreakPosSet_bp, ASTAUX::MkNameFromId(ASTAUX::MkId(file), NilContextId)); // Token is spec
+    bs.SetField (pos_BreakPosSet_bp, ASTAUX::MkName(file)); // Token is spec
     bs.set_line (line);
     bs.set_col (col);
     bs.set_num (num);

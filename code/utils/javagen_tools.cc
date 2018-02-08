@@ -119,7 +119,7 @@ bool JavaGenTools::EvalJavaParse(const TYPE_ProjectTypes_FileName & filename)
 	// Internally java classes are distinguished from VDM++
 	// classes using the prefix "java|"
         nameStr = L"java|" + nameStr;
-        m.set_name(ASTAUX::MkNameFromId(ASTAUX::MkId(nameStr), NilContextId));
+        m.set_name(ASTAUX::MkName(nameStr));
         m.set_header(header);
         m.set_ast(thisIdent);
         moduleAsts.ImpAppend(m);

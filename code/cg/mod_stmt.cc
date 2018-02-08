@@ -2863,7 +2863,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGExitStmt(const TYPE_AS_ExitStmt & p_es)
       if (ntp.Is(TAG_TYPE_REP_ObjRefTypeRep))
       {
         const TYPE_AS_Name & clnm (Record(ntp).GetRecord(pos_REP_ObjRefTypeRep_nm));
-        TYPE_AS_Name jexcnm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"JDK_Exception"), NilContextId)); 
+        TYPE_AS_Name jexcnm (ASTAUX::MkName(L"JDK_Exception")); 
         if ((clnm == jexcnm) || GetOrderedSupers(clnm).Elems().InSet(jexcnm))
         {
           l_cppast.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_exName)));
@@ -3333,8 +3333,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGTrapStmt(const TYPE_AS_TrapStmt & p_ts, bool p_isLas
       TYPE_REP_TypeRep l_patRepType (FromAS2RepType(tp));
       if (l_patRepType.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
         const TYPE_AS_Name & clnm (l_patRepType.GetRecord(pos_REP_ObjRefTypeRep_nm));
-        TYPE_AS_Name jexcnm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"JDK_Exception"), NilContextId)); 
-        TYPE_AS_Name jthrnm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"JDK_Throwable"), NilContextId)); 
+        TYPE_AS_Name jexcnm (ASTAUX::MkName(L"JDK_Exception")); 
+        TYPE_AS_Name jthrnm (ASTAUX::MkName(L"JDK_Throwable")); 
         if ((clnm == jexcnm) ||
             GetOrderedSupers(clnm).Elems().InSet(jexcnm) ||
             GetOrderedSupers(clnm).Elems().InSet(jthrnm)) {

@@ -244,10 +244,10 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
     case TAG_TYPE_REP_TypeNameRep: {
 #ifdef VDMSL
       TYPE_AS_Name name (tp.GetRecord(pos_REP_TypeNameRep_nm));
-      if (name.GetSequence(pos_AS_Name_ids).Length() == 2)
-      {
-	if (ASTAUX::GetFirstName(name) == ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId))
+      if (name.GetSequence(pos_AS_Name_ids).Length() == 2) {
+	if (ASTAUX::GetFirstName(name) == ASTAUX::GetDefaultModASName()) {
           name = ASTAUX::GetSecondName(name);
+        }
       }
       return PrintName (name).GetString();
 #endif // VDMSL

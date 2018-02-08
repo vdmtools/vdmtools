@@ -3725,7 +3725,7 @@ Generic vdmcg::CGObjRef (const TYPE_AS_FieldSelectExpr & fexpr,
           ti.Is(TAG_TYPE_REP_ObjRefTypeRep) &&
           ( IsAbstractClass(ti.GetRecord(pos_REP_ObjRefTypeRep_nm)) ||
             isInterface(ti.GetRecord(pos_REP_ObjRefTypeRep_nm))) &&
-          fexpr_nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"IsNil"), NilContextId) &&
+          fexpr_nm == ASTAUX::MkName(L"IsNil") &&
           par_l.IsEmpty()) {
         TYPE_CPP_Expr eqExpr (vdm_BC_GenEq(obj, GenNullExpr()));
         TYPE_CPP_Expr isNilExpr (GenInvokeExpr(TYPE_REP_ObjRefTypeRep(ti),
@@ -8545,7 +8545,7 @@ Generic vdmcg::CGNewExpr(const TYPE_AS_NewExpr & ns, const TYPE_CGMAIN_VT & vt)
 
   TYPE_CPP_Expr constr (CallConstructor(nm, l_argL));
   IncludeClass (nm);
-  if (!(get_j2v_option() && (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JavaLangClass"), NilContextId)))) {
+  if (!(get_j2v_option() && (nm == ASTAUX::MkName(L"JavaLangClass")))) {
     SetException(true);
   }
 

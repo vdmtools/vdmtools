@@ -163,9 +163,9 @@ void SETTINGS::InitSettings()
 
   this->SetOneOff();
 
-  this->AddAllTypeAllowed(ASTAUX::MkNameFromId(ASTAUX::MkId(L"IO"), NilContextId));
-  this->AddAllTypeAllowed(ASTAUX::MkNameFromId(ASTAUX::MkId(L"VDMUtil"), NilContextId));
-  this->AddAllTypeAllowed(ASTAUX::MkNameFromId(ASTAUX::MkId(L"JDK_PrintStream"), NilContextId));
+  this->AddAllTypeAllowed(ASTAUX::MkName(L"IO"));
+  this->AddAllTypeAllowed(ASTAUX::MkName(L"VDMUtil"));
+  this->AddAllTypeAllowed(ASTAUX::MkName(L"JDK_PrintStream"));
 
   this->CallLogOff();
   this->SetCallLogFileName(wstring(L"calllog.txt"));

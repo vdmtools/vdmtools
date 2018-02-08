@@ -335,7 +335,7 @@ void EvalState::TranslateAST (const TYPE_AS_Document & doc_l, bool ast_is_new)
       new_int.Init(type_7AS_NameCUM(), Nil(), cid);
 
       // create module
-      TYPE_AS_Name mod_nm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), cid));
+      TYPE_AS_Name mod_nm (ASTAUX::GetDefaultModASName());
 
       TYPE_AS_Module new_mod;
       new_mod.Init (mod_nm, new_int, defs, cid);

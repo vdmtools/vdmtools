@@ -107,7 +107,7 @@ bool VdmStdLib::IsEq(const TYPE_AS_Name & nm, const wstring & q)
 {
   wstring s (ASTAUX::ASName2String (nm));
 #ifdef VDMSL
-  return (s == q) || (s == L"DefaultMod");
+  return (s == q) || (s == ASTAUX::GetDefaultModName());
 #endif //VDMSL
 #ifdef VDMPP
   return (s == q);

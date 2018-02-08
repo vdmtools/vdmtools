@@ -997,7 +997,7 @@ TYPE_AS_Expr PAT::GetExpr (const TYPE_AS_Pattern & pat_p)
   switch(pat_p.GetTag()) {
     case TAG_TYPE_AS_PatternName: {
       if ( pat_p.GetField(pos_AS_PatternName_nm).IsNil () )
-        return GetExpr(DoCarePattern (pat_p, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
+        return GetExpr(DoCarePattern (pat_p, ASTAUX::MkName(L"1")));
       else {
         return pat_p.GetRecord(pos_AS_PatternName_nm);
       }

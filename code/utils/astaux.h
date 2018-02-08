@@ -50,7 +50,7 @@ public:
   static TYPE_AS_Name MkNameFromIds (const TYPE_AS_Ids & ids, const TYPE_CI_ContextId & cid)
   { return TYPE_AS_Name().Init(ids, cid); };
 
-  static TYPE_AS_Name MkNameFromStr (const wstring &, const TYPE_CI_ContextId &);
+  static TYPE_AS_Name MkName (const wstring & name);
 
   static wstring Id2String(const TYPE_AS_Id &);
   static wstring ASName2String(const TYPE_AS_Name & asname);
@@ -90,6 +90,12 @@ public:
   static SEQ<TYPE_AS_Bind> BindListToBindSeq(const SEQ<TYPE_AS_MultBind> & bind_l);
   static SEQ<TYPE_AS_MultBind> MargeBindList(const SEQ<TYPE_AS_MultBind> & bind_l);
 
+#ifdef VDMSL
+  static wstring GetDefaultModName();
+  static TYPE_AS_Name GetDefaultModASName();
+  static wstring DefaultModName;
+  static Generic DefaultModASName;
+#endif // VDMSL
 #ifdef VDMPP
   static TYPE_AS_Document ChangeDocumentToStatic(const TYPE_AS_Document & cs);
   static TYPE_AS_Class ChangeClassToStatic(const TYPE_AS_Class & cl);

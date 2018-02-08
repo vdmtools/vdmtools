@@ -179,7 +179,7 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
     if( dldata == NULL ) {
       if (VDMGetDefaultRecInfoMap().GetSymTag(tag, tmptag)) {
         // Copy internal RecInfo to user RecInfo
-        TYPE_AS_Name symtag (ASTAUX::MkNameFromStr(tmptag, NilContextId));
+        TYPE_AS_Name symtag (ASTAUX::MkName(tmptag));
         if( !SemRec::IsDecl(symtag) ) {
           SEQ<Bool> dc_s;
           for (size_t i = 1; i <= size; i++ ) {
@@ -196,7 +196,7 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
     }
      
     if (p) {
-      TYPE_AS_Name symtag (ASTAUX::MkNameFromStr(p, NilContextId));
+      TYPE_AS_Name symtag (ASTAUX::MkName(p));
       SEQ<TYPE_SEM_VAL> resseq;
       size_t len_valr = valr.Length();
       for (size_t i = 1; i <= len_valr; i++) {

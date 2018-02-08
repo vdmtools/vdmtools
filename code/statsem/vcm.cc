@@ -38,8 +38,8 @@ void StatSem::InitParseEnv()
   this->classNames.Clear();
   this->clstypes.Clear();
 #ifdef VICE
-  TYPE_AS_Name cpu (ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId));
-  TYPE_AS_Name bus (ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId));
+  TYPE_AS_Name cpu (ASTAUX::MkName(L"CPU"));
+  TYPE_AS_Name bus (ASTAUX::MkName(L"BUS"));
   this->ParseEnv.ImpModify(cpu, CPUInfo());
   this->ParseEnv.ImpModify(bus, BUSInfo());
   this->classNames.Insert(cpu);
@@ -1923,7 +1923,7 @@ bool StatSem::IsSysClass(const TYPE_AS_Name & nm) const
 TYPE_SSENV_ParseTypeInfo StatSem::CPUInfo()
 {
   TYPE_SSENV_ParseTypeInfo pti;
-  pti.Init(ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId),
+  pti.Init(ASTAUX::MkName(L"CPU"),
            Bool(false),
            SET<TYPE_AS_Name>(),
            Map (),
@@ -1945,7 +1945,7 @@ TYPE_SSENV_ParseTypeInfo StatSem::CPUInfo()
 TYPE_SSENV_ParseTypeInfo StatSem::BUSInfo()
 {
   TYPE_SSENV_ParseTypeInfo pti;
-  pti.Init(ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId),
+  pti.Init(ASTAUX::MkName(L"BUS"),
            Bool(false),
            SET<TYPE_AS_Name>(),
            Map (),
@@ -2014,14 +2014,14 @@ Map StatSem::CPUDeployOperation()
 // +> set of ENV`AccessOpTypeRep
 Set StatSem::CPUConstructor()
 {
-  TYPE_REP_QuoteTypeRep fcfs (mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"FCFS"), NilContextId)));
-  TYPE_REP_QuoteTypeRep fp (mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"FP"), NilContextId)));
+  TYPE_REP_QuoteTypeRep fcfs (mk_REP_QuoteTypeRep(ASTAUX::MkName(L"FCFS")));
+  TYPE_REP_QuoteTypeRep fp (mk_REP_QuoteTypeRep(ASTAUX::MkName(L"FP")));
   SEQ<TYPE_REP_TypeRep> argtps;
   argtps.ImpAppend(mk_REP_UnionTypeRep(mk_set(fcfs, fp)));
   argtps.ImpAppend(btp_natone);
 // 20091216 -->
-//  TYPE_REP_TypeRep cputp (mk_REP_ObjRefTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)));
-  TYPE_REP_TypeRep cputp (mk_REP_TypeNameRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)));
+//  TYPE_REP_TypeRep cputp (mk_REP_ObjRefTypeRep(ASTAUX::MkName(L"CPU")));
+  TYPE_REP_TypeRep cputp (mk_REP_TypeNameRep(ASTAUX::MkName(L"CPU")));
 // <-- 20091216
   TYPE_REP_TypeRep optp (mk_REP_OpTypeRep(argtps, cputp));
   //TYPE_SSENV_AccessOpTypeRep aotr (mk_SSENV_AccessOpTypeRep(optp, Int(PUBLIC_AS), Bool(false)));
@@ -2034,17 +2034,17 @@ Set StatSem::CPUConstructor()
 // +> set of ENV`AccessOpTypeRep
 Set StatSem::BUSConstructor()
 {
-  TYPE_REP_QuoteTypeRep fcfs (mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"FCFS"), NilContextId)));
-  TYPE_REP_QuoteTypeRep tdma (mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"TDMA"), NilContextId)));
-  TYPE_REP_QuoteTypeRep csmacd (mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"CSMACD"), NilContextId)));
-  TYPE_REP_TypeRep cputp (mk_REP_ObjRefTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)));
+  TYPE_REP_QuoteTypeRep fcfs (mk_REP_QuoteTypeRep(ASTAUX::MkName(L"FCFS")));
+  TYPE_REP_QuoteTypeRep tdma (mk_REP_QuoteTypeRep(ASTAUX::MkName(L"TDMA")));
+  TYPE_REP_QuoteTypeRep csmacd (mk_REP_QuoteTypeRep(ASTAUX::MkName(L"CSMACD")));
+  TYPE_REP_TypeRep cputp (mk_REP_ObjRefTypeRep(ASTAUX::MkName(L"CPU")));
   SEQ<TYPE_REP_TypeRep> argtps;
   argtps.ImpAppend(mk_REP_UnionTypeRep(mk_set(fcfs, tdma, csmacd)));
   argtps.ImpAppend(btp_natone);
   argtps.ImpAppend(mk_REP_SetTypeRep(cputp));
 // 20091216 -->
-//  TYPE_REP_TypeRep bustp (mk_REP_ObjRefTypeRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId)));
-  TYPE_REP_TypeRep bustp (mk_REP_TypeNameRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId)));
+//  TYPE_REP_TypeRep bustp (mk_REP_ObjRefTypeRep(ASTAUX::MkName(L"BUS")));
+  TYPE_REP_TypeRep bustp (mk_REP_TypeNameRep(ASTAUX::MkName(L"BUS")));
 // <-- 20091216
   TYPE_REP_TypeRep optp (mk_REP_OpTypeRep(argtps, bustp));
   //TYPE_SSENV_AccessOpTypeRep aotr (mk_SSENV_AccessOpTypeRep(optp, Int(PUBLIC_AS), Bool(false)));
@@ -2190,13 +2190,11 @@ bool StatSem::UpdateParseEnvWithAST(const TYPE_AS_Document & ast_l)
     const Generic & defs    (ast.GetField(pos_AS_Class_defs));
 
 #ifdef VICE
-    if ( nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId) )
-    {
+    if ( nm == ASTAUX::MkName(L"CPU") ) {
       GenErr (nm, ERR, 403, Sequence());
       return false;
     }
-    else if ( nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId) )
-    {
+    else if ( nm == ASTAUX::MkName(L"BUS") ) {
       GenErr (nm, ERR, 404, Sequence());
       return false;
     }
@@ -2295,18 +2293,17 @@ void StatSem::RemoveClassFromParseEnv(const SET<TYPE_AS_Name> & cls_s)
 {
   SET<TYPE_AS_Name> clsnms (this->classNames);
   Generic clsnm;
-  for( bool bb = clsnms.First(clsnm); bb; bb = clsnms.Next(clsnm) )
-  {
+  for( bool bb = clsnms.First(clsnm); bb; bb = clsnms.Next(clsnm) ) {
 #ifdef VICE
-    if( (clsnm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)) ||
-        (clsnm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"BUS"), NilContextId)) )
+    if( (clsnm == ASTAUX::MkName(L"CPU")) || (clsnm == ASTAUX::MkName(L"BUS")) ) {
       continue;
+    }
 #endif // VICE 
-    if( !cls_s.InSet(clsnm) )
-    {
+    if( !cls_s.InSet(clsnm) ) {
       this->classNames.RemElem( clsnm );
-      if( this->ParseEnv.DomExists( clsnm ) )
+      if( this->ParseEnv.DomExists( clsnm ) ) {
         this->ParseEnv.RemElem( clsnm );
+      }
     }
   }
 }

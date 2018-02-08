@@ -322,9 +322,9 @@ void batchTypeCheckerAndCG(CLIOptions & thisCliOpt)
 #ifdef VDMPP
   Sequence ast_l (ToolMediator::GetVDMASTs());
   size_t len_ast_l = ast_l.Length();
-  for (size_t idx = 1; idx <= len_ast_l; idx++)
+  for (size_t idx = 1; idx <= len_ast_l; idx++) {
     GetStatSem().ExpandClass(Settings.TypeCheck(), ast_l[idx]);
-
+  }
 #endif // VDMPP
 
   SEQ<TYPE_ProjectTypes_ModuleName> mod_l (ToolMediator::VDMModules().ToSequence());
@@ -335,22 +335,20 @@ void batchTypeCheckerAndCG(CLIOptions & thisCliOpt)
 
   bool ok = ToolMediator::BTools()->vdm_TypeCheck (mod_l).GetValue ();
   
-  if (thisCliOpt.IsInternalTest() && ok)
-  {
+  if (thisCliOpt.IsInternalTest() && ok) {
     ofstream m4pp("m4pp");
     Sequence ast_l (ToolMediator::GetVDMASTs());
     Map m (ToolMediator::GetFileMapNumName());
     ToolMediator::PrintAstTuple(m4pp, ast_l, GetCI(), m);
   }
 
-  if (pf == FLAG_TYPECHECKER)
+  if (pf == FLAG_TYPECHECKER) {
     return;
-
-  if (!ok)
+  }
+  if (!ok) {
     TOOLS::ExitToolbox (1);
-  
+  } 
   Quote kind ((pf == FLAG_CPPCG) ? Quote(L"CPP") : Quote(L"JAVA"));
-// 20060906
   Bool testcond (Settings.PreCheck());
   Bool preandpost = true;
   
@@ -363,40 +361,34 @@ void batchTypeCheckerAndCG(CLIOptions & thisCliOpt)
   if (pf == FLAG_JAVACG) {
     preandpost = testcond.GetValue() || thisCliOpt.JavaGenPrePost();
     wstring packageString (thisCliOpt.GetJavaPackageName());
-    if (packageString != L"")
+    if (packageString != L"") {
       package_name = Sequence(packageString);
-
+    }
     wstring  interfaceList = thisCliOpt.JavaGetInterfaces();
-    if (interfaceList != L"")
+    if (interfaceList != L"") {
       TOOLS::SetInterfacesOption(interfaceList);
-
+    }
     Settings.SetJCGVDMPrefix(thisCliOpt.JavaVDMPrefix());
   
-// 20081208 -->
     wstring classesList (thisCliOpt.GetJavaClassNames());
-    if (!classesList.empty())
-    {
+    if (!classesList.empty()) {
       wstring separator = L",";
       wstring classNames[20];
       int numClasses = STR_split(classesList, classNames, 20, STR_RXwhite_and_comma);
       mod_l.Clear();
-      for (int i = 0; i < numClasses; i ++)
-      {
+      for (int i = 0; i < numClasses; i ++) {
         TYPE_ProjectTypes_ModuleName mod (PTAUX::mk_ModuleName(classNames[i]));
         mod_l.ImpAppend(mod);
       }
     }
-// <-- 20081208
-// 20121106 -->
     SEQ<TYPE_ProjectTypes_ModuleName> mod_l_q;
     size_t len_mod_l = mod_l.Length();
-    for (size_t idx = 1; idx <= len_mod_l; idx++)
-    {
-      if (PTAUX::ExtractModuleName(mod_l[idx]).find(L"JDK_") != 0)
+    for (size_t idx = 1; idx <= len_mod_l; idx++) {
+      if (PTAUX::ExtractModuleName(mod_l[idx]).find(L"JDK_") != 0) {
         mod_l_q.ImpAppend(mod_l[idx]);
+      }
     }
     mod_l = mod_l_q;
-// <-- 20121106
   }
   ok = ToolMediator::BTools()->vdm_CodeGenerate (mod_l,
                                    kind,
@@ -437,28 +429,27 @@ void batchPOG(CLIOptions & thisCliOpt, char * argv[])
   
   bool ok = ToolMediator::BTools()->vdm_TypeCheck (mod_l).GetValue ();
   
-  if(the_Setting_DEF)
+  if(the_Setting_DEF) {
     Settings.DefOn();
-  else
+  }
+  else {
     Settings.DefOff();
-  
+  } 
   string filename = argv[optind];
   if (ok) {
   
     string pogfilename;
     ofstream pogFile;
-    if (pf == FLAG_POG)
-    {
+    if (pf == FLAG_POG) {
       pogfilename = filename+".pog";
       pogFile.open(pogfilename.c_str());
     }
-    else
-    {
+    else {
       wstring resfile (thisCliOpt.GetResultFile());
-      if (resfile != L"")
+      if (resfile != L"") {
         pogfilename = TBWSTR::wstring2fsstr(resfile);
-      else
-      {
+      }
+      else {
         pogfilename = filename + ".res";
       }
     }
@@ -468,8 +459,7 @@ void batchPOG(CLIOptions & thisCliOpt, char * argv[])
     SET<TYPE_TEST_ProofObligationPP> tpopps;
 
     Generic g;
-    for (bool bb = mod_l.First(g); bb; bb = mod_l.Next(g))
-    {
+    for (bool bb = mod_l.First(g); bb; bb = mod_l.Next(g)) {
       TYPE_ProjectTypes_String moduleName (TYPE_ProjectTypes_ModuleName(g).get_nm());
       wstring name;
       moduleName.GetString(name);
@@ -477,42 +467,37 @@ void batchPOG(CLIOptions & thisCliOpt, char * argv[])
       vdm_log << L"Generating proof obligations for " << name << L"..." << flush;
   
       pog.setup();
-      pog.genPO(mk_sequence(ASTAUX::MkNameFromId(moduleName, NilContextId)));
+      pog.genPO(mk_sequence(ASTAUX::MkName(name)));
   
-      if (pf == FLAG_POG)
-      {
+      if (pf == FLAG_POG) {
         pogFile << TBWSTR::wstring2string(pog.getPrettyPO()) << endl;
       }
-      else
+      else {
         tpopps.ImpUnion(pog.getTestPOs());
-
+      }
       vdm_log << L"done" << endl;
     }
-    if (pf == FLAG_POG)
-    {
+    if (pf == FLAG_POG) {
       pogFile.close();
     }
-    else
-    {
+    else {
       wofstream pog_res (pogfilename.c_str());
       pog_res << tpopps << endl;
       pog_res.close();
     }
   }
-  else
-  { // TypeCheck Error
-    if (pf == FLAG_POGTEST)
-    {
+  else { // TypeCheck Error
+    if (pf == FLAG_POGTEST) {
       SEQ<TYEP_SSERR_ErrMsg> res;
       SEQ<TYPE_ProjectTypes_WarnMsg> warns (ToolMediator::Errs()->vdm_GetWarnings());
       size_t len_warns = warns.Length();
-      for (size_t widx = 1; widx <= len_warns; widx++)
-      {
+      for (size_t widx = 1; widx <= len_warns; widx++) {
         const TYPE_ProjectTypes_WarnMsg & wm (warns[widx]); 
         const type_cLL & t_l (wm.GetSequence(vdm_ProjectTypes::pos_WarnMsg_msg));
         type_cL msg;
-        if (!t_l.IsEmpty())
+        if (!t_l.IsEmpty()) {
           msg = t_l[1];
+        }
         res.ImpAppend(TYEP_SSERR_ErrMsg().Init(wm.GetInt(vdm_ProjectTypes::pos_WarnMsg_fid),
                                                wm.GetInt(vdm_ProjectTypes::pos_WarnMsg_line),
                                                wm.GetInt(vdm_ProjectTypes::pos_WarnMsg_col),
@@ -521,13 +506,13 @@ void batchPOG(CLIOptions & thisCliOpt, char * argv[])
 
       SEQ<TYPE_ProjectTypes_ErrMsg> errors (ToolMediator::Errs()->vdm_GetErrors());
       size_t len_errors = errors.Length();
-      for (size_t eidx = 1; eidx <= len_errors; eidx++)
-      {
+      for (size_t eidx = 1; eidx <= len_errors; eidx++) {
         const TYPE_ProjectTypes_ErrMsg & em (errors[eidx]); 
         const type_cLL & t_l (em.GetSequence(vdm_ProjectTypes::pos_ErrMsg_msg));
         type_cL msg;
-        if (!t_l.IsEmpty())
+        if (!t_l.IsEmpty()) {
           msg = t_l[1];
+        }
         res.ImpAppend(TYEP_SSERR_ErrMsg().Init(em.GetInt(vdm_ProjectTypes::pos_ErrMsg_fid),
                                                em.GetInt(vdm_ProjectTypes::pos_ErrMsg_line),
                                                em.GetInt(vdm_ProjectTypes::pos_ErrMsg_col),
@@ -536,10 +521,12 @@ void batchPOG(CLIOptions & thisCliOpt, char * argv[])
 
       wstring resfile (thisCliOpt.GetResultFile());
       string pogfilename;
-      if (resfile != L"")
+      if (resfile != L"") {
         pogfilename = TBWSTR::wstring2fsstr(resfile);
-      else
+      }
+      else {
         pogfilename = filename + ".res";
+      }
       wofstream pog_res (pogfilename.c_str());
       pog_res << res << endl;
       pog_res.close();
@@ -551,54 +538,25 @@ void RunBatchMode(int argc, char *argv[], CLIOptions & thisCliOpt)
 {
   TOOLS::InitToolbox (true);
 
-// 20121105 -->
 #ifdef VDMPP
-//  if (thisCliOpt.GetPrimaryFlag() == FLAG_JAVACG)
     Settings.SetJCGHackParser(true);
 #endif // VDMPP
-// <-- 20121105
 
-  if (! ToolMediator::BTools()->vdm_SyntaxCheck (thisCliOpt.GetFileList()).GetValue ())
+  if (! ToolMediator::BTools()->vdm_SyntaxCheck (thisCliOpt.GetFileList()).GetValue ()) {
     TOOLS::ExitToolbox (2);
-
+  }
   switch(thisCliOpt.GetPrimaryFlag()) {
-    case FLAG_INTERNAL: {
-      batchInternal(thisCliOpt);
-      break;
-    }
-    case FLAG_INTERPRETER: {
-      batchInterpreter(thisCliOpt, argv);
-      break;
-    }
-    case FLAG_SYNTAXCHECK: {
-      batchSyntaxCheck(thisCliOpt);
-      break;
-    }
-    case FLAG_PRETTYPRINT: {
-      batchPrettyPrint(thisCliOpt);
-      break;
-    }
+    case FLAG_INTERNAL:    { batchInternal(thisCliOpt); break; }
+    case FLAG_INTERPRETER: { batchInterpreter(thisCliOpt, argv); break; }
+    case FLAG_SYNTAXCHECK: { batchSyntaxCheck(thisCliOpt); break; }
+    case FLAG_PRETTYPRINT: { batchPrettyPrint(thisCliOpt); break; }
     case FLAG_TYPECHECKER:
     case FLAG_CPPCG:
-    case FLAG_JAVACG: {
-      batchTypeCheckerAndCG(thisCliOpt);
-      break;
-    }
+    case FLAG_JAVACG:      { batchTypeCheckerAndCG(thisCliOpt); break; }
     case FLAG_POG:
-    case FLAG_POGTEST: {
-      batchPOG(thisCliOpt, argv);
-      break;
-    }
-    case FLAG_EXTERNAL: {
-// 20150319 -->
-// not used
-/*
-      TOOLS::ExternalParseService(thisCliOpt);
-*/
-// <-- 20150319
-      break;
-    }
-    default: break;
+    case FLAG_POGTEST:     { batchPOG(thisCliOpt, argv); break; }
+    case FLAG_EXTERNAL:    { /* TOOLS::ExternalParseService(thisCliOpt); */ break; }
+    default:               { break; }
   }
 }
 
@@ -617,13 +575,11 @@ void RunInteractiveMode(int argc, char *argv[], CLIOptions & thisCliOpt)
   ToolMediator::BTools ()->vdm_SyntaxCheck (thisCliOpt.GetFileList());
 
   wstring scriptfile (thisCliOpt.GetOptionalScript());
-  if (!scriptfile.empty())
-  {
+  if (!scriptfile.empty()) {
     TOOLS::ReadScriptFile(scriptfile);
   }
 
-  if (!thisCliOpt.QuitToolBox())
-  {
+  if (!thisCliOpt.QuitToolBox()) {
     // Enable the signal handler
     signal(SIGINT, StopButton);
 
@@ -655,14 +611,12 @@ int main (int argc, char *argv[])
   CLIOptions thisCliOpt;
   cliOpt = &thisCliOpt;
 
-// 20100409 -->
   Settings.InvOff();
   Settings.DtcOff();
   Settings.PreOff();
   Settings.PostOff();
   Settings.AssertOff();
   Settings.DoCheckOff();
-// <-- 2010409
 
   bool batchMode = thisCliOpt.ProcessOptions(argc, argv);
 
@@ -684,10 +638,12 @@ int main (int argc, char *argv[])
   type_ref_ErrorState prompt_state (&promptErr);
 
   vdm_Errors * errs = new AsciiErrors();
-  if (batchMode)
+  if (batchMode) {
     errs->vdm_InitState(batch_state);
-  else
+  }
+  else {
     errs->vdm_InitState(prompt_state);
+  }
   type_ref_Errors errs_r (errs);
 
   vdm_Errors * exprerrs = new AsciiErrors();
@@ -696,21 +652,16 @@ int main (int argc, char *argv[])
 
   vdm_ToolKit toolkit;
   toolkit.vdm_Init (if_r, errs_r, exprerrs_r);
-  //
 
-  if (batchMode)
-  {
+  if (batchMode) {
     RunBatchMode(argc, argv, thisCliOpt);
   }
-  else
-  {
-// 20100409 -->
+  else {
     Settings.InvOn();
     Settings.DtcOn();
     Settings.PreOn();
     Settings.PostOn();
     Settings.DoCheckOn();
-// <--20121026
     RunInteractiveMode(argc, argv, thisCliOpt);
   }
 #ifdef VDMPP

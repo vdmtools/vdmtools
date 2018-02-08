@@ -30,16 +30,36 @@
 #include "tbutils.h"
 #include "UTIL.h"
 
-// MkNameFromStr
+#ifdef VDMSL
+wstring ASTAUX::DefaultModName = L"DefaultMod";
+Generic ASTAUX::DefaultModASName = Nil();
+#endif // VDMSL
+
+// MkName
 // tag : seq of char
-// cid : CI`ContextId
 // -> AS`Name
-TYPE_AS_Name ASTAUX::MkNameFromStr (const wstring & tag, const TYPE_CI_ContextId & cid)
+TYPE_AS_Name ASTAUX::MkName (const wstring & tag)
 {
   // create a name record with a identifier sequence
   TYPE_AS_Ids ids (UTIL::split(SEQ<Char>(tag), Char(L'`')));
-  return TYPE_AS_Name().Init(ids, cid);
+  return TYPE_AS_Name().Init(ids, NilContextId);
 }
+
+#ifdef VDMSL
+// 
+wstring ASTAUX::GetDefaultModName()
+{
+  return ASTAUX::DefaultModName;
+}
+
+TYPE_AS_Name ASTAUX::GetDefaultModASName()
+{
+  if (ASTAUX::DefaultModASName.IsNil()) {
+    ASTAUX::DefaultModASName = ASTAUX::MkName(DefaultModName);
+  }
+  return DefaultModASName;
+}
+#endif // VDMSL
 
 // Id2String
 // id : AS`Id

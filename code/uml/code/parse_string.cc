@@ -64,7 +64,7 @@ bool UMLPARSE::parse_expr(const wstring & ws, Record & res)
       wcout << L"Internal Error" << endl;
       wcout << L"parse_expr: " << ws << endl;
       TYPE_AS_ValueDef vd;
-      vd.Init(TYPE_AS_PatternName().Init(ASTAUX::MkNameFromId(ASTAUX::MkId(L"pat"), NilContextId), Nil(), NilContextId),
+      vd.Init(TYPE_AS_PatternName().Init(ASTAUX::MkName(L"pat"), Nil(), NilContextId),
               Nil(),
               TYPE_AS_UndefinedExpr().Init(NilContextId),
               Int(NOT_INITIALISED_AS),

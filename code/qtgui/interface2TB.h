@@ -213,8 +213,6 @@ typedef QLIST<PogInfo> PogList;
 class Qt2TB
 {
 public:
-//  static bool canContinueI();
-
   static QString wstring2qstring(const std::wstring &);
   static std::wstring qstring2wstring(const QString &);
 
@@ -249,6 +247,9 @@ public:
   //returns all modules of open project
   static QStringList getModulesI();
 
+#ifdef VDMSL
+  static QString GetDefaultModName();
+#endif // VDMSL
 
   //returns all modules of specified file
   static QStringList getModulesI(const QString & filename);

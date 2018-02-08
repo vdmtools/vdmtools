@@ -477,25 +477,29 @@ bool TBDEBUG::ExtractBreakNames (const wstring & str,
   // evaluate the wstring. this must be a legal module name and an
   // id for a function or
   Tuple t (TOOLS::ParseExprsString(TBWSTR::ConvertToHexquad(str)));
-    if (!TOOLS::IsInScript())
-
-  if (!t.GetBoolValue(1)) {
-    wos << L"Invalid name for construct: \"" << str << endl;
-    if (del)
-      wos << L"\"" << str << L"\" is not a breakpoint. " << endl;
-    else
-      wos << L"No breakpoint set for \"" << str << endl;
-    return false;
+  if (!TOOLS::IsInScript()) {
+    if (!t.GetBoolValue(1)) {
+      wos << L"Invalid name for construct: \"" << str << endl;
+      if (del) {
+        wos << L"\"" << str << L"\" is not a breakpoint. " << endl;
+      }
+      else {
+        wos << L"No breakpoint set for \"" << str << endl;
+      }
+      return false;
+    }
   }
 
   const Sequence & exprs (t.GetSequence(2)) ;
   TYPE_AS_Expr break_nm_val (exprs.Hd ());
   if (! break_nm_val.Is (TAG_TYPE_AS_Name)) {
     wos << L"Invalid name for construct: \"" << str << endl;
-    if (del)
+    if (del) {
       wos << L"\"" << str << L"\" is not a breakpint" << endl;
-    else
+    }
+    else {
       wos << L"No breakpoint set for \"" << str << endl;
+    }
     return false;
   }
 
@@ -512,11 +516,6 @@ bool TBDEBUG::ExtractBreakNames (const wstring & str,
   TYPE_AS_Name stripped (name_t.GetField(2));
   Record smo (theState().GetAnyModule(name_t.GetField(1)));
 
-//  if (!sigmamo) {
-//    wos << L"Could not find a break position for "
-//              << ASTAUX::ASName2String (break_nm) << endl;
-//    return false;
-//  }
   if (smo.Is(TAG_TYPE_GLOBAL_SigmaIMO)) {
     wos << L"Cannot set break point in dl module" << endl;
     return false;
@@ -551,44 +550,41 @@ bool TBDEBUG::ExtractBreakNames (const wstring & str,
   TYPE_AS_Ids name_seq (break_nm.GetSequence(pos_AS_Name_ids));
   TYPE_AS_Id funop_id (name_seq.Index (name_seq.Length ()));
 
-  Funop_Name = ASTAUX::MkNameFromId (funop_id, break_nm.GetInt(pos_AS_Name_cid));
+  Funop_Name = ASTAUX::MkNameFromIds (mk_sequence(funop_id), break_nm.GetInt(pos_AS_Name_cid));
 
   MAP<TYPE_AS_Name,TYPE_GLOBAL_SigmaClass> classes (theState().GetClasses());
-  //Generic sigmacl_g;
-  //if (!(theState().GetClasses().DomExists(Mod_Name, sigmacl_g))) {
   if (!classes.DomExists(Mod_Name)) {
     wos << L"Class \"" << ASTAUX::ASName2String(Mod_Name) << L"\"" << L"is not defined. " << endl;
     return false;
   }
-  //TYPE_GLOBAL_SigmaClass sigmacl (sigmacl_g);
   const TYPE_GLOBAL_SigmaClass & sigmacl (classes[Mod_Name]);
 
   Break_Name = AUX::ConstructDoubleName(Mod_Name, Funop_Name);
 
-  if (sigmacl.get_explfns().DomExists(Funop_Name))
+  if (sigmacl.get_explfns().DomExists(Funop_Name)) {
     return true;
-
+  }
   Set explops (sigmacl.get_explops().Dom());
   Generic nm;
-  for (bool bb = explops.First(nm); bb; bb = explops.Next(nm))
-  {
-    if (MANGLE::IsMangled(nm))
-    {
-      if (MANGLE::GetUnmangledName(nm) == Funop_Name)
+  for (bool bb = explops.First(nm); bb; bb = explops.Next(nm)) {
+    if (MANGLE::IsMangled(nm)) {
+      if (MANGLE::GetUnmangledName(nm) == Funop_Name) {
         return true;
+      }
     }
-    else
-    {
-      if (nm == Funop_Name)
+    else {
+      if (nm == Funop_Name) {
         return true;
+      }
     }
   }
 #endif //VDMPP
 
   // then we delete a break-point it didn't matter that the
   // name didn't exist in the check above.
-  if (del)
+  if (del) {
     return true;
+  }
 
   // Now we know that the name was a known function/method.
 
@@ -659,7 +655,7 @@ Tuple TBDEBUG::GetFnOpPosInfo(const wstring & fnopnm, wostream & wos)
   Tuple t;
   try {
     // We can not ensure that there is no Runtime Error in this function.
-    t  = theState().GetFirstCIDOfFctOp(ASTAUX::MkNameFromStr(fnopnm, NilContextId));
+    t  = theState().GetFirstCIDOfFctOp(ASTAUX::MkName(fnopnm));
   }
   catch (TB_Exception &e) {
     return mk_(Bool(false), Int(1), Int(1), Int(1));
@@ -762,11 +758,11 @@ bool TBDEBUG::ExtractClassName(const TYPE_AS_Name & break_nm, TYPE_AS_Name & mod
   TYPE_AS_Ids name (break_nm.GetSequence(pos_AS_Name_ids));
   int len = name.Length();
 
-  if (len == 1)
+  if (len == 1) {
     return false;
-
+  }
   else {
-    mod_name = ASTAUX::MkNameFromId( name.Hd(), break_nm.GetInt(pos_AS_Name_cid));
+    mod_name = ASTAUX::MkNameFromIds( mk_sequence(name.Hd()), break_nm.GetInt(pos_AS_Name_cid));
     return true;
   }
 }
@@ -1361,7 +1357,7 @@ bool TBDEBUG::GetSupersOfClass(const wstring & args, Set& cl_s, wstring kind,
   
   TYPE_AS_Name nm;
   if (params[0].length() > 0)
-    nm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+    nm = ASTAUX::MkName(params[0]);
   else {
     wos << L"Please, specify a class name." << endl << flush;
     return false;
@@ -1389,8 +1385,9 @@ void TBDEBUG::EvalFunctions(const wstring & args, wostream & wos)
   wos << L"Explicit functions defined in current module:" << endl;
   Set func (FindCurrentFunctions ());
   Generic bp;
-  for (bool j = func.First(bp); j; j = func.Next(bp))
+  for (bool j = func.First(bp); j; j = func.Next(bp)) {
     wos << ASTAUX::ASName2String (bp) << L" ";
+  }
   wos << endl << flush;
 #endif //VDMSL
 #ifdef VDMPP
@@ -1398,8 +1395,9 @@ void TBDEBUG::EvalFunctions(const wstring & args, wostream & wos)
   STR_split (args, params, 20, STR_RXwhite_and_comma);
 
   TYPE_AS_Name nm;
-  if (params[0].length() > 0)
-    nm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+  if (params[0].length() > 0) {
+    nm = ASTAUX::MkName(params[0]);
+  }
   else {
     wos << L"Please, specify a class name." << endl << flush;
     return;
@@ -1473,8 +1471,9 @@ void TBDEBUG::EvalInstVars(const wstring & args, wostream & wos)
   STR_split (args, params, 20, STR_RXwhite_and_comma);
   
   TYPE_AS_Name nm;
-  if (params[0].length() > 0)
-    nm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+  if (params[0].length() > 0) {
+    nm = ASTAUX::MkName(params[0]);
+  }
   else {
     wos << L"Please, specify a class name." << endl << flush;
     return;
@@ -1576,8 +1575,9 @@ void TBDEBUG::EvalTypes(const wstring & args, wostream & wos)
   STR_split (args, params, 20, STR_RXwhite_and_comma);
   
   TYPE_AS_Name nm;
-  if (params[0].length() > 0 )
-    nm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+  if (params[0].length() > 0 ) {
+    nm = ASTAUX::MkName(params[0]);
+  }
   else {
     wos << L"Please, specify a class name." << endl;
     return;
@@ -1615,8 +1615,9 @@ void TBDEBUG::EvalValues(const wstring & args, wostream & wos)
   STR_split (args, params, 20, STR_RXwhite_and_comma);
   
   TYPE_AS_Name nm;
-  if (params[0].length() > 0)
-    nm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+  if (params[0].length() > 0) {
+    nm = ASTAUX::MkName(params[0]);
+  }
   else {
     wos << L"Please, specify a class name." << endl << flush;
     return;
@@ -1699,8 +1700,9 @@ void TBDEBUG::EvalUnitList (wostream & wos)
       wos << Status2String (status) << changed;
       wstring nm (PTAUX::ExtractModuleName (modnm)); 
 #ifdef VDMSL
-      if (nm == L"DefaultMod")
+      if (nm == ASTAUX::GetDefaultModName()) {
         nm = L"";
+      }
 #endif // VDMSL
       wos << nm << endl << flush;
     }
@@ -1871,25 +1873,23 @@ void TBDEBUG::DisplayObjectReferenceInfo (const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( nos > 1 )
-  {
+  if( nos > 1 ) {
     Set refs;
-    for( int i = 1; i < nos; i++ )
-    {
+    for( int i = 1; i < nos; i++ ) {
       unsigned long objid = atol( TBWSTR::wstring2string( params[i] ).c_str() );
-      if( objid > 0 )
+      if( objid > 0 ) {
         theState().GetObjectReferenceByID( Int(objid), refs );
-      else
-        theState().GetObjectReferenceByName(ASTAUX::MkNameFromId(ASTAUX::MkId(params[i]), NilContextId), refs );
+      }
+      else {
+        theState().GetObjectReferenceByName(ASTAUX::MkName(params[i]), refs );
+      }
     }
     Generic ref;
-    for (bool bb = refs.First(ref); bb; bb = refs.Next(ref))
-    {
+    for (bool bb = refs.First(ref); bb; bb = refs.Next(ref)) {
       theState().DisplayObjectReference( ref, wos );
     }
   }
-  else
-  {
+  else {
     theState().DisplayLiveObjects(wos);
     theState().DisplayDanglingObjects(wos);
   }
@@ -1907,21 +1907,20 @@ void TBDEBUG::EvalObjects (const wstring & args, wostream & wos)
       theState().ShowAllObjects(wos);
       return;
     }
-    if( nos > 1 )
-    {
+    if( nos > 1 ) {
       wos << L"Objects (all): " << endl << flush;
       Set refs;
-      for( int i = 1; i < nos; i++ )
-      {
+      for( int i = 1; i < nos; i++ ) {
         unsigned long objid = atol(TBWSTR::wstring2string(params[i]).c_str());
-        if( objid > 0 )
+        if( objid > 0 ) {
           theState().GetObjectReferenceByID(Int(objid), refs);
-        else
-          theState().GetObjectReferenceByName(ASTAUX::MkNameFromId(ASTAUX::MkId(params[i]), NilContextId), refs);
+        }
+        else {
+          theState().GetObjectReferenceByName(ASTAUX::MkName(params[i]), refs);
+        }
       }
       Generic ref;
-      for(bool bb = refs.First( ref ); bb; bb = refs.Next( ref ) )
-      {
+      for(bool bb = refs.First( ref ); bb; bb = refs.Next( ref ) ) {
         VAL2X::val2stream( ref, wos, 0);
         wos << endl << flush;
       }
@@ -1955,29 +1954,27 @@ void TBDEBUG::DisplayState(const wstring & args, wostream & wos)
     wstring params[20];
     int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
     Sequence arg_s;
-    if( nos > 1 )
-    {
-      for( int i = 1; i < nos; i++ )
-      {
+    if( nos > 1 ) {
+      for( int i = 1; i < nos; i++ ) {
         unsigned long objid = atol( TBWSTR::wstring2string( params[i] ).c_str() );
-        if( objid > 0 )
+        if( objid > 0 ) {
           arg_s.ImpAppend(Int(objid));
-        else
-          arg_s.ImpAppend(ASTAUX::MkNameFromId(ASTAUX::MkId(params[i]), NilContextId));
+        }
+        else {
+          arg_s.ImpAppend(ASTAUX::MkName(params[i]));
+        }
       }
     }
     theState().DisplayObjectsDetail( arg_s, wos ) ;
     return;
   }
 
-  if (args.find(L"-u") != string::npos)
-  {
+  if (args.find(L"-u") != string::npos) {
     theState().DisplayUserObjects( wos );
     return;
   }
 
-  if (args.find(L"-r") != string::npos)
-  {
+  if (args.find(L"-r") != string::npos) {
     TBDEBUG::DisplayObjectReferenceInfo ( args, wos );
     return;
   }
@@ -2446,13 +2443,11 @@ void TBDEBUG::DisplaySigma (const wstring & args, wostream & wos)
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
  
   Generic clsnm = Nil();
-  if ( nos > 0 )
-  {
-    clsnm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+  if ( nos > 0 ) {
+    clsnm = ASTAUX::MkName(params[0]);
   }
 #ifdef VDMPP
-  else
-  {
+  else {
     wos << L"sigma requires class name" << endl << flush;
     return;
   }
@@ -2476,14 +2471,12 @@ void TBDEBUG::DisplayCode (const wstring & args, wostream & wos)
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
 
   Generic clsnm = Nil();
-  if ( nos > 0 )
-  {
-    clsnm = ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId);
+  if ( nos > 0 ) {
+    clsnm = ASTAUX::MkName(params[0]);
   }
-  else
-  {
+  else {
 #ifdef VDMSL
-    clsnm = ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), NilContextId);
+    clsnm = ASTAUX::GetDefaultModASName();
 #endif // VDMSL
 #ifdef VDMPP
     wos << L"sigma requires class name" << endl << flush;
@@ -2640,16 +2633,17 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
 
 #ifdef VDMSL
-  TYPE_AS_Name defmod (ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), NilContextId));
+  TYPE_AS_Name defmod (ASTAUX::GetDefaultModASName());
   Generic trnm = Nil();
   Generic tpnm = Nil();
   TYPE_AS_Name clmodnm (defmod);
   if ( 0 != nos ) {
-    TYPE_AS_Name n (ASTAUX::MkNameFromStr(params[0], NilContextId));
+    TYPE_AS_Name n (ASTAUX::MkName(params[0]));
     TYPE_AS_Ids ids (n.GetSequence(pos_AS_Name_ids));
     if (ids.Length() == 1) {
-      if (ToolMediator::GetAllVDMModuleNames().InSet(n))
+      if (ToolMediator::GetAllVDMModuleNames().InSet(n)) {
         clmodnm = n;
+      }
       else {
         trnm = n; 
         tpnm = AUX::ConstructDoubleName(defmod, n);
@@ -2668,7 +2662,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
     return;
   }
 
-  TYPE_AS_Name tpnm (ASTAUX::MkNameFromStr(params[0], NilContextId));
+  TYPE_AS_Name tpnm (ASTAUX::MkName(params[0]));
   TYPE_AS_Name clmodnm (ASTAUX::GetFirstName(tpnm));
   Generic trnm = Nil();
   if (tpnm.GetSequence(pos_AS_Name_ids).Length() > 1) {

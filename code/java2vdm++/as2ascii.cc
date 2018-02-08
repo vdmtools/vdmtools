@@ -12,8 +12,7 @@ wstring AS2ASCII::GetComments(const TYPE_CI_ContextId & cid_)
   wstring comments; comments.erase();
 
   int cid = cid_.GetValue();
-  if(cid > 0)
-  {
+  if(cid > 0) {
     Sequence ci(pTokenci->get_ci());
     Sequence tll(pTokenci->get_tll());
     TYPE_CI_ContextNodeInfo cni(ci[cid]);
@@ -795,16 +794,17 @@ wstring AS2ASCII::ExtractName(const TYPE_AS_Name & nm)
 {
   TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
 #ifdef VDMSL
-  if (ids[1] == SEQ<Char>(L"DefaultMod"))
+  if (ids[1] == SEQ<Char>(ASTAUX::GetDefaultModName())) {
     ids.ImpTl();
+  }
 #endif //VDMSL
 
   wstring result(L"");
   size_t len_ids = ids.Length();
-  for (size_t idx = 1; idx <= len_ids; idx++)
-  {
-    if (idx > 1)
+  for (size_t idx = 1; idx <= len_ids; idx++) {
+    if (idx > 1) {
       result += L"`";
+    }
     result += ids[idx].GetString();
   }
   return result;

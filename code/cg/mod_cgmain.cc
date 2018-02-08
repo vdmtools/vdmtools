@@ -278,10 +278,9 @@ SET<TYPE_CPP_File> vdmcg::cg_CG(const TYPE_AS_Document & doc_l, const Map & tc_s
   set_testpreandpost_option(testcond);
 
   TYPE_AS_Document mod_l;  // seq of (AS`Module | AS`DLModule)
-  if ((doc_l.Length() == 1) && doc_l[1].Is(TAG_TYPE_AS_Definitions))
-  {
+  if ((doc_l.Length() == 1) && doc_l[1].Is(TAG_TYPE_AS_Definitions)) {
     TYPE_AS_Module mod;
-    mod.Init(ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), NilContextId),
+    mod.Init(ASTAUX::GetDefaultModASName(),
              TYPE_AS_Interface().Init(type_7AS_NameCUM(), Nil(), NilContextId),
              doc_l[1],
              NilContextId);
@@ -294,8 +293,7 @@ SET<TYPE_CPP_File> vdmcg::cg_CG(const TYPE_AS_Document & doc_l, const Map & tc_s
 
   SET<TYPE_CPP_File> file_s;
   size_t len_mod_l = mod_l.Length();
-  for (size_t i = 1; i <= len_mod_l; i++)
-  {
+  for (size_t i = 1; i <= len_mod_l; i++) {
     const Record & md (mod_l[i]);
     switch (md.GetTag()) {
       case TAG_TYPE_AS_Module: {

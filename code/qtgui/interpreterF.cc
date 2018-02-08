@@ -620,7 +620,7 @@ void interpreterW::addBreakName(const QString& name, int num)
 
   QString methodName (name);
 #ifdef VDMSL
-  if ((list.count() == 2) && (list.front() == "DefaultMod")) {
+  if ((list.count() == 2) && (list.front() == Qt2TB::GetDefaultModName())) {
     methodName = list.back();
   }
 #endif // VDMSL

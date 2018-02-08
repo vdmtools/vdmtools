@@ -907,7 +907,7 @@ TYPE_AS_Definitions ToolMediator::EmptyDefinitions ()
 // create module for flat spec
 TYPE_AS_Module ToolMediator::mk_DefaultMod (const TYPE_AS_Definitions & def)
 {
-  return TYPE_AS_Module().Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId),
+  return TYPE_AS_Module().Init(ASTAUX::GetDefaultModASName(),
                                TYPE_AS_Interface().Init(MAP<TYPE_AS_Name, Generic>(), Nil(), NilContextId),
                                def,
                                NilContextId);
@@ -2000,9 +2000,13 @@ bool TOOLS::LocalEvalTypeCheck (const TYPE_ProjectTypes_ModuleName & modnm, int 
 
   wos << L"Type checking ";
   wstring mnm (PTAUX::ExtractModuleName (modnm));
-  if (mnm != wstring(L"DefaultMod")) {
+#ifdef VDMSL
+  if (mnm != ASTAUX::GetDefaultModName()) {
+#endif // VDMSL
     wos << mnm << L" ";
+#ifdef VDMSL
   }
+#endif // VDMSL
   wos << L"... " << flush;
 
 #ifndef NOSS
@@ -2280,7 +2284,7 @@ void TOOLS::DisplayAST(const wstring & args, wostream & wos)
   wstring modnm (params[0]);
   if( 0 == nos ) {
 #ifdef VDMSL
-    modnm = L"DefaultMod";
+    modnm = ASTAUX::GetDefaultModName();
 #endif // VDMSL
 #ifdef VDMPP
     wos << L"ast command requires ";
@@ -2337,8 +2341,8 @@ void TOOLS::GoFindType(const wstring & args, wostream & wos)
     wos << L"find requires name & class/module name" << endl;
     return;
   }
-  TYPE_AS_Name nm (ASTAUX::MkNameFromId(ASTAUX::MkId(params[0]), NilContextId));
-  TYPE_AS_Name clnm (ASTAUX::MkNameFromId(ASTAUX::MkId(params[1]), NilContextId));
+  TYPE_AS_Name nm (ASTAUX::MkName(params[0]));
+  TYPE_AS_Name clnm (ASTAUX::MkName(params[1]));
   Generic dft (DependencyFindType(nm, clnm));
   wos << dft << endl;
 }
@@ -4154,7 +4158,7 @@ wstring TOOLS::GetTraceArgs(int index)
 // ==> bool * seq of seq of char
 Tuple TOOLS::GetOperations(const wstring & clsnm)
 {
-  TYPE_AS_Name cls (ASTAUX::MkNameFromId(ASTAUX::MkId(clsnm), NilContextId));
+  TYPE_AS_Name cls (ASTAUX::MkName(clsnm));
   Tuple t (TBDEBUG::GetOperations(cls));
   if (t.GetBoolValue(1)) {
     Set nm_s (t.GetSet(2));
@@ -4183,10 +4187,10 @@ void TOOLS::EvalNoCheck (const wstring & args, wostream & wos)
   else if (nos == 2) {
     wstring opt (params[0]);
     if (opt == L"add") {
-      Settings.AddNoCheck(ASTAUX::MkNameFromId(ASTAUX::MkId(params[1]), NilContextId));
+      Settings.AddNoCheck(ASTAUX::MkName(params[1]));
     }
     else if (opt == L"del") {
-      Settings.RemoveNoCheck(ASTAUX::MkNameFromId(ASTAUX::MkId(params[1]), NilContextId));
+      Settings.RemoveNoCheck(ASTAUX::MkName(params[1]));
     }
   }
 }
@@ -4325,10 +4329,10 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
           ( 0 != params[0].compare(wstring(L"-P")))) {
         nm = PTAUX::mk_ModuleName(params[0]);
       }
-      else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
-        nm = PTAUX::mk_ModuleName(L"DefaultMod");
-      }
 #ifdef VDMSL
+      else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
+        nm = PTAUX::mk_ModuleName(ASTAUX::GetDefaultModName());
+      }
       else {
         Tuple t (TBDEBUG::GetCurrentModule()); // bool * [ProjectTypes`ModuleName]
         if (t.GetBoolValue(1)) {
@@ -4425,7 +4429,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
         return true;
       }
 
-      Generic kind = (Quote) L"JAVA";
+      Quote kind (L"JAVA");
       bool skeleton_option = false;
       bool preandpost_option = false;
       bool onlytypes_option = false;
@@ -4739,10 +4743,10 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
           (0 != params[0].compare(wstring(L"def")))) {
         nm = PTAUX::mk_ModuleName (params[0]);
       }
-      else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
-        nm = PTAUX::mk_ModuleName (L"DefaultMod");
-      }
 #ifdef VDMSL
+      else if (ToolMediator::Repos()->vdm_IsSession (flat_session)) {
+        nm = PTAUX::mk_ModuleName (ASTAUX::GetDefaultModName());
+      }
       else {
         Tuple t (TBDEBUG::GetCurrentModule()); // bool * [ProjectTypes`ModuleName]
         if (t.GetBoolValue(1)) {
@@ -5519,7 +5523,7 @@ void TOOLS::SetInterfacesOption(const wstring & interfacesList)
   int numClasses = STR_split(interfacesList, classNames, 20, STR_RXwhite_and_comma);
   SET<TYPE_AS_Name> nm_s;
   for (int i = 0; i < numClasses; i ++) {
-    nm_s.Insert(ASTAUX::MkNameFromId(ASTAUX::MkId(classNames[i]), NilContextId));
+    nm_s.Insert(ASTAUX::MkName(classNames[i]));
   }
 
   SET<TYPE_AS_Name> modNames (ToolMediator::GetAllVDMModuleNames());

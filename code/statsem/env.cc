@@ -7535,14 +7535,16 @@ SEQ<TYPE_REP_TypeRep> StatSem::TransTypeList (const Generic & modnm, const SEQ<T
 TYPE_REP_TypeRep StatSem::TransTypeDef (const Generic & modnm, const TYPE_AS_Name & nm,
                                         const TYPE_AS_Type & tp, const Generic & inv)
 {
-  if (inv.IsNil())
+  if (inv.IsNil()) {
     return TransType(modnm, tp);
-  else
-  {
+  }
+  else {
     const TYPE_AS_Invariant asInv (inv);
-    TYPE_AS_Name name (
-      (modnm.IsNil() || (modnm == ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId)))
-       ? nm : ExtName (modnm, nm));
+    TYPE_AS_Name name (modnm.IsNil()
+#ifdef VDMSL
+                      || (modnm == ASTAUX::GetDefaultModASName())
+#endif // VDMSL
+                       ? nm : ExtName (modnm, nm));
     return mk_REP_InvTypeRep(name,
                              TransType(modnm, tp),
                              (Generic)mk_(asInv.GetRecord(pos_AS_Invariant_pat),

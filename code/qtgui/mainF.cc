@@ -1962,7 +1962,7 @@ void mainW::newFile_qt3()
   // get class/module name
 #ifdef VDMSL
   bool iso = false;
-  if ((moduleList.count() == 1) && (moduleList.first() == QString("DefaultMod"))) {
+  if ((moduleList.count() == 1) && (moduleList.first() == Qt2TB::GetDefaultModName())) {
     iso = true;
   }
 #endif // VDMSL

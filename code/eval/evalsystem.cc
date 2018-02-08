@@ -1556,7 +1556,7 @@ void SYSTEM::AddBUS(const TYPE_AS_Name & busnm, const Generic & decl)
 // ==> AS`Name
 void SYSTEM::AddVirtualBUS()
 {
-  TYPE_AS_Name virtualbusid (ASTAUX::MkNameFromId(ASTAUX::MkId(VBUS), NilContextId));
+  TYPE_AS_Name virtualbusid (ASTAUX::MkName(VBUS));
   AddBUS(virtualbusid, Nil());
 }
 
@@ -1565,7 +1565,7 @@ void SYSTEM::AddVirtualBUS()
 // ==> ()
 void SYSTEM::AddToVirtualBUS(const TYPE_AS_Name & newcpuid)
 {
-  TYPE_AS_Name virtualbusid (ASTAUX::MkNameFromId(ASTAUX::MkId(VBUS), NilContextId));
+  TYPE_AS_Name virtualbusid (ASTAUX::MkName(VBUS));
   TYPE_STKM_BUSSigma bsigma (this->busstate[virtualbusid]);
   Set cpus (bsigma.GetSet(pos_STKM_BUSSigma_cpus));
   cpus.Insert(newcpuid);
@@ -2281,7 +2281,7 @@ Generic SYSTEM::FindBUSFromClass(const Generic & calledcpunm) const
         check &= !(c.SubSet(Set(this->syscpus[sysnm])));
       }
 
-      TYPE_AS_Name virtualbusid (ASTAUX::MkNameFromId(ASTAUX::MkId(VBUS), NilContextId));
+      TYPE_AS_Name virtualbusid (ASTAUX::MkName(VBUS));
       if (((busid == virtualbusid) && check) || ((busid != virtualbusid) && !check))
       return busid;
     }

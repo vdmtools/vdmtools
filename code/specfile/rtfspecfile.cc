@@ -82,7 +82,7 @@ string get_vdm_ncov();
 
 // Name of the Module/Class being pp
 #ifdef VDMSL
-  wstring mod_name = L"DefaultMod\\:";
+  wstring mod_name = ASTAUX::GetDefaultModName() + L"\\:";
 #endif // VDMSL
 #ifdef VDMPP
   wstring mod_name = L"DefaultClass\\:";
@@ -282,7 +282,7 @@ bool RTFWordSpecFileHandler::pp_tc_table(const string & parm_mod_name,  // nodul
 
     double pcoverage = TestCoverage::PrintEntireTestSuite (
                  pp_out,
-                 ASTAUX::MkNameFromId (ASTAUX::MkId(TBWSTR::mbstr2wstring(parm_mod_name)), NilContextId),
+                 ASTAUX::MkName(TBWSTR::mbstr2wstring(parm_mod_name)),
                  asts_set,
                  FORMAT_RTF_WORD,
                  ci);
@@ -932,7 +932,7 @@ bool RTFWordSpecFileHandler::pp(SpecFile & sf, Sequence & asts, ContextInfo &ci)
   }
 
 #ifdef VDMSL
-    mod_name = L"DefaultMod\\:";
+    mod_name = ASTAUX::GetDefaultModName() + L"\\:";
 #endif
 #ifdef VDMPP
     mod_name = L"DefaultClass\\:"; // notice the colon in the end
@@ -1198,7 +1198,7 @@ bool RTFWordSpecFileHandler::file_update(SpecFile &sf, wstring & err)
   this->generate_rti   = false;
   this->pp_key_and_ident = false;
 #ifdef VDMSL
-  mod_name = "DefaultMod\\:";
+  mod_name = ASTAUX::GetDefaultModName() + L"\\:";
 #endif
 #ifdef VDMPP
   mod_name = L"DefaultClass\\:"; // notice the colon in the end

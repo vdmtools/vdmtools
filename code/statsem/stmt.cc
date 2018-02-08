@@ -1511,22 +1511,21 @@ Tuple StatSem::wf_CallStmt (const Int & i, const TYPE_AS_CallStmt & stmt, const 
   Bool reswf (true);
   SEQ<TYPE_REP_TypeRep> etp;
   Set classes;
-  if (!obj.IsNil ())
-  {
+  if (!obj.IsNil ()) {
     Tuple cor (CheckObjectRef (i,obj));
     classes = cor.GetSet(1);
     reswf &= cor.GetBool (2);
 
 #ifdef VICE
-    if ((nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"setPriority"), NilContextId)) &&
+    if ((nm == ASTAUX::MkName(L"setPriority")) &&
         (classes.Card() == 1) &&
-        classes.InSet(ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)))
+        classes.InSet(ASTAUX::MkName(L"CPU"))) {
       NotStaticOk();
+    }
 #endif // VICE
 
     size_t len_args = args.Length();
-    for (size_t idx = 1; idx <= len_args; idx++)
-    {
+    for (size_t idx = 1; idx <= len_args; idx++) {
       Tuple infer2 (wf_Expr (i, args[idx], rep_alltp));
       reswf &= infer2.GetBool (1);
 // 20090413 -->

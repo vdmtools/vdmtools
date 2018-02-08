@@ -350,8 +350,13 @@ bool TestCoverage::PrintTestSuiteItem (
     // Print fct/op name with optional Module name Prefix
 
     if (fmt == FORMAT_LATEX) {
-      if (pm && !(mod_name == ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId)))
+      if (pm
+#ifdef VDMSL
+          && !(mod_name == ASTAUX::GetDefaultModASName())
+#endif // VDMSL
+         ) {
         ostr << TBWSTR::wstring2mbstr(GenLatexOutput::ConvertStr (ASTAUX::ASName2String (mod_name))) << "`";
+      }
 
 #ifdef VDMSL
       TYPE_AS_Name ufunc_name (func_name);
@@ -382,7 +387,9 @@ bool TestCoverage::PrintTestSuiteItem (
 
       // name of function
       if (pm &&
-          !(mod_name == ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId)) &&
+#ifdef VDMSL
+          !(mod_name == ASTAUX::GetDefaultModASName()) &&
+#endif // VDMSL
           !(mod_name == ASTAUX::MkNameFromVoid())) {
         std::string hqstrName (TBWSTR::wstring2string(ASTAUX::ASName2String(mod_name)));
         std::string rtfName = "";
@@ -435,7 +442,7 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
 
   TYPE_AS_Name mod_name (modnm);
 
-  TYPE_AS_Name emptyName (ASTAUX::MkNameFromId(ASTAUX::MkId(L""), NilContextId));
+  TYPE_AS_Name emptyName (ASTAUX::MkName(L""));
 
   if (mod_name == ASTAUX::MkNameFromVoid () || mod_name == emptyName)
                                      //Print coverage info
@@ -661,53 +668,51 @@ void TestCoverage::EvalListTestSuite (const std::wstring & fname, ContextInfo & 
         vdm_iplog.width (6);
         vdm_iplog << RTINFO::Is_Covered (fndef, ci) << L"  ";
 #ifdef VDMSL
-        if (mod_nm != ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId))
+        if (mod_nm != ASTAUX::GetDefaultModASName()) {
           vdm_iplog << ASTAUX::ASName2String (mod_nm) << L"`";
+        }
         vdm_iplog << ASTAUX::ASName2String (fnm_nm) << endl;
 #endif // VDMSL
 #ifdef VDMPP
         vdm_iplog << ASTAUX::ASName2String (mod_nm) << L"`";
-        if (MANGLE::IsMangled(fnm_nm))
-        {
+        if (MANGLE::IsMangled(fnm_nm)) {
           Tuple t (MANGLE::UnMangle(fnm_nm));
           SEQ<TYPE_AS_Type> tp_l (t.GetSequence(3));
           vdm_iplog << ASTAUX::ASName2String (t.GetRecord(1));
-          if (tp_l.IsEmpty())
+          if (tp_l.IsEmpty()) {
             vdm_iplog << L"()" << endl;
-          else
-          {
+          }
+          else {
             AS2ASCII conv;
             vdm_iplog << L"( ";
             size_t len_tp_l = tp_l.Length();
-            for (size_t idx = 1; idx <= len_tp_l; idx++)
-            {
-              if (idx > 1) 
+            for (size_t idx = 1; idx <= len_tp_l; idx++) {
+              if (idx > 1) {
                 vdm_iplog << L" * ";
+              }
               conv.Type2ASCII(tp_l[idx], vdm_iplog);   
             }
             vdm_iplog << L" )" << endl;
           }
         }
-        else
+        else {
           vdm_iplog << ASTAUX::ASName2String (fnm_nm) << endl;
+        }
 #endif // VDMPP
       }
-// 20130610 -->
 #ifdef VDMSL
-      if (mod_nm != ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId))
-      {
+      if (mod_nm != ASTAUX::GetDefaultModASName()) {
 #endif // VDMSL
-      if (clmodexprs > 0) {
-        int percentCoverage = (int)floor ((100.0 * (double)clmodcoverage)/(double)clmodexprs);
-        vdm_iplog.width ();
-        vdm_iplog.width (5);
-        vdm_iplog << percentCoverage << L"%  ";
-        vdm_iplog << ASTAUX::ASName2String (mod_nm) << endl;
-      }
+        if (clmodexprs > 0) {
+          int percentCoverage = (int)floor ((100.0 * (double)clmodcoverage)/(double)clmodexprs);
+          vdm_iplog.width ();
+          vdm_iplog.width (5);
+          vdm_iplog << percentCoverage << L"%  ";
+          vdm_iplog << ASTAUX::ASName2String (mod_nm) << endl;
+        }
 #ifdef VDMSL
       }
 #endif // VDMSL
-// <-- 20130610
     }
   }
   
@@ -717,8 +722,9 @@ void TestCoverage::EvalListTestSuite (const std::wstring & fname, ContextInfo & 
     int percentCoverage = (int)floor ((100.0 * (double)totcoverage)/(double)totexprs);
     vdm_iplog << percentCoverage << L"%" << endl;
   }
-  else
+  else {
     vdm_iplog << L"undefined" << endl;
+  }
 }
 
 /////////////////////////
@@ -832,8 +838,8 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
     
     int exprs, covered;
     PrintTestSuiteItem (ostr,
-                        ASTAUX::MkNameFromId (ASTAUX::MkId(mod_name), NilContextId),
-                        ASTAUX::MkNameFromId (ASTAUX::MkId(func_name), NilContextId),
+                        ASTAUX::MkName(mod_name),
+                        ASTAUX::MkName(func_name),
                         get_mod_name,
                         exprs, covered,
                         asts,
@@ -848,7 +854,7 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
   if (get_all)
     // PrintEntireTestSuite return -1 if pcoverage is undefined
     pcoverage = PrintEntireTestSuite (ostr,
-                                      ASTAUX::MkNameFromId (ASTAUX::MkId(mod_name), NilContextId),
+                                      ASTAUX::MkName(mod_name),
                                       asts,
                                       FORMAT_LATEX,
                                       ci);

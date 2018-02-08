@@ -121,8 +121,7 @@ bool StatSem::wf_Module (const Int & i, const Record & mod)
   
       bool reswf = ExpandModule (i, mod);
 
-      if (Settings.VDMSLmode() && !(modid == ASTAUX::MkNameFromId (ASTAUX::MkId(L"DefaultMod"), NilContextId)))
-      {
+      if (Settings.VDMSLmode() && !(modid == ASTAUX::GetDefaultModASName())) {
         //---------------------------------------------
         // Error message #351
         // Modules are not supported by standard VDM-SL

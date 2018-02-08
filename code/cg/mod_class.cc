@@ -1493,20 +1493,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenVarInit(const TYPE_AS_InstAssignDef & ii)
     // hack for String 
     //return CGExpr (dclinit, vt);
     SEQ<TYPE_CPP_Stmt> stmts (CGExpr (dclinit, vt));
-    if ((stmts.Length() == 1) && IsStringType(tpe))
-    {
+    if ((stmts.Length() == 1) && IsStringType(tpe)) {
       const TYPE_CPP_Stmt & stmt (stmts[1]);
       if (stmt.Is(TAG_TYPE_CPP_ExpressionStmt) &&
-          stmt.GetField(pos_CPP_ExpressionStmt_expr).Is(TAG_TYPE_CPP_AssignExpr))
-      {
+          stmt.GetField(pos_CPP_ExpressionStmt_expr).Is(TAG_TYPE_CPP_AssignExpr)) {
         const TYPE_CPP_AssignExpr & ae (stmt.GetRecord(pos_CPP_ExpressionStmt_expr));
         if ((ae.GetField(pos_CPP_AssignExpr_assignop) 
                    == TYPE_CPP_AssignOp().Init(Quote(L"ASEQUAL"), NilContextId)) &&
-             ae.GetRecord(pos_CPP_AssignExpr_assignexpr).Is(TAG_TYPE_CPP_ClassInstanceCreationExpr))
-        {
+             ae.GetRecord(pos_CPP_AssignExpr_assignexpr).Is(TAG_TYPE_CPP_ClassInstanceCreationExpr)) {
           const TYPE_CPP_ClassInstanceCreationExpr & cice (ae.GetRecord(pos_CPP_AssignExpr_assignexpr));
-          if (cice.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenStringType().get_tp())
-          {
+          if (cice.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenStringType().get_tp()) {
             TYPE_CPP_AssignExpr new_ae (ae);
             new_ae.SetField(pos_CPP_AssignExpr_assignexpr, cice.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg)[1]); 
             SEQ<TYPE_CPP_Stmt> rb;
@@ -1611,11 +1607,9 @@ bool vdmcg::IsPossibleInterface(const TYPE_AS_Class & cl)
 
   bool forall = IsCandidateInterface(cl);
   size_t len_supercl = supercl.Length();
-  for (size_t idx = 1; (idx <= len_supercl) && forall; idx++)
-  {
+  for (size_t idx = 1; (idx <= len_supercl) && forall; idx++) {
     const TYPE_AS_Name & sc (supercl[idx]);
-    forall = (isInterface(sc) ||
-              (get_j2v_option() && (sc == ASTAUX::MkNameFromId(ASTAUX::MkId(L"Nullable"), NilContextId))));
+    forall = (isInterface(sc) || (get_j2v_option() && (sc == ASTAUX::MkName(L"Nullable"))));
   }
   return forall;
 }
@@ -1798,65 +1792,57 @@ SEQ<TYPE_AS_ValueDef> vdmcg::GetJCGOption (const SEQ<TYPE_AS_ValueDef> & vals_)
 {
   size_t len_vals = vals_.Length();
   SEQ<TYPE_AS_ValueDef> vals;
-  for (size_t idx = 1; idx <= len_vals; idx++)
-  {
+  for (size_t idx = 1; idx <= len_vals; idx++) {
     const TYPE_AS_ValueDef & vd (vals_[idx]);
     bool controll_found = false;
     const TYPE_AS_Pattern & p (vd.GetRecord(pos_AS_ValueDef_pat));
-    if (p.Is(TAG_TYPE_AS_PatternName) && !p.GetField(pos_AS_PatternName_nm).IsNil())
-    {
+    if (p.Is(TAG_TYPE_AS_PatternName) && !p.GetField(pos_AS_PatternName_nm).IsNil()) {
       const TYPE_AS_Name & nm (p.GetField(pos_AS_PatternName_nm));
-      if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_package"), NilContextId))
-      {
+      if (nm == ASTAUX::MkName(L"JCGControl_package")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_TextLit))
-        {
-          if (get_package_option().IsNil())
-          {
+        if (e.Is(TAG_TYPE_AS_TextLit)) {
+          if (get_package_option().IsNil()) {
             const SEQ<Char> & ps (e.GetSequence(pos_AS_TextLit_val));
             set_package_option(ps); 
           }
           controll_found = true;
         }
       }
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_imports"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_imports")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set is_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
               is_s.Insert(e_l[i].GetSequence(pos_AS_TextLit_val));
-            else
+            }
+            else {
               forall = false;
+            }
           }
-          if (forall)
-          {
+          if (forall) {
             set_imports_names(is_s);
             controll_found = true;
           }
         }
       }
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_interfaces"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_interfaces")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set ifs_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
               ifs_s.Insert(ASTAUX::MkNameFromId(e_l[i].GetSequence(pos_AS_TextLit_val), NilContextId));
-            else
+            }
+            else {
               forall = false;
+            }
           }
           if (forall)
           {
@@ -1865,132 +1851,118 @@ SEQ<TYPE_AS_ValueDef> vdmcg::GetJCGOption (const SEQ<TYPE_AS_ValueDef> & vals_)
           }
         }
       }
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_entries"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_entries")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set etrs_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
               etrs_s.Insert(ASTAUX::MkNameFromId(e_l[i].GetSequence(pos_AS_TextLit_val), NilContextId));
-            else
+            }
+            else {
               forall = false;
+            }
           }
-          if (forall)
-          {
+          if (forall) {
             set_entries_names(etrs_s);
             controll_found = true;
           }
         }
       }
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_throws"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_throws")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set thrs_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
               thrs_s.Insert(ASTAUX::MkNameFromId(e_l[i].GetSequence(pos_AS_TextLit_val), NilContextId));
-            else
+            }
+            else {
               forall = false;
+            }
           }
-          if (forall)
-          {
+          if (forall) {
             set_throws_names(thrs_s);
             controll_found = true;
           }
         }
       }
-// 20121220 -->
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_integer"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_integer")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set thrs_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
-            {
-              TYPE_AS_Name nm (ASTAUX::MkNameFromStr(e_l[i].GetSequence(pos_AS_TextLit_val).GetString(), NilContextId));
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
+              TYPE_AS_Name nm (ASTAUX::MkName(e_l[i].GetSequence(pos_AS_TextLit_val).GetString()));
               TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
               TYPE_AS_Id cnm (ids.Length() == 1 ? ASTAUX::MkId(L"*") : ids[1]);
               TYPE_AS_Id mnm (ids.Length() == 1 ? ids[1] : ids[2]);
               AddJavaPrimitiveIntType(cnm, mnm);
             }
-            else
+            else {
               forall = false;
+            }
           }
           controll_found = forall;
         }
       }
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_boolean"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_boolean")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set thrs_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
-            {
-              TYPE_AS_Name nm (ASTAUX::MkNameFromStr(e_l[i].GetSequence(pos_AS_TextLit_val).GetString(), NilContextId));
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
+              TYPE_AS_Name nm (ASTAUX::MkName(e_l[i].GetSequence(pos_AS_TextLit_val).GetString()));
               TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
               TYPE_AS_Id cnm (ids.Length() == 1 ? ASTAUX::MkId(L"*") : ids[1]);
               TYPE_AS_Id mnm (ids.Length() == 1 ? ids[1] : ids[2]);
               AddJavaPrimitiveBoolType(cnm, mnm);
             }
-            else
+            else {
               forall = false;
+            }
           }
           controll_found = forall;
         }
       }
-      else if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"JCGControl_double"), NilContextId))
-      {
+      else if (nm == ASTAUX::MkName(L"JCGControl_double")) {
         const TYPE_AS_Expr & e (vd.GetRecord(pos_AS_ValueDef_val)); 
-        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr))
-        {
+        if (e.Is(TAG_TYPE_AS_SetEnumerationExpr)) {
           const SEQ<TYPE_AS_Expr> & e_l (e.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool forall = true;
           Set thrs_s;
           size_t len_e_l = e_l.Length();
-          for (size_t i = 1; (i <= len_e_l) && forall; i++)
-          {
-            if (e_l[i].Is(TAG_TYPE_AS_TextLit))
-            {
-              TYPE_AS_Name nm (ASTAUX::MkNameFromStr(e_l[i].GetSequence(pos_AS_TextLit_val).GetString(), NilContextId));
+          for (size_t i = 1; (i <= len_e_l) && forall; i++) {
+            if (e_l[i].Is(TAG_TYPE_AS_TextLit)) {
+              TYPE_AS_Name nm (ASTAUX::MkName(e_l[i].GetSequence(pos_AS_TextLit_val).GetString()));
               TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
               TYPE_AS_Id cnm (ids.Length() == 1 ? ASTAUX::MkId(L"*") : ids[1]);
               TYPE_AS_Id mnm (ids.Length() == 1 ? ids[1] : ids[2]);
               AddJavaPrimitiveRealType(cnm, mnm);
             }
-            else
+            else {
               forall = false;
+            }
           }
           controll_found = forall;
         }
       }
-// <-- 20121220
     }
-    if (!controll_found)
+    if (!controll_found) {
       vals.ImpAppend(vd);
+    }
   }
   return vals;
 }

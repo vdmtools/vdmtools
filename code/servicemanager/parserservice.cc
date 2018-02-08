@@ -39,13 +39,12 @@ Generic ParserService::GetAST(const wchar_t* nm) const
 {
 #ifdef VDMPP
   SEQ<TYPE_AS_Class> classes (GetASTS());
-  TYPE_AS_Name anm (ASTAUX::MkNameFromId(ASTAUX::MkId(wstring(nm)), NilContextId));
+  TYPE_AS_Name anm (ASTAUX::MkName(wstring(nm)));
 
   Generic ast;
   bool exists = false;
   size_t len_classes = classes.Length();
-  for (size_t idx = 1; (idx <= len_classes) && !exists; idx++)
-  {
+  for (size_t idx = 1; (idx <= len_classes) && !exists; idx++) {
     const TYPE_AS_Class & cl (classes[idx]);
     const TYPE_AS_Name & clnm (cl.GetRecord(pos_AS_Class_nm));
     const TYPE_AS_Ids & ids (clnm.GetSequence(pos_AS_Name_ids));

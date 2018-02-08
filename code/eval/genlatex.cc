@@ -108,8 +108,8 @@ GenLatexOutput::GenLatexOutput (const std::wstring & OutputFilename,  // output 
 
     // Is it a flat spec?
     // In this case use orderly, modorder is not initialised!
-    if (mod_name == ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), NilContextId))
-    {
+#ifdef VDMSL
+    if (mod_name == ASTAUX::GetDefaultModASName()) {
       //////////////////////
       // AST is list of definitions
       //////////////////////
@@ -128,6 +128,7 @@ GenLatexOutput::GenLatexOutput (const std::wstring & OutputFilename,  // output 
       GenDefinitions (Nil(), defs, VDMPARSER::orderly, false);
     }
     else
+#endif // VDMSL
     {
       //////////////////////////
       // AST is list of modules/classes
@@ -5991,10 +5992,8 @@ void GenLatexOutput::GenLabelName (const TYPE_AS_Name & Name1, std::ofstream & o
 
 void GenLatexOutput::GenName (const TYPE_AS_Name & Name1, std::ofstream & ofs)
 {
-  if (this->post_condition_scope)
-  {
-    if (Name1 == ASTAUX::MkNameFromId(ASTAUX::MkId(L"RESULT"), NilContextId))
-    {
+  if (this->post_condition_scope) {
+    if (Name1 == ASTAUX::MkName(L"RESULT")) {
       ofs << "\\RESULT";
       return;
     }
@@ -6004,10 +6003,12 @@ void GenLatexOutput::GenName (const TYPE_AS_Name & Name1, std::ofstream & ofs)
 #endif // VDMSL
 #ifdef VDMPP
   TYPE_AS_Name unmangledName;
-  if (MANGLE::IsMangled(Name1))
+  if (MANGLE::IsMangled(Name1)) {
     unmangledName = MANGLE::GetUnmangledName(Name1);
-  else
+  }
+  else {
     unmangledName = Name1;
+  }
 
   const TYPE_AS_Ids & name_l (unmangledName.GetSequence(pos_AS_Name_ids));
 #endif // VDMPP
