@@ -303,24 +303,28 @@ if it has been changed between the old and new models, a replace action is gener
 \begin{vdm_al}
   ConditionAction : [AS`Expr] * [AS`Expr] * ConditionKind * 
                     (AS`FnDef | AS`OpDef) * AS`Name -> set of Action
-  ConditionAction(old, new, kind, parent, clnm) ==
-    if old = new
+  ConditionAction(old_e, new_e, kind, parent, clnm) ==
+    if old_e = new_e
     then {}
-    else cases mk_(old, new):
-          mk_(nil, -) -> { mk_InsertAction(mk_Condition(kind, new, parent, new.cid),
-                                           clnm) },
-          mk_(-, nil) -> { mk_SkipAction(mk_Condition(kind, old, parent, old.cid))},
-          others      -> { mk_SkipAction(mk_Condition(kind, old, parent, old.cid)),
-                           mk_InsertAction(mk_Condition(kind, new, parent, new.cid), clnm) }
+    else cases mk_(old_e, new_e):
+          mk_(nil, -) -> { mk_InsertAction(mk_Condition(kind, new_e, parent, GetCid(new_e)), clnm) },
+          mk_(-, nil) -> { mk_SkipAction(mk_Condition(kind, old_e, parent, GetCid(old_e)))},
+          others      -> { mk_SkipAction(mk_Condition(kind, old_e, parent, GetCid(old_e))),
+                           mk_InsertAction(mk_Condition(kind, new_e, parent, GetCid(new_e)), clnm) }
           end;
 
+
   CreateInheritActions : AS`Class * AS`Class +> ActionList
-  CreateInheritActions(old,new) ==
-    let mk_AS`Class(-,-,n_super,-,-,-) = new,
-        mk_AS`Class(-,-,o_super,-,-,-) = old
+  CreateInheritActions(old_e,new_e) ==
+    let mk_AS`Class(-,-,n_super,-,-,-) = new_e,
+        mk_AS`Class(-,-,o_super,-,-,-) = old_e
     in if elems n_super = elems o_super
        then {}
-       else {mk_ReplaceAction(old, new)};
+       else {mk_ReplaceAction(old_e, new_e)};
+
+functions
+  GetCid : AS`Expr -> CI`ContextId
+  GetCid(expr) == expr.cid;
 
 end ASTMERGE
 
