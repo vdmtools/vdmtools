@@ -14,12 +14,13 @@ CreateJavaVM(version, options) ==
     in
       cases res:
         (JNIEnv`JNI_OK)     -> return true,
+        --(JNIEnv`JNI_ERR)    ->  return false,
+        (JNIEnv`JNI_ERR),
         (JNIEnv`JNI_EEXIST) -> (if jnienv.GetEnv(version) = 0
                                 then
                                   if jnienv.AttachCurrentThread() = 0
                                   then return true;
                                 return true;),
-        (JNIEnv`JNI_ERR)    ->  return false,
         others              ->  return false
       end
   else return false;
