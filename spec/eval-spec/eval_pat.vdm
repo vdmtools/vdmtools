@@ -287,8 +287,10 @@ MatchSeqConcPattern ( mk_STKM`SeqConcPattern(lp_p, rp_p), val_v) ==
                rp_is_seq_enum_pattern and len_val_lv <> (len_lp_p + len rp_p.els)
             then return {}
             else
-             (From := len_lp_p;
-              To := From)
+             --(From := len_lp_p;
+             -- To := From)
+             return MatchLists(lp_p.els ^ [rp_p],
+                               val_lv(1,...,len_lp_p) ^ [mk_SEM`SEQ(val_lv(len_lp_p+1,...,len_val_lv))])
         elseif rp_is_seq_enum_pattern
         then
           let len_rp_p = len rp_p.els

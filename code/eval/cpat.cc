@@ -363,8 +363,16 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
     }
 
     case TAG_TYPE_AS_SeqConcPattern: {
-      return TYPE_STKM_SeqConcPattern().Init(P2P(pat.GetRecord(pos_AS_SeqConcPattern_lp)),
-                                             P2P(pat.GetRecord(pos_AS_SeqConcPattern_rp)));
+      TYPE_STKM_Pattern sclp (P2P(pat.GetRecord(pos_AS_SeqConcPattern_lp)));
+      TYPE_STKM_Pattern scrp (P2P(pat.GetRecord(pos_AS_SeqConcPattern_rp)));
+      if (sclp.Is(TAG_TYPE_STKM_SeqEnumPattern) && scrp.Is(TAG_TYPE_STKM_SeqEnumPattern)) {
+        SEQ<TYPE_STKM_Pattern> els (sclp.GetSequence(pos_AS_SeqEnumPattern_els));
+        els.ImpConc(scrp.GetSequence(pos_AS_SeqEnumPattern_els));
+        return TYPE_STKM_SeqEnumPattern().Init(els);
+      }
+      else {
+        return TYPE_STKM_SeqConcPattern().Init(sclp,scrp);
+      }
     }
 
     case TAG_TYPE_AS_MapEnumPattern: {

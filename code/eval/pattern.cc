@@ -359,8 +359,13 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
           return eset;
         }
       }
-      from = len_lp_p;
-      to = from;
+//      from = len_lp_p;
+//      to = from;
+      SEQ<TYPE_STKM_Pattern> p_l (lp_p.GetSequence(pos_STKM_SeqEnumPattern_els));
+      SEQ<TYPE_SEM_VAL> v_l (val_lv.SubSequence(1, len_lp_p));
+      p_l.ImpAppend(rp_p);
+      v_l.ImpAppend(mk_SEM_SEQ(val_lv.SubSequence(len_lp_p +1, len_val_lv)));
+      return MatchLists (p_l, v_l);
     }
     else if(rp_is_seq_enum_pattern) {
       int len_rp_p = rp_p.GetSequence(pos_STKM_SeqEnumPattern_els).Length(); 

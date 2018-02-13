@@ -2958,7 +2958,14 @@ void StackEval::ExeSetUnion()
 void StackEval::ExeSeqConc()
 {
   SEQ<TYPE_STKM_Pattern> pat_l (POPN(2)); // [leftpat,rightpat]
-  PUSH(TYPE_STKM_SeqConcPattern().Init(pat_l[1], pat_l[2])); // leftpat, rightpat
+  if (pat_l[1].Is(TAG_TYPE_STKM_SeqEnumPattern) && pat_l[2].Is(TAG_TYPE_STKM_SeqEnumPattern)) {
+    SEQ<TYPE_STKM_Pattern> els (pat_l[1].GetSequence(pos_STKM_SeqEnumPattern_els));
+    els.ImpAppend(pat_l[2].GetSequence(pos_STKM_SeqEnumPattern_els));
+    PUSH(TYPE_STKM_SeqEnumPattern().Init(els));
+  }
+  else {
+    PUSH(TYPE_STKM_SeqConcPattern().Init(pat_l[1], pat_l[2])); // leftpat, rightpat
+  }
 }
 
 // ExeMapMerge

@@ -30,13 +30,12 @@ The main operation for transforming VDM++ ast's into UML representation.
   BuildUmlModel : seq1 of AS`Class ==> AUML`Model
   BuildUmlModel(c_l) ==
     def mk_(inh,stat) = GetGraphs();
-        assoc_m = GenUniAssocs(stat) in
-    ( UMLERR`ClearWarnings();
+        assoc_m = GenUniAssocs(stat)
+    in
+     (UMLERR`ClearWarnings();
       GenUMLWarnings(stat);
-      return mk_AUML`Model(GenClasses(c_l, assoc_m),
-                           GenInherit(inh),
-                           assoc_m)
-    );
+      return mk_AUML`Model(GenClasses(c_l, assoc_m), GenInherit(inh), assoc_m)
+     );
 
   -- For testing at the specification level:
   SpecTest : seq1 of AS`Class ==> AUML`Model
@@ -46,8 +45,6 @@ The main operation for transforming VDM++ ast's into UML representation.
     ( def - = DEP`MkGraph(cl_l, nm_s) in skip;
       return BuildUmlModel(cl_l)
     );
-       
-    
 
 functions
 
@@ -68,26 +65,25 @@ functions
   GenAssocMap : AS`Name * set of DEP`Ref * set of AS`Name +> AUML`UniAssoc
   GenAssocMap(c_nm, ref_s,allclnm_s) ==
     let unf_ref_s = 
-          { mk_DEP`Ref(o,t,DEP`UnfoldType(t,c_nm,{},allclnm_s,0),
-                       v,e,acc,stat) 
-          | mk_DEP`Ref(o,t,-,v,e,acc,stat) in set ref_s} in
-    { MkName(rlnm) |-> GenRole(tp,unf_tp,snm, expr, acc, stat) 
-    | mk_DEP`Ref(snm, tp, unf_tp, rlnm, expr, acc, stat) in set unf_ref_s 
-      & not NonValidObjMap(unf_tp, snm) 
-      and ValidAssoc(unf_tp) };
-
+          { mk_DEP`Ref(o,t,DEP`UnfoldType(t,c_nm,{},allclnm_s,0), v,e,acc,stat) 
+            | mk_DEP`Ref(o,t,-,v,e,acc,stat) in set ref_s}
+    in
+      { MkName(rlnm) |-> GenRole(tp,unf_tp,snm, expr, acc, stat) 
+        | mk_DEP`Ref(snm, tp, unf_tp, rlnm, expr, acc, stat) in set unf_ref_s 
+        & not NonValidObjMap(unf_tp, snm) and ValidAssoc(unf_tp) };
 
   ValidAssoc : AS`Type +> bool
   ValidAssoc(tp) ==
     if SimpleAssoc(tp)
     then true
-    else cases tp:
-           mk_AS`GeneralMap0Type(-, tt, -),
-           mk_AS`GeneralMap1Type(-, tt, -),
-           mk_AS`InjectiveMap0Type(-, tt, -),
-           mk_AS`InjectiveMap1Type(-, tt, -) -> SimpleAssoc(tt),
-           others -> false
-         end;
+    else
+      cases tp:
+        mk_AS`GeneralMap0Type(-, tt, -),
+        mk_AS`GeneralMap1Type(-, tt, -),
+        mk_AS`InjectiveMap0Type(-, tt, -),
+        mk_AS`InjectiveMap1Type(-, tt, -) -> SimpleAssoc(tt),
+        others -> false
+      end;
 
 \end{vdm_al}
 This function tests whether a given object reference is of the kind
@@ -117,14 +113,10 @@ functions
   NonValidObjMap : AS`Type * AS`Name +> bool
   NonValidObjMap(tp, snm) ==
     cases tp:
-      mk_AS`GeneralMap0Type(mk_AS`TypeName(-,-), 
-                           mk_AS`TypeName(server,-),-),
-      mk_AS`GeneralMap1Type(mk_AS`TypeName(-,-), 
-                           mk_AS`TypeName(server,-),-),
-      mk_AS`InjectiveMap0Type(mk_AS`TypeName(-,-), 
-                           mk_AS`TypeName(server,-),-),
-      mk_AS`InjectiveMap1Type(mk_AS`TypeName(-,-), 
-                             mk_AS`TypeName(server,-),-) -> 
+      mk_AS`GeneralMap0Type(mk_AS`TypeName(-,-), mk_AS`TypeName(server,-),-),
+      mk_AS`GeneralMap1Type(mk_AS`TypeName(-,-), mk_AS`TypeName(server,-),-),
+      mk_AS`InjectiveMap0Type(mk_AS`TypeName(-,-), mk_AS`TypeName(server,-),-),
+      mk_AS`InjectiveMap1Type(mk_AS`TypeName(-,-), mk_AS`TypeName(server,-),-) -> 
         server <> snm,
       others -> false 
     end;
@@ -168,40 +160,37 @@ functions
   GenCard : AS`Type +> AUML`Cardinality
   GenCard(tp) ==
     cases tp:
-      mk_AS`TypeName(-,-) -> <ONE>,
+      mk_AS`TypeName(-,-)               -> <ONE>,
       mk_AS`Set0Type(-,-),
       mk_AS`Set1Type(-,-),
-      mk_AS`Seq0Type(-,-) -> <MANY>,
-      mk_AS`Seq1Type(-,-) -> <ONE_TO_MANY>,
-      mk_AS`OptionalType(-,-) -> <ZERO_ONE>,
+      mk_AS`Seq0Type(-,-)               -> <MANY>,
+      mk_AS`Seq1Type(-,-)               -> <ONE_TO_MANY>,
+      mk_AS`OptionalType(-,-)           -> <ZERO_ONE>,
       mk_AS`GeneralMap0Type(-, tt,-),
       mk_AS`GeneralMap1Type(-, tt,-),
       mk_AS`InjectiveMap0Type(-, tt,-),
-      mk_AS`InjectiveMap1Type(-, tt,-) -> GenCard(tt),
+      mk_AS`InjectiveMap1Type(-, tt,-)  -> GenCard(tt),
       others -> <ONE>
     end;
 
 
   GenQualifier : AS`Type * AS`Type +> [AS`Type]
   GenQualifier(tp, unf_tp) ==
-    if is_AS`GeneralMap0Type(tp) or is_AS`GeneralMap1Type(tp) or
-       is_AS`InjectiveMap0Type(tp) or is_AS`InjectiveMap1Type(tp)
+    cases tp:
     -- First check if the folded type is a map and use the folded domain type:
-    then cases tp:
-           mk_AS`GeneralMap0Type(q, -,-),
-           mk_AS`GeneralMap1Type(q, -,-),
-           mk_AS`InjectiveMap0Type(q, -,-),
-           mk_AS`InjectiveMap1Type(q, -,-) -> q
-         end
-    else
+      mk_AS`GeneralMap0Type(q,-,-),
+      mk_AS`GeneralMap1Type(q,-,-),
+      mk_AS`InjectiveMap0Type(q,-,-),
+      mk_AS`InjectiveMap1Type(q,-,-) -> q,
     -- otherwise we use the completely unfolded type unf_tp:
-      cases unf_tp:
-        mk_AS`GeneralMap0Type(q, -,-),
-        mk_AS`GeneralMap1Type(q, -,-),
-        mk_AS`InjectiveMap0Type(q, -,-),
-        mk_AS`InjectiveMap1Type(q, -,-) -> q,
-        others -> nil
-      end;
+      others                          -> cases unf_tp:
+                                           mk_AS`GeneralMap0Type(q,-,-),
+                                           mk_AS`GeneralMap1Type(q,-,-),
+                                           mk_AS`InjectiveMap0Type(q,-,-),
+                                           mk_AS`InjectiveMap1Type(q,-,-) -> q,
+                                           others -> nil
+                                         end
+    end;
 
   RoleType : AS`Type +> AUML`RoleType
   RoleType(tp) ==
@@ -242,12 +231,11 @@ attribute is not already generated as an association.
 
   GenValues : seq of AS`ValueDef +> AUML`ValuesDef
   GenValues(val_l) ==
-    if len val_l = 0
-    then { |-> }
-    else let mk_AS`ValueDef(pat,tp,val,acc,stat,-) = hd val_l
-         in { pat |-> mk_AUML`ValDef(tp,val,AS2AUML_Access(acc),stat,nil) }
-            ++ 
-            GenValues(tl val_l);
+    cases val_l:
+      []         -> { |-> },
+      [mk_AS`ValueDef(pat,tp,val,acc,stat,-)] ^ tl_val_l ->
+         { pat |-> mk_AUML`ValDef(tp,val,AS2AUML_Access(acc),stat,nil) } ++ GenValues(tl_val_l)
+    end;
 
   GenMethods : map AS`Name to AS`OpDef +> AUML`CommonSign
   GenMethods(opm) ==
