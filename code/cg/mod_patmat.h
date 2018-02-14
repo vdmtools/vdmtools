@@ -131,6 +131,7 @@ private:
                      const Map &,
                      const Generic &,
                      bool);
+  TYPE_AS_Pattern CheckSeqConcPattern(const TYPE_AS_Pattern & p);
   TYPE_REP_TypeRep GenEqType (const TYPE_REP_TypeRep & type);
   bool HasComplexPattern(const TYPE_AS_Pattern & p);
   int CountComplexPattern(const TYPE_AS_Pattern & p);

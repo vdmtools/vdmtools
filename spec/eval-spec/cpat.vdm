@@ -174,12 +174,19 @@ operations
       mk_AS`SetUnionPattern(lp,rp,-) -> return mk_STKM`SetUnionPattern(P2P(lp), P2P(rp)),
       mk_AS`SeqEnumPattern(els,-)    -> def e_l = [P2P(els(i)) | i in set inds els]
                                           in return mk_STKM`SeqEnumPattern(e_l),
-      mk_AS`SeqConcPattern(lp,rp,-)  -> def sclp = P2P(lp);
-                                            scrp = P2P(rp);
-                                        in
-                                          if is_STKM`SeqEnumPattern(sclp) and is_STKM`SeqEnumPattern(scrp)
-                                          then return mk_STKM`SeqEnumPattern(sclp.els ^ scrp.els)
-                                          else return mk_STKM`SeqConcPattern(sclp, scrp),
+      mk_AS`SeqConcPattern(lp,rp,-)  ->
+            def sclp = P2P(lp);
+                scrp = P2P(rp);
+            in
+              if is_STKM`SeqEnumPattern(scrp)
+              then
+                cases sclp:
+                  mk_STKM`SeqEnumPattern(els) -> return mk_STKM`SeqEnumPattern(els ^ scrp.els),
+                  mk_STKM`SeqConcPattern(lp, mk_STKM`SeqEnumPattern(els)) ->
+                           return mk_STKM`SeqConcPattern(lp, mk_STKM`SeqEnumPattern(els ^ scrp.els)),
+                  others -> return mk_STKM`SeqConcPattern(sclp, scrp)
+                end
+              else return mk_STKM`SeqConcPattern(sclp, scrp),
       mk_AS`MapEnumPattern(mls,-)    ->
             def m_l = [let mk_AS`MapletPattern(dp,rp,-) = mls(i)
                        in mk_STKM`MapletPattern(P2P(dp), P2P(rp)) | i in set inds mls];

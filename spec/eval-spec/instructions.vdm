@@ -1917,8 +1917,14 @@ operations
   ExeSeqConc() ==
     def [leftpat, rightpat] = STKM`Pop(2)
     in
-      if is_STKM`SeqEnumPattern(leftpat) and is_STKM`SeqEnumPattern(rightpat)
-      then STKM`Push(mk_STKM`SeqEnumPattern(leftpat.els ^ rightpat.els))
+      if is_STKM`SeqEnumPattern(rightpat)
+      then
+        cases leftpat:
+          mk_STKM`SeqEnumPattern(els) -> STKM`Push(mk_STKM`SeqEnumPattern(els ^ rightpat.els)),
+          mk_STKM`SeqConcPattern(lp, mk_STKM`SeqEnumPattern(els)) ->
+              STKM`Push(mk_STKM`SeqConcPattern(lp, mk_STKM`SeqEnumPattern(els ^ rightpat.els))),
+          others -> STKM`Push(mk_STKM`SeqConcPattern(leftpat, rightpat))
+        end
       else STKM`Push(mk_STKM`SeqConcPattern(leftpat, rightpat))
   pre STKM`LenES(2) and
       def [ left_v, right_v ] = STKM`GetES(2)

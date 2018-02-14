@@ -95,7 +95,12 @@ definitions
         (is_AS`RecordPattern(p))   -> CGMatchRecordPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
         (is_AS`TuplePattern(p))    -> CGMatchTuplePattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
         (is_AS`SetUnionPattern(p)) -> CGMatchSetUnionPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
-        (is_AS`SeqConcPattern(p))  -> CGMatchSeqConcPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+        (is_AS`SeqConcPattern(p))  ->
+                def pat = CheckSeqConcPattern(p)
+                in
+                  if is_AS`SeqEnumPattern(pat)
+                  then CGMatchSeqEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
+                  else CGMatchSeqConcPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
         (is_AS`MapMergePattern(p)) -> CGMatchMapMergePattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
 #ifdef VDMPP
         (is_AS`ObjectPattern(p))   -> CGMatchObjectPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
@@ -2000,6 +2005,23 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
       );
    );
 
+CheckSeqConcPattern: AS`Pattern ==> AS`Pattern
+CheckSeqConcPattern(p) ==
+  if is_AS`SeqConcPattern(p)
+  then
+    def lp = CheckSeqConcPattern(p.lp);
+        rp = CheckSeqConcPattern(p.rp);
+    in 
+      if is_AS`SeqEnumPattern(rp)
+      then
+        cases lp:
+          mk_AS`SeqEnumPattern(els,-) -> return mk_AS`SeqEnumPattern(els ^ rp.els, p.cid),
+          mk_AS`SeqConcPattern(sclp, mk_AS`SeqEnumPattern(els,-),-) ->
+                 return mk_AS`SeqConcPattern(sclp, mk_AS`SeqEnumPattern(els ^ rp.els, p.cid), p.cid),
+          others -> return mk_AS`SeqConcPattern(lp,rp,p.cid)
+        end
+      else return mk_AS`SeqConcPattern(lp,rp,p.cid)
+  else return p;
 \end{vdm_al}
 
 

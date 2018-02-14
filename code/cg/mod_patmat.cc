@@ -154,7 +154,13 @@ Tuple vdmcg::CGPatternMatch (const TYPE_AS_Pattern & p,
       break;
     }
     case TAG_TYPE_AS_SeqConcPattern: {
-      res = CGMatchSeqConcPattern (p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
+      TYPE_AS_Pattern pat (CheckSeqConcPattern(p));
+      if (pat.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        res = CGMatchSeqEnumPattern (pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
+      }
+      else {
+        res = CGMatchSeqConcPattern (pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
+      }
       break;
     }
     case TAG_TYPE_AS_MapMergePattern: {
@@ -2448,6 +2454,52 @@ Tuple vdmcg::CGMatchList (const SEQ<TYPE_AS_Pattern> & p_l,
         }
       }
     }
+  }
+}
+
+// CheckSeqConcPattern
+// p : AS`Pattern
+// ==> AS`Pattern
+TYPE_AS_Pattern vdmcg::CheckSeqConcPattern(const TYPE_AS_Pattern & p)
+{
+  if (p.Is(TAG_TYPE_AS_SeqConcPattern)) {
+    const TYPE_AS_Pattern & lp (CheckSeqConcPattern(p.GetRecord(pos_AS_SeqConcPattern_lp)));
+    const TYPE_AS_Pattern & rp (CheckSeqConcPattern(p.GetRecord(pos_AS_SeqConcPattern_rp)));
+    const TYPE_CI_ContextId & cid (p.GetInt(pos_AS_SeqConcPattern_cid));
+
+    if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+      switch (lp.GetTag()) {
+        case TAG_TYPE_AS_SeqEnumPattern: {
+          SEQ<TYPE_AS_Pattern> els (lp.GetSequence(pos_AS_SeqEnumPattern_els));
+          els.ImpConc(rp.GetSequence(pos_AS_SeqEnumPattern_els));
+          return TYPE_AS_SeqEnumPattern().Init(els, cid);
+          break;
+        }
+        case TAG_TYPE_AS_SeqConcPattern: {
+          const TYPE_AS_Pattern & lrp (lp.GetRecord(pos_AS_SeqConcPattern_rp));
+          TYPE_AS_SeqConcPattern scp (lp);
+          if (lrp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+            SEQ<TYPE_AS_Pattern> els (lrp.GetSequence(pos_AS_SeqEnumPattern_els));
+            els.ImpConc(rp.GetSequence(pos_AS_SeqEnumPattern_els));
+            scp.SetField(pos_AS_SeqConcPattern_rp, TYPE_AS_SeqEnumPattern().Init(els, cid));
+            return scp;
+          }
+          else {
+            return TYPE_AS_SeqConcPattern().Init(lp,rp,cid);
+          }
+          break;
+        }
+        default: {
+          return TYPE_AS_SeqConcPattern().Init(lp,rp,cid);
+        }
+      }
+    }
+    else {
+      return TYPE_AS_SeqConcPattern().Init(lp,rp,cid);
+    }
+  }
+  else {
+    return p;
   }
 }
 
