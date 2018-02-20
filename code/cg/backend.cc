@@ -125,29 +125,27 @@ wstring CGBackEnd::GetName(const Generic & decl)
         break;
       }
   }
-  else if (decl.IsSequence())
-  {
+  else if (decl.IsSequence()) {
       // If this is a sequence, it could be a string itself, ir a
       // sequence of declarators
     Sequence declSeq (decl);
-    if (declSeq.Hd().IsChar())
+    if (declSeq.Hd().IsChar()) {
       declSeq.GetString(name);
-    else
+    }
+    else {
       return GetName(Sequence(decl).Hd());
+    }
   }
   return name;
 }
 
 wstring CGBackEnd::GetMangleName(const Generic & decl)
 {
-  if (!decl.IsRecord() || !Record(decl).Is(TAG_TYPE_CPP_FctDecl))
-  {
+  if (!decl.IsRecord() || !Record(decl).Is(TAG_TYPE_CPP_FctDecl)) {
     return GetName(decl);
   }
-  else
-  {
-    if (isJAVA())
-    {
+  else {
+    if (isJAVA()) {
       wstring nm (GetName(decl));
       Generic arg (Record(decl).GetField(pos_CPP_FctDecl_arg));
       if (arg.IsNil()) return nm;
@@ -161,20 +159,16 @@ wstring CGBackEnd::GetMangleName(const Generic & decl)
 
       nm += L"#" + Int(ad_l.Length()).ascii();
       size_t len_ad_l = ad_l.Length();
-      for (size_t i = 1; i <= len_ad_l; i++)
-      {
+      for (size_t i = 1; i <= len_ad_l; i++) {
         TYPE_CPP_ArgDecl ad (ad_l[i]);
         SEQ<TYPE_CPP_DeclSpecifier> ds_l (ad.GetSequence(pos_CPP_ArgDecl_ds));
         size_t len_ds_l = ds_l.Length();
-        for (size_t j = 1; j <= len_ds_l; j++)
-        {
+        for (size_t j = 1; j <= len_ds_l; j++) {
           bool doBreak = false;
           TYPE_CPP_DeclSpecifier ds (ds_l[j]);
-          if (ds.Is(TAG_TYPE_CPP_TypeSpecifier))
-          {
+          if (ds.Is(TAG_TYPE_CPP_TypeSpecifier)) {
             Generic tpg (ds.GetField(pos_CPP_TypeSpecifier_tp));
-            if (tpg.IsRecord())
-            {
+            if (tpg.IsRecord()) {
               Record tp (tpg);
               switch(tp.GetTag()) {
                 case TAG_TYPE_CPP_Identifier: {
@@ -250,18 +244,19 @@ string CGBackEnd::StartKeepTag(const Generic & decl, bool override, bool keep)
     // inner classes do not have tags generated (breaking the
     // no-nesting rule)
     //if (level == 1 || override)
-    if (GetLevel() == 1 || override)
-    {
+    if (GetLevel() == 1 || override) {
       string result = startString + " "
                       + nameString + TBWSTR::wstring2mbstr(GetMangleName(decl)) + " "
                       + keepString + (keep? "YES" : "NO") + "\n";
       return result;
     }
-    else
+    else {
       return "";
+    }
   }
-  else
+  else {
     return "";
+  }
 }
 
 // EndKeepTag is used to output an opening keep tag to the generated
@@ -280,11 +275,13 @@ string CGBackEnd::EndKeepTag(const Generic & decl, bool override)
     if (GetLevel() == 1 || override) {
       return endString + " " + nameString + TBWSTR::wstring2mbstr(GetMangleName(decl)) + "\n";
     }
-    else
+    else {
       return "";
+    }
   }
-  else
+  else {
     return "";
+  }
 }
 
 void CGBackEnd::GenFiles(const Generic & ast, enum cg_backend_kind kind)
@@ -320,15 +317,13 @@ Set CGBackEnd::GetHeadEntities(const TYPE_CPP_PackageAndImportDeclarations& head
 Set CGBackEnd::GetASTEntities(const Generic & ast, bool inClass)
 {
   Set result;
-  if (ast.IsSequence())
-  {
+  if (ast.IsSequence()) {
     Generic g;
     Sequence astSeq(ast);
     for (bool bb = astSeq.First(g); bb; bb = astSeq.Next(g))
       result.ImpUnion(GetASTEntities(g, inClass));
   }
-  else if (ast.IsRecord())
-  {
+  else if (ast.IsRecord()) {
     Record rc (ast);
     switch(rc.GetTag()) {
       case TAG_TYPE_CPP_TypeSpecifier: {
@@ -372,14 +367,15 @@ Set CGBackEnd::GetASTEntities(const Generic & ast, bool inClass)
         Record ch (rc.GetRecord(1));
         Sequence ml (rc.GetSequence(2));
 
-        if (!inClass)
+        if (!inClass) {
           result.ImpUnion(GetASTEntities(ml, true));
-        else
+        }
+        else {
           result.Insert(Sequence(GetName(ch)));
+        }
         break;
       }
-      default:
-      {
+      default: {
         OutputErr(L"Internal error in the code generator backend (3).");
         OutputErr(L"Please report this error.");
         break;
@@ -411,9 +407,9 @@ string CGBackEnd::CheckExisting(wstring entityName, bool override)
   Sequence entityNameSeq (entityName);
 
   //if ((level != 1 || !isJAVA()) && !override)
-  if ((GetLevel() != 1 || isCPP()) && !override)
+  if ((GetLevel() != 1 || isCPP()) && !override) {
     return "";
-
+  }
   wstring result = L"";
   Generic entityVal;
   if (existingEntitiesMap.DomExists(entityNameSeq, entityVal)) {
@@ -446,16 +442,16 @@ void CGBackEnd::GenLogInfo (ostream & o)
     << endl;
 
 #ifdef TESTSPEC
-  if (isCPP())
+  if (isCPP()) {
     o << "// (" << TBWSTR::wstring2string(GiveToolVersionDate ()) << ")" << endl;
+  }
 #else
   o << "// (" << TBWSTR::wstring2string(tb_version.GiveToolVersionDate ()) << ")" << endl;
 #endif // TESTSPEC
 
   o << "//" << endl;;
 
-  if (isJAVA())
-  {
+  if (isJAVA()) {
 /*
     o << "// Supported compilers: ";
     o << "jdk 1.4/1.5/1.6" << endl;
@@ -478,8 +474,7 @@ void CGBackEnd::GenLogInfo (ostream & o)
     o << EndKeepTag(Sequence(L"HeaderComment"), true);
     o << endl;
   }
-  else
-  {
+  else {
 /*
     o << "// Supported compilers:" << endl;
     o << "//   g++ version 3 on Linux, Mac OS X Panther(10.3), Sun Solaris 10" << endl;
@@ -515,7 +510,7 @@ wstring CGBackEnd::GetKeepTagName(const string & text,
 {
   wstring name;
   std::string::size_type namePos;
-  if (expectSpace){
+  if (expectSpace) {
     namePos = text.find(nameString, searchPos + startString.length());
     endNamePos = text.find(" ", namePos);
   }
@@ -524,7 +519,7 @@ wstring CGBackEnd::GetKeepTagName(const string & text,
     endNamePos = text.find('\n', namePos);
   }
 
-  if (namePos == string::npos){
+  if (namePos == string::npos) {
     OutputLog(illFormed + Int(linenum).ascii() + L" in file " + filename);
     return L"";
   }
@@ -556,13 +551,14 @@ Tuple CGBackEnd::ReadJavaFile(ifstream* javaFile, const wstring & filename)
 
   while (javaFile->peek() != EOF) {
     string thisLine = "";
-    while ((javaFile->peek() != EOF) && (javaFile->peek() != '\n'))
+    while ((javaFile->peek() != EOF) && (javaFile->peek() != '\n')) {
       thisLine += (char) javaFile->get();
+    }
     linenum++;
     javaFile->get();
 
     std::string::size_type searchPos;
-    if ((searchPos = thisLine.find(startString)) != string::npos){
+    if ((searchPos = thisLine.find(startString)) != string::npos) {
       if (withinTag) {
         OutputLog(L"Warning: Ignoring nested keep tag on line " +
                   Int(linenum).ascii() + L" in file " + filename);
@@ -628,8 +624,7 @@ Tuple CGBackEnd::ReadJavaFile(ifstream* javaFile, const wstring & filename)
       }
     }
     else {
-      if (keepingText)
-      {
+      if (keepingText) {
         thisLine += "\n";
         currentCode.ImpConc(Sequence(TBWSTR::mbstr2wstring(thisLine)));
       }
@@ -671,34 +666,28 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
 
   wstring id (PTAUX::Seq2Str(name));
 
-  if (isJAVA())
-  {
+  if (isJAVA()) {
     wstring cwd = L".";
     //cwd = L".";
 #ifndef TESTSPEC
-    if (Settings.GetJCGUseCodeDir())
-    {
-      if (!Settings.GetJCGCodeDir().IsNil())
-      {
+    if (Settings.GetJCGUseCodeDir()) {
+      if (!Settings.GetJCGCodeDir().IsNil()) {
         Sequence dirnm (Settings.GetJCGCodeDir());
         cwd = dirnm.GetString();
       }
     }
 #endif // TESTSPEC
-    if (! pckname.IsNil())
-    {
+    if (! pckname.IsNil()) {
       Sequence packageDirs (pckname);
       Generic gg;
-      for (bool bb = packageDirs.First(gg); bb; bb = packageDirs.Next(gg))
-      {
+      for (bool bb = packageDirs.First(gg); bb; bb = packageDirs.Next(gg)) {
         wstring dirname (PTAUX::Seq2Str(gg));
         cwd += L"/" + dirname;
 
 #ifdef TESTSPEC
         string dname (TBWSTR::wstring2fsstr(cwd));
         struct stat stbuf;
-        if ( stat( dname.c_str(), &stbuf ) == -1 )
-        {
+        if ( stat( dname.c_str(), &stbuf ) == -1 ) {
           OutputLog(L"Making directory " + cwd + L"...");
 
 #ifndef _MSC_VER
@@ -713,10 +702,9 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
       }
     }
     wstring oldid = id;
-    if (cwd != L"")
+    if (cwd != L"") {
       id = cwd + L"/" + oldid;
-
-
+    }
     ifstream javaFile (TBWSTR::wstring2fsstr(id).c_str());
     if (!javaFile) {
       // No existing file - set data structures to be empty
@@ -740,8 +728,9 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
         ifstream orgFile (TBWSTR::wstring2fsstr(id).c_str());
         wstring backupName (id + L".bak");
         ofstream bakFile(TBWSTR::wstring2fsstr(backupName).c_str());
-        if (!orgFile || !bakFile)
+        if (!orgFile || !bakFile) {
           OutputLog(L"  Warning: unable to back up " + id);
+        }
         else {
           OutputLog(L"  Backing up " + id + L" in " + backupName);
           bakFile << orgFile.rdbuf();
@@ -761,8 +750,7 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
 #ifndef TESTSPEC
   TYPE_CI_ContextId cid (rc.GetInt(pos_CPP_File_cid));
   Tuple flcp (GetCI().GetFileLineColPos(cid));
-  if (!flcp.GetField(1).IsNil())
-  {
+  if (!flcp.GetField(1).IsNil()) {
     m4code << "// This file was genereted from " << TBWSTR::wstring2mbstr(flcp.GetSequence(1).ascii()) << "." << endl;
     m4code << endl;
   }
@@ -836,13 +824,11 @@ void CGBackEnd::GenTypeSpecifier(const TYPE_CPP_TypeSpecifier & rc)
 void CGBackEnd::GenPackageAndImportDeclarations(const TYPE_CPP_PackageAndImportDeclarations & rc)
 {
   string existingCode;
-  if ((existingCode = CheckExisting(L"package", true)) != "")
-  {
+  if ((existingCode = CheckExisting(L"package", true)) != "") {
     m4code << StartKeepTag(Sequence(L"package"), true, true);
     m4code << existingCode;
   }
-  else
-  {
+  else {
     m4code << StartKeepTag(Sequence(L"package"), true, false);
     const Generic & packdecl (rc.GetField(pos_CPP_PackageAndImportDeclarations_pd));  // [PackageDeclaration]
     if (!packdecl.IsNil()) {
@@ -853,13 +839,11 @@ void CGBackEnd::GenPackageAndImportDeclarations(const TYPE_CPP_PackageAndImportD
   m4code << EndKeepTag(Sequence(L"package"), true);
   GenNewLine(m4code);
 
-  if ((existingCode = CheckExisting(L"imports", true)) != "")
-  {
+  if ((existingCode = CheckExisting(L"imports", true)) != "") {
     m4code << StartKeepTag(Sequence(L"imports"), true, true);
     m4code << existingCode;
   }
-  else
-  {
+  else {
     const SEQ<TYPE_CPP_ImportDeclaration> & ds (rc.GetSequence(pos_CPP_PackageAndImportDeclarations_ims));
     m4code << StartKeepTag(Sequence(L"imports"), true, false);
     if (!ds.IsEmpty()) {
@@ -884,9 +868,9 @@ void CGBackEnd::GenPackageDeclaration(const TYPE_CPP_PackageDeclaration & rc)
 void CGBackEnd::GenTypeImportOnDemandDeclaration(const TYPE_CPP_TypeImportOnDemandDeclaration & rc)
 {
   const TYPE_CPP_PackageName & tin (rc.GetRecord(pos_CPP_TypeImportOnDemandDeclaration_name));
-  if (GetContext() != IMPORT)
+  if (GetContext() != IMPORT) {
     GenNewLine(m4code);
-
+  }
   m4code << "import ";
   GenCode(tin);
   m4code << ".*;";
@@ -927,17 +911,17 @@ void CGBackEnd::GenFctMacroDef(const TYPE_CPP_FctMacroDef & rc)
   const TYPE_AS_Ids & id_l (rc.GetSequence(pos_CPP_FctMacroDef_id_ul) );
   wstring tc (PTAUX::Seq2Str(rc.GetSequence(pos_CPP_FctMacroDef_ts)));
 
-  if (GetContext() != MACRO)
+  if (GetContext() != MACRO) {
     GenNewLine(m4code);
-
+  }
   GenNewLine(m4code);
   m4code << "#define " << TBWSTR::wstring2mbstr(id) << " ";
   m4code << "(";
   size_t len = id_l.Length();
-  for (size_t i = 1; i <= len; i++)
-  {
-    if ( i > 1 )
+  for (size_t i = 1; i <= len; i++) {
+    if ( i > 1 ) {
       m4code << ", ";
+    }
     m4code << TBWSTR::wstring2mbstr(PTAUX::Seq2Str(id_l[i]));
   }
   m4code << ") " << TBWSTR::wstring2mbstr(tc);
@@ -948,9 +932,9 @@ void CGBackEnd::GenSquareIncl(const TYPE_CPP_SquareIncl& rc)
 {
   wstring name (PTAUX::Seq2Str(rc.GetSequence(pos_CPP_SquareIncl_name)));
 
-  if (GetContext() != INCLUDE)
+  if (GetContext() != INCLUDE) {
     GenNewLine(m4code);
-
+  }
   m4code << "#include ";
   m4code << "<" << TBWSTR::wstring2mbstr(name) << ">";
 
@@ -962,9 +946,9 @@ void CGBackEnd::GenQuoteIncl(const TYPE_CPP_QuoteIncl & rc)
 {
   wstring name (PTAUX::Seq2Str(rc.GetSequence(pos_CPP_QuoteIncl_name)));
 
-  if (GetContext() != INCLUDE)
+  if (GetContext() != INCLUDE) {
     GenNewLine(m4code);
-
+  }
   m4code << "#include ";
   m4code << "\"" << TBWSTR::wstring2mbstr(name) << "\"";
 
@@ -979,56 +963,51 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
   const Generic & dl (rc.GetField(pos_CPP_IdentDeclaration_dl));
   const SEQ<TYPE_CPP_Annotation> & annos (rc.GetSequence(pos_CPP_IdentDeclaration_annos));
 
-  if (isCPP())
-  { // c++
-    if ((GetContext() != CSTMT) && (GetContext() != BLOCK))
-    {
-      if (dl.IsSequence())
-      {
+  if (isCPP()) { // c++
+    if ((GetContext() != CSTMT) && (GetContext() != BLOCK)) {
+      if (dl.IsSequence()) {
         SEQ<TYPE_CPP_InitDeclarator> dl_l (dl);
-        if (!dl_l.IsEmpty())
-        {
+        if (!dl_l.IsEmpty()) {
           TYPE_CPP_InitDeclarator decl (dl_l[1]);
-          if( GetContext() != FOR )
-          {
+          if( GetContext() != FOR ) {
 //m4code << "/* last = " << last << " */";
-            if (decl.Is(TAG_TYPE_CPP_FctDecl))
+            if (decl.Is(TAG_TYPE_CPP_FctDecl)) {
               SetContext(FDECL);
-            else
+            }
+            else {
               SetContext(BE_DECL);
+            }
 
             GenNewLine(m4code);
           }
         }
       }
-      else
-      {
+      else {
 //m4code << "/* last = " << last << " */";
         GenNewLine(m4code);
       }
     }
   }
   else { // Java
-    if (GetContext() == CLASS)
+    if (GetContext() == CLASS) {
       GenNewLine(m4code);
-    if (dl.IsSequence() && !Sequence(dl).IsEmpty() && (GetContext() != FOR))
-    {
+    }
+    if (dl.IsSequence() && !Sequence(dl).IsEmpty() && (GetContext() != FOR)) {
 //m4code << "/* last = " << last << " */";
       GenNewLine(m4code);
     }
   }
 
   bool useExistingCode = false;
-  if (isJAVA())
-  {
-    if (dl.IsSequence())
+  if (isJAVA()) {
+    if (dl.IsSequence()) {
       if (!Sequence(dl).IsEmpty()) {
         string existingCode;
-        if ((existingCode = CheckExisting(GetName(dl))) == "")
-        {
+        if ((existingCode = CheckExisting(GetName(dl))) == "") {
           m4code << StartKeepTag(dl, false, false);
-          if (GetContext() != FOR)
+          if (GetContext() != FOR) {
             IND(m4code);
+          }
         }
         else {
           useExistingCode = true;
@@ -1036,6 +1015,7 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
           m4code << existingCode;
         }
       }
+    }
   }
 
   if (!useExistingCode) {
@@ -1080,11 +1060,12 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
     }
   }
 
-  if (isCPP() || (dl.IsSequence() && !Sequence(dl).IsEmpty()))
+  if (isCPP() || (dl.IsSequence() && !Sequence(dl).IsEmpty())) {
     SetContext(BE_DECL);
-  else
+  }
+  else {
     SetContext(CLASS);
-
+  }
 //m4code << "/* GDI end - last = " << last << " */";
 }
 
@@ -1857,9 +1838,10 @@ void CGBackEnd::GenCode(const Generic & ast)
       m4code << "switch(";
       GenCode(expr);
       m4code << ") ";
-
+      OpenBlock();
       SetContext(SWITCH);
       GenStmt(block, true);
+      CloseBlock();
       break;
     }
 
@@ -1867,23 +1849,11 @@ void CGBackEnd::GenCode(const Generic & ast)
       const SEQ<TYPE_CPP_SwitchBlockStmtGrp> & groups (rc.GetSequence(pos_CPP_SwitchBlock_groups));
       const Generic & labels (rc.GetField(pos_CPP_SwitchBlock_labels));
 
-      if (isJAVA()) {
-        GenNewLine(m4code);
-      }
-      IND(m4code);
-
-      OpenBlock();
-
       SetContext(BLOCK);
-
       GenCodeSeq(groups, "");
-
       if (!labels.IsNil()) {
         GenCode(labels);
       }
-      GenNewLine(m4code);
-      CloseBlock();
-
       GenNewLine(m4code);
       break;
     }
@@ -4297,26 +4267,28 @@ void CGBackEnd::GenStmt(const TYPE_CPP_Stmt & stmt, bool sw)
 {
   switch(stmt.GetTag()) {
     case TAG_TYPE_CPP_CompoundStmt: {
-      if (sw)
+      if (sw) {
         CloseScope();
-
+      }
       GenCode(stmt);
 
-      if (sw)
+      if (sw) {
         OpenScope();
+      }
       break;
     }
     default: {
-      if (!sw)
+      if (!sw) {
         OpenScope();
-
-      if (isCPP() && (GetContext() != ELSE))
+      }
+      if (isCPP() && (GetContext() != ELSE) && (GetContext() != SWITCH)) {
         GenNewLine(m4code);
-
+      }
       GenCode(stmt);
 
-      if (!sw)
+      if (!sw) {
         CloseScope();
+      }
     }
   }
 }
