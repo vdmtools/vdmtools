@@ -706,6 +706,10 @@
         <translation type="finished">実行時エラーを例外として捕捉する(&amp;e)</translation>
     </message>
     <message>
+        <source>Old reverse in Sequence Loop Stmt</source>
+        <translation type="finished">reverseの旧仕様を有効にする</translation>
+    </message>
+    <message>
         <source>Expression: </source>
         <translation type="finished">式: </translation>
     </message>

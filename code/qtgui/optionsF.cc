@@ -235,13 +235,17 @@ QLayout* optionsW::createInterpreterLayout1( QWidget* parent )
 
   layout->addWidget( this->createRuntimeCheckingGroupBox( parent ));
 
-  ip_ppValues = new QCheckBox( parent );
-  ip_ppValues->setText( mainW::mf(tr( "Pretty printing of &values" )) );
-  layout->addWidget( ip_ppValues );
+  this->ip_ppValues = new QCheckBox( parent );
+  this->ip_ppValues->setText( mainW::mf(tr( "Pretty printing of &values" )) );
+  layout->addWidget( this->ip_ppValues );
 
-  ip_exception = new QCheckBox( parent );
-  ip_exception->setText( mainW::mf(tr( "Catch RunTime Error as &exception" )) );
-  layout->addWidget( ip_exception );
+  this->ip_exception = new QCheckBox( parent );
+  this->ip_exception->setText( mainW::mf(tr( "Catch RunTime Error as &exception" )) );
+  layout->addWidget( this->ip_exception );
+
+  this->ip_oldreverse = new QCheckBox( parent );
+  this->ip_oldreverse->setText( mainW::mf( tr( "Old reverse in Sequence Loop Stmt" )) );
+  layout->addWidget( this->ip_oldreverse );
 
 #ifdef VDMPP
   layout->addItem( this->createSpacer() );
@@ -1256,6 +1260,7 @@ void optionsW::setOptions()
   this->ip_exception->setChecked(String2Bool(optionMap[ "RTERR_EXCEPTION" ]));
   this->ip_rndGen->setValue(optionMap[ "Seed_nondetstmt" ].toInt());
   this->ip_expression->setText(optionMap[ "EXPRESSION" ]);
+  this->ip_oldreverse->setChecked(String2Bool(optionMap[ "OLD_REVERSE" ]));
   
   // Type checker options
   this->tc_posTc->setChecked(optionMap[ "DEF" ] != "def");
@@ -1362,6 +1367,8 @@ void optionsW::putOptions()
   optionMap[ "RTERR_EXCEPTION" ] = (this->ip_exception->isChecked() ? "1" : "0");
   optionMap[ "EXPRESSION" ] = this->ip_expression->text();
   optionMap[ "Seed_nondetstmt" ] = QString::number(this->ip_rndGen->value());
+  optionMap[ "OLD_REVERSE" ] = (this->ip_oldreverse->isChecked() ? "1" : "0");
+
   optionMap[ "DEF" ] = (this->tc_defTc->isChecked() ? "def" : "pos");
   optionMap[ "errlevel" ] = (this->tc_extTc->isChecked() ? "1" : "0");
   optionMap[ "SEP" ] = (this->tc_msgSeparation->isChecked() ? "1" : "0");
@@ -1591,8 +1598,9 @@ void optionsW::loadOptionsV2()
 #endif // QT_VERSION >= 0x040000
 
 #ifdef VDMPP
-  if( optionMap.contains( "FVStatic" ) && !optionMap.contains( "VDM10" ) )
+  if( optionMap.contains( "FVStatic" ) && !optionMap.contains( "VDM10" ) ) {
     optionMap["VDM10"] == optionMap["FVStatic"];
+  }
 #endif // VDMPP
 
   Qt2TB::SetOptions(optionMap);

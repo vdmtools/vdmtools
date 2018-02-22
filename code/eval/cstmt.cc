@@ -20,6 +20,7 @@
 #include "contextinfo.h"
 #include "rt_errmsg.h"
 #include "libman.h"
+#include "settings.h"
 
 void StackCompiler::Init_CSTMT()
 {
@@ -437,8 +438,23 @@ TYPE_STKM_SubProgram StackCompiler::CompileSeqForLoopStmt(const TYPE_AS_SeqForLo
 {
   // Unpack sIn
   const TYPE_AS_PatternBind & cv (sIn.GetRecord(pos_AS_SeqForLoopStmt_cv));
-  const TYPE_AS_Expr & fseq      (sIn.GetRecord(pos_AS_SeqForLoopStmt_fseq));
+  TYPE_AS_Expr fseq              (sIn.GetRecord(pos_AS_SeqForLoopStmt_fseq));
   const TYPE_AS_Stmt & body      (sIn.GetRecord(pos_AS_SeqForLoopStmt_body));
+
+  if (Settings.OldReverse() && fseq.Is(TAG_TYPE_AS_BinaryExpr)) {
+    if (Int(SEQCONC) == fseq.GetField(pos_AS_BinaryExpr_opr)) {
+      const TYPE_AS_Expr & left (fseq.GetRecord(pos_AS_BinaryExpr_left));
+      if (left.Is(TAG_TYPE_AS_PrefixExpr)) {
+        if (Int(SEQREVERSE) == left.GetField(pos_AS_PrefixExpr_opr)) {
+          TYPE_AS_BinaryExpr be (fseq);
+          TYPE_AS_PrefixExpr pe (left); 
+          be.SetField(pos_AS_BinaryExpr_left, left.GetRecord(pos_AS_PrefixExpr_arg));
+          pe.SetField(pos_AS_PrefixExpr_arg, be);
+          fseq = pe;
+        }
+      } 
+    }
+  }
 
   // prep_instr is written directly to prog
   TYPE_STKM_SubProgram prep_instr;

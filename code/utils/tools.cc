@@ -2565,10 +2565,10 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
       wos << L"elapsed time set" << endl << flush;
     }
   }
-  else if (opt == L"setone") {
+  else if (opt == L"mapone") {
     if (EvalSet_Check_NoOf_Args(opt, nos, 1, wos)) {
-      Settings.SetOneOn();
-      wos << L"setone set" << endl << flush;
+      Settings.MapOneOn();
+      wos << L"mapone set" << endl << flush;
     }
   }
   else if (opt == L"tex") {
@@ -2829,9 +2829,9 @@ void TOOLS::EvalUnSet (const wstring & opt, wostream & wos)
     Settings.ElapsedTimeOff();
     wos << L"elapsed time unset" << endl << flush;
   }
-  else if (opt == L"setone") {
-    Settings.SetOneOff();
-    wos << L"setone unset" << endl << flush;
+  else if (opt == L"mapone") {
+    Settings.MapOneOff();
+    wos << L"mapone unset" << endl << flush;
   }
   else if (opt == L"calllog") {
     Settings.CallLogOff();
@@ -4887,7 +4887,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
          << L"profile          " << (Settings.Profile() ? L"on" : L"off") << endl
          << L"calllog          " << (Settings.CallLog() ? L"on" : L"off") << endl
          << L"measure          " << (Settings.Measure() ? L"on" : L"off") << endl
-         << L"setone           " << (Settings.SetOne() ? L"on" : L"off") << endl
+         << L"mapone           " << (Settings.MapOne() ? L"on" : L"off") << endl
          << flush;
       }
       else {

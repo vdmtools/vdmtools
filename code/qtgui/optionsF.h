@@ -209,6 +209,7 @@ private:
   QPushButton* ip_opAddButton;
   QPushButton* ip_opDelButton;
   QLineEdit* ip_expression;
+  QCheckBox* ip_oldreverse;
 
   // Type checker options
   QRadioButton* tc_posTc;

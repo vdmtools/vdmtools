@@ -92,6 +92,9 @@ public:
   void VDM10On();
   void VDM10Off();
   bool VDM10() const;
+  void OldReverseOn();
+  void OldReverseOff();
+  bool OldReverse() const;
   void DtcOn();
   void DtcOff();
   bool DTC() const;
@@ -218,9 +221,9 @@ public:
   void ElapsedTimeOn() { this->elapsedtime = true; };
   void ElapsedTimeOff() { this->elapsedtime = false; };
 
-  bool SetOne() const { return this->setone; };
-  void SetOneOn() { this->setone = true; };
-  void SetOneOff() { this->setone = false; };
+  bool MapOne() const { return this->setone; };
+  void MapOneOn() { this->setone = true; };
+  void MapOneOff() { this->setone = false; };
 
 public:
   SET<TYPE_AS_Name> GetNoCheck() const;
@@ -242,6 +245,7 @@ public:
 
 private:
   bool vdm10;
+  bool oldreverse;
 // Eval Option
   bool dtc;            // dynamic typechecking
   bool precheck;       // pre-cond checking

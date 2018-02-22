@@ -702,6 +702,10 @@
         <translation type="unfinished">Pretty printing of &amp;values</translation>
     </message>
     <message>
+        <source>Old reverse in Sequence Loop Stmt</source>
+        <translation type="unfinished">Old reverse in Sequence Loop Stmt</translation>
+    </message>
+    <message>
         <source>Catch RunTime Error as &apm;exception</source>
         <translation type="unfinished">Catch RunTime Error as &apm;exception</translation>
     </message>

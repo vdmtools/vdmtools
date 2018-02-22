@@ -43,6 +43,7 @@ SETTINGS::SETTINGS()
 void SETTINGS::InitSettings()
 {
   this->VDM10Off();
+  this->OldReverseOff();
 //The following is the definition of the standard settings which
 // can be set by the 'set' command.
 // 20100409 -->
@@ -161,7 +162,7 @@ void SETTINGS::InitSettings()
 
   this->ElapsedTimeOff();
 
-  this->SetOneOff();
+  this->MapOneOff();
 
   this->AddAllTypeAllowed(ASTAUX::MkName(L"IO"));
   this->AddAllTypeAllowed(ASTAUX::MkName(L"VDMUtil"));
@@ -184,6 +185,21 @@ void SETTINGS::VDM10Off()
 bool SETTINGS::VDM10() const
 {
   return this->vdm10;
+}
+
+void SETTINGS::OldReverseOn()
+{
+  this->oldreverse = true;
+}
+
+void SETTINGS::OldReverseOff()
+{
+  this->oldreverse = false;
+}
+
+bool SETTINGS::OldReverse() const
+{
+  return this->oldreverse;
 }
 
 void SETTINGS::DtcOn()

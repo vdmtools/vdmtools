@@ -209,7 +209,6 @@ void ParserRecover::InitRepairTokens()
   AddToken(LEX_IMPORTS,        L"imports",             TG_valid,       0,        TTF_None);
 #endif //VDMSL
   AddToken(LEX_IN,             L"in",                  TG_valid,       0,        TTF_None);
-  AddToken(LEX_IN_REVERSE,     L"in reverse",          TG_valid,       0,        TTF_None);
   AddToken(LEX_INDS,           L"inds",                TG_skip_expr_unop, TG_Expr, TTF_None);
 #ifdef VDMSL
   AddToken(LEX_INIT,           L"init",                TG_valid,       0,        TTF_None);
@@ -641,7 +640,6 @@ Token_Type BINOPS::id2gtype( int id )
     case LEX_IMPORTS:
 #endif // VDMSL
     case LEX_IN:
-    case LEX_IN_REVERSE:
     case LEX_INDS:
 #ifdef VDMSL
     case LEX_INIT:

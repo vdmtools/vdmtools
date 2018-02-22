@@ -1026,6 +1026,18 @@ void Qt2TB::SetOptions(const QMap<QString, QString> & optionMap)
       }
     }
   }
+  if( optionMap.contains( "OLD_REVERSE" ) ) {
+    if(String2Bool(optionMap[ "OLD_REVERSE" ])) {
+      if (!Settings.OldReverse()) {
+        Settings.OldReverseOn();
+      }
+    }
+    else {
+      if (Settings.OldReverse()) {
+        Settings.OldReverseOff();
+      }
+    }
+  }
   if( optionMap.contains( "errlevel" ) ) {
     if(String2Bool(optionMap[ "errlevel" ])) {
       Settings.ErrorLevelPRF();
@@ -1176,6 +1188,7 @@ QMap<QString, QString> Qt2TB::GetOptions()
   optionMap[ "SEP" ] = (Settings.SEP() ? "1" : "0");
   optionMap[ "VDMSLMOD" ] = (Settings.VDMSLmode() ? "1" : "0");
   optionMap[ "VDM10" ] = (Settings.VDM10() ? "1" : "0");
+  optionMap[ "OLD_REVERSE" ] = (Settings.OldReverse() ? "1" : "0");
   optionMap[ "INDEX" ] = wstring2qstring(Int(Settings.GetIndex()).ascii());
   optionMap[ "PrettyPrint_RTI" ] = (Settings.GetPrettyPrintRTI() ? "1" : "0");
   optionMap[ "CG_RTI" ] = (Settings.GetCGRTI() ? "1" : "0");

@@ -248,7 +248,6 @@ static void yyerror(const char *);
 %token LEX_HD LEX_HOOK
 %token LEX_IF LEX_IMPLY
 %token LEX_IN LEX_INDS
-%token LEX_IN_REVERSE
 %token LEX_INMAP LEX_INMAP1
 %token LEX_INT
 %token LEX_INV 
@@ -4779,40 +4778,6 @@ SequenceForLoop
           delete $4;
           delete $6;
         }
-        | LEX_FOR PatternBind LEX_IN_REVERSE Expression LEX_DO Statement
-        {
-          TYPE_AS_PrefixExpr pe;
-          MYPARSER::SetPos2(pe, @3, @4);
-          pe.SetField (pos_AS_PrefixExpr_opr, Int(SEQREVERSE));
-          pe.SetField (pos_AS_PrefixExpr_arg, *$4);
-
-          $$ = new TYPE_AS_SeqForLoopStmt();
-          MYPARSER::SetPos2(*$$, @1, @6);
-          $$->SetField (pos_AS_SeqForLoopStmt_cv,   *$2);
-          $$->SetField (pos_AS_SeqForLoopStmt_fseq, pe);
-          $$->SetField (pos_AS_SeqForLoopStmt_body, *$6);
-          delete $2;
-          delete $4;
-          delete $6;
-        }
-/*
-        | LEX_FOR PatternBind LEX_IN LEX_REVERSE Expression LEX_DO Statement
-        {
-          TYPE_AS_PrefixExpr pe;
-          MYPARSER::SetPos2(pe, @4, @5);
-          pe.SetField (pos_AS_PrefixExpr_opr, Int(SEQREVERSE));
-          pe.SetField (pos_AS_PrefixExpr_arg, *$5);
-
-          $$ = new TYPE_AS_SeqForLoopStmt();
-          MYPARSER::SetPos2(*$$, @1, @7);
-          $$->SetField (pos_AS_SeqForLoopStmt_cv,   *$2);
-          $$->SetField (pos_AS_SeqForLoopStmt_fseq, pe);
-          $$->SetField (pos_AS_SeqForLoopStmt_body, *$7);
-          delete $2;
-          delete $5;
-          delete $7;
-        }
-*/
         ;
 
 SetForLoop

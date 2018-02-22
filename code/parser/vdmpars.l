@@ -330,11 +330,6 @@ in{separators}{identifierorkeyword}       {
                              SCANNER::INSERT_TOKEN2(yylpos, LEX_IN_SEQ, yytext);
                              return (LEX_IN_SEQ);    
                            }
-                           else if ((strcmp(id, "reverse") == 0) && !Settings.VDM10()) { 
-                             SCANNER::AdjustLineColumn(yytext);
-                             SCANNER::INSERT_TOKEN2(yylpos, LEX_IN_REVERSE, yytext);
-                             return (LEX_IN_REVERSE);    
-                           }
                            else {
                              // push back separators and identifierorkeyword
                              // lex_unput changes yytext.
@@ -431,7 +426,7 @@ not{separators}in{separators}{identifierorkeyword}  {
 			         return (LEX_ASSERT);
                                }
                              }
-                             if (Settings.SetOne()) { 
+                             if (Settings.MapOne()) { 
                                if (strcmp(yytext, "map1") == 0) {
                                  SCANNER::INSERT_TOKEN2(yylpos, LEX_MAP1,yytext);
 			         return (LEX_MAP1);
