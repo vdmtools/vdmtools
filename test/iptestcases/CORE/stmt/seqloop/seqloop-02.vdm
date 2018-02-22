@@ -12,7 +12,7 @@ public Test : () ==> seq of nat
 Test () ==
 ( dcl s : seq of nat := [];
 
-  for mk_R(a,b) : R in reverse [mk_R(1,2), mk_R(3,4)] ^ [mk_R(5,6)] do
+  for mk_R(a,b) : R in reverse ([mk_R(1,2), mk_R(3,4)] ^ [mk_R(5,6)]) do
     ( dcl s2 : seq of nat := [a,b];
       s := s ^ s2 );
 
