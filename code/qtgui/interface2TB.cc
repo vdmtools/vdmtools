@@ -116,17 +116,14 @@ QStringList Qt2TB::getVDMPackages()
   SET<TYPE_ProjectTypes_FileName> dom_packages (packages.Dom());
   Generic fnm;
   SET<TYPE_ProjectTypes_FileName> vdmPackages;
-  for (bool bb = dom_packages.First(fnm); bb; bb = dom_packages.Next(fnm))
-  {
+  for (bool bb = dom_packages.First(fnm); bb; bb = dom_packages.Next(fnm)) {
     Set files (packages[fnm]); // set of (ProjectTypes`FileName * ProjectTypes`FileName)
     Generic gg;
-    for (bool cc = files.First(gg); cc; cc = files.Next(gg))
-    {
+    for (bool cc = files.First(gg); cc; cc = files.Next(gg)) {
       Tuple pair (gg); // (ProjectTypes`FileName * ProjectTypes`FileName)
       TYPE_ProjectTypes_FileName filename (pair.GetRecord(2));
       QString fnQstr (wstring2qstring(PTAUX::ExtractFileName(filename)));
-      if (!isJavaFile(fnQstr))
-      {
+      if (!isJavaFile(fnQstr)) {
 	vdmPackages.Insert(fnm);
         break;
       }
@@ -138,8 +135,7 @@ QStringList Qt2TB::getVDMPackages()
 
   QStringList qsl;
   Generic fn;
-  for (bool bb = vdmPackages.First(fn); bb; bb = vdmPackages.Next(fn))
-  {
+  for (bool bb = vdmPackages.First(fn); bb; bb = vdmPackages.Next(fn)) {
     wstring filename (PTAUX::ExtractFileName(fn));
     qsl.append(wstring2qstring(filename));
     Qt2TB::existingVDMPackages.insert(filename);
@@ -155,17 +151,14 @@ QStringList Qt2TB::getJavaPackages()
   
   SET<TYPE_ProjectTypes_FileName> javaPackages;
   Generic fnm;
-  for (bool bb = dom_packages.First(fnm); bb; bb = dom_packages.Next(fnm))
-  {
+  for (bool bb = dom_packages.First(fnm); bb; bb = dom_packages.Next(fnm)) {
     Set files (packages[fnm]); // set of (ProjectTypes`FileName * ProjectTypes`FileName)
     Generic gg;
-    for (bool cc = files.First(gg); cc; cc = files.Next(gg))
-    {
+    for (bool cc = files.First(gg); cc; cc = files.Next(gg)) {
       Tuple pair (gg); // (ProjectTypes`FileName * ProjectTypes`FileName)
       TYPE_ProjectTypes_FileName filename (pair.GetRecord(2));
       QString fnQstr (wstring2qstring(PTAUX::ExtractFileName(filename)));
-      if (isJavaFile(fnQstr))
-      {
+      if (isJavaFile(fnQstr)) {
 	javaPackages.Insert(fnm);
         break;
       }
@@ -176,8 +169,7 @@ QStringList Qt2TB::getJavaPackages()
 
   QStringList qsl;
   Generic fn;
-  for (bool bb = javaPackages.First(fn); bb; bb = javaPackages.Next(fn))
-  {
+  for (bool bb = javaPackages.First(fn); bb; bb = javaPackages.Next(fn)) {
     wstring filename (PTAUX::ExtractFileName(fn));
     qsl.append(wstring2qstring(filename));
     Qt2TB::existingJavaPackages.insert(filename);
@@ -188,8 +180,7 @@ QStringList Qt2TB::getJavaPackages()
 QStringList Qt2TB::getModulesInFilesI(const QStringList & fileList)
 {
   QStringList result;
-  for (QStringList::const_iterator iter = fileList.begin(); iter != fileList.end(); ++iter)
-  {
+  for (QStringList::const_iterator iter = fileList.begin(); iter != fileList.end(); ++iter) {
     QStringList theseModules (getModulesI(*iter));
     result += theseModules;
   }
@@ -201,8 +192,9 @@ QString Qt2TB::getSourceNameI(const QString & apparentName)
   wstring file (qstring2wstring(apparentName));
   TYPE_ProjectTypes_FileName tfn (ToolMediator::GetVDMTempFileName (PTAUX::mk_FileName (file)));
   wstring tmpfn (PTAUX::ExtractFileName (tfn));
-  if (tmpfn.length() == 0)
+  if (tmpfn.length() == 0) {
     tmpfn = file;
+  }
   return wstring2qstring(tmpfn);
 }
 
@@ -1027,16 +1019,7 @@ void Qt2TB::SetOptions(const QMap<QString, QString> & optionMap)
     }
   }
   if( optionMap.contains( "OLD_REVERSE" ) ) {
-    if(String2Bool(optionMap[ "OLD_REVERSE" ])) {
-      if (!Settings.OldReverse()) {
-        Settings.OldReverseOn();
-      }
-    }
-    else {
-      if (Settings.OldReverse()) {
-        Settings.OldReverseOff();
-      }
-    }
+    ToolMediator::SetOldReverseEnable(String2Bool(optionMap[ "OLD_REVERSE" ]));
   }
   if( optionMap.contains( "errlevel" ) ) {
     if(String2Bool(optionMap[ "errlevel" ])) {

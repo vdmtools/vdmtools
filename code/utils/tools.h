@@ -129,6 +129,7 @@ public:
   static void DisableSession ();
 
   static bool SyntaxCheckOk (const TYPE_ProjectTypes_FileName & filename);
+  static void SetOldReverseEnable(bool b);
 #ifdef VDMSL
 private:
   static Tuple RemoveConstructs (int file_id, const Record & Origin, const TYPE_AS_Definitions & AST) ;

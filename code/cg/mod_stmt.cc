@@ -25,6 +25,7 @@
 #include "BC.h"
 #include "position.h"
 #include "intconvquotes.h"
+#include "settings.h"
 
 //wcout << L"intertp: " << INT2Q::h2gAS(intertp) << endl;
 
@@ -1962,8 +1963,23 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
 SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstmt, bool isLast)
 {
   const TYPE_AS_PatternBind & cv (sflstmt.GetRecord(pos_AS_SeqForLoopStmt_cv));
-  const TYPE_AS_Expr & fseq      (sflstmt.GetRecord(pos_AS_SeqForLoopStmt_fseq));
+  TYPE_AS_Expr fseq              (sflstmt.GetRecord(pos_AS_SeqForLoopStmt_fseq));
   const TYPE_AS_Stmt & body      (sflstmt.GetRecord(pos_AS_SeqForLoopStmt_body));
+
+  if (Settings.OldReverse() && fseq.Is(TAG_TYPE_AS_BinaryExpr)) {
+    if (Int(SEQCONC) == fseq.GetField(pos_AS_BinaryExpr_opr)) {
+      const TYPE_AS_Expr & left (fseq.GetRecord(pos_AS_BinaryExpr_left));
+      if (left.Is(TAG_TYPE_AS_PrefixExpr)) {
+        if (Int(SEQREVERSE) == left.GetField(pos_AS_PrefixExpr_opr)) {
+          TYPE_AS_BinaryExpr be (fseq);
+          TYPE_AS_PrefixExpr pe (left);
+          be.SetField(pos_AS_BinaryExpr_left, left.GetRecord(pos_AS_PrefixExpr_arg));
+          pe.SetField(pos_AS_PrefixExpr_arg, be);
+          fseq = pe;
+        }
+      }
+    }
+  }
 
   TYPE_REP_TypeRep sqt (FindType(fseq));
   TYPE_CPP_Identifier elem (vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
@@ -1978,12 +1994,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstm
 
   TYPE_CPP_Expr sq (vdm_BC_GiveName(ASTAUX::MkId(L"sq")));
   SEQ<TYPE_CPP_Stmt> rb_l (sq_stmt);
-  if ( (!(pid_cv_s.ImpIntersect(pid_expr_s)).IsEmpty()) || !fseq.Is(TAG_TYPE_AS_Name))
-  {
+  if ( (!(pid_cv_s.ImpIntersect(pid_expr_s)).IsEmpty()) || !fseq.Is(TAG_TYPE_AS_Name)) {
     rb_l.ImpConc(GenDeclInit_DS(sqt, sq, sq1));
   }
-  else
-  {
+  else {
     sq = sq1;
   }
 

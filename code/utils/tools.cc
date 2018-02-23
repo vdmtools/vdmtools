@@ -1818,6 +1818,17 @@ bool ToolMediator::SyntaxCheckOk (const TYPE_ProjectTypes_FileName & filename)
   return Repos()->vdm_IsSyntaxCorrect(filename).GetValue();
 }
 
+void ToolMediator::SetOldReverseEnable(bool b) {
+  if (b && !Settings.OldReverse()) {
+    Settings.OldReverseOn();
+    TBDEBUG::InitCurrentDefinition (true, vdm_iplog);
+  }
+  else if (!b && Settings.OldReverse()) {
+    Settings.OldReverseOff();
+    TBDEBUG::InitCurrentDefinition (true, vdm_iplog);
+  }
+}
+
 // ParseExprsString
 // str : seq of char
 // ==> bool * seq os AS`Expr
@@ -2760,6 +2771,14 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
       wos << L"profile set" << endl << flush;
     }
   }
+  else if (opt == L"oldreverse") {
+    if (EvalSet_Check_NoOf_Args(opt, nos, 1, wos)) {
+      if (!Settings.OldReverse()) {
+        ToolMediator::SetOldReverseEnable(true);
+        wos << L"oldreverse set" << endl << flush;
+      }
+    }
+  }
   else {
     wos << opt << L" is not an internal option" << endl << flush;
   }
@@ -2902,6 +2921,12 @@ void TOOLS::EvalUnSet (const wstring & opt, wostream & wos)
   else if (opt == L"profile") {
     Settings.ProfileOff();
     wos << L"profile unset" << endl << flush;
+  }
+  else if (opt == L"oldreverse") {
+    if (Settings.OldReverse()) {
+      ToolMediator::SetOldReverseEnable(false);
+      wos << L"oldreverse unset" << endl << flush;
+    }
   }
   else {
     wos << opt << L" is not an internal option" << endl << flush;
@@ -4888,6 +4913,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
          << L"calllog          " << (Settings.CallLog() ? L"on" : L"off") << endl
          << L"measure          " << (Settings.Measure() ? L"on" : L"off") << endl
          << L"mapone           " << (Settings.MapOne() ? L"on" : L"off") << endl
+         << L"oldreverse       " << (Settings.OldReverse() ? L"on" : L"off") << endl
          << flush;
       }
       else {
