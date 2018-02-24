@@ -200,21 +200,7 @@ GUILNKOPT = $(LNKOPT) $(QTLIBFLAG)
 ifeq ($(strip $(OSTYPE)),win32)
 INCDIR = $(SHADOWINC)
 else
-ifeq ($(strip $(OSTYPE)),SunOS)
-ifneq ($(strip $(FLEXROOT)),/usr/sfw)
-INCDIR = -I $(FLEXROOT)/include
-endif
-else
-ifeq ($(strip $(OSTYPE)),Darwin)
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.8)
-INCDIR = -I $(FLEXROOT)/include
-endif
-else
-ifneq ($(strip $(FLEXROOT)),/usr)
-INCDIR = -I $(FLEXROOT)/include
-endif
-endif
-endif
+INCDIR = -I $(FLEXINC)
 endif
 
 ifeq ($(strip $(YACC)),yacc)
@@ -794,6 +780,7 @@ LINK_DEBUG=
 LNKOPT += -L/usr/local/lib -lposix4 -lsocket
 
 FLEXROOT?=/usr/sfw
+FLEXINC?=$(FLEXROOT)/include
 CPUTYPE = $(shell uname -p)
 DISTARCH = solaris10-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
@@ -835,6 +822,7 @@ LNKOPT += -L/usr/local/lib -liconv
 READLINE_LIB += -lreadline
 
 FLEXROOT?=/usr
+FLEXINC?=$(FLEXROOT)/include
 CPUTYPE = $(shell uname -p)
 DISTARCH    = FreeBSD-$(OSV_MAJOR)-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
@@ -882,6 +870,7 @@ endif
 
 STATIC = #-static 
 FLEXROOT?=/usr
+FLEXINC?=$(FLEXROOT)/include
 CPUTYPE = $(shell uname -m)
 
 ifndef NOOPT
@@ -947,6 +936,7 @@ endif
 
 STATIC = #-static 
 FLEXROOT?=/usr
+FLEXINC?=$(FLEXROOT)/include
 CPUTYPE = $(shell uname -m)
 
 ifndef NOOPT
@@ -1432,6 +1422,7 @@ WIN_DIST = $(VPATH)/win32
 WIN_DIST_BIN = $(WIN_DIST)/bin
 WIN_DIST_CORBA = $(WIN_DIST)/corba
 FLEXROOT?=/usr
+FLEXINC?=$(FLEXROOT)/include
 DISTARCH = i386-win32
 TARFOLLOWLINKS=
 
@@ -1568,6 +1559,7 @@ OPTIMIZE += $(PROFILE)
 OSV_MAJOR=$(shell uname -r | awk -F '.' '{print $$1}')
 LION_OR_LATER=$(shell [ $(OSV_MAJOR) -ge 11 ] && echo true)
 MOUNTAINLION_OR_LATER=$(shell [ $(OSV_MAJOR) -ge 12 ] && echo true)
+YOSEMITE_OR_LATER=$(shell [ $(OSV_MAJOR) -ge 14 ] && echo true)
 
 CCPATH = /usr/bin/
 
@@ -1659,7 +1651,11 @@ GCC_MAJOR = $(word 1, $(subst ., ,$(strip $(GCCVERSION))))
 GCC_MINOR = $(word 2, $(subst ., ,$(strip $(GCCVERSION))))
 
 FLEXROOT?=/usr
+ifeq ($(strip $(YOSEMITE_OR_LATER)),true)
+FLEXINC?=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include
+else
 FLEXINC?=$(FLEXROOT)/include
+endif
 FLEXLIB?=$(FLEXROOT)/lib
 FLEXBIN?=$(FLEXROOT)/bin
 
@@ -1759,8 +1755,10 @@ linkTest:
 linkMISC:
 	@ : dummy
 
-FlexLexer.h : $(FLEXROOT)/include/FlexLexer.h
-	-$(CP) $(FLEXROOT)/include/FlexLexer.h .
+#FlexLexer.h : $(FLEXROOT)/include/FlexLexer.h
+#	-$(CP) $(FLEXROOT)/include/FlexLexer.h .
+FlexLexer.h : $(FLEXINC)/FlexLexer.h
+	-$(CP) $(FLEXINC)/FlexLexer.h .
 
 tb_exceptions.o: tb_exceptions.cc tb_exceptions.h
 
