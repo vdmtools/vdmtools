@@ -204,28 +204,17 @@ INCDIR = -I $(FLEXINC)
 endif
 
 ifeq ($(strip $(YACC)),yacc)
-#YACC = bison-1.28
-YACC = bison-2.3
+YACC = bison
 endif
 
-BISONVERSIONSTR = $(shell $(YACC) --version)
-BISONVERSION = $(word 4, $(strip $(BISONVERSIONSTR)))
+BISONVERSION = $(shell $(YACC) --version | head -1 | awk -F ' ' '{print $$4}')
+BISONVERSION_MAJOR = $(shell echo $(BISONVERSION) | awk -F '.' '{print $$1}')
 
 bison:
 	echo $(BISONVERSION)
+	echo $(BISONVERSION_MAJOR)
 
-ifeq ($(strip $(REALOS)),CYGWIN_NT)
-BISON2=1
-else
-ifeq ($(strip $(BISONVERSION)),1.28)
-else
-BISON2=1
-endif
-endif
-
-ifdef BISON2
-BISONFLAG =
-else
+ifeq ($(strip $(BISONVERSION_MAJOR)),1)
 BISONFLAG = -DUSE_BISON128
 PREPROCESS += -DUSE_BISON128
 endif
@@ -910,7 +899,6 @@ GCC_MINOR = $(word 2, $(subst ., ,$(strip $(GCCVERSION))))
 
 #DEBUG= -g
 VPATH=.
-BISON2=1
 YACC=bison
 
 CCPATH = /usr/bin/
@@ -1065,19 +1053,15 @@ LINK_DEBUG=
 MT=mt.exe
 
 ifeq ($(strip $(REALOS)),CYGWIN_NT)
-#LINKCHG = $(VPATH)/linkchg.pl 1
 LINKCHG = /usr/bin/perl $(VPATH)/linkchg.pl 1
-# FIXPARSER = $(VPATH)/fixparser.pl
 else
 LINKCHG = ./linkchg.pl 1
-# FIXPARSER = ./fixparser.pl
 endif
 
 LINKOUT = /Fe
 ifdef WIN32_PROFILE
 AR=LIB
 else
-#AR=ar
 AR=/usr/bin/ar
 endif
 CCPATH = 
@@ -2006,16 +1990,16 @@ endif
 YACCFILEPREFIX=$(patsubst %.y,%,$(filter %.y,$^))
 
 ifeq ($(strip $(REALOS)),CYGWIN_NT)
-ifdef BISON2
-FIXPOSASSIGN = $(VPATH)/fixposassign2
-else
+ifeq ($(strip $(BISONVERSION_MAJOR)),1)
 FIXPOSASSIGN = $(VPATH)/fixposassign
+else
+FIXPOSASSIGN = $(VPATH)/fixposassign2
 endif
 else
-ifdef BISON2
-FIXPOSASSIGN = ./fixposassign2
-else
+ifeq ($(strip $(BISONVERSION_MAJOR)),1)
 FIXPOSASSIGN = ./fixposassign
+else
+FIXPOSASSIGN = ./fixposassign2
 endif
 endif
 
