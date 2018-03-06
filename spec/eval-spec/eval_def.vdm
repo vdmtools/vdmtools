@@ -832,16 +832,14 @@ CreateExplMeasureFns (mod_id, fndef, overloadnm) ==
 
     if not is_(measu, [<NOTYETSPEC>]) and not CMPL`MeasureIsId(measu, fndef)
     then
-      def nid = CI`NilContextId;
-          nm_measu = AUX`MeasureName(overloadnm);
-          bt = mk_AS`AllType (nid);
+      def nm_measu = AUX`MeasureName(overloadnm);
           pi_l = CPAT`PL2PL(hd parms);
-          fn_measu = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (tp.fndom,bt,nid),
-                                             [pi_l],
-                                             CMPL`CompileMeasureExpr(measu),
-                                             AUX`MkEmptyBlkEnv (<READ_ONLY>),
-                                             { |-> }, nm_measu, mod_id,false, nil,
-                                             RealAccess(access,<FN>)))
+          fn_measu = SEM`CompFN(mk_SEM`ExplFN (CreateFunctionMeasureType(tp.fndom,tp.fnrng,parms),
+                                               [pi_l],
+                                               CMPL`CompileMeasureExpr(measu),
+                                               AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                               { |-> }, nm_measu, mod_id,false, nil,
+                                               RealAccess(access,<FN>)))
       in res_m := res_m ++ { nm_measu |-> fn_measu };
   return res_m;
  );
@@ -885,11 +883,10 @@ CreateExplPolyMeasureFns (mod_id, fndef, overloadnm) ==
 
     if not is_(measu, [<NOTYETSPEC>]) and not CMPL`MeasureIsId(measu, fndef)
     then
-      def nid = CI`NilContextId;
-          nm_measu  = AUX`MeasureName(overloadnm);
+      def nm_measu  = AUX`MeasureName(overloadnm);
           pi_l = [CPAT`PL2PL(parms(j)) | j in set inds parms];
           fn_measu = mk_SEM`ExplPOLY (ttp,
-                                      mk_AS`TotalFnType (tp.fndom, mk_AS`AllType (nid),nid),
+                                      CreateFunctionMeasureType(tp.fndom, tp.fnrng, parms),
                                       pi_l,
                                       CMPL`CompileMeasureExpr(measu),
                                       AUX`MkEmptyBlkEnv (<READ_ONLY>),
@@ -990,7 +987,7 @@ CreateFunctionPreType (tpdom, tprng, parms) ==
   let nid = CI`NilContextId
   in
     if len parms <= 1 
-    then mk_AS`TotalFnType(tpdom, mk_AS`AllType(nid), nid)
+    then mk_AS`TotalFnType(tpdom, mk_AS`BooleanType(nid), nid)
     else
       cases tprng:
         mk_AS`TotalFnType(d,r,-), 
@@ -1007,7 +1004,23 @@ CreateFunctionPostType (tpdom, tprng) ==
                 then tprng
                 else [mk_AS`ProductType(tprng,(hd tprng).cid)]
   in
-    mk_AS`TotalFnType (tpdom ^ realrng, mk_AS`BooleanType (nid),nid)
+    mk_AS`TotalFnType (tpdom ^ realrng, mk_AS`BooleanType (nid),nid);
+
+CreateFunctionMeasureType : AS`DiscretionaryType * AS`Type * seq of AS`Parameters +> AS`Type
+CreateFunctionMeasureType (tpdom, tprng, parms) ==
+  let nid = CI`NilContextId
+  in
+    if len parms <= 1 
+    then mk_AS`TotalFnType(tpdom, mk_AS`AllType(nid), nid)
+    else
+      cases tprng:
+        mk_AS`TotalFnType(d,r,-), 
+        mk_AS`PartialFnType(d,r,-) -> mk_AS`TotalFnType(tpdom,
+                                                        CreateFunctionMeasureType(d,r,tl parms),
+                                                        nid),
+        others -> undefined
+      end;
+
 \end{vdm_al}
 
 This operation returns the type of a post predicate function in a function definition.
