@@ -59,9 +59,21 @@ public:
   static Map CreateMeasureFns (const TYPE_AS_Name & mod_id,
                                const TYPE_AS_FnDef & fn_def,
                                const TYPE_AS_Name & overloadnm);
+  static Map CreateExplMeasureFns (const TYPE_AS_Name & mod_id,
+                                   const TYPE_AS_FnDef & fn_def,
+                                   const TYPE_AS_Name & overloadnm);
+  static Map CreateExtExplMeasureFns (const TYPE_AS_Name & mod_id,
+                                      const TYPE_AS_FnDef & fn_def,
+                                      const TYPE_AS_Name & overloadnm);
   static Map CreatePolyMeasureFns (const TYPE_AS_Name & mod_id,
                                    const TYPE_AS_FnDef & fn_def,
                                    const TYPE_AS_Name & overloadnm);
+  static Map CreateExplPolyMeasureFns (const TYPE_AS_Name & mod_id,
+                                       const TYPE_AS_FnDef & fn_def,
+                                       const TYPE_AS_Name & overloadnm);
+  static Map CreateExtExplPolyMeasureFns (const TYPE_AS_Name & mod_id,
+                                          const TYPE_AS_FnDef & fn_def,
+                                          const TYPE_AS_Name & overloadnm);
   static Tuple ImplicitTypeParams (const SEQ<TYPE_AS_PatTypePair> & partps);
   static TYPE_AS_Type ImplicitResType (const SEQ<TYPE_AS_NameType> & resnmtps);
 #ifdef VDMPP
@@ -115,11 +127,15 @@ private:
   static Tuple ImplicitResNameTypes (const SEQ<TYPE_AS_NameType> & resnmtps);
   static TYPE_AS_Type CreateFunctionPreType (
                                  const SEQ<TYPE_AS_Type> & tpdom,
-                                 const SEQ<TYPE_AS_Type> & tprng,
+                                 const TYPE_AS_Type & tprng,
                                  const SEQ<TYPE_AS_Parameters> & parms);
   static TYPE_AS_Type CreateFunctionPostType (
                                  const SEQ<TYPE_AS_Type> & tpdom,
                                  const SEQ<TYPE_AS_Type> & tprng,
+                                 const SEQ<TYPE_AS_Parameters> & parms);
+  static TYPE_AS_Type CreateFunctionMeasureType (
+                                 const SEQ<TYPE_AS_Type> & tpdom,
+                                 const TYPE_AS_Type & tprng,
                                  const SEQ<TYPE_AS_Parameters> & parms);
   static TYPE_AS_Type CreateOperationPreType (const SEQ<TYPE_AS_Type> & tpdom, const Generic & st_id);
   static TYPE_AS_Type CreateOperationPostType (

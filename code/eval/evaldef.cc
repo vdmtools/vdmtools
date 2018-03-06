@@ -882,9 +882,7 @@ Map DEF::CreateExplPrePostFns (const TYPE_AS_Name & mod_id,
       parm_pre.ImpAppend (theCompiler().PL2PL(parms[idx]));
     }
 
-    SEQ<TYPE_AS_Type> rng;
-    rng.ImpAppend(tp.GetRecord(2));
-    TYPE_AS_TotalFnType fn_tp (CreateFunctionPreType(tp.GetSequence (1), rng, parms));
+    TYPE_AS_TotalFnType fn_tp (CreateFunctionPreType(tp.GetSequence (1), tp.GetRecord(2), parms));
 
     TYPE_AS_Name nm_pre (AUX::PreName(overloadnm));
 
@@ -1166,9 +1164,7 @@ Map DEF::CreateExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
       pi_l.ImpAppend(theCompiler().PL2PL(parms[idx]));
     }
 
-    SEQ<TYPE_AS_Type> rng;
-    rng.ImpAppend(tp.GetRecord(2));
-    TYPE_AS_TotalFnType fn_tp (CreateFunctionPreType(tp.GetSequence (1), rng, parms));
+    TYPE_AS_TotalFnType fn_tp (CreateFunctionPreType(tp.GetSequence (1), tp.GetRecord(2), parms));
 
     TYPE_AS_Name nm_pre (AUX::PreName(overloadnm));
 
@@ -1386,8 +1382,105 @@ Map DEF::CreateMeasureFns (const TYPE_AS_Name & mod_id,
                            const TYPE_AS_FnDef & fn_def,
                            const TYPE_AS_Name & overloadnm)
 {
-  // is not yet implemented
-  return Map();
+  switch(fn_def.GetTag()) {
+    case TAG_TYPE_AS_ExplFnDef:    { return CreateExplMeasureFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ExtExplFnDef: { return CreateExtExplMeasureFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ImplFnDef:    { return Map(); }
+    default:                       { return Map(); }
+  }
+}
+
+// CreateExplMeasureFns
+// mod_id : AS`Name
+// fn_def : AS`FnDef
+// overloadnm : AS`Name
+// ==> map AS`Name to SEM`CompExplFN
+Map DEF::CreateExplMeasureFns (const TYPE_AS_Name & mod_id,
+                               const TYPE_AS_FnDef & fn_def,
+                               const TYPE_AS_Name & overloadnm)
+{
+  const TYPE_AS_FnType & tp             (fn_def.GetRecord(pos_AS_ExplFnDef_tp));
+  const SEQ<TYPE_AS_Parameters> & parms (fn_def.GetSequence(pos_AS_ExplFnDef_parms));
+  const Generic & measu                 (fn_def.GetField(pos_AS_ExplFnDef_measu));
+  const TYPE_AS_Access & access         (fn_def.GetField(pos_AS_ExplFnDef_access));
+
+  Map res_m;
+
+  if (!measu.IsNil () && (measu != Int(NOTYETSPEC))) {
+    if (!theCompiler().MeasureIsId(measu, fn_def)) {
+      SEQ<type_dL> parm_measu; // seq of seq of STKM`Pattern
+      size_t len_parms = parms.Length();
+      for (size_t idx = 1; idx <= len_parms; idx++) {
+        parm_measu.ImpAppend (theCompiler().PL2PL(parms[idx]));
+      }
+
+      TYPE_AS_TotalFnType fn_tp (CreateFunctionMeasureType(tp.GetSequence (1), tp.GetRecord(2), parms));
+
+      TYPE_AS_Name nm_measu (AUX::MeasureName(overloadnm));
+
+      TYPE_SEM_ExplFN fn_measu;
+      fn_measu.Init(fn_tp,
+                    parm_measu,
+                    theCompiler().CompileMeasureExpr(measu),
+                    AUX::MkEmptyBlkEnv(sem_read_only),
+                    MAP<TYPE_AS_TypeVar,TYPE_AS_Type>(),
+                    nm_measu,
+                    mod_id,
+                    Bool(false),
+                    Nil(),
+                    RealAccess(access, ACC_FN));
+
+      res_m.Insert (nm_measu, SemRec::CompFN(fn_measu));
+    }
+  }
+  return (res_m);
+}
+
+// CreateExtExplMeasureFns
+// mod_id : AS`Name
+// fn_def : AS`FnDef
+// overloadnm : AS`Name
+// ==> map AS`Name to SEM`CompExplFN
+Map DEF::CreateExtExplMeasureFns (const TYPE_AS_Name & mod_id,
+                                  const TYPE_AS_FnDef & fn_def,
+                                  const TYPE_AS_Name & overloadnm)
+{
+  const SEQ<TYPE_AS_PatTypePair> & partps (fn_def.GetSequence(pos_AS_ExtExplFnDef_partps));
+  const Generic & measu                   (fn_def.GetField(pos_AS_ExtExplFnDef_measu));
+  const TYPE_AS_Access & access           (fn_def.GetField(pos_AS_ExtExplFnDef_access));
+
+  Tuple tmp_parml (ImplicitTypeParams(partps));
+  const SEQ<TYPE_AS_Type> & fndom    (tmp_parml.GetSequence(1));
+  const SEQ<TYPE_AS_Pattern> & parms (tmp_parml.GetSequence(2));
+
+  Map res_m;
+
+  if (!measu.IsNil () && (measu != Int(NOTYETSPEC))) {
+    if (!theCompiler().MeasureIsId(measu, fn_def)) {
+      SEQ<type_dL> parm_measu; // seq of seq of STKM`Pattern
+      parm_measu.ImpAppend (theCompiler().PL2PL(parms));
+
+      TYPE_AS_TotalFnType fn_tp;
+      fn_tp.Init(fndom, TYPE_AS_AllType().Init(NilContextId), NilContextId);
+  
+      TYPE_AS_Name nm_measu (AUX::MeasureName(overloadnm));
+  
+      TYPE_SEM_ExplFN fn_measu;
+      fn_measu.Init(fn_tp,
+                    parm_measu,
+                    theCompiler().CompileMeasureExpr(measu),
+                    AUX::MkEmptyBlkEnv (sem_read_only),
+                    MAP<TYPE_AS_TypeVar,TYPE_AS_Type>(),
+                    nm_measu,
+                    mod_id,
+                    Bool(false),
+                    Nil(),
+                    RealAccess(access, ACC_FN));
+  
+      res_m.Insert (nm_measu, SemRec::CompFN(fn_measu));
+    }
+  }
+  return (res_m);
 }
 
 // CreatePolyMeasureFns
@@ -1399,8 +1492,105 @@ Map DEF::CreatePolyMeasureFns (const TYPE_AS_Name & mod_id,
                                const TYPE_AS_FnDef & fn_def,
                                const TYPE_AS_Name & overloadnm)
 {
-  // is not yet implemented
-  return Map();
+  switch(fn_def.GetTag()) {
+    case TAG_TYPE_AS_ExplFnDef:    { return CreateExplPolyMeasureFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ExtExplFnDef: { return CreateExtExplPolyMeasureFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ImplFnDef:    { return Map(); }
+    default:                       { return Map(); }
+  }
+}
+
+// CreateExplPolyMeasureFns
+// mod_id : AS`Name
+// fn_def : AS`FnDef
+// overloadnm : AS`Name
+// ==> map AS`Name to SEM`ExplPOLY
+Map DEF::CreateExplPolyMeasureFns (const TYPE_AS_Name & mod_id,
+                                   const TYPE_AS_FnDef & fn_def,
+                                   const TYPE_AS_Name & overloadnm)
+{
+  const SEQ<TYPE_AS_TypeVar> & tpp      (fn_def.GetSequence(pos_AS_ExplFnDef_tpparms));
+  const TYPE_AS_FnType & tp             (fn_def.GetRecord(pos_AS_ExplFnDef_tp));
+  const SEQ<TYPE_AS_Parameters> & parms (fn_def.GetSequence(pos_AS_ExplFnDef_parms));
+  const Generic & measu                 (fn_def.GetField(pos_AS_ExplFnDef_measu));
+  const TYPE_AS_Access & access         (fn_def.GetField(pos_AS_ExplFnDef_access));
+
+  Map res_m;
+
+  if (!measu.IsNil () && (measu != Int(NOTYETSPEC))) {
+    if (!theCompiler().MeasureIsId(measu, fn_def)) {
+      SEQ<type_dL> pi_l; // seq of seq of STKM`Pattern
+      size_t len_parms = parms.Length();
+      for (size_t idx = 1; idx <= len_parms; idx++) {
+        pi_l.ImpAppend(theCompiler().PL2PL(parms[idx]));
+      }
+
+      TYPE_AS_TotalFnType fn_tp (CreateFunctionMeasureType(tp.GetSequence (1), tp.GetRecord(2), parms));
+
+      TYPE_AS_Name nm_measu (AUX::MeasureName(overloadnm));
+
+      TYPE_SEM_ExplPOLY fn_measu;
+      fn_measu.Init(tpp,
+                    fn_tp,
+                    pi_l,
+                    theCompiler().CompileMeasureExpr(measu),
+                    AUX::MkEmptyBlkEnv (sem_read_only),
+                    nm_measu,
+                    mod_id,
+                    Nil(),
+                    RealAccess(access, ACC_FN));
+  
+      res_m.Insert (nm_measu, fn_measu);
+    }
+  }
+  return (res_m);
+}
+
+// CreateExtExplPolyMeasureFns
+// mod_id : AS`Name
+// fn_def : AS`FnDef
+// overloadnm : AS`Name
+// ==> map AS`Name to SEM`ExplPOLY
+Map DEF::CreateExtExplPolyMeasureFns (const TYPE_AS_Name & mod_id,
+                                      const TYPE_AS_FnDef & fn_def,
+                                      const TYPE_AS_Name & overloadnm)
+{
+  const SEQ<TYPE_AS_TypeVar> & tpp        (fn_def.GetSequence(pos_AS_ExtExplFnDef_params));
+  const SEQ<TYPE_AS_PatTypePair> & partps (fn_def.GetSequence(pos_AS_ExtExplFnDef_partps));
+  const Generic & measu                   (fn_def.GetField(pos_AS_ExtExplFnDef_measu));
+  const TYPE_AS_Access & access           (fn_def.GetField(pos_AS_ExtExplFnDef_access));
+
+  Tuple tmp_parml (ImplicitTypeParams(partps));
+  const SEQ<TYPE_AS_Type> & fndom    (tmp_parml.GetSequence(1));
+  const SEQ<TYPE_AS_Pattern> & parms (tmp_parml.GetSequence(2));
+
+  Map res_m;
+
+  if (!measu.IsNil () && (measu != Int(NOTYETSPEC))) {
+    if (!theCompiler().MeasureIsId(measu, fn_def)) {
+      SEQ<type_dL> parm_measu; // seq of seq of STKM`Pattern
+      parm_measu.ImpAppend (theCompiler().PL2PL(parms));
+  
+      TYPE_AS_TotalFnType fn_tp;
+      fn_tp.Init(fndom, TYPE_AS_AllType().Init(NilContextId), NilContextId);
+
+      TYPE_AS_Name nm_measu (AUX::MeasureName(overloadnm));
+
+      TYPE_SEM_ExplPOLY fn_measu;
+      fn_measu.Init(tpp,
+                    fn_tp,
+                    parm_measu,
+                    theCompiler().CompileMeasureExpr(measu),
+                    AUX::MkEmptyBlkEnv (sem_read_only),
+                    nm_measu,
+                    mod_id,
+                    Nil(),
+                    RealAccess(access, ACC_FN));
+  
+      res_m.Insert (nm_measu, fn_measu);
+    }
+  }
+  return (res_m);
 }
 
 // ImplicitTypeParams
@@ -1465,13 +1655,13 @@ TYPE_AS_Type DEF::ImplicitResType (const SEQ<TYPE_AS_NameType> & resnmtps)
   }
 }
 
-// CreateFunctionPreType (not in spec)
+// CreateFunctionPreType
 // tpdom : seq of AS`Type
-// tprng : seq of AS`Type
+// tprng : AS`Type
 // parms : seq of AS`Parameters (= seq of seq of AS`Pattern)
 // ==> AS`Type
 TYPE_AS_Type DEF::CreateFunctionPreType (const SEQ<TYPE_AS_Type> & tpdom,
-                                         const SEQ<TYPE_AS_Type> & tprng,
+                                         const TYPE_AS_Type & tprng,
                                          const SEQ<TYPE_AS_Parameters> & parms)
 {
   switch (parms.Length()) {
@@ -1483,20 +1673,16 @@ TYPE_AS_Type DEF::CreateFunctionPreType (const SEQ<TYPE_AS_Type> & tpdom,
     }
     default: {
       // curry function
-      // tp must be AS`FnType
-      TYPE_AS_Type tp (tprng.Hd());
-      switch (tp.GetTag()) {
+      switch (tprng.GetTag()) {
         case TAG_TYPE_AS_TotalFnType: {
-          const SEQ<TYPE_AS_Type> dom (tp.GetSequence(pos_AS_TotalFnType_fndom));
-          SEQ<TYPE_AS_Type> rng;
-          rng.ImpAppend(tp.GetRecord(pos_AS_TotalFnType_fnrng));
+          const SEQ<TYPE_AS_Type>  & dom (tprng.GetSequence(pos_AS_TotalFnType_fndom));
+          const TYPE_AS_Type & rng (tprng.GetRecord(pos_AS_TotalFnType_fnrng));
           TYPE_AS_Type ptp (CreateFunctionPreType(dom, rng, parms.Tl()));  
           return TYPE_AS_TotalFnType().Init(tpdom, ptp, NilContextId);
         }
         case TAG_TYPE_AS_PartialFnType: {
-          const SEQ<TYPE_AS_Type> dom (tp.GetSequence(pos_AS_PartialFnType_fndom));
-          SEQ<TYPE_AS_Type> rng;
-          rng.ImpAppend(tp.GetRecord(pos_AS_PartialFnType_fnrng));
+          const SEQ<TYPE_AS_Type> & dom (tprng.GetSequence(pos_AS_PartialFnType_fndom));
+          const TYPE_AS_Type & rng      (tprng.GetRecord(pos_AS_PartialFnType_fnrng));
           TYPE_AS_Type ptp (CreateFunctionPreType(dom, rng, parms.Tl()));  
           return TYPE_AS_TotalFnType().Init(tpdom, ptp, NilContextId);
         }
@@ -1553,6 +1739,46 @@ TYPE_AS_Type DEF::CreateFunctionPostType (const SEQ<TYPE_AS_Type> & tpdom,
         }
         default: {
           RTERR::Error(L"CreateFunctionPostType", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+          return TYPE_AS_Type();
+        }
+      }
+    }
+  }
+}
+
+// CreateFunctionMeasureType
+// tpdom : seq of AS`Type
+// tprng : AS`Type
+// parms : seq of AS`Parameters (= seq of seq of AS`Pattern)
+// ==> AS`Type
+TYPE_AS_Type DEF::CreateFunctionMeasureType (const SEQ<TYPE_AS_Type> & tpdom,
+                                             const TYPE_AS_Type & tprng,
+                                             const SEQ<TYPE_AS_Parameters> & parms)
+{
+  switch (parms.Length()) {
+    case 0:
+    case 1: {
+      TYPE_AS_TotalFnType fn_tp;
+      fn_tp.Init(tpdom, TYPE_AS_AllType().Init(NilContextId), NilContextId);
+      return fn_tp;
+    }
+    default: {
+      // curry function
+      switch (tprng.GetTag()) {
+        case TAG_TYPE_AS_TotalFnType: {
+          const SEQ<TYPE_AS_Type> dom (tprng.GetSequence(pos_AS_TotalFnType_fndom));
+          const TYPE_AS_Type & rng    (tprng.GetRecord(pos_AS_TotalFnType_fnrng));
+          TYPE_AS_Type ptp (CreateFunctionMeasureType(dom, rng, parms.Tl()));  
+          return TYPE_AS_TotalFnType().Init(tpdom, ptp, NilContextId);
+        }
+        case TAG_TYPE_AS_PartialFnType: {
+          const SEQ<TYPE_AS_Type> dom (tprng.GetSequence(pos_AS_PartialFnType_fndom));
+          const TYPE_AS_Type & rng    (tprng.GetRecord(pos_AS_PartialFnType_fnrng));
+          TYPE_AS_Type ptp (CreateFunctionMeasureType(dom, rng, parms.Tl()));  
+          return TYPE_AS_TotalFnType().Init(tpdom, ptp, NilContextId);
+        }
+        default: {
+          RTERR::Error(L"CreateFunctionMeasureType", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
           return TYPE_AS_Type();
         }
       }

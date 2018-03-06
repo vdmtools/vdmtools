@@ -529,6 +529,7 @@ CreateExplPrePostFns (mod_id, mk_AS`ExplFnDef (-,-,tp,parms,-,Pre_e,Post_e,acces
            nm_pre = AUX`PreName(overloadnm);
            bt = mk_AS`BooleanType (nid);
            pi_l = CPAT`PL2PL(hd parms);
+           --fn_pre = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (tp.fndom,bt,nid),
            fn_pre = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (tp.fndom,bt,nid),
                                               [pi_l],
                                               CMPL`CompilePrePostExpr(Pre_e),
@@ -816,12 +817,110 @@ predicate functions for an implicit polymorphic function definition.
 
 CreateMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
 CreateMeasureFns (mod_id, fndef, overloadnm) ==
-  return {|->}; --is not yet specified;
+  cases true:
+    (is_AS`ExplFnDef (fndef))    -> CreateExplMeasureFns (mod_id, fndef, overloadnm),
+    (is_AS`ExtExplFnDef (fndef)) -> CreateExtExplMeasureFns (mod_id, fndef, overloadnm),
+    (is_AS`ImplFnDef (fndef))    -> return {|->},
+    others -> error
+  end;
 
-CreatePolyMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateExplMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateExplMeasureFns (mod_id, fndef, overloadnm) ==
+  let mk_AS`ExplFnDef (-,-,tp,parms,-,-,-,access,-,measu,-) = fndef
+  in 
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if not is_(measu, [<NOTYETSPEC>]) and not CMPL`MeasureIsId(measu, fndef)
+    then
+      def nid = CI`NilContextId;
+          nm_measu = AUX`MeasureName(overloadnm);
+          bt = mk_AS`AllType (nid);
+          pi_l = CPAT`PL2PL(hd parms);
+          fn_measu = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (tp.fndom,bt,nid),
+                                             [pi_l],
+                                             CMPL`CompileMeasureExpr(measu),
+                                             AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                             { |-> }, nm_measu, mod_id,false, nil,
+                                             RealAccess(access,<FN>)))
+      in res_m := res_m ++ { nm_measu |-> fn_measu };
+  return res_m;
+ );
+
+CreateExtExplMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateExtExplMeasureFns (mod_id, fndef, overloadnm) ==
+  let mk_AS`ExtExplFnDef(-,-,parml,-,-,-,-,access,-,measu,-) = fndef,
+      mk_(fndom,parms) = ImplicitTypeParams(parml)
+  in
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if not is_(measu, [<NOTYETSPEC>]) and not CMPL`MeasureIsId(measu, fndef)
+    then
+      def nid = CI`NilContextId;
+          nm_measu  = AUX`MeasureName(overloadnm);
+          pi_l = CPAT`PL2PL(parms);
+          fn_measu = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (fndom, mk_AS`AllType (nid),nid),
+                                               [ pi_l ],
+                                               CMPL`CompileMeasureExpr(measu),
+                                               AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                               { |-> }, nm_measu, mod_id,false,nil,
+                                               RealAccess(access,<FN>)))
+      in res_m := res_m ++ { nm_measu |-> fn_measu };
+    return res_m;
+   );
+
+CreatePolyMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
 CreatePolyMeasureFns (mod_id, fndef, overloadnm) ==
-  --is not yet rpecified;
-  return {|->}; --is not yet specified;
+  cases true:
+    (is_AS`ExplFnDef (fndef))    -> CreateExplPolyMeasureFns (mod_id, fndef, overloadnm),
+    (is_AS`ExtExplFnDef (fndef)) -> CreateExtExplPolyMeasureFns (mod_id, fndef, overloadnm),
+    (is_AS`ImplFnDef (fndef))    -> return {|->},
+    others -> error
+  end;
+
+CreateExplPolyMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
+CreateExplPolyMeasureFns (mod_id, fndef, overloadnm) ==
+  let mk_AS`ExplFnDef (-,ttp,tp,parms,-,-,-,access,-,measu,-) = fndef
+  in
+   (dcl res_m : map AS`Name to SEM`ExplPOLY := { |-> };
+
+    if not is_(measu, [<NOTYETSPEC>]) and not CMPL`MeasureIsId(measu, fndef)
+    then
+      def nid = CI`NilContextId;
+          nm_measu  = AUX`MeasureName(overloadnm);
+          pi_l = [CPAT`PL2PL(parms(j)) | j in set inds parms];
+          fn_measu = mk_SEM`ExplPOLY (ttp,
+                                      mk_AS`TotalFnType (tp.fndom, mk_AS`AllType (nid),nid),
+                                      pi_l,
+                                      CMPL`CompileMeasureExpr(measu),
+                                      AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                      nm_measu,
+                                      mod_id,nil,RealAccess(access, <FN>))
+      in res_m := res_m ++ { nm_measu |-> fn_measu };
+    return res_m
+   );
+
+CreateExtExplPolyMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
+CreateExtExplPolyMeasureFns (mod_id, fndef, overloadnm) ==
+  let mk_AS`ExtExplFnDef(-,ttp,parml,-,-,-,-,access,-,measu,-) = fndef,
+      mk_(fndom,parms) = ImplicitTypeParams(parml)
+  in
+   (dcl res_m : map AS`Name to SEM`ExplPOLY := { |-> };
+
+    if not is_(measu, [<NOTYETSPEC>]) and not CMPL`MeasureIsId(measu, fndef)
+    then
+      def nid = CI`NilContextId;
+          nm_measu = AUX`MeasureName(overloadnm);
+          pi_l = CPAT`PL2PL(parms);
+          fn_measu = mk_SEM`ExplPOLY (ttp,
+                                      mk_AS`TotalFnType (fndom, mk_AS`AllType (nid),nid),
+                                      [ pi_l ],
+                                      CMPL`CompileMeasureExpr(measu),
+                                      AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                      nm_measu,
+                                      mod_id,nil,RealAccess(access,<FN>))
+      in res_m := res_m ++ { nm_measu |-> fn_measu };
+    return res_m
+   );
 \end{vdm_al}
 
 
@@ -885,6 +984,21 @@ element into this type, if it has more than one element into a product type.
 
 \begin{vdm_al}
 functions
+
+CreateFunctionPreType : AS`DiscretionaryType * AS`Type * seq of AS`Parameters +> AS`Type
+CreateFunctionPreType (tpdom, tprng, parms) ==
+  let nid = CI`NilContextId
+  in
+    if len parms <= 1 
+    then mk_AS`TotalFnType(tpdom, mk_AS`AllType(nid), nid)
+    else
+      cases tprng:
+        mk_AS`TotalFnType(d,r,-), 
+        mk_AS`PartialFnType(d,r,-) -> mk_AS`TotalFnType(tpdom,
+                                                        CreateFunctionPreType(d,r,tl parms),
+                                                        nid),
+        others -> undefined
+      end;
 
 CreateFunctionPostType : AS`DiscretionaryType * AS`DiscretionaryType +> AS`Type
 CreateFunctionPostType (tpdom, tprng) ==
