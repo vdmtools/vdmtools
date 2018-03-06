@@ -58,6 +58,7 @@ module AUX
       SingleNameToString: AS`Name -> seq of char;
       PreName : AS`Name -> AS`Name;
       PostName : AS`Name -> AS`Name;
+      MeasureName : AS`Name -> AS`Name;
       InvName : AS`Name -> AS`Name;
       InitName : AS`Name -> AS`Name;
       OrderName : AS`Name -> AS`Name;
@@ -927,6 +928,17 @@ relates to the post-conditions.
 \begin{vdm_al}
 functions
 
+MeasureName : AS`Name -> AS`Name
+MeasureName(mk_AS`Name(id_l, cid)) ==
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["measure_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "measure", which
+relates to the post-conditions.
+
+\begin{vdm_al}
+functions
+
 InvName : AS`Name -> AS`Name
 InvName(mk_AS`Name(id_l, cid)) ==
   mk_AS`Name(id_l(1,...,len id_l -1) ^ ["inv_" ^ id_l(len id_l)],cid);
@@ -950,18 +962,10 @@ relates to the state initialization.
 OrderName : AS`Name -> AS`Name
 OrderName(mk_AS`Name(id_l, cid)) ==
   mk_AS`Name(id_l(1,...,len id_l -1) ^ ["ord_" ^ id_l(len id_l)],cid);
-
-MaxName : AS`Name -> AS`Name
-MaxName(mk_AS`Name(id_l, cid)) ==
-  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["max_" ^ id_l(len id_l)],cid);
-
-MinName : AS`Name -> AS`Name
-MinName(mk_AS`Name(id_l, cid)) ==
-  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["min_" ^ id_l(len id_l)],cid);
 \end{vdm_al}
 
 Extends the name of function or operation by an prefix "order", which
-relates to the type order.
+relates to the state initialization.
 
 \begin{vdm_al}
 EqualityName : AS`Name -> AS`Name
@@ -971,6 +975,24 @@ EqualityName(mk_AS`Name(id_l, cid)) ==
 
 Extends the name of function or operation by an prefix "eq", which
 relates to the type equality.
+
+\begin{vdm_al}
+MaxName : AS`Name -> AS`Name
+MaxName(mk_AS`Name(id_l, cid)) ==
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["max_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "max", which
+relates to the state initialization.
+
+\begin{vdm_al}
+MinName : AS`Name -> AS`Name
+MinName(mk_AS`Name(id_l, cid)) ==
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["min_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "min", which
+relates to the type order.
 
 \begin{vdm_al}
 functions

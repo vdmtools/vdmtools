@@ -66,6 +66,7 @@ public:
 #endif // VDMSL
   static TYPE_AS_Name PreName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name PostName(const TYPE_AS_Name & nm);
+  static TYPE_AS_Name MeasureName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name InvName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name InitName(const TYPE_AS_Name & nm);
   static TYPE_AS_Name OrderName(const TYPE_AS_Name & nm);

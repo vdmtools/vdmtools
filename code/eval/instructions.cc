@@ -261,6 +261,38 @@ void StackEval::ExeMEASURECHECK()
   }
 }
 
+// ExeDTCMEASURE
+// ==> ()
+void StackEval::ExeDTCMEASURE()
+{
+  TYPE_SEM_VAL curr_mv (HEAD());
+  switch (curr_mv.GetTag()) {
+    case TAG_TYPE_SEM_NUM: {
+      if (!curr_mv.GetReal(pos_SEM_NUM_v).IsNat() ) {
+        RTERR::Error(L"ExeMEASURECHECK", RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      }
+      break;
+    }
+    case TAG_TYPE_SEM_TUPLE: {
+      const SEQ<TYPE_SEM_VAL> & v_l (curr_mv.GetSequence(pos_SEM_TUPLE_v));
+      size_t len_v_l = v_l.Length ();
+      bool exists = v_l.IsEmpty();
+      for (size_t i = 1; (i <= len_v_l) && !exists; i++) {
+        const TYPE_SEM_VAL & v (v_l[i]);
+        exists = !(v.Is(TAG_TYPE_SEM_NUM) ? v.GetReal(pos_SEM_NUM_v).IsNat() : false);
+      }
+      if (exists) {
+        RTERR::Error(L"ExeMEASURECHECK", RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      }
+      break;
+    }
+    default: {
+      RTERR::Error(L"ExeMEASURECHECK", RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      break;
+    }
+  }
+}
+
 // ExePOSTENV
 // resnmtps : seq of AS`NameType
 // ci : CI`ContextId

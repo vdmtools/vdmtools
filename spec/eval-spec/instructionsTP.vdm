@@ -131,7 +131,7 @@ environments improved with the closure environment.
 
   AuxInstr = CBR | CNBR | BR | EOCL | ERRINST | COPYVAL | DTC | DTCSET |
              SIZE | COMMENT | ISTART | IEND | NOBODY | TPTOSET | MACRO |
-             GETPRE | CONTEXT | PUSHOS | POPOS;
+             GETPRE | CONTEXT | PUSHOS | POPOS | DTCMEASURE;
 
   CBR :: length: int ;
   BR :: length: int ;
@@ -141,6 +141,8 @@ environments improved with the closure environment.
   DTC :: tp : AS`Type;
 
   DTCSET :: ;
+
+  DTCMEASURE :: ;
 
   SIZE :: n : nat;
 

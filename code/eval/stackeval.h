@@ -1621,6 +1621,7 @@ public:
   void ExeMEASURE();
   void ExeMEASURETPINST(const SEQ<TYPE_AS_TypeVar> & tpparms);
   void ExeMEASURECHECK();
+  void ExeDTCMEASURE();
   void ExePOSTENV(const SEQ<TYPE_AS_NameType> & resnmtps, const TYPE_CI_ContextId & ci);
   void ExeNOBODY(const TYPE_RTERR_ERR & err,
                  const TYPE_AS_Name & modname,

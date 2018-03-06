@@ -1932,6 +1932,11 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
       break;
     }
 
+    case TAG_TYPE_INSTRTP_DTCMEASURE: {
+      ExeDTCMEASURE();
+      break;
+    }
+
     case TAG_TYPE_INSTRTP_PUSHOS: {
       break;
     }

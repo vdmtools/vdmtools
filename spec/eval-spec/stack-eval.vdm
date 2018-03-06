@@ -4331,6 +4331,7 @@ operations
     mk_INSTRTP`MEASURE()                    -> INSTR`ExeMEASURE(),
     mk_INSTRTP`MEASURETPINST(tpparams)      -> INSTR`ExeMEASURETPINST(tpparams),
     mk_INSTRTP`MEASURECHECK()               -> INSTR`ExeMEASURECHECK(),
+    mk_INSTRTP`DTCMEASURE()                 -> INSTR`ExeDTCMEASURE(),
     mk_INSTRTP`POSTENV(resnmtps,ci)         -> INSTR`ExePOSTENV(resnmtps,ci),
     mk_INSTRTP`DTC(tp)                      -> INSTR`ExeDTC(tp),
     mk_INSTRTP`DTCSET()                     -> INSTR`ExeDTCSET(),

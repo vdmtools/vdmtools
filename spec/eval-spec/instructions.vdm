@@ -134,6 +134,23 @@ ExeMEASURECHECK() ==
       others            -> RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, [])
     end;
 
+ExeDTCMEASURE: () ==> ()
+ExeDTCMEASURE() ==
+  def curr_mv = STKM`Head()
+  in
+    cases curr_mv:
+      mk_SEM`NUM(v)     -> if is_nat(v)
+                           then skip
+                           else RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, []),
+      mk_SEM`TUPLE(v_l) -> if forall i in set inds v_l & cases v_l(i):
+                                                           mk_SEM`NUM(v) -> is_nat(v),
+                                                           others        -> false
+                                                         end
+                           then skip
+                           else RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, []),
+      others            -> RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, [])
+    end;
+
 ExePOSTENV: seq of AS`NameType * CI`ContextId ==> ()
 ExePOSTENV(resnmtps,ci) ==
   def resval = STKM`Head()
