@@ -254,6 +254,17 @@ TYPE_STKM_SubProgramId StackCompiler::CompilePrePostExpr(const TYPE_AS_Expr& e)
   return program_table.InsertProgram(GetClMod(), sp);
 }
 
+// CompileMeasureExpr
+// e : AS`Expr
+// ==> STKM`SubProgramId
+TYPE_STKM_SubProgramId StackCompiler::CompileMeasureExpr(const TYPE_AS_Expr& e)
+{
+  TYPE_STKM_SubProgram sp (E2I(e));
+  sp.ImpAppend(TYPE_INSTRTP_DTCMEASURE());
+  sp.ImpAppend(TYPE_INSTRTP_RETURN());
+  return program_table.InsertProgram(GetClMod(), sp);
+}
+
 // Mease2I
 // fndef : AS`FnDef
 // ==> STKM`SubProgram

@@ -417,9 +417,11 @@ TransFnMap(mod_id, fnm) ==
     in
       cases true:
         (is_SEM`CompExplFN(FNval)) ->  efn := efn ++ {id |-> FNval}
-                                                  ++ CreatePrePostFns(mod_id, fnm(id),id),
+                                                  ++ CreatePrePostFns(mod_id,fnm(id),id)
+                                                  ++ CreateMeasureFns(mod_id,fnm(id),id),
         (is_SEM`ExplPOLY(FNval))   ->  epf := epf ++ {id |-> FNval}
                                                   ++ CreatePolyPrePostFns(mod_id,fnm(id),id)
+                                                  ++ CreatePolyMeasureFns(mod_id,fnm(id),id)
       end;
   return mk_(efn, epf)
  );
@@ -809,6 +811,19 @@ CreateImplPolyPrePostFns (mod_id,
 
 This operation returns the semantic function values for the pre and/or post
 predicate functions for an implicit polymorphic function definition.
+
+\begin{vdm_al}
+
+CreateMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateMeasureFns (mod_id, fndef, overloadnm) ==
+  return {|->}; --is not yet specified;
+
+CreatePolyMeasureFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreatePolyMeasureFns (mod_id, fndef, overloadnm) ==
+  --is not yet rpecified;
+  return {|->}; --is not yet specified;
+\end{vdm_al}
+
 
 \begin{vdm_al}
 functions

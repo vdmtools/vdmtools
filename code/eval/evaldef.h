@@ -56,6 +56,12 @@ public:
   static Map CreatePolyPrePostFns (const TYPE_AS_Name & mod_id,
                                    const TYPE_AS_FnDef & fn_def,
                                    const TYPE_AS_Name & overloadnm);
+  static Map CreateMeasureFns (const TYPE_AS_Name & mod_id,
+                               const TYPE_AS_FnDef & fn_def,
+                               const TYPE_AS_Name & overloadnm);
+  static Map CreatePolyMeasureFns (const TYPE_AS_Name & mod_id,
+                                   const TYPE_AS_FnDef & fn_def,
+                                   const TYPE_AS_Name & overloadnm);
   static Tuple ImplicitTypeParams (const SEQ<TYPE_AS_PatTypePair> & partps);
   static TYPE_AS_Type ImplicitResType (const SEQ<TYPE_AS_NameType> & resnmtps);
 #ifdef VDMPP

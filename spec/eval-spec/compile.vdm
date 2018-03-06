@@ -273,50 +273,54 @@ index of the table entry.
     in
       return InsertProgram(GetClMod(), instr);
 
+  CompileMeasureExpr : AS`Expr ==> STKM`SubProgramId
+  CompileMeasureExpr(e) ==
+    def instr = CEXPR`E2I(e) ^ [mk_INSTRTP`DTCMEASURE(), mk_INSTRTP`RETURN()]
+    in
+      return InsertProgram(GetClMod(), instr);
+
   Mease2I : AS`FnDef ==> STKM`SubProgram
   Mease2I(fndef) ==
    (dcl sp : STKM`SubProgram := [];
     let measu = fndef.measu,
         fnbody = fndef.body.body
     in 
-      if measu <> nil and not is_(fnbody, AS`NoBody)
+      if not is_(measu, [<NOTYETSPEC>]) and not is_(fnbody, AS`NoBody)
       then
-        if measu <> <NOTYETSPEC>
+       (dcl tsp : STKM`SubProgram := CEXPR`E2I(measu);
+        if MeasureIsId(measu, fndef)
         then
-         (dcl tsp : STKM`SubProgram := CEXPR`E2I(measu);
-          if MeasureIsId(measu, fndef)
-          then
-           (dcl count : nat := 0;
-              cases fndef:
-                mk_AS`ExplFnDef(-,tpparms,-,parms,-,-,-,-,-,-,-) ->
-                    (if tpparms <> []
-                     then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(tpparms) ];
-                     tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
-                     for pat_l in parms do
-                       if pat_l <> []
-                       then 
-                        (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
-                         count := count + len pat_l);
-                    ),
-                mk_AS`ExtExplFnDef(-,params,parml,-,-,-,-,-,-,-,-) ->
-                    (if params <> []
-                     then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(params) ];
-                     tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
-                     for mk_AS`PatTypePair(pat_l,-,-) in parml do
+         (dcl count : nat := 0;
+            cases fndef:
+              mk_AS`ExplFnDef(-,tpparms,-,parms,-,-,-,-,-,-,-) ->
+                  (if tpparms <> []
+                   then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(tpparms) ];
+                   tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
+                   for pat_l in parms do
+                     if pat_l <> []
+                     then 
                       (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
                        count := count + len pat_l);
-                    )
-              end;
-            tsp := tsp ^ [ mk_INSTRTP`PUSHLIST(count) ];
+                  ),
+              mk_AS`ExtExplFnDef(-,params,parml,-,-,-,-,-,-,-,-) ->
+                  (if params <> []
+                   then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(params) ];
+                   tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
+                   for mk_AS`PatTypePair(pat_l,-,-) in parml do
+                    (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
+                     count := count + len pat_l);
+                  )
+            end;
+          tsp := tsp ^ [ mk_INSTRTP`PUSHLIST(count) ];
 #ifdef VDMPP
-            tsp := tsp ^ [ mk_INSTRTP`GUARD(true) ];
+          tsp := tsp ^ [ mk_INSTRTP`GUARD(true) ];
 #endif VDMPP
-            tsp := tsp ^ SetContext(measu.cid, false)
+          tsp := tsp ^ SetContext(measu.cid, false)
                        ^ [ mk_INSTRTP`APPLY(), mk_INSTRTP`REMSTACKELEM(2) ];
-           );
-          tsp := tsp ^ [ mk_INSTRTP`MEASURECHECK() ];
-          sp := CEXPR`ConcIfThenElse( [ mk_INSTRTP`MEASURE() ], tsp, [] );
          );
+        tsp := tsp ^ [ mk_INSTRTP`MEASURECHECK() ];
+        sp := CEXPR`ConcIfThenElse( [ mk_INSTRTP`MEASURE() ], tsp, [] );
+       );
     return sp;
    );
 

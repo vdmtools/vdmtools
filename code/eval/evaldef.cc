@@ -471,8 +471,9 @@ TYPE_AS_Type DEF::UpdateType(const TYPE_AS_Type & type, const TYPE_AS_Name & cur
                                    type.GetInt(pos_AS_OpType_cid));
     }
 //
-    default:
+    default: {
       return type;
+    }
   }
 }
 #endif // VDMPP
@@ -501,13 +502,13 @@ MAP<TYPE_AS_Name,TYPE_AS_TypeDef> DEF::GenStateTypeDef (const TYPE_AS_StateDef &
 // ==> [GLOBAL`StateInv(AS`Name * seq of AS`Name * AS`Pattern * AS`Expr)]
 Generic DEF::StateInvariant (const Generic & e)
 {
-  if (e.IsNil ())
+  if (e.IsNil ()) {
     return Nil ();
-
+  }
   TYPE_AS_StateDef sd (e);
-  if (sd.GetField(pos_AS_StateDef_Inv).IsNil ())
+  if (sd.GetField(pos_AS_StateDef_Inv).IsNil ()) {
     return Nil ();
-
+  }
   const TYPE_AS_Type & comp_t (sd.GetRecord(pos_AS_StateDef_tp)); // CompositeType
   const TYPE_AS_Name & name (comp_t.GetRecord(pos_AS_CompositeType_name)); // AS`Name
   const SEQ<TYPE_AS_Field> & fields_lv (comp_t.GetSequence(pos_AS_CompositeType_fields));
@@ -544,8 +545,7 @@ Tuple DEF::TransInstVars(const SEQ<TYPE_AS_InstanceVarDef> & instvardef_l)
   Map instvars_tp; // map AS`Name to AS`Type
 
   size_t len_instvardef_l = instvardef_l.Length();
-  for (size_t idx = 1; idx <= len_instvardef_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_instvardef_l; idx++) {
     const TYPE_AS_InstanceVarDef & ivd (instvardef_l[idx]);
     switch(ivd.GetTag()) {
       case TAG_TYPE_AS_InstAssignDef: {
@@ -577,20 +577,15 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> DEF::ExtractStaticMembers(const MAP<TYPE_AS_Name
   SET<TYPE_AS_Name> dom_fnm (fnm.Dom());
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> statmap;
   Generic fnnm;
-  for (bool bb = dom_fnm.First(fnnm); bb; bb = dom_fnm.Next(fnnm))
-  {
+  for (bool bb = dom_fnm.First(fnnm); bb; bb = dom_fnm.Next(fnnm)) {
     const TYPE_AS_FnDef & fn (fnm[fnnm]);
-    if (ASTAUX::GetFnStatic(fn))
-    {
+    if (ASTAUX::GetFnStatic(fn)) {
       statmap.Insert(fnnm, LookUpLocalFn(fnnm, sigma));
-      if (!ASTAUX::GetFnPrecond(fn).IsNil())
-      {
+      if (!ASTAUX::GetFnPrecond(fn).IsNil()) {
         TYPE_AS_Name prenm (AUX::PreName(fnnm));
         statmap.Insert(prenm, LookUpLocalFn(prenm, sigma));
       }
-
-      if (!ASTAUX::GetFnPostcond(fn).IsNil())
-      {
+      if (!ASTAUX::GetFnPostcond(fn).IsNil()) {
         TYPE_AS_Name postnm (AUX::PostName(fnnm));
         statmap.Insert(postnm, LookUpLocalFn(postnm, sigma));
       }
@@ -600,13 +595,12 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> DEF::ExtractStaticMembers(const MAP<TYPE_AS_Name
   SET<TYPE_AS_Name> dom_opm (opm.Dom());
   const Map & explops (sigma.GetMap(pos_GLOBAL_SigmaClass_explops));
   Generic opnm;
-  for (bool cc = dom_opm.First(opnm); cc; cc = dom_opm.Next(opnm))
-  {
+  for (bool cc = dom_opm.First(opnm); cc; cc = dom_opm.Next(opnm)) {
     const TYPE_AS_OpDef & op (opm[opnm]);
-    if (ASTAUX::GetOpStatic(op))
-    {
-      if (explops.DomExists(opnm))
+    if (ASTAUX::GetOpStatic(op)) {
+      if (explops.DomExists(opnm)) {
         statmap.Insert(opnm, explops[opnm]);
+      }
     }
   }
   return statmap;
@@ -619,10 +613,12 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> DEF::ExtractStaticMembers(const MAP<TYPE_AS_Name
 TYPE_SEM_VAL DEF::LookUpLocalFn(const TYPE_AS_Name & fnnm, const TYPE_GLOBAL_SigmaClass & sigma)
 {
   Generic g;
-  if (sigma.GetMap(pos_GLOBAL_SigmaClass_explfns).DomExists(fnnm, g))
+  if (sigma.GetMap(pos_GLOBAL_SigmaClass_explfns).DomExists(fnnm, g)) {
     return g;
-  else
+  }
+  else {
     return sigma.GetMap(pos_GLOBAL_SigmaClass_explpolys)[fnnm];
+  }
 }
 
 // TransLocalRecSel
@@ -645,8 +641,7 @@ Tuple DEF::TransFnMap (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name,TYPE_
   SET<TYPE_AS_Name> dom_fnm (fnm.Dom());
   Map efn, epf;
   Generic id;
-  for (bool bb = dom_fnm.First (id); bb; bb = dom_fnm.Next (id))
-  {
+  for (bool bb = dom_fnm.First (id); bb; bb = dom_fnm.Next (id)) {
     const TYPE_AS_FnDef & fd (fnm[id]);
     TYPE_SEM_VAL FNval (TransFN (mod_id, fd));
 
@@ -654,11 +649,13 @@ Tuple DEF::TransFnMap (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name,TYPE_
       case TAG_TYPE_SEM_CompExplFN: {
         efn.Insert (id, FNval);
         efn.ImpOverride (CreatePrePostFns (mod_id, fd, id));
+        efn.ImpOverride (CreateMeasureFns (mod_id, fd, id));
         break;
       }
       case TAG_TYPE_SEM_ExplPOLY: {
         epf.Insert (id, FNval);
         epf.ImpOverride (CreatePolyPrePostFns (mod_id, fd, id));
+        epf.ImpOverride (CreatePolyMeasureFns (mod_id, fd, id));
         break;
       }
     }
@@ -696,9 +693,9 @@ TYPE_SEM_VAL DEF::TransExplFN(const TYPE_AS_Name & mod_id, const TYPE_AS_ExplFnD
 
   SEQ<type_dL> pi_l; // seq of seq of STKM`Pattern
   size_t len = parms_l.Length();
-  for (size_t i = 1; i <= len; i++)
+  for (size_t i = 1; i <= len; i++) {
     pi_l.ImpAppend(theCompiler().PL2PL(parms_l[i]));
-
+  }
   if (tpp.IsEmpty()) { // non-polymorphic function
     TYPE_SEM_ExplFN FNval;
     FNval.Init(tp, // type
@@ -853,14 +850,10 @@ Map DEF::CreatePrePostFns (const TYPE_AS_Name & mod_id,
                            const TYPE_AS_Name & overloadnm)
 {
   switch(fn_def.GetTag()) {
-    case TAG_TYPE_AS_ExplFnDef:
-      return CreateExplPrePostFns(mod_id, fn_def, overloadnm);
-    case TAG_TYPE_AS_ExtExplFnDef:
-      return CreateExtExplPrePostFns(mod_id, fn_def, overloadnm);
-    case TAG_TYPE_AS_ImplFnDef:
-      return CreateImplPrePostFns(mod_id, fn_def, overloadnm);
-    default:
-      return Map();
+    case TAG_TYPE_AS_ExplFnDef:    { return CreateExplPrePostFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ExtExplFnDef: { return CreateExtExplPrePostFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ImplFnDef:    { return CreateImplPrePostFns(mod_id, fn_def, overloadnm); }
+    default:                       { return Map(); }
   }
 }
 
@@ -882,12 +875,10 @@ Map DEF::CreateExplPrePostFns (const TYPE_AS_Name & mod_id,
 
   Map res_m;
 
-  if (! pre_e.IsNil ())
-  {
+  if (! pre_e.IsNil ()) {
     SEQ<type_dL> parm_pre; // seq of seq of STKM`Pattern
     size_t len_parms = parms.Length();
-    for (size_t idx = 1; idx <= len_parms; idx++)
-    {
+    for (size_t idx = 1; idx <= len_parms; idx++) {
       parm_pre.ImpAppend (theCompiler().PL2PL(parms[idx]));
     }
 
@@ -1109,8 +1100,9 @@ Map DEF::CreateImplPrePostFns (const TYPE_AS_Name & mod_id,
 SEQ<TYPE_AS_Pattern> DEF::CreatePostParms(const SEQ<TYPE_AS_Name> & resnms)
 {
   switch(resnms.Length()) {
-    case 0:
+    case 0: {
       return SEQ<TYPE_AS_Pattern>();
+    }
     case 1: {
       const TYPE_AS_Name & nm (resnms.Hd());
       SEQ<TYPE_AS_Pattern> res;
@@ -1141,14 +1133,10 @@ Map DEF::CreatePolyPrePostFns (const TYPE_AS_Name & mod_id,
                                const TYPE_AS_Name & overloadnm)
 {
   switch(fn_def.GetTag()) {
-    case TAG_TYPE_AS_ExplFnDef:
-      return CreateExplPolyPrePostFns(mod_id, fn_def, overloadnm);
-    case TAG_TYPE_AS_ExtExplFnDef:
-      return CreateExtExplPolyPrePostFns(mod_id, fn_def, overloadnm);
-    case TAG_TYPE_AS_ImplFnDef:
-      return CreateImplPolyPrePostFns(mod_id, fn_def, overloadnm);
-    default:
-      return Map();
+    case TAG_TYPE_AS_ExplFnDef:    { return CreateExplPolyPrePostFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ExtExplFnDef: { return CreateExtExplPolyPrePostFns(mod_id, fn_def, overloadnm); }
+    case TAG_TYPE_AS_ImplFnDef:    { return CreateImplPolyPrePostFns(mod_id, fn_def, overloadnm); }
+    default:                       { return Map(); }
   }
 }
 
@@ -1158,8 +1146,8 @@ Map DEF::CreatePolyPrePostFns (const TYPE_AS_Name & mod_id,
 // overloadnm : AS`Name
 // ==> map AS`Name to SEM`ExplPOLY
 Map DEF::CreateExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
-                                     const TYPE_AS_ExplFnDef & fn_def,
-                                     const TYPE_AS_Name & overloadnm)
+                                   const TYPE_AS_ExplFnDef & fn_def,
+                                   const TYPE_AS_Name & overloadnm)
 {
 //  const TYPE_AS_Name & nm          (fn_def.GetRecord(pos_AS_ExplFnDef_nm));
   const SEQ<TYPE_AS_TypeVar> & tpp      (fn_def.GetSequence(pos_AS_ExplFnDef_tpparms));
@@ -1174,8 +1162,7 @@ Map DEF::CreateExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
   if (!pre_e.IsNil ()) {
     SEQ<type_dL> pi_l; // seq of seq of STKM`Pattern
     size_t len_parms = parms.Length();
-    for (size_t idx = 1; idx <= len_parms; idx++)
-    {
+    for (size_t idx = 1; idx <= len_parms; idx++) {
       pi_l.ImpAppend(theCompiler().PL2PL(parms[idx]));
     }
 
@@ -1265,8 +1252,7 @@ Map DEF::CreateExtExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
 
   Map res_m;
 
-  if (! pre_e.IsNil ())
-  {
+  if (! pre_e.IsNil ()) {
     SEQ<type_dL> parm_pre; // seq of seq of STKM`Pattern
     parm_pre.ImpAppend (theCompiler().PL2PL(parms));
 
@@ -1289,8 +1275,7 @@ Map DEF::CreateExtExplPolyPrePostFns (const TYPE_AS_Name & mod_id,
     res_m.Insert (nm_pre, fn_pre);
   }
 
-  if (! post_e.IsNil ())
-  {
+  if (! post_e.IsNil ()) {
     SEQ<TYPE_AS_Pattern> res_p (CreatePostParms(resnms));
 
     TYPE_AS_Type tp_post (CreateFunctionPostType (fndom, restps, Sequence()));
@@ -1392,6 +1377,32 @@ Map DEF::CreateImplPolyPrePostFns (const TYPE_AS_Name & mod_id,
   return (res_m);
 }
 
+// CreateMeasureFns
+// mod_id : AS`Name
+// fn_def : AS`FnDef
+// overloadnm : AS`Name
+// ==> map AS`Name to SEM`CompExplFN
+Map DEF::CreateMeasureFns (const TYPE_AS_Name & mod_id,
+                           const TYPE_AS_FnDef & fn_def,
+                           const TYPE_AS_Name & overloadnm)
+{
+  // is not yet implemented
+  return Map();
+}
+
+// CreatePolyMeasureFns
+// mod_id : AS`Name
+// fn_def : AS`FnDef
+// overloadnm : AS`Name
+// ==> map AS`Name to SEM`ExplPOLY
+Map DEF::CreatePolyMeasureFns (const TYPE_AS_Name & mod_id,
+                               const TYPE_AS_FnDef & fn_def,
+                               const TYPE_AS_Name & overloadnm)
+{
+  // is not yet implemented
+  return Map();
+}
+
 // ImplicitTypeParams
 // partps : AS`ParameterTypes
 // ==> AS`DiscretionaryType * AS`Parameters
@@ -1400,15 +1411,13 @@ Tuple DEF::ImplicitTypeParams (const SEQ<TYPE_AS_PatTypePair> & partps)
   SEQ<TYPE_AS_Type> tp_l;
   SEQ<TYPE_AS_Pattern> parm_l;
   size_t len_partps = partps.Length();
-  for (size_t i = 1; i <= len_partps; i++)
-  {
+  for (size_t i = 1; i <= len_partps; i++) {
     const TYPE_AS_PatTypePair & ptp (partps[i]);
     const SEQ<TYPE_AS_Pattern> & pat_l (ptp.GetSequence(pos_AS_PatTypePair_pats));
     const TYPE_AS_Type & tp    (ptp.GetRecord(pos_AS_PatTypePair_tp));
 
     size_t len_pat_l = pat_l.Length();
-    for (size_t j = 1; j <= len_pat_l; j++)
-    {
+    for (size_t j = 1; j <= len_pat_l; j++) {
       tp_l.ImpAppend(tp);
       parm_l.ImpAppend (pat_l[j]);
     }
@@ -1424,8 +1433,7 @@ Tuple DEF::ImplicitResNameTypes (const SEQ<TYPE_AS_NameType> & resnmtps)
   SEQ<TYPE_AS_Name> nm_l;
   SEQ<TYPE_AS_Type> tp_l;
   size_t len_resnmtps = resnmtps.Length();
-  for (size_t idx = 1; idx <= len_resnmtps; idx++)
-  {
+  for (size_t idx = 1; idx <= len_resnmtps; idx++) {
     const TYPE_AS_NameType & nmtp (resnmtps[idx]);
     nm_l.ImpAppend(nmtp.GetRecord(pos_AS_NameType_nm));
     tp_l.ImpAppend(nmtp.GetRecord(pos_AS_NameType_tp));
@@ -1439,15 +1447,16 @@ Tuple DEF::ImplicitResNameTypes (const SEQ<TYPE_AS_NameType> & resnmtps)
 TYPE_AS_Type DEF::ImplicitResType (const SEQ<TYPE_AS_NameType> & resnmtps)
 {
   switch(resnmtps.Length()) {
-    case 0:
+    case 0: {
       return TYPE_AS_VoidType().Init(NilContextId);
-    case 1:
+    }
+    case 1: {
       return resnmtps[1].GetRecord(pos_AS_NameType_tp);
+    }
     default: { // resnmtps.Length() > 1
       size_t len_resnmtps = resnmtps.Length();
       SEQ<TYPE_AS_Type> tp_l;
-      for (size_t idx = 1; idx <= len_resnmtps; idx++)
-      {
+      for (size_t idx = 1; idx <= len_resnmtps; idx++) {
         const TYPE_AS_NameType & nmtp (resnmtps[idx]);
         tp_l.ImpAppend(nmtp.GetRecord(pos_AS_NameType_tp));
       }
@@ -1513,11 +1522,12 @@ TYPE_AS_Type DEF::CreateFunctionPostType (const SEQ<TYPE_AS_Type> & tpdom,
     case 0:
     case 1: {
       SEQ<TYPE_AS_Type> ntpdom (tpdom);
-      if (tprng.Length() <= 1)
+      if (tprng.Length() <= 1) {
         ntpdom.ImpConc (tprng);
-      else
+      }
+      else {
         ntpdom.ImpAppend(TYPE_AS_ProductType().Init(tprng, ASTAUX::GetCid(tprng.Hd())));
-
+      }
       TYPE_AS_TotalFnType fn_tp;
       fn_tp.Init(ntpdom, TYPE_AS_BooleanType().Init(NilContextId), NilContextId);
       return fn_tp;
@@ -1560,8 +1570,9 @@ TYPE_AS_Type DEF::CreateOperationPreType (const SEQ<TYPE_AS_Type> & tpdom, const
   new_tpdom.ImpConc(tpdom);
 
 #ifdef VDMSL
-  if (!st_id.IsNil ())
+  if (!st_id.IsNil ()) {
     new_tpdom.ImpAppend(TYPE_AS_TypeName().Init(st_id, ASTAUX::GetCid(st_id)));
+  }
 #endif // VDMSL
 
   return TYPE_AS_TotalFnType().Init(new_tpdom, TYPE_AS_BooleanType().Init(NilContextId), NilContextId);
@@ -1580,14 +1591,17 @@ TYPE_AS_Type DEF::CreateOperationPostType (const SEQ<TYPE_AS_Type> & tpdom,
   // This block implemented from PGL spec (based on eval_def
   // v1.35.2.22) 990820
   switch (tprng.Length()) {
-    case 0:
+    case 0: {
       break;
-    case 1:
+    }
+    case 1: {
       realtprng.ImpConc(tprng);
       break;
-    default:
+    }
+    default: {
       realtprng.ImpAppend(TYPE_AS_ProductType().Init(tprng, ASTAUX::GetCid(tprng[1])));
       break; 
+    }
   }
 
   SEQ<TYPE_AS_Type> new_tpdom;
@@ -1595,8 +1609,7 @@ TYPE_AS_Type DEF::CreateOperationPostType (const SEQ<TYPE_AS_Type> & tpdom,
   new_tpdom.ImpConc(realtprng);
 
 #ifdef VDMSL
-  if (!st_id.IsNil ())
-  {
+  if (!st_id.IsNil ()) {
     TYPE_AS_TypeName st_tp;
     st_tp.Init(st_id, ASTAUX::GetCid(st_id));
     new_tpdom.ImpAppend(st_tp);

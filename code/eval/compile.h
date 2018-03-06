@@ -153,6 +153,7 @@ public:
 
   TYPE_STKM_SubProgramId CompileFnOpDef(const Record &);
   TYPE_STKM_SubProgramId CompilePrePostExpr(const TYPE_AS_Expr &);
+  TYPE_STKM_SubProgramId CompileMeasureExpr(const TYPE_AS_Expr &);
   TYPE_STKM_SubProgram Mease2I(const TYPE_AS_FnDef &);
   bool MeasureIsId(const Generic & measu, const TYPE_AS_FnDef &);
   SET<TYPE_AS_Name> NamesInPatternList(const SEQ<TYPE_AS_Pattern> & pat_l);
