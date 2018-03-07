@@ -562,10 +562,11 @@ private:
 
 private:
   bool ReservedPrefix (const TYPE_AS_Name & nm) const;
-  TYPE_AS_Name Init (const TYPE_AS_Name & nm) const;
-  TYPE_AS_Name Inv (const TYPE_AS_Name & nm) const;
-  TYPE_AS_Name Post (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Pre (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Post (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Measure (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Inv (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Init (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Equality (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Order (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Max (const TYPE_AS_Name & nm) const;
@@ -574,8 +575,9 @@ private:
 public:
   TYPE_AS_Name ExtName (const TYPE_AS_Name & mod, const TYPE_AS_Name & nm) const;
 private:
-  TYPE_REP_FnTypeRep MakePostType (const TYPE_REP_FnTypeRep & fntp) const;
   TYPE_REP_FnTypeRep MakePreType (const TYPE_REP_FnTypeRep & fntp) const;
+  TYPE_REP_FnTypeRep MakePostType (const TYPE_REP_FnTypeRep & fntp) const;
+  TYPE_REP_FnTypeRep MakeMeasureType (const TYPE_REP_FnTypeRep & fntp) const;
   TYPE_REP_TypeRep SeqMapTypeModify (const TYPE_REP_TypeRep & seqtp,
                                      const TYPE_REP_TypeRep & maptp,
                                      const TYPE_REP_TypeRep & modtp);
@@ -630,8 +632,9 @@ private:
 
   TYPE_REP_TypeRep AlwaysType(const TYPE_REP_TypeRep &, const TYPE_REP_TypeRep &) const;
   Generic ExtractExitTypeRep (const TYPE_REP_TypeRep &) const;
-  Tuple MakePolyPostType (const SEQ<TYPE_REP_TypeVarRep> & tv_l, const TYPE_REP_FnTypeRep & fntp) const;
   Tuple MakePolyPreType (const SEQ<TYPE_REP_TypeVarRep> & tv_l, const TYPE_REP_FnTypeRep & fntp) const;
+  Tuple MakePolyPostType (const SEQ<TYPE_REP_TypeVarRep> & tv_l, const TYPE_REP_FnTypeRep & fntp) const;
+  Tuple MakePolyMeasureType (const SEQ<TYPE_REP_TypeVarRep> & tv_l, const TYPE_REP_FnTypeRep & fntp) const;
   Record InstFnAS (const Record & gtp, const MAP<TYPE_AS_Name,TYPE_AS_Type> & bind) const;
   TYPE_REP_TypeRep InstFn (const Int & kind,
                            const TYPE_REP_TypeRep & tp,

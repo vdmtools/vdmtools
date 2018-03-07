@@ -46,10 +46,11 @@ void StatSem::EnterScope (const MAP<TYPE_AS_Name,Tuple> & bindings)
   SET<TYPE_AS_Name> dom_bindings (bindings.Dom());
   MAP<TYPE_AS_Name,TYPE_SSENV_TypeRepElem> env;
   Generic nm;
-  for (bool bb = dom_bindings.First(nm); bb; bb = dom_bindings.Next(nm))
+  for (bool bb = dom_bindings.First(nm); bb; bb = dom_bindings.Next(nm)) {
     //env.Insert (nm, mk_SSENV_TypeRepElem(bindings[nm].GetRecord(1), Bool(false), Bool(false)));
     env.Insert (nm, mk_SSENV_TypeRepElem(bindings[nm].GetRecord(1),
                                          Bool(bindings[nm].GetIntValue(2) > 1), Bool(false)));
+  }
   this->SEnv.ImpPrepend (env);
 }
 
@@ -60,8 +61,7 @@ void StatSem::UpdateScope (const MAP<TYPE_AS_Name,Tuple> & bindings)
   SET<TYPE_AS_Name> dom_bindings (bindings.Dom());
   MAP<TYPE_AS_Name,TYPE_SSENV_TypeRepElem> env (this->SEnv.Hd());
   Generic nm;
-  for (bool bb = dom_bindings.First(nm); bb; bb = dom_bindings.Next(nm))
-  {
+  for (bool bb = dom_bindings.First(nm); bb; bb = dom_bindings.Next(nm)) {
     env.ImpModify (nm,
                    mk_SSENV_TypeRepElem(bindings[nm].GetRecord(1),
                                   (env.DomExists(nm) ? env[nm].GetBool(pos_SSENV_TypeRepElem_used)
@@ -74,24 +74,24 @@ void StatSem::UpdateScope (const MAP<TYPE_AS_Name,Tuple> & bindings)
 // LeaveScope
 void StatSem::LeaveScope ()
 {
-  if (this->SEnv.IsEmpty())
+  if (this->SEnv.IsEmpty()) {
     InternalError(L"LeaveScope");
-  else
-  {
+  }
+  else {
     TYPE_AS_Name result (ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), NilContextId));
     MAP<TYPE_AS_Name,TYPE_SSENV_TypeRepElem> env (this->SEnv.Hd());
     SET<TYPE_AS_Name> dom_env (env.Dom()); 
     Generic nm;
-    for (bool bb = dom_env.First(nm); bb; bb = dom_env.Next(nm))
-    {
+    for (bool bb = dom_env.First(nm); bb; bb = dom_env.Next(nm)) {
       if (!env[nm].GetBool(pos_SSENV_TypeRepElem_used) &&
           (nm != result) &&
-          !IsPrePostFn(nm))
+          !IsPrePostFn(nm)) {
         //--------------------
         // Error message #33
         // L"%1" is not used
         //--------------------
         GenErr(nm, WRN1, 33, mk_sequence(PrintName(nm)));
+      }
     }
     this->SEnv.ImpTl();
   }
@@ -116,12 +116,12 @@ void StatSem::UpdateLocalScope (const MAP<TYPE_AS_Name,Tuple> & bindings)
 void StatSem::LeaveLocalScope ()
 {
 // 20120619 -->
-//  if ((this->LocalEnv.IsEmpty()) || (this->SEnv.IsEmpty()))
-  if (this->LocalEnv.IsEmpty())
+//  if ((this->LocalEnv.IsEmpty()) || (this->SEnv.IsEmpty())) {
+  if (this->LocalEnv.IsEmpty()) {
 // <-- 20120619
     InternalError(L"LeaveLocalScope");
-  else
-  {
+  }
+  else {
     this->LocalEnv.ImpTl();
 // 20120619 -->
 //    LeaveScope();
@@ -159,8 +159,7 @@ Generic StatSem::LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & n
 Generic StatSem::LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm,
                                     bool writable, bool printError)
 {
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
@@ -168,10 +167,8 @@ Generic StatSem::LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name
       Generic tp (writable ? LookUpInHierarchy(nnm, ncls, STATE, OBJECT)
                            : LookUpInHierarchy (nnm, ncls, VAL, OBJECT));
       Generic tp_q;
-      if (tp.IsNil ())
-      {
-        if ((tp_q = LookUpInHierarchy (nnm, ncls, STATE, LOCAL)).IsNil ())
-        {
+      if (tp.IsNil ()) {
+        if ((tp_q = LookUpInHierarchy (nnm, ncls, STATE, LOCAL)).IsNil ()) {
           //------------------------
           // Error message #34
           // Unknown identifier L"%1"
@@ -179,31 +176,36 @@ Generic StatSem::LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name
           if (printError)
             GenErr(nm, ERR, 34, mk_sequence(PrintName(nm)));
         }
-        else
+        else {
           return tp_q;
+        }
       }
       return tp;
     }
     else {
       Generic tp (LookUp(nm, false));
-      if (!tp.IsNil())
+      if (!tp.IsNil()) {
         return tp;
-      else
+      }
+      else {
         //---------------------------------------
         // Error message #391
         // L"Class "%1" has no static member "%2"
         //---------------------------------------
-      GenErr(nm, ERR, 391, mk_sequence(PrintName(ncls), PrintName(nnm)));
-      return Nil();
+        GenErr(nm, ERR, 391, mk_sequence(PrintName(ncls), PrintName(nnm)));
+        return Nil();
+      }
     }
   }
   else {
     Generic valtp (writable ? LookUpInHierarchy(nm, obj, STATE, OBJECT)
                             : LookUpInHierarchy(nm, obj, VAL, OBJECT));
-    if (valtp.IsNil ())
+    if (valtp.IsNil ()) {
       return LookUpInHierarchy (nm, obj, STATE, LOCAL);
-    else
+    }
+    else {
       return valtp;
+    }
   }
 }
 #ifdef VICE
@@ -238,45 +240,45 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
 {
 // 20110629 -->
 #ifdef VDMSL
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
-    if (ASTAUX::GetFirstName(nm) == GetCurMod ())
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
+    if (ASTAUX::GetFirstName(nm) == GetCurMod ()) {
       return LookUp (ASTAUX::GetSecondName(nm), printErr);
+    }
   }
 #endif // VDMSL
 // <-- 20110629
 #ifdef VDMPP
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
 // 20120216 -->
     //TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
     TYPE_AS_Name ncls = ASTAUX::GetFirstName(nm);
     Tuple t (ExpandClassName(ncls, Set()));
-    if (t.GetBoolValue(1))
+    if (t.GetBoolValue(1)) {
       ncls = t.GetRecord(2);
+    }
 // <--20120216
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
-    if (ncls == GetCurClass ())
+    if (ncls == GetCurClass ()) {
       return LookUp (nnm, printErr);
-
+    }
     Generic tp = Nil();
-    if (IsLocalSuperSuper(ncls))
+    if (IsLocalSuperSuper(ncls)) {
       tp = LookUpInHierarchy(nnm, ncls, VAL, LOCAL);
-    else
+    }
+    else {
       tp = LookUpInHierarchy(nnm, ncls, VAL, GLOBAL);
-
+    }
     bool nilOrHasNotStaticAndNotSubClass = false;
-    if (tp.IsNil ())
+    if (tp.IsNil ()) {
       nilOrHasNotStaticAndNotSubClass = true;
+    }
     else {
       bool hasNotStatic = false;
-      if (IsAccessType(tp))
-      {
+      if (IsAccessType(tp)) {
         hasNotStatic = !(GetSSStatic(tp).GetValue());
       }
-      else
-      { //  set of AccessType
+      else { //  set of AccessType
         Set tp_set (tp);
         bool exists = false;
         Generic t;
@@ -290,20 +292,20 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
 #endif // VICE
 
       //if (hasNotStatic && (!IsSubClass(CheckClass, ncls)))
-      if (hasNotStatic && (!IsSubClass(GetCurClass(), ncls)))
+      if (hasNotStatic && (!IsSubClass(GetCurClass(), ncls))) {
         nilOrHasNotStaticAndNotSubClass = true;
-      else
+      }
+      else {
         nilOrHasNotStaticAndNotSubClass = false;
+      }
     }
 
-    if (nilOrHasNotStaticAndNotSubClass)
-    {
+    if (nilOrHasNotStaticAndNotSubClass) {
       if (printErr
 #ifdef VICE
           && this->staticrequired
 #endif // VICE
-         )
-      {
+         ) {
         //------------------------
         // Error message #391
         // L"Class \"%1\" has no static member \"%2\"
@@ -313,8 +315,7 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
         return Nil();
       }
 #ifdef VICE
-      else if (printErr)
-      {
+      else if (printErr) {
         //------------------------
         // Error message #435
         // L"%1 is not defined"
@@ -332,48 +333,46 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
 #endif //VDMPP
   {
     size_t depth = this->SEnv.Length();
-    for (size_t i = 1 ; i <= depth ; i++)
-    {
+    for (size_t i = 1 ; i <= depth ; i++) {
       MAP<TYPE_AS_Name,TYPE_SSENV_TypeRepElem> currentEnv (this->SEnv[i]);
-      if (currentEnv.DomExists(nm))
-      {
+      if (currentEnv.DomExists(nm)) {
         TYPE_SSENV_TypeRepElem rc (currentEnv[nm]);
         rc.set_used (Bool(true));
         currentEnv.ImpModify(nm, rc);
         this->SEnv.ImpModify(i, currentEnv);
-        if (rc.get_tp().Is(TAG_TYPE_REP_TmpTypeRep))
-        {
+        if (rc.get_tp().Is(TAG_TYPE_REP_TmpTypeRep)) {
           //----------------------------------
           // Error message #36
           // Missing type information for L"%1"
           //----------------------------------
-          if (printErr)
+          if (printErr) {
             GenErr (nm, WRN1, 36, mk_sequence(PrintName (nm)));
+          }
           return rep_alltp;
         }
         return rc.get_tp ();
       }
     }
 
-    if (this->ConstEnv.DomExists(nm))
-    {
+    if (this->ConstEnv.DomExists(nm)) {
       TYPE_SSENV_TypeRepElem rc (this->ConstEnv[nm]);
       rc.set_used (Bool(true));
       this->ConstEnv.ImpModify (nm, rc);
-      if (rc.get_tp().Is(TAG_TYPE_REP_TmpTypeRep))
+      if (rc.get_tp().Is(TAG_TYPE_REP_TmpTypeRep)) {
         //----------------------------------
         // Error message #36
         // Missing type information for L"%1"
         //----------------------------------
-      {
-        if (printErr)
+        if (printErr) {
           GenErr (nm, WRN1, 36, mk_sequence(PrintName (nm)));
+        }
         return rep_alltp;
       }
       return rc.get_tp();
     }
-    else if (this->ValueIds.InSet (nm))
+    else if (this->ValueIds.InSet (nm)) {
       return rep_alltp;
+    }
     else if (this->StateEnv.DomExists(nm)) {
 #ifdef VDMPP
       CheckLookupStatic(nm, TYPE_SSENV_TypeRepElem(this->StateEnv[nm]).get_stat());
@@ -385,8 +384,7 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
 #endif //VDMPP
           //(((kind == IMPL) || (kind == PRE) || (kind == POST)) && this->ExtEnv.DomExists (nm))
           (((kind == IMPL) || (kind == PRE) || (kind == POST) || (kind == PUREOP)) && this->ExtEnv.DomExists (nm))
-         )
-      {
+         ) {
         TYPE_SSENV_TypeRepElem rc (this->StateEnv[nm]);
         rc.set_used (Bool(true));
         this->StateEnv.ImpModify (nm, rc);
@@ -397,13 +395,13 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
         // Error message #37
         // The state component L"%1" must not be used here
         //-----------------------------------------------
-        if (printErr)
+        if (printErr) {
           GenErr (nm, ERR, 37, mk_sequence(PrintName (nm)));
+        }
         return Nil ();
       }
     }
-    else if (this->FunctionEnv.DomExists(nm))
-    {
+    else if (this->FunctionEnv.DomExists(nm)) {
       TYPE_SSENV_TypeRepElem rc (this->FunctionEnv[nm]);
 #ifdef VDMPP
       CheckLookupStatic(nm, rc.get_stat());
@@ -414,8 +412,7 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
     }
 // 20130702 -->
 #ifdef VDMSL
-    else if (this->PolyEnv.DomExists(nm))
-    {
+    else if (this->PolyEnv.DomExists(nm)) {
       TYPE_SSENV_PolyTypeRepElem rc (this->PolyEnv[nm]);
       rc.set_used (Bool(true));
       this->PolyEnv.ImpModify (nm, rc);
@@ -427,8 +424,7 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
     }
 #endif // VDMSL
 // <-- 20130702
-    else if (this->OperationEnv.DomExists(nm))
-    {
+    else if (this->OperationEnv.DomExists(nm)) {
       TYPE_SSENV_OpTypeRepElem rc (this->OperationEnv[nm]);
 #ifdef VDMPP
       CheckLookupStatic(nm, rc.get_stat());
@@ -439,8 +435,9 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
         // Error message #460
         // Impure operation call "%1" in pure operation
         //-----------------------------
-        if (printErr)
+        if (printErr) {
           GenErr (nm, ERR, 460, mk_sequence(PrintName (nm)));
+        }
         //return mk_(Bool(false), Rng);
       }
 // <-- 20151020
@@ -449,14 +446,12 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
       return rc.get_tp();
     }
 #ifdef VDMPP
-    else if (this->OverloadedEnv.DomExists(nm))
-    {
+    else if (this->OverloadedEnv.DomExists(nm)) {
       SET<TYPE_SSENV_TypeRepElem> oe_nm (this->OverloadedEnv[nm]);
       SET<TYPE_SSENV_TypeRepElem> new_oe_nm;
       Set result;
       Generic g;
-      for (bool i = oe_nm.First(g); i; i = oe_nm.Next(g))
-      {
+      for (bool i = oe_nm.First(g); i; i = oe_nm.Next(g)) {
         TYPE_SSENV_TypeRepElem b_atr(g);
         CheckLookupStatic(nm, b_atr.get_stat());
         b_atr.set_used(Bool(true));
@@ -471,14 +466,14 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
 #ifdef VDMPP
     {
       Generic DefClass = GetCurClass();
-      if  ( !DefiningClass.IsEmpty() )
+      if  ( !DefiningClass.IsEmpty() ) {
         DefClass = DefiningClass.Hd();
-
+      }
       Generic tp (LookUpInHierarchy (nm, DefClass, VAL, LOCAL));
 
-      if( tp.IsNil() )
+      if( tp.IsNil() ) {
         tp = LookUpInHierarchy (nm, Nil(), VAL, LOCAL);
-      
+      }
       if (tp.IsNil())
 #endif //VDMPP
       {
@@ -486,13 +481,15 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
         // Error message #34
         // Unknown identifier L"%1"
         //------------------------
-        if (printErr)
+        if (printErr) {
           GenErr(nm, ERR, 34, mk_sequence(PrintName(nm)));
+        }
         return Nil ();
       }
 #ifdef VDMPP
-      else
+      else {
         return tp;
+      }
     }
 #endif //VDMPP
   }
@@ -504,13 +501,14 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
 // stat : bool
 void StatSem::CheckLookupStatic(const TYPE_AS_Name & nm, const Bool & stat)
 {
-  if (GetStatic().GetValue() && !stat.GetValue())
+  if (GetStatic().GetValue() && !stat.GetValue()) {
     // -------------------------------------------------
     // -- Error message #380
     // -- Can not refer to non-static class member %1 in
     // -- a static class member
     // -------------------------------------------------
     GenErr(nm, ERR, 380, mk_sequence(PrintName(nm)));
+  }
 }
 #endif //VDMPP
 
@@ -558,30 +556,29 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
 // 20070309
   this->FoundClass = Nil();
 
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
-    if (ncls == GetCurClass ())
+    if (ncls == GetCurClass ()) {
       //return LookUpTypeName (nnm, true);
       return LookUpTypeName_q (nnm, true);
-    else
-    {
+    }
+    else {
       Generic tp (LookUpInHierarchy(nnm, ncls, TYPE, GLOBAL));
 
-      if (tp.IsNil ())
-      {
-        if (CheckClassName(nnm))
+      if (tp.IsNil ()) {
+        if (CheckClassName(nnm)) {
           return mk_REP_ObjRefTypeRep(nnm);
-        else
-        {
+        }
+        else {
           //------------------------
           // Error message #34
           // Unknown identifier L"%1"
           //------------------------
-          if (printerr)
+          if (printerr) {
             GenErr(nm, ERR, 34, mk_sequence(PrintName(nm)));
+          }
         }
       }
       return tp;
@@ -592,8 +589,7 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
   { // (nm.GetSequence(pos_AS_Name_ids).Length() == 1)
 #ifdef VDMSL
   if ((nm.GetSequence(pos_AS_Name_ids).Length() == 2) && 
-       ASTAUX::GetFirstName(nm) == GetCurMod())
-  {
+       ASTAUX::GetFirstName(nm) == GetCurMod()) {
     return LookUpTypeName (ASTAUX::GetSecondName(nm));
   }
   else
@@ -609,8 +605,7 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
 //      GenErr (nm, ERR, 38, mk_sequence(PrintName (nm)));
 //      return Nil ();
 //    }
-    if (this->RenamedTypes.DomExists (nm))
-    {
+    if (this->RenamedTypes.DomExists (nm)) {
       if (InsideInter) {
         //-----------------------------------------------------------
         // Error message #38
@@ -619,14 +614,14 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
         GenErr (nm, ERR, 38, mk_sequence(PrintName (nm)));
         return Nil ();
       }
-      else
+      else {
         return LookUpTypeName (this->RenamedTypes[nm]);
+      }
     }
 // <-- 20140321
     else
 #endif //VDMSL
-    if (this->TypeEnv.DomExists (nm))
-    {
+    if (this->TypeEnv.DomExists (nm)) {
       TYPE_SSENV_TypeRepElem rc (this->TypeEnv[nm]);
       // PERFORMANCE: Only update the 'used' field if it is false.
       // ETN 960105.
@@ -643,14 +638,14 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
 #ifdef VDMPP
     {
       Generic DefClass = GetCurClass();
-      if ( !DefiningClass.IsEmpty() )
+      if ( !DefiningClass.IsEmpty() ) {
         DefClass = DefiningClass.Hd();
-
+      }
       Generic tp (LookUpInHierarchy (nm, DefClass, TYPE, LOCAL));
 
-      if (tp.IsNil())
+      if (tp.IsNil()) {
         tp = LookUpInHierarchy (nm, Nil(), TYPE, LOCAL);
-
+      }
       if (tp.IsNil()) {
         if (CheckClassName(nm)) {
           return mk_REP_ObjRefTypeRep(nm);
@@ -665,8 +660,9 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
           // Error message #34
           // Unknown identifier L"%1"
           //------------------------
-          if (printerr)
+          if (printerr) {
             GenErr(nm, ERR, 34, mk_sequence(PrintName(nm)));
+          }
           this->TypeEnv.Insert(nm, mk_SSENV_TypeRepElem(rep_alltp, Bool(true), Bool(false)));
           return Nil ();
         }
@@ -676,8 +672,7 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
 #endif //VDMPP
 #ifdef VDMSL
     {
-      if (this->TagEnv.DomExists(nm))
-      {
+      if (this->TagEnv.DomExists(nm)) {
         TYPE_REP_CompositeTypeRep ctr (mk_REP_CompositeTypeRep(nm, this->TagEnv[nm]));
         this->TypeEnv.Insert(nm, mk_SSENV_TypeRepElem(ctr, Bool(true), Bool(false)));
         return ctr;
@@ -716,10 +711,12 @@ Generic StatSem::LookUpDefClass ()
 */
 
 // impl 20070306
-  if (DefiningClass.IsEmpty())
+  if (DefiningClass.IsEmpty()) {
     return Nil();
-  else
+  }
+  else {
     return this->FoundClass;
+  }
 }
 
 // SetDefClass
@@ -750,10 +747,10 @@ void StatSem::UnSetDefClass()
 Generic StatSem::LookUpTag (const Int & i, const TYPE_AS_Name & nm, const SET<TYPE_AS_Name> & nm_s)
 {
 #ifdef VDMSL
-  if (nm_s.InSet(nm))
+  if (nm_s.InSet(nm)) {
     return Nil();
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  }
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name nmod (ASTAUX::GetFirstName(nm));
     if (nmod == GetCurMod ()) {
       TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
@@ -761,34 +758,43 @@ Generic StatSem::LookUpTag (const Int & i, const TYPE_AS_Name & nm, const SET<TY
     }
     // skip
   }
-  if (CheckLocalTag(nm))
-    if (this->RenamedTypes.DomExists(nm))
+  if (CheckLocalTag(nm)) {
+    if (this->RenamedTypes.DomExists(nm)) {
       return mk_(this->RenamedTypes[nm], this->TagEnv[nm]);
-    else
-    return mk_(nm, this->TagEnv[nm]);
-  else if (CheckImportedTag(nm))
+    }
+    else {
+      return mk_(nm, this->TagEnv[nm]);
+    }
+  }
+  else if (CheckImportedTag(nm)) {
     return mk_(nm, this->LocTagEnv[nm]);
-  else
+  }
+  else {
     return Nil ();
+  }
 #endif //VDMSL
 #ifdef VDMPP
-  if (nm_s.InSet(nm))
+  if (nm_s.InSet(nm)) {
     return Nil();
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  }
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
-    if (ncls == GetCurClass ())
+    if (ncls == GetCurClass ()) {
       return LookUpTag (i, nnm, Set(nm_s).Insert(nm));
-    else
+    }
+    else {
       return LookUpInHierarchy(nnm, ncls, TAG, GLOBAL);
+    }
   }
   else
-  if (CheckLocalTag(nm))
+  if (CheckLocalTag(nm)) {
     return mk_(nm, this->TagEnv[nm]);
-  else
+  }
+  else {
     return LookUpInHierarchy (nm, Nil(), TAG, LOCAL);
+  }
 #endif //VDMPP
 }
 
@@ -804,17 +810,17 @@ Set StatSem::LookUpOperationName (const Generic & classnm, const TYPE_AS_Name & 
   if (cls.IsNil()) {
     if (metnm.GetSequence(pos_AS_Name_ids).Length() == 2) {
       cls = ASTAUX::GetFirstName(metnm);
-    } else {
+    }
+    else {
       cls = GetCurClass();
     }
   }
   Generic tps (LookUpInObject(cls, metnm, false, true));
 
-  if (tps.IsNil() && objnm.IsNil())
+  if (tps.IsNil() && objnm.IsNil()) {
     tps = LookUp(metnm, false);
-
-  if (IsAccessType(tps))
-  {
+  }
+  if (IsAccessType(tps)) {
     switch(TYPE_SSENV_AccessType(tps).GetTag()) {
       case TAG_TYPE_SSENV_AccessOpTypeRep: {
         CheckLookupStatic(metnm, (!objnm.IsNil() ? Bool(true) : GetSSStatic(tps)));
@@ -830,13 +836,11 @@ Set StatSem::LookUpOperationName (const Generic & classnm, const TYPE_AS_Name & 
         break;
     }
   }
-  else if (IsAccessTypeSet(tps))
-  {
+  else if (IsAccessTypeSet(tps)) {
     SET<TYPE_SSENV_AccessType> tpss (tps);
     SET<TYPE_SSENV_AccessType> resvals;
     Generic b_tp;
-    for (bool bb = tpss.First(b_tp); bb; bb = tpss.Next(b_tp))
-    {
+    for (bool bb = tpss.First(b_tp); bb; bb = tpss.Next(b_tp)) {
       if (b_tp.Is(TAG_TYPE_SSENV_AccessOpTypeRep)) {
         CheckLookupStatic(metnm, (!objnm.IsNil() ? Bool(true) : GetSSStatic(b_tp)));
         resvals.Insert(b_tp);
@@ -844,8 +848,9 @@ Set StatSem::LookUpOperationName (const Generic & classnm, const TYPE_AS_Name & 
     }
     return resvals; // set of AccessOpTypeRep
   }
-  else 
+  else {
     return Set();
+  }
 }
 #endif // VDMPP
 
@@ -857,21 +862,15 @@ Set StatSem::LookUpOperationName (const Generic & classnm, const TYPE_AS_Name & 
 // ==> [REP`TypeRep]
 Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const Int & kind)
 {
-  if (kind == CUR)
-  {
+  if (kind == CUR) {
     size_t depth = this->LocalEnv.Length();
-    for (size_t i = 1 ; i <= depth ; i++)
-    {
+    for (size_t i = 1 ; i <= depth ; i++) {
       MAP<TYPE_AS_Name, Tuple> currentEnv (this->LocalEnv[i]); // map AS`Name to (REP`TypeRep * nat1)
-      if (currentEnv.DomExists (nm))
-      {
+      if (currentEnv.DomExists (nm)) {
         size_t len_SEnv = this->SEnv.Length();
-        for (size_t j = 1; j <= len_SEnv; j++)
-        {
-          if (this->SEnv[j].DomExists (nm))
-          {
-            if (use)
-            {
+        for (size_t j = 1; j <= len_SEnv; j++) {
+          if (this->SEnv[j].DomExists (nm)) {
+            if (use) {
               Map mp (this->SEnv[j]);
               TYPE_SSENV_TypeRepElem rc (mp[nm]);
               rc.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
@@ -884,8 +883,7 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
       }
     }
   }
-  else if (! this->ExtEnv.DomExists (nm))
-  {
+  else if (! this->ExtEnv.DomExists (nm)) {
     //-------------------------
     // Error message #42
     // L"%1" cannot be used here
@@ -893,8 +891,7 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
     GenErr (nm, ERR, 42, mk_sequence(PrintName(nm)));
     return Nil ();
   }
-  else if (this->ExtEnv[nm] == Int (READ))
-  {
+  else if (this->ExtEnv[nm] == Int (READ)) {
     //-------------------------------------------------------
     // Error message #43
     // The state component L"%1" can only be used in read mode
@@ -903,17 +900,14 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
     return Nil ();
   }
 
-  if (this->StateEnv.DomExists(nm))
-  {
+  if (this->StateEnv.DomExists(nm)) {
     bool exists = false;
     size_t len = this->SEnv.Length();
-    for (size_t idx = 1; (idx <= len) && !exists; idx++)
-    {
+    for (size_t idx = 1; (idx <= len) && !exists; idx++) {
       Map m (this->SEnv[idx]);
       exists = m.DomExists(nm);
     }
-    if (exists)
-    {
+    if (exists) {
       if (GetContext() != AS_PURE) {
         //----------------------------------------------------
         // Error message #18
@@ -934,8 +928,7 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
     this->StateEnv.ImpModify (nm, rc);
     return rc.GetField(pos_SSENV_TypeRepElem_tp);
   }
-  else
-  {
+  else {
     //-----------------------------
     // Error message #40
     // Unknown state reference L"%1"
@@ -955,29 +948,24 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
 // ==> [REP`TypeRep|AccessType]
 Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const Int & kind)
 {
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
-    if (ncls == GetCurClass ())
-    {
-      if (kind == CUR)
-      {
-        if (GetStatic().GetValue() && IsStaticInstanceVar(nm))
-        {
+    if (ncls == GetCurClass ()) {
+      if (kind == CUR) {
+        if (GetStatic().GetValue() && IsStaticInstanceVar(nm)) {
           Generic tp (LookUpInHierarchy(nnm, ncls, STATE, LOCAL));
-          if (!tp.IsNil ())
+          if (!tp.IsNil ()) {
             return tp;
+          }
         }
       } 
       return LookUpState (nnm, use, kind);
     }
-    else if (IsLocalSuperSuper (ncls))
-    {
+    else if (IsLocalSuperSuper (ncls)) {
       Generic tp (LookUpInHierarchy(nnm, ncls, STATE, LOCAL));
-      if (tp.IsNil ())
-      {
+      if (tp.IsNil ()) {
         ////------------------------
         //// Error message #34
         //// Unknown identifier L"%1"
@@ -1009,13 +997,10 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
       return Nil();
     }
   }
-  else
-  {
-    if (kind == CUR)
-    {
+  else {
+    if (kind == CUR) {
       size_t depth = this->LocalEnv.Length();
-      for (size_t i = 1 ; i <= depth ; i++)
-      {
+      for (size_t i = 1 ; i <= depth ; i++) {
         MAP<TYPE_AS_Name,Tuple> currentEnv (this->LocalEnv[i]);
         if (currentEnv.DomExists (nm))
         {
@@ -1028,16 +1013,13 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
         }
       }
     }
-    else if (!(GetContext() == POST) || this->ExtEnv.DomExists (nm))
-    {
-      if (this->StateEnv.DomExists(nm))
-      {
+    else if (!(GetContext() == POST) || this->ExtEnv.DomExists (nm)) {
+      if (this->StateEnv.DomExists(nm)) {
         TYPE_SSENV_TypeRepElem rc (this->StateEnv[nm]);
         rc.SetField(pos_SSENV_TypeRepElem_used, use);
         this->StateEnv.ImpModify (nm, rc);
 
-        if ((kind == Int (OLD)) && (this->ExtEnv[nm] == Int (READ)))
-        {
+        if ((kind == Int (OLD)) && (this->ExtEnv[nm] == Int (READ))) {
           //-------------------------------------------------------
           // Error message #43
           // The state component L"%1" can only be used in read mode
@@ -1045,14 +1027,13 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
           GenErr (nm, ERR, 43, mk_sequence(PrintName(nm)));
           return Nil ();
         }
-        else
+        else {
           return rc.get_tp();
+        }
       }
-      else
-      {
+      else {
         Generic tp (LookUpInHierarchy (nm, Nil(), STATE,LOCAL));
-        if (tp.IsNil())
-        {
+        if (tp.IsNil()) {
           //-----------------------------
           // Error message #40
           // Unknown state reference L"%1"
@@ -1065,17 +1046,14 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
       }
     }
 
-    if (this->StateEnv.DomExists(nm))
-    {
+    if (this->StateEnv.DomExists(nm)) {
       bool exists = false;
       size_t len = this->SEnv.Length();
-      for (size_t idx = 1; (idx <= len) && !exists; idx++)
-      {
+      for (size_t idx = 1; (idx <= len) && !exists; idx++) {
         Map m (this->SEnv[idx]);
         exists = m.DomExists(nm);
       }
-      if (exists)
-      {
+      if (exists) {
         if (GetContext() != AS_PURE) {
           //----------------------------------------------------
           // Error message #18
@@ -1095,8 +1073,7 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
       TYPE_SSENV_TypeRepElem rc (this->StateEnv[nm]);
       rc.SetField(pos_SSENV_TypeRepElem_used, use);
       this->StateEnv.ImpModify (nm, rc);
-      if (GetStatic() && !rc.GetBoolValue(pos_SSENV_TypeRepElem_stat))
-      {
+      if (GetStatic() && !rc.GetBoolValue(pos_SSENV_TypeRepElem_stat)) {
         //-----------------------------
         // Error message #422
         // Error L"%1"
@@ -1106,18 +1083,16 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
       }
       return rc.get_tp();
     }
-    else
-    {
+    else {
       Generic tpii (FoundAsInstanceInSEnv(nm));
-      if (!tpii.IsNil())
+      if (!tpii.IsNil()) {
         return tpii;
+      }
       Generic tp (LookUpInHierarchy (nm, Nil(), STATE,LOCAL));
       if (tp.IsNil()) {
         size_t len_SEnv = this->SEnv.Length ();
-        for (size_t j = 1; j <= len_SEnv; j++)
-        {
+        for (size_t j = 1; j <= len_SEnv; j++) {
             if (this->SEnv[j].DomExists (nm)) {
-          
             Map pm (this->SEnv[j]);
             TYPE_SSENV_TypeRepElem tre (pm[nm]);
             TYPE_REP_TypeRep tr (tre.GetRecord(pos_SSENV_TypeRepElem_tp));
@@ -1147,8 +1122,7 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
           }
         }
       }
-      if (tp.IsNil())
-      {
+      if (tp.IsNil()) {
         //-----------------------------
         // Error message #40
         // Unknown state reference L"%1"
@@ -1156,8 +1130,9 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
         GenErr(nm, ERR, 40, mk_sequence(PrintName(nm)));
         return Nil ();
       }
-      else
+      else {
         return tp;
+      }
     }
   }
   return Nil(); // To avoid warnings
@@ -1169,17 +1144,13 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
 Generic StatSem::FoundAsInstanceInSEnv(const TYPE_AS_Name & nm)
 {
   size_t depth = this->SEnv.Length();
-  for (size_t i = 1; i <= depth; i++)
-  {
+  for (size_t i = 1; i <= depth; i++) {
     Map currentEnv (this->SEnv[i]); // map AS`Name to TypeRepElem
-    if (currentEnv.DomExists(nm))
-    {
+    if (currentEnv.DomExists(nm)) {
       TYPE_SSENV_TypeRepElem tre (currentEnv[nm]);
       TYPE_REP_TypeRep tp (tre.GetRecord(pos_SSENV_TypeRepElem_tp));
-      if (tp.Is(TAG_TYPE_REP_TypeNameRep))
-      {
-        if (IsClassName(tp.GetRecord(pos_REP_TypeNameRep_nm)))
-        {
+      if (tp.Is(TAG_TYPE_REP_TypeNameRep)) {
+        if (IsClassName(tp.GetRecord(pos_REP_TypeNameRep_nm))) {
           tre.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
           currentEnv.ImpModify(nm, tre);
           this->SEnv.ImpModify(i, currentEnv); 
@@ -1197,8 +1168,7 @@ Generic StatSem::FoundAsInstanceInSEnv(const TYPE_AS_Name & nm)
 TYPE_SSENV_ParseTypeInfo StatSem::LookUpClass (const TYPE_AS_Name & nm)
 {
   Generic cls (GetClassTypeRep(nm));
-  if (cls.IsNil())
-  {
+  if (cls.IsNil()) {
     //----------------------------------------
     // Error message #1
     // The class L"%1" has not been pre-checked
@@ -1206,8 +1176,9 @@ TYPE_SSENV_ParseTypeInfo StatSem::LookUpClass (const TYPE_AS_Name & nm)
     GenErr(nm, ERR, 1, mk_sequence(PrintName(nm)));
     return MakeEmptyClass(nm);
   }
-  else
+  else {
     return cls;
+  }
 }
 
 // DefaultConstructorAccessible
@@ -1217,30 +1188,33 @@ bool StatSem::DefaultConstructorAccessible(const TYPE_AS_Name & p_nm)
 {
   Generic l_classInfo (GetClassTypeRep(p_nm));
   SET<TYPE_SSENV_AccessOpTypeRep> l_constrs;
-  if (!l_classInfo.IsNil())
+  if (!l_classInfo.IsNil()) {
     l_constrs.ImpUnion(Record(l_classInfo).GetSet(pos_SSENV_ParseTypeInfo_constructors));
-
+  }
   SET<TYPE_SSENV_AccessOpTypeRep> l_defConstrs;
   Generic b_constr;
-  for (bool bb = l_constrs.First(b_constr); bb; bb = l_constrs.Next(b_constr))
-  {
+  for (bool bb = l_constrs.First(b_constr); bb; bb = l_constrs.Next(b_constr)) {
     if (Record(b_constr).GetRecord(pos_SSENV_AccessOpTypeRep_tp)
                         .GetSequence(pos_REP_OpTypeRep_Dom)
-                        .IsEmpty())
+                        .IsEmpty()) {
       l_defConstrs.Insert(b_constr);
+    }
   }
 
-  if (l_defConstrs.IsEmpty())
+  if (l_defConstrs.IsEmpty()) {
     return true;
-  else
-  {
+  }
+  else {
     TYPE_SSENV_AccessOpTypeRep l_defConstr (l_defConstrs.GetElem());
-    if (GetCurClass() == p_nm)
+    if (GetCurClass() == p_nm) {
       return true;
-    else if (IsSubClass(GetCurClass(), p_nm))
+    }
+    else if (IsSubClass(GetCurClass(), p_nm)) {
       return (l_defConstr.get_a() != Int(PRIVATE_AS));
-    else
+    }
+    else {
       return (l_defConstr.get_a() == Int(PUBLIC_AS));
+    }
   }
 }
 
@@ -1268,57 +1242,51 @@ bool StatSem::ConstructorExists (const Int & p_i,
   int l_max = 0;
   if (!local) {
     Generic num;
-    for (bool bb = dom_constrs.First(num); bb; bb = dom_constrs.Next(num))
-      if (Int(num).GetValue() > l_max)
+    for (bool bb = dom_constrs.First(num); bb; bb = dom_constrs.Next(num)) {
+      if (Int(num).GetValue() > l_max) {
         l_max = Int(num).GetValue();
+      }
+    }
   }
 
   bool local_constr (GetCurClass() == p_nm);
   bool super_constr (IsSubClass(GetCurClass(), p_nm));
 
   Set b_s_public;
-  for (int level = 0; level <= l_max; level++)
-  {
-    if (l_constrs.DomExists(Int(level)))
-    {
+  for (int level = 0; level <= l_max; level++) {
+    if (l_constrs.DomExists(Int(level))) {
       Set l_iConstrsCl (l_constrs[Int(level)].DUnion()); // set of AccessOpTypeRep
       Generic aotr; // ENV`AccessOpTypeRep
-      for (bool dd = l_iConstrsCl.First(aotr); dd; dd = l_iConstrsCl.Next(aotr))
-      {
+      for (bool dd = l_iConstrsCl.First(aotr); dd; dd = l_iConstrsCl.Next(aotr)) {
         TYPE_SSENV_AccessOpTypeRep b_acc (aotr);
         if ((b_acc.get_a() == Int(PUBLIC_AS)) ||
             local_constr ||
-            (super_constr && b_acc.get_a() == Int(PROTECTED_AS)))
-        {
+            (super_constr && b_acc.get_a() == Int(PROTECTED_AS))) {
           const TYPE_REP_OpTypeRep & l_otr (b_acc.GetRecord(pos_SSENV_AccessOpTypeRep_tp));
-          if (l_otr.get_Dom().Length() == p_argTps.Length())
-          {
+          if (l_otr.get_Dom().Length() == p_argTps.Length()) {
             const TYPE_REP_TypeRep & rng (l_otr.GetRecord(pos_REP_OpTypeRep_Rng));
-            if (rng.Is(TAG_TYPE_REP_TypeNameRep))
-            {
+            if (rng.Is(TAG_TYPE_REP_TypeNameRep)) {
               const SEQ<TYPE_REP_TypeRep> & dom (l_otr.GetSequence(pos_REP_OpTypeRep_Dom));
               const TYPE_AS_Name & nm (rng.GetRecord(pos_REP_TypeNameRep_nm));
               bool forall = true;
               Generic t;
-              for (bool ee = b_s_public.First(t); ee && forall; ee = b_s_public.Next(t))
-              {
+              for (bool ee = b_s_public.First(t); ee && forall; ee = b_s_public.Next(t)) {
                 TYPE_REP_TotalFnTypeRep tftr (t);
                 const TYPE_REP_TypeRep & ptr (tftr.GetRecord(pos_REP_TotalFnTypeRep_fnrng));
-                if (ptr.Is(TAG_TYPE_REP_TypeNameRep))
-                {
+                if (ptr.Is(TAG_TYPE_REP_TypeNameRep)) {
                   const SEQ<TYPE_REP_TypeRep> & fndom (tftr.GetSequence(pos_REP_TotalFnTypeRep_fndom));
                   bool exists = !IsSubClass(ptr.GetRecord(pos_REP_TypeNameRep_nm), nm);
                   size_t len_fndom = fndom.Length(); 
-                  for (size_t idx = 1; idx <= len_fndom && !exists; idx++)
-                  {
+                  for (size_t idx = 1; idx <= len_fndom && !exists; idx++) {
                     //exists = !IsSubType(dom[idx], fndom[idx], Set());
                     exists = !IsCompatible(p_i, dom[idx], fndom[idx]);
                   }
                   forall = exists;
                 }
               }
-              if (forall)
+              if (forall) {
                 b_s_public.Insert(mk_REP_TotalFnTypeRep(l_otr.get_Dom(), rng));
+              }
             }
           }
         }
@@ -1340,8 +1308,7 @@ Map StatSem::LookUpConstructors(const TYPE_AS_Name & p_nm)
   Generic l_classInfo (GetClassTypeRep(p_nm)); // [ParseTypeInfo]
 
   SET<Set> l_constructors; // set of set of AccessOpTypeRep
-  if (!l_classInfo.IsNil())
-  {
+  if (!l_classInfo.IsNil()) {
     l_constructors.Insert(Record(l_classInfo).GetSet(pos_SSENV_ParseTypeInfo_constructors));
   }
   l_result.Insert(Int(0), l_constructors);
@@ -1354,16 +1321,13 @@ Map StatSem::LookUpConstructors(const TYPE_AS_Name & p_nm)
   Map l_indexedSupers (TransClosIndex(p_nm));  // map nat to set of AS`Name
   SET<TYPE_AS_Name> dom_l_indexedSupers (l_indexedSupers.Dom());
   Generic b_i;
-  for (bool bb = dom_l_indexedSupers.First(b_i); bb; bb = dom_l_indexedSupers.Next(b_i))
-  {
+  for (bool bb = dom_l_indexedSupers.First(b_i); bb; bb = dom_l_indexedSupers.Next(b_i)) {
     SET<Set> l_theseConstructors;
     SET<TYPE_AS_Name> l_theseSupers (l_indexedSupers[b_i]);
     Generic b_cl; // AS`Name
-    for (bool cc = l_theseSupers.First(b_cl); cc; cc = l_theseSupers.Next(b_cl))
-    {
+    for (bool cc = l_theseSupers.First(b_cl); cc; cc = l_theseSupers.Next(b_cl)) {
       Generic l_theseClassInfo (GetClassTypeRep(b_cl));
-      if (!l_theseClassInfo.IsNil())
-      {
+      if (!l_theseClassInfo.IsNil()) {
         l_theseConstructors.Insert(Record(l_theseClassInfo).GetSet(pos_SSENV_ParseTypeInfo_constructors));
       }
     }
@@ -1387,10 +1351,10 @@ bool StatSem::CheckClassName (const TYPE_AS_Name & nm)
 bool StatSem::HasThread(const TYPE_AS_Name & nm)
 {
   Generic classti (GetClassTypeRep(nm));
-  if (classti.IsNil())
+  if (classti.IsNil()) {
     return false;
-  else
-  {
+  }
+  else {
     TYPE_SSENV_ParseTypeInfo pti (classti);
     if (pti.GetIntValue(pos_SSENV_ParseTypeInfo_thread) != NONE)
       return true;
@@ -1398,8 +1362,9 @@ bool StatSem::HasThread(const TYPE_AS_Name & nm)
       SET<TYPE_AS_Name> super (pti.GetSet(pos_SSENV_ParseTypeInfo_super));
       bool exists = false;
       Generic cls;
-      for (bool bb = super.First(cls); bb && !exists; bb = super.Next(cls))
+      for (bool bb = super.First(cls); bb && !exists; bb = super.Next(cls)) {
         exists = HasThread(cls);
+      }
       return exists;
     }
   }
@@ -1425,75 +1390,67 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
 
   Map binds; // map AS`Name to (REP`TypeRep | AccessType | (AS`Name * AccessFieldRep) | set of AccessType)
   SET<TYPE_AS_Name> super;
-  if (classid.IsNil())
+  if (classid.IsNil()) {
     super = this->Super;
-  else
+  }
+  else {
     super.Insert (classid);
-
+  }
   Generic sup;
-  for (bool bb = super.First(sup); bb; bb = super.Next(sup))
-  {
+  for (bool bb = super.First(sup); bb; bb = super.Next(sup)) {
     binds.ImpOverride (LookUpInHierarchyAux (nm, sup, kind, local, Set()));
   }
 
-  if (binds.IsEmpty())
-  {
+  if (binds.IsEmpty()) {
     return Nil();
   }
-  else if (binds.Size() == 1)
-  {
+  else if (binds.Size() == 1) {
     this->FoundClass = binds.Dom().GetElem();
     return binds[this->FoundClass];
   }
-  else
-  {
+  else {
     Set rng_binds (binds.Rng());
     bool exists = false;
     Generic s;
-    for (bool cc = rng_binds.First(s); cc && !exists; cc = rng_binds.Next(s))
-    {
+    for (bool cc = rng_binds.First(s); cc && !exists; cc = rng_binds.Next(s)) {
       exists = IsSetOfAccessType(s);
     }
 
-    if (exists || IsAccessTypeSet(rng_binds))
-    {
+    if (exists || IsAccessTypeSet(rng_binds)) {
       Map l_setBinds;
       Set dom_binds (binds.Dom());
       Generic b_nm;
-      for (bool ee = dom_binds.First(b_nm); ee; ee = dom_binds.Next(b_nm))
-      {
+      for (bool ee = dom_binds.First(b_nm); ee; ee = dom_binds.Next(b_nm)) {
         Generic acs (binds[b_nm]);
-        if (IsSetOfAccessType(acs))
+        if (IsSetOfAccessType(acs)) {
           l_setBinds.Insert(b_nm, acs);
-        else
+        }
+        else {
           l_setBinds.Insert(b_nm, Set().Insert(acs));
+        }
       }
       Set l_tps (l_setBinds.Rng().DInter());
 
-      if (!l_tps.IsEmpty())
-      {
+      if (!l_tps.IsEmpty()) {
 // 20120905 -->
         Set dom_l_setBinds (l_setBinds.Dom());
         Generic n;
-        for (bool ii = dom_l_setBinds.First(n); ii; ii = dom_l_setBinds.Next(n))
-        {
+        for (bool ii = dom_l_setBinds.First(n); ii; ii = dom_l_setBinds.Next(n)) {
           Generic l_pte (GetClassTypeRep(n));
-          if (!l_pte.IsNil())
-          {
+          if (!l_pte.IsNil()) {
             const TYPE_SSENV_ParseTypeInfo & pti = l_pte;
             Map subresps (pti.GetMap(pos_SSENV_ParseTypeInfo_subresps));
             TYPE_AS_Name nn (ASTAUX::Combine2Names(n, nm));
-            if (subresps.DomExists(nn))
-            {
+            if (subresps.DomExists(nn)) {
               Generic atp (subresps[nn]);
               Set atps (atp.IsSet() ? Set(atp) : mk_set(atp));
-              if (l_tps.Diff(atps).IsEmpty())
+              if (l_tps.Diff(atps).IsEmpty()) {
                 l_setBinds.RemElem(n); 
+              }
             }
           }
         }
-        if (l_setBinds.Size() == 1)
-        {
+        if (l_setBinds.Size() == 1) {
           this->FoundClass = l_setBinds.Dom().GetElem();
           return binds[this->FoundClass];
         }
@@ -1506,8 +1463,7 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
         GenErr(nm, ERR, 45, mk_sequence(PrintName(nm)));
         return Nil();
       }
-      else
-      {
+      else {
         // ------------------------------------------------------
         // -- split on polymorphic or not
         // -------------------------------------------------------
@@ -1516,12 +1472,13 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
         Set poly;
         Set non_poly;
         Generic b_acc;
-        for (bool ff = flatBindsRng.First(b_acc); ff; ff = flatBindsRng.Next(b_acc))
-        {
-          if (b_acc.Is(TAG_TYPE_SSENV_AccessPolyTypeRep))
+        for (bool ff = flatBindsRng.First(b_acc); ff; ff = flatBindsRng.Next(b_acc)) {
+          if (b_acc.Is(TAG_TYPE_SSENV_AccessPolyTypeRep)) {
             poly.Insert(b_acc);
-          else
+          }
+          else {
             non_poly.Insert(b_acc);
+          }
         }
 
         //  ------------------------------------------------------
@@ -1529,14 +1486,14 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
         //  -------------------------------------------------------
         Map param_lengths_m; //  map nat to set of SS`AccessPolyTypeRep
         Generic bd;
-        for (bool gg = poly.First(bd); gg; gg = poly.Next(bd))
-        {
+        for (bool gg = poly.First(bd); gg; gg = poly.Next(bd)) {
           TYPE_REP_PolyTypeRep tp (Record(bd).GetField(pos_SSENV_AccessPolyTypeRep_tp));
           Int param_length (tp.GetSequence(pos_REP_PolyTypeRep_vars).Length());
 
           Set tmp_s;
-          if (param_lengths_m.DomExists(param_length))
+          if (param_lengths_m.DomExists(param_length)) {
             tmp_s = param_lengths_m[param_length];
+          }
           tmp_s.Insert(bd);
           param_lengths_m.ImpModify(param_length, tmp_s);
         }
@@ -1555,10 +1512,10 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
                                  .Insert(non_poly_consistency)
                                  .DUnion());
 
-        if (non_poly.IsEmpty() || !non_poly_consistency.IsEmpty())
-        {
-          if (poly.IsEmpty() || !poly_consistency_set.InSet(Set()))
+        if (non_poly.IsEmpty() || !non_poly_consistency.IsEmpty()) {
+          if (poly.IsEmpty() || !poly_consistency_set.InSet(Set())) {
             return consistency_sets;
+          }
         /*
         Set l_res (TypesAreConsistent(binds.Rng()));
         if (!l_res.IsEmpty())
@@ -1573,8 +1530,7 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
         return Nil();
       }
     }
-    else
-    {
+    else {
       //------------------------------------------
       // Error message #45
       // L"%1" is multiple defined in super classes
@@ -1590,33 +1546,35 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
 // -> set of AccessType
 SET<TYPE_SSENV_AccessType> StatSem::TypesAreConsistent(const Set & p_s_)
 {
-  if (p_s_.IsEmpty())
+  if (p_s_.IsEmpty()) {
     return SET<TYPE_SSENV_AccessType>();
-
+  }
   Set p_s (p_s_); // for safe
   Generic b_tp;
-  for (bool bb = p_s.First(b_tp); bb; bb = p_s.Next(b_tp))
-  {
-    if (b_tp.IsRecord()) // REP`TypeRep | AccessType
-    {
-      if (!IsAccessType(b_tp)) // REP`TypeRep
+  for (bool bb = p_s.First(b_tp); bb; bb = p_s.Next(b_tp)) {
+    if (b_tp.IsRecord()) { // REP`TypeRep | AccessType
+      if (!IsAccessType(b_tp)) { // REP`TypeRep
         return SET<TYPE_SSENV_AccessType>();
+      }
     }
-    else if(b_tp.IsTuple()) // (AS`Name * AccessFieldRep)
+    else if(b_tp.IsTuple()) { // (AS`Name * AccessFieldRep)
       return SET<TYPE_SSENV_AccessType>();
+    }
   }
 
   // p_s : set of (AccessType | set of AccessType)
   SET<TYPE_SSENV_AccessType> l_flatAccs;
   Generic b_acc;
-  for(bool cc = p_s.First(b_acc); cc; cc = p_s.Next(b_acc))
-  {
-    if (IsAccessOpFnPolyTypeRep(b_acc))
+  for(bool cc = p_s.First(b_acc); cc; cc = p_s.Next(b_acc)) {
+    if (IsAccessOpFnPolyTypeRep(b_acc)) {
       l_flatAccs.Insert(NormaliseAccessType(b_acc));
-    else if (IsAccessTypeSet(b_acc))
+    }
+    else if (IsAccessTypeSet(b_acc)) {
       l_flatAccs.ImpUnion(NormaliseAccessTypeSet(b_acc));
-    else
+    }
+    else {
       return SET<TYPE_SSENV_AccessType>();
+    }
   }
 
   // l_flatAccs : set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep)
@@ -1624,8 +1582,7 @@ SET<TYPE_SSENV_AccessType> StatSem::TypesAreConsistent(const Set & p_s_)
   SET<TYPE_SSENV_AccessType> l_retVal;
   SET<Sequence> l_paramTps;
   Generic g;
-  for (bool dd = l_flatAccs.First(g); dd; dd = l_flatAccs.Next(g))
-  {
+  for (bool dd = l_flatAccs.First(g); dd; dd = l_flatAccs.Next(g)) {
     SEQ<TYPE_REP_TypeRep> b_tp1;
     TYPE_SSENV_AccessType b_tp (g);
     switch(b_tp.GetTag()) {
@@ -1653,18 +1610,17 @@ SET<TYPE_SSENV_AccessType> StatSem::TypesAreConsistent(const Set & p_s_)
     l_retVal.Insert(b_tp);
 
     Generic h;
-    for (bool ee = l_paramTps.First(h); ee; ee = l_paramTps.Next(h))
-    {
+    for (bool ee = l_paramTps.First(h); ee; ee = l_paramTps.Next(h)) {
       bool isOverlapping = true;
       SEQ<TYPE_REP_TypeRep> b_tp2 (h);
-      if ((b_tp1 != b_tp2) && (b_tp1.Length() == b_tp2.Length()))
-      {
+      if ((b_tp1 != b_tp2) && (b_tp1.Length() == b_tp2.Length())) {
         size_t len = b_tp1.Length();
-        for (size_t i = 1; i <= len && isOverlapping; i++)
+        for (size_t i = 1; i <= len && isOverlapping; i++) {
           isOverlapping = IsOverlapping(b_tp1[i], b_tp2[i], Set());
-
-        if( isOverlapping )
+        }
+        if( isOverlapping ) {
           return SET<TYPE_SSENV_AccessType>();
+        }
       }
     }
     l_paramTps.Insert(b_tp1);
@@ -1675,9 +1631,9 @@ SET<TYPE_SSENV_AccessType> StatSem::TypesAreConsistent(const Set & p_s_)
 //    return SET<TYPE_SSENV_AccessType>();
 // <-- 20121016
 
-  if( l_retVal.Card() != l_paramTps.Card() )
+  if( l_retVal.Card() != l_paramTps.Card() ) {
     return SET<TYPE_SSENV_AccessType>();
-
+  }
   return l_retVal;
 }
 
@@ -1695,9 +1651,9 @@ Map StatSem::LookUpInHierarchyAux (const TYPE_AS_Name & nm,
                                    int where,
                                    const Set & checked)
 {
-  if (checked.InSet(sup))
+  if (checked.InSet(sup)) {
     return Map();
-
+  }
   TYPE_SSENV_ParseTypeInfo classinfo (LookUpClass (sup));
 //  if (ctr.Is(TAG_TYPE_SSENV_ParseTypeInfo))
 //  {
@@ -1731,22 +1687,24 @@ Map StatSem::LookUpInHierarchyAux (const TYPE_AS_Name & nm,
         Set super (classinfo.GetSet(pos_SSENV_ParseTypeInfo_super));
         Map binds;
         Generic s;
-        for (bool bb = super.First(s); bb; bb = super.Next(s))
+        for (bool bb = super.First(s); bb; bb = super.Next(s)) {
           binds.ImpOverride (LookUpInHierarchyAux (nm, s, VAL, where, ss));
-
+        }
         return RemoveHidden(valBd, binds);
         break;
       }
       case TYPE: {
         Map binds;
         Generic rng;
-        if (classinfo.GetMap(pos_SSENV_ParseTypeInfo_tps).DomExists (qname, rng))
+        if (classinfo.GetMap(pos_SSENV_ParseTypeInfo_tps).DomExists (qname, rng)) {
           binds.Insert (sup, rng);
+        }
         else {
           Set super (classinfo.GetSet(pos_SSENV_ParseTypeInfo_super));
           Generic s;
-          for (bool bb = super.First(s); bb; bb = super.Next(s))
+          for (bool bb = super.First(s); bb; bb = super.Next(s)) {
             binds.ImpOverride (LookUpInHierarchyAux (nm, s, TYPE, where, ss));
+          }
         }
         return TransBinds (sup, binds);
         break;
@@ -1760,8 +1718,7 @@ Map StatSem::LookUpInHierarchyAux (const TYPE_AS_Name & nm,
 // 20120703 -->
         else if (classinfo.GetMap(pos_SSENV_ParseTypeInfo_tps).DomExists (qname, rng)) {
           TYPE_REP_TypeRep tp (StripAccessType(rng));
-          if (tp.Is(TAG_TYPE_REP_TypeNameRep))
-          {
+          if (tp.Is(TAG_TYPE_REP_TypeNameRep)) {
             const TYPE_AS_Name & tag (tp.GetRecord(pos_REP_TypeNameRep_nm));
             TYPE_AS_Name ncls ((tag.GetSequence(pos_AS_Name_ids).Length() == 2)
                                  ? ASTAUX::GetFirstName(tag) : sup);
@@ -1775,15 +1732,17 @@ Map StatSem::LookUpInHierarchyAux (const TYPE_AS_Name & nm,
         else {
           Set super (classinfo.GetSet(pos_SSENV_ParseTypeInfo_super));
           Generic s;
-          for (bool bb = super.First(s); bb; bb = super.Next(s))
+          for (bool bb = super.First(s); bb; bb = super.Next(s)) {
             binds.ImpOverride (LookUpInHierarchyAux (nm, s, TAG, where, ss));
+          }
         }
         return TransBinds (sup, binds);
         break;
       }
       case STATE: {
-        if (where != LOCAL)
+        if (where != LOCAL) {
           return Map();
+        }
 
         Map binds; // map As`name to ENV`AccessTypeRep
         Generic rng;
@@ -1792,8 +1751,9 @@ Map StatSem::LookUpInHierarchyAux (const TYPE_AS_Name & nm,
         else {
           Set super (classinfo.GetSet(pos_SSENV_ParseTypeInfo_super));
           Generic s;
-          for (bool bb = super.First(s); bb; bb = super.Next(s))
+          for (bool bb = super.First(s); bb; bb = super.Next(s)) {
             binds.ImpOverride (LookUpInHierarchyAux (nm, s, STATE, where, ss));
+          }
         }
         return TransBinds (sup, binds);
         break;
@@ -1820,10 +1780,8 @@ Map StatSem::ExtractValue(const Set & p_defms_,
 
   Generic b_m; // map AS`Name to (AccessType | set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep)))
   bool found = false;
-  for (bool bb = p_defms.First(b_m); bb && !found; bb = p_defms.Next(b_m))
-  {
-    if (Map(b_m).DomExists(p_qname))
-    {
+  for (bool bb = p_defms.First(b_m); bb && !found; bb = p_defms.Next(b_m)) {
+    if (Map(b_m).DomExists(p_qname)) {
       l_matchMaps.Insert(b_m);
 // 20090413 -->
 //      if (p_isGlobal)
@@ -1831,69 +1789,60 @@ Map StatSem::ExtractValue(const Set & p_defms_,
 #ifdef VICE
            this->staticrequired &&
 #endif // VICE
-          p_isGlobal)
-// <-- 20090413
-      {
+          p_isGlobal) {
         Map b_mMap (b_m);
         Generic b_m_p_qname (b_mMap[p_qname]);
-        if (IsAccessTypeSet(b_m_p_qname)) // b_m_p_qname.IsSet()
-        {
+        if (IsAccessTypeSet(b_m_p_qname)) { // b_m_p_qname.IsSet()
           Set b_m_p_qname_s (b_m_p_qname);
           Generic b_atr;
           bool exists = false;
-          for (bool cc = b_m_p_qname_s.First(b_atr); cc && !exists; cc = b_m_p_qname_s.Next(b_atr))
-          {
-            if (GetSSStatic(b_atr))
+          for (bool cc = b_m_p_qname_s.First(b_atr); cc && !exists; cc = b_m_p_qname_s.Next(b_atr)) {
+            if (GetSSStatic(b_atr)) {
               exists = true;
+            }
           }
-          if (exists)
-          {
+          if (exists) {
             l_match = b_mMap;
             found = true;
           }
         }
         else {
-          if (GetSSStatic(b_m_p_qname))
-          {
+          if (GetSSStatic(b_m_p_qname)) {
             l_match = b_mMap;
             found = true;
           }
         }
       }
-      else
-      {
+      else {
         l_match = Map(b_m);
         found = true;
       }
     }
   }
 
-  if (!found)
+  if (!found) {
     return Map();
-
+  }
   Generic resVal;
-  if (IsAccessTypeSet(l_match[p_qname]))
-  {
+  if (IsAccessTypeSet(l_match[p_qname])) {
     Set resValSet;
     Set l_match_p_qname(l_match[p_qname]);
     Generic b_meth_g;
-    for (bool dd = l_match_p_qname.First(b_meth_g); dd; dd = l_match_p_qname.Next(b_meth_g))
-    {
+    for (bool dd = l_match_p_qname.First(b_meth_g); dd; dd = l_match_p_qname.Next(b_meth_g)) {
       if ((
 #ifdef VICE
            this->staticrequired &&
 #endif // VICE
-           p_isGlobal) && !GetSSStatic(b_meth_g))
+           p_isGlobal) && !GetSSStatic(b_meth_g)) {
         continue;
-
+      }
       TYPE_SSENV_AccessType b_meth (b_meth_g);
       b_meth.SetField(1, SubSuperClType(p_sup, StripAccessType(b_meth)));  
       resValSet.Insert(b_meth);
     }
     return Map().Insert(p_sup, resValSet);
   }
-  else
-  {
+  else {
     TYPE_SSENV_AccessType b_meth (l_match[p_qname]);
 // 20070301
     b_meth.SetField(1, SubSuperClType(p_sup, StripAccessType(b_meth)));  
@@ -1913,95 +1862,89 @@ Map StatSem::RemoveHidden(const Map& p_subMap, const Map& p_supMap)
   Set rng_p_subMap (p_subMap.Rng());
   Set l_flatSubs;
   Generic b_atp;
-  for (bool bb = rng_p_subMap.First(b_atp); bb; bb = rng_p_subMap.Next(b_atp))
-  {
-    if (IsAccessType(b_atp))
+  for (bool bb = rng_p_subMap.First(b_atp); bb; bb = rng_p_subMap.Next(b_atp)) {
+    if (IsAccessType(b_atp)) {
       l_flatSubs.Insert(b_atp);
-    else // overloaded
+    }
+    else { // overloaded
       l_flatSubs.ImpUnion(Set(b_atp));
+    }
   }
 
   Set dom_p_supMap (p_supMap.Dom());
   Generic b_nm;
-  for (bool cc = dom_p_supMap.First(b_nm); cc; cc = dom_p_supMap.Next(b_nm))
-  {
+  for (bool cc = dom_p_supMap.First(b_nm); cc; cc = dom_p_supMap.Next(b_nm)) {
     Generic b_bd (p_supMap[b_nm]);
-    if (IsAccessType(b_bd))
-    {
+    if (IsAccessType(b_bd)) {
       Set l_subOccs;
       Generic b_atp;
-      for (bool dd = l_flatSubs.First(b_atp); dd; dd = l_flatSubs.Next(b_atp))
-      {
-        if (IsSubType(StripAccessType(NormaliseAccessType(b_atp)), StripAccessType(NormaliseAccessType(b_bd)), Set()))
+      for (bool dd = l_flatSubs.First(b_atp); dd; dd = l_flatSubs.Next(b_atp)) {
+        if (IsSubType(StripAccessType(NormaliseAccessType(b_atp)), StripAccessType(NormaliseAccessType(b_bd)), Set())) {
           l_subOccs.Insert(b_atp);
+        }
       }
       TYPE_AS_Access acc (GetSSAccess(b_bd)); // AS`Access
-      if ((!(acc == Int(PUBLIC_AS) || acc == Int(PROTECTED_AS))) || !l_subOccs.IsEmpty())
+      if ((!(acc == Int(PUBLIC_AS) || acc == Int(PROTECTED_AS))) || !l_subOccs.IsEmpty()) {
         l_supMap.RemElem(b_nm);
+      }
     }
-    else
-    { // overloaded
+    else { // overloaded
       Set b_bd_s (b_bd);  // overloaded
       Set l_pubpro;
       Generic b_atp;
-      for (bool dd = b_bd_s.First(b_atp); dd; dd = b_bd_s.Next(b_atp))
-      {
+      for (bool dd = b_bd_s.First(b_atp); dd; dd = b_bd_s.Next(b_atp)) {
         TYPE_AS_Access acc (GetSSAccess(b_atp)); // AS`Access
-        if (acc == Int(PUBLIC_AS) || acc == Int(PROTECTED_AS))
+        if (acc == Int(PUBLIC_AS) || acc == Int(PROTECTED_AS)) {
           l_pubpro.Insert(b_atp);
+        }
       }
-      if (l_pubpro.IsEmpty())
+      if (l_pubpro.IsEmpty()) {
         l_supMap.RemElem(b_nm);
-      else
+      }
+      else {
         l_supMap.ImpModify(b_nm, l_pubpro);
+      }
     }
   }
 
   Set dom_p_subMap (p_subMap.Dom());
   Generic b_subNm;
-  for (bool dd = dom_p_subMap.First(b_subNm); dd; dd = dom_p_subMap.Next(b_subNm))
-  {
+  for (bool dd = dom_p_subMap.First(b_subNm); dd; dd = dom_p_subMap.Next(b_subNm)) {
     Generic b_bd (p_subMap[b_subNm]);
     Set dom_l_supMap (l_supMap.Dom());
     Generic b_supNm;
-    for (bool ee = dom_l_supMap.First(b_supNm); ee; ee = dom_l_supMap.Next(b_supNm))
-    {
+    for (bool ee = dom_l_supMap.First(b_supNm); ee; ee = dom_l_supMap.Next(b_supNm)) {
       Generic b_supBd (l_supMap[b_supNm]);
       //if (b_supBd.IsSet()) // set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep))
-      if (IsAccessTypeSet(b_supBd))
-      { // overloaded
+      if (IsAccessTypeSet(b_supBd)) { // overloaded
         Set b_supBd_s (b_supBd);
         Set l_matches;
         Generic b_atp2;
-        for (bool ff = b_supBd_s.First(b_atp2); ff; ff = b_supBd_s.Next(b_atp2))
-        {
+        for (bool ff = b_supBd_s.First(b_atp2); ff; ff = b_supBd_s.Next(b_atp2)) {
           //if (b_bd.IsSet()) // set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep))
-          if (IsAccessTypeSet(b_bd))
-          { // overloaded
+          if (IsAccessTypeSet(b_bd)) { // overloaded
             Set b_bd_s (b_bd);
             bool exists = false;
             Generic b_atp1;
-            for (bool gg = b_bd_s.First(b_atp1); gg && !exists; gg = b_bd_s.Next(b_atp1))
-            {
+            for (bool gg = b_bd_s.First(b_atp1); gg && !exists; gg = b_bd_s.Next(b_atp1)) {
               exists = IsSubType(StripAccessType(NormaliseAccessType(b_atp1)),
                                  StripAccessType(NormaliseAccessType(b_atp2)), Set());
             }
-            if (exists)
+            if (exists) {
               l_matches.Insert(b_atp2);
+            }
           }
-          else
-          {
-            if (IsSubType(StripAccessType(NormaliseAccessType(b_bd)),
-                          StripAccessType(NormaliseAccessType(b_atp2)), Set()))
+          else {
+            if (IsSubType(StripAccessType(NormaliseAccessType(b_bd)), 
+                          StripAccessType(NormaliseAccessType(b_atp2)), Set())) {
               l_matches.Insert(b_atp2);
+            }
           }
         }
-        if (l_matches == b_supBd)
-        {
+        if (l_matches == b_supBd) {
           l_supMap.RemElem(b_supNm);
         }
-        else
-        {
+        else {
           Set s (l_supMap[b_supNm]);
           s.ImpDiff(l_matches);
           l_supMap.ImpModify(b_supNm, s);
@@ -2030,32 +1973,30 @@ TYPE_REP_TypeRep StatSem::SubSuperClType(const TYPE_AS_Name & clsnm, const TYPE_
       return typerep;
     case TAG_TYPE_REP_TypeNameRep: {
       const TYPE_AS_Name & nm (typerep.GetRecord(pos_REP_TypeNameRep_nm));
-      if(nm.GetSequence(pos_AS_Name_ids).Length() == 1)
-      {
+      if(nm.GetSequence(pos_AS_Name_ids).Length() == 1) {
 // 20141202 -->
 //        if (IsClassName(nm))
 //          return mk_REP_ObjRefTypeRep(nm);
 // <-- 20141202
         Generic newnm (LookUpTypeInSuper(nm, clsnm));
-        if( !newnm.IsNil() )
-        {
+        if( !newnm.IsNil() ) {
           return mk_REP_TypeNameRep(newnm);
         }
       }
 // 20120226 -->
-      else
-      {
+      else {
         TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
         TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
         Generic gpti (GetClassTypeRep(ncls));
-        if (!gpti.IsNil())
-        {
+        if (!gpti.IsNil()) {
           Set dom_tps (Record(gpti).GetMap(pos_SSENV_ParseTypeInfo_tps).Dom());
-          if (dom_tps.InSet(nm))
+          if (dom_tps.InSet(nm)) {
             return typerep;
+          }
         }
-        if (IsClassName(nnm))
+        if (IsClassName(nnm)) {
           return mk_REP_ObjRefTypeRep(nnm);
+        }
       }
 // <-- 20120226
       return typerep;
@@ -2064,16 +2005,18 @@ TYPE_REP_TypeRep StatSem::SubSuperClType(const TYPE_AS_Name & clsnm, const TYPE_
       SET<TYPE_REP_TypeRep> tp_s (typerep.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> new_tp_s;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb; bb = tp_s.Next(tp)) {
         new_tp_s.Insert(SubSuperClType(clsnm, tp));
+      }
       return mk_REP_UnionTypeRep(new_tp_s);
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tp_l (typerep.GetSequence(pos_REP_ProductTypeRep_tps));
       SEQ<TYPE_REP_TypeRep> new_tp_l;
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         new_tp_l.ImpAppend(SubSuperClType(clsnm, tp_l[idx]));
+      }
       return mk_REP_ProductTypeRep(new_tp_l);
     }
     case TAG_TYPE_REP_SetTypeRep: {
@@ -2104,16 +2047,18 @@ TYPE_REP_TypeRep StatSem::SubSuperClType(const TYPE_AS_Name & clsnm, const TYPE_
       const SEQ<TYPE_REP_TypeRep> & dtpl (typerep.GetSequence(pos_REP_OpTypeRep_Dom));
       SEQ<TYPE_REP_TypeRep> new_dtpl;
       size_t len_dtpl = dtpl.Length();
-      for (size_t idx = 1; idx <= len_dtpl; idx++)
+      for (size_t idx = 1; idx <= len_dtpl; idx++) {
         new_dtpl.ImpAppend(SubSuperClType(clsnm, dtpl[idx]));
+      }
       return mk_REP_OpTypeRep(new_dtpl, SubSuperClType(clsnm, typerep.GetRecord(pos_REP_OpTypeRep_Rng)));
     }
     case TAG_TYPE_REP_PartialFnTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & dtpl (typerep.GetSequence(pos_REP_PartialFnTypeRep_fndom));
       SEQ<TYPE_REP_TypeRep> new_dtpl;
       size_t len_dtpl = dtpl.Length();
-      for (size_t idx = 1; idx <= len_dtpl; idx++)
+      for (size_t idx = 1; idx <= len_dtpl; idx++) {
         new_dtpl.ImpAppend(SubSuperClType(clsnm, dtpl[idx]));
+      }
       return mk_REP_PartialFnTypeRep(new_dtpl,
                                      SubSuperClType(clsnm, typerep.GetRecord(pos_REP_PartialFnTypeRep_fnrng)));
     }
@@ -2121,8 +2066,9 @@ TYPE_REP_TypeRep StatSem::SubSuperClType(const TYPE_AS_Name & clsnm, const TYPE_
       const SEQ<TYPE_REP_TypeRep> & dtpl (typerep.GetSequence(pos_REP_TotalFnTypeRep_fndom));
       SEQ<TYPE_REP_TypeRep> new_dtpl;
       size_t len_dtpl = dtpl.Length();
-      for (size_t idx = 1; idx <= len_dtpl; idx++)
+      for (size_t idx = 1; idx <= len_dtpl; idx++) {
         new_dtpl.ImpAppend(SubSuperClType(clsnm, dtpl[idx]));
+      }
       return mk_REP_TotalFnTypeRep(new_dtpl, SubSuperClType(clsnm, typerep.GetRecord(pos_REP_TotalFnTypeRep_fnrng)));
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -2142,8 +2088,9 @@ TYPE_REP_TypeRep StatSem::SubSuperClType(const TYPE_AS_Name & clsnm, const TYPE_
 // ==> [AS`Name]
 Generic StatSem::LookUpTypeInSuper(const TYPE_AS_Name & tpnm_, const TYPE_AS_Name & clsnm_)
 {
-  if (IsClassName(tpnm_))
+  if (IsClassName(tpnm_)) {
     return Nil();
+  }
 // 20141202 -->
   TYPE_AS_Name tpnm ((tpnm_.get_ids().Length() == 1) ? tpnm_ : ASTAUX::GetSecondName(tpnm_));
   TYPE_AS_Name clsnm ((tpnm_.get_ids().Length() == 1) ? clsnm_ : ASTAUX::GetFirstName(tpnm_));
@@ -2157,20 +2104,20 @@ Generic StatSem::LookUpTypeInSuper(const TYPE_AS_Name & tpnm_, const TYPE_AS_Nam
 // 20141202 -->
     const Map & tps (classinfo.GetMap(pos_SSENV_ParseTypeInfo_tps));
      
-    if (CheckAccessCurClass (tps[extnm]).IsNil())
+    if (CheckAccessCurClass (tps[extnm]).IsNil()) {
       return Nil();
+    }
 // <-- 20141202
     return extnm;
   }
-  else
-  {
+  else {
     SET<TYPE_AS_Name> supers (classinfo.get_super());
     Generic sup;
-    for (bool bb = supers.First(sup); bb; bb = supers.Next(sup))
-    {
+    for (bool bb = supers.First(sup); bb; bb = supers.Next(sup)) {
       Generic nm (LookUpTypeInSuper(tpnm, sup));
-      if (!nm.IsNil())
+      if (!nm.IsNil()) {
         return nm;
+      }
     }
     return Nil();
   }
@@ -2184,15 +2131,12 @@ Generic StatSem::LookUpTypeInSuper(const TYPE_AS_Name & tpnm_, const TYPE_AS_Nam
 Generic StatSem::LookUpPolyFn (const TYPE_AS_Name & nm)
 {
   size_t depth = this->SEnv.Length();
-  for (size_t i = 1 ; i <= depth ; i++)
-  {
+  for (size_t i = 1 ; i <= depth ; i++) {
     Map currentEnv (this->SEnv[i]); // map AS`Name to TypeRepElem
-    if (currentEnv.DomExists (nm))
-    {
+    if (currentEnv.DomExists (nm)) {
       TYPE_SSENV_TypeRepElem rc (currentEnv[nm]);
       TYPE_REP_TypeRep tp (rc.GetRecord(pos_SSENV_TypeRepElem_tp));
-      if (tp.Is(TAG_TYPE_REP_PolyTypeRep))
-      {
+      if (tp.Is(TAG_TYPE_REP_PolyTypeRep)) {
         rc.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
         currentEnv.ImpModify (nm, rc);
         this->SEnv.ImpModify (i, currentEnv);
@@ -2201,8 +2145,7 @@ Generic StatSem::LookUpPolyFn (const TYPE_AS_Name & nm)
     }
   }
 
-  if (this->PolyEnv.DomExists(nm))
-  {
+  if (this->PolyEnv.DomExists(nm)) {
     TYPE_SSENV_PolyTypeRepElem rc (this->PolyEnv[nm]);
     rc.SetField(pos_SSENV_PolyTypeRepElem_used, Bool(true));
     this->PolyEnv.ImpModify (nm, rc);
@@ -2232,15 +2175,17 @@ bool StatSem::CheckTypeVar (const TYPE_REP_TypeVarRep & nm)
 // return : bool
 bool StatSem::CheckTag (const TYPE_AS_Name & nm)
 {
-  if (this->TagEnv.DomExists (nm))
+  if (this->TagEnv.DomExists (nm)) {
     return true;
-  else
+  }
+  else {
 #ifdef VDMPP
     return (!LookUpInHierarchy (nm, Nil (), TAG, GLOBAL).IsNil ());
 #endif //VDMPP
 #ifdef VDMSL
-  return (this->LocTagEnv.DomExists(nm));
+    return (this->LocTagEnv.DomExists(nm));
 #endif //VDMSL
+  }
 }
 
 // CheckLocalTag
@@ -2267,13 +2212,13 @@ bool StatSem::CheckImportedTag(const TYPE_AS_Name & nm)
 bool StatSem::CheckTypeName (const TYPE_AS_Name & nm)
 {
 #ifdef VDMPP
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
-    if (ncls == GetCurClass ())
+    if (ncls == GetCurClass ()) {
       return CheckTypeName (nnm);
+    }
     else {
       Generic looktp (LookUpInHierarchy (nnm, ncls, TYPE, GLOBAL));
       if (!looktp.IsNil ()) {
@@ -2286,35 +2231,32 @@ bool StatSem::CheckTypeName (const TYPE_AS_Name & nm)
           GenErr (nm, ERR, 368, mk_sequence(PrintName (nm)));
           return false;
         }
-        else
+        else {
           return true;
+        }
       }
-      else
+      else {
         return true;
+      }
     }
   }
 #endif //VDMPP
 
-  if( this->TypeEnv.DomExists (nm) )
-  {
+  if( this->TypeEnv.DomExists (nm) ) {
     TYPE_SSENV_TypeRepElem tpre (this->TypeEnv[nm]);
     TYPE_REP_TypeRep tp (tpre.get_tp());
-    if( !tp.Is(TAG_TYPE_REP_AllTypeRep) )
-    {
+    if( !tp.Is(TAG_TYPE_REP_AllTypeRep) ) {
       tpre.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
       this->TypeEnv.ImpModify(nm, tpre);
       return true;
     }
   }
 #ifdef VDMPP
-  else // if(nm.GetSequence(pos_AS_Name_ids).Length() == 1)
-  {
+  else { // if(nm.GetSequence(pos_AS_Name_ids).Length() == 1)
     Generic looktp (LookUpInHierarchy (nm, Nil(), TYPE, GLOBAL));
-    if (!looktp.IsNil ())
-    {
+    if (!looktp.IsNil ()) {
       Generic acs (CheckAccessCurClass (looktp));
-      if (acs.IsNil ())
-      {
+      if (acs.IsNil ()) {
         //--------------------
         // Error message #368
         // Access violation
@@ -2322,20 +2264,24 @@ bool StatSem::CheckTypeName (const TYPE_AS_Name & nm)
         GenErr (nm, ERR, 368, mk_sequence(PrintName (nm)));
         return false;
       }
-      else
+      else {
         return true;
+      }
     }
-    else
+    else {
       return CheckClassName(nm);
+    }
   }
 #endif //VDMPP
 #ifdef VDMSL
 //  else if (this->TypeParEnv.DomExists (nm))
 //    return true;
-  else if (this->RenamedTypes.DomExists (nm))
+  else if (this->RenamedTypes.DomExists (nm)) {
     return CheckTypeName (this->RenamedTypes [nm]);
-  else
+  }
+  else {
     return false;
+  }
 #endif //VDMSL
   return false; // dummy
 }
@@ -2345,20 +2291,20 @@ bool StatSem::CheckTypeName (const TYPE_AS_Name & nm)
 // ==> bool
 bool StatSem::CheckOperationName (const TYPE_AS_Name& nm)
 {
-  if (this->OperationEnv.DomExists (nm))
-  {
+  if (this->OperationEnv.DomExists (nm)) {
     TYPE_SSENV_OpTypeRepElem tre (this->OperationEnv[nm]);
     tre.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
     this->OperationEnv.ImpModify (nm, tre);
     return true;
   }
-  else
+  else {
 #ifdef VDMSL
     return false;
 #endif // VDMSL
 #ifdef VDMPP
     return ! LookUpOperationName(Nil(), nm, Nil()).IsEmpty ();
 #endif // VDMPP
+  }
 }
 
 #ifdef VDMSL
@@ -2399,9 +2345,9 @@ bool StatSem::InstallCurClass (const TYPE_AS_Name & classnm, const SEQ<TYPE_AS_N
 {
   SetCurClass(classnm);
 
-  if (!CheckClassName(classnm))
+  if (!CheckClassName(classnm)) {
     return false;
-
+  }
   this->Super = super.Elems ();
   this->SuperSuper = TransClos (classnm);
   return true;
@@ -2477,49 +2423,52 @@ bool StatSem::IsAccessibleCurClass (const TYPE_SSENV_AccessType & acs)
 Generic StatSem::CheckAccess (const TYPE_AS_Name & cls, const Generic & tp)
 {
   Generic l_defcl (LookUpDefClass ());
-  if (IsAccessTypeSet(tp))
-  {
+  if (IsAccessTypeSet(tp)) {
     SET<TYPE_SSENV_AccessType> tps (tp);
     TYPE_AS_Name l_actcl (l_defcl.IsNil() ? cls : TYPE_AS_Name(l_defcl));
 
     Generic b_atp;
     SET<TYPE_SSENV_AccessType> l_tps;
-    for (bool bb = tps.First(b_atp); bb; bb = tps.Next(b_atp))
-    {
-      if (IsAccessible(l_actcl, b_atp))
+    for (bool bb = tps.First(b_atp); bb; bb = tps.Next(b_atp)) {
+      if (IsAccessible(l_actcl, b_atp)) {
         l_tps.Insert(StripAccessType(b_atp));
+      }
     }
 
-    if (l_tps.IsEmpty())
+    if (l_tps.IsEmpty()) {
       return Nil();
-    else
+    }
+    else {
       return l_tps;
+    }
   }
-  else if (IsAccessType (tp))
-  {
+  else if (IsAccessType (tp)) {
     // check cls is class or not
     Generic gtp = Nil();
-    if (cls != GetCurClass ())
-    {
+    if (cls != GetCurClass ()) {
       SetDefClass(GetCurClass ());
       gtp = LookUp(cls, false);
       UnSetDefClass();
 
-      if (IsAccessType(gtp))
+      if (IsAccessType(gtp)) {
         CheckLookupStatic(cls, GetSSStatic(gtp));
+      }
     }
     if (
 #ifdef VICE
         !this->staticrequired ||
 #endif // VICE
         (!l_defcl.IsNil () && IsAccessible (l_defcl, tp) && (!gtp.IsNil() || IsAccessible (cls, tp))) ||
-        (l_defcl.IsNil () && IsAccessible (cls, tp)))
+        (l_defcl.IsNil () && IsAccessible (cls, tp))) {
       return StripAccessType(tp);
-    else
+    }
+    else {
       return Nil();
+    }
   }
-  else
+  else {
     return tp;
+  }
 }
 
 //// ConvertAccessMethToRep
@@ -2554,17 +2503,18 @@ Generic StatSem::CheckAccessCurClass (const Generic & tp)
 // -> bool
 bool StatSem::IsAccessType (const Generic & a) const
 {
-  if (a.IsRecord ())
-  {
+  if (a.IsRecord ()) {
     switch(Record(a).GetTag()) {
       case TAG_TYPE_SSENV_AccessTypeRep:
       case TAG_TYPE_SSENV_AccessFnTypeRep:
       case TAG_TYPE_SSENV_AccessPolyTypeRep:
       case TAG_TYPE_SSENV_AccessOpTypeRep:
-      case TAG_TYPE_SSENV_AccessFieldRep:
+      case TAG_TYPE_SSENV_AccessFieldRep: {
         return true;
-      default:
+      }
+      default: {
         return false;
+      }
     }
   }
   else
@@ -2578,13 +2528,13 @@ bool StatSem::IsAccessType (const Generic & a) const
 // -> bool
 bool StatSem::IsSetOfAccessType (const Generic & a) const
 {
-  if (a.IsSet())
-  {
+  if (a.IsSet()) {
     Set tp_s (a);
     bool forall = true;
     Generic tp;
-    for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+    for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
       forall = IsAccessType(tp);
+    }
     return forall;
   }
   else
@@ -2598,17 +2548,18 @@ bool StatSem::IsSetOfAccessType (const Generic & a) const
 // -> bool
 bool StatSem::IsAccessTypeSet(const Generic & a) const
 {
-  if (a.IsSet())
-  {
+  if (a.IsSet()) {
     Set tp_s (a);
     bool forall = true;
     Generic tp;
-    for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+    for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
       forall = IsAccessOpFnPolyTypeRep(tp);
+    }
     return forall;
   }
-  else
+  else {
     return false;
+  }
 }
 
 // GetSSStatic (Not in spec)
@@ -2621,14 +2572,10 @@ Bool StatSem::GetSSStatic(const Generic & a) const
   if (a.IsRecord()) {
     TYPE_SSENV_AccessType tp (a);
     switch(tp.GetTag()) {
-      case TAG_TYPE_SSENV_AccessTypeRep:
-        return tp.GetBool(pos_SSENV_AccessTypeRep_stat);
-      case TAG_TYPE_SSENV_AccessFnTypeRep:
-        return tp.GetBool(pos_SSENV_AccessFnTypeRep_stat);
-      case TAG_TYPE_SSENV_AccessPolyTypeRep:
-        return tp.GetBool(pos_SSENV_AccessPolyTypeRep_stat);
-      case TAG_TYPE_SSENV_AccessOpTypeRep:
-        return tp.GetBool(pos_SSENV_AccessOpTypeRep_stat);
+      case TAG_TYPE_SSENV_AccessTypeRep:     { return tp.GetBool(pos_SSENV_AccessTypeRep_stat); }
+      case TAG_TYPE_SSENV_AccessFnTypeRep:   { return tp.GetBool(pos_SSENV_AccessFnTypeRep_stat); }
+      case TAG_TYPE_SSENV_AccessPolyTypeRep: { return tp.GetBool(pos_SSENV_AccessPolyTypeRep_stat); }
+      case TAG_TYPE_SSENV_AccessOpTypeRep:   { return tp.GetBool(pos_SSENV_AccessOpTypeRep_stat); }
     }
   }
   return Bool(false);
@@ -2644,16 +2591,11 @@ TYPE_AS_Access StatSem::GetSSAccess(const Generic & a) const
   if (a.IsRecord()) {
     TYPE_SSENV_AccessType tp (a);
     switch(tp.GetTag()) {
-      case TAG_TYPE_SSENV_AccessTypeRep:
-        return tp.GetField(pos_SSENV_AccessTypeRep_a);
-      case TAG_TYPE_SSENV_AccessFnTypeRep:
-        return tp.GetField(pos_SSENV_AccessFnTypeRep_a);
-      case TAG_TYPE_SSENV_AccessPolyTypeRep:
-        return tp.GetField(pos_SSENV_AccessPolyTypeRep_a);
-      case TAG_TYPE_SSENV_AccessOpTypeRep:
-        return tp.GetField(pos_SSENV_AccessOpTypeRep_a);
-      case TAG_TYPE_SSENV_AccessFieldRep:
-        return tp.GetField(pos_SSENV_AccessFieldRep_a);
+      case TAG_TYPE_SSENV_AccessTypeRep:     { return tp.GetField(pos_SSENV_AccessTypeRep_a); }
+      case TAG_TYPE_SSENV_AccessFnTypeRep:   { return tp.GetField(pos_SSENV_AccessFnTypeRep_a); }
+      case TAG_TYPE_SSENV_AccessPolyTypeRep: { return tp.GetField(pos_SSENV_AccessPolyTypeRep_a); }
+      case TAG_TYPE_SSENV_AccessOpTypeRep:   { return tp.GetField(pos_SSENV_AccessOpTypeRep_a); }
+      case TAG_TYPE_SSENV_AccessFieldRep:    { return tp.GetField(pos_SSENV_AccessFieldRep_a); }
     }
   }
   return Nil();
@@ -2666,19 +2608,21 @@ TYPE_AS_Access StatSem::GetSSAccess(const Generic & a) const
 // -> bool
 bool StatSem::IsAccessOpFnPolyTypeRep(const Generic & a) const
 {
-  if (a.IsRecord ())
-  {
+  if (a.IsRecord ()) {
     switch(Record(a).GetTag()) {
       case TAG_TYPE_SSENV_AccessFnTypeRep:
       case TAG_TYPE_SSENV_AccessPolyTypeRep:
-      case TAG_TYPE_SSENV_AccessOpTypeRep:
+      case TAG_TYPE_SSENV_AccessOpTypeRep: {
         return true;
-      default:
+      }
+      default: {
         return false;
+      }
     }
   }
-  else
+  else {
     return false;
+  }
 }
 
 // IsOpFnTypeRep (Not in spec)
@@ -2688,19 +2632,21 @@ bool StatSem::IsAccessOpFnPolyTypeRep(const Generic & a) const
 // -> bool
 bool StatSem::IsOpFnTypeRep(const Generic & a) const
 {
-  if (a.IsRecord ())
-  {
+  if (a.IsRecord ()) {
     switch(Record(a).GetTag()) {
       case TAG_TYPE_REP_OpTypeRep:
       case TAG_TYPE_REP_PartialFnTypeRep:
-      case TAG_TYPE_REP_TotalFnTypeRep:
+      case TAG_TYPE_REP_TotalFnTypeRep: {
         return true;
-      default:
+      }
+      default: {
         return false;
+      }
     }
   }
-  else
+  else {
     return false;
+  }
 }
 
 // IsOpFnTypeRepSet (Not in spec)
@@ -2710,17 +2656,18 @@ bool StatSem::IsOpFnTypeRep(const Generic & a) const
 // -> bool
 bool StatSem::IsOpFnTypeRepSet(const Generic & a) const
 {
-  if (a.IsSet())
-  {
+  if (a.IsSet()) {
     Set tp_s (a);
     bool forall = true;
     Generic tp;
-    for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+    for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
       forall = IsOpFnTypeRep(tp);
+    }
     return forall;
   }
-  else
+  else {
     return false;
+  }
 }
 
 // IsTypeRep (Not in spec)
@@ -2728,8 +2675,7 @@ bool StatSem::IsOpFnTypeRepSet(const Generic & a) const
 // -> bool
 bool StatSem::IsTypeRep(const Generic & a) const
 {
-  if (a.IsRecord ())
-  {
+  if (a.IsRecord ()) {
     switch(Record(a).GetTag()) {
       case TAG_TYPE_REP_InvTypeRep:
       case TAG_TYPE_REP_BooleanTypeRep:
@@ -2763,14 +2709,17 @@ bool StatSem::IsTypeRep(const Generic & a) const
       case TAG_TYPE_REP_NilTypeRep:
       case TAG_TYPE_REP_EmptySetTypeRep:
       case TAG_TYPE_REP_EmptySeqTypeRep:
-      case TAG_TYPE_REP_EmptyMapTypeRep:
+      case TAG_TYPE_REP_EmptyMapTypeRep: {
         return true;
-      default: 
+      }
+      default: {
         return false;
+      }
     }
   }
-  else
+  else {
     return false;
+  }
 }
 
 // StripAccessType
@@ -2778,26 +2727,20 @@ bool StatSem::IsTypeRep(const Generic & a) const
 // -> [REP`TypeRep|seq of REP`FieldRep]
 Generic StatSem::StripAccessType (const Generic & tp)
 {
-  if (IsAccessType (tp))
-  {
+  if (IsAccessType (tp)) {
     TYPE_SSENV_AccessType tpr (tp);
     switch(tpr.GetTag()) {
-      case TAG_TYPE_SSENV_AccessTypeRep:
-        return tpr.GetField(pos_SSENV_AccessTypeRep_tp);
-      case TAG_TYPE_SSENV_AccessFnTypeRep:
-        return tpr.GetField(pos_SSENV_AccessFnTypeRep_tp);
-      case TAG_TYPE_SSENV_AccessPolyTypeRep:
-        return tpr.GetField(pos_SSENV_AccessPolyTypeRep_tp);
-      case TAG_TYPE_SSENV_AccessOpTypeRep:
-        return tpr.GetField(pos_SSENV_AccessOpTypeRep_tp);
-      case TAG_TYPE_SSENV_AccessFieldRep:
-        return tpr.GetField(pos_SSENV_AccessFieldRep_tp);
-      default:
-        return TYPE_REP_TypeRep(); // dummy
+      case TAG_TYPE_SSENV_AccessTypeRep:     { return tpr.GetField(pos_SSENV_AccessTypeRep_tp); }
+      case TAG_TYPE_SSENV_AccessFnTypeRep:   { return tpr.GetField(pos_SSENV_AccessFnTypeRep_tp); }
+      case TAG_TYPE_SSENV_AccessPolyTypeRep: { return tpr.GetField(pos_SSENV_AccessPolyTypeRep_tp); }
+      case TAG_TYPE_SSENV_AccessOpTypeRep:   { return tpr.GetField(pos_SSENV_AccessOpTypeRep_tp); }
+      case TAG_TYPE_SSENV_AccessFieldRep:    { return tpr.GetField(pos_SSENV_AccessFieldRep_tp); }
+      default:                               { return TYPE_REP_TypeRep(); } // dummy
     }
   }
-  else
+  else {
     return tp;
+  }
 }
 
 // CheckInstAccess
@@ -2809,11 +2752,9 @@ bool StatSem::CheckInstAccess(const TYPE_AS_Access & p_acc, const TYPE_AS_Name &
   bool l_res = true;
   Set ss (this->SuperSuper);
   Generic b_clnm;
-  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm))
-  {
+  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm)) {
     Generic l_acs (LookUpInObject(b_clnm, p_nm, true, true));
-    if (IsAccessType(l_acs) && !NotNarrowedAccess(GetSSAccess(l_acs), p_acc))
-    {
+    if (IsAccessType(l_acs) && !NotNarrowedAccess(GetSSAccess(l_acs), p_acc)) {
       //--------------------------------------
       //-- Error 369
       //-- Scope narrowed by L"%1"
@@ -2834,16 +2775,13 @@ bool StatSem::CheckTypeDefAccess(const TYPE_AS_Access & p_acc, const TYPE_AS_Nam
   bool l_res = true;
   Set ss (this->SuperSuper);
   Generic b_clnm;
-  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm))
-  {
+  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm)) {
 // 20100802 -->
 // for cid 
-    if (CheckClassName(b_clnm))
-    {
+    if (CheckClassName(b_clnm)) {
 // <-- 20100802
       Generic tp_acs (LookUpTypeName(ExtName(b_clnm, p_nm), false));
-      if (IsAccessType(tp_acs) && !NotNarrowedAccess(GetSSAccess(tp_acs), p_acc))
-      {
+      if (IsAccessType(tp_acs) && !NotNarrowedAccess(GetSSAccess(tp_acs), p_acc)) {
         //--------------------------------------
         //-- Error 369
         //-- Scope narrowed by L"%1"
@@ -2868,22 +2806,21 @@ bool StatSem::CheckDefAccess(const TYPE_SSENV_AccessType & p_act, const TYPE_AS_
  
   Set ss (this->SuperSuper);
   Generic b_clnm;
-  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm))
-  {
-    if (CheckClassName(b_clnm))
-    {
+  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm)) {
+    if (CheckClassName(b_clnm)) {
       Generic tp_acs (LookUp(ExtName(b_clnm, p_nm), false));
       Set tp_acs_s;
-      if (IsAccessType(tp_acs))
+      if (IsAccessType(tp_acs)) {
         tp_acs_s.Insert(tp_acs);
-      else if (IsAccessTypeSet(tp_acs))
+      }
+      else if (IsAccessTypeSet(tp_acs)) {
         tp_acs_s.ImpUnion(tp_acs);
+      }
       if (!tp_acs_s.IsEmpty()) {
         bool forallScopeOk = true; 
         bool forallPureOk = true; 
         Generic acs;
-        for (bool bb = tp_acs_s.First(acs); bb; bb = tp_acs_s.Next(acs))
-        {
+        for (bool bb = tp_acs_s.First(acs); bb; bb = tp_acs_s.Next(acs)) {
           if (IsCompatible(POS, StripAccessType(p_act), StripAccessType(acs))) {
             forallScopeOk = NotNarrowedAccess(GetSSAccess(acs), p_acc) && forallScopeOk;
             if (p_act.Is(TAG_TYPE_SSENV_AccessOpTypeRep)) {
@@ -2894,8 +2831,7 @@ bool StatSem::CheckDefAccess(const TYPE_SSENV_AccessType & p_act, const TYPE_AS_
           }
         }
   
-        if (!forallScopeOk)
-        {
+        if (!forallScopeOk) {
           //--------------------------------------
           //-- Error 369
           //-- Scope narrowed by L"%1"
@@ -2903,8 +2839,7 @@ bool StatSem::CheckDefAccess(const TYPE_SSENV_AccessType & p_act, const TYPE_AS_
           GenErr(p_nm, ERR, 369, mk_sequence(PrintName(p_nm)));
           l_res = false;
         }
-        if (!forallPureOk)
-        {
+        if (!forallPureOk) {
           //--------------------------------------
           //-- Error 461
           //-- Impure operation "%1" override pure operation
@@ -2928,19 +2863,18 @@ bool StatSem::CheckPatternBindAccess (const TYPE_AS_Access & acc, const MAP<TYPE
   bool res (true);
   SET<TYPE_AS_Name> dom_bd (bd.Dom());
   Generic nm;
-  for (bool bb = dom_bd.First(nm); bb; bb = dom_bd.Next (nm))
-  {
+  for (bool bb = dom_bd.First(nm); bb; bb = dom_bd.Next (nm)) {
     TYPE_REP_TypeRep tp (bd[nm].GetRecord(1));
     Generic acs (LookUpInObject (curcls, nm, false, true));
     Set acsSet;
-    if (acs.IsSet())
+    if (acs.IsSet()) {
       acsSet = acs;
-    else
+    }
+    else {
       acsSet.Insert(acs);
-
+    }
     Generic b_acs;
-    for (bool cc = acsSet.First(b_acs); cc; cc = acsSet.Next(b_acs))
-    {
+    for (bool cc = acsSet.First(b_acs); cc; cc = acsSet.Next(b_acs)) {
       switch(tp.GetTag()) {
         case TAG_TYPE_REP_TypeNameRep: {
           res &= CheckTypeAccessAux (GetSSAccess(b_acs),
@@ -2957,28 +2891,23 @@ bool StatSem::CheckPatternBindAccess (const TYPE_AS_Access & acc, const MAP<TYPE
 
     Set ss (this->SuperSuper);
     Generic b_clnm;
-    for (bool dd = ss.First(b_clnm); dd; dd = ss.Next(b_clnm))
-    {
+    for (bool dd = ss.First(b_clnm); dd; dd = ss.Next(b_clnm)) {
       Generic acs (LookUpInObject (b_clnm, nm, false, true));
       bool narrowed = false;
-      if (IsAccessType(acs))
-      {
+      if (IsAccessType(acs)) {
         narrowed = !NotNarrowedAccess(GetSSAccess(acs), acc);
       }
-      else if (IsAccessTypeSet(acs))
-      {
+      else if (IsAccessTypeSet(acs)) {
         Set acsS (acs);
         Generic b_acs;
         bool exists = false;
-        for (bool ee = acsS.First(b_acs); ee && !exists; ee = acsS.Next(b_acs))
-        {
+        for (bool ee = acsS.First(b_acs); ee && !exists; ee = acsS.Next(b_acs)) {
           exists = !NotNarrowedAccess(GetSSAccess(b_acs), acc);
         }
         narrowed = exists;
       }
       
-      if (narrowed)
-      {
+      if (narrowed) {
         //--------------------------------------
         //-- Error 369
         //-- Scope narrowed by L"%1"
@@ -2999,8 +2928,9 @@ bool StatSem::CheckTypeListAccess (const TYPE_AS_Name & nm, const SEQ<TYPE_AS_Ty
 {
   bool res (true);
   size_t len_tp_l = tp_l.Length();
-  for (size_t idx = 1; idx <= len_tp_l; idx++)
+  for (size_t idx = 1; idx <= len_tp_l; idx++) {
     res = CheckTypeAccess (nm, tp_l[idx]) && res;
+  }
   return res;
 }
 
@@ -3014,21 +2944,21 @@ bool StatSem::CheckTypeAccess (const TYPE_AS_Name & nm, const TYPE_AS_Type & tp)
 
   Generic nm_acs (local_tp.IsNil () ? LookUpInHierarchy (nm, GetCurClass (), VAL, LOCAL) : local_tp);
 
-  if (IsAccessType(nm_acs))
-  {
+  if (IsAccessType(nm_acs)) {
     return CheckTypeAccessAux (GetSSAccess(nm_acs), tp);
   }
-  else if (IsAccessTypeSet(nm_acs))
-  {
+  else if (IsAccessTypeSet(nm_acs)) {
     Set nm_acsS (nm_acs);
     bool reswf = true;
     Generic l_atr;
-    for (bool bb = nm_acsS.First(l_atr); bb; bb = nm_acsS.Next(l_atr))
+    for (bool bb = nm_acsS.First(l_atr); bb; bb = nm_acsS.Next(l_atr)) {
       reswf = CheckTypeAccessAux(GetSSAccess(l_atr), tp) && reswf;
+    }
     return reswf;
   }
-  else
+  else {
     return true;
+  }
 }
 
 // GetMethRng
@@ -3093,24 +3023,27 @@ bool StatSem::CheckTypeAccessAux (const TYPE_AS_Access & main_acs, const TYPE_AS
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence (pos_AS_ProductType_tps));
       bool forall (true);
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         forall &= CheckTypeAccessAux (main_acs, tp_l[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_UnionType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_UnionType_tps));
       bool forall (true);
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         forall &= CheckTypeAccessAux (main_acs, tp_l[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_CompositeType: {
       const SEQ<TYPE_AS_Field> & flds (tp.GetSequence(pos_AS_CompositeType_fields));
       bool forall (true);
       size_t len_flds = flds.Length();
-      for (size_t idx = 1; idx <= len_flds; idx++)
+      for (size_t idx = 1; idx <= len_flds; idx++) {
         forall &= CheckTypeAccessAux (main_acs, flds[idx].GetRecord(pos_AS_Field_type));
+      }
       return forall;
     }
     case TAG_TYPE_AS_OptionalType:
@@ -3145,38 +3078,42 @@ bool StatSem::CheckTypeAccessAux (const TYPE_AS_Access & main_acs, const TYPE_AS
       const SEQ<TYPE_AS_Type> & dtp_l (tp.GetSequence(pos_AS_OpType_opdom));
       bool forall (CheckTypeAccessAux (main_acs, tp.GetRecord(pos_AS_OpType_oprng)));
       size_t len_dtp_l = dtp_l.Length();
-      for (size_t idx = 1; idx <= len_dtp_l; idx++)
+      for (size_t idx = 1; idx <= len_dtp_l; idx++) {
         forall &= CheckTypeAccessAux (main_acs, dtp_l[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_PartialFnType: {
       const SEQ<TYPE_AS_Type> & dtp_l (tp.GetSequence(pos_AS_PartialFnType_fndom));
       bool forall (CheckTypeAccessAux (main_acs, tp.GetRecord(pos_AS_PartialFnType_fnrng)));
       size_t len_dtp_l = dtp_l.Length();
-      for (size_t idx = 1; idx <= len_dtp_l; idx++)
+      for (size_t idx = 1; idx <= len_dtp_l; idx++) {
         forall &= CheckTypeAccessAux (main_acs, dtp_l[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_TotalFnType: {
       const SEQ<TYPE_AS_Type> & dtp_l (tp.GetSequence(pos_AS_TotalFnType_fndom));
       bool forall (CheckTypeAccessAux (main_acs, tp.GetRecord(pos_AS_TotalFnType_fnrng)));
       size_t len_dtp_l = dtp_l.Length();
-      for (size_t idx = 1; idx <= len_dtp_l; idx++)
+      for (size_t idx = 1; idx <= len_dtp_l; idx++) {
         forall &= CheckTypeAccessAux (main_acs, dtp_l[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_TypeName: {
       const TYPE_AS_Name & nm (tp.GetRecord(pos_AS_TypeName_name));
       Generic lookup (LookUpTypeName (nm, true));
-      if (lookup.Is(TAG_TYPE_REP_ObjRefTypeRep))
+      if (lookup.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
         return true;
+      }
 // 20070626 -->
 // special case return type name is op/fn name and op/fn is overloaded
-      else if (lookup.Is(TAG_TYPE_REP_AllTypeRep))
+      else if (lookup.Is(TAG_TYPE_REP_AllTypeRep)) {
         return true;
+      }
 // <-- 20070626
-      else
-      {
+      else {
         Generic acc (CheckAccessCurClass (lookup));
         if (acc.IsNil ()) {
           //---------------------
@@ -3188,8 +3125,9 @@ bool StatSem::CheckTypeAccessAux (const TYPE_AS_Access & main_acs, const TYPE_AS
         }
         else {
           TYPE_AS_Access tp_acs (LookUpAccessForType (lookup,nm));
-          if (NotNarrowedAccess (main_acs, tp_acs))
+          if (NotNarrowedAccess (main_acs, tp_acs)) {
             return true;
+          }
           else {
             //----------------------
             // Error #369
@@ -3220,31 +3158,27 @@ bool StatSem::CheckThreadInherit(const TYPE_AS_Name & clsnm)
   SET<TYPE_AS_Name> cl_s;
   Set ss (this->SuperSuper);
   Generic b_clnm;
-  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm))
-  {
+  for (bool bb = ss.First(b_clnm); bb; bb = ss.Next(b_clnm)) {
     Generic clrep (GetClassTypeRep(b_clnm));
-    if (!clrep.IsNil()) 
-    {
+    if (!clrep.IsNil()) {
       TYPE_SSENV_ParseTypeInfo pti (clrep);
-      if (pti.GetInt(pos_SSENV_ParseTypeInfo_thread) != Int(NONE))
-      {
+      if (pti.GetInt(pos_SSENV_ParseTypeInfo_thread) != Int(NONE)) {
         cl_s.Insert(b_clnm);
       }
     }
   }
   bool wf (cl_s.Card() <= 1);
-  if (!wf)
-  {
+  if (!wf) {
     SEQ<Char> nm_l;
     bool first = true;
     Generic nm;
-    for (bool cc = cl_s.First(nm); cc; cc = cl_s.Next(nm))
-    {
-      if (first)
+    for (bool cc = cl_s.First(nm); cc; cc = cl_s.Next(nm)) {
+      if (first) {
         first = false;
-      else
+      }
+      else {
         nm_l.ImpConc(SEQ<Char>(L", "));
-
+      }
       nm_l.ImpConc(PrintName(nm));
     }
     //------------------------------------------
@@ -3262,37 +3196,39 @@ bool StatSem::CheckThreadInherit(const TYPE_AS_Name & clsnm)
 // return : AS`Access
 TYPE_AS_Access StatSem::LookUpAccessForType (const Record & tp, const TYPE_AS_Name & nm)
 {
-  if (IsAccessType (tp))
+  if (IsAccessType (tp)) {
     return GetSSAccess(tp);
+  }
   else {
     Generic lu (LookUpInHierarchy (nm, GetCurClass (), TYPE, LOCAL));
     if (lu.IsNil ()) {
       Generic lu_q (LookUpInHierarchy (nm, GetCurClass (), VAL, LOCAL));
-      if (!lu_q.IsNil ())
-      {
-        if (IsAccessTypeSet(lu_q)) // IsSetOfOpOrFn(lu_q)
-        {
+      if (!lu_q.IsNil ()) {
+        if (IsAccessTypeSet(lu_q)) { // IsSetOfOpOrFn(lu_q)
           Set l_s (lu_q);
           const TYPE_CI_ContextId & cid (tp.GetRecord(pos_REP_ObjRefTypeRep_nm)
                                            .GetInt(pos_AS_Name_cid));
           Generic b_atr;
-          for (bool bb = l_s.First(b_atr); bb; bb = l_s.Next(b_atr))
-          {
+          for (bool bb = l_s.First(b_atr); bb; bb = l_s.Next(b_atr)) {
             TYPE_REP_ObjRefTypeRep l_ort (GetMethRng(StripAccessType(b_atr)));
 
-            if (cid == l_ort.get_nm().get_cid())
+            if (cid == l_ort.get_nm().get_cid()) {
               return GetSSAccess(b_atr);
+            }
           }
           return Int(NOT_INITIALISED_AS);
         }
-        else
+        else {
           return GetSSAccess(lu_q);
+        }
       }
-      else
+      else {
         return Int(NOT_INITIALISED_AS);
+      }
     }
-    else
+    else {
       return GetSSAccess(lu);
+    }
   }
 }
 
@@ -5426,6 +5362,7 @@ bool StatSem::ExtractExplicitFunctionSignature (const TYPE_AS_ExplFnDef & fndef)
   const TYPE_AS_FnType & tp         (fndef.GetRecord(pos_AS_ExplFnDef_tp));
   const Generic & fnpre             (fndef.GetField(pos_AS_ExplFnDef_fnpre));
   const Generic & fnpost            (fndef.GetField(pos_AS_ExplFnDef_fnpost));
+  const Generic & measu             (fndef.GetField(pos_AS_ExplFnDef_measu));
   Bool stat                         (Settings.VDM10() ? Bool(true) : fndef.GetBool(pos_AS_ExplFnDef_stat));
 
   MarkUsedType (tp);
@@ -5439,39 +5376,44 @@ bool StatSem::ExtractExplicitFunctionSignature (const TYPE_AS_ExplFnDef & fndef)
     GenErr (nm, WRN2, 98, mk_sequence(PrintName(nm)));
     return false;
   }
-  else
-  {
+  else {
     this->WhileChecking = L"while expanding function " + PrintName(nm).GetString();
     TYPE_REP_TypeRep fntp (TransType(Nil (), tp));
-    if (!tv_l.IsEmpty ())
-    {
+    if (!tv_l.IsEmpty ()) {
       SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (Nil (), tv_l));
       this->PolyEnv.ImpModify (nm, mk_SSENV_PolyTypeRepElem(r_l, fntp, Bool(false)));
 
-      if (!fnpre.IsNil ())
-      {
+      if (!fnpre.IsNil ()) {
         Tuple infer (MakePolyPreType (r_l, fntp));
         const SEQ<TYPE_REP_TypeVarRep> & tv_l (infer.GetSequence (1));
         const TYPE_REP_FnTypeRep & pfn (infer.GetRecord (2));
         this->PolyEnv.ImpModify (Pre (nm), mk_SSENV_PolyTypeRepElem(tv_l, pfn, Bool(true)));
       }
-
-      if (!fnpost.IsNil ())
-      {
-        Tuple infer (MakePolyPreType (r_l, fntp));
+      if (!fnpost.IsNil ()) {
+        Tuple infer (MakePolyPostType (r_l, fntp));
         const SEQ<TYPE_REP_TypeVarRep> & tv_l (infer.GetSequence (1));
         const TYPE_REP_FnTypeRep & pfn (infer.GetRecord (2));
         this->PolyEnv.ImpModify (Post (nm), mk_SSENV_PolyTypeRepElem(tv_l, pfn, Bool(true)));
       }
+      if (!measu.IsNil ()) {
+        Tuple infer (MakePolyMeasureType (r_l, fntp));
+        const SEQ<TYPE_REP_TypeVarRep> & tv_l (infer.GetSequence (1));
+        const TYPE_REP_FnTypeRep & pfn (infer.GetRecord (2));
+        this->PolyEnv.ImpModify (Measure (nm), mk_SSENV_PolyTypeRepElem(tv_l, pfn, Bool(true)));
+      }
     }
-    else
-    {
+    else {
       this->FunctionEnv.ImpModify (nm, mk_SSENV_TypeRepElem(fntp, Bool(false), stat));
 
-      if (!fnpre.IsNil())
-          this->FunctionEnv.ImpModify (Pre (nm), mk_SSENV_TypeRepElem(MakePreType (fntp), Bool(true), stat));
-      if (!fnpost.IsNil())
-          this->FunctionEnv.ImpModify (Post (nm), mk_SSENV_TypeRepElem(MakePostType (fntp), Bool(true), stat));
+      if (!fnpre.IsNil()) {
+        this->FunctionEnv.ImpModify (Pre (nm), mk_SSENV_TypeRepElem(MakePreType (fntp), Bool(true), stat));
+      }
+      if (!fnpost.IsNil()) {
+        this->FunctionEnv.ImpModify (Post (nm), mk_SSENV_TypeRepElem(MakePostType (fntp), Bool(true), stat));
+      }
+      if (!measu.IsNil()) {
+        this->FunctionEnv.ImpModify (Measure (nm), mk_SSENV_TypeRepElem(MakeMeasureType (fntp), Bool(true), stat));
+      }
     }
   }
   return true;
@@ -5492,8 +5434,7 @@ bool StatSem::ExtractImplicitFunctionSignature (const TYPE_AS_ImplFnDef & fndef)
   TYPE_AS_Type fnrng (ConstructImplRngType(resnmtps));
   MarkUsedType (fnrng);
 
-  if (!CheckName (nm))
-  {
+  if (!CheckName (nm)) {
     //-------------------------------------
     // Error message #98
     // Ignoring function signature for L"%1"
@@ -5501,39 +5442,38 @@ bool StatSem::ExtractImplicitFunctionSignature (const TYPE_AS_ImplFnDef & fndef)
     GenErr (nm, WRN2, 98, mk_sequence(PrintName(nm)));
     return false;
   }
-  else
-  {
+  else {
     this->WhileChecking = L"while expanding function " + PrintName(nm).GetString();
 
     SEQ<TYPE_AS_Type> domtps (ConstructImplDomType(partps));
     Generic t;
-    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t))
+    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t)) {
       MarkUsedType (t);
-
+    }
     SEQ<TYPE_REP_TypeRep> domtp (TransTypeList (Nil (), domtps));
     TYPE_REP_TypeRep restp (TransType(Nil (), fnrng));
 
     TYPE_REP_TotalFnTypeRep fnsig (mk_REP_TotalFnTypeRep(domtp, restp));
-    TYPE_REP_TotalFnTypeRep fnpresig (mk_REP_TotalFnTypeRep(domtp, btp_bool));
-    TYPE_REP_TotalFnTypeRep fnpostsig (mk_REP_TotalFnTypeRep(domtp.ImpAppend (restp), btp_bool));
 
-    if (!tv_l.IsEmpty ())
-    {
+    if (!tv_l.IsEmpty ()) {
       SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (Nil (), tv_l));
       this->PolyEnv.ImpModify (nm, mk_SSENV_PolyTypeRepElem(r_l, fnsig, Bool(false)));
 
-      if (!fnpre.IsNil ())
+      if (!fnpre.IsNil ()) {
+        TYPE_REP_TotalFnTypeRep fnpresig (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->PolyEnv.ImpModify (Pre (nm), mk_SSENV_PolyTypeRepElem(r_l, fnpresig, Bool(true)));
-
+      }
+      TYPE_REP_TotalFnTypeRep fnpostsig (mk_REP_TotalFnTypeRep(domtp.ImpAppend (restp), btp_bool));
       this->PolyEnv.ImpModify (Post (nm), mk_SSENV_PolyTypeRepElem(r_l, fnpostsig, Bool(true)));
     }
-    else
-    {
+    else {
       this->FunctionEnv.Insert (nm, mk_SSENV_TypeRepElem(fnsig, Bool(false), stat));
 
-      if (!fnpre.IsNil())
+      if (!fnpre.IsNil()) {
+        TYPE_REP_TotalFnTypeRep fnpresig (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->FunctionEnv.ImpModify (Pre(nm), mk_SSENV_TypeRepElem(fnpresig, Bool(true), stat));
-
+      }
+      TYPE_REP_TotalFnTypeRep fnpostsig (mk_REP_TotalFnTypeRep(domtp.ImpAppend (restp), btp_bool));
       this->FunctionEnv.ImpModify (Post(nm), mk_SSENV_TypeRepElem(fnpostsig, Bool(true), stat));
     }
   }
@@ -5551,13 +5491,13 @@ bool StatSem::ExtractExtExplicitFunctionSignature (const TYPE_AS_ExtExplFnDef & 
   const SEQ<TYPE_AS_NameType> & resnmtps  (fndef.GetSequence(pos_AS_ExtExplFnDef_resnmtps));
   const Generic & fnpre                   (fndef.GetField(pos_AS_ExtExplFnDef_fnpre));
   const Generic & fnpost                  (fndef.GetField(pos_AS_ExtExplFnDef_fnpost));
+  const Generic & measu                   (fndef.GetField(pos_AS_ExtExplFnDef_measu));
   Bool stat                               (Settings.VDM10() ? Bool(true) : fndef.GetBool(pos_AS_ExtExplFnDef_stat));
 
   TYPE_AS_Type fnrng (ConstructImplRngType(resnmtps));
   MarkUsedType (fnrng);
 
-  if (!CheckName (nm))
-  {
+  if (!CheckName (nm)) {
     //-------------------------------------
     // Error message #98
     // Ignoring function signature for L"%1"
@@ -5565,42 +5505,50 @@ bool StatSem::ExtractExtExplicitFunctionSignature (const TYPE_AS_ExtExplFnDef & 
     GenErr (nm, WRN2, 98, mk_sequence(PrintName(nm)));
     return false;
   }
-  else
-  {
+  else {
     this->WhileChecking = L"while expanding function " + PrintName(nm).GetString();
 
     SEQ<TYPE_AS_Type> domtps (ConstructImplDomType(partps));
     Generic t;
-    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t))
+    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t)) {
       MarkUsedType (t);
-
+    }
     SEQ<TYPE_REP_TypeRep> domtp (TransTypeList (Nil (), domtps));
     TYPE_REP_TypeRep restp (TransType(Nil (), fnrng));
 
     TYPE_REP_TotalFnTypeRep fnsig (mk_REP_TotalFnTypeRep(domtp, restp));
-    TYPE_REP_TotalFnTypeRep fnpresig (mk_REP_TotalFnTypeRep(domtp, btp_bool));
-    TYPE_REP_TotalFnTypeRep fnpostsig (mk_REP_TotalFnTypeRep(domtp.ImpAppend (restp), btp_bool));
-
-    if (!tv_l.IsEmpty ())
-    {
+    if (!tv_l.IsEmpty ()) {
       SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (Nil (), tv_l));
       this->PolyEnv.ImpModify (nm, mk_SSENV_PolyTypeRepElem(r_l, fnsig, Bool(false)));
 
-      if (!fnpre.IsNil ())
+      if (!fnpre.IsNil ()) {
+        TYPE_REP_TotalFnTypeRep fnpresig (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->PolyEnv.ImpModify (Pre (nm), mk_SSENV_PolyTypeRepElem(r_l, fnpresig, Bool(true)));
-
-      if (!fnpost.IsNil ())
+      }
+      if (!fnpost.IsNil ()) {
+        TYPE_REP_TotalFnTypeRep fnpostsig (mk_REP_TotalFnTypeRep(domtp.ImpAppend (restp), btp_bool));
         this->PolyEnv.ImpModify (Post (nm), mk_SSENV_PolyTypeRepElem(r_l, fnpostsig, Bool(true)));
+      }
+      if (!measu.IsNil ()) {
+        TYPE_REP_TotalFnTypeRep fnmeasusig (mk_REP_TotalFnTypeRep(domtp, rep_alltp));
+        this->PolyEnv.ImpModify (Measure (nm), mk_SSENV_PolyTypeRepElem(r_l, fnmeasusig, Bool(true)));
+      }
     }
-    else
-    {
+    else {
       this->FunctionEnv.Insert (nm, mk_SSENV_TypeRepElem(fnsig, Bool(false), stat));
 
-      if (!fnpre.IsNil())
+      if (!fnpre.IsNil()) {
+        TYPE_REP_TotalFnTypeRep fnpresig (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->FunctionEnv.ImpModify (Pre (nm), mk_SSENV_TypeRepElem(fnpresig, Bool(true), stat));
-
-      if (!fnpost.IsNil())
+      }
+      if (!fnpost.IsNil()) {
+        TYPE_REP_TotalFnTypeRep fnpostsig (mk_REP_TotalFnTypeRep(domtp.ImpAppend (restp), btp_bool));
         this->FunctionEnv.ImpModify (Post(nm), mk_SSENV_TypeRepElem(fnpostsig, Bool(true), stat));
+      }
+      if (!measu.IsNil()) {
+        TYPE_REP_TotalFnTypeRep fnmeasusig (mk_REP_TotalFnTypeRep(domtp, rep_alltp));
+        this->FunctionEnv.ImpModify (Measure (nm), mk_SSENV_TypeRepElem(fnmeasusig, Bool(true), stat));
+      }
     }
   }
   return true;
@@ -5695,8 +5643,7 @@ bool StatSem::ExtractExplicitOperationSignature (const TYPE_AS_ExplOpDef & opdef
 
   MarkUsedType (tp);
 
-  if (!CheckName (nm))
-  {
+  if (!CheckName (nm)) {
     //----------------------------------
     // Error message #99
     // Ignoring operation signature L"%1"
@@ -5704,35 +5651,28 @@ bool StatSem::ExtractExplicitOperationSignature (const TYPE_AS_ExplOpDef & opdef
     GenErr (nm, WRN2, 99, mk_sequence(PrintName(nm)));
     return false;
   }
-  else
-  {
+  else {
     this->WhileChecking = L"while expanding operation " + PrintName(nm).GetString();
     TYPE_REP_OpTypeRep fntp (TransType(Nil (), tp));
 
     TYPE_SSENV_TypeRepElem tpe (mk_SSENV_OpTypeRepElem(fntp, Bool(false), stat, oppure));
     this->OperationEnv.ImpModify (nm, tpe);
 #ifdef VDMSL
-    if (!fnpre.IsNil())
-    {
+    if (!fnpre.IsNil()) {
       this->FunctionEnv.ImpModify (Pre (nm),
                     mk_SSENV_TypeRepElem(MakeOpPreType (Nil(), fntp, stdef), Bool(true), Bool(true)));
     }
-
-    if (!fnpost.IsNil())
-    {
+    if (!fnpost.IsNil()) {
       this->FunctionEnv.ImpModify (Post (nm),
                     mk_SSENV_TypeRepElem(MakeOpPostType (Nil(), fntp, stdef), Bool(true), Bool(true)));
     }
 #endif // VDMSL
 #ifdef VDMPP
-    if (!fnpre.IsNil())
-    {
+    if (!fnpre.IsNil()) {
       this->FunctionEnv.ImpModify (Pre (nm),
                     mk_SSENV_TypeRepElem(MakeOpPreType (Nil(), fntp, Nil()), Bool(true), Bool(true)));
     }
-
-    if (!fnpost.IsNil())
-    {
+    if (!fnpost.IsNil()) {
       this->FunctionEnv.ImpModify (Post (nm),
                     mk_SSENV_TypeRepElem(MakeOpPostType (Nil(), fntp, Nil()), Bool(true), Bool(true)));
     }
@@ -5765,8 +5705,7 @@ bool StatSem::ExtractImplicitOperationSignature (const TYPE_AS_ImplOpDef & opdef
   TYPE_AS_Type oprng (ConstructImplRngType(resnmtps));
   MarkUsedType (oprng);
 
-  if (!CheckName (nm))
-  {
+  if (!CheckName (nm)) {
     //----------------------------------
     // Error message #99
     // Ignoring operation signature L"%1"
@@ -5774,15 +5713,14 @@ bool StatSem::ExtractImplicitOperationSignature (const TYPE_AS_ImplOpDef & opdef
     GenErr (nm, WRN2, 99, mk_sequence(PrintName(nm)));
     return false;
   }
-  else
-  {
+  else {
     this->WhileChecking = L"while expanding function " + PrintName(nm).GetString();
 
     SEQ<TYPE_AS_Type> domtps (ConstructImplDomType(partps));
     Generic t;
-    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t))
+    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t)) {
       MarkUsedType (t);
-
+    }
     TYPE_REP_TypeRep rngtp (resnmtps.IsEmpty () ? rep_unittp : TransType(Nil (), oprng));
 
     SEQ<TYPE_REP_TypeRep> domtp (TransTypeList (Nil (), domtps));
@@ -5792,8 +5730,7 @@ bool StatSem::ExtractImplicitOperationSignature (const TYPE_AS_ImplOpDef & opdef
     this->OperationEnv.ImpModify (nm, mk_SSENV_OpTypeRepElem( opsig, Bool(false), stat, oppure ));
 
 #ifdef VDMSL
-    if (!fnpre.IsNil())
-    {
+    if (!fnpre.IsNil()) {
       this->FunctionEnv.ImpModify (Pre(nm),
                     mk_SSENV_TypeRepElem(MakeOpPreType (Nil(), opsig, stdef), Bool(true), Bool(true)));
     }
@@ -5801,8 +5738,7 @@ bool StatSem::ExtractImplicitOperationSignature (const TYPE_AS_ImplOpDef & opdef
                   mk_SSENV_TypeRepElem(MakeOpPostType (Nil(), opsig, stdef), Bool(true), Bool(true)));
 #endif // VDMSL
 #ifdef VDMPP
-    if (!fnpre.IsNil())
-    {
+    if (!fnpre.IsNil()) {
       this->FunctionEnv.ImpModify (Pre(nm),
                     mk_SSENV_TypeRepElem(MakeOpPreType (Nil(), opsig, Nil()), Bool(true), Bool(true)));
     }
@@ -5841,8 +5777,7 @@ bool StatSem::ExtractExtExplicitOperationSignature (const TYPE_AS_ExtExplOpDef &
   TYPE_AS_Type oprng (ConstructImplRngType(resnmtps));
   MarkUsedType (oprng);
 
-  if (!CheckName (nm))
-  {
+  if (!CheckName (nm)) {
     //----------------------------------
     // Error message #99
     // Ignoring operation signature L"%1"
@@ -5850,16 +5785,15 @@ bool StatSem::ExtractExtExplicitOperationSignature (const TYPE_AS_ExtExplOpDef &
     GenErr (nm, WRN2, 99, mk_sequence(PrintName(nm)));
     return false;
   }
-  else
-  {
+  else {
     bool reswf (true);
     this->WhileChecking = L"while expanding function " + PrintName(nm).GetString();
 
     SEQ<TYPE_AS_Type> domtps (ConstructImplDomType(partps));
     Generic t;
-    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t))
+    for (bool bb = domtps.First(t); bb; bb = domtps.Next(t)) {
       MarkUsedType (t);
-
+    }
     SEQ<TYPE_REP_TypeRep> domtp (TransTypeList (Nil (), domtps));
 
     TYPE_REP_TypeRep rngtp (resnmtps.IsEmpty () ? rep_unittp : TransType(Nil (), oprng));
@@ -5873,7 +5807,6 @@ bool StatSem::ExtractExtExplicitOperationSignature (const TYPE_AS_ExtExplOpDef &
       this->FunctionEnv.ImpModify (Pre(nm),
                     mk_SSENV_TypeRepElem(MakeOpPreType (Nil (), opsig, stdef), Bool(true), Bool(true)));
     }
-
     if (!oppost.IsNil()) {
       this->FunctionEnv.ImpModify (Post(nm),
                     mk_SSENV_TypeRepElem(MakeOpPostType (Nil (), opsig, stdef), Bool(true), Bool(true)));
@@ -5884,7 +5817,6 @@ bool StatSem::ExtractExtExplicitOperationSignature (const TYPE_AS_ExtExplOpDef &
       this->FunctionEnv.ImpModify (Pre(nm),
                     mk_SSENV_TypeRepElem(MakeOpPreType (Nil (), opsig, Nil()), Bool(true), Bool(true)));
     }
-
     if (!oppost.IsNil()) {
       this->FunctionEnv.ImpModify (Post(nm),
                     mk_SSENV_TypeRepElem(MakeOpPostType (Nil (), opsig, Nil()), Bool(true), Bool(true)));
@@ -5906,51 +5838,51 @@ bool StatSem::ExtractOverloadedSignatures(const MAP<TYPE_AS_Name,TYPE_AS_OpDef> 
 
   Set dom_p_opm (p_opm.Dom());
   Generic b_opnm;
-  for (bool bb = dom_p_opm.First(b_opnm); bb; bb = dom_p_opm.Next(b_opnm))
-  {
+  for (bool bb = dom_p_opm.First(b_opnm); bb; bb = dom_p_opm.Next(b_opnm)) {
     TYPE_AS_OpDef l_opdef (p_opm[b_opnm]);
-    if (MANGLE::IsMangled(b_opnm))
-    {
+    if (MANGLE::IsMangled(b_opnm)) {
       TYPE_AS_Name l_nm (MANGLE::GetUnmangledName(b_opnm));
       Tuple l_opsig (GetOperationSignature(l_opdef)); // (seq of REP`TypeRep) * REP`TypeRep
       const SEQ<TYPE_REP_TypeRep> & l_opdom (l_opsig.GetSequence(1));
       const TYPE_REP_TypeRep & l_oprng (l_opsig.GetRecord(2));
       bool l_static = GetOperationStaticStatus(l_opdef);
 
-      if (this->OverloadedEnv.DomExists(l_nm))
-      {
-        if (OverloadedTypeConsistent(l_nm, l_opdom, true))
+      if (this->OverloadedEnv.DomExists(l_nm)) {
+        if (OverloadedTypeConsistent(l_nm, l_opdom, true)) {
           InsertOverloadedName(l_nm, l_opdom, l_oprng, true, l_static);
-        else
+        }
+        else {
           l_reswf = false;
+        }
       }
-      else
+      else {
         InsertOverloadedName(l_nm, l_opdom, l_oprng, true, l_static);
+      }
     }
   }
 
   Set dom_p_fnm (p_fnm.Dom());
   Generic b_fnm;
-  for (bool dd = dom_p_fnm.First(b_fnm); dd; dd = dom_p_fnm.Next(b_fnm))
-  {
+  for (bool dd = dom_p_fnm.First(b_fnm); dd; dd = dom_p_fnm.Next(b_fnm)) {
     TYPE_AS_FnDef l_fndef (p_fnm[b_fnm]);
-    if (MANGLE::IsMangled(b_fnm))
-    {
+    if (MANGLE::IsMangled(b_fnm)) {
       TYPE_AS_Name l_nm (MANGLE::GetUnmangledName(b_fnm));
       Tuple l_fnsig (GetFunctionSignature(l_fndef));
       const SEQ<TYPE_REP_TypeRep> & l_fndom (l_fnsig.GetSequence(1));
       const TYPE_REP_TypeRep & l_fnrng (l_fnsig.GetRecord(2));
       bool l_static = GetFunctionStaticStatus(l_fndef);
 
-      if (this->OverloadedEnv.DomExists(l_nm))
-      {
-        if (OverloadedTypeConsistent(l_nm, l_fndom, false))
+      if (this->OverloadedEnv.DomExists(l_nm)) {
+        if (OverloadedTypeConsistent(l_nm, l_fndom, false)) {
           InsertOverloadedName(l_nm, l_fndom, l_fnrng, false, l_static);
-        else
+        }
+        else {
           l_reswf = false;
+        }
       }
-      else
+      else {
         InsertOverloadedName(l_nm, l_fndom, l_fnrng, false, l_static);
+      }
     }
   }
   return l_reswf;
@@ -5969,8 +5901,7 @@ bool StatSem::OverloadedTypeConsistent(const TYPE_AS_Name & p_nm,
 
   Set l_domtps; // set of seq of REP`TypeRep
   Generic b_tp;
-  for (bool bb = l_typereps.First(b_tp); bb; bb = l_typereps.Next(b_tp))
-  {
+  for (bool bb = l_typereps.First(b_tp); bb; bb = l_typereps.Next(b_tp)) {
     TYPE_SSENV_TypeRepElem l_tre (b_tp); //l_tre:TypeRepElem
     const TYPE_REP_TypeRep & r (l_tre.GetRecord(pos_SSENV_TypeRepElem_tp));
     switch(r.GetTag()) {
@@ -5994,17 +5925,14 @@ bool StatSem::OverloadedTypeConsistent(const TYPE_AS_Name & p_nm,
 
   bool l_reswf = true;
   Generic b_tpseqg;
-  for (bool cc = l_domtps.First(b_tpseqg); cc; cc = l_domtps.Next(b_tpseqg))
-  {
+  for (bool cc = l_domtps.First(b_tpseqg); cc; cc = l_domtps.Next(b_tpseqg)) {
     SEQ<TYPE_REP_TypeRep> b_tpseq (b_tpseqg);
     bool forall = (b_tpseq.Length() == p_domtp.Length());
     size_t len_b_tpseq = b_tpseq.Length();
-    for (size_t i = 1; (i <= len_b_tpseq) && forall; i++)
-    {
+    for (size_t i = 1; (i <= len_b_tpseq) && forall; i++) {
       forall = IsOverlapping(b_tpseq[i], p_domtp[i], Set());
     }
-    if (forall)
-    {
+    if (forall) {
       // ---------------------------------
       // -- Error message #382/#384
       // -- Parameter types of overloaded operations/functions overlap
@@ -6032,21 +5960,23 @@ void StatSem::InsertOverloadedName(const TYPE_AS_Name & p_nm,
   TYPE_REP_TypeRep l_rngtp (NormaliseTypeName(p_rngtp));
 
   TYPE_REP_TypeRep l_methtp;
-  if (p_isop)
+  if (p_isop) {
     l_methtp = mk_REP_OpTypeRep(l_domtps, l_rngtp);
-  else
+  }
+  else {
     l_methtp = mk_REP_TotalFnTypeRep(l_domtps, l_rngtp);
+  }
 
   TYPE_SSENV_TypeRepElem l_tre (mk_SSENV_TypeRepElem(l_methtp, Bool(false), Bool(p_static)));
 
-  if (this->OverloadedEnv.DomExists(p_nm))
-  {
+  if (this->OverloadedEnv.DomExists(p_nm)) {
     Set oe_pnm (this->OverloadedEnv[p_nm]);
     oe_pnm.Insert(l_tre);
     this->OverloadedEnv.ImpModify(p_nm, oe_pnm);
   }
-  else
+  else {
     this->OverloadedEnv.Insert(p_nm, Set().Insert(l_tre));
+  }
 }
 
 // NormaliseTypeNameList
@@ -6056,9 +5986,9 @@ SEQ<TYPE_REP_TypeRep> StatSem::NormaliseTypeNameList(const SEQ<TYPE_REP_TypeRep>
 {
   SEQ<TYPE_REP_TypeRep> l_tpL;
   size_t len_p_tpL = p_tpL.Length();
-  for (size_t idx = 1; idx <= len_p_tpL; idx++)
+  for (size_t idx = 1; idx <= len_p_tpL; idx++) {
     l_tpL.ImpAppend (NormaliseTypeName(p_tpL[idx]));
-
+  }
   return l_tpL;
 }
 
@@ -6097,18 +6027,15 @@ TYPE_REP_TypeRep StatSem::NormaliseTypeName(const TYPE_REP_TypeRep & p_tp)
     case TAG_TYPE_REP_TypeNameRep: {
       const TYPE_AS_Name & nm (p_tp.GetRecord(pos_REP_TypeNameRep_nm));
   
-      if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-      {
+      if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
         TYPE_AS_Name l_clnm (ASTAUX::GetFirstName(nm));
         TYPE_AS_Name l_elmnm (ASTAUX::GetSecondName(nm));
   
         if (IsClassName(l_elmnm)) {
-  
           Generic l_pte (GetClassTypeRep(l_clnm));
           Map l_tps;
   
-          if (!l_pte.IsNil())
-          {
+          if (!l_pte.IsNil()) {
             const TYPE_SSENV_ParseTypeInfo & pti = l_pte;
             l_tps = pti.get_tps();
           }
@@ -6118,12 +6045,10 @@ TYPE_REP_TypeRep StatSem::NormaliseTypeName(const TYPE_REP_TypeRep & p_tp)
           }
         }
 // 20061213 for inherit types (not in spec)
-        else
-        {
+        else {
           // check inherited types
           Map sup_tpm (LookUpInHierarchyAux(l_elmnm, l_clnm, TYPE, LOCAL, Set()));
-          if( sup_tpm.Size() == 1 )
-          {
+          if( sup_tpm.Size() == 1 ) {
             TYPE_AS_Name sup_nm (sup_tpm.Dom().GetElem());
             TYPE_AS_Ids new_ids (sup_nm.get_ids());
             new_ids.ImpConc(l_elmnm.get_ids());
@@ -6140,8 +6065,7 @@ TYPE_REP_TypeRep StatSem::NormaliseTypeName(const TYPE_REP_TypeRep & p_tp)
       const SEQ<TYPE_REP_FieldRep> & fields (p_tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> l_fields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_REP_FieldRep & fld (fields[idx]);
         l_fields.ImpAppend (mk_REP_FieldRep(fld.GetField(pos_REP_FieldRep_sel),
                                             NormaliseTypeName(fld.GetRecord(pos_REP_FieldRep_tp)),
@@ -6218,8 +6142,7 @@ TYPE_REP_TypeRep StatSem::NormaliseTypeName(const TYPE_REP_TypeRep & p_tp)
           (dom[1].Is(TAG_TYPE_REP_AnyOpTypeRep)) &&
           (dom[2] == btp_nat) &&
           //(rng == TYPE_REP_UnitTypeRep()))
-          (rng.Is(TAG_TYPE_REP_UnitTypeRep)))
-        {
+          (rng.Is(TAG_TYPE_REP_UnitTypeRep))) {
           SEQ<TYPE_REP_TypeRep> l_dtp;
           l_dtp.ImpAppend(mk_REP_TypeNameRep(ASTAUX::MkNameFromId(ASTAUX::MkId(L"top"), NilContextId)));
           l_dtp.ImpAppend(btp_nat); 
@@ -6341,15 +6264,12 @@ bool StatSem::ExpandInstanceVars (const SEQ<TYPE_AS_InstanceVarDef> & inst_l)
   bool reswf(true);
 
   size_t len_inst_l = inst_l.Length();
-  for (size_t idx = 1; idx <= len_inst_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_inst_l; idx++) {
     const TYPE_AS_InstanceVarDef & ivd (inst_l[idx]);
-    if (ivd.Is (TAG_TYPE_AS_InstAssignDef))
-    {
+    if (ivd.Is (TAG_TYPE_AS_InstAssignDef)) {
       const TYPE_AS_AssignDef & ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
       const TYPE_AS_Name & nm (ad.GetRecord(pos_AS_AssignDef_var));
-      if (!CheckName (nm))
-      {
+      if (!CheckName (nm)) {
         //-------------------------------
         // Error message #95
         // State name L"%1" is disregarded
@@ -6357,8 +6277,7 @@ bool StatSem::ExpandInstanceVars (const SEQ<TYPE_AS_InstanceVarDef> & inst_l)
         GenErr(nm, WRN2, 95, mk_sequence(PrintName(nm)));
         reswf = false;
       }
-      else
-      {
+      else {
         const TYPE_AS_Type & tp (ad.GetRecord(pos_AS_AssignDef_tp));
         const Bool & stat (ivd.GetBool(pos_AS_InstAssignDef_stat));
 
@@ -6383,19 +6302,16 @@ bool StatSem::ExtractValueDefsFirst (const Int & i, const SEQ<TYPE_AS_ValueDef> 
   this->ValueIds.Clear();
 
   size_t len_vals = vals.Length();
-  for (size_t j = 1; j <= len_vals; j++)
-  {
+  for (size_t j = 1; j <= len_vals; j++) {
     this->ValueIds.ImpUnion (ExtractPatternName (vals[j].GetRecord(pos_AS_ValueDef_pat)).Dom());
   }
 
   bool reswf (true);
-  for (size_t k = 1; k <= len_vals; k++)
-  {
+  for (size_t k = 1; k <= len_vals; k++) {
     const TYPE_AS_ValueDef & vd (vals[k]);
     const Generic & tp (vd.GetField(pos_AS_ValueDef_tp));
 
-    if (!tp.IsNil ())
-    {
+    if (!tp.IsNil ()) {
       const TYPE_AS_Pattern & pat   (vd.GetRecord(pos_AS_ValueDef_pat));
       const Bool & stat             (vd.GetBool(pos_AS_ValueDef_stat));
 #ifdef VDMPP
@@ -6410,8 +6326,7 @@ bool StatSem::ExtractValueDefsFirst (const Int & i, const SEQ<TYPE_AS_ValueDef> 
 
       Set dom_bd (bd.Dom());
       Generic nm;
-      for (bool dd = dom_bd.First(nm); dd; dd = dom_bd.Next(nm))
-      {
+      for (bool dd = dom_bd.First(nm); dd; dd = dom_bd.Next(nm)) {
 #ifdef VDMPP
 // 20101004 -->
         //reswf = CheckDefAccess(access, nm) && reswf;
@@ -6426,8 +6341,7 @@ bool StatSem::ExtractValueDefsFirst (const Int & i, const SEQ<TYPE_AS_ValueDef> 
     }
   }
 
-  if (!this->ValueIds.IsEmpty())
-  {
+  if (!this->ValueIds.IsEmpty()) {
     Set ids (this->ValueIds);
     Generic nm;
     for (bool ee = ids.First(nm); ee; ee = ids.Next(nm))
@@ -6449,15 +6363,13 @@ bool StatSem::ExtractValueDefs (const Int & i, const SEQ<TYPE_AS_ValueDef> & val
 
   Set dom_valbds (valbds.Dom());
   Generic nm;
-  for (bool bb = dom_valbds.First (nm); bb; bb = dom_valbds.Next (nm))
-  {
+  for (bool bb = dom_valbds.First (nm); bb; bb = dom_valbds.Next (nm)) {
     Tuple t (valbds[nm]); // (REP`TypeRep * bool)
     this->ConstEnv.ImpModify (nm, mk_SSENV_TypeRepElem(t.GetRecord(1), Bool(false), t.GetBool(2)));
   }
 
   size_t len_vals = vals.Length();
-  for (size_t j = 1; j <= len_vals; j++)
-  {
+  for (size_t j = 1; j <= len_vals; j++) {
     Tuple infer2 (wf_ValueDef (i, vals[j]));
     const Bool & wf_def (infer2.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
@@ -6466,10 +6378,8 @@ bool StatSem::ExtractValueDefs (const Int & i, const SEQ<TYPE_AS_ValueDef> & val
 
     Set dom_bd (bd.Dom());
     Generic nm;
-    for (bool dd = dom_bd.First (nm); dd; dd = dom_bd.Next (nm))
-    {
-      if (this->ConstEnv.DomExists (nm))
-      {
+    for (bool dd = dom_bd.First (nm); dd; dd = dom_bd.Next (nm)) {
+      if (this->ConstEnv.DomExists (nm)) {
         TYPE_SSENV_TypeRepElem tre (this->ConstEnv[nm]);
         this->ConstEnv.ImpModify (nm, mk_SSENV_TypeRepElem(bd[nm].GetRecord(1), tre.get_used (), tre.get_stat ()));
       }
@@ -6492,8 +6402,7 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
 
   Bool reswf (true);
   size_t len = vals.Length();
-  for (size_t index = 1; index <= len; index++)
-  {
+  for (size_t index = 1; index <= len; index++) {
     TYPE_AS_LocalDef def (vals[index]);
 
     switch(def.GetTag()) {
@@ -6505,10 +6414,8 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
         SET<TYPE_AS_Name> newids (ExtractPatternName (pat).Dom());
   
         Generic id;
-        for (bool bb = newids.First (id); bb; bb = newids.Next (id))
-        {
-          if (valbds.DomExists (id))
-          {
+        for (bool bb = newids.First (id); bb; bb = newids.Next (id)) {
+          if (valbds.DomExists (id)) {
             //-------------------------------------------------------
             // Error message #100
             // L"%1" is multiple defined, and must have the same value
@@ -6517,8 +6424,7 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
           }
         }
   
-        if (!tp.IsNil ())
-        {
+        if (!tp.IsNil ()) {
           bool wftp (wf_Type (i, tp));
   
           reswf &= wftp;
@@ -6528,8 +6434,7 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
           Bool wf (infer.GetField (1) == Bool (true)); // [bool]
           const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
   
-          if (!wf)
-          {
+          if (!wf) {
             //-------------------------------------
             // Error message #101
             // Rhs of value definition cannot match
@@ -6539,21 +6444,16 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
           }
   
           SET<TYPE_AS_Name> st (newids);
-          for (bool cc = st.First (id); cc; cc = st.Next (id))
-          {
+          for (bool cc = st.First (id); cc; cc = st.Next (id)) {
             TYPE_REP_TypeRep tp (bd[id].GetRecord(1));
-            if (valbds.DomExists (id))
-            {
+            if (valbds.DomExists (id)) {
               Tuple t (valbds[id]); // REP`TypeRep * bool
-              if (t.GetRecord(1).Is(TAG_TYPE_REP_TmpTypeRep))
-              {
+              if (t.GetRecord(1).Is(TAG_TYPE_REP_TmpTypeRep)) {
                 valbds.ImpModify (id, mk_(tp, stat));
                 valNames.Insert(id);
               }
-              else
-              {
-                if (t.GetRecord(1) != tp)
-                {
+              else {
+                if (t.GetRecord(1) != tp) {
                   //----------------------------------------
                   // Error message #102
                   // L"%1" is assigned to two different types
@@ -6563,19 +6463,15 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
                 }
               }
             }
-            else
-            {
+            else {
               valbds.ImpModify (id, mk_(bd[id].GetRecord(1), stat));
               valNames.Insert(id);
             }
           }
         }
-        else
-        {
-          for (bool dd = newids.First (id); dd; dd = newids.Next (id))
-          {
-            if (!valbds.DomExists (id))
-            {
+        else {
+          for (bool dd = newids.First (id); dd; dd = newids.Next (id)) {
+            if (!valbds.DomExists (id)) {
               valbds.ImpModify (id, mk_(rep_tmptp, stat));
               valNames.Insert(id);
             }
@@ -6593,8 +6489,7 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
   
         TYPE_REP_TypeRep fntp (TransType(Nil (), tp));
   
-        if (valbds.DomExists (nm))
-        {
+        if (valbds.DomExists (nm)) {
           //--------------------------------------------
           // Error message #103
           // L"%1" cannot be used in multiple definitions
@@ -6602,33 +6497,30 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
           GenErr (nm, ERR, 103, mk_sequence(PrintName (nm)));
           reswf = Bool(false);
         }
-        else if (!tv_l.IsEmpty ())
-        {
+        else if (!tv_l.IsEmpty ()) {
           SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (Nil (), tv_l));
           valbds.ImpModify (nm, mk_(mk_REP_PolyTypeRep(r_l, fntp), stat));
           valNames.Insert(nm);
   
-          if (!fnpre.IsNil ())
-          {
+          if (!fnpre.IsNil ()) {
             Tuple infer (MakePolyPreType (r_l, fntp)); // seq of REP`TypeVarRep * REP`FnTypeRep
             valbds.ImpModify (Pre (nm), mk_(mk_REP_PolyTypeRep(infer.GetSequence (1), infer.GetRecord (2)), stat));
           }
   
-          if (!fnpost.IsNil ())
-          {
+          if (!fnpost.IsNil ()) {
             Tuple infer (MakePolyPostType (r_l, fntp));
             valbds.ImpModify (Post (nm), mk_(mk_REP_PolyTypeRep(infer.GetSequence (1), infer.GetRecord (2)), stat));
           }
         }
-        else
-        {
+        else {
           valNames.Insert(nm);
           valbds.ImpModify (nm, mk_(fntp, stat));
-          if (!fnpre.IsNil ())
+          if (!fnpre.IsNil ()) {
             valbds.ImpModify (Pre (nm), mk_(MakePreType (fntp), stat));
-  
-          if (!fnpost.IsNil ())
+          } 
+          if (!fnpost.IsNil ()) {
             valbds.ImpModify (Post (nm), mk_(MakePostType (fntp), stat));
+          }
         }
         break;
       } // End of Is(ExplFnDef)
@@ -6651,8 +6543,7 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
   
         SEQ<TYPE_REP_TypeRep> r_l (TransTypeList(Nil (), tv_l));
   
-        if (valbds.DomExists (nm))
-        {
+        if (valbds.DomExists (nm)) {
           //--------------------------------------------
           // Error message #103
           // L"%1" cannot be used in multiple definitions
@@ -6660,23 +6551,21 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
           GenErr (nm, ERR, 103, mk_sequence(PrintName (nm)));
           reswf = Bool(false);
         }
-        else if (!tv_l.IsEmpty ())
-        {
+        else if (!tv_l.IsEmpty ()) {
           valbds.ImpModify (nm, mk_(mk_REP_PolyTypeRep(r_l, fnsig), stat));
           valNames.Insert(nm);
   
-          if (!fnpre.IsNil ())
+          if (!fnpre.IsNil ()) {
             valbds.ImpModify (Pre (nm), mk_(mk_REP_PolyTypeRep(r_l, fnpresig), stat));
-  
+          } 
           valbds.ImpModify (Post (nm), mk_(mk_REP_PolyTypeRep(r_l, fnpostsig), stat));
         }
-        else
-        {
+        else {
           valNames.Insert(nm);
           valbds.ImpModify (nm, mk_(fnsig, stat));
-          if (!fnpre.IsNil ())
+          if (!fnpre.IsNil ()) {
             valbds.ImpModify (Pre (nm), mk_(fnpresig, stat));
-  
+          } 
           valbds.ImpModify (Post (nm), mk_(fnpostsig, stat));
         }
         break;
@@ -6703,8 +6592,7 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
   
         SEQ<TYPE_REP_TypeRep> r_l (TransTypeList(Nil (), tv_l));
   
-        if (valbds.DomExists (nm))
-        {
+        if (valbds.DomExists (nm)) {
           //--------------------------------------------
           // Error message #103
           // L"%1" cannot be used in multiple definitions
@@ -6712,29 +6600,25 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
           GenErr (nm, ERR, 103, mk_sequence(PrintName (nm)));
           reswf = Bool(false);
         }
-        else if (!tv_l.IsEmpty ())
-        {
+        else if (!tv_l.IsEmpty ()) {
           valbds.ImpModify (nm, mk_(mk_REP_PolyTypeRep(r_l, fnsig), stat));
           valNames.Insert(nm);
   
-          if (!fnpre.IsNil ())
+          if (!fnpre.IsNil ()) {
             valbds.ImpModify (Pre (nm), mk_(mk_REP_PolyTypeRep(r_l, fnpresig), stat));
-  
-          if (!fnpost.IsNil ())
+          } 
+          if (!fnpost.IsNil ()) {
             valbds.ImpModify (Post (nm), mk_(mk_REP_PolyTypeRep(r_l, fnpostsig), stat));
+          }
         }
-        else
-        {
+        else {
           valbds.ImpModify (nm, mk_(fnsig, stat));
           valNames.Insert(nm);
   
-          if (!fnpre.IsNil ())
-          {
+          if (!fnpre.IsNil ()) {
             valbds.ImpModify (Pre (nm), mk_(fnpresig, stat));
           }
-  
-          if (!fnpost.IsNil ())
-          {
+          if (!fnpost.IsNil ()) {
             valbds.ImpModify (Post (nm), mk_(fnpostsig, stat));
           }
         }
@@ -6748,10 +6632,8 @@ Tuple StatSem::ExtractPatterns (const Int & i, const SEQ<TYPE_AS_LocalDef> & val
   }
 
   Generic nm;
-  for (bool cc = valNames.First (nm); cc; cc = valNames.Next (nm))
-  {
-    if (ReservedPrefix (nm))
-    {
+  for (bool cc = valNames.First (nm); cc; cc = valNames.Next (nm)) {
+    if (ReservedPrefix (nm)) {
       //--------------------------------
       // Error message #110
       // L"%1" contains a reserved prefix
@@ -6794,9 +6676,9 @@ Tuple StatSem::wf_ValueDef (const Int & i, const TYPE_AS_ValueDef & def)
   const TYPE_REP_TypeRep & tp_e (infer.GetRecord (2));
 
   TYPE_AS_PatternBind patbind (pat);
-  if (!tp.IsNil ())
+  if (!tp.IsNil ()) {
     patbind = TYPE_AS_TypeBind().Init(pat, tp, cid);
-
+  }
   Tuple infer2 (wf_PatternBind (i, patbind, tp_e));
   Bool wf_pb (infer2.GetField (1) == Bool(true)); // [bool]
   const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
@@ -6804,11 +6686,9 @@ Tuple StatSem::wf_ValueDef (const Int & i, const TYPE_AS_ValueDef & def)
 // 20100827 -->
 #ifdef VDMSL
   Set mult (bd.Dom().Intersect(this->Renamed));
-  if (!mult.IsEmpty())
-  {
+  if (!mult.IsEmpty()) {
     Generic nm;
-    for (bool bb = mult.First(nm); bb; bb = mult.Next(nm))
-    {
+    for (bool bb = mult.First(nm); bb; bb = mult.Next(nm)) {
       //-------------------------
       // Error message #73
       // L"%1" is multiple defined
@@ -6819,8 +6699,7 @@ Tuple StatSem::wf_ValueDef (const Int & i, const TYPE_AS_ValueDef & def)
 #endif // VDMSL
 // <-- 20100827
 
-  if (!wf_pb)
-  {
+  if (!wf_pb) {
     //---------------------
     // Error message #104
     // Pattern cannot match
@@ -6882,8 +6761,7 @@ SET<TYPE_AS_Name> StatSem::TransClosAux (const TYPE_AS_Name & nm, const SET<TYPE
                                                 : Set());
 
   SET<TYPE_AS_Name> dones (done);
-  while (!supers.SubSet(dones))
-  {
+  while (!supers.SubSet(dones)) {
     SET<TYPE_AS_Name> st (supers.Diff (dones));
 
     TYPE_AS_Name super (st.GetElem ());
@@ -6911,30 +6789,30 @@ Map StatSem::TransClosIndexAux(const TYPE_AS_Name& nm, int base, const SET<TYPE_
   resmap.Insert(Int(base), l_supers);
 
   Generic b_s;
-  for (bool bb = l_supers.First(b_s); bb; bb = l_supers.Next(b_s))
-  {
+  for (bool bb = l_supers.First(b_s); bb; bb = l_supers.Next(b_s)) {
     Map indexentry (TransClosIndexAux(b_s, base + 1, l_newDone));
     SET<Int> intersect (indexentry.Dom().ImpIntersect(resmap.Dom()));
-    if(!intersect.IsEmpty())
-    {
+    if(!intersect.IsEmpty()) {
       Generic entry;
-      for (bool cc = intersect.First(entry); cc; cc = intersect.Next(entry))
-      {
+      for (bool cc = intersect.First(entry); cc; cc = intersect.Next(entry)) {
 //        SET<TYPE_AS_Name> unionset (Set(resmap[entry]).ImpUnion(indexentry[entry]));
         SET<TYPE_AS_Name> unionset (resmap[entry]);
         unionset.ImpUnion(indexentry[entry]);
         resmap.ImpModify(entry, unionset);
       }
-    } else {
+    }
+    else {
 // 20091021 -->
 //      resmap.ImpOverride(indexentry);
       Set rng_indexentry (indexentry.Rng());
       bool exists = false;
       Generic nm_s;
-      for (bool dd = rng_indexentry.First(nm_s); dd && !exists; dd = rng_indexentry.Next(nm_s))
+      for (bool dd = rng_indexentry.First(nm_s); dd && !exists; dd = rng_indexentry.Next(nm_s)) {
         exists = !Set(nm_s).IsEmpty();
-      if (exists)
+      }
+      if (exists) {
         resmap.ImpOverride(indexentry);
+      }
 // <-- 20091021
     }
   }
@@ -6957,11 +6835,9 @@ Bool StatSem::CheckParmsInHierarchy(const TYPE_AS_Name & nm,
 
   Set dom_superparms (superparms.Dom());
   Generic b_clnm;
-  for (bool bb = dom_superparms.First(b_clnm); bb; bb = dom_superparms.Next(b_clnm))
-  {
+  for (bool bb = dom_superparms.First(b_clnm); bb; bb = dom_superparms.Next(b_clnm)) {
     TYPE_SSENV_AccessType b_supOcc (superparms[b_clnm]);
-    if ((GetMethDom(StripAccessType(b_supOcc)) == ptps) && !NotNarrowedAccess(GetSSAccess(b_supOcc), p_acc))
-    {
+    if ((GetMethDom(StripAccessType(b_supOcc)) == ptps) && !NotNarrowedAccess(GetSSAccess(b_supOcc), p_acc)) {
       //--------------------------------------
       //-- Error 369
       //-- Scope narrowed by L"%1"
@@ -6982,8 +6858,7 @@ Map StatSem::LookUpParmsInHierarchy(const TYPE_AS_Name & nm, const Bool & op_or_
   Map class_m;
   Set ss (this->SuperSuper);
   Generic classnm;
-  for (bool bb = ss.First(classnm); bb; bb = ss.Next(classnm))
-  {
+  for (bool bb = ss.First(classnm); bb; bb = ss.Next(classnm)) {
     Generic pti (GetClassTypeRep(classnm));
     if (!pti.IsNil()) {
 //
@@ -7009,10 +6884,8 @@ Map StatSem::ExtractParmsMap(const TYPE_AS_Name & nm, const TYPE_AS_Name & class
   TYPE_AS_Name nm1 (ASTAUX::GetFirstName(nm));
   SET<TYPE_AS_Name> dom_meths (meths.Dom());
   Generic meth;
-  for (bool bb = dom_meths.First(meth); bb; bb = dom_meths.Next(meth))
-  {
-    if (Record(meth).GetSequence(pos_AS_Name_ids).Length() == 2)
-    {
+  for (bool bb = dom_meths.First(meth); bb; bb = dom_meths.Next(meth)) {
+    if (Record(meth).GetSequence(pos_AS_Name_ids).Length() == 2) {
       TYPE_AS_Name nm2 (ASTAUX::GetSecondName(meth));
       if (nm1 == nm2) {
         Map result;
@@ -7165,8 +7038,7 @@ bool StatSem::SetExtAll (const SET<TYPE_AS_Name> & nm_s)
   this->ExtEnv.Clear();
   SET<TYPE_AS_Name> dom_se (this->StateEnv.Dom());
   Generic nm;
-  for (bool bb = dom_se.First (nm); bb; bb = dom_se.Next (nm))
-  {
+  for (bool bb = dom_se.First (nm); bb; bb = dom_se.Next (nm)) {
     this->ExtEnv.Insert (nm, rw);
     if (nm_s.InSet (nm)) {
       //----------------------------------------------------------------
@@ -7196,23 +7068,22 @@ bool StatSem::SetExt (const SEQ<TYPE_AS_ExtInf> & ext_l, const SET<TYPE_AS_Name>
   this->ExtEnv.Clear();
 
   size_t len = ext_l.Length();
-  for (size_t index = 1; index <= len; index++)
-  {
+  for (size_t index = 1; index <= len; index++) {
     TYPE_AS_ExtInf ei (ext_l[index]);
     const TYPE_AS_Mode & md         (ei.GetField(pos_AS_ExtInf_mode));
     const SEQ<TYPE_AS_Name>  & vars (ei.GetSequence(pos_AS_ExtInf_vars));
     const Generic & tp              (ei.GetField(pos_AS_ExtInf_tp));
 
-    if (!tp.IsNil ())
+    if (!tp.IsNil ()) {
       MarkUsedType (tp);
-
+    }
     size_t len_vars = vars.Length();
-    for (size_t j = 1; j <= len_vars; j++)
-    {
+    for (size_t j = 1; j <= len_vars; j++) {
       TYPE_AS_Name var (vars[j]);
       Generic sttp (LookUpState (var, Bool(false), CUR));
-      if (sttp.IsNil ())
+      if (sttp.IsNil ()) {
         reswf = false;
+      }
       else if (!tp.IsNil () &&
 #ifdef VDMSL
                //! (sttp == InstFn(PAR, TransType(Nil (),tp), this->TypeParEnv))
@@ -7221,8 +7092,7 @@ bool StatSem::SetExt (const SEQ<TYPE_AS_ExtInf> & ext_l, const SET<TYPE_AS_Name>
 #ifdef VDMPP
                ! (sttp == TransType(Nil (),tp))
 #endif //VDMPP
-                )
-      {
+                ) {
         //--------------------------------------------------------------------
         // Error message #106
         // The type listed for L"%1" in the external clause is not the correct
@@ -7248,21 +7118,22 @@ bool StatSem::SetExt (const SEQ<TYPE_AS_ExtInf> & ext_l, const SET<TYPE_AS_Name>
         GenErr(var, ERR, 108, mk_sequence(PrintName (var)));
         reswf = false;
       }
-      else
+      else {
         this->ExtEnv.ImpModify (var, md);
+      }
     }
   }
 
 #ifdef VDMPP
   Sequence le (this->LocalEnv); // seq of map AS`Name to REP`TypeRep
   size_t len_le = le.Length();
-  for (size_t i = 1; i <= len_le; i++)
-  {
+  for (size_t i = 1; i <= len_le; i++) {
     Map m (le[i]);
     Set dom_m (m.Dom());
     Generic nm;
-    for (bool ee = dom_m.First(nm); ee; ee = dom_m.Next(nm))
+    for (bool ee = dom_m.First(nm); ee; ee = dom_m.Next(nm)) {
       this->ExtEnv.ImpModify (nm, Int (READWRITE));
+    }
   }
 #endif //VDMPP
 
@@ -7318,18 +7189,15 @@ Map StatSem::TransBinds (const TYPE_AS_Name & clsnm, const Map & binds)
   SET<TYPE_AS_Name> dom_binds (binds.Dom());
   Map res_binds (binds);
   Generic nm;
-  for (bool bb = dom_binds.First(nm); bb; bb = dom_binds.Next(nm))
-  {
+  for (bool bb = dom_binds.First(nm); bb; bb = dom_binds.Next(nm)) {
     Generic tp (binds[nm]);
-    if (tp.IsTuple()) // (AS`Name * AccessFieldRep)
-    {
+    if (tp.IsTuple()) {
       Tuple tpl (tp); // (AS`Name * AccessFieldRep)
       const TYPE_SSENV_AccessFieldRep & fl (tpl.GetRecord (2)); // AccessFieldRep
       const SEQ<TYPE_REP_FieldRep> & fr_l (fl.GetSequence(pos_SSENV_AccessFieldRep_tp));
       SEQ<TYPE_REP_FieldRep> new_fr_l;
       size_t len = fr_l.Length();
-      for (size_t i = 1; i <= len; i++)
-      {
+      for (size_t i = 1; i <= len; i++) {
         TYPE_REP_FieldRep fr (fr_l[i]);
         new_fr_l.ImpAppend (mk_REP_FieldRep(fr.GetField(pos_REP_FieldRep_sel),
                                             PrependClassName (clsnm, fr.GetRecord(pos_REP_FieldRep_tp)),
@@ -7349,19 +7217,18 @@ Map StatSem::TransBinds (const TYPE_AS_Name & clsnm, const Map & binds)
         tpr.SetField (1, PrependClassName (clsnm, StripAccessType(tpr)));
         res_binds.ImpModify (nm, tpr);
       }
-      else // REP`TypeRep
+      else { // REP`TypeRep
         res_binds.ImpModify (nm, PrependClassName (clsnm, tpr));
+      }
     }
-    else
-    { // if (tp.IsSet()) { // set of AccessOpTypeRep
+    else { // if (tp.IsSet()) { // set of AccessOpTypeRep
       // Note that the implementation is slightly
       // different here from the spec, since the implementation level
       // offers and easier way to express this IsSet test
       SET<TYPE_SSENV_AccessOpTypeRep> tps (tp);
       SET<TYPE_SSENV_AccessOpTypeRep> rb_nm;
       Generic tp;
-      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp))
-      {
+      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp)) {
         TYPE_SSENV_AccessOpTypeRep tpe (tp);
         tpe.SetField(pos_SSENV_AccessOpTypeRep_tp,
                      PrependClassName(clsnm, tpe.GetRecord(pos_SSENV_AccessOpTypeRep_tp)));
@@ -7379,8 +7246,7 @@ Map StatSem::TransBinds (const TYPE_AS_Name & clsnm, const Map & binds)
 // ==> bool
 bool StatSem::CheckName (const TYPE_AS_Name & nm)
 {
-  if (this->UsedName.InSet (nm))
-  {
+  if (this->UsedName.InSet (nm)) {
     //-------------------------
     // Error message #73
     // L"%1" is multiple defined
@@ -7388,13 +7254,11 @@ bool StatSem::CheckName (const TYPE_AS_Name & nm)
     GenErr (nm, ERR, 73, mk_sequence(PrintName(nm)));
     return false;
   }
-  else if (!ReservedPrefix (nm))
-  {
+  else if (!ReservedPrefix (nm)) {
     this->UsedName.Insert (nm);
     return true;
   }
-  else
-  {
+  else {
     //--------------------------------
     // Error message #110
     // L"%1" contains a reserved prefix
@@ -7414,8 +7278,7 @@ void StatSem::MarkUsedType (const TYPE_AS_Type & tp)
 //#ifdef VDMSL
 //      if (!this->TypeParEnv.DomExists (nm))
 //#endif //VDMSL
-      if (this->TypeEnv.DomExists (nm))
-      {
+      if (this->TypeEnv.DomExists (nm)) {
         TYPE_SSENV_TypeRepElem rc (this->TypeEnv[nm]);
         rc.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
         this->TypeEnv.ImpModify (nm, rc);
@@ -7425,22 +7288,25 @@ void StatSem::MarkUsedType (const TYPE_AS_Type & tp)
     case TAG_TYPE_AS_CompositeType: {
       const SEQ<TYPE_AS_Field> & fields (tp.GetSequence(pos_AS_CompositeType_fields));
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++)
+      for (size_t i = 1; i <= len_fields; i++) {
         MarkUsedType (fields[i].GetRecord(pos_AS_Field_type));
+      }
       break;
     }
     case TAG_TYPE_AS_UnionType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_UnionType_tps));
       size_t len_tp_l = tp_l.Length();
-      for (size_t i = 1; i <= len_tp_l; i++)
+      for (size_t i = 1; i <= len_tp_l; i++) {
         MarkUsedType (tp_l[i]);
+      }
       break;
     }
     case TAG_TYPE_AS_ProductType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_ProductType_tps));
       size_t len_tp_l = tp_l.Length();
-      for (size_t i = 1; i <= len_tp_l; i++)
+      for (size_t i = 1; i <= len_tp_l; i++) {
         MarkUsedType (tp_l[i]);
+      }
       break;
     }
     case TAG_TYPE_AS_BracketedType: {
@@ -7490,24 +7356,27 @@ void StatSem::MarkUsedType (const TYPE_AS_Type & tp)
     case TAG_TYPE_AS_OpType: {
       const SEQ<TYPE_AS_Type> & d (tp.GetSequence(pos_AS_OpType_opdom));
       size_t len_d = d.Length();
-      for (size_t i = 1; i <= len_d; i++)
+      for (size_t i = 1; i <= len_d; i++) {
         MarkUsedType (d[i]);
+      }
       MarkUsedType (tp.GetRecord(pos_AS_OpType_oprng));
       break;
     }
     case TAG_TYPE_AS_PartialFnType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_PartialFnType_fndom));
       size_t len_tp_l = tp_l.Length();
-      for (size_t i = 1; i <= len_tp_l; i++)
+      for (size_t i = 1; i <= len_tp_l; i++) {
         MarkUsedType (tp_l[i]);
+      }
       MarkUsedType (tp.GetRecord(pos_AS_PartialFnType_fnrng));
       break;
     }
     case TAG_TYPE_AS_TotalFnType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_TotalFnType_fndom));
       size_t len_tp_l = tp_l.Length();
-      for (size_t i = 1; i <= len_tp_l; i++)
+      for (size_t i = 1; i <= len_tp_l; i++) {
         MarkUsedType (tp_l[i]);
+      }
       MarkUsedType (tp.GetRecord(pos_AS_TotalFnType_fnrng));
       break;
     }
@@ -7522,8 +7391,9 @@ SEQ<TYPE_REP_TypeRep> StatSem::TransTypeList (const Generic & modnm, const SEQ<T
 {
   SEQ<TYPE_REP_TypeRep> res;
   size_t len_tp_l = tp_l.Length();
-  for (size_t index = 1; index <= len_tp_l; index++)
+  for (size_t index = 1; index <= len_tp_l; index++) {
     res.ImpAppend (TransType (modnm, tp_l[index]));
+  }
   return res;
 }
 
@@ -7592,15 +7462,15 @@ TYPE_REP_TypeRep StatSem::TransType (const Generic & modnm, const TYPE_AS_Type &
                 && !IsClassName(nm)
                 && GetTypes().InSet(nm)
 #endif // VDMPP
-              )
-      {
+              ) {
         // TODO : 20071130
         // the case : nm is a type defined by super class
         //            modnm is't good
         return mk_REP_TypeNameRep(ExtName (modnm, nm));
       }
-      else
+      else {
         return mk_REP_TypeNameRep(nm);
+      }
     }
     case TAG_TYPE_AS_TypeVar: {
       return mk_REP_TypeVarRep(tp.GetRecord(pos_AS_TypeVar_name));
@@ -7608,19 +7478,23 @@ TYPE_REP_TypeRep StatSem::TransType (const Generic & modnm, const TYPE_AS_Type &
     case TAG_TYPE_AS_CompositeType: {
       const TYPE_AS_Name & tag (tp.GetRecord(pos_AS_CompositeType_name));
       const SEQ<TYPE_AS_Field> & fields (tp.GetSequence(pos_AS_CompositeType_fields));
-      if (modnm.IsNil ())
+      if (modnm.IsNil ()) {
         return mk_REP_CompositeTypeRep(tag, TransFields(modnm, fields));
-      else if (tag.GetSequence(pos_AS_Name_ids).Length() == 1)
+      }
+      else if (tag.GetSequence(pos_AS_Name_ids).Length() == 1) {
         return mk_REP_CompositeTypeRep(ExtName (modnm, tag), TransFields(modnm, fields));
-      else
+      }
+      else {
         return mk_REP_CompositeTypeRep(tag, TransFields(modnm, fields));
+      }
     }
     case TAG_TYPE_AS_UnionType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_UnionType_tps));
       size_t len_tp_l = tp_l.Length();
       SET<TYPE_REP_TypeRep> tp_s;
-      for (size_t i = 1; i <= len_tp_l; i++)
+      for (size_t i = 1; i <= len_tp_l; i++) {
         tp_s.Insert(TransType(modnm, tp_l[i]));
+      }
       return mk_REP_UnionTypeRep( FlatternUnion(tp_s) );
     }
     case TAG_TYPE_AS_ProductType: {
@@ -7709,8 +7583,9 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
             nm.set_ids (ids.Tl ());
             return mk_REP_TypeNameRep(nm);
           }
-          else
+          else {
             return tp;
+          }
         }
         case ADD: {
           if (ids.Length () == 1) {
@@ -7718,8 +7593,9 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
             nm.set_ids (cids);
             return mk_REP_TypeNameRep(nm);
           }
-          else
+          else {
             return tp;
+          }
         }
       }
     }
@@ -7728,8 +7604,7 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
       const SEQ<TYPE_REP_FieldRep> & fields (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> f_l;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_REP_FieldRep & field (fields[idx]);
         f_l.ImpAppend (mk_REP_FieldRep(field.GetField(pos_REP_FieldRep_sel),
                                        CurMod(kind,curmod,field.GetRecord(pos_REP_FieldRep_tp)),
@@ -7757,16 +7632,18 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
       SET<TYPE_REP_TypeRep> tp_s (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> s;
       Generic g;
-      for (bool bb = tp_s.First (g); bb; bb = tp_s.Next (g))
+      for (bool bb = tp_s.First (g); bb; bb = tp_s.Next (g)) {
         s.Insert (CurMod(kind, curmod, g));
+      }
       return mk_REP_UnionTypeRep(s);
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tp_l (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       SEQ<TYPE_REP_TypeRep> l;
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         l.ImpAppend (CurMod(kind, curmod, tp_l[idx]));
+      }
       return mk_REP_ProductTypeRep(l);
     }
     case TAG_TYPE_REP_SetTypeRep: {
@@ -7802,8 +7679,9 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
       const TYPE_REP_TypeRep & tp_ (tp.GetRecord(pos_REP_OpTypeRep_Rng));
       SEQ<TYPE_REP_TypeRep> l;
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         l.ImpAppend (CurMod(kind, curmod, tp_l[idx]));
+      }
       return mk_REP_OpTypeRep(l, CurMod(kind, curmod, tp_));
     }
     case TAG_TYPE_REP_PartialFnTypeRep: {
@@ -7811,14 +7689,16 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
 // 20140326 -->
       //const SEQ<TYPE_REP_TypeRep> & fndom (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
       const Generic & dom (tp.GetField(pos_REP_PartialFnTypeRep_fndom));
-      if (dom.Is(TAG_TYPE_REP_AllTypeRep))
+      if (dom.Is(TAG_TYPE_REP_AllTypeRep)) {
         return mk_REP_PartialFnTypeRep(dom, CurMod(kind, curmod, fnrng));
+      }
       const SEQ<TYPE_REP_TypeRep> & fndom (dom);
 // <-- 20140326
       SEQ<TYPE_REP_TypeRep> l;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         l.ImpAppend (CurMod(kind,curmod, fndom[idx]));
+      }
       return mk_REP_PartialFnTypeRep(l, CurMod(kind, curmod, fnrng));
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
@@ -7826,18 +7706,21 @@ TYPE_REP_TypeRep StatSem::CurMod (int kind, const TYPE_AS_Name & curmod, const T
 // 20140326 -->
       //const SEQ<TYPE_REP_TypeRep> & fndom (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
       const Generic & dom (tp.GetField(pos_REP_TotalFnTypeRep_fndom));
-      if (dom.Is(TAG_TYPE_REP_AllTypeRep))
+      if (dom.Is(TAG_TYPE_REP_AllTypeRep)) {
         return mk_REP_TotalFnTypeRep(dom, CurMod(kind, curmod, fnrng));
+      }
       const SEQ<TYPE_REP_TypeRep> & fndom (dom);
 // <-- 20140326
       SEQ<TYPE_REP_TypeRep> l;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         l.ImpAppend (CurMod(kind, curmod, fndom[idx]));
+      }
       return mk_REP_TotalFnTypeRep(l, CurMod(kind, curmod, fnrng));
     }
-    default:
+    default: {
       return tp;
+    }
   }
 }
 #endif // VDMSL
@@ -7881,8 +7764,7 @@ TYPE_REP_TypeRep StatSem::PrependClassName (const TYPE_AS_Name & clsnm, const TY
       const SEQ<TYPE_REP_FieldRep> & f_l (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> res_f_l;
       size_t len_f_l = f_l.Length();
-      for (size_t idx = 1; idx <= len_f_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_f_l; idx++) {
         const TYPE_REP_FieldRep & fld (f_l[idx]);
 //        fld.set_tp (PrependClassName (clsnm, fld.get_tp ()));
 //        res_f_l.ImpAppend (fld);
@@ -7892,26 +7774,26 @@ TYPE_REP_TypeRep StatSem::PrependClassName (const TYPE_AS_Name & clsnm, const TY
       }
 // 20070305
       TYPE_AS_Name tagext (tag);
-      if (tag.GetSequence(pos_AS_Name_ids).Length() == 1)
+      if (tag.GetSequence(pos_AS_Name_ids).Length() == 1) {
         tagext = ExtName(clsnm, tag);
-
+      }
       return mk_REP_CompositeTypeRep(tagext, res_f_l);
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> t_s (tp.GetSet(pos_REP_UnionTypeRep_tps)), res_t_s;
       Generic t;
-      for (bool bb = t_s.First(t); bb; bb = t_s.Next(t))
+      for (bool bb = t_s.First(t); bb; bb = t_s.Next(t)) {
         res_t_s.Insert (PrependClassName (clsnm, t));
-
+      }
       return mk_REP_UnionTypeRep(res_t_s);
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & f_l (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       SEQ<TYPE_REP_TypeRep> res_f_l;
       size_t len_f_l = f_l.Length();
-      for (size_t idx = 1; idx <= len_f_l; idx++)
+      for (size_t idx = 1; idx <= len_f_l; idx++) {
         res_f_l.ImpAppend (PrependClassName (clsnm, f_l[idx]));
-
+      }
       return mk_REP_ProductTypeRep(res_f_l);
     }
     case TAG_TYPE_REP_SetTypeRep: {
@@ -7942,18 +7824,18 @@ TYPE_REP_TypeRep StatSem::PrependClassName (const TYPE_AS_Name & clsnm, const TY
       const SEQ<TYPE_REP_TypeRep> & sq (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
       SEQ<TYPE_REP_TypeRep> res_sq;
       size_t len_sq = sq.Length();
-      for (size_t idx = 1; idx <= len_sq; idx++)
+      for (size_t idx = 1; idx <= len_sq; idx++) {
         res_sq.ImpAppend (PrependClassName (clsnm, sq[idx]));
-
+      }
       return mk_REP_TotalFnTypeRep(res_sq, PrependClassName (clsnm, tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng)));
     }
     case TAG_TYPE_REP_PartialFnTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & sq (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
       SEQ<TYPE_REP_TypeRep> res_sq;
       size_t len_sq = sq.Length();
-      for (size_t idx = 1; idx <= len_sq; idx++)
+      for (size_t idx = 1; idx <= len_sq; idx++) {
         res_sq.ImpAppend (PrependClassName (clsnm, sq[idx]));
-
+      }
       return mk_REP_PartialFnTypeRep(res_sq, PrependClassName (clsnm, tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng)));
     }
     case TAG_TYPE_REP_OpTypeRep: {
@@ -7974,8 +7856,7 @@ SET<TYPE_REP_TypeRep> StatSem::FlatternUnion (const SET<TYPE_REP_TypeRep> & s) c
   SET<TYPE_REP_TypeRep> tps (s); // for safe
   SET<TYPE_REP_TypeRep> res;
   Generic t;
-  for(bool bb = tps.First(t); bb; bb = tps.Next(t))
-  {
+  for(bool bb = tps.First(t); bb; bb = tps.Next(t)) {
     TYPE_REP_TypeRep tp (t);
     switch(tp.GetTag()) {
       case TAG_TYPE_REP_UnionTypeRep: {
@@ -8000,8 +7881,7 @@ SEQ<TYPE_REP_FieldRep> StatSem::TransFields (const Generic & modnm, const SEQ<TY
 {
   SEQ<TYPE_REP_FieldRep> res;
   size_t len_f_l = f_l.Length();
-  for (size_t i = 1; i <= len_f_l; i++)
-  {
+  for (size_t i = 1; i <= len_f_l; i++) {
     const TYPE_AS_Field & f (f_l[i]);
     res.ImpAppend(mk_REP_FieldRep(f.GetField(pos_AS_Field_sel),
                                   TransType(modnm, f.GetRecord(pos_AS_Field_type)),
@@ -8033,8 +7913,7 @@ SEQ<TYPE_AS_Pattern> StatSem::ConstructImplParms (const SEQ<TYPE_AS_PatTypePair>
   SEQ<TYPE_AS_Pattern> res;
 
   size_t len_partps = partps.Length();
-  for (size_t i = 1; i <= len_partps; i++)
-  {
+  for (size_t i = 1; i <= len_partps; i++) {
     const TYPE_AS_PatTypePair & ptp (partps[i]);
     const SEQ<TYPE_AS_Pattern> & pats (ptp.GetSequence(pos_AS_PatTypePair_pats));
     res.ImpConc(pats);
@@ -8049,17 +7928,19 @@ SEQ<Char> StatSem::PrintName(const TYPE_AS_Name & name) const
 {
   const TYPE_AS_Ids & ids (name.GetSequence(pos_AS_Name_ids));
   switch (ids.Length()) {
-    case 0:
+    case 0: {
       return SEQ<Char>(L"");
-    case 1:
+    }
+    case 1: {
       return ids[1];
-    case 2:
+    }
+    case 2: {
       return ids[1].Conc(SEQ<Char>(L"`")).Conc(ids[2]);
+    }
     default: {
       SEQ<Char> res (ids[1]);
       size_t len_ids = ids.Length();
-      for (size_t idx = 2; idx <= len_ids; idx++)
-      {
+      for (size_t idx = 2; idx <= len_ids; idx++) {
         res.ImpAppend(Char(L'`'));
         res.ImpConc(ids[idx]);
       }
@@ -8077,8 +7958,7 @@ MAP<TYPE_AS_Name, Tuple> StatSem::ExtractValueBindings (const SEQ<TYPE_AS_NameTy
 
   if (!valtps.IsEmpty()) {
     size_t len = valtps.Length();
-    for (size_t index = 1; index <= len; index++)
-    {
+    for (size_t index = 1; index <= len; index++) {
       TYPE_AS_NameType valtp (valtps[index]);
       res.Insert (valtp.GetRecord(pos_AS_NameType_nm),
                   mk_(TransType(Nil (), valtp.GetRecord(pos_AS_NameType_tp)),Int(1)));
@@ -8122,8 +8002,7 @@ SEQ<TYPE_AS_Type> StatSem::ConstructImplDomType (const SEQ<TYPE_AS_PatTypePair> 
   SEQ<TYPE_AS_Type> tp_l;
 
   size_t len_partps = partps.Length();
-  for (size_t i = 1; i <= len_partps; i++)
-  {
+  for (size_t i = 1; i <= len_partps; i++) {
     const TYPE_AS_PatTypePair & ptp (partps[i]);
     const TYPE_AS_Type & tp (ptp.GetRecord(pos_AS_PatTypePair_tp));
     size_t len = ptp.GetSequence(pos_AS_PatTypePair_pats).Length();
@@ -8139,16 +8018,18 @@ SEQ<TYPE_AS_Type> StatSem::ConstructImplDomType (const SEQ<TYPE_AS_PatTypePair> 
 TYPE_AS_Type StatSem::ConstructImplRngType (const SEQ<TYPE_AS_NameType> & nmtps) const
 {
   switch(nmtps.Length()) {
-    case 0:
+    case 0: {
       return TYPE_AS_VoidType().Init(NilContextId);
-    case 1:
+    }
+    case 1: {
       return (nmtps[1].GetRecord(pos_AS_NameType_tp));
+    }
     default: {
       SEQ<TYPE_AS_Type> tps;
       size_t len = nmtps.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         tps.ImpAppend(nmtps[i].GetRecord(pos_AS_NameType_tp));
-
+      }
       return TYPE_AS_ProductType().Init(tps, NilContextId);
     }
   }
@@ -8214,14 +8095,15 @@ Tuple StatSem::PublicLookUpTypeName (const TYPE_AS_Name & nm, const TYPE_AS_Name
 // ==> [REP`TypeRep]
 Generic StatSem::LookUpStateEnv(const TYPE_AS_Name & nm)
 {
-  if (this->StateEnv.DomExists(nm))
-  {
+  if (this->StateEnv.DomExists(nm)) {
     const TYPE_SSENV_TypeRepElem & rc (this->StateEnv[nm]);
     const TYPE_REP_TypeRep & rsttp (rc.GetRecord(pos_SSENV_TypeRepElem_tp));
-    if (rsttp.Is(TAG_TYPE_REP_InvTypeRep))
+    if (rsttp.Is(TAG_TYPE_REP_InvTypeRep)) {
       return rsttp.GetRecord(pos_REP_InvTypeRep_shape);
-    else
+    }
+    else {
       return rsttp;
+    }
   }
   return Nil();
 }
@@ -8238,45 +8120,38 @@ Generic StatSem::LookUpOpOrFnName (const Generic & classnm, const TYPE_AS_Name &
 //                              : StripAccessType (LookUpInObject(classnm, metnm, false, true)));
   // TODO: Overload type returned by LookUpInObject
   Generic tp = Nil();
-  if (classnm.IsNil())
+  if (classnm.IsNil()) {
     tp = StripAccessType (LookUp(metnm, true));
-  else
-  {
+  }
+  else {
     Generic luio (LookUpInObject(classnm, metnm, false, true));
-    if (luio.IsRecord())
+    if (luio.IsRecord()) {
       tp = StripAccessType(luio);
-    else if (IsSetOfAccessType(luio))
-    {
+    }
+    else if (IsSetOfAccessType(luio)) {
       Set atp_s (luio);
       Set tp_s;
       Generic atp;
-      for (bool bb = atp_s.First(atp); bb; bb = atp_s.Next(atp))
+      for (bool bb = atp_s.First(atp); bb; bb = atp_s.Next(atp)) {
         tp_s.Insert(StripAccessType(atp));
+      }
       tp = tp_s;
     }
   }
-// <--20120721
-
   if (tp.Is(TAG_TYPE_REP_OpTypeRep) ||
       tp.Is(TAG_TYPE_REP_TotalFnTypeRep) ||
-      tp.Is(TAG_TYPE_REP_PartialFnTypeRep))
-  {
+      tp.Is(TAG_TYPE_REP_PartialFnTypeRep)) {
     return tp;
   }
-// 20121221 -->
-  else if (tp.Is(TAG_TYPE_REP_PolyTypeRep))
-  {
+  else if (tp.Is(TAG_TYPE_REP_PolyTypeRep)) {
     return Record(tp).GetRecord(pos_REP_PolyTypeRep_tp);
   }
-// <-- 20121221
-// 20120721 -->
-  else if (tp.IsSet())
-  {
+  else if (tp.IsSet()) {
     return tp;
   }
-// <--20120721
-  else
+  else {
     return Nil();
+  }
 }
 
 // ExpandClassName
@@ -8285,15 +8160,15 @@ Generic StatSem::LookUpOpOrFnName (const Generic & classnm, const TYPE_AS_Name &
 // ==> bool * AS`Name
 Tuple StatSem::ExpandClassName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> & nm_s)
 {
-  if (nm_s.InSet(name))
+  if (nm_s.InSet(name)) {
     return mk_(Bool(false), name);
-  if (IsClassName(name))
+  }
+  if (IsClassName(name)) {
     return mk_(Bool(true), name);
-  else
-  {
+  }
+  else {
     Generic newtp (StripAccessType (LookUpTypeName(name, false)));
-    if (newtp.Is(TAG_TYPE_REP_TypeNameRep))
-    {
+    if (newtp.Is(TAG_TYPE_REP_TypeNameRep)) {
       TYPE_REP_TypeNameRep tnr (newtp);
       return ExpandClassName(tnr.GetRecord(pos_REP_TypeNameRep_nm), Set(nm_s).Insert(name));
     }
@@ -8348,21 +8223,23 @@ bool StatSem::IsStaticInstanceVar(const TYPE_AS_Name & nm)
 // ==> bool
 bool StatSem::IsInstanceVar_q(const TYPE_AS_Name & nm, bool checkStatic)
 {
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
 
     Generic cls (GetClassTypeRep(ncls));
-    if (cls.IsNil())
+    if (cls.IsNil()) {
       return false;
+    }
     else {
       TYPE_SSENV_ParseTypeInfo pti (cls);
       const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & insts (pti.GetMap(pos_SSENV_ParseTypeInfo_insts));
       if (insts.DomExists(nm)) {
-        if (checkStatic)
+        if (checkStatic) {
           return insts[nm].GetBoolValue(pos_SSENV_AccessTypeRep_stat);
-        else
+        }
+        else {
           return true;
+        }
       }
       else {
         const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & vals (pti.GetMap(pos_SSENV_ParseTypeInfo_vals));
@@ -8371,16 +8248,18 @@ bool StatSem::IsInstanceVar_q(const TYPE_AS_Name & nm, bool checkStatic)
     }
   }
   else {
-    if (this->StateEnv.DomExists(nm))
-    {
+    if (this->StateEnv.DomExists(nm)) {
       TYPE_SSENV_TypeRepElem tre (this->StateEnv[nm]);
-      if (checkStatic)
+      if (checkStatic) {
         return tre.GetBoolValue(pos_SSENV_TypeRepElem_stat);
-      else
+      }
+      else {
         return true;
+      }
     }
-    else
+    else {
       return false;
+    }
   }
 }
 
@@ -8389,33 +8268,36 @@ bool StatSem::IsInstanceVar_q(const TYPE_AS_Name & nm, bool checkStatic)
 // ==> [REP`TypeRep]
 Generic StatSem::LookUpInstanceVar(const TYPE_AS_Name & nm)
 {
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
 
     Generic cls (GetClassTypeRep(ncls));
-    if (cls.IsNil())
+    if (cls.IsNil()) {
       return Nil();
+    }
     else {
       TYPE_SSENV_ParseTypeInfo pti (cls);
       const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & insts (pti.GetMap(pos_SSENV_ParseTypeInfo_insts));
       const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & vals (pti.GetMap(pos_SSENV_ParseTypeInfo_vals));
-      if (insts.DomExists(nm))
+      if (insts.DomExists(nm)) {
         return StripAccessType(insts[nm]);
-      else if (vals.DomExists(nm))
+      }
+      else if (vals.DomExists(nm)) {
         return StripAccessType(vals[nm]);
-      else
+      }
+      else {
         return Nil();
+      }
     }
   }
   else {
-    if (this->StateEnv.DomExists(nm))
-    {
+    if (this->StateEnv.DomExists(nm)) {
       TYPE_SSENV_TypeRepElem tre (this->StateEnv[nm]);
       return tre.GetRecord(pos_SSENV_TypeRepElem_tp);
     }
-    else
+    else {
       return Nil();
+    }
   }
 }
 
@@ -8425,10 +8307,12 @@ Generic StatSem::LookUpInstanceVar(const TYPE_AS_Name & nm)
 bool StatSem::HasInstInv(const TYPE_AS_Name & nm)
 {
   Generic pti (GetClassTypeRep(nm));
-  if (pti.IsNil())
+  if (pti.IsNil()) {
     return false;
-  else
+  }
+  else {
     return Record(pti).GetBoolValue(pos_SSENV_ParseTypeInfo_instinv);
+  }
 }
 #endif //VDMPP
 

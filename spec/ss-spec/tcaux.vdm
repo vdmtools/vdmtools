@@ -130,8 +130,10 @@ exports
   InverseMapType: [REP`TypeRep] -> REP`TypeRep;
   MakePreType : REP`FnTypeRep -> REP`FnTypeRep;
   MakePostType : REP`FnTypeRep -> REP`FnTypeRep;
+  MakeMeasureType : REP`FnTypeRep -> REP`FnTypeRep;
   MakePolyPreType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
   MakePolyPostType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
+  MakePolyMeasureType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
   MakeOpPreType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep;
   MakeOpPostType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep;
   AlwaysType: REP`TypeRep * REP`TypeRep -> REP`TypeRep;
@@ -141,6 +143,7 @@ exports
   SepName : AS`Name -> [AS`Name] * AS`Name;
   Pre: AS`Name -> AS`Name;
   Post: AS`Name -> AS`Name;
+  Measure: AS`Name -> AS`Name;
   Inv: AS`Name -> AS`Name;
   Init: AS`Name -> AS`Name;
   Equality: AS`Name -> AS`Name;
@@ -1795,14 +1798,20 @@ functions
       mk_REP`PartialFnTypeRep(fndom,fnrng) -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep())
     end;
 
+  MakeMeasureType : REP`FnTypeRep -> REP`FnTypeRep
+  MakeMeasureType(fntp) ==
+    cases fntp:
+      mk_REP`TotalFnTypeRep(fndom,-)   -> mk_REP`TotalFnTypeRep(fndom,mk_REP`AllTypeRep()),
+      mk_REP`PartialFnTypeRep(fndom,-) -> mk_REP`TotalFnTypeRep(fndom,mk_REP`AllTypeRep())
+    end;
+
   MakePolyPreType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep
   MakePolyPreType(tv_l,fntp) ==
     let pretp = cases fntp:
                   mk_REP`TotalFnTypeRep(fndom,-)   -> mk_REP`TotalFnTypeRep(fndom,mk_REP`BooleanTypeRep()),
                   mk_REP`PartialFnTypeRep(fndom,-) -> mk_REP`TotalFnTypeRep(fndom,mk_REP`BooleanTypeRep())
                 end
-    in
-      mk_(tv_l,pretp);
+    in mk_(tv_l,pretp);
 
   MakePolyPostType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep
   MakePolyPostType(tv_l,fntp) ==
@@ -1810,8 +1819,15 @@ functions
                    mk_REP`TotalFnTypeRep(fndom,fnrng)   -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep()),
                    mk_REP`PartialFnTypeRep(fndom,fnrng) -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep())
                  end
-    in
-      mk_(tv_l,posttp);
+    in mk_(tv_l,posttp);
+
+  MakePolyMeasureType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep
+  MakePolyMeasureType(tv_l,fntp) ==
+    let measuretp = cases fntp:
+                  mk_REP`TotalFnTypeRep(fndom,-)   -> mk_REP`TotalFnTypeRep(fndom,mk_REP`AllTypeRep()),
+                  mk_REP`PartialFnTypeRep(fndom,-) -> mk_REP`TotalFnTypeRep(fndom,mk_REP`AllTypeRep())
+                end
+    in mk_(tv_l,measuretp);
 
   MakeOpPreType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep
 #ifdef VDMSL
@@ -1888,6 +1904,11 @@ functions
     mk_AS`Name(ids(1,...,len ids -1) ^ ["post_"^ids(len ids)],cid);
         -- NOTICE that the contextid is taken from the argument
 
+  Measure: AS`Name -> AS`Name
+  Measure(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["measure_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
   Inv: AS`Name -> AS`Name
   Inv(mk_AS`Name(ids,cid)) ==
     mk_AS`Name(ids(1,...,len ids -1) ^ ["inv_"^ids(len ids)],cid);
@@ -1922,7 +1943,8 @@ functions
   ReservedPrefix(mk_AS`Name([id],-)) ==
     (id(1,...,3) in set {"is_","mk_","eq_"}) or
     (id(1,...,4) in set {"pre_","inv_","ord_","max_","min_"}) or
-    (id(1,...,5) in set {"post_","init_"});
+    (id(1,...,5) in set {"post_","init_"}) or
+    (id(1,...,8) in set {"measure_"});
 
   IsEmptyName : AS`Name -> bool
   IsEmptyName(mk_AS`Name(ids,-)) ==

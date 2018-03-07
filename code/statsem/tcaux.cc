@@ -3623,6 +3623,27 @@ TYPE_REP_FnTypeRep StatSem::MakePostType (const TYPE_REP_FnTypeRep & fntp) const
   }
 }
 
+// MakeMeasureType
+// fntp : REP`FnTypeRep
+// -> REP`FnTypeRep
+TYPE_REP_FnTypeRep StatSem::MakeMeasureType (const TYPE_REP_FnTypeRep & fntp) const
+{
+  switch(fntp.GetTag()) {
+    case TAG_TYPE_REP_TotalFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & fndom (fntp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
+      return mk_REP_TotalFnTypeRep(fndom, rep_alltp);
+    }
+    case TAG_TYPE_REP_PartialFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & fndom (fntp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
+      return mk_REP_TotalFnTypeRep(fndom, rep_alltp);
+    }
+    default: {
+      InternalError (L"MakeMeasureType");
+      return rep_alltp;
+    }
+  }
+}
+
 // MakePolyPreType
 // tv_l : seq of REP`TypeVarRep
 // fntp : REP`FnTypeRep
@@ -3664,6 +3685,28 @@ Tuple StatSem::MakePolyPostType (const SEQ<TYPE_REP_TypeVarRep> & tv_l, const TY
     } 
     default: {
       InternalError (L"MakePolyPostType");
+      return Tuple(0);
+    }
+  }
+}
+
+// MakePolyMeasureType
+// tv_l : seq of REP`TypeVarRep
+// fntp : REP`FnTypeRep
+// -> seq of REP`TypeVarRep * REP`FnTypeRep
+Tuple StatSem::MakePolyMeasureType (const SEQ<TYPE_REP_TypeVarRep> & tv_l, const TYPE_REP_FnTypeRep & fntp) const
+{
+  switch(fntp.GetTag()) {
+    case TAG_TYPE_REP_TotalFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & fndom (fntp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
+      return mk_(tv_l, mk_REP_TotalFnTypeRep(fndom, rep_alltp));
+    }
+    case TAG_TYPE_REP_PartialFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & fndom (fntp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
+      return mk_(tv_l, mk_REP_TotalFnTypeRep(fndom, rep_alltp));
+    } 
+    default: {
+      InternalError (L"MakePolyMeasureType");
       return Tuple(0);
     }
   }
@@ -3766,6 +3809,18 @@ TYPE_AS_Name StatSem::Post (const TYPE_AS_Name & nm) const
   return name;
 }
 
+// Measure
+// nm : AS`Name
+// -> AS`Name
+TYPE_AS_Name StatSem::Measure (const TYPE_AS_Name & nm) const
+{
+  TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
+  TYPE_AS_Id id (ASTAUX::MkId(L"measure_").ImpConc(ids[ids.Length()]));
+  TYPE_AS_Name name (nm);
+  name.SetField(pos_AS_Name_ids, ids.SubSequence(1,ids.Length() -1).ImpAppend(id));
+  return name;
+}
+
 // Inv
 // nm : AS`Name
 // -> AS`Name
@@ -3845,10 +3900,11 @@ bool StatSem::ReservedPrefix (const TYPE_AS_Name & nm) const
   TYPE_AS_Id id (nm.GetSequence(pos_AS_Name_ids).Hd());
   wstring txt;
   id.GetString(txt);
-  return (txt.find(L"is_") == 0 || txt.find(L"mk_") == 0 || txt.find(L"eq_") == 0 ||
-          txt.find(L"pre_") == 0 || txt.find(L"inv_") == 0 || txt.find(L"ord_") == 0 ||
-          txt.find(L"max_") == 0 || txt.find(L"min_") == 0 ||
-          txt.find(L"post_") == 0 || txt.find(L"init_") == 0);
+  return ((txt.find(L"is_") == 0) || (txt.find(L"mk_") == 0) || (txt.find(L"eq_") == 0) ||
+          (txt.find(L"pre_") == 0) || (txt.find(L"inv_") == 0) || (txt.find(L"ord_") == 0) ||
+          (txt.find(L"max_") == 0) || (txt.find(L"min_") == 0) ||
+          (txt.find(L"post_") == 0) || (txt.find(L"init_") == 0) ||
+          (txt.find(L"measure_") == 0));
 }
 
 // IsEmptyName
