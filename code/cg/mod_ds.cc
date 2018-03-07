@@ -6273,6 +6273,10 @@ TYPE_CPP_Expr vdmcg::GenEq_DS(const TYPE_CGMAIN_VT & vt1, const TYPE_CGMAIN_VT &
   const TYPE_CPP_Expr & var2   (vt2.GetRecord(pos_CGMAIN_VT_name));
   const TYPE_REP_TypeRep & tp2 (vt2.GetRecord(pos_CGMAIN_VT_type));
 
+  if ((var1 != GenNilLit()) && (var2 == GenNilLit())) {
+    return GenBoolExpr(GenIsNil(var1));
+  }
+  else
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     TYPE_CPP_Expr expr (IsNumType(tp1) && IsNumType(tp2)

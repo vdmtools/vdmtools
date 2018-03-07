@@ -2483,8 +2483,7 @@ Generic vdmcg::CGTypeJudgementExpr(const TYPE_AS_TypeJudgementExpr & tj, const T
   const TYPE_AS_Type & type (tj.GetRecord(pos_AS_TypeJudgementExpr_type));
   const TYPE_CI_ContextId & cid (tj.GetInt(pos_AS_TypeJudgementExpr_cid));
 
-  if (!expr.Is(TAG_TYPE_AS_Name))
-  {
+  if (!expr.Is(TAG_TYPE_AS_Name)) {
     TYPE_CI_ContextId ecid (GetCI().PushCGType(FindType(expr)));
     TYPE_CPP_Identifier tjTempId (vdm_BC_GiveName(ASTAUX::MkId(L"tjTemp")));
     TYPE_AS_Name tjTemp (ASTAUX::MkNameFromId(tjTempId.GetSequence(pos_CPP_Identifier_id), ecid));
@@ -2544,6 +2543,13 @@ Generic vdmcg::ConvertTypeJudgementExprAS(const TYPE_AS_Expr & expr, const TYPE_
     }
     case TAG_TYPE_AS_AllType: {
       return TYPE_AS_BoolLit().Init(Bool(true), cid);
+    }
+    case TAG_TYPE_AS_OptionalType: {
+      const TYPE_AS_Type & type (tp.GetRecord(pos_AS_OptionalType_tp));
+      // is_(expr, [T]) == expr = nil or is_(expr, T)
+      TYPE_CI_ContextId ncid (GetCI().PushCGType(mk_REP_NilTypeRep()));
+      TYPE_AS_Expr e (TYPE_AS_BinaryExpr().Init(expr, Int(EQ), TYPE_AS_NilLit().Init(ncid), cid));
+      return TYPE_AS_BinaryExpr().Init(e, Int(OR), TYPE_AS_TypeJudgementExpr().Init(expr,type,cid), cid);
     }
     case TAG_TYPE_AS_UnionType: {
       // is_(expr, T1 | ... | Tn) == is_(expr, T1) or ... or is_(expr, Tn)

@@ -2363,6 +2363,10 @@ ConvertTypeJudgementExprAS(expr, tp) ==
       mk_AS`QuoteType(lit,-)       -> return mk_AS`BinaryExpr(expr, <EQ>, lit, cid),
       mk_AS`BracketedType(type,-)  -> return ConvertTypeJudgementExprAS(expr, type),
       mk_AS`AllType(-)             -> return mk_AS`BoolLit(true, cid),
+      -- is_(expr, [T]) == expr = nil or is_(expr, T)
+      mk_AS`OptionalType(type,-)   -> def ncid = CI`PushCGType(mk_REP`NilTypeRep());
+                                          e = mk_AS`BinaryExpr(expr, <EQ>, mk_AS`NilLit(ncid), cid);
+                                      in return mk_AS`BinaryExpr(e, <OR>, mk_AS`TypeJudgementExpr(expr,type,cid), cid),
       -- is_(expr, T1 | ... | Tn) ==
       --   is_(expr, T1) or ... or is_(expr, Tn)
       mk_AS`UnionType(tps,-) -> (dcl allOk : bool := true,

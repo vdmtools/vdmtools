@@ -4681,6 +4681,9 @@ union are records. Using the \MCL{} library it is always possible to compare any
 \begin{vdm_al}
 GenEq: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
 GenEq( mk_CGMAIN`VT( var1, tp1), mk_CGMAIN`VT(var2, tp2) ) ==
+  if var1 <> GenNilLit() and var2 = GenNilLit()
+  then return GenBoolExpr(GenIsNil(var1))
+  else
 #ifdef VDMPP
   if CPP`isJAVA()
   then
