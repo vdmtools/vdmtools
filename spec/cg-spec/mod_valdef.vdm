@@ -637,7 +637,7 @@ in
         def mk_(expr, stmts) = CGEXPR`CGExprExcl(val, "tmpVal", vtp);
             decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
             --vt = mk_CGMAIN`VT(expr, vtp);
-            vt = mk_CGMAIN`VT(expr, TPGEN`RemoveInvType(vtp));
+            vt = mk_CGMAIN`VT(expr, CGAUX`RemoveInvType(vtp));
             mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false);
             pm1 = pm ^ if not Is_Excl
                        then [BC`GenIfStmt(BC`GenNot(succ), BC`GenBlock([rti]), nil)]

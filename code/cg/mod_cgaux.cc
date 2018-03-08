@@ -6746,6 +6746,92 @@ Generic vdmcg::PackageToDir(const Generic & gpackage)
 }
 #endif // VDMPP
 
+// RemoveInvType
+// tp : REP`TypeRep
+// -> REP`TypeRep
+TYPE_REP_TypeRep vdmcg::RemoveInvType(const TYPE_REP_TypeRep & tp)
+{
+  switch (tp.GetTag()) {
+    case TAG_TYPE_REP_InvTypeRep: {
+      return RemoveInvType(tp.GetRecord(pos_REP_InvTypeRep_shape));
+    }
+    case TAG_TYPE_REP_UnionTypeRep: {
+      SET<TYPE_REP_TypeRep> tps (tp.GetSet(pos_REP_UnionTypeRep_tps));
+      SET<TYPE_REP_TypeRep> new_tps;
+      Generic t;
+      for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
+        new_tps.Insert(RemoveInvType(t));
+      }
+      if (new_tps.Card() == 1) {
+        return new_tps.GetElem();
+      }
+      else {
+        return mk_REP_UnionTypeRep(new_tps);
+      }
+    }
+    case TAG_TYPE_REP_SetTypeRep: {
+      return mk_REP_SetTypeRep(RemoveInvType(tp.GetRecord(pos_REP_SetTypeRep_elemtp)));
+    }
+    case TAG_TYPE_REP_EmptySetTypeRep: {
+      return mk_REP_EmptySetTypeRep(RemoveInvType(tp.GetRecord(pos_REP_EmptySetTypeRep_elemtp)));
+    }
+    case TAG_TYPE_REP_SeqTypeRep: {
+      return mk_REP_SeqTypeRep(RemoveInvType(tp.GetRecord(pos_REP_SeqTypeRep_elemtp)));
+    }
+    case TAG_TYPE_REP_EmptySeqTypeRep: {
+      return mk_REP_EmptySeqTypeRep(RemoveInvType(tp.GetRecord(pos_REP_EmptySeqTypeRep_elemtp)));
+    }
+    case TAG_TYPE_REP_GeneralMapTypeRep: {
+      return mk_REP_GeneralMapTypeRep(RemoveInvType(tp.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)),
+                                      RemoveInvType(tp.GetRecord(pos_REP_GeneralMapTypeRep_maprng)));
+    }
+    case TAG_TYPE_REP_InjectiveMapTypeRep: {
+      return mk_REP_InjectiveMapTypeRep(RemoveInvType(tp.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)),
+                                        RemoveInvType(tp.GetRecord(pos_REP_InjectiveMapTypeRep_maprng)));
+    }
+    case TAG_TYPE_REP_EmptyMapTypeRep: {
+      return mk_REP_EmptyMapTypeRep(RemoveInvType(tp.GetRecord(pos_REP_EmptyMapTypeRep_mapdom)),
+                                    RemoveInvType(tp.GetRecord(pos_REP_EmptyMapTypeRep_maprng)));
+    }
+    case TAG_TYPE_REP_ProductTypeRep : {
+      const SEQ<TYPE_REP_TypeRep> & fl (tp.GetSequence(pos_REP_ProductTypeRep_tps));
+      SEQ<TYPE_REP_TypeRep> fl_new;
+      size_t len_fl = fl.Length();
+      for (size_t idx = 1; idx <= len_fl; idx++) {
+        fl_new.ImpAppend(RemoveInvType(fl[idx]));
+      }
+      return mk_REP_ProductTypeRep(fl_new);
+    }
+    case TAG_TYPE_REP_PartialFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & fndom (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
+      SEQ<TYPE_REP_TypeRep> new_fndom;
+      size_t len_fndom = fndom.Length();
+      for (size_t idx = 1; idx <= len_fndom; idx++)
+        new_fndom.ImpAppend(RemoveInvType(fndom[idx]));
+      return mk_REP_PartialFnTypeRep(new_fndom, RemoveInvType(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng)));
+    }
+    case TAG_TYPE_REP_TotalFnTypeRep : {
+      const SEQ<TYPE_REP_TypeRep> & fndom (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
+      SEQ<TYPE_REP_TypeRep> new_fndom;
+      size_t len_fndom = fndom.Length();
+      for (size_t idx = 1; idx <= len_fndom; idx++)
+        new_fndom.ImpAppend(RemoveInvType(fndom[idx]));
+      return mk_REP_TotalFnTypeRep(new_fndom, RemoveInvType(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng)));
+    }
+    case TAG_TYPE_REP_OpTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & opdom (tp.GetSequence(pos_REP_OpTypeRep_Dom));
+      SEQ<TYPE_REP_TypeRep> new_opdom;
+      size_t len_opdom = opdom.Length();
+      for (size_t idx = 1; idx <= len_opdom; idx++)
+        new_opdom.ImpAppend(RemoveInvType(opdom[idx]));
+      return mk_REP_OpTypeRep(new_opdom, RemoveInvType(tp.GetRecord(pos_REP_OpTypeRep_Rng)));
+    }
+    default: {
+      return tp;
+    }
+  }
+}
+
 // RemoveNil
 // type : REP`TypeRep
 // -> REP`TypeRep

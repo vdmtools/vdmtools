@@ -298,6 +298,7 @@ private:
   static Generic PackageToDir(const Generic &);
 #endif //VDMPP
 
+  TYPE_REP_TypeRep RemoveInvType(const TYPE_REP_TypeRep & p);
   TYPE_REP_TypeRep RemoveNil(const TYPE_REP_TypeRep & type);
   TYPE_REP_TypeRep RemoveExitType(const TYPE_REP_TypeRep & type);
   static bool NoReturnValue(const TYPE_REP_TypeRep & tp);

@@ -50,6 +50,7 @@ private:
                             const Map &,
                             const Generic &,
                             bool);
+  bool MatchType(const TYPE_REP_TypeRep & ptp, const TYPE_REP_TypeRep & vtp);
   Tuple CGMatchVal (const TYPE_AS_MatchVal & p,
                     const TYPE_CGMAIN_VT & rc,
                     const Set &,

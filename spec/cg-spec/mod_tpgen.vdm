@@ -2428,39 +2428,6 @@ GenUnionType(mk_REP`UnionTypeRep(ts), mk_REP`UnionTypeRep(uts), names) ==
     return id;
    );
 
-RemoveInvType : REP`TypeRep ==> REP`TypeRep
-RemoveInvType(tp) ==
-  cases tp:
-    mk_REP`InvTypeRep(-,shape,-)               -> return RemoveInvType(shape),
-    mk_REP`UnionTypeRep(tps)                   -> def new_tps = { RemoveInvType(t) | t in set tps }
-                                                  in cases new_tps:
-                                                       {t} -> return t,
-                                                       others -> return mk_REP`UnionTypeRep(new_tps)
-                                                     end,
-    mk_REP`SetTypeRep(elemtp)                  -> return mk_REP`SetTypeRep(RemoveInvType(elemtp)),
-    mk_REP`EmptySetTypeRep(elemtp)             -> return mk_REP`EmptySetTypeRep(RemoveInvType(elemtp)),
-    mk_REP`SeqTypeRep(elemtp)                  -> return mk_REP`SeqTypeRep(RemoveInvType(elemtp)),
-    mk_REP`EmptySeqTypeRep(elemtp)             -> return mk_REP`EmptySeqTypeRep(RemoveInvType(elemtp)),
-    mk_REP`GeneralMapTypeRep(mapdom, maprng)   -> return mk_REP`GeneralMapTypeRep(RemoveInvType(mapdom),
-                                                                                  RemoveInvType(maprng)),
-    mk_REP`InjectiveMapTypeRep(mapdom, maprng) -> return mk_REP`InjectiveMapTypeRep(RemoveInvType(mapdom),
-                                                                                    RemoveInvType(maprng)),
-    mk_REP`EmptyMapTypeRep(mapdom, maprng)     -> return mk_REP`EmptyMapTypeRep(RemoveInvType(mapdom),
-                                                                                RemoveInvType(maprng)),
-    mk_REP`ProductTypeRep(tps)                 -> def fl_new = [ RemoveInvType(tps(idx)) | idx in set inds tps ]
-                                                  in return mk_REP`ProductTypeRep(fl_new),
-    mk_REP`PartialFnTypeRep(fndom,fnrng)       -> return mk_REP`PartialFnTypeRep([ RemoveInvType(fndom(idx))
-                                                                                     | idx in set inds fndom ],
-                                                                                   RemoveInvType(fnrng)),
-    mk_REP`TotalFnTypeRep(fndom,fnrng)         -> return mk_REP`TotalFnTypeRep([ RemoveInvType(fndom(idx))
-                                                                                   | idx in set inds fndom ],
-                                                                                 RemoveInvType(fnrng)),
-    mk_REP`OpTypeRep(opdom,oprng)              -> return mk_REP`OpTypeRep([ RemoveInvType(opdom(idx))
-                                                                              | idx in set inds opdom ],
-                                                                            RemoveInvType(oprng)),
-    others -> return tp
-  end;
-
 AddUnionType : AS`Name * AS`Name ==> ()
 AddUnionType(enm,nm) ==
   if enm in set dom union_types
@@ -2733,7 +2700,7 @@ GenCppTypeDef : AS`Name * AS`Type * [AS`Access] ==> CPP`CPPAS
 #endif
 GenCppTypeDef(nm,tp,acc) ==
   -- COMPOSITE TYPE
-  def rtp = RemoveInvType(CGAUX`FromAS2RepType(tp))
+  def rtp = CGAUX`RemoveInvType(CGAUX`FromAS2RepType(tp))
   in
     if is_AS`CompositeType(tp)
     then   -- COMPOSITE TYPE - related to module file
@@ -2855,7 +2822,7 @@ reason why the Rep2CppTypeSpecifier takes both the rep type and the AS`Type.
 
 Rep2CppTypeSpecifier : REP`TypeRep * [AS`Type] ==> CPP`TypeSpecifier
 Rep2CppTypeSpecifier(rtp_, atp) ==
-def rtp = CGAUX`RemoveNil(RemoveInvType(rtp_));
+def rtp = CGAUX`RemoveNil(CGAUX`RemoveInvType(rtp_));
     cpp_name = GenVDMTpName(rtp, <H>,{})
 in
 #ifdef VDMSL

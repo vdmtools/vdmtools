@@ -223,7 +223,8 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
         return mk_(rb, Bool(false));
       }
     }
-    else if ( !pid_m.DomExists(n) || (pid_m.DomExists(n) && (pid_m[n] == type)) )
+    //else if ( !pid_m.DomExists(n) || (pid_m.DomExists(n) && (pid_m[n] == type)) )
+    else if ( !pid_m.DomExists(n) || (pid_m.DomExists(n) && MatchType(pid_m[n], type)) )
     { // patern is not binded yet
       // type for pattern is't defined or equals defind type
 
@@ -326,6 +327,31 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
     if (!inner.IsNil())
       rb.ImpConc(inner);
     return mk_(rb, Bool(true));
+  }
+}
+
+// MatchType
+// ptp : REP`TypeRep
+// vtp : REP`TypeRep
+// -> bool
+bool vdmcg::MatchType(const TYPE_REP_TypeRep & ptp, const TYPE_REP_TypeRep & vtp)
+{
+  if (ptp == vtp) {
+    return true;
+  }
+  else if (ptp.Is(TAG_TYPE_REP_UnionTypeRep) && vtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
+    const SET<TYPE_REP_TypeRep> & ptps (ptp.GetSet(pos_REP_UnionTypeRep_tps));
+    SET<TYPE_REP_TypeRep> vtps (vtp.GetSet(pos_REP_UnionTypeRep_tps));
+    bool forall = (ptps.Card() == vtps.Card());
+    Generic t;
+    for (bool bb = vtps.First(t); bb && forall; bb = vtps.Next(t)) {
+      Generic tp (RemoveInvType(t));
+      forall = ptps.InSet(tp.Is(TAG_TYPE_REP_CompositeTypeRep) ? tp : t);
+    }
+    return forall;
+  }
+  else {
+    return false;
   }
 }
 

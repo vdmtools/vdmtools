@@ -934,7 +934,7 @@ GenExplicitCast(restp, e, tp) ==
                              not CGAUX`IsPossibleStringType(type)))
                           then return GetStringVal(e)
                           else return e
-                elseif CGAUX`IsSubType(type, TPGEN`RemoveInvType(restype))
+                elseif CGAUX`IsSubType(type, CGAUX`RemoveInvType(restype))
                 then return e
                 elseif GenType(type) = BC`GenGeneric()
                 then return BC`GenCastExpr(GenType(restype),e)

@@ -72,7 +72,7 @@ CGExpr(expr, mk_CGMAIN`VT(res_v,type)) ==
 #ifdef VDMPP
       if CPP`isJAVA()
       then
-        def tp = CGAUX`RemoveNil(TPGEN`RemoveInvType(CGAUX`FindType(expr)));
+        def tp = CGAUX`RemoveNil(CGAUX`RemoveInvType(CGAUX`FindType(expr)));
         in
          (dcl cast : CPP`Expr := pp_v;
           if CGAUX`IsStringType(type) and
@@ -131,7 +131,7 @@ cases true:
        if is_REP`CompositeTypeRep(tp) and tp.nm = expr
        then
          def exprs = [ tp.fields(i).sel | i in set inds tp.fields ];
-             cid = CI`PushCGType(TPGEN`RemoveInvType(CGAUX`FindType(expr)));
+             cid = CI`PushCGType(CGAUX`RemoveInvType(CGAUX`FindType(expr)));
              rce = mk_AS`RecordConstructorExpr(tp.nm, exprs, cid)
          in CGRecordConstructorExpr(rce, resVar_v)
        else
@@ -259,7 +259,7 @@ CGExprExcl( expr, e_name, etp ) ==
       if is_CPP`Identifier(e_name)
       then return mk_(etmpVar, exl_v)
       else
-        def tp = TPGEN`RemoveInvType(e_t);
+        def tp = CGAUX`RemoveInvType(e_t);
             decl_stmt = DS`GenDecl(tp, etmpVar, nil); -- must be here for include 
             stmt = exl_v(len exl_v)
         in
@@ -2589,7 +2589,7 @@ ConvertTypeJudgementExprAS(expr, tp) ==
 CGNarrowExpr: AS`NarrowExpr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGNarrowExpr(mk_AS`NarrowExpr(expr,type,-), mk_CGMAIN`VT(resvar,restp)) ==
   def rtp = CGAUX`FindType(expr);
-      tp = TPGEN`RemoveInvType(CGAUX`FromAS2RepType(type))
+      tp = CGAUX`RemoveInvType(CGAUX`FromAS2RepType(type))
   in
     if rtp <> nil
     then
@@ -3098,9 +3098,9 @@ CGFctApplyExpr(mk_AS`ApplyExpr(expr, par_l, cid), vt) ==
                   cases tmptp: 
                     nil -> exprtp := nil,
 #ifdef VDMPP
-                    mk_REP`OverTypeRep(-) -> exprtp := GetOverFNOP(TPGEN`RemoveInvType(tmptp), par_l),
+                    mk_REP`OverTypeRep(-) -> exprtp := GetOverFNOP(CGAUX`RemoveInvType(tmptp), par_l),
 #endif VDMPP
-                    others -> exprtp := TPGEN`RemoveInvType(tmptp)
+                    others -> exprtp := CGAUX`RemoveInvType(tmptp)
                   end;
 #ifdef VDMPP
                   cases exprtp:
@@ -5005,7 +5005,7 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
           in
            (tmpRec := e;
             rec_stmt := stmts;
-            tmpRecType := TPGEN`RemoveInvType(CGAUX`FindType( rec ));
+            tmpRecType := CGAUX`RemoveInvType(CGAUX`FindType( rec ));
             rb := rec_stmt);
         
         def rectypes = FindAllRecTypes( tmpRecType );

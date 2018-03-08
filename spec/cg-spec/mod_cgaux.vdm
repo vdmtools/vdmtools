@@ -274,10 +274,10 @@ FindPatIdMap(expr) ==
     (dcl res : map AS`Name to REP`TypeRep := {|->};
      for all nm in set dom pid_m do
        (dcl tp : REP`TypeRep := pid_m(nm),
-            newtp : REP`TypeRep := TPGEN`RemoveInvType(CleanFlatType(tp));
+            newtp : REP`TypeRep := RemoveInvType(CleanFlatType(tp));
         while tp <> newtp do  
         (tp := newtp;
-         newtp := TPGEN`RemoveInvType(CleanFlatType(tp)));
+         newtp := RemoveInvType(CleanFlatType(tp)));
          res := res ++ {nm |-> tp});
      return res;)
 
@@ -2874,7 +2874,7 @@ operations
 
 FindSeqElemType: REP`TypeRep ==> [REP`TypeRep]
 FindSeqElemType(ti_) ==
-  def ti = TPGEN`RemoveInvType(ti_)
+  def ti = RemoveInvType(ti_)
   in
     cases ti:
       mk_REP`AllTypeRep()         -> return ti,
@@ -2896,7 +2896,7 @@ FindSeqElemType(ti_) ==
     
 FindSetElemType: REP`TypeRep ==> [REP`TypeRep]
 FindSetElemType(ti_) ==
-  def ti = TPGEN`RemoveInvType(ti_)
+  def ti = RemoveInvType(ti_)
   in
     cases ti:
       mk_REP`AllTypeRep()          -> return ti,
@@ -2919,7 +2919,7 @@ FindSetElemType(ti_) ==
 
 FindMapDomType: REP`TypeRep ==> [REP`TypeRep]
 FindMapDomType(ti_) ==
-  def ti = TPGEN`RemoveInvType(ti_)
+  def ti = RemoveInvType(ti_)
   in
     cases ti:
       mk_REP`AllTypeRep()              -> return ti,
@@ -2943,7 +2943,7 @@ FindMapDomType(ti_) ==
 
 FindMapRngType: REP`TypeRep ==> [REP`TypeRep]
 FindMapRngType(ti_) ==
-  def ti = TPGEN`RemoveInvType(ti_) in
+  def ti = RemoveInvType(ti_) in
   cases ti:
     mk_REP`AllTypeRep()          -> return ti,
     mk_REP`UnionTypeRep(ti_s) ->
@@ -2968,7 +2968,7 @@ FindMapRngType(ti_) ==
 
 FindProductElemType: REP`TypeRep * nat ==> [seq of REP`TypeRep]
 FindProductElemType(ti_, l) ==
-  def ti = TPGEN`RemoveInvType(ti_)
+  def ti = RemoveInvType(ti_)
   in
     cases ti:
       mk_REP`UnionTypeRep(ti_s) ->
@@ -3013,7 +3013,7 @@ an expression of type {\em type}.
 \begin{vdm_al}
 posFieldApplyTypes: REP`TypeRep * AS`Name ==> REP`TypeRep
 posFieldApplyTypes(type, sel) ==
-def tp = CleanFlatType(TPGEN`RemoveInvType(type)) in
+def tp = CleanFlatType(RemoveInvType(type)) in
 cases tp:
    mk_REP`CompositeTypeRep(-,fr_l) -> 
         let mk_REP`FieldRep(sel1, tp,-) in set elems fr_l be st sel = sel1
@@ -3050,7 +3050,7 @@ or sequence apply with expression {\em expr} at an expression of type {\em type}
 \begin{vdm_al}        
 posRngMapOrIndsSeqType: REP`TypeRep  ==> REP`TypeRep
 posRngMapOrIndsSeqType(type) ==
-def tp = CleanFlatType(TPGEN`RemoveInvType(type)) in
+def tp = CleanFlatType(RemoveInvType(type)) in
 cases tp:
      mk_REP`GeneralMapTypeRep(-, maprng),
      mk_REP`InjectiveMapTypeRep(-, maprng) -> return CleanFlatType(maprng),
@@ -3808,6 +3808,40 @@ RemoveNil(type) ==
   else
 #endif VDMPP
     return type;
+
+functions
+RemoveInvType : REP`TypeRep -> REP`TypeRep
+RemoveInvType(tp) ==
+  cases tp:
+    mk_REP`InvTypeRep(-,shape,-)               -> RemoveInvType(shape),
+    mk_REP`UnionTypeRep(tps)                   -> def new_tps = { RemoveInvType(t) | t in set tps }
+                                                  in cases new_tps:
+                                                       {t} -> t,
+                                                       others -> mk_REP`UnionTypeRep(new_tps)
+                                                     end,
+    mk_REP`SetTypeRep(elemtp)                  -> mk_REP`SetTypeRep(RemoveInvType(elemtp)),
+    mk_REP`EmptySetTypeRep(elemtp)             -> mk_REP`EmptySetTypeRep(RemoveInvType(elemtp)),
+    mk_REP`SeqTypeRep(elemtp)                  -> mk_REP`SeqTypeRep(RemoveInvType(elemtp)),
+    mk_REP`EmptySeqTypeRep(elemtp)             -> mk_REP`EmptySeqTypeRep(RemoveInvType(elemtp)),
+    mk_REP`GeneralMapTypeRep(mapdom, maprng)   -> mk_REP`GeneralMapTypeRep(RemoveInvType(mapdom),
+                                                                                  RemoveInvType(maprng)),
+    mk_REP`InjectiveMapTypeRep(mapdom, maprng) -> mk_REP`InjectiveMapTypeRep(RemoveInvType(mapdom),
+                                                                                    RemoveInvType(maprng)),
+    mk_REP`EmptyMapTypeRep(mapdom, maprng)     -> mk_REP`EmptyMapTypeRep(RemoveInvType(mapdom),
+                                                                                RemoveInvType(maprng)),
+    mk_REP`ProductTypeRep(tps)                 -> def fl_new = [ RemoveInvType(tps(idx)) | idx in set inds tps ]
+                                                  in mk_REP`ProductTypeRep(fl_new),
+    mk_REP`PartialFnTypeRep(fndom,fnrng)       -> mk_REP`PartialFnTypeRep([ RemoveInvType(fndom(idx))
+                                                                                     | idx in set inds fndom ],
+                                                                                   RemoveInvType(fnrng)),
+    mk_REP`TotalFnTypeRep(fndom,fnrng)         -> mk_REP`TotalFnTypeRep([ RemoveInvType(fndom(idx))
+                                                                                   | idx in set inds fndom ],
+                                                                                 RemoveInvType(fnrng)),
+    mk_REP`OpTypeRep(opdom,oprng)              -> mk_REP`OpTypeRep([ RemoveInvType(opdom(idx))
+                                                                              | idx in set inds opdom ],
+                                                                            RemoveInvType(oprng)),
+    others -> tp
+  end;
 
 functions
 RemoveExitType: REP`TypeRep +> REP`TypeRep

@@ -213,7 +213,6 @@ private:
   TYPE_AS_Id GenSeqType(const TYPE_REP_SeqTypeRep &, const SET<TYPE_AS_Name> &);
   bool StringAsBefore(wstring &, const wstring & s);
   TYPE_AS_Id GenUnionType(const TYPE_REP_UnionTypeRep &, const TYPE_REP_UnionTypeRep &, const SET<TYPE_AS_Name> &);
-  TYPE_REP_TypeRep RemoveInvType(const TYPE_REP_TypeRep & p);
   void AddUnionType(const TYPE_AS_Name &, const TYPE_AS_Name &);
   void AddRecordType(const TYPE_AS_Name &, const TYPE_AS_Name &);
 #ifdef VDMPP

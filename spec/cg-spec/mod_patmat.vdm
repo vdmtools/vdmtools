@@ -152,7 +152,8 @@ CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                                                        BC`GenBracketedExpr(DS`GenEqVal(BC`Rename(n), varExpr_v))),
                                         BC`GenBlock(inner), nil)], false)
         else return mk_([BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(DS`GenEqVal(BC`Rename(n), varExpr_v)))], false)
-      else if (pid_m = nil) or (n not in set dom pid_m) or (n in set dom pid_m and pid_m(n) = type)
+      --else if (pid_m = nil) or (n not in set dom pid_m) or (n in set dom pid_m and pid_m(n) = type)
+      else if (pid_m = nil) or (n not in set dom pid_m) or (n in set dom pid_m and MatchType(pid_m(n),type))
       then 
        (-- the pattern name has not been bound in the scope
         dcl rb : seq of CPP`Stmt := [],
@@ -227,6 +228,23 @@ CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
       if inner <> nil
       then rb := rb ^ inner;
       return mk_(rb, true));
+
+functions
+MatchType: REP`TypeRep * REP`TypeRep -> bool
+MatchType(ptp, vtp) ==
+  cases mk_(ptp, vtp):
+    mk_(t,t) -> true,
+    mk_(mk_REP`UnionTypeRep(ptps), mk_REP`UnionTypeRep(vtps)) -> 
+      (card ptps = card vtps) and
+      forall t in set vtps & let tp = CGAUX`RemoveInvType(t)
+                             in 
+                              (cases true:
+                                 (is_REP`CompositeTypeRep(tp)) -> tp,
+                                 others                        -> t
+                               end) in set ptps,
+    others -> false
+  end;
+
 \end{vdm_al}
 
 Consider the pattern match in the specification:
@@ -266,6 +284,7 @@ skip
 
 
 \begin{vdm_al}
+operations
 CGMatchVal: AS`MatchVal * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *[seq of CPP`Stmt] * bool
             ==> seq of CPP`Stmt * bool
 CGMatchVal(mk_AS`MatchVal(e,-), mk_CGMAIN`VT(varExpr_v, type), - , succ_v, inner, nonstop) ==

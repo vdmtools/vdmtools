@@ -933,7 +933,7 @@ CGReturnStmt(mk_AS`ReturnStmt(val,-)) ==
 #ifdef VDMPP
       if CPP`isJAVA()
       then
-        def rtp = CGAUX`RemoveNil(TPGEN`RemoveInvType(CGAUX`GiveCurrentRType()));
+        def rtp = CGAUX`RemoveNil(CGAUX`RemoveInvType(CGAUX`GiveCurrentRType()));
         in
          (dcl cast : CPP`Expr;
           if CGAUX`IsStringType(rtp) and
