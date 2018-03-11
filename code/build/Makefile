@@ -207,8 +207,12 @@ ifeq ($(strip $(YACC)),yacc)
 YACC = bison
 endif
 
+ifeq ($(strip $(OSTYPE)),win32)
+BISONVERSION_MAJOR = 2
+else
 BISONVERSION = $(shell $(YACC) --version | head -1 | awk -F ' ' '{print $$4}')
 BISONVERSION_MAJOR = $(shell echo $(BISONVERSION) | awk -F '.' '{print $$1}')
+endif
 
 bison:
 	echo $(BISONVERSION)
