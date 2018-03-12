@@ -2360,8 +2360,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmt(const TYPE_AS_CasesStmt & cs, bool isLast)
 #ifdef VDMPP
   bool exists = false;
   Generic n;
-  for (bool bb = all_nm_in_expr.First(n); bb && !exists; bb = all_nm_in_expr.Next(n))
-  {
+  for (bool bb = all_nm_in_expr.First(n); bb && !exists; bb = all_nm_in_expr.Next(n)) {
     exists = FindType(n).Is(TAG_TYPE_REP_ObjRefTypeRep);
   }
   need_decl = need_decl || exists;
@@ -2380,16 +2379,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmt(const TYPE_AS_CasesStmt & cs, bool isLast)
 
   SEQ<TYPE_CPP_Stmt> rb (sel_stmt);
 
-  if (need_decl)
+  if (need_decl) {
     rb.ImpConc(GenConstDeclInit(selResType, sel_v, selRes1_v));
-
+  }
   rb.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ_v, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
   rb.ImpConc(CGCasesStmtAltn(altns, mk_CG_VT(selRes_v, selResType), succ_v, Others, isLast));
 
-  if (Others.IsNil())
-  {
-    if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep))
-    {
+  if (Others.IsNil()) {
+    if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep)) {
       rb.ImpAppend(RunTime (L"The operation did not return a value"));
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
@@ -2422,15 +2419,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmtAltn(const SEQ<TYPE_AS_CasesStmtAltn> & alt
 
   // NOTE: len_altns > 0
   size_t len_altns = altns.Length();
-  for (size_t i = 1; i <= len_altns; i++)
-  {
+  for (size_t i = 1; i <= len_altns; i++) {
     PushEnv_CGAUX();
     TYPE_CPP_Stmt stmt (CGAltnStmt(altns[i], selRes_v, succ_v, Nil(), isLast));
 
-    if (i == 1)
+    if (i == 1) {
       rb.ImpAppend(stmt);
-    else
+    }
+    else {
       rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
+    }
     PopEnv_CGAUX();
   }
   
@@ -2440,10 +2438,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmtAltn(const SEQ<TYPE_AS_CasesStmtAltn> & alt
 //    rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"others")));
 //#endif // VDMPP
     SEQ<TYPE_CPP_Stmt> othersStmt (GenStmt(Others, isLast));
-    if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep))
+    if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep)) {
       rb.ImpConc(othersStmt);
-    else
+    }
+    else {
       rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(othersStmt), nil));
+    }
   }
   return rb;
 }
@@ -2470,43 +2470,72 @@ TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
   bool samepatternIds (spi.GetBoolValue(1));
   const Map & pid_m(spi.GetMap(2)); // map AS`Name to set of REP`TypeRep
 
-  if (samepatternIds)
-  {
+  if (samepatternIds) {
     // each pattern in the pattern list contains the same set of PatternId.
     RememberPid_m(pid_m);
 
     SEQ<TYPE_CPP_Stmt> decl (DeclarePatterns(pid_m));
     SEQ<TYPE_CPP_Stmt> rb;
-    if ( p_l.Length() > 1 )
-      rb.ImpConc( decl );
 
-    size_t len_p_l = p_l.Length();
-    for (size_t i = 1; i <= len_p_l; i++)
-    {
-      Tuple cgpm (CGPatternMatchExcl(p_l[i], selRes_v, Set(), succ_v, Map(), Nil(), false));
+    if ( 1 == p_l.Length() ) {
+      SEQ<TYPE_CPP_Stmt> inner (GenStmt(s, isLast));
+      Tuple cgpm (CGPatternMatchExcl(p_l[1], selRes_v, Set(), succ_v, Map(), inner, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
       bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
-
-      SEQ<TYPE_CPP_Stmt> pm1;
-      if (Is_Excl)
-        pm1.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
-      pm1.ImpConc(pm);
-
-      if (!pm1.IsEmpty())
-      {
-        if(i == 1) {
-          if ( len_p_l > 1 )
-            rb.ImpConc(pm1);
-          else
-            rb.ImpConc(MergeStmts( decl, pm1 ));
+//      if (Is_Excl) {
+//        rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
+//      }
+      if ((1 == pm.Length()) && pm[1].Is(TAG_TYPE_CPP_IfStmt) &&
+            pm[1].GetRecord(pos_CPP_IfStmt_alt1).Is(TAG_TYPE_CPP_CompoundStmt)) {
+        if (Is_Excl) {
+          rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
         }
-        else
-          rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(pm1), nil));
+        TYPE_CPP_Stmt stmt (pm[1]);
+        SEQ<TYPE_CPP_Stmt> stmts (MergeStmts(decl,stmt.GetRecord(pos_CPP_IfStmt_alt1).GetSequence(pos_CPP_CompoundStmt_stms)));
+        stmt.SetField(pos_CPP_IfStmt_alt1, vdm_BC_GenBlock(stmts));
+        rb.ImpAppend(stmt);
+      }
+      else {
+        if (Is_Excl) {
+ //         rb.ImpAppend(vdm_BC_GenIfStmt(succ_v, vdm_BC_GenBlock(MergeStmts(decl,pm)), nil));
+          SEQ<TYPE_CPP_Stmt> ss;
+          ss.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
+          ss.ImpConc(MergeStmts(decl,pm));
+          rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(ss), nil));
+        }
+        else {
+          rb.ImpConc(MergeStmts(decl,pm));
+        }
       }
     }
-    TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(GenStmt(s, isLast)));
+    else {
+      rb.ImpConc( decl );
+
+      size_t len_p_l = p_l.Length();
+      for (size_t i = 1; i <= len_p_l; i++) {
+        Tuple cgpm (CGPatternMatchExcl(p_l[i], selRes_v, Set(), succ_v, Map(), Nil(), false));
+        const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
+        bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
+
+        SEQ<TYPE_CPP_Stmt> pm1;
+        if (Is_Excl) {
+          pm1.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
+        }
+        pm1.ImpConc(pm);
+
+        if (!pm1.IsEmpty()) {
+          if(i == 1) {
+            rb.ImpConc(pm1);
+          }
+          else {
+            rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(pm1), nil));
+          }
+        }
+      }
+      TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(GenStmt(s, isLast)));
+      rb.ImpAppend( vdm_BC_GenIfStmt(succ_v, stmt, elseStmt) );
+    }
     DeletePid_m();
-    rb.ImpAppend( vdm_BC_GenIfStmt(succ_v, stmt, elseStmt) );
     return vdm_BC_GenBlock(rb);
   }
   else

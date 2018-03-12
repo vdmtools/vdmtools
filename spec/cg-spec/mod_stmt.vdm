@@ -2181,31 +2181,51 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
   in
     if samepatternIds
     then -- each pattern in the pattern list contains the same set of PatternId.
-     (DS`RememberPid_m(pid_m);
+     (dcl rb : seq of CPP`Stmt := [];
+      DS`RememberPid_m(pid_m);
       def decl = CGEXPR`DeclarePatterns( pid_m );
       in
-       (dcl rb : seq of CPP`Stmt := [];
-        if len p_l > 1
-        then rb := rb ^ decl;
-        for i = 1 to len p_l do
-          def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false);
-              pm1 = (if Is_Excl
-                     then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
-                     else []) ^ pm
+       if len p_l = 1
+       then
+          def inner = GenStmt(s, isLast);
+              mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false);
           in
-            if pm1 <> []
-            then
-              if i = 1
+            cases pm:
+              [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
+                  (if Is_Excl
+                   then rb := rb ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
+                   def stmts = CGEXPR`MergeStmts( decl, stmt_l )
+                   in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))]
+                  ),
+              others -> if Is_Excl
+                        then 
+                          def ss = [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))] ^
+                                       CGEXPR`MergeStmts( decl, pm )
+                          in rb := rb ^ [BC`GenIfStmt(BC`GenNot(succ_v), BC`GenBlock(ss), nil)]
+                        else rb := rb ^ CGEXPR`MergeStmts( decl, pm )
+            end
+       else
+         (rb := rb ^ decl;
+          for i = 1 to len p_l do
+            def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false);
+                pm1 = (if Is_Excl
+                       then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
+                       else []) ^ pm
+            in
+              if pm1 <> []
               then
-                if len p_l > 1 
-                then rb := rb ^ pm1
-                else rb := rb ^ CGEXPR`MergeStmts( decl, pm1 )
-              else rb := rb ^ [BC`GenIfStmt(BC`GenNot(succ_v), BC`GenBlock(pm1), nil)];
-        def stmt = BC`GenBlock(GenStmt(s, isLast))
-        in
-         (DS`DeletePid_m();
-          rb := rb ^ [ BC`GenIfStmt( succ_v, stmt, elseStmt) ]);
-        return BC`GenBlock(rb)))
+                if i = 1
+                then
+                  if len p_l > 1 
+                  then rb := rb ^ pm1
+                  else rb := rb ^ CGEXPR`MergeStmts( decl, pm1 )
+                else rb := rb ^ [BC`GenIfStmt(BC`GenNot(succ_v), BC`GenBlock(pm1), nil)];
+          def stmt = BC`GenBlock(GenStmt(s, isLast))
+          in rb := rb ^ [ BC`GenIfStmt( succ_v, stmt, elseStmt) ]
+         );
+      DS`DeletePid_m();
+      return BC`GenBlock(rb)
+     )
     else
      (dcl elseStmt1 : [CPP`Stmt] := elseStmt;
        for i = 0 to len p_l -1 do

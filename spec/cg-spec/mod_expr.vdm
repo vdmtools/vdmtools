@@ -669,28 +669,38 @@ CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
       -- each pattern in the pattern list contains the same set of PatternId.
       def decl = DeclarePatterns( pid_m );
       in
-       (if len p_l > 1
-        then rb := rb ^ decl;
-        for i = 1 to len p_l do
-          def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false);
-              pm1 = (if Is_Excl
-                     then [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))]
-                     else []) ^ pm
+        if len p_l = 1
+        then
+          def inner = CGExpr(e, resVar_v);
+              mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false);
           in
-            if i = 1 
-            then
-              if len p_l > 1
+           (if Is_Excl
+            then rb := rb ^ [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))];
+            cases pm:
+              [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
+                   def stmts = MergeStmts( decl, stmt_l )
+                   in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))],
+              others -> rb := rb ^ MergeStmts( decl, pm )
+            end;
+           )
+        else
+         (rb := rb ^ decl;
+          for i = 1 to len p_l do
+            def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false);
+                pm1 = (if Is_Excl
+                       then [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))]
+                       else []) ^ pm
+            in
+              if i = 1 
               then rb := rb ^ pm1
-              else rb := rb ^ CGEXPR`MergeStmts( decl, pm1 )
-            else rb := rb ^ [BC`GenIfStmt( BC`GenNot( succ_v ), BC`GenBlock(pm1), nil )];
-        def stmts : seq of CPP`Stmt = CGExpr(e, resVar_v)
-        in
-          rb := rb ^ [ BC`GenIfStmt( succ_v, BC`GenBlock(stmts), nil) ]
-       )
+              else rb := rb ^ [BC`GenIfStmt( BC`GenNot( succ_v ), BC`GenBlock(pm1), nil )];
+          def stmts : seq of CPP`Stmt = CGExpr(e, resVar_v)
+          in rb := rb ^ [ BC`GenIfStmt( succ_v, BC`GenBlock(stmts), nil) ]
+         )
     else
      (dcl ca_l: seq of AS`CaseAltn := [];
-      for i =1 to len p_l do
-        ca_l := ca_l ^ [ mk_AS`CaseAltn([p_l(i)], e, cid) ];
+      for p in p_l do
+        ca_l := ca_l ^ [ mk_AS`CaseAltn([p], e, cid) ];
       rb := rb ^ CGCasesExprAltn( ca_l, selRes_v, resVar_v, succ_v )
      );
   CGAUX`PopEnv();
@@ -712,8 +722,8 @@ SamePatternIds( p_l ) ==
   then
    (dcl same_pid : bool := true,
         pid_m : map (AS`Name | AS`OldName) to set of REP`TypeRep := FindPatternId( hd p_l );
-    for i = 2 to len p_l do
-      def tmp_m = FindPatternId( p_l( i) )
+    for p in tl p_l do
+      def tmp_m = FindPatternId( p )
       in
        (same_pid := same_pid and forall n in set dom tmp_m & n in set dom pid_m;
         if same_pid

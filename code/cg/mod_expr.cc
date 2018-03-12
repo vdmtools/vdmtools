@@ -737,40 +737,54 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
 // <-- 20100622
   if (samepatternIds.GetValue ()) {
     SEQ<TYPE_CPP_Stmt> decl (DeclarePatterns (pid_m)); // must be first of CGPatternMatch
-    if ( p_l.Length() > 1) {
-      rb.ImpConc( decl );
-    }
 
-    size_t len_p_l = p_l.Length();
-    for (size_t i = 1; i <= len_p_l; i++) {
-      Tuple cgpm (CGPatternMatchExcl (p_l[i], selRes_v, eset, succ_v, Map(), Nil(), false));
+    if ( p_l.Length() == 1) {
+      SEQ<TYPE_CPP_Stmt> inner (CGExpr(e,resVar_v));
+      Tuple cgpm (CGPatternMatchExcl (p_l[1], selRes_v, eset, succ_v, Map(), inner, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
       bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
-
-      SEQ<TYPE_CPP_Stmt> pm1;
       if (Is_Excl) {
-        pm1.ImpAppend(vdm_BC_GenAsgnStmt(succ_v,vdm_BC_GenBoolLit(true)));
+        rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v,vdm_BC_GenBoolLit(true)));
       }
-      pm1.ImpConc(pm);
+      if ((1 == pm.Length()) && pm[1].Is(TAG_TYPE_CPP_IfStmt) &&
+            pm[1].GetRecord(pos_CPP_IfStmt_alt1).Is(TAG_TYPE_CPP_CompoundStmt)) {
+        TYPE_CPP_Stmt stmt (pm[1]);
+        SEQ<TYPE_CPP_Stmt> stmts (MergeStmts(decl,stmt.GetRecord(pos_CPP_IfStmt_alt1).GetSequence(pos_CPP_CompoundStmt_stms)));
+        stmt.SetField(pos_CPP_IfStmt_alt1, vdm_BC_GenBlock(stmts));
+        rb.ImpAppend(stmt);
+      }
+      else {
+        rb.ImpConc(MergeStmts(decl,pm));
+      }
+    }
+    else {
+      rb.ImpConc( decl );
+      size_t len_p_l = p_l.Length();
+      for (size_t i = 1; i <= len_p_l; i++) {
+        Tuple cgpm (CGPatternMatchExcl (p_l[i], selRes_v, eset, succ_v, Map(), Nil(), false));
+        const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
+        bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
 
-      if (i == 1) {
-        if ( len_p_l > 1 ) {
+        SEQ<TYPE_CPP_Stmt> pm1;
+        if (Is_Excl) {
+          pm1.ImpAppend(vdm_BC_GenAsgnStmt(succ_v,vdm_BC_GenBoolLit(true)));
+        }
+        pm1.ImpConc(pm);
+
+        if (i == 1) {
           rb.ImpConc(pm1);
         }
         else {
-          rb.ImpConc(MergeStmts(decl,pm1));
+          rb.ImpAppend(vdm_BC_GenIfStmt (vdm_BC_GenNot (succ_v), vdm_BC_GenBlock(pm1), nil));
         }
-      }
-      else {
-        rb.ImpAppend(vdm_BC_GenIfStmt (vdm_BC_GenNot (succ_v), vdm_BC_GenBlock(pm1), nil));
-      }
-    }
-    SEQ<TYPE_CPP_Stmt> stmts;
+     }
+     SEQ<TYPE_CPP_Stmt> stmts;
 //#ifdef VDMPP
-//    stmts.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(MPP::MiniPP(INT2Q::h2gAS(e)))));
+//     stmts.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(MPP::MiniPP(INT2Q::h2gAS(e)))));
 //#endif // VDMPP
-    stmts.ImpConc(CGExpr(e,resVar_v));
-    rb.ImpAppend(vdm_BC_GenIfStmt (succ_v, vdm_BC_GenBlock(stmts), nil));
+     stmts.ImpConc(CGExpr(e,resVar_v));
+     rb.ImpAppend(vdm_BC_GenIfStmt (succ_v, vdm_BC_GenBlock(stmts), nil));
+    }
   }
   else {
     SEQ<TYPE_AS_CaseAltn> ca_l;
