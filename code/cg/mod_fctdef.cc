@@ -214,23 +214,23 @@ Tuple vdmcg::Impl2ExplSignature(const SEQ<TYPE_AS_PatTypePair> & partps, const S
   Generic restp;
 
   size_t len_partps = partps.Length();
-  for (size_t idx = 1; idx <= len_partps; idx++)
-  {
+  for (size_t idx = 1; idx <= len_partps; idx++) {
     const TYPE_AS_PatTypePair & ptp (partps[idx]);
     const SEQ<TYPE_AS_Pattern> & pat_l (ptp.GetSequence(pos_AS_PatTypePair_pats));
     const TYPE_AS_Type & tp (ptp.GetRecord(pos_AS_PatTypePair_tp));
 
     parm_l.ImpConc(pat_l);
     size_t len_pat_l = pat_l.Length();
-    for (size_t i = 1; i <= len_pat_l; i++)
+    for (size_t i = 1; i <= len_pat_l; i++) {
       tp_l.ImpAppend (tp);
+    }
   }
 
-  switch (resnmtps.Length())
-  {
-    case 0:
+  switch (resnmtps.Length()) {
+    case 0: {
       restp = TYPE_AS_VoidType().Init(NilContextId);
       break;
+    }
     case 1: {
       restp = resnmtps[1].GetRecord(pos_AS_NameType_tp);
       break;
@@ -238,15 +238,13 @@ Tuple vdmcg::Impl2ExplSignature(const SEQ<TYPE_AS_PatTypePair> & partps, const S
     default: {
       SEQ<TYPE_AS_Type> restp_l;
       size_t len_resnmtps = resnmtps.Length();
-      for (size_t i = 1; i <= len_resnmtps; i++)
-      {
+      for (size_t i = 1; i <= len_resnmtps; i++) {
         restp_l.ImpAppend(resnmtps[i].GetRecord(pos_AS_NameType_tp));
       }
       restp = TYPE_AS_ProductType().Init(restp_l, NilContextId);
       break;
     }
   }
-
   return mk_(parm_l, tp_l, restp);
 }
 
@@ -295,8 +293,7 @@ bool vdmcg::IsNotyetspecified (const Record & bdy, bool isDlClass, bool isStatic
     }
   }
 
-  if ( body == Int(NOTYETSPEC) )
-  {
+  if ( body == Int(NOTYETSPEC) ) {
     this->impl = ! isDlClass || this->impl;
     this->staticImpl = (!isDlClass && isStatic) || this->staticImpl;
     return true;
@@ -388,9 +385,9 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
     return TYPE_CPP_CPPAS();
   }
 
-  if (stat)
+  if (stat) {
     SetIsStatic();
-
+  }
   // ==> bool * map AS`Name to set of REP`TypeRep
   Tuple spi (SamePatternIds (parms));
   const Map & pid_m (spi.GetMap (2)); // map AS`Name to set of REP`TypeRep
@@ -618,23 +615,28 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
                            const SEQ<TYPE_CPP_ArgDecl> & p_arg_l,
                            const SEQ<TYPE_CPP_DeclSpecifier> & p_ds)
 {
+  const TYPE_AS_Name & nm     (p_fndef.GetRecord(pos_AS_ExplFnDef_nm));
+  const TYPE_AS_FnType & tp   (p_fndef.GetRecord(pos_AS_ExplFnDef_tp));
+  const TYPE_AS_FnBody & body (p_fndef.GetRecord(pos_AS_ExplFnDef_body));
+  const Bool & stat           (p_fndef.GetBool(pos_AS_ExplFnDef_stat));
+      
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     if (p_isImplicit) {
-      TYPE_CPP_Identifier tid (vdm_BC_Rename(p_fndef.get_nm()));
-      TYPE_AS_Id fnName (tid.get_id());
-      if(IsNotyetspecified(p_fndef.get_body(), false, p_fndef.GetBoolValue(pos_AS_ExplFnDef_stat))) {
+      TYPE_CPP_Identifier tid (vdm_BC_Rename(nm));
+      const TYPE_AS_Id & id (tid.GetSequence(pos_CPP_Identifier_id));
+      if(IsNotyetspecified(body, false, stat)) {
         SEQ<TYPE_CPP_Expr> exprlist (FindVariables(p_arg_l));
         TYPE_CPP_Expr l_resVar (vdm_BC_GiveName(ASTAUX::MkId(L"childResult")));
         TYPE_CPP_Identifier childid (vdm_BC_GenIdentifier(ASTAUX::MkId(L"child")));
-        TYPE_CPP_Expr fctCall (vdm_BC_GenFctCallObjMemAcc(childid, ASTAUX::MkId(L"impl_").ImpConc(fnName), exprlist ));
+        TYPE_CPP_Expr fctCall (vdm_BC_GenFctCallObjMemAcc(childid, ASTAUX::MkId(L"impl_").ImpConc(id), exprlist ));
         SEQ<TYPE_CPP_Stmt> l_stmt;
         l_stmt.ImpAppend(vdm_BC_GenDecl(p_ds.Hd(), l_resVar, vdm_BC_GenAsgnInit(fctCall)));
         return mk_(l_resVar, l_stmt);
       }
       else {
         SEQ<TYPE_CPP_Stmt> l_stmt;
-        l_stmt.ImpAppend((RunTime(L"Implicit Function " + ASTAUX::Id2String(fnName) + L" has been called")));
+        l_stmt.ImpAppend((RunTime(L"Implicit Function " + ASTAUX::Id2String(id) + L" has been called")));
         return mk_(Nil(), l_stmt);
       }
     }
@@ -642,20 +644,33 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
       return mk_(Nil(), SEQ<TYPE_CPP_Stmt>());
     }
     else {
-      return CGExprExcl(p_fndef.get_body().get_body(), ASTAUX::MkId(L"varRes"),
-                   FromAS2RepType(p_fndef.GetRecord(pos_AS_ExplFnDef_tp).GetRecord(2)));
+      return CGExprExcl(body.get_body(), ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
     }
   }
   else
 #endif // VDMPP
   { // C++
-    if (IsNotyetspecified(p_fndef.get_body(), p_isDlClass, p_fndef.GetBoolValue(pos_AS_ExplFnDef_stat))
-           && p_isDlClass) {
-      return GenerateDlCall(p_fndef.get_nm(), p_arg_l, false, false);
+    if (IsNotyetspecified(body, p_isDlClass, stat) && p_isDlClass) {
+      return GenerateDlCall(nm, p_arg_l, false, false);
     }
     else {
-      return CGExprExcl(p_fndef.get_body().get_body(), ASTAUX::MkId(L"varRes"),
-                   FromAS2RepType(p_fndef.GetRecord(pos_AS_ExplFnDef_tp).GetRecord(2)));
+      //return CGExprExcl(body.get_body(), ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
+      const TYPE_AS_Expr & expr (body.GetRecord(pos_AS_FnBody_body));
+      Tuple cgee (CGExprExcl(body.get_body(), ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
+      const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
+      if (!stmts.IsEmpty()) {
+        bool forall = stmts[stmts.Length()].Is(TAG_TYPE_CPP_CompoundStmt);
+        size_t len_stmts = stmts.Length();
+        for (size_t i = 1; (i < len_stmts) && forall; i++) {
+          forall = stmts[i].Is(TAG_TYPE_CPP_DeclarationStmt);
+        }
+        if (forall) { 
+          SEQ<TYPE_CPP_Stmt> res (stmts.SubSequence(1,len_stmts -1));
+          return mk_(cgee.GetField(1),
+                     stmts.SubSequence(1,len_stmts -1).Conc(stmts[len_stmts].GetSequence(pos_CPP_CompoundStmt_stms)));
+        }
+      }
+      return cgee;
     }
   }
 }

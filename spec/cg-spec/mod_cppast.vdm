@@ -642,13 +642,15 @@ A C++ Class Declaration has no modifiers.
     annospec : AnnotationSpec
     CNTXT
 #ifdef VDMSL
- inv ch == (ch.m = []) and (ch.ispec = nil)
+ --inv ch == (ch.m = []) and (ch.ispec = nil)
+ inv ch == (ch.m = []) and (ch.ispec = [])
 #endif VDMSL
 #ifdef VDMPP
  inv ch == isJAVA() => (ch.ck = <CLASS> and
                         is_Identifier(ch.name) and
                         card(elems ch.bs)=1)
-           and isCPP() => ((ch.m = []) and (ch.ispec = nil))
+           --and isCPP() => ((ch.m = []) and (ch.ispec = nil))
+           and isCPP() => ((ch.m = []) and (ch.ispec = []))
 #endif VDMPP
 ;
 

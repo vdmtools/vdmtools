@@ -717,12 +717,12 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
                             const TYPE_CGMAIN_VT & resVar_v,
                             const TYPE_CPP_Name & succ_v)
 {
-  PushEnv();
-  PushEnv_CGAUX();
-
   const SEQ<TYPE_AS_Pattern> & p_l (rc1.GetSequence(pos_AS_CaseAltn_match));
   const TYPE_AS_Expr & e (rc1.GetRecord(pos_AS_CaseAltn_body));
   const TYPE_CI_ContextId & cid (rc1.GetInt(pos_AS_CaseAltn_cid));
+
+  PushEnv();
+  PushEnv_CGAUX();
 
   // ==> bool * map AS`Name to set of REP`TypeRep
   Tuple spi (SamePatternIds (p_l));
@@ -802,7 +802,12 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
   PopEnv();
   PopEnv_CGAUX();
 
-  return vdm_BC_GenBlock (rb);
+  if ( 1 == rb.Length() ) {
+    return rb[1];
+  }
+  else {
+    return vdm_BC_GenBlock (rb);
+  }
 }
 
 // SamePatternIds modified for Java and C++ (jojo, 11.12.98)
@@ -812,14 +817,12 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
 // ==> bool * map (AS`Name | AS`OldName) to set of REP`TypeRep
 Tuple vdmcg::SamePatternIds (const SEQ<TYPE_AS_Pattern> & p_l)
 {
-  if (!p_l.IsEmpty ())
-  {
+  if (!p_l.IsEmpty ()) {
     Map pid_m (FindPatternId (p_l.Hd ())); // map AS`Name to set of REP`TypeRep
     bool same_pid = true;
 
     size_t len_p_l = p_l.Length();
-    for (size_t idx = 2; idx <= len_p_l; idx++)
-    {
+    for (size_t idx = 2; idx <= len_p_l; idx++) {
       Map tmp_m (FindPatternId (p_l[idx])); // map AS`Name to set of REP`TypeRep
       same_pid = same_pid && tmp_m.Dom().SubSet(pid_m.Dom());
       if ( same_pid ) {
@@ -831,8 +834,9 @@ Tuple vdmcg::SamePatternIds (const SEQ<TYPE_AS_Pattern> & p_l)
     }
     return mk_(Bool (same_pid), pid_m);
   }
-  else
+  else {
     return mk_(Bool (false), Map ());
+  }
 }
 
 // FindPatternId
@@ -843,14 +847,15 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
   switch (pat.GetTag ()) {
     case TAG_TYPE_AS_PatternName: {
       Map res;
-      if (!pat.GetField(pos_AS_PatternName_nm).IsNil ())
-      {
+      if (!pat.GetField(pos_AS_PatternName_nm).IsNil ()) {
         SET<TYPE_REP_TypeRep> st;
         Generic tp (FindType(pat));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           st.Insert (TYPE_REP_AllTypeRep());
-        else
+        }
+        else {
           st.Insert (tp);
+        }
         res.Insert (pat.GetRecord(pos_AS_PatternName_nm), st);
       }
       return res; 
@@ -862,8 +867,9 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & pat_l (pat.GetSequence (pos_AS_SetEnumPattern_Elems));
       Map pid_m; // map AS`Name to set of REP`TypeRep
       size_t len_pat_l = pat_l.Length();
-      for (size_t idx = 1; idx <= len_pat_l; idx++)
+      for (size_t idx = 1; idx <= len_pat_l; idx++) {
         pid_m = MergePidM(FindPatternId (pat_l[idx]), pid_m);
+      }
       return pid_m; 
       break;
     }
@@ -871,8 +877,9 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & pat_l (pat.GetSequence (pos_AS_SeqEnumPattern_els));
       Map pid_m; // map AS`Name to set of REP`TypeRep
       size_t len_pat_l = pat_l.Length();
-      for (size_t idx = 1; idx <= len_pat_l; idx++)
+      for (size_t idx = 1; idx <= len_pat_l; idx++) {
         pid_m = MergePidM(FindPatternId (pat_l[idx]), pid_m);
+      }
       return pid_m; 
       break;
     }
@@ -893,8 +900,9 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & pat_l (pat.GetSequence (pos_AS_TuplePattern_fields));
       Map pid_m; // map AS`Name to set of REP`TypeRep
       size_t len_pat_l = pat_l.Length();
-      for (size_t idx = 1; idx <= len_pat_l; idx++)
+      for (size_t idx = 1; idx <= len_pat_l; idx++) {
         pid_m = MergePidM(FindPatternId (pat_l[idx]), pid_m);
+      }
       return pid_m; 
       break;
     }
@@ -902,8 +910,9 @@ Map vdmcg::FindPatternId (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & pat_l (pat.GetSequence(pos_AS_RecordPattern_fields));
       Map pid_m; // map AS`Name to set of REP`TypeRep
       size_t len_pat_l = pat_l.Length();
-      for (size_t idx = 1; idx <= len_pat_l; idx++)
+      for (size_t idx = 1; idx <= len_pat_l; idx++) {
         pid_m = MergePidM(FindPatternId (pat_l[idx]), pid_m);
+      }
       return pid_m; 
       break;
     }
@@ -953,13 +962,14 @@ Map vdmcg::MergePidM(const Map & pid_m1, const Map & pid_m2)
   Map pid_m;
   Set dom_pid_m (pid_m1.Dom().ImpUnion(pid_m2.Dom()));
   Generic id;
-  for (bool bb = dom_pid_m.First(id); bb; bb = dom_pid_m.Next(id))
-  {
+  for (bool bb = dom_pid_m.First(id); bb; bb = dom_pid_m.Next(id)) {
     SET<TYPE_REP_TypeRep> rng;
-    if (pid_m1.DomExists(id))
+    if (pid_m1.DomExists(id)) {
       rng.ImpUnion(pid_m1[id]);
-    if (pid_m2.DomExists(id))
+    }
+    if (pid_m2.DomExists(id)) {
       rng.ImpUnion(pid_m2[id]);
+    }
     pid_m.ImpModify(id, rng);
   }
   return pid_m;
@@ -974,13 +984,13 @@ SEQ<TYPE_CPP_Stmt> vdmcg::DeclarePatterns (const Map & pid_m)
 
   SET<TYPE_AS_Name> dom_pid_m (pid_m.Dom());
   Generic tmp;
-  for (bool bb = dom_pid_m.First(tmp); bb; bb = dom_pid_m.Next(tmp))
-  {
+  for (bool bb = dom_pid_m.First(tmp); bb; bb = dom_pid_m.Next(tmp)) {
     const SET<TYPE_REP_TypeRep> & tp_s (pid_m[tmp]);
 
     TYPE_REP_TypeRep type;
-    if (tp_s.Card() == 1)
+    if (tp_s.Card() == 1) {
       type = tp_s.GetElem();
+    }
     else {
       type = TYPE_REP_UnionTypeRep().Init(tp_s);
     }
@@ -988,8 +998,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::DeclarePatterns (const Map & pid_m)
     InsertName_CGAUX(tmp);
     rb.ImpConc (GenDecl_DS (type, vdm_BC_Rename(tmp), nil));
 
-    if (PossibleFnType(type))
+    if (PossibleFnType(type)) {
       InsertLocFct(tmp);
+    }
   }
   return rb;
 }
@@ -1007,8 +1018,7 @@ Generic vdmcg::CGSetEnumerationExpr (const TYPE_AS_SetEnumerationExpr & rc1, con
   if (expr.IsEmpty()) {
     return GenEmptySetExpr();
   }
-  else
-  {
+  else {
     bool casting = !( rType.Is(TAG_TYPE_REP_SetTypeRep) );
 
     TYPE_CPP_Expr resVar_vq (casting ? GenCastSetTypeForModify(resVar_v) : resVar_v);
@@ -1038,8 +1048,9 @@ Generic vdmcg::CGSetEnumerationExpr (const TYPE_AS_SetEnumerationExpr & rc1, con
       rb.ImpConc(e_stmt);
       rb.ImpAppend(GenSetInsert(resVar_vq, e_v));
 
-      if (!e_stmt.IsEmpty() || e.Is(TAG_TYPE_AS_ApplyExpr))
+      if (!e_stmt.IsEmpty() || e.Is(TAG_TYPE_AS_ApplyExpr)) {
         allsimple = false;
+      }
       args.ImpAppend(e_v);
     }
 
@@ -1083,8 +1094,9 @@ Generic vdmcg::CGSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr & rc1, con
 
     bool isstringexpr = true;
     size_t len_expr = expr.Length();
-    for (size_t i = 1; (i <= len_expr) && isstringexpr; i++)
+    for (size_t i = 1; (i <= len_expr) && isstringexpr; i++) {
       isstringexpr = expr[i].Is(TAG_TYPE_AS_CharLit);
+    }
 
     TYPE_CPP_Expr seqCall ((iswstring || (possiblestringtype && isstringexpr))
       ? GenEmptyStringExpr() : GenEmptySeqExpr());

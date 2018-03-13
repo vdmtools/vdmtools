@@ -587,37 +587,50 @@ GenMethodDecl(p_nm, p_arg_l) ==
     in BC`GenFctDecl (BC`GenQualifiedName(cid, fnm), p_arg_l);
 #endif VDMPP
 
+\end{vdm_al}
+
+\begin{vdm_al}
+
 GenExplFnBody : AS`ExplFnDef * bool * bool * bool * seq of CPP`ArgDecl * CPP`DeclSpecifiers
                 ==> [CPP`Expr] * seq of CPP`Stmt
 #ifdef VDMSL
-GenExplFnBody(p_fndef, p_isDlClass, -, -, p_arg_l, -) ==
+GenExplFnBody(mk_AS`ExplFnDef(nm,-,tp,-,body,-,-,-,stat,-,-), p_isDlClass, -, -, p_arg_l, -) ==
 #endif VDMSL
 #ifdef VDMPP
-GenExplFnBody(p_fndef, p_isDlClass, p_isImplicit, p_isAbstract, p_arg_l, p_ds) ==
+GenExplFnBody(mk_AS`ExplFnDef(nm,-,tp,-,body,-,-,-,stat,-,-), p_isDlClass, p_isImplicit, p_isAbstract, p_arg_l, p_ds) ==
   if CPP`isJAVA()
   then
     if p_isImplicit
     then
-      if IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat)
-      then
-        def exprlist = FindVariables(p_arg_l);
-            resVar = BC`GiveName("childResult")
-        in
-          return mk_(resVar,
-              [BC`GenDecl(hd p_ds, resVar,
-                     BC`GenAsgnInit( BC`GenFctCallObjMemAcc( BC`GenIdentifier("child"),
-                                                             "impl_"^BC`Rename(p_fndef.nm).id,
-                                                             exprlist)))])
-      else
-        return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ BC`Rename(p_fndef.nm).id ^ " has been called")])
+      def id = BC`Rename(nm).id
+      in
+        if IsNotyetspecified(body, p_isDlClass, stat)
+        then
+          def exprlist = FindVariables(p_arg_l);
+              resVar = BC`GiveName("childResult");
+          in
+            return mk_(resVar,
+                [BC`GenDecl(hd p_ds, resVar,
+                       BC`GenAsgnInit( BC`GenFctCallObjMemAcc( BC`GenIdentifier("child"),
+                                                             "impl_" ^ id, exprlist)))])
+        else
+          return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ id ^ " has been called")])
     elseif p_isAbstract
     then return mk_(nil,[])
-    else CGEXPR`CGExprExcl(p_fndef.body.body, "varRes", CGAUX`FromAS2RepType(p_fndef.tp.fnrng))
+    else CGEXPR`CGExprExcl(body.body, "varRes", CGAUX`FromAS2RepType(tp.fnrng))
   else
 #endif VDMPP
-    if IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat) and p_isDlClass
-    then GenerateDlCall(p_fndef.nm, p_arg_l,false, false)
-    else CGEXPR`CGExprExcl(p_fndef.body.body, "varRes", CGAUX`FromAS2RepType(p_fndef.tp.fnrng));
+    if IsNotyetspecified(body, p_isDlClass, stat) and p_isDlClass
+    then GenerateDlCall(nm, p_arg_l,false, false)
+    --else CGEXPR`CGExprExcl(body.body, "varRes", CGAUX`FromAS2RepType(tp.fnrng));
+    else
+      def mk_AS`FnBody(expr,-) = body;
+          mk_(e,stmts) = CGEXPR`CGExprExcl(expr, "varRes", CGAUX`FromAS2RepType(tp.fnrng));
+      in
+        if stmts <> [] and is_CPP`CompoundStmt(stmts(len stmts))
+           and forall i in set {1,...,len stmts -1} & is_CPP`DeclarationStmt(stmts(i))
+        then return mk_(e, stmts(1,...,len stmts -1) ^ stmts(len stmts).stms)
+        else return mk_(e, stmts);
 
 \end{vdm_al}
 

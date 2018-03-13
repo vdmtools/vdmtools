@@ -705,7 +705,10 @@ CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
      );
   CGAUX`PopEnv();
   FD`PopEnv();
-  return BC`GenBlock(rb)
+  cases rb:
+    [stmt] -> return stmt,
+    others -> return BC`GenBlock(rb)
+  end;
  );
 \end{vdm_al}
 
@@ -2840,7 +2843,7 @@ CGApplyExpr(ae, resVar_v, expr1, type1, sd) ==
   let mk_AS`ApplyExpr(expr, -, -) = ae
   in
     if is_AS`BracketedExpr(expr)
-    then CGApplyExpr(mu(ae, fct |-> expr), resVar_v, expr1, type1, sd)
+    then CGApplyExpr(mu(ae, fct |-> expr.expr), resVar_v, expr1, type1, sd)
     else
      (dcl ti : [REP`TypeRep] := type1;
       if expr1 = nil
