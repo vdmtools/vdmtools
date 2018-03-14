@@ -2224,7 +2224,11 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
           in rb := rb ^ [ BC`GenIfStmt( succ_v, stmt, elseStmt) ]
          );
       DS`DeletePid_m();
-      return BC`GenBlock(rb)
+      --return BC`GenBlock(rb)
+      cases rb:
+        [stmt] -> return stmt,
+        others -> return BC`GenBlock(rb)
+      end;
      )
     else
      (dcl elseStmt1 : [CPP`Stmt] := elseStmt;

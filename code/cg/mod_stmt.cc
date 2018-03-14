@@ -2536,15 +2536,20 @@ TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
       rb.ImpAppend( vdm_BC_GenIfStmt(succ_v, stmt, elseStmt) );
     }
     DeletePid_m();
-    return vdm_BC_GenBlock(rb);
+    //return vdm_BC_GenBlock(rb);
+    if (1 == rb.Length()) {
+      return rb[1];
+    }
+    else {
+      return vdm_BC_GenBlock(rb);
+    }
   }
   else
   {
     Generic elseStmt1 (elseStmt);
 
     size_t len_p_l = p_l.Length();
-    for (size_t i = 0; i <= (len_p_l - 1); i++)
-    {
+    for (size_t i = 0; i <= (len_p_l - 1); i++) {
       if (i > 0) PushEnv_CGAUX();
 
       SEQ<TYPE_AS_Pattern> tmp_l;

@@ -327,20 +327,21 @@ SEQ<TYPE_CPP_Identifier> vdmcg::GenExceptionsHdr()
 // ==> CPP`CPPAS
 TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl, bool isDlClass)
 {
-  const TYPE_AS_Name & id (efd.GetRecord(pos_AS_ExplFnDef_nm));
+  const TYPE_AS_Name & nm                  (efd.GetRecord(pos_AS_ExplFnDef_nm));
+  const TYPE_AS_FnType & tp                (efd.GetRecord(pos_AS_ExplFnDef_tp));
+  const SEQ<TYPE_AS_Parameters> & parms_ll (efd.GetSequence(pos_AS_ExplFnDef_parms));
+  const TYPE_AS_FnBody & body              (efd.GetRecord(pos_AS_ExplFnDef_body));
+  const Generic & prefn                    (efd.GetField(pos_AS_ExplFnDef_fnpre));
+  const Generic & postfn                   (efd.GetField(pos_AS_ExplFnDef_fnpost));
+#ifdef VDMPP
+  const TYPE_AS_Access & acc               (efd.GetField(pos_AS_ExplFnDef_access));
+#endif // VDMPP
+  bool stat                                (efd.GetBoolValue(pos_AS_ExplFnDef_stat));
+  const TYPE_CI_ContextId & fctcid         (efd.GetInt(pos_AS_ExplFnDef_cid));
 
   if (get_verbose_mode()) {
-    wcout << L"function: " << ASTAUX::ASName2String(id) << L" start" << endl;
+    wcout << L"function: " << ASTAUX::ASName2String(nm) << L" start" << endl;
   }
-
-  const TYPE_AS_FnType & tp (efd.GetRecord(pos_AS_ExplFnDef_tp));
-  const SEQ<TYPE_AS_Parameters> & parms_ll (efd.GetSequence(pos_AS_ExplFnDef_parms));
-  const TYPE_AS_FnBody & body (efd.GetRecord(pos_AS_ExplFnDef_body));
-  const Generic & prefn (efd.GetField(pos_AS_ExplFnDef_fnpre));
-  const Generic & postfn (efd.GetField(pos_AS_ExplFnDef_fnpost));
-  const TYPE_AS_Access & acc (efd.GetField(pos_AS_ExplFnDef_access));
-  bool stat (efd.GetBool(pos_AS_ExplFnDef_stat).GetValue());
-  const TYPE_CI_ContextId & fctcid (efd.GetInt(pos_AS_ExplFnDef_cid));
 
   bool isimplicit (isimpl);
   bool isabstract (false);
@@ -397,8 +398,8 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   TYPE_REP_TypeRep rngtype (FromAS2RepType (tp.GetField (2)));
 
 //  TYPE_CPP_Identifier tid (vdm_BC_Rename(efd.get_nm()));
-  TYPE_CPP_Identifier tid (vdm_BC_Rename(id));
-  TYPE_AS_Id fnName (tid.get_id());
+  TYPE_CPP_Identifier tid (vdm_BC_Rename(nm));
+  const TYPE_AS_Id & fnName (tid.get_id());
 
   PushFctLoc( pid_m.Dom() );
   InsPosFct( pid_m );
@@ -420,15 +421,17 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
 #ifdef VDMPP
   if (vdm_CPP_isJAVA() ) {
     if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
-      TYPE_CPP_FctDecl exdecl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"impl_").ImpConc(GiveLastName(id))), arg_l));
+      TYPE_CPP_FctDecl exdecl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"impl_").ImpConc(GiveLastName(nm))), arg_l));
       SEQ<TYPE_CPP_Stmt> return_stmt;
       return_stmt.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(RemoveNil(rngtype))));
   
       SEQ<TYPE_CPP_Stmt> implfb;
-      if (IsNotyetspecified(body, isDlClass, stat))
+      if (IsNotyetspecified(body, isDlClass, stat)) {
         implfb.ImpAppend((RunTime(L"Preliminary Function " + ASTAUX::Id2String(fnName) + L" has been called")));
-      else
+      }
+      else {
         implfb.ImpAppend((RunTime(L"Implicit Function " + ASTAUX::Id2String(fnName) + L" has been called")));
+      }
       implfb.ImpConc(return_stmt);
 
       SEQ<TYPE_CPP_Identifier> excs (GenExceptionsHdr());
@@ -444,18 +447,18 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
     if (!parms.IsEmpty () && !inlineDecl
         && !(isimplicit || isabstract || get_skeleton_option())) {
       if (!prefn.IsNil() && get_testpreandpost_option()) {
-        fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+        fb.ImpAppend(GenMethPreCall(nm, FindVariables(arg_l), stat));
       }
       fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
       fb.ImpConc( b_stmt );
       if (!postfn.IsNil() && get_testpreandpost_option()) {
-        fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+        fb.ImpAppend(GenFnPostCall(nm, resVar_v, FindVariables(arg_l),stat));
       }
       fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
     }
     else {
       if (!prefn.IsNil() && get_testpreandpost_option()) {
-        fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+        fb.ImpAppend(GenMethPreCall(nm, FindVariables(arg_l), stat));
       }
 
       if (!isabstract && !get_skeleton_option()) {
@@ -472,7 +475,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
       }
 
       if (!postfn.IsNil() && get_testpreandpost_option()) {
-        fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+        fb.ImpAppend(GenFnPostCall(nm, resVar_v, FindVariables(arg_l),stat));
       }
 
       if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
@@ -493,14 +496,14 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
 #endif // VDMPP
   { // C++
     if (!prefn.IsNil() && get_testpreandpost_option()) {
-      fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+      fb.ImpAppend(GenMethPreCall(nm, FindVariables(arg_l), stat));
     }
     if (!parms.IsEmpty () && !inlineDecl) {
       fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
     }
     fb.ImpConc(b_stmt);
     if (!postfn.IsNil() && get_testpreandpost_option()) {
-      fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+      fb.ImpAppend(GenFnPostCall(nm, resVar_v, FindVariables(arg_l),stat));
     }
     fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
   }
@@ -511,7 +514,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
       fb.ImpAppend(GenPopFile());
   }
 
-  TYPE_CPP_FctDecl decl (GenMethodDecl(id, arg_l));
+  TYPE_CPP_FctDecl decl (GenMethodDecl(nm, arg_l));
 
   TYPE_CPP_CPPAS cpp;
 #ifdef VDMPP
@@ -541,7 +544,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   { // C++
     TYPE_CPP_CPPAS fdSeq;
     fdSeq.ImpAppend(vdm_BC_GenFctDef(ds, decl, nil, vdm_BC_GenBlock(fb)));
-    cpp.ImpConc (GenFctOpDefIfDef(id, fdSeq));
+    cpp.ImpConc (GenFctOpDefIfDef(nm, fdSeq));
   }
 
   PopEnv();
@@ -572,7 +575,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   ResetIsStatic();
 
   if (get_verbose_mode()) {
-    wcout << L"function: " << ASTAUX::ASName2String(id) << L" end" << endl;
+    wcout << L"function: " << ASTAUX::ASName2String(nm) << L" end" << endl;
   }
 
   return cpp;
@@ -615,17 +618,19 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
                            const SEQ<TYPE_CPP_ArgDecl> & p_arg_l,
                            const SEQ<TYPE_CPP_DeclSpecifier> & p_ds)
 {
-  const TYPE_AS_Name & nm     (p_fndef.GetRecord(pos_AS_ExplFnDef_nm));
-  const TYPE_AS_FnType & tp   (p_fndef.GetRecord(pos_AS_ExplFnDef_tp));
-  const TYPE_AS_FnBody & body (p_fndef.GetRecord(pos_AS_ExplFnDef_body));
-  const Bool & stat           (p_fndef.GetBool(pos_AS_ExplFnDef_stat));
-      
+  const TYPE_AS_Name & nm       (p_fndef.GetRecord(pos_AS_ExplFnDef_nm));
+  const TYPE_AS_FnType & tp     (p_fndef.GetRecord(pos_AS_ExplFnDef_tp));
+  const TYPE_AS_FnBody & fnbody (p_fndef.GetRecord(pos_AS_ExplFnDef_body));
+  const bool stat               (p_fndef.GetBoolValue(pos_AS_ExplFnDef_stat));
+ 
+  const Generic & body          (fnbody.GetRecord(pos_AS_FnBody_body));
+
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     if (p_isImplicit) {
       TYPE_CPP_Identifier tid (vdm_BC_Rename(nm));
       const TYPE_AS_Id & id (tid.GetSequence(pos_CPP_Identifier_id));
-      if(IsNotyetspecified(body, false, stat)) {
+      if(IsNotyetspecified(fnbody, false, stat)) {
         SEQ<TYPE_CPP_Expr> exprlist (FindVariables(p_arg_l));
         TYPE_CPP_Expr l_resVar (vdm_BC_GiveName(ASTAUX::MkId(L"childResult")));
         TYPE_CPP_Identifier childid (vdm_BC_GenIdentifier(ASTAUX::MkId(L"child")));
@@ -644,19 +649,18 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
       return mk_(Nil(), SEQ<TYPE_CPP_Stmt>());
     }
     else {
-      return CGExprExcl(body.get_body(), ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
+      return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
     }
   }
   else
 #endif // VDMPP
   { // C++
-    if (IsNotyetspecified(body, p_isDlClass, stat) && p_isDlClass) {
+    if (IsNotyetspecified(fnbody, p_isDlClass, stat) && p_isDlClass) {
       return GenerateDlCall(nm, p_arg_l, false, false);
     }
     else {
-      //return CGExprExcl(body.get_body(), ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
-      const TYPE_AS_Expr & expr (body.GetRecord(pos_AS_FnBody_body));
-      Tuple cgee (CGExprExcl(body.get_body(), ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
+      //return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
+      Tuple cgee (CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
       const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
       if (!stmts.IsEmpty()) {
         bool forall = stmts[stmts.Length()].Is(TAG_TYPE_CPP_CompoundStmt);
@@ -917,23 +921,22 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
                                    bool isimpl,
                                    bool isDlClass)
 {
-  const TYPE_AS_Name & nm (opdef.GetRecord(pos_AS_ExplOpDef_nm));
+  const TYPE_AS_Name & nm             (opdef.GetRecord(pos_AS_ExplOpDef_nm));
+  const TYPE_AS_OpType & tp           (opdef.GetRecord(pos_AS_ExplOpDef_tp));
+  const SEQ<TYPE_AS_Pattern> & parm_l (opdef.GetSequence(pos_AS_ExplOpDef_parms));
+  const TYPE_AS_OpBody & body         (opdef.GetRecord(pos_AS_ExplOpDef_body));
+#ifdef VDMPP
+  const Generic & oppre               (opdef.GetField(pos_AS_ExplOpDef_oppre));
+//  const Generic & oppost (opdef.GetField(pos_AS_ExplOpDef_oppost));
+#endif // VDMPP
+  const TYPE_AS_Access & acc          (opdef.GetField(pos_AS_ExplOpDef_access));
+  bool stat                           (opdef.GetBoolValue(pos_AS_ExplOpDef_stat));
+  bool constr                         (opdef.GetBoolValue(pos_AS_ExplOpDef_constr));
+  const TYPE_CI_ContextId & opcid     (opdef.GetInt(pos_AS_ExplOpDef_cid));
 
   if (get_verbose_mode()) {
     wcout << L"operation: " << ASTAUX::ASName2String(nm) << L" start" << endl;
   }
-
-  const TYPE_AS_OpType & tp (opdef.GetRecord(pos_AS_ExplOpDef_tp));
-  const SEQ<TYPE_AS_Pattern> & parm_l (opdef.GetSequence(pos_AS_ExplOpDef_parms));
-  const TYPE_AS_OpBody & body (opdef.GetRecord(pos_AS_ExplOpDef_body));
-#ifdef VDMPP
-  const Generic & oppre (opdef.GetField(pos_AS_ExplOpDef_oppre));
-//  const Generic & oppost (opdef.GetField(pos_AS_ExplOpDef_oppost));
-#endif // VDMPP
-  const TYPE_AS_Access & acc (opdef.GetField(pos_AS_ExplOpDef_access));
-  bool stat (opdef.GetBoolValue(pos_AS_ExplOpDef_stat));
-  bool constr (opdef.GetBoolValue(pos_AS_ExplOpDef_constr));
-  const TYPE_CI_ContextId & opcid (opdef.GetInt(pos_AS_ExplOpDef_cid));
 
 #ifdef VDMPP
   bool isimplicit (isimpl);
@@ -1418,84 +1421,76 @@ Tuple vdmcg::GenInlineBody(const TYPE_AS_ExplOpDef & opdef,
                            bool isimplicit,
                            bool isabstract)
 {
-  SEQ<TYPE_CPP_Stmt> return_stmt;
-  bool has_return_type = false;
-  TYPE_AS_Type oprng (opdef.get_tp().get_oprng());
-  if (!oprng.Is(TAG_TYPE_AS_VoidType)) {
-    has_return_type = true;
-    return_stmt.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(rngtype)));
-  }
+  const TYPE_AS_Name & nm       (opdef.GetRecord(pos_AS_ExplOpDef_nm));
+  const TYPE_AS_OpType & tp     (opdef.GetRecord(pos_AS_ExplOpDef_tp));
+  const TYPE_AS_OpBody & opbody (opdef.GetRecord(pos_AS_ExplOpDef_body));
+  const bool stat               (opdef.GetBoolValue(pos_AS_ExplOpDef_stat));
+  const bool constr             (opdef.GetBoolValue(pos_AS_ExplOpDef_constr));
 
-  const TYPE_AS_OpBody & body (opdef.GetRecord(pos_AS_ExplOpDef_body));
-  bool stat = opdef.GetBoolValue(pos_AS_ExplOpDef_stat);
-
-  wstring prelimOrImpl;
-  if (IsNotyetspecified(body, isDlClass, stat)) {
-    prelimOrImpl = L"Preliminary Operation ";
-  }
-  else {
-    prelimOrImpl = L"Implicit Operation ";
-  }
-
-  TYPE_CPP_Stmt fc (RunTime(prelimOrImpl + PTAUX::Seq2Str(TYPE_CPP_Identifier(vdm_BC_Rename(opdef.get_nm())).get_id())
-                                         + L" has been called"));
+  const TYPE_AS_Type & oprng    (tp.GetRecord(pos_AS_OpType_oprng));
+  const Generic & body          (opbody.GetField(pos_AS_OpBody_body));
+   
+  TYPE_CPP_Identifier tid (vdm_BC_Rename(nm));
+  const TYPE_AS_Id & id (tid.GetSequence(pos_CPP_Identifier_id));
 
   SEQ<TYPE_CPP_Stmt> implfb;
-  implfb.ImpAppend(fc);
-  implfb.ImpConc(return_stmt);
+  if (IsNotyetspecified(opbody, isDlClass, stat)) {
+    implfb.ImpAppend(RunTime(L"Preliminary Operation " + ASTAUX::Id2String(id) + L" has been called"));
+  }
+  else {
+    implfb.ImpAppend(RunTime(L"Implicit Operation " + ASTAUX::Id2String(id) + L" has been called"));
+  }
+  if (!oprng.Is(TAG_TYPE_AS_VoidType)) {
+    implfb.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(rngtype)));
+  }
 
   SEQ<TYPE_CPP_Stmt> fb;
-
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     if (isimplicit) {
       SEQ<TYPE_CPP_Expr> exprlist (FindVariables(arg_l));
+
       TYPE_CPP_Identifier obj (vdm_BC_GenIdentifier(ASTAUX::MkId(L"child")));
-      TYPE_CPP_ExpressionStmt fctcall (vdm_BC_GenFctCallObjMemAccStmt(
-                                         obj,
-                                         ASTAUX::MkId(L"impl_").ImpConc(vdm_BC_Rename(opdef.get_nm()).GetField(1)),
-                                         exprlist));
-      // Note that the spec is ludicrous here!
-      if (has_return_type) {
-        fb.ImpAppend(vdm_BC_GenReturnStmt(fctcall.get_expr()));
+      TYPE_CPP_Expr opcall (vdm_BC_GenFctCallObjMemAcc(obj, ASTAUX::MkId(L"impl_").ImpConc(id), exprlist));
+      if (oprng.Is(TAG_TYPE_AS_VoidType)) {
+        fb.ImpAppend(vdm_BC_GenExpressionStmt(opcall));
       }
       else {
-        fb.ImpAppend(fctcall);
+        fb.ImpAppend(vdm_BC_GenReturnStmt(opcall));
       }
     }
     else { // !isimplicit
-      if (opdef.GetBoolValue(pos_AS_ExplOpDef_constr)) {
+      if (constr) {
         // for constructor of C++ and java
         SetConstr();
-        fb.ImpConc(GenStmt(body.get_body(), true));
+        fb.ImpConc(GenStmt(body, true));
         UnsetConstr();
       }
       else if (!isabstract && !get_skeleton_option()) {
-        fb.ImpConc(GenStmt(body.get_body (), true));
-        IsSafeReturn(body, rngtype);
+        fb.ImpConc(GenStmt(body, true));
+        IsSafeReturn(opbody, rngtype);
       }
     }
   }
   else 
 #endif //VDMPP
   { // C++
-    if (isDlClass && IsNotyetspecified(body, isDlClass, stat)) {
+    if (isDlClass && IsNotyetspecified(opbody, isDlClass, stat)) {
       // for dlclass of C++
-      fb.ImpConc(Sequence(GenerateDlCall(opdef.get_nm(), arg_l,
-                        true, opdef.get_tp().get_oprng().Is(TAG_TYPE_AS_VoidType))));
+      fb.ImpConc(Sequence(GenerateDlCall(nm, arg_l, true, oprng.Is(TAG_TYPE_AS_VoidType))));
     }
     else {
 #ifdef VDMPP
-      if (opdef.GetBoolValue(pos_AS_ExplOpDef_constr)) {
+      if (constr) {
         // for constructor of C++ and java
         SetConstr();
-        fb.ImpConc(GenStmt(body.get_body(), true));
+        fb.ImpConc(GenStmt(body, true));
         UnsetConstr();
       }
       else
 #endif //VDMPP
       {
-        fb.ImpConc(GenStmt(body.get_body (), true));
+        fb.ImpConc(GenStmt(body, true));
       }
     }
   }
@@ -2755,19 +2750,14 @@ Tuple vdmcg::IsMemInitFirst(const TYPE_AS_Name & nm, const SEQ<TYPE_CPP_Stmt> & 
 bool vdmcg::IsSafeReturn(const TYPE_AS_OpBody & body, const TYPE_REP_TypeRep & rngtype)
 {
   const TYPE_CI_ContextId & cid (body.GetInt(pos_AS_OpBody_cid));
-  if (cid != NilContextId)
-  {
+  if (cid != NilContextId) {
     Generic ti (GetCI().GetTypeInfo(cid));
-    if (!ti.IsNil())
-    {
-      if (rngtype.Is(TAG_TYPE_REP_UnitTypeRep) && !ti.Is(TAG_TYPE_REP_UnitTypeRep))
-      {
+    if (!ti.IsNil()) {
+      if (rngtype.Is(TAG_TYPE_REP_UnitTypeRep) && !ti.Is(TAG_TYPE_REP_UnitTypeRep)) {
         return false;
       }
-      else if (!rngtype.Is(TAG_TYPE_REP_UnitTypeRep))
-      {
-        if (!rngtype.Is(TAG_TYPE_REP_AllTypeRep) && HasUnitTypeRep(ti))
-        {
+      else if (!rngtype.Is(TAG_TYPE_REP_UnitTypeRep)) {
+        if (!rngtype.Is(TAG_TYPE_REP_AllTypeRep) && HasUnitTypeRep(ti)) {
           return false;
         }
       }

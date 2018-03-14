@@ -548,7 +548,7 @@ functions
 
   GenFctCallObjMemAccStmt: CPP`Expr * seq of char * CPP`Exprs * CI`ContextId -> CPP`Stmt
   GenFctCallObjMemAccStmt( obj, fname, par, cid ) ==
-    GenExpressionStmt(GenFctCall(mk_CPP`ObjectMemberAccess(obj, GenIdentifier(fname, cid), cid), par, cid ), cid );
+    GenExpressionStmt(GenFctCallObjMemAcc( obj, fname, par, cid ), cid);
 
   GenInclStmt: CPP`FileName * CI`ContextId -> CPP`IncludeStmt
   GenInclStmt(id,cid) ==
