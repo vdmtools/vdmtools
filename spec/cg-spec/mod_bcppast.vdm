@@ -494,7 +494,20 @@ by any of the code generators.
     mk_CPP`IfStmt(cond, alt1, alt2,cid);
 
    GenBlock: seq of CPP`Stmt * CI`ContextId -> CPP`Stmt
-   GenBlock(cpp_l,cid) == mk_CPP`CompoundStmt(cpp_l,cid);
+   --GenBlock(cpp_l,cid) == mk_CPP`CompoundStmt(cpp_l,cid);
+   GenBlock(cpp_l,cid) == 
+     cases cpp_l:
+       stmts ^ [mk_CPP`CompoundStmt(-,-)]
+         -> if forall i in set inds stmts & is_CPP`DeclarationStmt(stmts(i))
+            then mk_CPP`CompoundStmt(cpp_l(1,...,len cpp_l - 1) ^ cpp_l(len cpp_l).stms,cid)
+            else mk_CPP`CompoundStmt(cpp_l,cid),
+       stmts ^ [mk_CPP`CompoundStmt(-,-), mk_CPP`Return(-,-)]
+         -> if forall i in set inds stmts & is_CPP`DeclarationStmt(stmts(i))
+            then mk_CPP`CompoundStmt(cpp_l(1,...,len cpp_l - 2) ^
+                     cpp_l(len cpp_l - 1).stms ^ [cpp_l(len cpp_l)],cid)
+            else mk_CPP`CompoundStmt(cpp_l,cid),
+       others -> mk_CPP`CompoundStmt(cpp_l,cid)
+     end;
 
    GenExpressionStmt: [ CPP`Expr ] * CI`ContextId -> CPP`Stmt
    GenExpressionStmt( e,cid ) == mk_CPP`ExpressionStmt( e,cid );

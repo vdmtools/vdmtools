@@ -1250,7 +1250,8 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                                         BC`GenNot(DS`GenSeqIsEmpty(DS`GenCastString(varExpr_v)))))
           else
 #endif VDMPP
-            cond := BC`GenLogAnd(DS`GenIsSeq(varExpr_v), DS`GenSeqIsEmpty(DS`GenCastSeq(varExpr_v, nil)));
+            cond := BC`GenLogAnd(DS`GenIsSeq(varExpr_v),
+                                 BC`GenNot(DS`GenSeqIsEmpty(DS`GenCastSeq(varExpr_v, nil))));
         if inner <> nil
         then
           if nonstop

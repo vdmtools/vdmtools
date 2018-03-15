@@ -114,48 +114,56 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStmt(const TYPE_AS_Stmt & stmt, bool isLast)
       break;
 
 #ifdef VDMPP
-    case TAG_TYPE_AS_StartStmt:
-      if (vdm_CPP_isJAVA() && get_conc_option())
+    case TAG_TYPE_AS_StartStmt: {
+      if (vdm_CPP_isJAVA() && get_conc_option()) {
         cpp = GenStartStmt(stmt, isLast);
+      }
       else {
         cpp.ImpConc(GenNotSupported(L"start statement", stmt, isLast));
       }
       break;
-    case TAG_TYPE_AS_StartListStmt:
-      if (vdm_CPP_isJAVA() && get_conc_option())
+    }
+    case TAG_TYPE_AS_StartListStmt: {
+      if (vdm_CPP_isJAVA() && get_conc_option()) {
         cpp = GenStartlistStmt(stmt, isLast);
+      }
       else {
         cpp.ImpConc(GenNotSupported(L"start list statement", stmt, isLast));
       }
       break;
-    case TAG_TYPE_AS_StopStmt:
+    }
+    case TAG_TYPE_AS_StopStmt: {
       if (vdm_CPP_isJAVA() && get_conc_option())
         cpp = GenStopStmt(stmt, isLast);
       else {
         cpp.ImpConc(GenNotSupported(L"stop statement", stmt, isLast));
       }
       break;
-    case TAG_TYPE_AS_StopListStmt:
-      if (vdm_CPP_isJAVA() && get_conc_option())
+    }
+    case TAG_TYPE_AS_StopListStmt: {
+      if (vdm_CPP_isJAVA() && get_conc_option()) {
         cpp = GenStoplistStmt(stmt, isLast);
+      }
       else {
         cpp.ImpConc(GenNotSupported(L"stop list statement", stmt, isLast));
       }
       break;
+    }
 #endif // VDMPP
 #ifdef VICE
     case TAG_TYPE_AS_DurationStmt: {
       cpp.ImpConc(GenStmt(stmt.GetRecord(pos_AS_DurationStmt_stmt), isLast));
-    };
-    break;
+      break;
+    }
     case TAG_TYPE_AS_CycleStmt: {
       cpp.ImpConc(GenStmt(stmt.GetRecord(pos_AS_CycleStmt_stmt), isLast));
-    };
-    break;
+      break;
+    }
 #endif //VICE
-    default:
+    default: {
       ReportError(L"GenStmt");
       return SEQ<TYPE_CPP_Stmt>(); // To avoid warnings
+    }
   }
 
 //wcout << L"end: " << stmt.GetTag () << endl << flush;
@@ -168,13 +176,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStmt(const TYPE_AS_Stmt & stmt, bool isLast)
     pos_l.ImpConc(GenUpdatePosInfo(stmt));
     pos_l.ImpConc(cpp);
 
-    if (!stmt.Is(TAG_TYPE_AS_ReturnStmt))
+    if (!stmt.Is(TAG_TYPE_AS_ReturnStmt)) {
       pos_l.ImpAppend(GenPopPosInfo());
-
+    }
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenBlock(pos_l));
   }
-  else
+  else {
     return cpp;
+  }
 }
 
 // GenNotSupported
