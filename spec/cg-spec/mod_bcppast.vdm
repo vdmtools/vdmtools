@@ -498,11 +498,13 @@ by any of the code generators.
    GenBlock(cpp_l,cid) == 
      cases cpp_l:
        stmts ^ [mk_CPP`CompoundStmt(-,-)]
-         -> if forall i in set inds stmts & is_CPP`DeclarationStmt(stmts(i))
+         -> if forall i in set inds stmts &
+                  (is_CPP`DeclarationStmt(stmts(i)) or is_CPP`ExpressionStmt(stmts(i)))
             then mk_CPP`CompoundStmt(cpp_l(1,...,len cpp_l - 1) ^ cpp_l(len cpp_l).stms,cid)
             else mk_CPP`CompoundStmt(cpp_l,cid),
        stmts ^ [mk_CPP`CompoundStmt(-,-), mk_CPP`Return(-,-)]
-         -> if forall i in set inds stmts & is_CPP`DeclarationStmt(stmts(i))
+         -> if forall i in set inds stmts & 
+                  (is_CPP`DeclarationStmt(stmts(i)) or is_CPP`ExpressionStmt(stmts(i)))
             then mk_CPP`CompoundStmt(cpp_l(1,...,len cpp_l - 2) ^
                      cpp_l(len cpp_l - 1).stms ^ [cpp_l(len cpp_l)],cid)
             else mk_CPP`CompoundStmt(cpp_l,cid),
