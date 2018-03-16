@@ -1570,7 +1570,13 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
   const TYPE_CPP_Expr & elemExpr (cgee.GetRecord(1));
   const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
-  SEQ<TYPE_CPP_Stmt> elemStmt (e_stmt);
+  SEQ<TYPE_CPP_Stmt> elemStmt;
+  if ((e_stmt.Length() == 1) && e_stmt[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    elemStmt.ImpConc(e_stmt[1].GetSequence(pos_CPP_CompoundStmt_stms));
+  }
+  else {
+    elemStmt.ImpConc(e_stmt);
+  }
   TYPE_CPP_Expr append;
 #ifdef VDMPP
   const TYPE_REP_TypeRep & rType (vt.GetRecord(pos_CGMAIN_VT_type));
@@ -1589,8 +1595,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
   elemStmt.ImpAppend(append);
 
   SEQ<TYPE_CPP_Stmt> succbody;
-  if (pred.IsNil() || (pred.Is(TAG_TYPE_AS_BoolLit) && ((Record) pred).GetBoolValue(pos_AS_BoolLit_val)))
-  {
+  if (pred.IsNil() || (pred.Is(TAG_TYPE_AS_BoolLit) && ((Record) pred).GetBoolValue(pos_AS_BoolLit_val))) {
     succbody.ImpConc(elemStmt);
   }
   else {
@@ -1708,14 +1713,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSetBind (const TYPE_AS_SeqComprehens
   const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
   TYPE_CPP_Stmt impappend (GenImpAppend(resL_v, elemExpr));
-  SEQ<TYPE_CPP_Stmt> elemStmt (e_stmt);
+  SEQ<TYPE_CPP_Stmt> elemStmt;
+  if ((e_stmt.Length() == 1) && e_stmt[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    elemStmt.ImpConc(e_stmt[1].GetSequence(pos_CPP_CompoundStmt_stms));
+  }
+  else {
+    elemStmt.ImpConc(e_stmt);
+  }
   elemStmt.ImpAppend(impappend);
 
   SEQ<TYPE_CPP_Stmt> decls (DeclPatVars(pid_m));
 
   SEQ<TYPE_CPP_Stmt> succbody;
-  if (pred.IsNil() || (pred.Is(TAG_TYPE_AS_BoolLit) && ((Record) pred).GetBoolValue(pos_AS_BoolLit_val)))
-  {
+  if (pred.IsNil() || (pred.Is(TAG_TYPE_AS_BoolLit) && ((Record) pred).GetBoolValue(pos_AS_BoolLit_val))) {
     succbody.ImpConc(elemStmt);
   }
   else {
@@ -1858,18 +1868,22 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
   const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
   TYPE_CPP_Stmt impappend (GenImpAppend(resL_v, elemExpr));
-  SEQ<TYPE_CPP_Stmt> elemStmt (e_stmt);
+  SEQ<TYPE_CPP_Stmt> elemStmt;
+  if ((e_stmt.Length() == 1) && e_stmt[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    elemStmt.ImpConc(e_stmt[1].GetSequence(pos_CPP_CompoundStmt_stms));
+  }
+  else {
+    elemStmt.ImpConc(e_stmt);
+  }
   elemStmt.ImpAppend(impappend);
 
   SEQ<TYPE_CPP_Stmt> decls (DeclPatVars(pid_m));
 
   SEQ<TYPE_CPP_Stmt> succbody;
-  if (pred.IsNil() || (pred.Is(TAG_TYPE_AS_BoolLit) && ((Record) pred).GetBoolValue(pos_AS_BoolLit_val)))
-  {
+  if (pred.IsNil() || (pred.Is(TAG_TYPE_AS_BoolLit) && ((Record) pred).GetBoolValue(pos_AS_BoolLit_val))) {
     succbody.ImpConc(elemStmt);
   }
-  else
-  {
+  else {
     Tuple cgee (CGExprExcl(pred, ASTAUX::MkId(L"pred"), nil));
     const TYPE_CPP_Expr & pred_v (cgee.GetRecord(1));
     const SEQ<TYPE_CPP_Stmt> & pred_stmt (cgee.GetSequence(2));
@@ -1995,11 +2009,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetRangeExpr(const TYPE_AS_SetRangeExpr & expr, cons
     {
       lbval = GenGetValue(vdm_BC_GenCastExpr(its, lb_vq), irep);
     }
-
     rb_l.ImpAppend(vdm_BC_GenDecl(sint, lbi_v, vdm_BC_GenAsgnInit(lbval)));
   }
-  else
-  {
+  else {
     TYPE_CPP_Expr lb_vq (GenGetValue(lb_v, irep));
     if (lb_vq.Is(TAG_TYPE_CPP_IntegerLit)) {
       lbi_v = lb_vq;
@@ -2010,8 +2022,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetRangeExpr(const TYPE_AS_SetRangeExpr & expr, cons
   }
 
   TYPE_CPP_Expr ubi_v (vdm_BC_GiveName(ASTAUX::MkId(L"ubi")));
-  if (! IsIntType(ubt))
-  {
+  if (! IsIntType(ubt)) {
     TYPE_CPP_Expr ub_vq (vdm_BC_GiveName(ASTAUX::MkId(L"ub")));
     if (ub_v.Is(TAG_TYPE_CPP_Identifier) || IsIntExpr(ub_v)) {
       ub_vq = ub_v;
@@ -4699,15 +4710,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGLetExpr (const TYPE_AS_LetExpr & rc1, const TYPE_CGM
 
   SEQ<TYPE_CPP_Stmt> rb;
   rb.ImpConc(GenLocalValDef(lvd_l));
-  rb.ImpConc(CGExpr( body, resVar_v));
+  SEQ<TYPE_CPP_Stmt> stmts (CGExpr( body, resVar_v));
+  if ((stmts.Length() == 1) && stmts[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    rb.ImpConc(stmts[1].GetSequence(pos_CPP_CompoundStmt_stms));
+  }
+  else {
+    rb.ImpConc(stmts);
+  }
 
   PopEnv();
   PopEnv_CGAUX();
   DeleteLoc();
 
-  SEQ<TYPE_CPP_Stmt> sq;
-  sq.ImpAppend(vdm_BC_GenBlock(rb));;
-  return sq;
+  return mk_sequence(vdm_BC_GenBlock(rb));
 }
 
 // CGLetBeSTExpr
@@ -4903,8 +4918,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGDefExpr(const TYPE_AS_DefExpr & DE, const TYPE_CGMAI
 
   SEQ<TYPE_AS_ValueDef> lvd_l;
   size_t len_def_l = def_l.Length();
-  for (size_t idx = 1; idx <= len_def_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_def_l; idx++) {
     const Tuple & t (def_l[idx]); 
     const TYPE_AS_PatternBind & patb (t.GetRecord(1));
     const TYPE_AS_Expr & expr (t.GetRecord(2));
@@ -4919,8 +4933,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGDefExpr(const TYPE_AS_DefExpr & DE, const TYPE_CGMAI
         break;
       }
       case TAG_TYPE_AS_SetBind: {
-
-//        pat = patb.GetRecord(pos_AS_SetBind_pat);
         const TYPE_AS_Pattern & pat (patb.GetRecord(pos_AS_SetBind_pat));
         const TYPE_AS_Expr & Set (patb.GetRecord(pos_AS_SetBind_Set));
         TYPE_CI_ContextId pcid (GetCI().PushCGType(mk_REP_SetTypeRep(FindType(pat))));
@@ -4949,15 +4961,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGDefExpr(const TYPE_AS_DefExpr & DE, const TYPE_CGMAI
 
   SEQ<TYPE_CPP_Stmt> rb_l;
   rb_l.ImpConc(GenLocalValDef(lvd_l));
-  rb_l.ImpConc(CGExpr(body, resVar_v));
+  SEQ<TYPE_CPP_Stmt> stmts (CGExpr(body, resVar_v));
+  if ((stmts.Length() == 1) && stmts[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    rb_l.ImpConc(stmts[1].GetSequence(pos_CPP_CompoundStmt_stms));
+  }
+  else {
+    rb_l.ImpConc(stmts);
+  }
 
   PopEnv();
   PopEnv_CGAUX();
   DeleteLoc();
 
-  SEQ<TYPE_CPP_Stmt> sq;
-  sq.ImpAppend(vdm_BC_GenBlock(rb_l));
-  return sq;
+  return mk_sequence(vdm_BC_GenBlock(rb_l));
 }
 
 // CGBracketedExpr

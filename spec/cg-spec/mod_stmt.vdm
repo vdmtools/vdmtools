@@ -1425,7 +1425,12 @@ CGLetStmt(mk_AS`LetStmt(ld_l, In, -), isLast) ==
      rb_l := rb_l ^ VD`GenLocalValDef(lvd_l));
 
   if not is_AS`IdentStmt(In)
-  then rb_l := rb_l ^ GenStmt(In, isLast);
+  then
+    def stmts = GenStmt(In, isLast)
+    in rb_l := rb_l ^ cases stmts:
+                        [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                        others                        -> stmts
+                      end;
 
   FD`PopEnv();
   CGAUX`PopEnv();
@@ -1507,7 +1512,12 @@ CGDefStmt(mk_AS`DefStmt(def_l, body,-), isLast) ==
     end;
     rb_l := VD`GenLocalValDef(lvd_l);
     if not is_AS`IdentStmt(body)
-    then rb_l := rb_l ^ GenStmt(body, isLast);
+    then
+      def stmts = GenStmt(body, isLast)
+      in rb_l := rb_l ^ cases stmts:
+                          [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                          others                        -> stmts
+                        end;
 
     CGAUX`PopEnv();
     FD`PopEnv();
@@ -1649,8 +1659,12 @@ CGSeqForLoopStmt(mk_AS`SeqForLoopStmt(cv, fseq, body,-), isLast) ==
           vt1 = mk_CGMAIN`VT(sq, sqt);
           vt2 = mk_CGMAIN`VT(elem, CGAUX`FindSeqElemType(sqt));
           stmt = GenStmt(body, isLast);
+          inner = cases stmt:
+                    [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                    others                        -> stmt
+                  end;
           rti = BC`GenBlock([CGAUX`RunTime("Pattern did not match in sequence for loop")]);
-          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, stmt, false);
+          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, inner, false);
           pm1 = if Is_Excl
                 then pm
                 else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
@@ -1756,7 +1770,7 @@ CGSetForLoopStmt(mk_AS`SetForLoopStmt(pat, fset, body,-), isLast) ==
           def seqindices = CGAUX`IsSeqIndicesSet(fset)
           in
            (dcl seqapply_s : set of (CPP`Expr * CPP`Expr) := {},
-                stmt_l : seq of CPP`Stmt := [];
+                inner : seq of CPP`Stmt := [];
             if name <> nil
             then
               def - = CGAUX`InsertName(name);
@@ -1766,14 +1780,22 @@ CGSetForLoopStmt(mk_AS`SetForLoopStmt(pat, fset, body,-), isLast) ==
                 then seqapply_s := seqapply_s union {mk_(BC`Rename(fset.arg), BC`Rename(name))};
                );
             CGAUX`AddNoCheckSeqApply(seqapply_s);
-            stmt_l := GenStmt(body, isLast);
+            def stmts = GenStmt(body, isLast)
+            in inner := cases stmts:
+                          [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                          others                        -> stmts
+                        end;
             CGAUX`RemNoCheckSeqApply(seqapply_s);
-            rb_l := rb_l ^ DS`GenIterSet(vt1, nil, vt2, stmt_l);
+            rb_l := rb_l ^ DS`GenIterSet(vt1, nil, vt2, inner);
            )
       else
         def decl_l = CGEXPR`DeclarePatVars(pat); -- first
             stmt = GenStmt(body, isLast);        -- second
-            mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, stmt, true); -- third
+            inner = cases stmt:
+                      [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                      others                        -> stmt
+                    end;
+            mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, inner, true); -- third
             pm1 = if Is_Excl
                   then pm
                   else

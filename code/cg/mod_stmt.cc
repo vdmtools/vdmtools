@@ -1780,14 +1780,20 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGLetStmt(const TYPE_AS_LetStmt & ls, bool isLast)
     existsDecl = rb_l[i].Is(TAG_TYPE_CPP_DeclarationStmt);
   }
   if (!In.Is(TAG_TYPE_AS_IdentStmt)) {
-    rb_l.ImpConc(GenStmt(In, isLast));
+    SEQ<TYPE_CPP_Stmt> stmts (GenStmt(In, isLast));
+    if ((stmts.Length() == 1) && stmts[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+      rb_l.ImpConc(stmts[1].GetSequence(pos_CPP_CompoundStmt_stms));
+    }
+    else {
+      rb_l.ImpConc(stmts);
+    }
   }
   PopEnv();
   PopEnv_CGAUX();
   DeleteLoc();
 
   if ((rb_l.Length() > 1) && existsDecl) {
-    return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenBlock(rb_l));
+    return mk_sequence(vdm_BC_GenBlock(rb_l));
   }
   else {
     return rb_l;
@@ -1893,13 +1899,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGDefStmt(const TYPE_AS_DefStmt & stmt, bool isLast)
   rb_l.ImpConc(GenLocalValDef(lvd_l));
   
   if (!body.Is(TAG_TYPE_AS_IdentStmt)) {
-    rb_l.ImpConc(GenStmt(body, isLast));
+    SEQ<TYPE_CPP_Stmt> stmts (GenStmt(body, isLast));
+    if ((stmts.Length() == 1) && stmts[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+      rb_l.ImpConc(stmts[1].GetSequence(pos_CPP_CompoundStmt_stms));
+    }
+    else {
+      rb_l.ImpConc(stmts);
+    }
   }
   PopEnv();
   PopEnv_CGAUX();
   DeleteLoc();
 
-  return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenBlock(rb_l));
+  return mk_sequence(vdm_BC_GenBlock(rb_l));
 }
 
 // CGWhileLoopStmt
@@ -2019,9 +2031,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstm
   TYPE_CGMAIN_VT vt1 (mk_CG_VT(sq, sqt));
   TYPE_CGMAIN_VT vt2 (mk_CG_VT(elem, FindSeqElemType(sqt)));
   SEQ<TYPE_CPP_Stmt> stmt (GenStmt(body, isLast));
+  SEQ<TYPE_CPP_Stmt> inner;
+  if ((stmt.Length() == 1) && stmt[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    inner.ImpConc(stmt[1].GetSequence(pos_CPP_CompoundStmt_stms));
+  }
+  else {
+    inner.ImpConc(stmt);
+  }
   TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"Pattern did not match in sequence for loop"))));
 
-  Tuple cgpme(CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), stmt, false));
+  Tuple cgpme(CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), inner, false));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
   bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -2040,7 +2059,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstm
 
   PopEnv_CGAUX();
 
-  return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenBlock(rb_l));
+  return mk_sequence(vdm_BC_GenBlock(rb_l));
 }
 
 // DeclareVars
@@ -2133,15 +2152,28 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetForLoopStmt(const TYPE_AS_SetForLoopStmt & sflstm
     AddNoCheckSeqApply(seqapply_s);
     SEQ<TYPE_CPP_Stmt> stmt_l;
     stmt_l.ImpConc(GenStmt(body, isLast));
+    SEQ<TYPE_CPP_Stmt> inner;
+    if ((stmt_l.Length() == 1) && stmt_l[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+      inner.ImpConc(stmt_l[1].GetSequence(pos_CPP_CompoundStmt_stms));
+    }
+    else {
+      inner.ImpConc(stmt_l);
+    }
     RemNoCheckSeqApply(seqapply_s);
-    rb_l.ImpConc(GenIterSet(vt1, nil, vt2, stmt_l));
+    rb_l.ImpConc(GenIterSet(vt1, nil, vt2, inner));
   }
   else {
     SEQ<TYPE_CPP_Stmt> decl_l (DeclarePatVars(pat));
 
     SEQ<TYPE_CPP_Stmt> stmt (GenStmt(body, isLast));
-
-    Tuple cgpme (CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), stmt, true));
+    SEQ<TYPE_CPP_Stmt> inner;
+    if ((stmt.Length() == 1) && stmt[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+      inner.ImpConc(stmt[1].GetSequence(pos_CPP_CompoundStmt_stms));
+    }
+    else {
+      inner.ImpConc(stmt);
+    }
+    Tuple cgpme (CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), inner, true));
     const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
     bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 

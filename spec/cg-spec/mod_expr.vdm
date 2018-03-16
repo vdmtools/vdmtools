@@ -1543,7 +1543,10 @@ CGSeqComprehensionIndexLoop(rc1, mk_CGMAIN`VT(resVar_v, rType) ) ==
       else
 #endif VDMPP
         append := DS`GenImpAppend(tmpSeq_v, elemExpr);
-      let elemStmt = e_stmt ^ [append]
+      let elemStmt = (cases e_stmt:
+                       [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                       others                        -> e_stmt
+                      end) ^ [append]
       in
         cases pred:
           nil,
@@ -1636,7 +1639,10 @@ CGSeqComprehensionSetBind(rc1, vt) ==
       def - = CGAUX`InsertNamesinEnv(dom pid_m) in skip;
       def mk_(elemExpr, e_stmt) = CGExprExcl(elem, "reselem", nil);
           impappend = DS`GenImpAppend(resL_v, elemExpr);
-          elemStmt = e_stmt ^ [impappend];
+          elemStmt = (cases e_stmt:
+                       [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                       others                        -> e_stmt
+                      end) ^ [impappend];
           decls = DeclPatVars( pid_m );
       in
        (dcl succbody : seq of CPP`Stmt;
@@ -1754,7 +1760,10 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
        def - = CGAUX`InsertNamesinEnv(dom pid_m) in skip;
        def mk_(elemExpr, e_stmt) = CGExprExcl(elem, "reselem", nil);
            impappend = DS`GenImpAppend(resL_v, elemExpr);
-           elemStmt = e_stmt ^ [impappend];
+           elemStmt = (cases e_stmt:
+                        [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                        others                        -> e_stmt
+                       end) ^ [impappend];
            decls = DeclPatVars( pid_m );
        in
         (dcl succbody : seq of CPP`Stmt;
@@ -4034,21 +4043,28 @@ bool succ = true;
 \begin{vdm_al}
 CGLetExpr: AS`LetExpr * CGMAIN`VT ==> seq of CPP`Stmt
 CGLetExpr( mk_AS`LetExpr(ld_l, body, -), resVar_v) ==
-( dcl rb : seq of CPP`Stmt := [];
+ (dcl rb : seq of CPP`Stmt := [];
   FD`PushEnv();
   CGAUX`PushEnv();
-  let vindex_s = { i | i in set inds ld_l & is_AS`ValueDef(ld_l(i)) } in
+  let vindex_s = { i | i in set inds ld_l & is_AS`ValueDef(ld_l(i)) }
+  in
     let lvd_l = [ ld_l(i) | i in set vindex_s ],
-        lfd_l = [ ld_l(i) | i in set inds ld_l \ vindex_s ] in
-    ( FD`GenLocalFcts(lfd_l);
+        lfd_l = [ ld_l(i) | i in set inds ld_l \ vindex_s ]
+    in
+     (FD`GenLocalFcts(lfd_l);
       rb := rb ^ VD`GenLocalValDef(lvd_l);
-      rb := rb ^ CGExpr( body, resVar_v)
-    );
+      def stmts = CGExpr(body, resVar_v)
+      in
+        cases stmts:
+          [mk_CPP`CompoundStmt(stms,-)] -> rb := rb ^ stms,
+          others                        -> rb := rb ^ stmts
+        end;
+     );
   FD`PopEnv();
   CGAUX`PopEnv();
   VD`DeleteLoc();
   return [BC`GenBlock(rb)]
-);
+ );
 \end{vdm_al}
 
 \subsection{Let-Be-Such-That Expression}
@@ -4279,7 +4295,12 @@ CGDefExpr(mk_AS`DefExpr(def_l, body, -), resVar_v) ==
       others -> lvd_l := lvd_l ^ [mk_AS`ValueDef(patb, nil, expr, <NOT_INITIALISED_AS>, false, patb.cid)]
     end;
   rb_l := rb_l ^ VD`GenLocalValDef(lvd_l);
-  rb_l := rb_l ^  CGExpr(body, resVar_v);
+  def stmts = CGExpr(body, resVar_v)
+  in
+    cases stmts:
+      [mk_CPP`CompoundStmt(stms,-)] -> rb_l := rb_l ^ stms,
+      others                        -> rb_l := rb_l ^ stmts
+    end;
   FD`PopEnv();
   CGAUX`PopEnv();
   VD`DeleteLoc();
