@@ -472,7 +472,7 @@ in
                (if prefn <> nil and CGMAIN`get_testpreandpost_option()
                 then fb := [GenMethPreCall(nm, FindVariables(arg_l), stat)];
                 if parms <> [] and not inlineDecl
-                then fb := fb ^ GenArgPatternMatch(pid_m, fndef, varlist);
+                then fb := fb ^ GenArgPatternMatch(pid_m, nm, hd parms_ll, false, varlist);
                 fb := fb ^ b_stmt;
                 if postfn <> nil and CGMAIN`get_testpreandpost_option()
                 then fb := fb ^ [GenFnPostCall(nm, resVar_v, FindVariables(arg_l), stat)];
@@ -511,7 +511,7 @@ in
              (if prefn <> nil and CGMAIN`get_testpreandpost_option()
               then fb := [GenMethPreCall(nm, FindVariables(arg_l), stat)];
               if parms <> [] and not inlineDecl
-              then fb := fb ^ GenArgPatternMatch(pid_m, fndef, varlist);
+              then fb := fb ^ GenArgPatternMatch(pid_m, nm, hd parms_ll, false, varlist);
               fb := fb ^ b_stmt;
               if postfn <> nil and CGMAIN`get_testpreandpost_option()
               then fb := fb ^ [GenFnPostCall(nm, resVar_v, FindVariables(arg_l), stat)];
@@ -624,8 +624,8 @@ GenExplFnBody(mk_AS`ExplFnDef(nm,-,tp,-,fnbody,-,-,-,stat,-,-), p_isDlClass, p_i
   else
 #endif VDMPP
     if IsNotyetspecified(fnbody, p_isDlClass, stat) and p_isDlClass
-    then GenerateDlCall(nm, p_arg_l,false, false)
-    --else CGEXPR`CGExprExcl(body.body, "varRes", CGAUX`FromAS2RepType(tp.fnrng));
+    then GenerateDlCall(nm, p_arg_l, false, false)
+    --else CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(tp.fnrng));
     else
       def mk_(e,stmts) = CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng));
       in
@@ -644,7 +644,6 @@ GenerateDlCall(id, arg_l, isOp, isVoid) ==
   def seqName = BC`GiveName("parmSeq");
       parms = [ FindVariableinDecl(arg_l(i).decl) | i in set inds arg_l];
       succFlag = BC`GiveName("success");
-      resName = BC`GiveName("dlCallResult");
       fnm = CGAUX`GiveLastName(id);
       body = DS`GenSeqDecl(seqName, nil) ^
               [ BC`GenFctCallObjMemAccStmt(seqName, "ImpAppend", [parms(i)]) | i in set inds parms ] ^
@@ -658,7 +657,8 @@ GenerateDlCall(id, arg_l, isOp, isVoid) ==
                      then BC`GenExpressionStmt(dlcall)
                      else BC`GenReturnStmt(dlcall)]
     else
-      return mk_(resName, body ^ DS`GenGenericDecl(resName, BC`GenAsgnInit(dlcall)));
+      def resName = BC`GiveName("dlCallResult");
+      in return mk_(resName, body ^ DS`GenGenericDecl(resName, BC`GenAsgnInit(dlcall)));
 \end{vdm_al}
 
 The next operations are auxiliary operations to $GenExplFctDef$ and
@@ -997,96 +997,99 @@ GenPrePost(opdef, sd) ==
   return cpp
  );
 
-GenArgPatternMatch: map (AS`Name | AS`OldName) to set of REP`TypeRep * (AS`ExplOpDef | AS`ExplFnDef) *
+GenArgPatternMatch: map (AS`Name | AS`OldName) to set of REP`TypeRep * AS`Name * AS`Parameters * bool *
                     seq of CGMAIN`VT ==> seq of CPP`Stmt
-GenArgPatternMatch(pid_m, opdef, varlist) ==
-def succ_v = BC`GiveName("succ");
-    l_parms = if is_AS`ExplFnDef(opdef)
-              then hd opdef.parms
-              else opdef.parms
-in
-( dcl var_l : seq of CGMAIN`VT := varlist,
-      p_s : set of (AS`Name | AS`OldName) := {},
-      fb : seq of CPP`Stmt := [],
-      pattern_fb : seq of CPP`Stmt := [],
-      tmp_fb : seq of CPP`Stmt := [],
-      need_succ : bool := false;
+GenArgPatternMatch(pid_m, nm, parms, isop, varlist) ==
+  def succ_v = BC`GiveName("succ");
+  in
+   (dcl var_l : seq of CGMAIN`VT := varlist,
+        p_s : set of (AS`Name | AS`OldName) := {},
+        fb : seq of CPP`Stmt := [],
+        pattern_fb : seq of CPP`Stmt := [],
+        tmp_fb : seq of CPP`Stmt := [],
+        need_succ : bool := false;
 
-  fb := CGEXPR`DeclarePatterns(pid_m);
-  for tmp in l_parms do
-   (if not (is_AS`PatternName(tmp) and tmp.nm = nil)
-    then
-      def mk_(match, Is_Excl) = PM`CGPatternMatchExcl( tmp, hd var_l, p_s, succ_v, nil, nil, false );
+    fb := CGEXPR`DeclarePatterns(pid_m);
+    for tmp in parms do
+     (if not (is_AS`PatternName(tmp) and tmp.nm = nil)
+      then
+        def mk_(match, Is_Excl) = PM`CGPatternMatchExcl( tmp, hd var_l, p_s, succ_v, nil, nil, false );
                   patId = dom CGEXPR`FindPatternId ( tmp )
-      in
-       (tmp_fb := tmp_fb ^ match;
-        if not Is_Excl
-        then
-          (pattern_fb := pattern_fb ^ if need_succ
-                                      then [BC`GenIfStmt( succ_v, BC`GenBlock(tmp_fb), nil)]
-                                      else tmp_fb;
-           tmp_fb := []);
-        p_s := p_s union patId;
-        need_succ := need_succ or not Is_Excl);
-    var_l := tl var_l);
-  if tmp_fb <> []
-  then
-    pattern_fb := pattern_fb ^ if need_succ
-                               then [BC`GenIfStmt( succ_v, BC`GenBlock(tmp_fb), nil)]
-                               else tmp_fb;
+        in
+         (tmp_fb := tmp_fb ^ match;
+          if not Is_Excl
+          then
+           (pattern_fb := pattern_fb ^ if need_succ
+                                       then [BC`GenIfStmt( succ_v, BC`GenBlock(tmp_fb), nil)]
+                                       else tmp_fb;
+            tmp_fb := []);
+          p_s := p_s union patId;
+          need_succ := need_succ or not Is_Excl
+         );
+      var_l := tl var_l
+     );
+    if tmp_fb <> []
+    then
+      pattern_fb := pattern_fb ^ if need_succ
+                                 then [BC`GenIfStmt( succ_v, BC`GenBlock(tmp_fb), nil)]
+                                 else tmp_fb;
 
   -- The declaration for succ_v and check on it will only be generated
   -- if some  pattern matching is actually being performed i.e. not
   -- all of the patterns are don't care patterns
-  if pattern_fb <> []
-  then
-    def fctname = CGAUX`GiveLastName(opdef.nm)
-    in
-      let call    = if is_AS`ExplOpDef(opdef)
+    if pattern_fb <> []
+    then
+      def fctname = CGAUX`GiveLastName(nm)
+      in
+        let call  = if isop
                     then "operation call in operation "
                     else "function apply in function ",
-          errMess = "Pattern match failed in " ^ call ^ fctname
-      in
-       (if need_succ
-        then pattern_fb := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v,
+            errMess = "Pattern match failed in " ^ call ^ fctname
+        in
+         (if need_succ
+          then pattern_fb := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v,
                                   BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ pattern_fb;
-        fb := CGEXPR`MergeStmts(fb, pattern_fb);
-        if need_succ
-        then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v),
-                                 BC`GenBlock([CGAUX`RunTime(errMess)]), nil)]
-       );
-  return fb
-);
+          fb := CGEXPR`MergeStmts(fb, pattern_fb);
+          if need_succ
+          then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v),
+                                  BC`GenBlock([CGAUX`RunTime(errMess)]), nil)]
+         );
+    return fb
+   );
 
 GenPatternBody : map AS`Name to set of REP`TypeRep * AS`ExplOpDef * bool *
                  seq of CPP`ArgDecl * seq of CGMAIN`VT==> seq of CPP`Stmt
-GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist) ==
-( dcl cppast : (CPP`Expr * seq of CPP`Stmt) | seq of CPP`Stmt,
-      fb : seq of CPP`Stmt := [];
-  fb := GenArgPatternMatch(pid_m, opdef, varlist);
-
-  if CPP`isCPP() and isDlClass and
-     IsNotyetspecified(opdef.body, isDlClass, opdef.stat)
-  then cppast := GenerateDlCall(opdef.nm, arg_l,true, is_AS`VoidType(opdef.tp.oprng))
+#ifdef VDMSL
+GenPatternBody(pid_m, mk_AS`ExplOpDef(nm,-,-,tp,parms,opbody,-,-,-,stat,-,-), isDlClass, arg_l, varlist) ==
+#endif VDMSL
 #ifdef VDMPP
-  elseif opdef.constr
-  then
-  ( CGAUX`SetConstr();
-    cppast := CGSTMT`GenStmt(opdef.body.body, true);
-    CGAUX`UnsetConstr()
-  )
+GenPatternBody(pid_m, mk_AS`ExplOpDef(nm,-,-,tp,parms,opbody,-,-,-,stat,constr,-), isDlClass, arg_l, varlist) ==
 #endif VDMPP
-  else cppast := CGSTMT`GenStmt(opdef.body.body, true);
+  let mk_AS`OpType(-, oprng,-) = tp,
+      mk_AS`OpBody(body,-) = opbody
+  in
+   (dcl cppast : (CPP`Expr * seq of CPP`Stmt) | seq of CPP`Stmt,
+        fb : seq of CPP`Stmt := GenArgPatternMatch(pid_m, nm, parms, true, varlist);
 
-  if is_AS`BlockStmt(opdef.body.body) and len cppast = 1 and
-      is_CPP`CompoundStmt(hd cppast)
-  then
-    let mk_CPP`CompoundStmt(stmts,-) = hd cppast
-    in fb := fb ^ stmts
-  else
-    fb := fb ^ cppast;
-  return fb;
-);
+    if CPP`isCPP() and isDlClass and IsNotyetspecified(opbody, isDlClass, stat)
+    then cppast := GenerateDlCall(nm, arg_l, true, is_AS`VoidType(oprng)) -- (CPP`Expr * seq of CPP`Stmt) | seq of CPP`Stmt
+#ifdef VDMPP
+    elseif constr
+    then
+     (CGAUX`SetConstr();
+      cppast := CGSTMT`GenStmt(body, true); -- seq of CPP`Stmt
+      CGAUX`UnsetConstr();
+     )
+#endif VDMPP
+    else cppast := CGSTMT`GenStmt(body, true); -- seq of CPP`Stmt
+
+    fb := fb ^ cases cppast:
+                 [mk_CPP`CompoundStmt(stms,-)] -> stms,
+                 others                        -> cppast
+               end;
+    
+    return fb;
+ );
 
 GenInlineBody : AS`ExplOpDef * REP`TypeRep * bool * seq of CPP`ArgDecl * bool * bool
                  ==> seq of CPP`Stmt * seq of CPP`Stmt

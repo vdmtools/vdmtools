@@ -65,7 +65,8 @@ Tuple InitMethod(const SEQ<TYPE_AS_Pattern> &, const TYPE_AS_OpType&);
 TYPE_CPP_CPPAS GenExplOpDef(const TYPE_AS_Name&, const TYPE_AS_ExplOpDef&, const Generic&, bool, bool);
 SEQ<TYPE_CPP_Stmt> GenDefaultConstructorHdr(const SEQ<TYPE_CPP_Stmt> &);
 TYPE_CPP_CPPAS GenPrePost(const TYPE_AS_ExplOpDef&, const Generic&);
-SEQ<TYPE_CPP_Stmt> GenArgPatternMatch(const Map &, const Record &, const SEQ<TYPE_CGMAIN_VT> &);
+SEQ<TYPE_CPP_Stmt> GenArgPatternMatch(const Map &, const TYPE_AS_Name &, const TYPE_AS_Parameters &,
+                                      bool, const SEQ<TYPE_CGMAIN_VT> &);
 SEQ<TYPE_CPP_Stmt> GenPatternBody(const Map&,
                                   const TYPE_AS_ExplOpDef &,
                                   bool,
