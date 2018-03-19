@@ -518,10 +518,16 @@ CGMatchSetEnumPattern(mk_AS`SetEnumPattern(p_l, -), mk_CGMAIN`VT(varExpr_v, type
     in
      (dcl stmt : CPP`Stmt;
       if inner <> nil
-      then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+      --then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+      then
+        if nonstop
+        then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+        else stmt := BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(if_cond)),
+                                        BC`GenBlock(inner), nil)
       else stmt := BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(if_cond));
       if CGAUX`IsSetType(type)
-      then return mk_([stmt], false)
+      --then return mk_([stmt], false)
+      then return mk_([stmt], (inner <> nil) and nonstop)
       else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsSet(varExpr_v))),
                                     stmt, nil)], false)
      )
@@ -732,10 +738,16 @@ CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
         in
          (dcl stmt : CPP`Stmt;
           if inner <> nil
-          then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+          --then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+          then
+            if nonstop
+            then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+            else stmt := BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(if_cond)),
+                                        BC`GenBlock(inner), nil)
           else stmt := BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(if_cond));
           if CGAUX`IsSeqType(type)
-          then return mk_([stmt], false)
+          --then return mk_([stmt], false)
+          then return mk_([stmt], inner <> nil and nonstop)
           else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsSeq(varExpr_v))),
                                   stmt, nil)], false)
          )
@@ -828,10 +840,16 @@ CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
         in
          (dcl stmt : CPP`Stmt;
           if inner <> nil
-          then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+          --then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+          then
+            if nonstop
+            then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+            else stmt := BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(if_cond)),
+                                        BC`GenBlock(inner), nil)
           else stmt := BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(if_cond));
           if CGAUX`IsMapType(type)
-          then return mk_([stmt], false)
+          --then return mk_([stmt], false)
+          then return mk_([stmt], (inner <> nil) and nonstop)
           else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsMap(varExpr_v))),
                                   stmt, nil)], false)
          )

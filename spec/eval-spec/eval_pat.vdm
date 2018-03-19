@@ -802,8 +802,8 @@ functions
                                                              cid),
     mk_AS`MapEnumPattern(mls,cid)    ->
        let e_l = [ let mk_AS`MapletPattern(dp,rp,mcid) = mls(i)
-                   in mk_AS`MapletPattern(DoCarePattern(dp, NewBase(id_base, 1)),
-                                          DoCarePattern(rp, NewBase(id_base, 2)),
+                   in mk_AS`MapletPattern(DoCarePattern(dp, NewBase(id_base, i*2-1)),
+                                          DoCarePattern(rp, NewBase(id_base, i*2)),
                                           mcid)
                    | i in set inds mls ]
        in mk_AS`MapEnumPattern(e_l,cid),

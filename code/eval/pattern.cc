@@ -1177,8 +1177,8 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       for (size_t i = 1; i <= len_mls; i++) {
         const TYPE_AS_MapletPattern & mp (mls[i]);
         TYPE_AS_MapletPattern mp_res (mp);
-        mp_res.set_dp(DoCarePattern (mp.GetRecord(pos_AS_MapletPattern_dp), NewBase (id_base, 1)));
-        mp_res.set_rp(DoCarePattern (mp.GetRecord(pos_AS_MapletPattern_rp), NewBase (id_base, 2)));
+        mp_res.set_dp(DoCarePattern (mp.GetRecord(pos_AS_MapletPattern_dp), NewBase (id_base, i*2-1)));
+        mp_res.set_rp(DoCarePattern (mp.GetRecord(pos_AS_MapletPattern_rp), NewBase (id_base, i*2)));
         m_l.ImpAppend (mp_res);
       }
       TYPE_AS_MapEnumPattern res_v (pat_p);

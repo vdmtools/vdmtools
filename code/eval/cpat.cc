@@ -325,24 +325,17 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
     }
 
     case TAG_TYPE_AS_SetEnumPattern: {
-// 20150925 -->
-      //const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
       const SEQ<TYPE_AS_Pattern> & elems (pat_q.GetSequence(pos_AS_SetEnumPattern_Elems));
-// <-- 20150925
       SEQ<TYPE_STKM_Pattern> els;
       SET<TYPE_STKM_Pattern> p_s;
       size_t len_elems = elems.Length();
-      for (size_t i = 1; i <= len_elems; i++)
-      {
-// 20140303 -->
-        //els.ImpAppend(P2P(elems[i]));
+      for (size_t i = 1; i <= len_elems; i++) {
         TYPE_STKM_Pattern p (P2P(elems[i]));
         if (!p_s.InSet(p)) {
           els.ImpAppend(p);
           p_s.Insert(p);
         }
-// <--20140303
       }
       return TYPE_STKM_SetEnumPattern().Init(els);
     }
@@ -395,7 +388,8 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
     }
 
     case TAG_TYPE_AS_MapEnumPattern: {
-      const SEQ<TYPE_AS_MapletPattern> & mls (pat.GetSequence(pos_AS_MapEnumPattern_mls));
+      TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
+      const SEQ<TYPE_AS_MapletPattern> & mls (pat_q.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_STKM_Pattern> els;
       SET<TYPE_STKM_Pattern> p_s;
       size_t len_mls = mls.Length();
