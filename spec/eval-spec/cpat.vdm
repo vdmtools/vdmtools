@@ -181,18 +181,21 @@ operations
               if is_STKM`SetEnumPattern(surp)
               then
                 cases sulp:
-                  --mk_STKM`SetEnumPattern(els) -> return mk_STKM`SetEnumPattern(els ^ surp.els),
                   mk_STKM`SetEnumPattern(els) -> 
                      let p_l = els ^ surp.els,
                          p_l' = [ p_l(i) | i in set inds p_l &
                                   p_l(i) not in set { p_l(j) | j in set inds p_l & j < i } ]
                      in return mk_STKM`SetEnumPattern(p_l'),
                   mk_STKM`SetUnionPattern(lp, mk_STKM`SetEnumPattern(els)) ->
-                     --      return mk_STKM`SetUnionPattern(lp, mk_STKM`SetEnumPattern(els ^ surp.els)),
                      let p_l = els ^ surp.els,
                          p_l' = [ p_l(i) | i in set inds p_l &
                                   p_l(i) not in set { p_l(j) | j in set inds p_l & j < i } ]
                      in return mk_STKM`SetUnionPattern(lp, mk_STKM`SetEnumPattern(p_l')),
+                  mk_STKM`SetUnionPattern(mk_STKM`SetEnumPattern(els),rp) ->
+                     let p_l = els ^ surp.els,
+                         p_l' = [ p_l(i) | i in set inds p_l &
+                                  p_l(i) not in set { p_l(j) | j in set inds p_l & j < i } ]
+                     in return mk_STKM`SetUnionPattern(rp, mk_STKM`SetEnumPattern(p_l')),
                   others -> return mk_STKM`SetUnionPattern(sulp, surp)
                 end
               else return mk_STKM`SetUnionPattern(sulp, surp),

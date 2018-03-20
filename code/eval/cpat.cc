@@ -361,6 +361,7 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
             return TYPE_STKM_SetEnumPattern().Init(els);
           }
           case TAG_TYPE_STKM_SetUnionPattern: {
+            const TYPE_STKM_Pattern & suplp (sulp.GetRecord(pos_STKM_SetUnionPattern_lp));
             const TYPE_STKM_Pattern & suprp (sulp.GetRecord(pos_STKM_SetUnionPattern_rp));
             if (suprp.Is(TAG_TYPE_STKM_SetEnumPattern)) {
               SEQ<TYPE_STKM_Pattern> els (suprp.GetSequence(pos_AS_SetEnumPattern_Elems));
@@ -372,8 +373,19 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
                   els.ImpAppend(p);
                 }
               }
-              return TYPE_STKM_SetUnionPattern ().Init(sulp.GetRecord(pos_STKM_SetUnionPattern_lp),
-                                                       TYPE_STKM_SetEnumPattern().Init(els));
+              return TYPE_STKM_SetUnionPattern ().Init(suplp, TYPE_STKM_SetEnumPattern().Init(els));
+            }
+            else if (suplp.Is(TAG_TYPE_STKM_SetEnumPattern)) {
+              SEQ<TYPE_STKM_Pattern> els (suplp.GetSequence(pos_AS_SetEnumPattern_Elems));
+              SEQ<TYPE_STKM_Pattern> p_l (surp.GetSequence(pos_AS_SetEnumPattern_Elems));
+              size_t len_p_l = p_l.Length();
+              for (size_t i = 1; i <= len_p_l; i++) {
+                const TYPE_STKM_Pattern & p(p_l[i]);
+                if (!els.Elems().InSet(p)) {
+                  els.ImpAppend(p);
+                }
+              }
+              return TYPE_STKM_SetUnionPattern ().Init(suprp, TYPE_STKM_SetEnumPattern().Init(els));
             }
             else {
               return TYPE_STKM_SetUnionPattern().Init(sulp,surp);
