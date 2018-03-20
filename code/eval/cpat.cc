@@ -341,8 +341,52 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
     }
 
     case TAG_TYPE_AS_SetUnionPattern: {
-      return TYPE_STKM_SetUnionPattern().Init(P2P(pat.GetRecord(pos_AS_SetUnionPattern_lp)), 
-                                              P2P(pat.GetRecord(pos_AS_SetUnionPattern_rp)));
+      TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
+      //return TYPE_STKM_SetUnionPattern().Init(P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_lp)), 
+      //                                        P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_rp)));
+      TYPE_STKM_Pattern sulp (P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_lp)));
+      TYPE_STKM_Pattern surp (P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_rp)));
+      if (surp.Is(TAG_TYPE_STKM_SetEnumPattern)) {
+        switch (sulp.GetTag()) {
+          case TAG_TYPE_STKM_SetEnumPattern: {
+            SEQ<TYPE_STKM_Pattern> els (sulp.GetSequence(pos_AS_SetEnumPattern_Elems));
+            SEQ<TYPE_STKM_Pattern> p_l (surp.GetSequence(pos_AS_SetEnumPattern_Elems));
+            size_t len_p_l = p_l.Length();
+            for (size_t i = 1; i <= len_p_l; i++) {
+              const TYPE_STKM_Pattern & p(p_l[i]);
+              if (!els.Elems().InSet(p)) {
+                els.ImpAppend(p);
+              }
+            }
+            return TYPE_STKM_SetEnumPattern().Init(els);
+          }
+          case TAG_TYPE_STKM_SetUnionPattern: {
+            const TYPE_STKM_Pattern & suprp (sulp.GetRecord(pos_STKM_SetUnionPattern_rp));
+            if (suprp.Is(TAG_TYPE_STKM_SetEnumPattern)) {
+              SEQ<TYPE_STKM_Pattern> els (suprp.GetSequence(pos_AS_SetEnumPattern_Elems));
+              SEQ<TYPE_STKM_Pattern> p_l (surp.GetSequence(pos_AS_SetEnumPattern_Elems));
+              size_t len_p_l = p_l.Length();
+              for (size_t i = 1; i <= len_p_l; i++) {
+                const TYPE_STKM_Pattern & p(p_l[i]);
+                if (!els.Elems().InSet(p)) {
+                  els.ImpAppend(p);
+                }
+              }
+              return TYPE_STKM_SetUnionPattern ().Init(sulp.GetRecord(pos_STKM_SetUnionPattern_lp),
+                                                       TYPE_STKM_SetEnumPattern().Init(els));
+            }
+            else {
+              return TYPE_STKM_SetUnionPattern().Init(sulp,surp);
+            }
+          }
+          default: {
+            return TYPE_STKM_SetUnionPattern().Init(sulp,surp);
+          }
+        }
+      }
+      else {
+        return TYPE_STKM_SetUnionPattern().Init(sulp,surp);
+      }
     }
 
     case TAG_TYPE_AS_SeqEnumPattern: {
@@ -391,23 +435,22 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
       TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
       const SEQ<TYPE_AS_MapletPattern> & mls (pat_q.GetSequence(pos_AS_MapEnumPattern_mls));
       SEQ<TYPE_STKM_Pattern> els;
-      SET<TYPE_STKM_Pattern> p_s;
       size_t len_mls = mls.Length();
       for (size_t i = 1; i <= len_mls; i++) {
         const TYPE_AS_MapletPattern & mp(mls[i]);
         TYPE_STKM_Pattern p (TYPE_STKM_MapletPattern().Init(P2P(mp.GetRecord(pos_AS_MapletPattern_dp)),
                                                             P2P(mp.GetRecord(pos_AS_MapletPattern_rp))));
-        if (!p_s.InSet(p)) {
+        if (!els.Elems().InSet(p)) {
           els.ImpAppend(p);
-          p_s.Insert(p);
         }
       }
       return TYPE_STKM_MapEnumPattern().Init(els);
     }
 
     case TAG_TYPE_AS_MapMergePattern: {
-      return TYPE_STKM_MapMergePattern().Init(P2P(pat.GetRecord(pos_AS_MapMergePattern_lp)),
-                                              P2P(pat.GetRecord(pos_AS_MapMergePattern_rp)));
+      TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
+      return TYPE_STKM_MapMergePattern().Init(P2P(pat_q.GetRecord(pos_AS_MapMergePattern_lp)),
+                                              P2P(pat_q.GetRecord(pos_AS_MapMergePattern_rp)));
     }
 
     case TAG_TYPE_AS_TuplePattern: {

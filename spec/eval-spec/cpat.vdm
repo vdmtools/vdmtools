@@ -171,7 +171,32 @@ operations
                 e_l' = [ e_l(i) | i in set inds e_l &
                                  e_l(i) not in set { e_l(j) | j in set inds e_l & j < i } ]
             in return mk_STKM`SetEnumPattern(e_l'),
-      mk_AS`SetUnionPattern(lp,rp,-) -> return mk_STKM`SetUnionPattern(P2P(lp), P2P(rp)),
+      --mk_AS`SetUnionPattern(lp,rp,-) -> return mk_STKM`SetUnionPattern(P2P(lp), P2P(rp)),
+      mk_AS`SetUnionPattern(-,-,-) ->
+            def mk_AS`SetUnionPattern(lp,rp,-) = PAT`DoCarePattern(pat,mk_AS`Name(["1"], CI`NilContextId));
+            --in return mk_STKM`SetUnionPattern(P2P(lp), P2P(rp)),
+                sulp = P2P(lp);
+                surp = P2P(rp);
+            in
+              if is_STKM`SetEnumPattern(surp)
+              then
+                cases sulp:
+                  --mk_STKM`SetEnumPattern(els) -> return mk_STKM`SetEnumPattern(els ^ surp.els),
+                  mk_STKM`SetEnumPattern(els) -> 
+                     let p_l = els ^ surp.els,
+                         p_l' = [ p_l(i) | i in set inds p_l &
+                                  p_l(i) not in set { p_l(j) | j in set inds p_l & j < i } ]
+                     in return mk_STKM`SetEnumPattern(p_l'),
+                  mk_STKM`SetUnionPattern(lp, mk_STKM`SetEnumPattern(els)) ->
+                     --      return mk_STKM`SetUnionPattern(lp, mk_STKM`SetEnumPattern(els ^ surp.els)),
+                     let p_l = els ^ surp.els,
+                         p_l' = [ p_l(i) | i in set inds p_l &
+                                  p_l(i) not in set { p_l(j) | j in set inds p_l & j < i } ]
+                     in return mk_STKM`SetUnionPattern(lp, mk_STKM`SetEnumPattern(p_l')),
+                  others -> return mk_STKM`SetUnionPattern(sulp, surp)
+                end
+              else return mk_STKM`SetUnionPattern(sulp, surp),
+
       mk_AS`SeqEnumPattern(els,-)    -> def e_l = [P2P(els(i)) | i in set inds els]
                                           in return mk_STKM`SeqEnumPattern(e_l),
       mk_AS`SeqConcPattern(lp,rp,-)  ->
@@ -194,7 +219,10 @@ operations
                 m_l' = [ m_l(i) | i in set inds m_l &
                             m_l(i) not in set { m_l(j) | j in set inds m_l & j < i } ]
             in return mk_STKM`MapEnumPattern(m_l'),
-      mk_AS`MapMergePattern(lp,rp,-) -> return mk_STKM`MapMergePattern(P2P(lp), P2P(rp)),
+      --mk_AS`MapMergePattern(lp,rp,-) -> return mk_STKM`MapMergePattern(P2P(lp), P2P(rp)),
+      mk_AS`MapMergePattern(-,-,-) ->
+            def mk_AS`MapMergePattern(lp,rp,-) = PAT`DoCarePattern(pat,mk_AS`Name(["1"], CI`NilContextId));
+            in return mk_STKM`MapMergePattern(P2P(lp), P2P(rp)),
       mk_AS`TuplePattern(p_l,-)      -> def els = [P2P(p_l(i)) | i in set inds p_l]
                                         in return mk_STKM`TuplePattern(els),
       mk_AS`RecordPattern(nm,p_l,-)  -> def els = [P2P(p_l(i)) | i in set inds p_l]
