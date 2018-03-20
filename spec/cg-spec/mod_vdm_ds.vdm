@@ -1640,7 +1640,6 @@ constructions of composite type.
           if ((hd nm.ids) = CGAUX`GiveCurCName())
           then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
           else
-           (
             def qnm = TPGEN`GenQualifiedTypeName(TPGEN`GenQName(nm))
             in
               if (qnm = nil)
@@ -1649,7 +1648,6 @@ constructions of composite type.
                 if (CGAUX`GiveFirstName(qnm) = CGAUX`GiveCurCASName())
                 then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
                 else return BC`GenTypeSpecifier(BC`Rename(qnm))
-           )
         else ---- prefix record type with class name (important when superclass is code generated as interface or imported class)
 
           def qnm = TPGEN`GenQualifiedTypeName(TPGEN`GenQName(nm));
@@ -1852,7 +1850,8 @@ constructions of product type.
     if CPP`isJAVA()
     then CGAUX`InsertImport("jp.vdmtools.VDM.Tuple");
 #endif VDMPP
-    return BC`GenTypeSpecifier( BC`GenIdentifier("Tuple") ););
+    return BC`GenTypeSpecifier( BC`GenIdentifier("Tuple") );
+   );
 
   GenCastProduct: CPP`Expr ==> CPP`Expr
   GenCastProduct(e) ==
@@ -1901,7 +1900,8 @@ constructions of product type.
     if CPP`isJAVA()
     then CGAUX`SetException(true);
 #endif VDMPP
-    return BC`GenFctCallObjMemAcc(tup, "SetField", [field, elem]););
+    return BC`GenFctCallObjMemAcc(tup, "SetField", [field, elem]);
+   ); 
 
   GenTupGetField: CPP`Expr * CPP`Expr * REP`TypeRep *REP`TypeRep ==> CPP`Expr
   GenTupGetField(e, i, tp, ptp) ==
@@ -1972,18 +1972,6 @@ GenLocalComparator(-) ==
                                       [ BC`GenInitDecl(  BC`GenIdentifier("vdmComp" ),
                                       initComparator) ] )  ]
   in return pr_l;
--- (dcl pr_l : seq of CPP`MemberDeclaration := [],
---      compClass: seq of char := "UTIL.VDMCompare";
---
---  let initComparator = BC`GenAsgnInit(BC`GenClassInstanceCreationExpr(BC`GenIdentifier(compClass), []))
---  in
---    pr_l:= pr_l ^ [ BC`GenIdentDeclaration([],
---                     [ BC`GenStorageClassSpecifier(<STATIC>),
---                       BC`GenTypeSpecifier( BC`GenIdentifier(compClass))  ],
---                     [ BC`GenInitDecl(  BC`GenIdentifier("vdmComp" ),
---                                        initComparator) ] )  ];
---  return pr_l
--- );
 \end{vdm_al}
 #endif VDMPP
 
