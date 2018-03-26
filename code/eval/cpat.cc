@@ -296,14 +296,11 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
         default: {
           // TODO: PGL (06.07) This is not correct but a major update is needed to fix it.
           // match any value
-// 20120406 -->
           // return TYPE_STKM_PatternName().Init(Nil(), Nil(), cid);
           TYPE_AS_Name clmodName (GetClMod());
           TYPE_SEM_BlkEnv blkenv (AUX::MkEmptyBlkEnv(sem_read_only));
-// 20150303 -->
           TYPE_AS_TotalFnType lft;
           lft.Init(Sequence(), TYPE_AS_AllType().Init(NilContextId), NilContextId);
-// <-- 20150303
 
           TYPE_STKM_SubProgramId id (InsertProgram(clmodName, E2I(val)));
 
@@ -319,7 +316,6 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
                    Nil(),
                    Int(PRIVATE_AS));
           return TYPE_STKM_MatchVal().Init(SemRec::CompFN(efn));
-// <--20120406
         }
       }
     }
@@ -342,8 +338,6 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
 
     case TAG_TYPE_AS_SetUnionPattern: {
       TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
-      //return TYPE_STKM_SetUnionPattern().Init(P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_lp)), 
-      //                                        P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_rp)));
       TYPE_STKM_Pattern sulp (P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_lp)));
       TYPE_STKM_Pattern surp (P2P(pat_q.GetRecord(pos_AS_SetUnionPattern_rp)));
       if (surp.Is(TAG_TYPE_STKM_SetEnumPattern)) {
@@ -461,8 +455,61 @@ TYPE_STKM_Pattern StackCompiler::P2P(const TYPE_AS_Pattern & pat)
 
     case TAG_TYPE_AS_MapMergePattern: {
       TYPE_AS_Pattern pat_q (PAT::DoCarePattern(pat, ASTAUX::MkNameFromId(SEQ<Char>(L"1"), NilContextId)));
-      return TYPE_STKM_MapMergePattern().Init(P2P(pat_q.GetRecord(pos_AS_MapMergePattern_lp)),
-                                              P2P(pat_q.GetRecord(pos_AS_MapMergePattern_rp)));
+      TYPE_STKM_Pattern mmlp (P2P(pat_q.GetRecord(pos_AS_MapMergePattern_lp)));
+      TYPE_STKM_Pattern mmrp (P2P(pat_q.GetRecord(pos_AS_MapMergePattern_rp)));
+      if (mmrp.Is(TAG_TYPE_STKM_MapEnumPattern)) {
+        switch (mmlp.GetTag()) {
+          case TAG_TYPE_STKM_MapEnumPattern: {
+            SEQ<TYPE_STKM_Pattern> mls (mmlp.GetSequence(pos_AS_MapEnumPattern_mls));
+            SEQ<TYPE_STKM_Pattern> p_l (mmrp.GetSequence(pos_AS_MapEnumPattern_mls));
+            size_t len_p_l = p_l.Length();
+            for (size_t i = 1; i <= len_p_l; i++) {
+              const TYPE_STKM_Pattern & p(p_l[i]);
+              if (!mls.Elems().InSet(p)) {
+                mls.ImpAppend(p);
+              }
+            }
+            return TYPE_STKM_MapEnumPattern().Init(mls);
+          }
+          case TAG_TYPE_STKM_MapMergePattern: {
+            const TYPE_STKM_Pattern & mmplp (mmlp.GetRecord(pos_STKM_MapMergePattern_lp));
+            const TYPE_STKM_Pattern & mmprp (mmlp.GetRecord(pos_STKM_MapMergePattern_rp));
+            if (mmprp.Is(TAG_TYPE_STKM_MapEnumPattern)) {
+              SEQ<TYPE_STKM_Pattern> mls (mmprp.GetSequence(pos_AS_MapEnumPattern_mls));
+              SEQ<TYPE_STKM_Pattern> p_l (mmrp.GetSequence(pos_AS_MapEnumPattern_mls));
+              size_t len_p_l = p_l.Length();
+              for (size_t i = 1; i <= len_p_l; i++) {
+                const TYPE_STKM_Pattern & p(p_l[i]);
+                if (!mls.Elems().InSet(p)) {
+                  mls.ImpAppend(p);
+                }
+              }
+              return TYPE_STKM_MapMergePattern ().Init(mmplp, TYPE_STKM_MapEnumPattern().Init(mls));
+            }
+            else if (mmplp.Is(TAG_TYPE_STKM_MapEnumPattern)) {
+              SEQ<TYPE_STKM_Pattern> mls (mmplp.GetSequence(pos_AS_MapEnumPattern_mls));
+              SEQ<TYPE_STKM_Pattern> p_l (mmrp.GetSequence(pos_AS_MapEnumPattern_mls));
+              size_t len_p_l = p_l.Length();
+              for (size_t i = 1; i <= len_p_l; i++) {
+                const TYPE_STKM_Pattern & p(p_l[i]);
+                if (!mls.Elems().InSet(p)) {
+                  mls.ImpAppend(p);
+                }
+              }
+              return TYPE_STKM_MapMergePattern ().Init(mmprp, TYPE_STKM_MapEnumPattern().Init(mls));
+            }
+            else {
+              return TYPE_STKM_MapMergePattern().Init(mmlp,mmrp);
+            }
+          }
+          default: {
+            return TYPE_STKM_MapMergePattern().Init(mmlp,mmrp);
+          }
+        }
+      }
+      else {
+        return TYPE_STKM_MapMergePattern().Init(mmlp,mmrp);
+      }
     }
 
     case TAG_TYPE_AS_TuplePattern: {
