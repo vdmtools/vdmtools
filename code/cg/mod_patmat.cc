@@ -81,8 +81,7 @@ Tuple vdmcg::CGPatternMatchExcl(const TYPE_AS_Pattern & p,
     case TAG_TYPE_AS_ObjectPattern:
 #endif // VDMPP
     case TAG_TYPE_AS_SeqConcPattern: {
-      if (!varExpr_v.Is(TAG_TYPE_CPP_Identifier))
-      {
+      if (!varExpr_v.Is(TAG_TYPE_CPP_Identifier)) {
         tmpVar_v = vdm_BC_GiveName(ASTAUX::MkId(L"tmpVar"));
         pm.ImpConc(GenConstDeclInit(type, tmpVar_v, varExpr_v));
       }
@@ -150,7 +149,13 @@ Tuple vdmcg::CGPatternMatch (const TYPE_AS_Pattern & p,
       break;
     }
     case TAG_TYPE_AS_SetUnionPattern: {
-      res = CGMatchSetUnionPattern (p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
+      TYPE_AS_Pattern pat (CheckSetUnionPattern(p));
+      if (pat.Is(TAG_TYPE_AS_SetEnumPattern)) {
+        res = CGMatchSetEnumPattern (pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
+      }
+      else {
+        res = CGMatchSetUnionPattern (pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop);
+      }
       break;
     }
     case TAG_TYPE_AS_SeqConcPattern: {
@@ -261,16 +266,16 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
         rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
       }
 
-      if (!inner.IsNil())
+      if (!inner.IsNil()) {
         rb.ImpConc(inner);
+      }
       return mk_(rb, Bool(true));
     }
     else
     { // (pid_m.DomExists(n) && (pid_m[n] != type))
       // type for pattern is defined and not equals defind type
       TYPE_AS_Expr newVarExpr_v (varExpr_v); 
-      if (!type.IsNil())
-      {
+      if (!type.IsNil()) {
         TYPE_REP_TypeRep t (type);
         switch (t.GetTag()) {
           case TAG_TYPE_REP_NumericTypeRep: {
@@ -288,11 +293,12 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
       }
 
       TYPE_REP_TypeRep tt;
-      if (type.IsNil() || IsSubType(pid_m[n], type))
+      if (type.IsNil() || IsSubType(pid_m[n], type)) {
         tt = pid_m[n];
-      else
+      }
+      else {
         tt = type;
-    
+      } 
       TYPE_CPP_Expr istype (GenIsType(newVarExpr_v, tt));
       TYPE_REP_BooleanTypeRep btype;
       TYPE_CPP_Expr cond (GenGetValue(istype, btype));
@@ -324,8 +330,9 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
   }
   else { // n = nil // match always
     SEQ<TYPE_CPP_Stmt> rb;
-    if (!inner.IsNil())
+    if (!inner.IsNil()) {
       rb.ImpConc(inner);
+    }
     return mk_(rb, Bool(true));
   }
 }
@@ -538,7 +545,14 @@ Tuple vdmcg::CGMatchSetEnumPattern (const TYPE_AS_SetEnumPattern & pat,
     return mk_(rb, Bool(false));
   }
 
-  TYPE_CPP_Expr castVarExpr_v (IsSetType(type) ? varExpr_v : GenCastSetType(varExpr_v));
+  SEQ<TYPE_CPP_Stmt> decls;
+  TYPE_CPP_Expr varExpr_v_q (varExpr_v);
+  if (!varExpr_v.Is(TAG_TYPE_CPP_Identifier)) {
+    varExpr_v_q = vdm_BC_GiveName(ASTAUX::MkId(L"tmpVal_v"));
+    decls.ImpConc(GenDeclInit_DS(type, varExpr_v_q, varExpr_v));
+  }
+  
+  TYPE_CPP_Expr castVarExpr_v (IsSetType(type) ? varExpr_v_q : GenCastSetType(varExpr_v_q));
 
   const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
 
@@ -571,13 +585,13 @@ Tuple vdmcg::CGMatchSetEnumPattern (const TYPE_AS_SetEnumPattern & pat,
     }
 
     if (IsSetType(type)) {
-      SEQ<TYPE_CPP_Stmt> rb;
+      SEQ<TYPE_CPP_Stmt> rb (decls);
       rb.ImpAppend(stmt);
       return mk_(rb, Bool(!inner.IsNil() && nonstop)); 
     }
     else {
-      SEQ<TYPE_CPP_Stmt> rb;
-      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v))),
+      SEQ<TYPE_CPP_Stmt> rb (decls);
+      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v_q))),
                                     stmt, nil));
       return mk_(rb, Bool(false)); 
     }
@@ -614,16 +628,16 @@ Tuple vdmcg::CGMatchSetEnumPattern (const TYPE_AS_SetEnumPattern & pat,
 
     TYPE_CPP_Expr cond (vdm_BC_GenEq (vdm_BC_GenIntegerLit (len_p_l), GenCard_int (castVarExpr_v)));
     if (!IsSetType(type)) {
-      cond = vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v)), vdm_BC_GenBracketedExpr(cond));
+      cond = vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v_q)), vdm_BC_GenBracketedExpr(cond));
     }
 
     if (Is_excl && nonstop) {
-      SEQ<TYPE_CPP_Stmt> rb;
+      SEQ<TYPE_CPP_Stmt> rb (decls);
       rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(ifBody), nil));
       return mk_(rb, Bool(true));
     }
     else {
-      SEQ<TYPE_CPP_Stmt> rb;
+      SEQ<TYPE_CPP_Stmt> rb (decls);
       rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
                                     vdm_BC_GenBlock(ifBody), nil));
       return mk_(rb, Bool(false));
@@ -654,10 +668,10 @@ Tuple vdmcg::CGMatchSetEnumPattern (const TYPE_AS_SetEnumPattern & pat,
                                 mk_CG_VT (perm_v, perm_t), inner_rb));
 
     TYPE_CPP_Expr cond (vdm_BC_GenEq (vdm_BC_GenIntegerLit (len_p_l), GenCard_int (castVarExpr_v)));
-    if (!IsSetType(type))
-      cond = vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v)), vdm_BC_GenBracketedExpr(cond));
-
-    SEQ<TYPE_CPP_Stmt> rb;
+    if (!IsSetType(type)) {
+      cond = vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v_q)), vdm_BC_GenBracketedExpr(cond));
+    }
+    SEQ<TYPE_CPP_Stmt> rb (decls);
     rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
                                   vdm_BC_GenBlock(ifBody), nil));
     return mk_(rb, Bool(false));
@@ -705,8 +719,7 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
   const TYPE_CPP_Expr & varExpr_v (rc2.GetRecord(pos_CGMAIN_VT_name));
   const Generic & type (rc2.GetField(pos_CGMAIN_VT_type));
 
-  if (!type.IsNil() && !IsPosSeqType(type))
-  {
+  if (!type.IsNil() && !IsPosSeqType(type)) {
     SEQ<TYPE_CPP_Stmt> rb;
     rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"never match")));
     rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(false)));
@@ -730,8 +743,7 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
       all_nilname = false;
   }
 
-  if (all_nilname)
-  {
+  if (all_nilname) {
     // special case: [ - ], [ -, - ], ...
     // check length only
     TYPE_CPP_Expr seq_size;
@@ -967,8 +979,7 @@ Tuple vdmcg::CGMatchMapEnumPattern (const TYPE_AS_MapEnumPattern & pat,
   TYPE_REP_SetTypeRep newsp_type (mk_REP_SetTypeRep (dom_type));
 
   SEQ<TYPE_CPP_Stmt> ifBody;
-  if (len_mp_l == 1)
-  {
+  if (len_mp_l == 1) {
     TYPE_CPP_Identifier dom_v (vdm_BC_GiveName(ASTAUX::MkId(L"dom")));
     TYPE_CPP_Identifier rng_v (vdm_BC_GiveName(ASTAUX::MkId(L"rng")));
 
@@ -2504,6 +2515,56 @@ Tuple vdmcg::CGMatchList (const SEQ<TYPE_AS_Pattern> & p_l,
         }
       }
     }
+  }
+}
+
+// CheckSetUnionPattern
+// p : AS`Pattern
+// ==> AS`Pattern
+TYPE_AS_Pattern vdmcg::CheckSetUnionPattern(const TYPE_AS_Pattern & p)
+{
+  if (p.Is(TAG_TYPE_AS_SetUnionPattern)) {
+    const TYPE_AS_Pattern & lp (CheckSetUnionPattern(p.GetRecord(pos_AS_SetUnionPattern_lp)));
+    const TYPE_AS_Pattern & rp (CheckSetUnionPattern(p.GetRecord(pos_AS_SetUnionPattern_rp)));
+    const TYPE_CI_ContextId & cid (p.GetInt(pos_AS_SetUnionPattern_cid));
+
+    if (rp.Is(TAG_TYPE_AS_SetEnumPattern)) {
+      switch (lp.GetTag()) {
+        case TAG_TYPE_AS_SetEnumPattern: {
+          SEQ<TYPE_AS_Pattern> els (lp.GetSequence(pos_AS_SetEnumPattern_Elems));
+          els.ImpConc(rp.GetSequence(pos_AS_SetEnumPattern_Elems));
+          return TYPE_AS_SetEnumPattern().Init(els, cid);
+          break;
+        }
+        case TAG_TYPE_AS_SetUnionPattern: {
+          const TYPE_AS_Pattern & llp (lp.GetRecord(pos_AS_SetUnionPattern_lp));
+          const TYPE_AS_Pattern & lrp (lp.GetRecord(pos_AS_SetUnionPattern_rp));
+          if (lrp.Is(TAG_TYPE_AS_SetEnumPattern)) {
+            SEQ<TYPE_AS_Pattern> els (lrp.GetSequence(pos_AS_SetEnumPattern_Elems));
+            els.ImpConc(rp.GetSequence(pos_AS_SetEnumPattern_Elems));
+            return TYPE_AS_SetUnionPattern().Init(llp, TYPE_AS_SetEnumPattern().Init(els, cid), cid);
+          }
+          else if (llp.Is(TAG_TYPE_AS_SetEnumPattern)) {
+            SEQ<TYPE_AS_Pattern> els (llp.GetSequence(pos_AS_SetEnumPattern_Elems));
+            els.ImpConc(rp.GetSequence(pos_AS_SetEnumPattern_Elems));
+            return TYPE_AS_SetUnionPattern().Init(llp, TYPE_AS_SetEnumPattern().Init(els, cid), cid);
+          }
+          else {
+            return TYPE_AS_SetUnionPattern().Init(lp,rp,cid);
+          }
+          break;
+        }
+        default: {
+          return TYPE_AS_SetUnionPattern().Init(lp,rp,cid);
+        }
+      }
+    }
+    else {
+      return TYPE_AS_SetUnionPattern().Init(lp,rp,cid);
+    }
+  }
+  else {
+    return p;
   }
 }
 
