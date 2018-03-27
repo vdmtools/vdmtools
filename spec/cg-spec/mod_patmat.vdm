@@ -95,20 +95,25 @@ definitions
         (is_AS`RecordPattern(p))   -> CGMatchRecordPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
         (is_AS`TuplePattern(p))    -> CGMatchTuplePattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
         (is_AS`SetUnionPattern(p)) ->
-                def pat = CheckSetUnionPattern(p)
+                def pat = FlattenSetUnionPattern(p)
                 in
                   if is_AS`SetEnumPattern(pat)
                   then CGMatchSetEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
                   else CGMatchSetUnionPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
 
         (is_AS`SeqConcPattern(p))  ->
-                def pat = CheckSeqConcPattern(p)
+                def pat = FlattenSeqConcPattern(p)
                 in
                   if is_AS`SeqEnumPattern(pat)
                   then CGMatchSeqEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
                   else CGMatchSeqConcPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
 
-        (is_AS`MapMergePattern(p)) -> CGMatchMapMergePattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+        (is_AS`MapMergePattern(p)) -> 
+                def pat = FlattenMapMergePattern(p)
+                in
+                  if is_AS`MapEnumPattern(pat)
+                  then CGMatchMapEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
+                  else CGMatchMapMergePattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
 #ifdef VDMPP
         (is_AS`ObjectPattern(p))   -> CGMatchObjectPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
 #endif VDMPP
@@ -634,7 +639,8 @@ The function $GenVarSetToSeq$ takes three variables:
 \end{description}
 
 \begin{vdm_al}
-GenValSetToSeq: CPP`Name * CPP`Name * REP`SetTypeRep ==> seq of CPP`Stmt
+--GenValSetToSeq: CPP`Name * CPP`Name * REP`SetTypeRep ==> seq of CPP`Stmt
+GenValSetToSeq: CPP`Name * CPP`Expr * REP`SetTypeRep ==> seq of CPP`Stmt
 GenValSetToSeq(tovar_v, fromvar_v, -) ==
 #ifdef VDMPP
   if CPP`isJAVA()
@@ -843,48 +849,43 @@ CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
     if type <> nil and not CGAUX`IsPosMapType(type) 
     then return mk_([ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ], false)
     else
+     (dcl decls : seq of CPP`Stmt := [],
+          varExpr_v' : CPP`Expr := varExpr_v,
+          castVarExpr_v : CPP`Expr := varExpr_v';
+
+      if not is_CPP`Identifier(varExpr_v)
+      then
+       (varExpr_v' := BC`GiveName("tmpVal_v");
+        decls := decls ^ DS`GenDeclInit(type, varExpr_v', varExpr_v);
+       );
+
+      if not CGAUX`IsMapType(type)
+      then castVarExpr_v := DS`GenCastMap(varExpr_v')
+      else castVarExpr_v := varExpr_v';
+
       if forall mp in set elems mp_l & is_AS`PatternName(mp.dp) and mp.dp.nm = nil and
                                        is_AS`PatternName(mp.rp) and mp.rp.nm = nil
-      then
-       (dcl castVarExpr_v : CPP`Expr := varExpr_v;
-        if not CGAUX`IsMapType(type)
-        then castVarExpr_v := DS`GenCastMap(varExpr_v);
+      then -- { - |-> -}, { - |-> -, - |-> - },...
         def if_cond = BC`GenEq(BC`GenIntegerLit (len mp_l), DS`GenSize_int(castVarExpr_v));
-        in
-         (dcl stmt : CPP`Stmt;
-          if inner <> nil
-          --then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
-          then
-            if nonstop
-            then stmt := BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
-            else stmt := BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(if_cond)),
+            stmt = if inner <> nil
+                   then
+                     if nonstop
+                     then BC`GenIfStmt(if_cond, BC`GenBlock(inner), nil)
+                     else BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(if_cond)),
                                         BC`GenBlock(inner), nil)
-          else stmt := BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(if_cond));
+                   else BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(if_cond));
+        in
           if CGAUX`IsMapType(type)
-          --then return mk_([stmt], false)
-          then return mk_([stmt], (inner <> nil) and nonstop)
-          else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsMap(varExpr_v))),
+          then return mk_(decls ^ [stmt], (inner <> nil) and nonstop)
+          else return mk_(decls ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsMap(varExpr_v'))),
                                   stmt, nil)], false)
-         )
-       )
       else
         def mp_type = CGAUX`FindType(pat);
             dom_type = CGAUX`FindMapDomType(mp_type);
             rng_type = CGAUX`FindMapRngType(mp_type);
-            p_l = conc [ [mp_l(i).dp, mp_l(i).rp] | i in set inds mp_l ];
-            valSeq_v = BC`GiveName( "valSeq" );
-            perm_v   = BC`GiveName( "perm" );
-            perm_t   = mk_REP`GeneralMapTypeRep(dom_type, rng_type);
-            tmpvarExpr_v = BC`GiveName( "tmpvarExpr" );
-            newsp_type = mk_REP`SetTypeRep( dom_type )
         in
-         (dcl castVarExpr_v : CPP`Expr := varExpr_v;
-          if not CGAUX`IsMapType(type)
-          then castVarExpr_v := DS`GenCastMap(varExpr_v);
-          
           if len mp_l = 1
           then
-           (
             def dom_v = BC`GiveName("dom");
                 rng_v = BC`GiveName("rng");
                 mk_(pmr, Is_execr) = CGPatternMatchExcl((hd mp_l).rp, mk_CGMAIN`VT(rng_v, rng_type),
@@ -917,49 +918,52 @@ CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
                          ^ pmd;
                if CGAUX`IsMapType(type)
                then cond := BC`GenEq (BC`GenIntegerLit (len mp_l), DS`GenSize_int (castVarExpr_v))
-               else cond := BC`GenLogAnd(BC`GenBracketedExpr(DS`GenIsMap(varExpr_v)),
+               else cond := BC`GenLogAnd(BC`GenBracketedExpr(DS`GenIsMap(varExpr_v')),
                                           BC`GenBracketedExpr(BC`GenEq (BC`GenIntegerLit (len mp_l),
                                                                           DS`GenSize_int (castVarExpr_v))));
                if Is_excl and nonstop
-               then return mk_([BC`GenIfStmt (cond, BC`GenBlock (ifBody), nil)], true)
-               else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
+               then return mk_(decls ^ [BC`GenIfStmt (cond, BC`GenBlock (ifBody), nil)], true)
+               else return mk_(decls ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
                                              BC`GenBlock (ifBody), nil)], false)
               )
-           )
           else
-            def permSL_v = BC`GiveName( "permSL" );
+            def p_l = conc [ [mp_l(i).dp, mp_l(i).rp] | i in set inds mp_l ];
+                valSeq_v = BC`GiveName( "valSeq" );
+                perm_v   = BC`GiveName( "perm" );
+                perm_t   = mk_REP`GeneralMapTypeRep(dom_type, rng_type);
+                newsp_type = mk_REP`SetTypeRep( dom_type );
+                permSL_v = BC`GiveName( "permSL" );
                 permSL_t = mk_REP`SetTypeRep( mk_REP`SeqTypeRep( dom_type ) );
                 tmpSeq_v = BC`GiveName( "tmpSeq" );
                 elem_v = BC`GiveName( "elem" );
                 stmt_l = [DS`GenImpAppend(perm_v, elem_v),
                           DS`GenImpAppend(perm_v, DS`GenMapApply(mk_CGMAIN`VT(castVarExpr_v,
-                                                            mk_REP`GeneralMapTypeRep(dom_type, rng_type)), elem_v))];
-                mk_(pm, Is_excl) = CGMatchList (p_l, mk_CGMAIN`VT (perm_v, perm_t), succ_v, pn_s, pid_m, inner, false);
+                                                mk_REP`GeneralMapTypeRep(dom_type, rng_type)), elem_v))];
+                mk_(pm, Is_excl) = CGMatchList (p_l, mk_CGMAIN`VT (perm_v, perm_t),
+                                                       succ_v, pn_s, pid_m, inner, false);
                 inner_rb = DS`GenDeclEmptySeq (perm_v)
                            ^ DS`GenIterSeq(mk_CGMAIN`VT (tmpSeq_v, mk_REP`SeqTypeRep(dom_type)), nil,
                                            mk_CGMAIN`VT (elem_v, dom_type), stmt_l)
                            ^ (if Is_excl
                               then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
                               else [])
-                           ^ pm
+                           ^ pm;
+                ifBody = GenValSetToSeq (valSeq_v, DS`GenDom(castVarExpr_v), newsp_type)
+                         ^ DS`GenDeclSet (permSL_v, DS`GenPermute(valSeq_v))
+                         ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false))]
+                         ^ DS`GenIterSet (mk_CGMAIN`VT (permSL_v, permSL_t), BC`GenNot(succ_v),
+                                          mk_CGMAIN`VT (tmpSeq_v, mk_REP`SeqTypeRep(dom_type)), inner_rb);
             in
-             (dcl ifBody : seq of CPP`Stmt := [],
-                  cond : CPP`Expr;
-              ifBody := ifBody ^ DS`GenDeclSet (tmpvarExpr_v, DS`GenDom(castVarExpr_v))
-                               ^ GenValSetToSeq (valSeq_v, tmpvarExpr_v, newsp_type)
-                               ^ DS`GenDeclSet (permSL_v, DS`GenPermute(valSeq_v))
-                               ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false))]
-                               ^ DS`GenIterSet (mk_CGMAIN`VT (permSL_v, permSL_t), BC`GenNot(succ_v),
-                                                mk_CGMAIN`VT (tmpSeq_v, mk_REP`SeqTypeRep(dom_type)), inner_rb);
+             (dcl cond : CPP`Expr;
               if CGAUX`IsMapType(type)
               then cond := BC`GenEq (BC`GenIntegerLit (len mp_l), DS`GenSize_int (castVarExpr_v))
-              else cond := BC`GenLogAnd(BC`GenBracketedExpr(DS`GenIsMap(varExpr_v)),
+              else cond := BC`GenLogAnd(BC`GenBracketedExpr(DS`GenIsMap(varExpr_v')),
                                         BC`GenBracketedExpr(BC`GenEq (BC`GenIntegerLit (len mp_l),
                                                                           DS`GenSize_int (castVarExpr_v))));
-              return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
+              return mk_(decls ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
                                        BC`GenBlock (ifBody), nil)], false);
              );
-    );
+     );
 
 \end{vdm_al}
 
@@ -2000,12 +2004,12 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
    );
 
 functions
-CheckSetUnionPattern: AS`Pattern -> AS`Pattern
-CheckSetUnionPattern(p) ==
+FlattenSetUnionPattern: AS`Pattern -> AS`Pattern
+FlattenSetUnionPattern(p) ==
   if is_AS`SetUnionPattern(p)
   then
-    def lp = CheckSetUnionPattern(p.lp);
-        rp = CheckSetUnionPattern(p.rp);
+    def lp = FlattenSetUnionPattern(p.lp);
+        rp = FlattenSetUnionPattern(p.rp);
     in 
       if is_AS`SetEnumPattern(rp)
       then
@@ -2020,12 +2024,12 @@ CheckSetUnionPattern(p) ==
       else mk_AS`SetUnionPattern(lp,rp,p.cid)
   else p;
 
-CheckSeqConcPattern: AS`Pattern -> AS`Pattern
-CheckSeqConcPattern(p) ==
+FlattenSeqConcPattern: AS`Pattern -> AS`Pattern
+FlattenSeqConcPattern(p) ==
   if is_AS`SeqConcPattern(p)
   then
-    def lp = CheckSeqConcPattern(p.lp);
-        rp = CheckSeqConcPattern(p.rp);
+    def lp = FlattenSeqConcPattern(p.lp);
+        rp = FlattenSeqConcPattern(p.rp);
     in 
       if is_AS`SeqEnumPattern(rp)
       then
@@ -2037,6 +2041,27 @@ CheckSeqConcPattern(p) ==
         end
       else mk_AS`SeqConcPattern(lp,rp,p.cid)
   else p;
+
+FlattenMapMergePattern: AS`Pattern -> AS`Pattern
+FlattenMapMergePattern(p) ==
+  if is_AS`MapMergePattern(p)
+  then
+    def lp = FlattenMapMergePattern(p.lp);
+        rp = FlattenMapMergePattern(p.rp);
+    in 
+      if is_AS`MapEnumPattern(rp)
+      then
+        cases lp:
+          mk_AS`MapEnumPattern(mls,-) -> mk_AS`MapEnumPattern(mls ^ rp.mls, p.cid),
+          mk_AS`MapMergePattern(mmlp, mk_AS`MapEnumPattern(mls,-),-) ->
+             mk_AS`MapMergePattern(mmlp, mk_AS`MapEnumPattern(mls ^ rp.mls, p.cid), p.cid),
+          mk_AS`MapMergePattern(mk_AS`SetEnumPattern(mls,-),mmrp,-) ->
+             mk_AS`MapMergePattern(mmrp, mk_AS`MapEnumPattern(mls ^ rp.mls, p.cid), p.cid),
+          others -> mk_AS`MapMergePattern(lp,rp,p.cid)
+        end
+      else mk_AS`MapMergePattern(lp,rp,p.cid)
+  else p;
+
 \end{vdm_al}
 
 

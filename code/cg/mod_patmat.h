@@ -65,7 +65,7 @@ private:
                                const Generic &,
                                bool);
   SEQ<TYPE_CPP_Stmt> GenValSetToSeq (const TYPE_CPP_Name & tovar_v,
-                                     const TYPE_CPP_Name & fromvar_v,
+                                     const TYPE_CPP_Expr & fromvar_v,
                                      const TYPE_REP_SetTypeRep & str);
   Tuple CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern &,
                                const TYPE_CGMAIN_VT &,
@@ -132,8 +132,9 @@ private:
                      const Map &,
                      const Generic &,
                      bool);
-  TYPE_AS_Pattern CheckSetUnionPattern(const TYPE_AS_Pattern & p);
-  TYPE_AS_Pattern CheckSeqConcPattern(const TYPE_AS_Pattern & p);
+  TYPE_AS_Pattern FlattenSetUnionPattern(const TYPE_AS_Pattern & p);
+  TYPE_AS_Pattern FlattenSeqConcPattern(const TYPE_AS_Pattern & p);
+  TYPE_AS_Pattern FlattenMapMergePattern(const TYPE_AS_Pattern & p);
   TYPE_REP_TypeRep GenEqType (const TYPE_REP_TypeRep & type);
   bool HasComplexPattern(const TYPE_AS_Pattern & p);
   int CountComplexPattern(const TYPE_AS_Pattern & p);
