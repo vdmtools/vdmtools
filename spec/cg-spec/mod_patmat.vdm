@@ -1136,10 +1136,10 @@ CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_
 CGMatchSetUnionPattern: AS`SetUnionPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
                         [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
                         ==> seq of CPP`Stmt * bool
-CGMatchSetUnionPattern(mk_AS`SetUnionPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
+CGMatchSetUnionPattern(mk_AS`SetUnionPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
   if type <> nil and
-     (is_AS`PatternName(a) or is_AS`SetEnumPattern(a)) and
-     (is_AS`PatternName(b) or is_AS`SetEnumPattern(b))
+     (is_AS`PatternName(lp) or is_AS`SetEnumPattern(lp)) and
+     (is_AS`PatternName(rp) or is_AS`SetEnumPattern(rp))
   then
     if not CGAUX`IsPosSetType(type)
     then return mk_([BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false))], false)
@@ -1148,7 +1148,7 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
       if not CGAUX`IsSetType(type)
       then castVarExpr_v := DS`GenCastSetType(varExpr_v);
       
-      cases mk_(a,b) :
+      cases mk_(lp,rp) :
         mk_(mk_AS`PatternName(nil,-,-),mk_AS`PatternName (nil,-,-)) -> 
               -- - union -
               if inner <> nil
@@ -1183,17 +1183,13 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
                       tempSet3_v = BC`GiveName("tempSet3");
                       alelem_v = BC`GiveName("alelem");
                       elemtp = CGAUX`FindSetElemType(type);
-                      mk_(a',b') = if not is_AS`SetEnumPattern(a) and is_AS`SetEnumPattern(b)
-                                   then mk_(b,a)
-                                   else mk_(a,b);
-                      --mk_(pml, Is_exec_l) = CGPatternMatchExcl(a', mk_CGMAIN`VT(tempSet1_v, mk_REP`SetTypeRep(elemtp)),
-                      --                                        pn_s, succ_v, pid_m, nil, nonstop);
-                      --mk_(pmr, Is_exec_r) = CGPatternMatchExcl(b', mk_CGMAIN`VT(tempSet2_v, mk_REP`SetTypeRep(elemtp)),
-                      --                            pn_s union (dom CGEXPR`FindPatternId (a')), succ_v, pid_m, inner, nonstop);
-                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(a', mk_CGMAIN`VT(tempSet1_v, mk_REP`SetTypeRep(elemtp)),
+                      mk_(lp',rp') = if not is_AS`SetEnumPattern(lp) and is_AS`SetEnumPattern(rp)
+                                   then mk_(rp,lp)
+                                   else mk_(lp,rp);
+                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp', mk_CGMAIN`VT(tempSet1_v, mk_REP`SetTypeRep(elemtp)),
                                                               pn_s, succ_v, pid_m, nil, false);
-                      mk_(pmr, Is_exec_r) = CGPatternMatchExcl(b', mk_CGMAIN`VT(tempSet2_v, mk_REP`SetTypeRep(elemtp)),
-                                                  pn_s union (dom CGEXPR`FindPatternId (a')), succ_v, pid_m, inner, false);
+                      mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp', mk_CGMAIN`VT(tempSet2_v, mk_REP`SetTypeRep(elemtp)),
+                                                  pn_s union (dom CGEXPR`FindPatternId (lp')), succ_v, pid_m, inner, false);
                       Is_excl = Is_exec_l and Is_exec_r
                   in
                     (dcl inner_rb_l : seq of CPP`Stmt := DS`GenDeclSet(tempSet1_v, alelem_v) ^
@@ -1237,15 +1233,15 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
 CGMatchSeqConcPattern: AS`SeqConcPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
                        ==> seq of CPP`Stmt * bool
-CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
+CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
   if type <> nil and
-     (is_AS`PatternName(a) or is_AS`SeqEnumPattern(a) or is_AS`MatchVal(a) or is_AS`SeqConcPattern(a)) and
-     (is_AS`PatternName(b) or is_AS`SeqEnumPattern(b) or is_AS`MatchVal(b))
+     (is_AS`PatternName(lp) or is_AS`SeqEnumPattern(lp) or is_AS`MatchVal(lp) or is_AS`SeqConcPattern(lp)) and
+     (is_AS`PatternName(rp) or is_AS`SeqEnumPattern(rp) or is_AS`MatchVal(rp))
   then
     if not CGAUX`IsPosSeqType(type)
     then return mk_([BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false))], false)
     else
-     (cases mk_(a,b) :
+     (cases mk_(lp,rp) :
         mk_(mk_AS`PatternName(nil,-,-),mk_AS`PatternName (nil,-,-)) -> 
           -- -^-
          (dcl cond : CPP`Expr;
@@ -1305,16 +1301,17 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
             else
 #endif VDMPP
               castVarExpr_v := DS`GenCastSeq(varExpr_v, nil);
+
 #ifdef VDMPP
-          if CPP`isJAVA()
-          then
+            if CPP`isJAVA()
+            then
               if CGAUX`IsStringType(type)
               then -- startsWith and endWith can be used in this case
-                if is_AS`MatchVal(a) and CGAUX`IsStringType(CGAUX`FindType(a.val))
+                if is_AS`MatchVal(lp) and CGAUX`IsStringType(CGAUX`FindType(lp.val))
                 then
                  (dcl tmpVal_v : CPP`Expr,
                       e_stmt : seq of CPP`Stmt;
-                  def mk_(e, stmts) = CGEXPR`CGExprExcl(a.val, "tmpVal_v", nil)
+                  def mk_(e, stmts) = CGEXPR`CGExprExcl(lp.val, "tmpVal_v", nil)
                   in
                   if CGAUX`IsStringExpr(e)
                   then
@@ -1338,7 +1335,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                       index = DS`GenLenString_int(tmpVal_v);
                       sb2 = DS`GenSubSequence(castVarExpr_v, type, index, Max);
                       seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                      mk_(pmr, Is_exec_r) = CGPatternMatchExcl(b, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
+                      mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
                   in
                     if Is_exec_r and nonstop
                     then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pmr), nil)], true)
@@ -1347,11 +1344,11 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                       then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                       else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pmr), nil)], false)
                  )
-                elseif is_AS`MatchVal(b) and CGAUX`IsStringType(CGAUX`FindType(b.val))
+                elseif is_AS`MatchVal(rp) and CGAUX`IsStringType(CGAUX`FindType(rp.val))
                 then
                  (dcl tmpVal_v : CPP`Expr,
                       e_stmt : seq of CPP`Stmt;
-                  def mk_(e, stmts) = CGEXPR`CGExprExcl(b.val, "tmpVal_v", nil)
+                  def mk_(e, stmts) = CGEXPR`CGExprExcl(rp.val, "tmpVal_v", nil)
                   in
                     if CGAUX`IsStringExpr(e)
                     then
@@ -1374,7 +1371,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                       index = BC`GenMinus(Max, DS`GenLenString_int(tmpVal_v));
                       sb1 = DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(0), index);
                       seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(a, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
+                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
                   in
                     if Is_exec_l and nonstop
                     then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pml), nil)], true)
@@ -1383,19 +1380,22 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                       then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                       else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pml), nil)], false);
                  )
-                else
+                else skip
+              else skip -- IsStringType
+            else
 #endif VDMPP
                   -- CPP
-                  if is_AS`MatchVal(a)
+                  if is_AS`MatchVal(lp)
                   then
                    (dcl tmpVal_v : CPP`Expr,
                         e_stmt : seq of CPP`Stmt;
-                    def mk_(e, stmts) = CGEXPR`CGExprExcl(a.val, "tmpVal_v", nil)
+                    def mk_(e, stmts) = CGEXPR`CGExprExcl(lp.val, "tmpVal_v", nil)
                     in
                       if not is_CPP`Identifier(e)
                       then
                        (tmpVal_v := BC`GiveName("tmpVal_v");
-                        e_stmt := stmts ^ [BC`GenDecl(DS`GenType(type), tmpVal_v, BC`GenAsgnInit(e))])
+                        --e_stmt := stmts ^ [BC`GenDecl(DS`GenType(type), tmpVal_v, BC`GenAsgnInit(e))])
+                        e_stmt := stmts ^ [BC`GenDecl(DS`GenType(type), tmpVal_v, BC`GenObjectInit([e]))])
                       else
                        (tmpVal_v := e;
                         e_stmt := stmts);
@@ -1404,7 +1404,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                         index = DS`GenLen_int(tmpVal_v);
                         sb2 = DS`GenSubSequence(castVarExpr_v, type, index, Max);
                         seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                        mk_(pmr, Is_exec_r) = CGPatternMatchExcl(b, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
+                        mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
                     in
                       if Is_exec_r and nonstop
                       then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pmr), nil)], true)
@@ -1413,16 +1413,17 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                         then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                         else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pmr), nil)], false)
                    )
-                  elseif is_AS`MatchVal(b)
+                  elseif is_AS`MatchVal(rp)
                   then
                    (dcl tmpVal_v : CPP`Expr,
                         e_stmt : seq of CPP`Stmt;
-                    def mk_(e, stmts) = CGEXPR`CGExprExcl(b.val, "tmpVal_v", nil)
+                    def mk_(e, stmts) = CGEXPR`CGExprExcl(rp.val, "tmpVal_v", nil)
                     in
                       if not is_CPP`Identifier(e)
                       then
                        (tmpVal_v := BC`GiveName("tmpVal_v");
-                        e_stmt := stmts ^ [BC`GenDecl(DS`GenType(type), tmpVal_v, BC`GenAsgnInit(e))])
+                        --e_stmt := stmts ^ [BC`GenDecl(DS`GenType(type), tmpVal_v, BC`GenAsgnInit(e))])
+                        e_stmt := stmts ^ [BC`GenDecl(DS`GenType(type), tmpVal_v, BC`GenObjectInit([e]))])
                       else
                        (tmpVal_v := e;
                         e_stmt := stmts);
@@ -1431,7 +1432,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                         index = BC`GenMinus(Max, DS`GenLen_int(tmpVal_v));
                         sb1 = DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(0), index);
                         seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                        mk_(pml, Is_exec_l) = CGPatternMatchExcl(a, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
+                        mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
                     in
                       if Is_exec_l and nonstop
                       then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pml), nil)], true)
@@ -1470,12 +1471,9 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
               sb2 := DS`GenSubSequence(castVarExpr_v', type, BC`GenPlus(index, BC`GenIntegerLit(1)), Max));
 
             def seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                --mk_(pml, Is_exec_l) = CGPatternMatchExcl(b, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop);
-                --mk_(pmr, Is_exec_r) = CGPatternMatchExcl(a, mk_CGMAIN`VT(sb1, seqtp),
-                --                             pn_s union(dom CGEXPR`FindPatternId (b)), succ_v, pid_m, inner, nonstop);
-                mk_(pml, Is_exec_l) = CGPatternMatchExcl(b, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, false);
-                mk_(pmr, Is_exec_r) = CGPatternMatchExcl(a, mk_CGMAIN`VT(sb1, seqtp),
-                                          pn_s union(dom CGEXPR`FindPatternId (b)), succ_v, pid_m, inner, false);
+                mk_(pml, Is_exec_l) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, false);
+                mk_(pmr, Is_exec_r) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp),
+                                          pn_s union(dom CGEXPR`FindPatternId (rp)), succ_v, pid_m, inner, false);
                 Is_excl = Is_exec_l and Is_exec_r
             in 
              (dcl inner_rb_l : seq of CPP`Stmt := [],
@@ -1496,24 +1494,32 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
               else
 #endif VDMPP
                 len_var := DS`GenLen_int(castVarExpr_v);
-              def index_from = if is_AS`SeqEnumPattern(a)
-                               then len a.els
-                               elseif is_AS`SeqConcPattern(a)
-                               then 2
-                               elseif is_AS`SeqEnumPattern(b)
-                               then 0
-                               else 1;
-                  ini = BC`GenDecl(DS`GenSmallIntType(), index, BC`GenAsgnInit(BC`GenIntegerLit(index_from)));
+              def ai_from = if is_AS`SeqEnumPattern(lp)
+                            then BC`GenAsgnInit(BC`GenIntegerLit(len lp.els))
+                            elseif is_AS`SeqConcPattern(lp)
+                            then BC`GenAsgnInit(BC`GenIntegerLit(2))
+                            elseif is_AS`SeqEnumPattern(rp)
+                            then BC`GenAsgnInit(To)
+                            else BC`GenAsgnInit(BC`GenIntegerLit(1));
+                  ini = BC`GenDecl(DS`GenSmallIntType(), index, ai_from);
                   e1 = BC`GenLogAnd(BC`GenBracketedExpr(BC`GenLeq(index, To)), BC`GenNot(succ_v));
                   e2 = BC`GenPostPlusPlus(index);
                   ai = BC`GenAsgnInit(len_var);
-                  ai_to = if is_AS`SeqEnumPattern(b)
-                          then BC`GenAsgnInit(BC`GenMinus(len_var, BC`GenIntegerLit(len b.els)))
+                  ai_to = if is_AS`SeqEnumPattern(lp)
+                          then BC`GenAsgnInit(BC`GenIntegerLit(len lp.els))
+                          elseif is_AS`SeqEnumPattern(rp)
+                          then BC`GenAsgnInit(BC`GenMinus(Max, BC`GenIntegerLit(len rp.els)))
                           else BC`GenAsgnInit(len_var);
                   ifBody = javarb ^ [ BC`GenDecl(DS`GenSmallIntType(), Max, ai),
-                             BC`GenDecl(DS`GenSmallIntType(), To, ai_to),
-                             BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)),
-                             BC`GenForStmt(ini, e1, [ e2 ], BC`GenBlock(inner_rb_l)) ]
+                                      BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ] ^
+                           if is_AS`SeqEnumPattern(lp)
+                           then [ BC`GenDecl(DS`GenSmallIntType(), index, ai_to),
+                                  BC`GenIfStmt(BC`GenLeq(index, Max), BC`GenBlock(inner_rb_l), nil) ]
+                           elseif is_AS`SeqEnumPattern(rp)
+                           then [ BC`GenDecl(DS`GenSmallIntType(), index, ai_to),
+                                  BC`GenIfStmt(BC`GenGeq(index, BC`GenIntegerLit(0)), BC`GenBlock(inner_rb_l), nil) ]
+                           else [ BC`GenDecl(DS`GenSmallIntType(), To, ai_to),
+                                  BC`GenForStmt(ini, e1, [ e2 ], BC`GenBlock(inner_rb_l)) ];
                in
                  if CGAUX`IsSeqType(type)
                  then return mk_(ifBody, false)
@@ -1541,10 +1547,10 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
 CGMatchMapMergePattern: AS`MapMergePattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
                         [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
                         ==> seq of CPP`Stmt * bool
-CGMatchMapMergePattern(mk_AS`MapMergePattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop) ==
+CGMatchMapMergePattern(mk_AS`MapMergePattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop) ==
   if type <> nil and
-     (is_AS`PatternName(a) or is_AS`MapEnumPattern(a)) and
-     (is_AS`PatternName(b) or is_AS`MapEnumPattern(b))
+     (is_AS`PatternName(lp) or is_AS`MapEnumPattern(lp)) and
+     (is_AS`PatternName(rp) or is_AS`MapEnumPattern(rp))
   then
     if not CGAUX`IsPosMapType(type)
     then return mk_([BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false))], false)
@@ -1552,7 +1558,7 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
      (dcl castVarExpr_v : CPP`Expr := varExpr_v;
       if not CGAUX`IsMapType(type)
       then castVarExpr_v := DS`GenCastMap(varExpr_v);
-      cases mk_(a,b) :
+      cases mk_(lp,rp) :
         mk_(mk_AS`PatternName(nil,-,-),mk_AS`PatternName (nil,-,-)) -> 
               -- - munion -
               if inner <> nil
@@ -1567,8 +1573,8 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
             mk_AS`PatternName (nil,-,-)),
         mk_(mk_AS`PatternName (nil,-,-),
             mk_AS`MapEnumPattern([mk_AS`MapletPattern(mk_AS`PatternName(nil,-,-),mk_AS`PatternName (nil,-,-),-)],-)) ->
-              -- {|->} munion -
-              -- - munion {|->} -
+              -- {- |-> -} munion -
+              -- - munion {- |-> -}
              (dcl cond : CPP`Expr;
               if CGAUX`IsMapType(type)
               then cond := BC`GenNot(DS`GenMapIsEmpty(castVarExpr_v))
@@ -1590,9 +1596,9 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
                       tempSet3_v = BC`GiveName("tempSet3");
                       alreadySet_v = BC`GiveName("alreadySet");
                       alelem_v = BC`GiveName("alelem");
-                      mk_(a',b') = if not is_AS`MapEnumPattern(a) and is_AS`MapEnumPattern(b)
-                                   then mk_(b,a)
-                                   else mk_(a,b)
+                      mk_(lp',rp') = if not is_AS`MapEnumPattern(lp) and is_AS`MapEnumPattern(rp)
+                                   then mk_(rp,lp)
+                                   else mk_(lp,rp)
                   in
                     (dcl inner_rb_l : seq of CPP`Stmt :=[],
                          tm1v : CPP`Expr := BC`GiveName("tempMap1"),
@@ -1624,18 +1630,12 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
                        else
                          tm2v := res2_v;
                       );
-                     --let mk_(pml, Is_exec_l) = CGPatternMatchExcl(a',
-                     --                             mk_CGMAIN`VT(tm1v, mk_REP`GeneralMapTypeRep(domtp, rngtp)),
-                     --                             pn_s, succ_v, pid_m, nil, nonstop),
-                     --    mk_(pmr, Is_exec_r) = CGPatternMatchExcl(b', mk_CGMAIN`VT(tm2v,
-                     --                             mk_REP`GeneralMapTypeRep(domtp, rngtp)),
-                     --                             pn_s union (dom CGEXPR`FindPatternId (a')), succ_v, pid_m, inner, nonstop),
-                     def mk_(pml, Is_exec_l) = CGPatternMatchExcl(a',
+                     def mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp',
                                                   mk_CGMAIN`VT(tm1v, mk_REP`GeneralMapTypeRep(domtp, rngtp)),
                                                   pn_s, succ_v, pid_m, nil, false);
-                         mk_(pmr, Is_exec_r) = CGPatternMatchExcl(b', mk_CGMAIN`VT(tm2v,
+                         mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp', mk_CGMAIN`VT(tm2v,
                                                   mk_REP`GeneralMapTypeRep(domtp, rngtp)),
-                                                  pn_s union (dom CGEXPR`FindPatternId (a')), succ_v, pid_m, inner, false);
+                                                  pn_s union (dom CGEXPR`FindPatternId (lp')), succ_v, pid_m, inner, false);
                          Is_excl = Is_exec_l and Is_exec_r
                      in
                       (if Is_excl and inner = nil

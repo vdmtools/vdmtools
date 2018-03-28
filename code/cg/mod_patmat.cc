@@ -819,8 +819,9 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
       stringstmt.ImpConc(trb);
 
       SEQ<TYPE_CPP_Stmt> seqstmt;
-      if (newtype_l != type)
+      if (newtype_l != type) {
         seqstmt.ImpConc(GenDeclInit_DS (newtype_l, tmpvarExpr_v, GenCastType(newtype_l, varExpr_v)));
+      }
       seqstmt.ImpConc(trb);
 
       if (IsStringType(type)) {
@@ -831,8 +832,7 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
         rb.ImpConc(seqstmt);
         return mk_(seqstmt, Bool(Is_excl && nonstop));
       }
-      else
-      {
+      else {
         TYPE_REP_TypeRep etp (FindSeqElemType(type));
         if (Is_excl && nonstop) {
           if (IsPosCharType(etp)) {
@@ -1025,8 +1025,7 @@ Tuple vdmcg::CGMatchMapEnumPattern (const TYPE_AS_MapEnumPattern & pat,
     if (!IsMapType(type)) {
       cond = vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(GenIsMap(varExpr_v_q)), vdm_BC_GenBracketedExpr(cond));
     }
-    if (Is_excl && nonstop)
-    {
+    if (Is_excl && nonstop) {
       SEQ<TYPE_CPP_Stmt> rb (decls);
       rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(ifBody), nil));
       return mk_(rb, Bool(true));
@@ -1305,17 +1304,15 @@ Tuple vdmcg::CGMatchSetUnionPattern (const TYPE_AS_SetUnionPattern & pat,
                                      const Generic & inner,
                                      bool nonstop)
 {
-  const TYPE_AS_Pattern & a (pat.GetRecord(pos_AS_SetUnionPattern_lp));
-  const TYPE_AS_Pattern & b (pat.GetRecord(pos_AS_SetUnionPattern_rp));
+  const TYPE_AS_Pattern & lp (pat.GetRecord(pos_AS_SetUnionPattern_lp));
+  const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_SetUnionPattern_rp));
   const TYPE_CPP_Expr & varExpr_v (rc2.GetRecord(pos_CGMAIN_VT_name));
   const Generic & type (rc2.GetRecord(pos_CGMAIN_VT_type));
 
   if (!type.IsNil() &&
-      (a.Is (TAG_TYPE_AS_PatternName) || a.Is (TAG_TYPE_AS_SetEnumPattern)) &&
-      (b.Is (TAG_TYPE_AS_PatternName) || b.Is (TAG_TYPE_AS_SetEnumPattern)))
-  {
-    if (!IsPosSetType(type))
-    {
+      (lp.Is (TAG_TYPE_AS_PatternName) || lp.Is (TAG_TYPE_AS_SetEnumPattern)) &&
+      (rp.Is (TAG_TYPE_AS_PatternName) || rp.Is (TAG_TYPE_AS_SetEnumPattern))) {
+    if (!IsPosSetType(type)) {
       SEQ<TYPE_CPP_Stmt> rb;
       rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"never match")));
       rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(false)));
@@ -1324,68 +1321,59 @@ Tuple vdmcg::CGMatchSetUnionPattern (const TYPE_AS_SetUnionPattern & pat,
 
     TYPE_CPP_Expr castVarExpr_v (IsSetType(type) ? varExpr_v : GenCastSetType(varExpr_v));
 
-    if (a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil() &&
-        b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil() )
-    {
+    if (lp.Is (TAG_TYPE_AS_PatternName) && lp.GetField(pos_AS_PatternName_nm).IsNil() &&
+        rp.Is (TAG_TYPE_AS_PatternName) && rp.GetField(pos_AS_PatternName_nm).IsNil() ) {
       // - union -
-      if (!inner.IsNil()) 
-      {
-        if (nonstop)
-        {
+      if (!inner.IsNil()) {
+        if (nonstop) {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(GenIsSet(varExpr_v), vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(true));
         }
-        else
-        {
+        else {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v))),
                                         vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(false));
         }
       }
-      else
-      {
+      else {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v))));
         return mk_(rb, Bool(false));
       }
     }
-    else if ((a.Is(TAG_TYPE_AS_SetEnumPattern) &&
-              (a.GetSequence(pos_AS_SetEnumPattern_Elems).Length() == 1) &&
-              a.GetSequence(pos_AS_SetEnumPattern_Elems)[1].Is(TAG_TYPE_AS_PatternName) &&
-              Record(a.GetSequence(pos_AS_SetEnumPattern_Elems)[1]).GetField(pos_AS_PatternName_nm).IsNil() &&
-              b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil())
+    else if ((lp.Is(TAG_TYPE_AS_SetEnumPattern) &&
+              (lp.GetSequence(pos_AS_SetEnumPattern_Elems).Length() == 1) &&
+              lp.GetSequence(pos_AS_SetEnumPattern_Elems)[1].Is(TAG_TYPE_AS_PatternName) &&
+              Record(lp.GetSequence(pos_AS_SetEnumPattern_Elems)[1]).GetField(pos_AS_PatternName_nm).IsNil() &&
+              rp.Is (TAG_TYPE_AS_PatternName) && rp.GetField(pos_AS_PatternName_nm).IsNil())
              ||
-             (a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil() &&
-              b.Is(TAG_TYPE_AS_SetEnumPattern) &&
-              (b.GetSequence(pos_AS_SetEnumPattern_Elems).Length() == 1) &&
-              b.GetSequence(pos_AS_SetEnumPattern_Elems)[1].Is(TAG_TYPE_AS_PatternName) &&
-              Record(b.GetSequence(pos_AS_SetEnumPattern_Elems)[1]).GetField(pos_AS_PatternName_nm).IsNil()))
+             (lp.Is (TAG_TYPE_AS_PatternName) && lp.GetField(pos_AS_PatternName_nm).IsNil() &&
+              rp.Is(TAG_TYPE_AS_SetEnumPattern) &&
+              (rp.GetSequence(pos_AS_SetEnumPattern_Elems).Length() == 1) &&
+              rp.GetSequence(pos_AS_SetEnumPattern_Elems)[1].Is(TAG_TYPE_AS_PatternName) &&
+              Record(rp.GetSequence(pos_AS_SetEnumPattern_Elems)[1]).GetField(pos_AS_PatternName_nm).IsNil()))
     {
       // {-} union -
       // - union {-}
       TYPE_CPP_Expr cond (IsSetType(type) 
                             ? vdm_BC_GenNot(GenSetIsEmpty(castVarExpr_v))
                             : vdm_BC_GenLogAnd(GenIsSet(varExpr_v), vdm_BC_GenNot(GenSetIsEmpty(castVarExpr_v))));
-      if (!inner.IsNil()) 
-      {
-        if (nonstop)
-        {
+      if (!inner.IsNil()) {
+        if (nonstop) {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(true));
         }
-        else
-        {
+        else {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
                                         vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(false));
         }
       }
-      else
-      {
+      else {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBracketedExpr(cond)));
         return mk_(rb, Bool(false));
@@ -1410,40 +1398,35 @@ Tuple vdmcg::CGMatchSetUnionPattern (const TYPE_AS_SetUnionPattern & pat,
 
       TYPE_REP_TypeRep elemtp (FindSetElemType(type));
 
-      TYPE_AS_Pattern a_q, b_q;
-      if (!a.Is(TAG_TYPE_AS_SetEnumPattern) && b.Is(TAG_TYPE_AS_SetEnumPattern))
-      {
-        a_q = b;
-        b_q = a;
+      TYPE_AS_Pattern lp_q, rp_q;
+      if (!lp.Is(TAG_TYPE_AS_SetEnumPattern) && rp.Is(TAG_TYPE_AS_SetEnumPattern)) {
+        lp_q = rp;
+        rp_q = lp;
       }
-      else
-      {
-        a_q = a;
-        b_q = b;
+      else {
+        lp_q = lp;
+        rp_q = rp;
       }
 
-//      Tuple cgpmel (CGPatternMatchExcl(a_q, mk_CG_VT(tempSet1_v, mk_REP_SetTypeRep(elemtp)),
-//                                       pn_s, succ_v, pid_m, Nil(), nonstop));
-//      Tuple cgpmer (CGPatternMatchExcl(b_q, mk_CG_VT(tempSet2_v, mk_REP_SetTypeRep(elemtp)),
-//                                       pn_s.Union(FindPatternId (a_q).Dom ()), succ_v, pid_m, inner, nonstop));
-      Tuple cgpmel (CGPatternMatchExcl(a_q, mk_CG_VT(tempSet1_v, mk_REP_SetTypeRep(elemtp)),
+      Tuple cgpmel (CGPatternMatchExcl(lp_q, mk_CG_VT(tempSet1_v, mk_REP_SetTypeRep(elemtp)),
                                        pn_s, succ_v, pid_m, Nil(), false));
-      Tuple cgpmer (CGPatternMatchExcl(b_q, mk_CG_VT(tempSet2_v, mk_REP_SetTypeRep(elemtp)),
-                                       pn_s.Union(FindPatternId (a_q).Dom ()), succ_v, pid_m, inner, false));
+      Tuple cgpmer (CGPatternMatchExcl(rp_q, mk_CG_VT(tempSet2_v, mk_REP_SetTypeRep(elemtp)),
+                                       pn_s.Union(FindPatternId (lp_q).Dom ()), succ_v, pid_m, inner, false));
 
       bool Is_excl = cgpmel.GetBoolValue(2) && cgpmer.GetBoolValue(2);
 
-      if (Is_excl && inner.IsNil())
+      if (Is_excl && inner.IsNil()) {
         inner_rb_l.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
-
+      }
       inner_rb_l.ImpConc(cgpmel.GetSequence(1));
       
-      if (!cgpmer.GetSequence(1).IsEmpty())
-      {
-        if (cgpmel.GetBoolValue(2)) // false : need to check pattern match failed
+      if (!cgpmer.GetSequence(1).IsEmpty()) {
+        if (cgpmel.GetBoolValue(2)) { // false : need to check pattern match failed
           inner_rb_l.ImpConc(cgpmer.GetSequence(1));
-        else
+        }
+        else {
           inner_rb_l.ImpAppend(vdm_BC_GenIfStmt(succ_v, vdm_BC_GenBlock(cgpmer.GetSequence(1)), nil));
+        }
       }
 
       SEQ<TYPE_CPP_Stmt> outer_rb_l;
@@ -1460,13 +1443,17 @@ Tuple vdmcg::CGMatchSetUnionPattern (const TYPE_AS_SetUnionPattern & pat,
                                   vdm_BC_GenNot(succ_v),
                                   mk_CG_VT (elem_v, elemtp), outer_rb_l));
 
-      SEQ<TYPE_CPP_Stmt> rb;
-      if (IsSetType(type))
+      if (IsSetType(type)) {
+        SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpConc(ifBody);
-      else
+        return mk_(rb, Bool(false)); 
+      }
+      else {
+        SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsSet(varExpr_v))),
                                       vdm_BC_GenBlock(ifBody), nil));
-      return mk_(rb, Bool(false)); 
+        return mk_(rb, Bool(false)); 
+      }
     }
   }
   this->ContainsNotSupportedConstruct = true;
@@ -1490,16 +1477,16 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
                                     const Generic & inner,
                                     bool nonstop)
 {
-  const TYPE_AS_Pattern & a (pat.GetRecord(pos_AS_SeqConcPattern_lp));
-  const TYPE_AS_Pattern & b (pat.GetRecord(pos_AS_SeqConcPattern_rp));
+  const TYPE_AS_Pattern & lp (pat.GetRecord(pos_AS_SeqConcPattern_lp));
+  const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_SeqConcPattern_rp));
   const TYPE_CPP_Expr & varExpr_v (rc2.GetRecord(pos_CGMAIN_VT_name));
   const Generic & type (rc2.GetRecord(pos_CGMAIN_VT_type));
 
   if (!type.IsNil() &&
-      (a.Is (TAG_TYPE_AS_PatternName) || a.Is (TAG_TYPE_AS_SeqEnumPattern) ||
-       a.Is (TAG_TYPE_AS_MatchVal) || a.Is (TAG_TYPE_AS_SeqConcPattern)) &&
-      (b.Is (TAG_TYPE_AS_PatternName) || b.Is (TAG_TYPE_AS_SeqEnumPattern) ||
-       b.Is (TAG_TYPE_AS_MatchVal))) {
+      (lp.Is (TAG_TYPE_AS_PatternName) || lp.Is (TAG_TYPE_AS_SeqEnumPattern) ||
+       lp.Is (TAG_TYPE_AS_MatchVal) || lp.Is (TAG_TYPE_AS_SeqConcPattern)) &&
+      (rp.Is (TAG_TYPE_AS_PatternName) || rp.Is (TAG_TYPE_AS_SeqEnumPattern) ||
+       rp.Is (TAG_TYPE_AS_MatchVal))) {
     if (!IsPosSeqType(type)) {
       SEQ<TYPE_CPP_Stmt> rb;
       rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"never match")));
@@ -1508,8 +1495,8 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
     }
 
 
-    if ((a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil()) &&
-        (b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil())) {
+    if ((lp.Is (TAG_TYPE_AS_PatternName) && lp.GetField(pos_AS_PatternName_nm).IsNil()) &&
+        (rp.Is (TAG_TYPE_AS_PatternName) && rp.GetField(pos_AS_PatternName_nm).IsNil())) {
       // - ^ -
       TYPE_CPP_Expr cond;
       if (IsSeqType(type)) {
@@ -1546,17 +1533,17 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
         return mk_(rb, Bool(false));
       }
     }
-    else if ((a.Is (TAG_TYPE_AS_SeqEnumPattern) &&
-              (a.GetSequence(pos_AS_SeqEnumPattern_els).Length() == 1) &&
-              a.GetSequence(pos_AS_SeqEnumPattern_els)[1].Is (TAG_TYPE_AS_PatternName) &&
-              Record(a.GetSequence(pos_AS_SeqEnumPattern_els)[1]).GetField(pos_AS_PatternName_nm).IsNil() &&
-              (b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil()))
+    else if ((lp.Is (TAG_TYPE_AS_SeqEnumPattern) &&
+              (lp.GetSequence(pos_AS_SeqEnumPattern_els).Length() == 1) &&
+              lp.GetSequence(pos_AS_SeqEnumPattern_els)[1].Is (TAG_TYPE_AS_PatternName) &&
+              Record(lp.GetSequence(pos_AS_SeqEnumPattern_els)[1]).GetField(pos_AS_PatternName_nm).IsNil() &&
+              (rp.Is (TAG_TYPE_AS_PatternName) && rp.GetField(pos_AS_PatternName_nm).IsNil()))
              ||
-             (a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil() &&
-              b.Is (TAG_TYPE_AS_SeqEnumPattern) &&
-              (b.GetSequence(pos_AS_SeqEnumPattern_els).Length() == 1) &&
-              b.GetSequence(pos_AS_SeqEnumPattern_els)[1].Is (TAG_TYPE_AS_PatternName) &&
-              Record(b.GetSequence(pos_AS_SeqEnumPattern_els)[1]).GetField(pos_AS_PatternName_nm).IsNil())) {
+             (lp.Is (TAG_TYPE_AS_PatternName) && lp.GetField(pos_AS_PatternName_nm).IsNil() &&
+              rp.Is (TAG_TYPE_AS_SeqEnumPattern) &&
+              (rp.GetSequence(pos_AS_SeqEnumPattern_els).Length() == 1) &&
+              rp.GetSequence(pos_AS_SeqEnumPattern_els)[1].Is (TAG_TYPE_AS_PatternName) &&
+              Record(rp.GetSequence(pos_AS_SeqEnumPattern_els)[1]).GetField(pos_AS_PatternName_nm).IsNil())) {
       // [-] ^ -
       // - ^ [-]
       TYPE_CPP_Expr cond;
@@ -1619,8 +1606,8 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       if (vdm_CPP_isJAVA()) {
         if (IsStringType(type)) {
           // startsWith and endWith can be used in this case
-          if (a.Is(TAG_TYPE_AS_MatchVal) && IsStringType(FindType(a.GetRecord(pos_AS_MatchVal_val)))) {
-            Tuple cgee (CGExprExcl(a.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
+          if (lp.Is(TAG_TYPE_AS_MatchVal) && IsStringType(FindType(lp.GetRecord(pos_AS_MatchVal_val)))) {
+            Tuple cgee (CGExprExcl(lp.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
             TYPE_AS_Expr tmpVal_v (cgee.GetRecord(1));
             SEQ<TYPE_CPP_Stmt> e_stmt (cgee.GetSequence(2));
             if (IsStringExpr(tmpVal_v)) {
@@ -1643,7 +1630,7 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
             TYPE_CPP_Identifier index (GenLenString_int(tmpVal_v));
             TYPE_CPP_Expr sb2 (GenSubSequence(castVarExpr_v, type, index, Max));
             TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
-            Tuple cgpmer (CGPatternMatchExcl(b, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), nonstop));
+            Tuple cgpmer (CGPatternMatchExcl(rp, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), nonstop));
             if (cgpmer.GetBool(2) && nonstop) {
               SEQ<TYPE_CPP_Stmt> rb (e_stmt);
               rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(cgpmer.GetSequence(1)), nil));
@@ -1661,8 +1648,8 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
               return mk_(rb, Bool(false));
             }
           }
-          if (b.Is(TAG_TYPE_AS_MatchVal) && IsStringType(FindType(b.GetRecord(pos_AS_MatchVal_val)))) {
-            Tuple cgee (CGExprExcl(b.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
+          if (rp.Is(TAG_TYPE_AS_MatchVal) && IsStringType(FindType(rp.GetRecord(pos_AS_MatchVal_val)))) {
+            Tuple cgee (CGExprExcl(rp.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
             TYPE_AS_Expr tmpVal_v (cgee.GetRecord(1));
             SEQ<TYPE_CPP_Stmt> e_stmt (cgee.GetSequence(2));
             if (IsStringExpr(tmpVal_v))
@@ -1685,7 +1672,7 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
             TYPE_CPP_Identifier index (vdm_BC_GenMinus(Max, GenLenString_int(tmpVal_v)));
             TYPE_CPP_Expr sb1 (GenSubSequence(castVarExpr_v, type, vdm_BC_GenIntegerLit(0), index));
             TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
-            Tuple cgpmel (CGPatternMatchExcl(a, mk_CG_VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop));
+            Tuple cgpmel (CGPatternMatchExcl(lp, mk_CG_VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop));
             if (cgpmel.GetBool(2) && nonstop) {
               SEQ<TYPE_CPP_Stmt> rb (e_stmt);
               rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(cgpmel.GetSequence(1)), nil));
@@ -1708,13 +1695,15 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       else
 #endif // VDMPP
       { // C++
-        if (a.Is(TAG_TYPE_AS_MatchVal)) {
-          Tuple cgee (CGExprExcl(a.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
+        if (lp.Is(TAG_TYPE_AS_MatchVal)) {
+          Tuple cgee (CGExprExcl(lp.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
           TYPE_AS_Expr tmpVal_v (cgee.GetRecord(1));
           SEQ<TYPE_CPP_Stmt> e_stmt (cgee.GetSequence(2));
           if (!tmpVal_v.Is(TAG_TYPE_CPP_Identifier)) {
             tmpVal_v = vdm_BC_GiveName(ASTAUX::MkId(L"tmpVal_v"));
-            e_stmt.ImpAppend(vdm_BC_GenDecl(GenType(type), tmpVal_v, vdm_BC_GenAsgnInit(cgee.GetRecord(1))));
+            //e_stmt.ImpAppend(vdm_BC_GenDecl(GenType(type), tmpVal_v, vdm_BC_GenAsgnInit(cgee.GetRecord(1))));
+            e_stmt.ImpAppend(vdm_BC_GenDecl(GenType(type), tmpVal_v,
+                                            vdm_BC_GenObjectInit(mk_sequence(cgee.GetRecord(1)))));
           }
           TYPE_CPP_Expr cond (vdm_BC_GenFctCallObjMemAcc(castVarExpr_v, ASTAUX::MkId(L"StartsWith"),
                                                          mk_sequence(tmpVal_v)));
@@ -1722,7 +1711,7 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
           TYPE_CPP_Identifier index (GenLen_int(tmpVal_v));
           TYPE_CPP_Expr sb2 (GenSubSequence(castVarExpr_v, type, index, Max));
           TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
-          Tuple cgpmer (CGPatternMatchExcl(b, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), nonstop));
+          Tuple cgpmer (CGPatternMatchExcl(rp, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), nonstop));
           if (cgpmer.GetBool(2) && nonstop) {
             SEQ<TYPE_CPP_Stmt> rb (e_stmt);
             rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(cgpmer.GetSequence(1)), nil));
@@ -1740,13 +1729,15 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
             return mk_(rb, Bool(false));
           }
         }
-        if (b.Is(TAG_TYPE_AS_MatchVal)) {
-          Tuple cgee (CGExprExcl(b.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
+        if (rp.Is(TAG_TYPE_AS_MatchVal)) {
+          Tuple cgee (CGExprExcl(rp.GetRecord(pos_AS_MatchVal_val), ASTAUX::MkId(L"tmpVal_v"), nil));
           TYPE_AS_Expr tmpVal_v (cgee.GetRecord(1));
           SEQ<TYPE_CPP_Stmt> e_stmt (cgee.GetSequence(2));
           if (!tmpVal_v.Is(TAG_TYPE_CPP_Identifier)) {
             tmpVal_v = vdm_BC_GiveName(ASTAUX::MkId(L"tmpVal_v"));
-            e_stmt.ImpAppend(vdm_BC_GenDecl(GenType(type), tmpVal_v, vdm_BC_GenAsgnInit(cgee.GetRecord(1))));
+            //e_stmt.ImpAppend(vdm_BC_GenDecl(GenType(type), tmpVal_v, vdm_BC_GenAsgnInit(cgee.GetRecord(1))));
+            e_stmt.ImpAppend(vdm_BC_GenDecl(GenType(type), tmpVal_v,
+                                            vdm_BC_GenObjectInit(mk_sequence(cgee.GetRecord(1)))));
           }
           TYPE_CPP_Expr cond (vdm_BC_GenFctCallObjMemAcc(castVarExpr_v, ASTAUX::MkId(L"EndsWith"),
                                                          mk_sequence(tmpVal_v)));
@@ -1754,7 +1745,7 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
           TYPE_CPP_Identifier index (vdm_BC_GenMinus(Max, GenLen_int(tmpVal_v)));
           TYPE_CPP_Expr sb1 (GenSubSequence(castVarExpr_v, type, vdm_BC_GenIntegerLit(0), index));
           TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
-          Tuple cgpmel (CGPatternMatchExcl(a, mk_CG_VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop));
+          Tuple cgpmel (CGPatternMatchExcl(lp, mk_CG_VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop));
           if (cgpmel.GetBool(2) && nonstop) {
             SEQ<TYPE_CPP_Stmt> rb (e_stmt);
             rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(cgpmel.GetSequence(1)), nil));
@@ -1804,12 +1795,9 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
 
       TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
 
-//      Tuple cgpmel (CGPatternMatchExcl(b, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), nonstop));
-//      Tuple cgpmer (CGPatternMatchExcl(a, mk_CG_VT(sb1, seqtp),
-//                                       pn_s.Union(FindPatternId (b).Dom ()), succ_v, pid_m, inner, nonstop));
-      Tuple cgpmel (CGPatternMatchExcl(b, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), false));
-      Tuple cgpmer (CGPatternMatchExcl(a, mk_CG_VT(sb1, seqtp),
-                                       pn_s.Union(FindPatternId (b).Dom ()), succ_v, pid_m, inner, false));
+      Tuple cgpmel (CGPatternMatchExcl(rp, mk_CG_VT(sb2, seqtp), pn_s, succ_v, pid_m, Nil(), false));
+      Tuple cgpmer (CGPatternMatchExcl(lp, mk_CG_VT(sb1, seqtp),
+                                       pn_s.Union(FindPatternId (rp).Dom ()), succ_v, pid_m, inner, false));
 
       bool Is_excl = cgpmel.GetBoolValue(2) && cgpmer.GetBoolValue(2);
 
@@ -1829,21 +1817,20 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
         }
       }
 
-      int index_from = 1;
-      if (a.Is(TAG_TYPE_AS_SeqEnumPattern))
-      {
-        index_from = a.GetSequence(pos_AS_SeqEnumPattern_els).Length();
+      TYPE_CPP_AsgnInit ai_from;
+      if (lp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        ai_from = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(lp.GetSequence(pos_AS_SeqEnumPattern_els).Length()));
       }
-      else if (a.Is(TAG_TYPE_AS_SeqConcPattern))
-      {
-        index_from = 2;
+      else if (lp.Is(TAG_TYPE_AS_SeqConcPattern)) {
+        ai_from = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(2));
       }
-      else if (b.Is(TAG_TYPE_AS_SeqEnumPattern))
-      {
-        index_from = 0;
+      else if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        ai_from = vdm_BC_GenAsgnInit(to);
       }
-      TYPE_CPP_Stmt ini (vdm_BC_GenDecl(GenSmallIntType(), index,
-                                        vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(index_from))));
+      else {
+        ai_from = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(1));
+      }
+      TYPE_CPP_Stmt ini (vdm_BC_GenDecl(GenSmallIntType(), index, ai_from));
       TYPE_CPP_Expr e1 (vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(index, to)), vdm_BC_GenNot(succ_v)));
       TYPE_CPP_Expr e2 (vdm_BC_GenPostPlusPlus(index));
 
@@ -1859,22 +1846,35 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       }
       TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(len_var));
       TYPE_CPP_AsgnInit ai_to;
-      {
-        if (b.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-          ai_to = vdm_BC_GenAsgnInit(vdm_BC_GenMinus(
-                                      len_var,
-                                      vdm_BC_GenIntegerLit(b.GetSequence(pos_AS_SeqEnumPattern_els).Length())));
-        }
-        else {
-          ai_to = vdm_BC_GenAsgnInit(len_var);
-        }
+      if (lp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        ai_to = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(lp.GetSequence(pos_AS_SeqEnumPattern_els).Length()));
+      }
+      else if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        ai_to = vdm_BC_GenAsgnInit(vdm_BC_GenMinus(
+                                    Max,
+                                    vdm_BC_GenIntegerLit(rp.GetSequence(pos_AS_SeqEnumPattern_els).Length())));
+      }
+      else {
+        ai_to = vdm_BC_GenAsgnInit(len_var);
       }
 
       SEQ<TYPE_CPP_Stmt> ifBody (javarb); 
       ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), Max, ai));
-      ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), to, ai_to));
       ifBody.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(false)));
-      ifBody.ImpAppend(vdm_BC_GenForStmt(ini, e1, type_dL().ImpAppend(e2), vdm_BC_GenBlock(inner_rb_l)));
+
+      if (lp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), index, ai_to));
+        ifBody.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenLeq(index, Max), vdm_BC_GenBlock(inner_rb_l), nil));
+      }
+      else if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
+        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), index, ai_to));
+        ifBody.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenGeq(index, vdm_BC_GenIntegerLit(0)),
+                                          vdm_BC_GenBlock(inner_rb_l), nil));
+      }
+      else {
+        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), to, ai_to));
+        ifBody.ImpAppend(vdm_BC_GenForStmt(ini, e1, type_dL().ImpAppend(e2), vdm_BC_GenBlock(inner_rb_l)));
+      }
 
       if (IsSeqType(type)) {
         return mk_(ifBody, Bool(false));
@@ -1919,17 +1919,15 @@ Tuple vdmcg::CGMatchMapMergePattern (const TYPE_AS_MapMergePattern & pat,
                                      const Generic & inner,
                                      bool nonstop)
 {
-  const TYPE_AS_Pattern & a (pat.GetRecord(pos_AS_MapMergePattern_lp));
-  const TYPE_AS_Pattern & b (pat.GetRecord(pos_AS_MapMergePattern_rp));
+  const TYPE_AS_Pattern & lp (pat.GetRecord(pos_AS_MapMergePattern_lp));
+  const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_MapMergePattern_rp));
   const TYPE_CPP_Expr & varExpr_v (rc2.GetRecord(pos_CGMAIN_VT_name));
   const Generic & type (rc2.GetRecord(pos_CGMAIN_VT_type));
 
   if (!type.IsNil() &&
-      (a.Is (TAG_TYPE_AS_PatternName) || a.Is (TAG_TYPE_AS_MapEnumPattern)) &&
-      (b.Is (TAG_TYPE_AS_PatternName) || b.Is (TAG_TYPE_AS_MapEnumPattern)))
-  {
-    if(!IsPosMapType(type))
-    {
+      (lp.Is (TAG_TYPE_AS_PatternName) || lp.Is (TAG_TYPE_AS_MapEnumPattern)) &&
+      (rp.Is (TAG_TYPE_AS_PatternName) || rp.Is (TAG_TYPE_AS_MapEnumPattern))) {
+    if(!IsPosMapType(type)) {
       SEQ<TYPE_CPP_Stmt> rb;
       rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"never match")));
       rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(false)));
@@ -1938,79 +1936,69 @@ Tuple vdmcg::CGMatchMapMergePattern (const TYPE_AS_MapMergePattern & pat,
 
     TYPE_CPP_Expr castVarExpr_v (IsMapType(type) ? varExpr_v : GenCastMap(varExpr_v));
 
-    if (a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil() &&
-        b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil() )
-    {
+    if (lp.Is (TAG_TYPE_AS_PatternName) && lp.GetField(pos_AS_PatternName_nm).IsNil() &&
+        rp.Is (TAG_TYPE_AS_PatternName) && rp.GetField(pos_AS_PatternName_nm).IsNil() ) {
       // - munion -
-      if (!inner.IsNil()) 
-      {
-        if (nonstop)
-        {
+      if (!inner.IsNil()) {
+        if (nonstop) {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(GenIsMap(varExpr_v), vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(true));
         }
-        else
-        {
+        else {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsMap(varExpr_v))),
                                         vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(false));
         }
       }
-      else
-      {
+      else {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBracketedExpr(GenIsMap(varExpr_v))));
         return mk_(rb, Bool(false));
       }
     }
-    else if ((a.Is (TAG_TYPE_AS_MapEnumPattern) &&
-              (a.GetSequence(pos_AS_MapEnumPattern_mls).Length() == 1) &&
-              Record(a.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).Is(TAG_TYPE_AS_PatternName) &&
-              Record(a.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).GetField(pos_AS_PatternName_nm).IsNil() &&
-              Record(a.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).Is(TAG_TYPE_AS_PatternName) &&
-              Record(a.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).GetField(pos_AS_PatternName_nm).IsNil() &&
-             b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil() )
+    else if ((lp.Is (TAG_TYPE_AS_MapEnumPattern) &&
+              (lp.GetSequence(pos_AS_MapEnumPattern_mls).Length() == 1) &&
+              Record(lp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).Is(TAG_TYPE_AS_PatternName) &&
+              Record(lp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).GetField(pos_AS_PatternName_nm).IsNil() &&
+              Record(lp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).Is(TAG_TYPE_AS_PatternName) &&
+              Record(lp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).GetField(pos_AS_PatternName_nm).IsNil() &&
+             rp.Is (TAG_TYPE_AS_PatternName) && rp.GetField(pos_AS_PatternName_nm).IsNil() )
             ||
-            (a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil() &&
-             b.Is (TAG_TYPE_AS_MapEnumPattern) &&
-             (b.GetSequence(pos_AS_MapEnumPattern_mls).Length() == 1) &&
-             Record(b.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).Is(TAG_TYPE_AS_PatternName) &&
-             Record(b.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).GetField(pos_AS_PatternName_nm).IsNil() &&
-             Record(b.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).Is(TAG_TYPE_AS_PatternName) &&
-             Record(b.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).GetField(pos_AS_PatternName_nm).IsNil()))
+            (lp.Is (TAG_TYPE_AS_PatternName) && lp.GetField(pos_AS_PatternName_nm).IsNil() &&
+             rp.Is (TAG_TYPE_AS_MapEnumPattern) &&
+             (rp.GetSequence(pos_AS_MapEnumPattern_mls).Length() == 1) &&
+             Record(rp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).Is(TAG_TYPE_AS_PatternName) &&
+             Record(rp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_dp).GetField(pos_AS_PatternName_nm).IsNil() &&
+             Record(rp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).Is(TAG_TYPE_AS_PatternName) &&
+             Record(rp.GetSequence(pos_AS_MapEnumPattern_mls)[1]).GetRecord(pos_AS_MapletPattern_rp).GetField(pos_AS_PatternName_nm).IsNil()))
     {
       // { - |-> - } munion -
       // - munion { - |-> - }
       TYPE_CPP_Expr cond (IsMapType(type) 
                             ? vdm_BC_GenNot(GenMapIsEmpty(castVarExpr_v))
                             : vdm_BC_GenLogAnd(GenIsMap(varExpr_v), vdm_BC_GenNot(GenMapIsEmpty(castVarExpr_v))));
-      if (!inner.IsNil()) 
-      {
-        if (nonstop)
-        {
+      if (!inner.IsNil()) {
+        if (nonstop) {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(true));
         }
-        else
-        {
+        else {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
                                         vdm_BC_GenBlock(inner), nil));
           return mk_(rb, Bool(false));
         }
       }
-      else
-      {
+      else {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBracketedExpr(cond)));
         return mk_(rb, Bool(false));
       }
     }
-    else
-    {
+    else {
       TYPE_REP_TypeRep domtp(FindMapDomType(type));
       TYPE_REP_TypeRep rngtp(FindMapRngType(type));
       
@@ -2055,40 +2043,35 @@ Tuple vdmcg::CGMatchMapMergePattern (const TYPE_AS_MapMergePattern & pat,
         tm2v = res2_v;
       }
 
-      TYPE_AS_Pattern a_q, b_q;
-      if (!a.Is(TAG_TYPE_AS_MapEnumPattern) && b.Is(TAG_TYPE_AS_MapEnumPattern))
-      {
-        a_q = b;
-        b_q = a;
+      TYPE_AS_Pattern lp_q, rp_q;
+      if (!lp.Is(TAG_TYPE_AS_MapEnumPattern) && rp.Is(TAG_TYPE_AS_MapEnumPattern)) {
+        lp_q = rp;
+        rp_q = lp;
       }
-      else
-      {
-        a_q = a;
-        b_q = b;
+      else {
+        lp_q = lp;
+        rp_q = rp;
       }
 
-//      Tuple cgpmel (CGPatternMatchExcl(a_q, mk_CG_VT(tm1v, mk_REP_GeneralMapTypeRep(domtp, rngtp)),
-//                                       pn_s, succ_v, pid_m, Nil(), nonstop));
-//      Tuple cgpmer (CGPatternMatchExcl(b_q, mk_CG_VT(tm2v, mk_REP_GeneralMapTypeRep(domtp, rngtp)),
-//                                       pn_s.Union(FindPatternId (a_q).Dom ()), succ_v, pid_m, inner, nonstop));
-      Tuple cgpmel (CGPatternMatchExcl(a_q, mk_CG_VT(tm1v, mk_REP_GeneralMapTypeRep(domtp, rngtp)),
+      Tuple cgpmel (CGPatternMatchExcl(lp_q, mk_CG_VT(tm1v, mk_REP_GeneralMapTypeRep(domtp, rngtp)),
                                        pn_s, succ_v, pid_m, Nil(), false));
-      Tuple cgpmer (CGPatternMatchExcl(b_q, mk_CG_VT(tm2v, mk_REP_GeneralMapTypeRep(domtp, rngtp)),
-                                       pn_s.Union(FindPatternId (a_q).Dom ()), succ_v, pid_m, inner, false));
+      Tuple cgpmer (CGPatternMatchExcl(rp_q, mk_CG_VT(tm2v, mk_REP_GeneralMapTypeRep(domtp, rngtp)),
+                                       pn_s.Union(FindPatternId (lp_q).Dom ()), succ_v, pid_m, inner, false));
 
       bool Is_excl = cgpmel.GetBoolValue(2) && cgpmer.GetBoolValue(2);
 
-      if (Is_excl && inner.IsNil())
+      if (Is_excl && inner.IsNil()) {
         inner_rb_l.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
-
+      }
       inner_rb_l.ImpConc(cgpmel.GetSequence(1));
 
-      if (!cgpmer.GetSequence(1).IsEmpty())
-      {
-        if (cgpmel.GetBoolValue(2))
+      if (!cgpmer.GetSequence(1).IsEmpty()) {
+        if (cgpmel.GetBoolValue(2)) {
           inner_rb_l.ImpConc(cgpmer.GetSequence(1));
-        else
+        }
+        else {
           inner_rb_l.ImpAppend(vdm_BC_GenIfStmt(succ_v, vdm_BC_GenBlock(cgpmer.GetSequence(1)), nil));
+        }
       }
 
       SEQ<TYPE_CPP_Stmt> outer_rb_l;
@@ -2106,12 +2089,10 @@ Tuple vdmcg::CGMatchMapMergePattern (const TYPE_AS_MapMergePattern & pat,
                                   vdm_BC_GenNot(succ_v),
                                   mk_CG_VT (elem_v, domtp), outer_rb_l));
 
-      if (!IsMapType(type))
-      {
+      if (!IsMapType(type)) {
         return mk_(ifBody, Bool(false)); 
       }
-      else
-      {
+      else {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsMap(varExpr_v))),
                                         vdm_BC_GenBlock(ifBody), nil));
