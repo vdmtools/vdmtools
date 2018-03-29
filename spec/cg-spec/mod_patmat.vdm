@@ -1449,7 +1449,8 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
            (dcl castVarExpr_v' : CPP`Expr := castVarExpr_v,
                 javarb : seq of CPP`Stmt := [],
                 sb1 : CPP`Expr,
-                sb2 : CPP`Expr;
+                sb2 : CPP`Expr,
+                len_var : CPP`Expr;
 #ifdef VDMPP
             if CPP`isJAVA()
             then
@@ -1463,78 +1464,69 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                  (javarb := javarb ^ [ BC`GenDecl(DS`GenSeq0Type(), tmpVal_v, BC`GenAsgnInit(ini)) ];
                   castVarExpr_v' := tmpVal_v);
               sb1 := DS`GenSubSequence(castVarExpr_v', type, BC`GenIntegerLit(0), index);
-              sb2 := DS`GenSubSequence(castVarExpr_v', type, index, Max)
+              sb2 := DS`GenSubSequence(castVarExpr_v', type, index, Max);
+              if CGAUX`IsStringType(type)
+              then len_var := DS`GenLenString_int(castVarExpr_v)
+              else len_var := DS`GenLen_int(castVarExpr_v');
              )
             else
 #endif VDMPP
              (sb1 := DS`GenSubSequence(castVarExpr_v', type, BC`GenIntegerLit(1), index);
-              sb2 := DS`GenSubSequence(castVarExpr_v', type, BC`GenPlus(index, BC`GenIntegerLit(1)), Max));
+              sb2 := DS`GenSubSequence(castVarExpr_v', type, BC`GenPlus(index, BC`GenIntegerLit(1)), Max);
+              len_var := DS`GenLen_int(castVarExpr_v);
+             );
 
             def seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
                 mk_(pml, Is_exec_l) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, false);
                 mk_(pmr, Is_exec_r) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp),
                                           pn_s union(dom CGEXPR`FindPatternId (rp)), succ_v, pid_m, inner, false);
-                Is_excl = Is_exec_l and Is_exec_r
-            in 
-             (dcl inner_rb_l : seq of CPP`Stmt := [],
-                  len_var : CPP`Expr;
-              if Is_excl and inner = nil
-              then inner_rb_l := inner_rb_l ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
-              inner_rb_l := inner_rb_l ^ pml;
-              if pmr <> []
-              then inner_rb_l := inner_rb_l ^ if Is_exec_l
-                                              then pmr
-                                              else [BC`GenIfStmt(succ_v, BC`GenBlock(pmr), nil)];
+                Is_excl = Is_exec_l and Is_exec_r;
+                inner_rb_l = (if Is_excl and inner = nil
+                              then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
+                              else []) ^
+                              pml ^ if not Is_exec_l and pmr <> []
+                                    then [BC`GenIfStmt(succ_v, BC`GenBlock(pmr), nil)]
+                                    else pmr;
+                ifBody = javarb ^ [ BC`GenDecl(DS`GenSmallIntType(), Max, BC`GenAsgnInit(len_var)) ] ^
+                    if is_AS`SeqEnumPattern(lp)
+                    then
+                      let ai = BC`GenAsgnInit(BC`GenIntegerLit(len lp.els)),
+                          cond = BC`GenLeq(index, Max)
+                      in [ BC`GenDecl(DS`GenSmallIntType(), index, ai),
+                           BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
+                                        BC`GenBlock(inner_rb_l), nil) ]
+                    elseif is_AS`SeqEnumPattern(rp)
+                    then
+                      let ai = BC`GenAsgnInit(BC`GenMinus(Max, BC`GenIntegerLit(len rp.els))),
+                          cond = BC`GenGeq(index, BC`GenIntegerLit(0))
+                      in [ BC`GenDecl(DS`GenSmallIntType(), index, ai),
+                           BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
+                                        BC`GenBlock(inner_rb_l), nil) ]
+                    else
+                      let ai_from = BC`GenAsgnInit(BC`GenIntegerLit(if is_AS`SeqConcPattern(lp)
+                                                                    then 2
+                                                                    else 1)),
+                          ini = BC`GenDecl(DS`GenSmallIntType(), index, ai_from),
+                          e1 = BC`GenLogAnd(BC`GenBracketedExpr(BC`GenLeq(index, To)), BC`GenNot(succ_v)),
+                          e2 = BC`GenPostPlusPlus(index),
+                          ai_to = BC`GenAsgnInit(len_var)
+                      in [ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)),
+                           BC`GenDecl(DS`GenSmallIntType(), To, ai_to),
+                           BC`GenForStmt(ini, e1, [ e2 ], BC`GenBlock(inner_rb_l)) ];
+              in
+                if CGAUX`IsSeqType(type)
+                then return mk_(ifBody, false)
+                else
+                 (dcl cond : CPP`Expr;
 #ifdef VDMPP
-              if CPP`isJAVA()
-              then
-                if CGAUX`IsStringType(type)
-                then len_var := DS`GenLenString_int(castVarExpr_v)
-                else len_var := DS`GenLen_int(castVarExpr_v')
-              else
+                  if CPP`isJAVA()
+                  then cond := BC`GenLogOr(DS`GenIsSeq(varExpr_v), DS`GenIsString(varExpr_v))
+                  else
 #endif VDMPP
-                len_var := DS`GenLen_int(castVarExpr_v);
-              def ai_from = if is_AS`SeqEnumPattern(lp)
-                            then BC`GenAsgnInit(BC`GenIntegerLit(len lp.els))
-                            elseif is_AS`SeqConcPattern(lp)
-                            then BC`GenAsgnInit(BC`GenIntegerLit(2))
-                            elseif is_AS`SeqEnumPattern(rp)
-                            then BC`GenAsgnInit(To)
-                            else BC`GenAsgnInit(BC`GenIntegerLit(1));
-                  ini = BC`GenDecl(DS`GenSmallIntType(), index, ai_from);
-                  e1 = BC`GenLogAnd(BC`GenBracketedExpr(BC`GenLeq(index, To)), BC`GenNot(succ_v));
-                  e2 = BC`GenPostPlusPlus(index);
-                  ai = BC`GenAsgnInit(len_var);
-                  ai_to = if is_AS`SeqEnumPattern(lp)
-                          then BC`GenAsgnInit(BC`GenIntegerLit(len lp.els))
-                          elseif is_AS`SeqEnumPattern(rp)
-                          then BC`GenAsgnInit(BC`GenMinus(Max, BC`GenIntegerLit(len rp.els)))
-                          else BC`GenAsgnInit(len_var);
-                  ifBody = javarb ^ [ BC`GenDecl(DS`GenSmallIntType(), Max, ai),
-                                      BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ] ^
-                           if is_AS`SeqEnumPattern(lp)
-                           then [ BC`GenDecl(DS`GenSmallIntType(), index, ai_to),
-                                  BC`GenIfStmt(BC`GenLeq(index, Max), BC`GenBlock(inner_rb_l), nil) ]
-                           elseif is_AS`SeqEnumPattern(rp)
-                           then [ BC`GenDecl(DS`GenSmallIntType(), index, ai_to),
-                                  BC`GenIfStmt(BC`GenGeq(index, BC`GenIntegerLit(0)), BC`GenBlock(inner_rb_l), nil) ]
-                           else [ BC`GenDecl(DS`GenSmallIntType(), To, ai_to),
-                                  BC`GenForStmt(ini, e1, [ e2 ], BC`GenBlock(inner_rb_l)) ];
-               in
-                 if CGAUX`IsSeqType(type)
-                 then return mk_(ifBody, false)
-                 else
-                  (dcl cond : CPP`Expr;
-#ifdef VDMPP
-                   if CPP`isJAVA()
-                   then cond := BC`GenLogOr(DS`GenIsSeq(varExpr_v), DS`GenIsString(varExpr_v))
-                   else
-#endif VDMPP
-                     cond := DS`GenIsSeq(varExpr_v);
-                   return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
-                               BC`GenBlock(ifBody), nil)], false)
-                  )
-             )
+                    cond := DS`GenIsSeq(varExpr_v);
+                  return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(cond)),
+                              BC`GenBlock(ifBody), nil)], false)
+                 )
            )
          ) -- end of others
       end

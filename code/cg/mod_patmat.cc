@@ -1773,6 +1773,7 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       TYPE_CPP_Expr castVarExpr_v_q = castVarExpr_v;
       TYPE_CPP_Expr sb1;
       TYPE_CPP_Expr sb2;
+      TYPE_CPP_Expr len_var;
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
         if (!IsSeqType(type)) {
@@ -1785,12 +1786,14 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
         }
         sb1 = GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenIntegerLit(0), index);
         sb2 = GenSubSequence(castVarExpr_v_q, type, index, Max);
+        len_var = (IsStringType(type) ? GenLenString_int(castVarExpr_v) : GenLen_int(castVarExpr_v_q));
       }
       else
 #endif // VDMPP
       {
         sb1 = GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenIntegerLit(1), index);
         sb2 = GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenPlus(index, vdm_BC_GenIntegerLit(1)), Max);
+        len_var = GenLen_int(castVarExpr_v);
       }
 
       TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
@@ -1805,9 +1808,7 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       if (Is_excl && inner.IsNil()) {
         inner_rb_l.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
       }
-
       inner_rb_l.ImpConc(cgpmel.GetSequence(1));
-      
       if (!cgpmer.GetSequence(1).IsEmpty()) {
         if (cgpmel.GetBoolValue(2)) {
           inner_rb_l.ImpConc(cgpmer.GetSequence(1));
@@ -1817,61 +1818,34 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
         }
       }
 
-      TYPE_CPP_AsgnInit ai_from;
-      if (lp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-        ai_from = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(lp.GetSequence(pos_AS_SeqEnumPattern_els).Length()));
-      }
-      else if (lp.Is(TAG_TYPE_AS_SeqConcPattern)) {
-        ai_from = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(2));
-      }
-      else if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-        ai_from = vdm_BC_GenAsgnInit(to);
-      }
-      else {
-        ai_from = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(1));
-      }
-      TYPE_CPP_Stmt ini (vdm_BC_GenDecl(GenSmallIntType(), index, ai_from));
-      TYPE_CPP_Expr e1 (vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(index, to)), vdm_BC_GenNot(succ_v)));
-      TYPE_CPP_Expr e2 (vdm_BC_GenPostPlusPlus(index));
-
-      TYPE_CPP_Expr len_var;
-#ifdef VDMPP
-      if (vdm_CPP_isJAVA()) {
-        len_var = (IsStringType(type) ? GenLenString_int(castVarExpr_v) : GenLen_int(castVarExpr_v_q));
-      }
-      else
-#endif // VDMPP
-      {
-        len_var = GenLen_int(castVarExpr_v);
-      }
-      TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(len_var));
-      TYPE_CPP_AsgnInit ai_to;
-      if (lp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-        ai_to = vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(lp.GetSequence(pos_AS_SeqEnumPattern_els).Length()));
-      }
-      else if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-        ai_to = vdm_BC_GenAsgnInit(vdm_BC_GenMinus(
-                                    Max,
-                                    vdm_BC_GenIntegerLit(rp.GetSequence(pos_AS_SeqEnumPattern_els).Length())));
-      }
-      else {
-        ai_to = vdm_BC_GenAsgnInit(len_var);
-      }
-
       SEQ<TYPE_CPP_Stmt> ifBody (javarb); 
-      ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), Max, ai));
-      ifBody.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(false)));
+      ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), Max, vdm_BC_GenAsgnInit(len_var)));
 
       if (lp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), index, ai_to));
-        ifBody.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenLeq(index, Max), vdm_BC_GenBlock(inner_rb_l), nil));
+        TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(
+                     vdm_BC_GenIntegerLit(lp.GetSequence(pos_AS_SeqEnumPattern_els).Length())));
+        TYPE_CPP_Expr cond (vdm_BC_GenLeq(index, Max));
+        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), index, ai));
+        ifBody.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
+                                          vdm_BC_GenBlock(inner_rb_l), nil));
       }
       else if (rp.Is(TAG_TYPE_AS_SeqEnumPattern)) {
-        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), index, ai_to));
-        ifBody.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenGeq(index, vdm_BC_GenIntegerLit(0)),
+        TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(
+           vdm_BC_GenMinus(Max, vdm_BC_GenIntegerLit(rp.GetSequence(pos_AS_SeqEnumPattern_els).Length()))));
+        TYPE_CPP_Expr cond (vdm_BC_GenGeq(index, vdm_BC_GenIntegerLit(0)));
+        ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), index, ai));
+        ifBody.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
                                           vdm_BC_GenBlock(inner_rb_l), nil));
       }
       else {
+        TYPE_CPP_AsgnInit ai_from (vdm_BC_GenAsgnInit(
+                   vdm_BC_GenIntegerLit(lp.Is(TAG_TYPE_AS_SeqConcPattern) ? 2 : 1 )));
+        TYPE_CPP_AsgnInit ai_to (vdm_BC_GenAsgnInit(len_var));
+        TYPE_CPP_Stmt ini (vdm_BC_GenDecl(GenSmallIntType(), index, ai_from));
+        TYPE_CPP_Expr e1 (vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(index, to)), vdm_BC_GenNot(succ_v)));
+        TYPE_CPP_Expr e2 (vdm_BC_GenPostPlusPlus(index));
+
+        ifBody.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(false)));
         ifBody.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), to, ai_to));
         ifBody.ImpAppend(vdm_BC_GenForStmt(ini, e1, type_dL().ImpAppend(e2), vdm_BC_GenBlock(inner_rb_l)));
       }

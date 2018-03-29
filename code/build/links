@@ -1150,7 +1150,7 @@ ln test1.cc test1-rt.cc
 
 # RT interpreter
 ln $RTDIR/code/time.cc
-ln $RTDIR/code/timetrace.h TIMETRACE.h
+ln $RTDIR/code/TIMETRACE.h TIMETRACE.h
 ln $RTDIR/code/timetrace.cc
 ln $LOCAL_EVALGENDIR_RT/SCHDTP.h SCHDTP-rt.h
 ln $LOCAL_EVALGENDIR_RT/SCHDTP.cc SCHDTP-rt.cc
