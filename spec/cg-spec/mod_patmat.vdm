@@ -1337,11 +1337,11 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                       seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
                       mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
                   in
-                    if Is_exec_r and nonstop
-                    then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pmr), nil)], true)
+                    if pmr = []
+                    then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                     else
-                      if pmr = []
-                      then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
+                      if nonstop
+                      then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pmr), nil)], Is_exec_r)
                       else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pmr), nil)], false)
                  )
                 elseif is_AS`MatchVal(rp) and CGAUX`IsStringType(CGAUX`FindType(rp.val))
@@ -1373,11 +1373,11 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                       seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
                       mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
                   in
-                    if Is_exec_l and nonstop
-                    then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pml), nil)], true)
+                    if pml = []
+                    then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                     else
-                      if pml = []
-                      then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
+                      if nonstop
+                      then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pml), nil)], Is_exec_l)
                       else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pml), nil)], false);
                  )
                 else skip
@@ -1406,11 +1406,11 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                         seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
                         mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
                     in
-                      if Is_exec_r and nonstop
-                      then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pmr), nil)], true)
+                      if pmr = []
+                      then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                       else
-                        if pmr = []
-                        then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
+                        if nonstop
+                        then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pmr), nil)], Is_exec_r)
                         else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pmr), nil)], false)
                    )
                   elseif is_AS`MatchVal(rp)
@@ -1434,11 +1434,11 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                         seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
                         mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
                     in
-                      if Is_exec_l and nonstop
-                      then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pml), nil)], true)
+                      if pml = []
+                      then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
                       else
-                        if pml = []
-                        then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
+                        if nonstop
+                        then return mk_(e_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(pml), nil)], Is_exec_l)
                         else return mk_(e_stmt ^ [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(pml), nil)], false)
                    ); -- 
 
@@ -1513,6 +1513,11 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                       in [ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)),
                            BC`GenDecl(DS`GenSmallIntType(), To, ai_to),
                            BC`GenForStmt(ini, e1, [ e2 ], BC`GenBlock(inner_rb_l)) ];
+                      --in (if nonstop
+                      --    then [ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ]
+                      --    else []) ^
+                      --    [ BC`GenDecl(DS`GenSmallIntType(), To, ai_to),
+                      --      BC`GenForStmt(ini, e1, [ e2 ], BC`GenBlock(inner_rb_l)) ];
               in
                 if CGAUX`IsSeqType(type)
                 then return mk_(ifBody, false)
