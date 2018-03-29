@@ -620,7 +620,13 @@ GenExplFnBody(mk_AS`ExplFnDef(nm,-,tp,-,fnbody,-,-,-,stat,-,-), p_isDlClass, p_i
         else return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ id ^ " has been called")])
     elseif p_isAbstract
     then return mk_(nil,[])
-    else CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng))
+    else --CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng))
+      def mk_(e,stmts) = CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng));
+      in
+        if stmts <> [] and is_CPP`CompoundStmt(stmts(len stmts))
+           and forall i in set {1,...,len stmts -1} & is_CPP`DeclarationStmt(stmts(i))
+        then return mk_(e, stmts(1,...,len stmts -1) ^ stmts(len stmts).stms)
+        else return mk_(e, stmts)
   else
 #endif VDMPP
     if IsNotyetspecified(fnbody, p_isDlClass, stat) and p_isDlClass

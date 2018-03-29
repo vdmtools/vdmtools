@@ -651,7 +651,22 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
       return mk_(Nil(), SEQ<TYPE_CPP_Stmt>());
     }
     else {
-      return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
+      //return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
+      Tuple cgee (CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
+      const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
+      if (!stmts.IsEmpty()) {
+        bool forall = stmts[stmts.Length()].Is(TAG_TYPE_CPP_CompoundStmt);
+        size_t len_stmts = stmts.Length();
+        for (size_t i = 1; (i < len_stmts) && forall; i++) {
+          forall = stmts[i].Is(TAG_TYPE_CPP_DeclarationStmt);
+        }
+        if (forall) { 
+          SEQ<TYPE_CPP_Stmt> res (stmts.SubSequence(1,len_stmts -1));
+          return mk_(cgee.GetField(1),
+                     stmts.SubSequence(1,len_stmts -1).Conc(stmts[len_stmts].GetSequence(pos_CPP_CompoundStmt_stms)));
+        }
+      }
+      return cgee;
     }
   }
   else
