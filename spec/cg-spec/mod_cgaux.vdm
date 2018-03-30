@@ -3888,6 +3888,20 @@ StripBracketedAndCastExpr(expr) ==
     others                    -> expr
   end;
 
+ExpandCompoundStmt: seq of CPP`Stmt -> seq of CPP`Stmt
+ExpandCompoundStmt(stmts) ==
+  cases stmts:
+    sts ^ [mk_CPP`CompoundStmt(stms,-), mk_CPP`Return(-,-)],
+    sts ^ [mk_CPP`CompoundStmt(stms,-)] -> 
+        if forall i in set inds sts & (is_CPP`DeclarationStmt(stmts(i)) or is_CPP`ExpressionStmt(stmts(i)))
+        then
+          if is_CPP`Return(stmts(len stmts))
+          then sts ^ stms ^ [stmts(len stmts)]
+          else sts ^ stms
+        else stmts,
+    others -> stmts
+  end;
+
 GetOpParms : AS`OpDef -> seq of AS`Type
 GetOpParms(op) ==
   cases op:

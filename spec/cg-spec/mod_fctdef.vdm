@@ -620,25 +620,16 @@ GenExplFnBody(mk_AS`ExplFnDef(nm,-,tp,-,fnbody,-,-,-,stat,-,-), p_isDlClass, p_i
         else return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ id ^ " has been called")])
     elseif p_isAbstract
     then return mk_(nil,[])
-    else --CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng))
+    else
       def mk_(e,stmts) = CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng));
-      in
-        if stmts <> [] and is_CPP`CompoundStmt(stmts(len stmts))
-           and forall i in set {1,...,len stmts -1} & is_CPP`DeclarationStmt(stmts(i))
-        then return mk_(e, stmts(1,...,len stmts -1) ^ stmts(len stmts).stms)
-        else return mk_(e, stmts)
+      in return mk_(e, CGAUX`ExpandCompoundStmt(stmts))
   else
 #endif VDMPP
     if IsNotyetspecified(fnbody, p_isDlClass, stat) and p_isDlClass
     then GenerateDlCall(nm, p_arg_l, false, false)
-    --else CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(tp.fnrng));
     else
       def mk_(e,stmts) = CGEXPR`CGExprExcl(body, "varRes", CGAUX`FromAS2RepType(fnrng));
-      in
-        if stmts <> [] and is_CPP`CompoundStmt(stmts(len stmts))
-           and forall i in set {1,...,len stmts -1} & is_CPP`DeclarationStmt(stmts(i))
-        then return mk_(e, stmts(1,...,len stmts -1) ^ stmts(len stmts).stms)
-        else return mk_(e, stmts);
+      in return mk_(e, CGAUX`ExpandCompoundStmt(stmts));
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -1089,10 +1080,11 @@ GenPatternBody(pid_m, mk_AS`ExplOpDef(nm,-,-,tp,parms,opbody,-,-,-,stat,constr,-
 #endif VDMPP
     else cppast := CGSTMT`GenStmt(body, true); -- seq of CPP`Stmt
 
-    fb := fb ^ cases cppast:
-                 [mk_CPP`CompoundStmt(stms,-)] -> stms,
-                 others                        -> cppast
-               end;
+    --fb := fb ^ cases cppast:
+    --             [mk_CPP`CompoundStmt(stms,-)] -> stms,
+    --             others                        -> cppast
+    --           end;
+    fb := fb ^ CGAUX`ExpandCompoundStmt(cppast);
     
     return fb;
  );
@@ -1155,7 +1147,11 @@ GenInlineBody(mk_AS`ExplOpDef(nm,-,-,tp,-,opbody,-,-,-,stat,constr,-), rngtype, 
 #endif VDMPP
           fb := CGSTMT`GenStmt(body, true);
   
-    return mk_(implfb, fb);
+    --return mk_(implfb, fb);
+    cases fb:
+      [mk_CPP`CompoundStmt(stms,-)] ^ s -> return mk_(implfb, CGAUX`ExpandCompoundStmt(stms) ^ s),
+      others -> return mk_(implfb, fb)
+    end;
    );
 
 GenMethPreCall : AS`Name * seq of CPP`Expr * bool ==> CPP`Stmt

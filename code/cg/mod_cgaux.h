@@ -306,6 +306,7 @@ private:
   static TYPE_CPP_Expr StripBracketedExpr (const TYPE_CPP_Expr & expr);
   static TYPE_CPP_Expr StripCastExpr (const TYPE_CPP_Expr & expr);
   static TYPE_CPP_Expr StripBracketedAndCastExpr (const TYPE_CPP_Expr & expr);
+  static SEQ<TYPE_CPP_Stmt> ExpandCompoundStmt(const SEQ<TYPE_CPP_Stmt> & stmts);
 
   SEQ<TYPE_AS_Type> GetOpParms(const TYPE_AS_OpDef &);
   SEQ<TYPE_AS_Type> GetFnParms(const TYPE_AS_FnDef &);

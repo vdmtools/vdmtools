@@ -653,20 +653,7 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
     else {
       //return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
       Tuple cgee (CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
-      const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
-      if (!stmts.IsEmpty()) {
-        bool forall = stmts[stmts.Length()].Is(TAG_TYPE_CPP_CompoundStmt);
-        size_t len_stmts = stmts.Length();
-        for (size_t i = 1; (i < len_stmts) && forall; i++) {
-          forall = stmts[i].Is(TAG_TYPE_CPP_DeclarationStmt);
-        }
-        if (forall) { 
-          SEQ<TYPE_CPP_Stmt> res (stmts.SubSequence(1,len_stmts -1));
-          return mk_(cgee.GetField(1),
-                     stmts.SubSequence(1,len_stmts -1).Conc(stmts[len_stmts].GetSequence(pos_CPP_CompoundStmt_stms)));
-        }
-      }
-      return cgee;
+      return mk_(cgee.GetField(1), ExpandCompoundStmt(cgee.GetSequence(2)));
     }
   }
   else
@@ -678,20 +665,7 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
     else {
       //return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
       Tuple cgee (CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
-      const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
-      if (!stmts.IsEmpty()) {
-        bool forall = stmts[stmts.Length()].Is(TAG_TYPE_CPP_CompoundStmt);
-        size_t len_stmts = stmts.Length();
-        for (size_t i = 1; (i < len_stmts) && forall; i++) {
-          forall = stmts[i].Is(TAG_TYPE_CPP_DeclarationStmt);
-        }
-        if (forall) { 
-          SEQ<TYPE_CPP_Stmt> res (stmts.SubSequence(1,len_stmts -1));
-          return mk_(cgee.GetField(1),
-                     stmts.SubSequence(1,len_stmts -1).Conc(stmts[len_stmts].GetSequence(pos_CPP_CompoundStmt_stms)));
-        }
-      }
-      return cgee;
+      return mk_(cgee.GetField(1), ExpandCompoundStmt(cgee.GetSequence(2)));
     }
   }
 }
@@ -1517,7 +1491,13 @@ Tuple vdmcg::GenInlineBody(const TYPE_AS_ExplOpDef & opdef,
       }
     }
   }
-  return mk_(implfb, fb);
+  //return mk_(implfb, fb);
+  if (!fb.IsEmpty() && fb[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    SEQ<TYPE_CPP_Stmt> res (ExpandCompoundStmt(fb[1].GetSequence(pos_CPP_CompoundStmt_stms)));
+    res.ImpConc(fb.SubSequence(2, fb.Length()));
+    return mk_(implfb, res);
+  }
+  return mk_(implfb, ExpandCompoundStmt(fb));
 }
 
 // GenMethPreCall

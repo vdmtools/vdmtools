@@ -4747,7 +4747,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGLetBeSTExpr(const TYPE_AS_LetBeSTExpr & expr, const 
 
     SEQ<TYPE_CPP_Stmt> rb_l;
     rb_l.ImpConc(GenBindListVariables(bind_l, expr.GetField(pos_AS_LetBeSTExpr_St)));
-    rb_l.ImpConc(CGExpr(expr.GetRecord(pos_AS_LetBeSTExpr_In), vt));
+    //rb_l.ImpConc(CGExpr(expr.GetRecord(pos_AS_LetBeSTExpr_In), vt));
+    rb_l.ImpConc(ExpandCompoundStmt(CGExpr(expr.GetRecord(pos_AS_LetBeSTExpr_In), vt)));
 
     PopEnv_CGAUX();
 

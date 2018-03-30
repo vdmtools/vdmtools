@@ -7223,6 +7223,41 @@ TYPE_CPP_Expr vdmcg::StripBracketedAndCastExpr (const TYPE_CPP_Expr & expr)
   }
 }
 
+// ExpandCompoundStmt
+// stmts : seq of CPP`Stmt
+// -> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::ExpandCompoundStmt(const SEQ<TYPE_CPP_Stmt> & stmts)
+{
+  size_t len_stmts = stmts.Length();
+  if ((len_stmts >= 2) && stmts[len_stmts - 1].Is(TAG_TYPE_CPP_CompoundStmt) &&
+        stmts[len_stmts].Is(TAG_TYPE_CPP_Return)) {
+    bool forall = true;
+    for (size_t i = 1; (i < len_stmts - 1) && forall; i++) {
+      const TYPE_CPP_Stmt & stmt (stmts[i]);
+      forall = (stmt.Is(TAG_TYPE_CPP_DeclarationStmt) || stmt.Is(TAG_TYPE_CPP_ExpressionStmt));
+    }
+    if (forall) {
+      SEQ<TYPE_CPP_Stmt> res (stmts.SubSequence(1,len_stmts - 2));
+      res.ImpConc(stmts[len_stmts - 1].GetSequence(pos_CPP_CompoundStmt_stms));
+      res.ImpAppend(stmts[len_stmts]);
+      return res;
+    }
+  }
+  else if ((len_stmts >= 1) && stmts[len_stmts].Is(TAG_TYPE_CPP_CompoundStmt)) {
+    bool forall = true;
+    for (size_t i = 1; (i < len_stmts) && forall; i++) {
+      const TYPE_CPP_Stmt & stmt (stmts[i]);
+      forall = (stmt.Is(TAG_TYPE_CPP_DeclarationStmt) || stmt.Is(TAG_TYPE_CPP_ExpressionStmt));
+    }
+    if (forall) {
+      SEQ<TYPE_CPP_Stmt> res (stmts.SubSequence(1,len_stmts - 1));
+      res.ImpConc(stmts[len_stmts].GetSequence(pos_CPP_CompoundStmt_stms));
+      return res;
+    }
+  }
+  return stmts;
+}
+
 // GetOpParms
 // op : AS`OpDef
 // -> seq of AS`Type

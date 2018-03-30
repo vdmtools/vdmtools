@@ -588,13 +588,14 @@ false.
 \begin{vdm_al}
 CGCasesExprAltn: seq1 of AS`CaseAltn * CGMAIN`VT * CGMAIN`VT * CPP`Name ==> seq of CPP`Stmt
 CGCasesExprAltn( altns, selRes_v, resVar_v, succ_v ) ==
-( dcl rb : seq of CPP`Stmt;
-  rb := [ CGAltn( hd altns, selRes_v, resVar_v, succ_v ) ];
-  for i = 2 to len altns do
-    rb := rb ^ [ BC`GenIfStmt( BC`GenNot( succ_v ),
-                               CGAltn( altns( i ), selRes_v, resVar_v, succ_v ),
-                               nil ) ];
-  return rb
+( dcl rb : seq of CPP`Stmt := [];
+  for i = 1 to len altns do
+    def stmt = CGAltn( altns( i ), selRes_v, resVar_v, succ_v );
+    in
+      if i = 1
+      then rb := [stmt]
+      else rb := rb ^ [ BC`GenIfStmt( BC`GenNot( succ_v ), stmt, nil ) ];
+  return rb;
 );
 \end{vdm_al}
 
@@ -4151,7 +4152,8 @@ CGLetBeSTExpr(mk_AS`LetBeSTExpr(bind, St, In, -), vt) ==
   then return [CGAUX`NotSupported("type bind")]
   else
    (CGAUX`PushEnv();
-    def rb_l = GenBindListVariables(bind, St) ^ CGExpr(In, vt)
+    --def rb_l = GenBindListVariables(bind, St) ^ CGExpr(In, vt)
+    def rb_l = GenBindListVariables(bind, St) ^ CGAUX`ExpandCompoundStmt(CGExpr(In, vt))
     in
      (CGAUX`PopEnv();
       return [BC`GenBlock(rb_l)]
