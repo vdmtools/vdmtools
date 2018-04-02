@@ -1360,7 +1360,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetComprehensionExpr (const TYPE_AS_SetComprehension
 
   RemNoCheckSeqApply(seqapply_s);
 
-  SEQ<TYPE_CPP_Stmt> todo (Sequence(elem_stmt).ImpAppend(GenSetInsert(resS_v, elem_v)));
+  //SEQ<TYPE_CPP_Stmt> todo (Sequence(elem_stmt).ImpAppend(GenSetInsert(resS_v, elem_v)));
+  SEQ<TYPE_CPP_Stmt> todo (ExpandCompoundStmt(elem_stmt).ImpAppend(GenSetInsert(resS_v, elem_v)));
 
   SEQ<TYPE_CPP_Stmt> rb;
   rb.ImpConc (GenDeclEmptySet (resS_v));
@@ -9006,8 +9007,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenPredicateStmt(const Generic & pred,
 
     TYPE_REP_TypeRep predType (FindType(pred));
 
-    SEQ<TYPE_CPP_Stmt> rb;
-    rb.ImpConc(res_stmt);
+    //SEQ<TYPE_CPP_Stmt> rb;
+    //rb.ImpConc(res_stmt);
+    SEQ<TYPE_CPP_Stmt> rb (ExpandCompoundStmt(res_stmt));
 
     if (predType.Is(TAG_TYPE_REP_BooleanTypeRep)) {
       if (notpred) {

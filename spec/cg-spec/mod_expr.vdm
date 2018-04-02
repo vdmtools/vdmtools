@@ -1261,7 +1261,8 @@ CGSetComprehensionExpr(expr, vt) ==
         mk_(elem_v, elem_stmt) = CGExprExcl(elem, "res_s", nil);
     in
      (CGAUX`RemNoCheckSeqApply(seqapply_s);
-      def todo = elem_stmt ^ [DS`GenSetInsert(resS_v, elem_v)];
+      --def todo = elem_stmt ^ [DS`GenSetInsert(resS_v, elem_v)];
+      def todo = CGAUX`ExpandCompoundStmt(elem_stmt) ^ [DS`GenSetInsert(resS_v, elem_v)];
           rb = DS`GenDeclEmptySet(resS_v) ^
                 CGComprehension(bind, pred, todo, nil, false, pid_m, true) ^
                  [BC`GenAsgnStmt(resVar_v, resS_v )]
@@ -8400,7 +8401,8 @@ GenPredicateStmt( pred, stmts, notpred ) ==
     def mk_(res, res_stmt) = CGExprExcl(pred, "pred", nil);
         predType = CGAUX`FindType(pred)
     in
-     (dcl rb : seq of CPP`Stmt := res_stmt;
+     --(dcl rb : seq of CPP`Stmt := res_stmt;
+     (dcl rb : seq of CPP`Stmt := CGAUX`ExpandCompoundStmt(res_stmt);
       if predType = mk_REP`BooleanTypeRep()
       then
         if notpred
