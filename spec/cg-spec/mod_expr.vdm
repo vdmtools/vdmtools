@@ -135,7 +135,7 @@ cases true:
              rce = mk_AS`RecordConstructorExpr(tp.nm, exprs, cid)
          in CGRecordConstructorExpr(rce, resVar_v)
        else
-         CGName(expr),      
+         CGName(expr),
 #endif VDMSL
 #ifdef VDMPP
  (is_AS`Name(expr))                     -> CGName(expr),
@@ -260,7 +260,7 @@ CGExprExcl( expr, e_name, etp ) ==
       then return mk_(etmpVar, exl_v)
       else
         def tp = CGAUX`RemoveInvType(e_t);
-            decl_stmt = DS`GenDecl(tp, etmpVar, nil); -- must be here for include 
+            decl_stmt = DS`GenDecl(tp, etmpVar, nil); -- must be here for include
             stmt = exl_v(len exl_v)
         in
           cases stmt:
@@ -311,7 +311,7 @@ CGExprExcl( expr, e_name, etp ) ==
             tp = if etp = nil
                  then gtp
                  else etp
-        in 
+        in
           if CGAUX`IsSubType(gtp, tp)
           then if (CGAUX`IsIntType(tp) and not CGAUX`IsIntType(gtp)) or
                   (not CGAUX`IsIntType(tp) and CGAUX`IsIntType(gtp))
@@ -365,7 +365,7 @@ MergeStmts(decls,pm) ==
                  end;
                def mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration(ds,[idec],-,-),-) = id_m(unary);
                    stmt = mu (id_m(unary), decl |->
-                            mu (id_m(unary).decl, 
+                            mu (id_m(unary).decl,
                                        ds |-> [ BC`GenTypeSpecifier(<CONST>) ] ^ ds,
                                        dl |-> [ mu(idec, i |-> initExpr ) ] ))
                in
@@ -692,7 +692,7 @@ CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
                        then [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))]
                        else []) ^ pm
             in
-              if i = 1 
+              if i = 1
               then rb := rb ^ pm1
               else rb := rb ^ [BC`GenIfStmt( BC`GenNot( succ_v ), BC`GenBlock(pm1), nil )];
           def stmts : seq of CPP`Stmt = CGExpr(e, resVar_v)
@@ -748,15 +748,17 @@ FindPatternId( pat ) ==
   cases pat:
     mk_AS`MatchVal(-,-),
     mk_AS`PatternName(nil, -, -)    -> return {|->},
-    mk_AS`PatternName(name, -, -)   -> def tp = CGAUX`FindType(pat)
-                                       in return { name |-> { if tp <> nil then tp else mk_REP`AllTypeRep() } },
+    mk_AS`PatternName(name, -, -)
+          -> def tp = CGAUX`FindType(pat)
+             in return { name |-> { if tp <> nil then tp else mk_REP`AllTypeRep() } },
     mk_AS`SetEnumPattern(pat_l, -),
     mk_AS`SeqEnumPattern(pat_l,-),
     mk_AS`TuplePattern(pat_l, -),
-    mk_AS`RecordPattern(-,pat_l,-)  -> (dcl pid_m : map (AS`Name | AS`OldName) to set of REP`TypeRep := {|->};
-                                        for tmp in pat_l do
-                                          pid_m := MergePidM(FindPatternId( tmp ), pid_m);
-                                        return pid_m),
+    mk_AS`RecordPattern(-,pat_l,-)
+          -> (dcl pid_m : map (AS`Name | AS`OldName) to set of REP`TypeRep := {|->};
+              for tmp in pat_l do
+                pid_m := MergePidM(FindPatternId( tmp ), pid_m);
+              return pid_m),
     mk_AS`SeqConcPattern(lp, rp,-),
     mk_AS`SetUnionPattern(lp, rp,-),
     mk_AS`MapMergePattern(lp, rp,-) -> return FindPatternId(lp) ++ FindPatternId(rp),
@@ -775,7 +777,7 @@ FindPatternId( pat ) ==
     others -> error
   end;
 
-MergePidM: map (AS`Name | AS`OldName) to set of REP`TypeRep * 
+MergePidM: map (AS`Name | AS`OldName) to set of REP`TypeRep *
            map (AS`Name | AS`OldName) to set of REP`TypeRep
            ==> map (AS`Name | AS`OldName) to set of REP`TypeRep
 MergePidM(pid_m1, pid_m2) ==
@@ -865,7 +867,7 @@ CGSetEnumerationExpr(mk_AS`SetEnumerationExpr(expr, -), mk_CGMAIN`VT(resVar_v, r
       then
        (resVar_v' := DS`GenCastSetTypeForModify(resVar_v);
         rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptySetExpr())]);
-      
+
 #ifdef VDMPP
       if CPP`isJAVA()
       then etp := CGAUX`FindSetElemType(rType);
@@ -884,7 +886,7 @@ CGSetEnumerationExpr(mk_AS`SetEnumerationExpr(expr, -), mk_CGMAIN`VT(resVar_v, r
         others ->
 #ifdef VDMPP
                   if CPP`isJAVA()
-                  then  
+                  then
                     return rb
                   else
 #endif VDMPP
@@ -1008,7 +1010,7 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
     then return DS`GenEmptySeqExpr()
     else
     def casting = not CGAUX`IsSeqType( rType );
-        isstringexpr = CGAUX`IsSeqType( rType ) and 
+        isstringexpr = CGAUX`IsSeqType( rType ) and
                        CGAUX`IsCharType(CGAUX`FindSeqElemType(rType)) and
                        forall e in set elems expr & is_AS`CharLit(e);
     in
@@ -1094,7 +1096,7 @@ CGMapEnumerationExpr(mk_AS`MapEnumerationExpr(ml, -), mk_CGMAIN`VT(resVar_v, rTy
           rtp : [REP`TypeRep] := nil,
           allsimple : bool := true,
           expr : CPP`Expr := DS`GenEmptyMapExpr();
-         
+
       if casting
       then
        (resVar_v' := DS`GenCastMapTypeForModify(resVar_v);
@@ -1513,7 +1515,7 @@ CGSeqComprehensionIndexLoop(rc1, mk_CGMAIN`VT(resVar_v, rType) ) ==
        )
     else
       let mk_AS`SetRangeExpr(srlb,srub,-) = expr -- in set {x,...,y}
-      in 
+      in
        (if is_AS`RealLit(srlb) or is_AS`NumLit(srlb)
         then lb := BC`GenIntegerLit(srlb.val)
         else
@@ -2110,7 +2112,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
         then
           if CGAUX`IsIntType(n1tp)
           then n1value := DS`GenGetValue(n1_v, rrep)
-          else n1value := DS`GenGetValue(BC`GenFctCallObjMemAcc(n1_v, "Ceil", []), rrep) 
+          else n1value := DS`GenGetValue(BC`GenFctCallObjMemAcc(n1_v, "Ceil", []), rrep)
         else
           def From = BC`GiveName("from")
           in
@@ -2125,7 +2127,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
         then
           if CGAUX`IsIntType(n2tp)
           then n2value := DS`GenGetValue(n2_v, rrep)
-          else n2value := DS`GenGetValue(BC`GenFctCallObjMemAcc(n2_v, "Floor", []), rrep) 
+          else n2value := DS`GenGetValue(BC`GenFctCallObjMemAcc(n2_v, "Floor", []), rrep)
         else
           def To = BC`GiveName("to")
           in
@@ -2356,7 +2358,7 @@ CGTokenConstExpr(mk_AS`TokenConstructorExpr(elem, -), mk_CGMAIN`VT(resVar,-)) ==
 \begin{vdm_al}
 CGTypeJudgementExpr: AS`TypeJudgementExpr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGTypeJudgementExpr(mk_AS`TypeJudgementExpr(expr,type,cid), vt) ==
-  if not is_AS`Name(expr) 
+  if not is_AS`Name(expr)
   then
    (def ecid = CI`PushCGType(CGAUX`FindType(expr));
         tjTempId = BC`GiveName("tjTemp");
@@ -2433,7 +2435,7 @@ ConvertTypeJudgementExprAS(expr, tp) ==
                     then e_l := e_l ^ [e]
                     else allOk := false and allOk;
                 if allOk
-                then 
+                then
                   (dcl e : AS`Expr := e_l(len e_l),
                        p_l : seq of AS`PatternName := [];
                    for i = len e_l - 1 to 1 by -1 do
@@ -2537,7 +2539,7 @@ ConvertTypeJudgementExprAS(expr, tp) ==
          in
            (CI`SetPidM(bcid, pid_m);
             def ae = if is_REP`AllTypeRep(getp)
-                     then 
+                     then
                        let atp = mk_AS`AllType(CI`NilContextId),
                            gmt = mk_AS`GeneralMap0Type(atp, atp, CI`NilContextId)
                        in mk_AS`ApplyExpr(mk_AS`NarrowExpr(expr, gmt, mapcid), [elem], rngcid)
@@ -2656,10 +2658,10 @@ CGMacro(mk_AS`Macro(tp,-), -) ==
   else
 #endif VDMPP
     cases tp:
-    <MACRO_FILE>  -> 
+    <MACRO_FILE>  ->
         let ds = BC`GenFctCall(BC`GenIdentifier("string2wstring"), [BC`GenIdentifier("__"^"FILE__")])
         in return BC`GenFctCall(DS`GenStringType().tp, [ds]),
-    <MACRO_LINE>  -> 
+    <MACRO_LINE>  ->
         return DS`GenIntExpr(BC`GenIdentifier("__"^"LINE__")),
     <MACRO_COLUMN> ->
       let colno = BC`GenIntegerLit (0)
@@ -2939,7 +2941,7 @@ CGSeqApplyExpr( mk_AS`ApplyExpr( expr, [ par ], - ), mk_CGMAIN`VT( resVar_v, res
   if expr1 = nil
   then
    (def mk_(tmp_expr, tmp_stmt) = CGExprExcl(expr, "tmp_l", nil)
-    in  
+    in
       if is_CPP`Identifier(tmp_expr)
       then
        (tmpseq_v := tmp_expr;
@@ -3119,7 +3121,7 @@ CGFctApplyExpr(mk_AS`ApplyExpr(expr, par_l, cid), vt) ==
                       rb_l : seq of CPP`Stmt := [],
                       var_l : seq of CPP`Expr := [],
                       index : int := 0;
-                  cases tmptp: 
+                  cases tmptp:
                     nil -> exprtp := nil,
 #ifdef VDMPP
                     mk_REP`OverTypeRep(-) -> exprtp := GetOverFNOP(CGAUX`RemoveInvType(tmptp), par_l),
@@ -3179,8 +3181,8 @@ CGFctApplyExpr(mk_AS`ApplyExpr(expr, par_l, cid), vt) ==
                                         ldomtp = CGAUX`LOT(fndom(index))
                                     in if CGAUX`IsSubType(lgtp, ldomtp) or
                                           CGAUX`IsCompositeType(lgtp) and CGAUX`IsCompositeType(ldomtp) or
-                                          CGAUX`IsSeqType(lgtp) and CGAUX`IsSeqType(ldomtp) or 
-                                          CGAUX`IsSetType(lgtp) and CGAUX`IsSetType(ldomtp) or 
+                                          CGAUX`IsSeqType(lgtp) and CGAUX`IsSeqType(ldomtp) or
+                                          CGAUX`IsSetType(lgtp) and CGAUX`IsSetType(ldomtp) or
                                           CGAUX`IsIntType(lgtp) and CGAUX`IsIntType(ldomtp)
                                        then var_l := var_l ^ [eval]
                                        else var_l := var_l ^ [BC`GenCastExpr(gtype, eval)])
@@ -3245,7 +3247,7 @@ GetOverFNOP(mk_REP`OverTypeRep(tp_s), par_l) ==
                      then return tp;
                  return nil;)
     end;
-             
+
 CGApplyFieldSel: AS`FieldSelectExpr * seq of AS`Expr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGApplyFieldSel (fexpr,par_l, vt) ==
   def tp = CGAUX`FindType (fexpr.rec) in
@@ -3371,7 +3373,7 @@ CGObjRef (fexpr,par_l, vt) ==
                   mthdid := BC`GenIdentifier(mid(6, ..., len mid));
                 (dcl id_l' : seq of CPP`Expr := id_l;
                  if clnm = "JDK_Calendar"
-                 then 
+                 then
                    if mid in set { "add", "set", "get" }
                    then
                     id_l' := [ DS`GenGetValue(id_l(i), mk_REP`NumericTypeRep(<INTEGER>)) | i in set inds id_l ];
@@ -3433,7 +3435,7 @@ CGObjRef (fexpr,par_l, vt) ==
                  fcall := DS`GenExplicitCast(tp, fcall, fnrng);
                   -- hack TODO: to check object is JDK_ class
                  if obj <> nil
-                 then 
+                 then
                    let mk_CGMAIN`VT(-, ti) = obj
                    in
                      cases ti:
@@ -3445,7 +3447,7 @@ CGObjRef (fexpr,par_l, vt) ==
                     def mk_AS`Name([clnm], -) = CGAUX`GiveCurCASName()
                     in
                       fcall := CGAUX`CheckJavaPrimitiveType(fcall, clnm, hd mi.#1.ids)
-                ) 
+                )
        )
       else -- CPP
         def exprtp = CGAUX`FindType(mthd);
@@ -3503,16 +3505,16 @@ CGObjRef (fexpr,par_l, vt) ==
             if luofn <> nil and CGAUX`IsInClassNamespace(nm, mthd)
             then
               (if is_(luofn, REP`FnTypeRep) or is_REP`OpTypeRep(luofn)
-               then 
+               then
                  (let fndom : seq of REP`TypeRep = if is_(luofn, REP`FnTypeRep)
                                                    then luofn.fndom
                                                    else luofn.Dom
-                 in 
+                 in
                    if len arg_l = len fndom and
                       forall i in set inds arg_l & TYPE`IsOverlapping(CGAUX`FindType(arg_l(i)), fndom(i), {})
                    then nm_s := nm_s union {nm})
                else
-                 ( -- TODO: overload 
+                 ( -- TODO: overload
                   nm_s := nm_s union {nm});
               ));
 
@@ -3574,7 +3576,7 @@ CGObjRef (fexpr,par_l, vt) ==
                 if idx = len alts_l and body1 = nil
                 then body1 := stmt
                 else body1 := BC`GenIfStmt(cond,stmt,body1);
-     
+
             body := [body1]
           );
       );
@@ -3816,7 +3818,7 @@ CGUnionTypeApply( applexpr, rv, expr1, type1, sd ) ==
           mapinjs := mis;
           seqs := sqs;
           strings := strs);
-       
+
       if len par_l = 0
       then
         def apex = CGFctApplyExpr(applexpr, rv)
@@ -4200,7 +4202,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
        rb_l := rb_l ^ [ BC`GenIfStmt (BC`GenNot (DS`GenIsSet(tmpS)),
                          BC`GenBlock([CGAUX`RunTime("A set was expected")]), nil) ];
        tmpSet := DS`GenCastSetType(tmpS));
-          
+
     rb_l := rb_l ^ s_st_stmt;
     rb_l := rb_l ^ DeclarePatterns(pid_m); -- second -- must be before CGExprExcl and CGPatternMatchExcl
 
@@ -4221,7 +4223,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
      (def p_s = dunion { dom FindPatternId(pat_l(j)) | j in set {1,...,i - 1} };
           p = if inner_stmts = [] then nil else inner_stmts;
           mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat_l(i), elemVT, p_s, succ, nil, p, false)
-      in 
+      in
         (inner_stmts := pm;
          need_decl := need_decl or not Is_Excl));
 
@@ -4408,7 +4410,7 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
              or (CPP`isCPP() and is_AS`QuoteLit(cons) and is_AS`QuoteLit(altn))
           then
             let expr = BC`GenCondExpr(cond, cons_expr, altn_expr)
-            in 
+            in
               if cond_stmt = []
               then return BC`GenBracketedExpr(expr)
               else return cond_stmt ^ [BC`GenAsgnStmt(resVar_v, BC`GenBracketedExpr(expr))]
@@ -4422,7 +4424,7 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
             if altn_type <> resVarType
             then cast_altn := BC`GenCastExpr( DS`GenType(resVarType), altn_expr );
             let expr = BC`GenCondExpr(cond, cast_cons, cast_altn)
-            in 
+            in
               if cond_stmt = []
               then return BC`GenBracketedExpr(expr)
               else return cond_stmt ^ [BC`GenAsgnStmt(resVar_v, BC`GenBracketedExpr(expr))];
@@ -4638,7 +4640,7 @@ CGSeqModifyMapOverrideExpr( mk_AS`SeqModifyMapOverrideExpr( seqmap, mapexp, -),
           rb := rb ^ [BC`GenIfStmt(BC`GenNot (DS`GenIsMap (tmpmap_v)),
                             BC`GenBlock([CGAUX`RunTime ("A map was expected")]), nil)];
           rb := rb ^ DS`GenDeclInit(tmpmapType, modmap_v, DS`GenCastMap(tmpmap_v)));
-          
+
     let rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")])
     in
       if CGAUX`IsPosMapType(seqmapType1) and not CGAUX`IsPosSeqType(seqmapType1)
@@ -4778,7 +4780,7 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
           then rb := DS`GenDeclInit(seqtp, s_v, DS`GenExplicitCast(seqtp, seq_v, nil))
           else
            (dcl seq_v' : CPP`Expr := seq_v;
-            if cast 
+            if cast
             then seq_v' := DS`GenCastSeq(seq_v, nil);
             def seq_v_c = DS`GenSeqExpr(seq_v')
             in
@@ -5037,14 +5039,14 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
             tmpRecType : [REP`TypeRep] := type1,
             rb : seq of CPP`Stmt := rec_stmt;
         if expr1 = nil
-        then 
+        then
           def mk_(e, stmts) = CGExprExcl(rec, "tmpRec", nil)
           in
            (tmpRec := e;
             rec_stmt := stmts;
             tmpRecType := CGAUX`RemoveInvType(CGAUX`FindType( rec ));
             rb := rec_stmt);
-        
+
         def rectypes = FindAllRecTypes( tmpRecType );
 #ifdef VDMPP
             oreftypes = FindAllObjRefTypes(tmpRecType);
@@ -5055,7 +5057,7 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
 #endif VDMPP
         in
           if posTypes <> {}
-          then 
+          then
             rb := rb ^ FindFieldSelApply(nm, mk_CGMAIN`VT( resVar_v, type ),mk_CGMAIN`VT(tmpRec, tmpRecType) );
 #ifdef VDMPP
         if CGAUX`IsUnionFunctionType (ti)
@@ -5212,7 +5214,7 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
                 else alt := [BC`GenIfStmt(if_cond, BC`GenBlock([l_asgn]), BC`GenBlock(alt))];
        ) -- end of for loop
     else
-#endif VDMPP            
+#endif VDMPP
      (if posRecTypes <> {}
       then
         if is_REP`CompositeTypeRep(tmpRecType) and card posRecTypes = 1
@@ -5457,12 +5459,12 @@ GenFieldInds(rec, recTp, mu_l) ==
     for mk_AS`RecordModification(field, -, -) in mu_l do
       postp_s := postp_s inter FindPossibleRecTypes(rectp_s, field);
 
-    cases postp_s: 
+    cases postp_s:
       {}     -> return [errstmt],
-      {t}    -> 
+      {t}    ->
 #ifdef VDMPP
                 if CPP`isJAVA()
-                then 
+                then
                  (dcl stmt_l : seq of CPP`Stmt := [];
                   let mk_REP`CompositeTypeRep(tagnm, fields) = t
                   in
@@ -5485,7 +5487,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                  (dcl stmt_l : seq of CPP`Stmt := [];
                   for mk_AS`RecordModification(field, newval, -) in mu_l do
                     def fieldno = DS`GenRecGetFieldNo(t, field);
-                        mk_(val, val_stmt) = CGExprExcl(newval, "val", nil) 
+                        mk_(val, val_stmt) = CGExprExcl(newval, "val", nil)
                     in
                       stmt_l := stmt_l ^ val_stmt ^ [ DS`GenRecSetField(rec, fieldno, val) ];
                   return stmt_l;
@@ -5734,7 +5736,7 @@ else
       else
 #endif VDMPP
         if_then := if_then ^ [BC`GenAsgnStmt(resVar, tmpElem)];
- 
+
       def pred_type = CGAUX`FindType(pred);
       in
       if CGAUX`IsBoolType(pred_type)
@@ -5763,7 +5765,7 @@ else
           body_l = MergeStmts( decl, pm1 );
           cond = BC`GenNeq(count, BC`GenIntegerLit(1));
           rti = BC`GenBlock([CGAUX`RunTime("No unique element in 'iota'")]);
-      in 
+      in
        (rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallIntType(), count, BC`GenAsgnInit(BC`GenIntegerLit(0)))];
         rb_l := rb_l ^ DS`GenIterSet(setVT, cexpr, elemVT, body_l);
         rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
@@ -5924,7 +5926,7 @@ CGUnaryNum( opr, arg, vt ) ==
         def cond = DS`GenIsReal( argTmp );
         in rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( cond ),
                                BC`GenBlock([CGAUX`RunTime("A number was expected")]), nil ) ];
-      
+
       cases opr:
         <NUMPLUS>  -> alt2 := DS`UnaryPlus( vt, rc1 ),
         <NUMMINUS> -> alt2 := DS`UnaryMinus( vt, rc1 ),
@@ -7473,9 +7475,9 @@ CGProperSubset( le, re,  mk_CGMAIN`VT( resVar_v, -) ) ==
      (dcl rb_l : seq of CPP`Stmt := stmt1 ^ stmt2;
       cases true:
         (CGAUX`IsSetType(type1) and not CGAUX`IsSetType(type2)) ->
-             rb_l := rb_l ^ [BC`GenIfStmt( cond2, errmess, nil )], 
+             rb_l := rb_l ^ [BC`GenIfStmt( cond2, errmess, nil )],
         (not CGAUX`IsSetType(type1) and CGAUX`IsSetType(type2)) ->
-             rb_l := rb_l ^ [BC`GenIfStmt( cond1, errmess, nil )], 
+             rb_l := rb_l ^ [BC`GenIfStmt( cond1, errmess, nil )],
         (not (CGAUX`IsSetType(type1) or CGAUX`IsSetType(type2))) ->
              rb_l := rb_l ^ [BC`GenIfStmt( BC`GenLogOr( cond1, cond2), errmess, nil )]
       end;
@@ -7519,9 +7521,9 @@ CGSubset( le, re, mk_CGMAIN`VT( resVar_v, -) ) ==
      (dcl rb_l : seq of CPP`Stmt := stmt1 ^ stmt2;
       cases true:
         (CGAUX`IsSetType(type1) and not CGAUX`IsSetType(type2)) ->
-             rb_l := rb_l ^ [BC`GenIfStmt( cond2, errmess, nil )], 
+             rb_l := rb_l ^ [BC`GenIfStmt( cond2, errmess, nil )],
         (not CGAUX`IsSetType(type1) and CGAUX`IsSetType(type2)) ->
-             rb_l := rb_l ^ [BC`GenIfStmt( cond1, errmess, nil )], 
+             rb_l := rb_l ^ [BC`GenIfStmt( cond1, errmess, nil )],
         (not (CGAUX`IsSetType(type1) or CGAUX`IsSetType(type2))) ->
              rb_l := rb_l ^ [BC`GenIfStmt( BC`GenLogOr( cond1, cond2), errmess, nil )]
       end;
@@ -8330,7 +8332,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
                     then seqapply_s := seqapply_s union {mk_(BC`Rename(setexpr.arg), BC`Rename(name))};
                    );
             CGAUX`AddNoCheckSeqApply(seqapply_s);
-            stmt_l := GenPredicateStmt(pred, stmt, notpred); 
+            stmt_l := GenPredicateStmt(pred, stmt, notpred);
             CGAUX`RemNoCheckSeqApply(seqapply_s);
             for id in id_l do
               stmt_l := DS`GenIterSet(mk_CGMAIN`VT(e_v, e_type), contexpr, mk_CGMAIN`VT(id, e_t), stmt_l);
@@ -8433,7 +8435,7 @@ GenPredicateStmt( pred, stmts, notpred ) ==
         if notpred
         then ifpred := BC`GenIfStmt(BC`GenNot(BC`GenBracketedExpr(cond)), BC`GenBlock(stmts), nil)
         else ifpred := BC`GenIfStmt(cond, BC`GenBlock(stmts), nil);
-          
+
         rb := rb ^ [BC`GenIfStmt( DS`GenIsBool( pred_v ), BC`GenBlock([ifpred]),
                       BC`GenBlock([CGAUX`RunTime( "A boolean was expected" )]))];
        );
@@ -8518,7 +8520,7 @@ MergeMultSetBind(bind) ==
       in m := m ++ {e_set |-> mk_AS`MultSetBind(p_l ^ pat_l,s,cid2)}
     else m := m ++ {e_set |-> mk_AS`MultSetBind(pat_l, e_set, cid)};
   for all e in set dom m do
-    bind_l := bind_l ^ [m(e)]; 
+    bind_l := bind_l ^ [m(e)];
   return bind_l;
  );
 

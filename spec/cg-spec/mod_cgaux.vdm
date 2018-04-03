@@ -1,6 +1,6 @@
 %--------------------------------------------------------------------------------
 % WHAT
-%    Module providing functions generating code corresponding to 
+%    Module providing functions generating code corresponding to
 %    both VDM++ and VDM-SL statements.
 %      C preprocessor macroes:
 %        VDMPP  -> VDM++ abstract syntax.
@@ -17,7 +17,7 @@ This module provides auxiliary functions and operations to the rest of the speci
 \begin{vdm_al}
 module CGAUX
 
-imports 
+imports
     from REP all,
     from CI all,
     from CPP all,
@@ -52,12 +52,12 @@ functions
   JavaAccess : AS`Access -> CPP`Modifier
   JavaAccess(access) ==
     cases access:
-      (<DEFAULT_AS>)   -> BC`GenModifier(<PRIVATE>), 
+      (<DEFAULT_AS>)   -> BC`GenModifier(<PRIVATE>),
       (<PRIVATE_AS>)   -> BC`GenModifier(<PRIVATE>),
-      (<PROTECTED_AS>) -> BC`GenModifier(<PROTECTED>), 
+      (<PROTECTED_AS>) -> BC`GenModifier(<PROTECTED>),
       (<PUBLIC_AS>)    -> BC`GenModifier(<PUBLIC>)
     end;
-\end{vdm_al}     
+\end{vdm_al}
 #endif VDMPP
 
 The function {\em FindType} is used to extract the type representation of
@@ -119,24 +119,24 @@ FindType( expr ) ==
   (is_AS`SeqEnumPattern(expr)),
   (is_AS`MapEnumPattern(expr)),
   (is_AS`TuplePattern(expr)),
-  (is_AS`MatchVal(expr)), 
+  (is_AS`MatchVal(expr)),
   (is_AS`RecordPattern(expr)),
   (is_AS`FieldRef(expr)),
   (is_AS`NarrowExpr(expr)),
   (is_AS`TupleSelectExpr(expr)),
   (is_AS`Macro(expr)),
-  (is_AS`MapOrSeqRef(expr)) -> 
-        
+  (is_AS`MapOrSeqRef(expr)) ->
+
     def cti = CI`GetTypeInfo(expr.cid);
 
         -- if we are generating code for values then qualify all type names.
-        --qti = if GetValState() and CPP`isCPP() 
+        --qti = if GetValState() and CPP`isCPP()
     in
      (dcl qti : [REP`TypeRep],
           reptp : [REP`TypeRep] := nil;
 
 #ifdef VDMPP
-      if CPP`isJAVA() 
+      if CPP`isJAVA()
       then
         qti := cti
       else
@@ -157,7 +157,7 @@ FindType( expr ) ==
   (is_AS`BoolLit(expr)),
   (is_AS`TypeJudgementExpr(expr)),
   (is_AS`PreConditionApplyExpr(expr)) -> return mk_REP`BooleanTypeRep(),
-  (is_AS`CharLit(expr))               -> return mk_REP`CharTypeRep(),   
+  (is_AS`CharLit(expr))               -> return mk_REP`CharTypeRep(),
   (is_AS`TextLit(expr))               -> return mk_REP`SeqTypeRep(mk_REP`CharTypeRep()),
   (is_AS`QuoteLit(expr))              -> def mk_AS`QuoteLit(v,cid) = expr;
 #ifdef VDMPP
@@ -173,7 +173,7 @@ FindType( expr ) ==
                                              in
                                                if is_REP`NumericTypeRep(tp)
                                                then return tp;
-                                           if is_int(v) 
+                                           if is_int(v)
                                            then
                                              if is_nat1(v)
                                              then return mk_REP`NumericTypeRep(<NATONE>)
@@ -229,7 +229,7 @@ values
 
 functions
 
-  ExchangeDefAccess: AS`InstAssignDef|AS`InstanceInv|AS`TypeDef|AS`FnDef|AS`OpDef|AS`ValueDef -> 
+  ExchangeDefAccess: AS`InstAssignDef|AS`InstanceInv|AS`TypeDef|AS`FnDef|AS`OpDef|AS`ValueDef ->
                      AS`InstAssignDef|AS`InstanceInv|AS`TypeDef|AS`FnDef|AS`OpDef|AS`ValueDef
   ExchangeDefAccess (rec) ==
     if rec.access = <DEFAULT_AS>
@@ -266,7 +266,7 @@ from $AllOrExistsExpr$, $ExistsUniqueExpr$, $SetComprehensionExpr$,
 $SeqComprehensionExpr$ and $MapComprehensionExpr$.
 
 \begin{vdm_al}
-operations 
+operations
 FindPatIdMap: AS`Expr ==> map AS`Name to REP`TypeRep
 FindPatIdMap(expr) ==
   def pid_m = CI`GetPidM(expr.cid)
@@ -275,7 +275,7 @@ FindPatIdMap(expr) ==
      for all nm in set dom pid_m do
        (dcl tp : REP`TypeRep := pid_m(nm),
             newtp : REP`TypeRep := RemoveInvType(CleanFlatType(tp));
-        while tp <> newtp do  
+        while tp <> newtp do
         (tp := newtp;
          newtp := RemoveInvType(CleanFlatType(tp)));
          res := res ++ {nm |-> tp});
@@ -304,7 +304,7 @@ IsSeqOfCPPStmt( l_v ) ==
              is_CPP`Goto( a ) or
              is_CPP`DeclarationStmt( a ) or
              is_CPP`TryBlock( a ) or
-             is_CPP`IncludeStmt( a ), 
+             is_CPP`IncludeStmt( a ),
              others -> false
   end;
 \end{vdm_al}
@@ -322,20 +322,20 @@ CleanFlatType(reptp) ==
 #ifdef VDMPP
   if CPP`isJAVA()
   then
-   (if is_REP`TypeNameRep(reptp) 
+   (if is_REP`TypeNameRep(reptp)
     then
       def mk_REP`TypeNameRep(nm) = reptp;
            qnm = TPGEN`GenRootType(TPGEN`GenQName(nm))
       in
         if qnm = nil
-        then tp := reptp 
+        then tp := reptp
         elseif not is_AS`Name(qnm)
         then tp := qnm
         else tp := mk_REP`TypeNameRep(qnm)
     else tp := reptp;
     def extp = ExpandTypeRep(tp,{});
         thistp = CleanAndFlattenType(extp);
-    in                 
+    in
       if is_REP`TypeNameRep(tp) and is_REP`UnionTypeRep(thistp) and IsCompositeType(thistp)
       then ss := {tp};
    )
@@ -353,16 +353,16 @@ UnQClassType (tp) ==
   let nm = tp.nm in
   if len nm.ids = 2 and --  and [hd nm.ids] = tl nm.ids
      TPGEN`isclassType (nm) then
-    return mk_REP`ObjRefTypeRep (mk_AS`Name (tl nm.ids, nm.cid)) 
+    return mk_REP`ObjRefTypeRep (mk_AS`Name (tl nm.ids, nm.cid))
   else return tp;
 #endif VDMPP
 \end{vdm_al}
 
 The function ExpandTypeRep will expand types to their first level with the following exceptions.
 \begin{enumerate}
-\item anonymous type names will be expanded until they reaches the 
-      bottom or the name of the type has been meet before in which case the 
-      typename isn't expanded any further. 
+\item anonymous type names will be expanded until they reaches the
+      bottom or the name of the type has been meet before in which case the
+      typename isn't expanded any further.
 \item all anonymous types names in an union type  will be expanded
 \end{enumerate}
 
@@ -450,9 +450,9 @@ functions
 CleanAndFlattenType: REP`TypeRep -> REP`TypeRep
 CleanAndFlattenType(type) ==
 let tps_clean = CleanAndFlattenTypeAux(type) in
-    if card tps_clean = 1 then 
+    if card tps_clean = 1 then
       let {tp} = tps_clean in tp
-    else 
+    else
       mk_REP`UnionTypeRep(tps_clean);
 
 CleanAndFlattenTypeAux: REP`TypeRep -> set of REP`TypeRep
@@ -463,8 +463,8 @@ cases type:
 
   mk_REP`CompositeTypeRep(nm,fl) ->
          {mk_REP`CompositeTypeRep(nm, [mk_REP`FieldRep(fl(i).sel, CleanAndFlattenType(fl(i).tp), fl(i).dc)
-                                                                   | i in set inds fl ])}, 
-                                
+                                                                   | i in set inds fl ])},
+
   mk_REP`UnionTypeRep(ts)  -> let type_s = dunion {CleanAndFlattenTypeAux(t) | t in set ts }
                               in
 
@@ -472,7 +472,7 @@ cases type:
          cases true:
           ( exists e in set type_s & is_REP`EmptySetTypeRep(e) and
             forall e in set type_s \ {mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())} & is_REP`SetTypeRep(e)
-          )  ->  
+          )  ->
 #endif
     let emset = dunion { cases s:
                            mk_REP`SetTypeRep(elemtp) -> {mk_REP`EmptySetTypeRep(elemtp)},
@@ -482,13 +482,13 @@ cases type:
                            others -> {}
                          end | s in set type_s }
     in OptimizeType(type_s \ emset),
-                    
+
 #ifdef LTO_OUT
          ( exists e in set type_s & is_REP`EmptySeqTypeRep(e) and
           forall e in set type_s \ {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep())} &
             is_REP`SeqTypeRep(e)) -> type_s \ {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep())},
 
-        ( exists e in set type_s & is_REP`EmptyMapTypeRep(e) and 
+        ( exists e in set type_s & is_REP`EmptyMapTypeRep(e) and
           forall e in set type_s \ {mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())} &
             is_REP`InjectiveMapTypeRep(e)) -> type_s \ {mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())},
 
@@ -518,7 +518,7 @@ cases type:
 Expanded and cleaned types can be combined.
 \begin{vdm_al}
 
-OptimizeType : set of REP`TypeRep -> set of REP`TypeRep 
+OptimizeType : set of REP`TypeRep -> set of REP`TypeRep
 OptimizeType(tps) ==
   let settypes    = {t | t in set tps & is_REP`SetTypeRep(t)},
       seqtypes    = {t | t in set tps & is_REP`SeqTypeRep(t)},
@@ -527,8 +527,8 @@ OptimizeType(tps) ==
 
      tps \ settypes \ seqtypes \ genmaptypes \ injmaptypes union
      CombineSetTypes(settypes) union
-     CombineSeqTypes(seqtypes) union 
-     CombineGenMapTypes(genmaptypes) union 
+     CombineSeqTypes(seqtypes) union
+     CombineGenMapTypes(genmaptypes) union
      CombineInjMapTypes(injmaptypes)
 ;
 
@@ -574,7 +574,7 @@ then
    let { t } = ts
    in t
 else
-  let md_s = { md | mk_REP`InjectiveMapTypeRep( md, - ) in set ts },     
+  let md_s = { md | mk_REP`InjectiveMapTypeRep( md, - ) in set ts },
       mr_s = { mr | mk_REP`InjectiveMapTypeRep( -, mr ) in set ts }
   in mk_REP`InjectiveMapTypeRep( mk_REP`UnionTypeRep( md_s ),
                                  mk_REP`UnionTypeRep( mr_s ) )
@@ -589,7 +589,7 @@ then
    let { t } = ts
    in t
 else
-  let md_s = { md | mk_REP`GeneralMapTypeRep( md, - ) in set ts },     
+  let md_s = { md | mk_REP`GeneralMapTypeRep( md, - ) in set ts },
       mr_s = { mr | mk_REP`GeneralMapTypeRep( -, mr ) in set ts }
   in mk_REP`GeneralMapTypeRep( mk_REP`UnionTypeRep( md_s ),
                                mk_REP`UnionTypeRep( mr_s ) )
@@ -607,7 +607,7 @@ FindPossibleMapType: REP`UnionTypeRep | REP`GeneralMapTypeRep | REP`InjectiveMap
 FindPossibleMapType(arg) ==
  if is_REP`GeneralMapTypeRep(arg) or is_REP`InjectiveMapTypeRep(arg)
  then arg
- else let atr = mk_REP`AllTypeRep() in 
+ else let atr = mk_REP`AllTypeRep() in
        mk_REP`GeneralMapTypeRep(atr, atr);
 \end{vdm_al}
 
@@ -623,7 +623,7 @@ let atr = mk_REP`AllTypeRep() in
 
 
 The next function computes the possible resulting set in a unary set
-distributed union operation.  
+distributed union operation.
 
 \begin{vdm_al}
 operations
@@ -668,15 +668,15 @@ types
   N = A
 \end{verbatim}
 
-Combine sets, sequences, maps 
+Combine sets, sequences, maps
 
 \begin{vdm_al}
 functions
-CombineSetTypes: set of REP`SetTypeRep -> set of REP`SetTypeRep 
+CombineSetTypes: set of REP`SetTypeRep -> set of REP`SetTypeRep
 CombineSetTypes( s ) ==
 cases s:
    {}, {-} -> s,
-   others -> 
+   others ->
      {mk_REP`SetTypeRep(mk_REP`UnionTypeRep({e|mk_REP`SetTypeRep(e) in set s}))}
 end;
 \end{vdm_al}
@@ -686,33 +686,33 @@ CombineSeqTypes: set of REP`SeqTypeRep -> set of REP`SeqTypeRep
 CombineSeqTypes( s ) ==
 cases s:
    { }, {-} -> s,
-   others -> 
+   others ->
               { mk_REP`SeqTypeRep( mk_REP`UnionTypeRep( { e  | mk_REP`SeqTypeRep( e ) in set s } ) ) }
 end;
 \end{vdm_al}
 
 \begin{vdm_al}
-CombineGenMapTypes: set of REP`GeneralMapTypeRep -> set of REP`GeneralMapTypeRep 
+CombineGenMapTypes: set of REP`GeneralMapTypeRep -> set of REP`GeneralMapTypeRep
 CombineGenMapTypes( s ) ==
 cases s:
    { }, {-} -> s,
-   others -> 
-       { mk_REP`GeneralMapTypeRep( mk_REP`UnionTypeRep( { md  | 
+   others ->
+       { mk_REP`GeneralMapTypeRep( mk_REP`UnionTypeRep( { md  |
                                                    mk_REP`GeneralMapTypeRep( md, - ) in set s } ),
-                                   mk_REP`UnionTypeRep( { mr  | 
+                                   mk_REP`UnionTypeRep( { mr  |
                                                     mk_REP`GeneralMapTypeRep( -, mr ) in set s } ) ) }
 end;
 \end{vdm_al}
 
 \begin{vdm_al}
-CombineInjMapTypes: set of REP`InjectiveMapTypeRep -> set of REP`InjectiveMapTypeRep 
+CombineInjMapTypes: set of REP`InjectiveMapTypeRep -> set of REP`InjectiveMapTypeRep
 CombineInjMapTypes( s ) ==
 cases s:
    { }, {-} -> s,
-   others -> 
-      { mk_REP`InjectiveMapTypeRep( mk_REP`UnionTypeRep( { md  | 
+   others ->
+      { mk_REP`InjectiveMapTypeRep( mk_REP`UnionTypeRep( { md  |
                                                        mk_REP`InjectiveMapTypeRep( md, - ) in set s } ) ,
-                                    mk_REP`UnionTypeRep( { mr  | 
+                                    mk_REP`UnionTypeRep( { mr  |
                                                        mk_REP`InjectiveMapTypeRep( -, mr ) in set s } ) ) }
 end;
 \end{vdm_al}
@@ -725,7 +725,7 @@ This should insure that we always gets exactly the same type
 as if we got it through the typechecker via LOT. Type names are expanded
 until recursion is detected.
 
-In the implementation an extra branch should be added with 
+In the implementation an extra branch should be added with
 \begin{verbatim}
 mk_AS`TypeName( - ) -> LookUpType( at )
 \end{verbatim}
@@ -733,7 +733,7 @@ mk_AS`TypeName( - ) -> LookUpType( at )
 \begin{vdm_al}
 operations
 FromAS2RepType: [AS`Type] ==> REP`TypeRep
-FromAS2RepType(at) == 
+FromAS2RepType(at) ==
   def exp_tp = FromAS2RepTypeAux(at)
   in CleanFlatType(exp_tp);
 
@@ -746,21 +746,21 @@ FromAS2RepTypeAux(at) ==
     mk_AS`TokenType(-) -> return mk_REP`TokenTypeRep(),
     mk_AS`CharType(-) -> return mk_REP`CharTypeRep(),
     mk_AS`VoidType(-) -> return mk_REP`UnitTypeRep(),
-  
+
     mk_AS`QuoteType(t,-) -> def mk_AS`QuoteLit(name,cid) = t;
 #ifdef VDMPP
                                 - = InsertQuote(name)
 #endif VDMPP
                             in return mk_REP`QuoteTypeRep(mk_AS`Name([name],cid)),
 
-    mk_AS`CompositeType(name, fields, -) -> return 
+    mk_AS`CompositeType(name, fields, -) -> return
     mk_REP`CompositeTypeRep(name, [ let mk_AS`Field(n,field,dc,-) = fields(i)
                                     in mk_REP`FieldRep(n, FromAS2RepTypeAux(field),dc)
                                     |  i in set inds fields ] ),
 
     mk_AS`UnionType(type_l,-) -> return mk_REP`UnionTypeRep({FromAS2RepTypeAux(type_l(i)) | i in set inds type_l}),
-  
-    mk_AS`ProductType(type_l,-) -> return 
+
+    mk_AS`ProductType(type_l,-) -> return
           mk_REP`ProductTypeRep( [ FromAS2RepTypeAux( type_l( i )) | i in set inds type_l ] ),
 
     mk_AS`OptionalType(t,-) -> return mk_REP`UnionTypeRep( { FromAS2RepTypeAux( t) , mk_REP`NilTypeRep() } ),
@@ -785,14 +785,14 @@ FromAS2RepTypeAux(at) ==
                                              rgti = FromAS2RepTypeAux(rgt)
                                        in return mk_REP`PartialFnTypeRep(domrep_l, rgti),
 
-    mk_AS`TotalFnType(dom_l, rgt,-) -> 
+    mk_AS`TotalFnType(dom_l, rgt,-) ->
       def domrep_l = [ FromAS2RepTypeAux(dom_l(i)) | i in set inds dom_l ];
           rgti = FromAS2RepTypeAux(rgt) in return
         mk_REP`TotalFnTypeRep(domrep_l, rgti),
 
     mk_AS`BracketedType(t,-)   -> FromAS2RepTypeAux(t),
 
-    mk_AS`TypeName(nm,-)     -> 
+    mk_AS`TypeName(nm,-)     ->
 #ifdef VDMSL
                                 def qnm = TPGEN`GenQName(nm)
                                 in return mk_REP`TypeNameRep(qnm),
@@ -869,42 +869,42 @@ functions
 
 #ifdef VDMPP
 values
-  javabasic = {"child","Math", "Boolean", "Character", "Class", "ClassLoader", 
-               "Compiler", "Number", "Process", "Runtime", "SecurityManager", 
-               "String", "StringBuffer", "System", "Thread", "ThreadGroup", 
-               "Throwable", "Void", "Byte", "Double", "Float", "Integer", 
+  javabasic = {"child","Math", "Boolean", "Character", "Class", "ClassLoader",
+               "Compiler", "Number", "Process", "Runtime", "SecurityManager",
+               "String", "StringBuffer", "System", "Thread", "ThreadGroup",
+               "Throwable", "Void", "Byte", "Double", "Float", "Integer",
                "Long", "Short", "Object", "Cloneable", "Runnable", "Exception",
-               "ClassNotFoundException", "CloneNotSupportedException", 
-               "IllegalAccessException", "InstantiationException", 
-               "InterruptedException", "NoSuchFieldException", 
-               "NoSuchMethodException", "RuntimeException", 
-               "ArithmeticException", "ArrayStoreException", 
-               "ClassCastException", "IllegalArgumentException", 
-               "IllegalMonitorStateException", "IllegalStateException", 
-               "IndexOutOfBoundsException", "NegativeArraySizeException", 
-               "NullPointerException", "SecurityException", 
-               "IllegalThreadStateException", "NumberFormatException", 
-               "ArrayIndexOutOfBoundsException", 
-               "StringIndexOutOfBoundsException", "Error", "LinkageError", 
-               "ThreadDeath", "VirtualMachineError", 
-               "ClassCircularityError", "ClassFormatError", 
-               "ExceptionInInitializerError", 
-               "IncompatibleClassChangeError", "NoClassDefFoundError", 
-               "UnsatisfiedLinkError", "VerifyError", "InternalError", 
-               "OutOfMemoryError", "StackOverflowError", "UnknownError", 
-               "AbstractMethodError", "IllegalAccessError", 
-               "InstantiationError", "NoSuchFieldError", 
-               "NoSuchMethodError", "Serializable", "Enumeration", "clone", 
-               "equals", "getClass", "hashCode", "notify", "notifyAll", 
-               "toString", "wait", "finalize", "catch", "throw", "abstract", 
-               "boolean", "break", "byte", "byvalue", "case", "cast", 
+               "ClassNotFoundException", "CloneNotSupportedException",
+               "IllegalAccessException", "InstantiationException",
+               "InterruptedException", "NoSuchFieldException",
+               "NoSuchMethodException", "RuntimeException",
+               "ArithmeticException", "ArrayStoreException",
+               "ClassCastException", "IllegalArgumentException",
+               "IllegalMonitorStateException", "IllegalStateException",
+               "IndexOutOfBoundsException", "NegativeArraySizeException",
+               "NullPointerException", "SecurityException",
+               "IllegalThreadStateException", "NumberFormatException",
+               "ArrayIndexOutOfBoundsException",
+               "StringIndexOutOfBoundsException", "Error", "LinkageError",
+               "ThreadDeath", "VirtualMachineError",
+               "ClassCircularityError", "ClassFormatError",
+               "ExceptionInInitializerError",
+               "IncompatibleClassChangeError", "NoClassDefFoundError",
+               "UnsatisfiedLinkError", "VerifyError", "InternalError",
+               "OutOfMemoryError", "StackOverflowError", "UnknownError",
+               "AbstractMethodError", "IllegalAccessError",
+               "InstantiationError", "NoSuchFieldError",
+               "NoSuchMethodError", "Serializable", "Enumeration", "clone",
+               "equals", "getClass", "hashCode", "notify", "notifyAll",
+               "toString", "wait", "finalize", "catch", "throw", "abstract",
+               "boolean", "break", "byte", "byvalue", "case", "cast",
                "default", "do", "double", "else", "extends", "false", "final",
-               "goto", "if", "implements", "import", "inner", "instanceof", 
-               "int", "operator", "outer", "package", "private", "protected", 
+               "goto", "if", "implements", "import", "inner", "instanceof",
+               "int", "operator", "outer", "package", "private", "protected",
                "public", "rest", "synchronized", "this", "throws", "transient",
                "true", "try", "char", "class", "const", "continue", "finally",
-               "float", "for", "future", "generic", "interface", "long", 
-               "native", "new", "null", "return", "short", "static", "super", 
+               "float", "for", "future", "generic", "interface", "long",
+               "native", "new", "null", "return", "short", "static", "super",
                "switch", "var", "void", "volatile", "while"};
 
   java_util = { "AbstractCollection", "AbstractList", "AbstractMap", "AbstractSet",
@@ -1046,7 +1046,7 @@ operations
    (IsRealType(tp1) and IsRealType(tp2)) or
    (IsCharType(tp1) and IsCharType(tp2)) or
    (IsQuoteType(tp1) and IsQuoteType(tp2)) or
-   (IsProductType(tp1) and IsProductType(tp2)) or   
+   (IsProductType(tp1) and IsProductType(tp2)) or
 -- hvad med NilType
 -- ???
 --#ifdef VDMPP
@@ -1114,7 +1114,7 @@ functions
     cases type:
       mk_REP`EmptySeqTypeRep(elemtype) -> IsCharType(elemtype),
       mk_REP`SeqTypeRep(elemtype) -> IsCharType(elemtype),
-      mk_REP`UnionTypeRep(tp_s) -> forall tp in set tp_s & IsSeqType(tp) => IsStringType(tp),               
+      mk_REP`UnionTypeRep(tp_s) -> forall tp in set tp_s & IsSeqType(tp) => IsStringType(tp),
       mk_REP`InvTypeRep(-,shape,-) -> IsPossibleStringType(shape),
       others -> false
      end;
@@ -1151,7 +1151,7 @@ functions
       mk_REP`TokenTypeRep() -> false,
       others -> false
     end;
-      
+
 operations
   IsNumType: REP`TypeRep ==> bool
   IsNumType(type) ==
@@ -1189,7 +1189,7 @@ functions
 
 The following two functions ($IsPosNumType$ and $IsPosIntType$) are
 predicates which check whether a type could possibly represent a
-number and an integer respectively. 
+number and an integer respectively.
 \begin{vdm_al}
   IsPosNumType : REP`TypeRep -> bool
   IsPosNumType(type) ==
@@ -1299,7 +1299,7 @@ operations
 #endif VDMPP
       others -> return false
     end;
-  
+
   IsFctType: REP`TypeRep ==> bool
   IsFctType(type) ==
     cases type:
@@ -1311,7 +1311,7 @@ operations
 #endif VDMPP
       others -> return false
     end;
-  
+
 functions
 IsUnionFunctionType: REP`TypeRep -> bool
 IsUnionFunctionType(ti) ==
@@ -1341,7 +1341,7 @@ The functions $MakePreFct$ and $MakePostFct$ makes an $AS`FnDef$
 corresponding to a pre or post condition, respectively.
 
 Note: $MakePreFct$ and $MakePostFct$ should be devided into four
-operations (TBD, HV). 
+operations (TBD, HV).
 
 \begin{vdm_al}
 operations
@@ -1351,7 +1351,7 @@ operations
     let btp = mk_AS`BooleanType(cid),
         fnm = BC`GivePrePostName(fd.nm, "pre") in
     cases fd:
-      mk_AS`ExplFnDef(-,tv_l,tp,parm_ll,-,fnpre,-,access,static,-,-) -> 
+      mk_AS`ExplFnDef(-,tv_l,tp,parm_ll,-,fnpre,-,access,static,-,-) ->
         let tp' = mk_AS`TotalFnType(tp.fndom, btp, cid),
             fnbdy = mk_AS`FnBody(fnpre,cid) in return
           mk_AS`ExplFnDef(fnm, tv_l, tp', parm_ll, fnbdy, nil, nil,access, static, nil, cid),
@@ -1361,14 +1361,14 @@ operations
           let tp = mk_AS`TotalFnType(fndom_l, btp,cid),
               fnbdy = mk_AS`FnBody(fnpre,cid) in return
             mk_AS`ExplFnDef(fnm, tv_l, tp, [parm_l], fnbdy, nil, nil,acc, static, nil, cid),
-      mk_AS`ExplOpDef(-,-,-,mk_AS`OpType(odom,-,-),parm_l,-,oppre,-,acc,static,-,-) -> 
+      mk_AS`ExplOpDef(-,-,-,mk_AS`OpType(odom,-,-),parm_l,-,oppre,-,acc,static,-,-) ->
         def tp_l = StateDefToType(sd);
             parm_l' = parm_l ^ StateDefToPattern(sd, nil) in
           let tp = mk_AS`TotalFnType(odom ^ tp_l, btp,cid),
               fnbdy = mk_AS`FnBody(oppre,cid) in return
             mk_AS`ExplFnDef(fnm, [], tp, [parm_l'], fnbdy, nil, nil,acc, static, nil, cid),
       mk_AS`ExtExplOpDef(-,-,-,pt_l,-,-,-,oppre,-,-,acc,static,-,-),
-      mk_AS`ImplOpDef(-,-,-,pt_l,-,-,oppre,-,-,acc,static,-,-) -> 
+      mk_AS`ImplOpDef(-,-,-,pt_l,-,-,oppre,-,-,acc,static,-,-) ->
         def mk_(odom_l, parm_l) = SplitParameterTypes(pt_l);
             tp_l = StateDefToType(sd);
             parm_l' = parm_l ^ StateDefToPattern(sd, nil);
@@ -1390,14 +1390,14 @@ operations
         resnm = mk_AS`Name(["RESULT"], cid),
         fnm = BC`GivePrePostName(fd.nm, "post") in
     cases fd:
-      mk_AS`ExplFnDef(-,tv_l,tp,parm_ll,-,-,fnpost,acc,static,-,-) -> 
+      mk_AS`ExplFnDef(-,tv_l,tp,parm_ll,-,-,fnpost,acc,static,-,-) ->
         def rtp = tp.fnrng;
             tp' = mk_AS`TotalFnType(tp.fndom ^ [rtp],btp,cid);
             c_rtp = CI`PushCGType(FromAS2RepType(rtp));
             parm = mk_AS`PatternName(resnm, nil, c_rtp);
             parm_ll' = [hd parm_ll ^ [parm]] ^ tl parm_ll;
             fnbdy = mk_AS`FnBody(fnpost,cid)
-        in return 
+        in return
           mk_AS`ExplFnDef(fnm, tv_l, tp', parm_ll', fnbdy, nil, nil,acc, static, nil, cid),
 
       mk_AS`ExtExplFnDef(-,tv_l,pt_l,nt_l,-,-,fnpost,acc,static,-,-),
@@ -1406,11 +1406,11 @@ operations
             mk_(parm,rtp) = MakeReturnPattern(nt_l);
             tp = mk_AS`TotalFnType(fndom_l ^ [rtp], btp,cid);
             fnbdy = mk_AS`FnBody(fnpost,cid)
-        in return 
+        in return
           mk_AS`ExplFnDef(fnm, tv_l, tp, [parm_l^[parm]], fnbdy, nil, nil, acc, static, nil, cid)
 #ifdef VDMSL
       ,
-      mk_AS`ExplOpDef(-,-,-,mk_AS`OpType(odom,rtp,-),parm_l,-,-,oppost,acc,stat,-,-) -> 
+      mk_AS`ExplOpDef(-,-,-,mk_AS`OpType(odom,rtp,-),parm_l,-,-,oppost,acc,stat,-,-) ->
        (dcl rp_l : seq of AS`Pattern := [],
             rt_l : seq of AS`Type := [];
         if not is_AS`VoidType(rtp)
@@ -1424,11 +1424,11 @@ operations
             tp = mk_AS`TotalFnType(odom ^ rt_l ^ tp_l ^ tp_l, btp,cid);
             parm_l' = parm_l ^ rp_l ^ p_l;
             fnbdy = mk_AS`FnBody(oppost,cid)
-        in return 
+        in return
           mk_AS`ExplFnDef(fnm,[],tp,[parm_l'],fnbdy,nil,nil,acc,stat,nil,cid)
        ),
       mk_AS`ExtExplOpDef(-,-,-,pt_l,nt_l,-,-,-,oppost,-,acc,stat,-,-),
-      mk_AS`ImplOpDef(-,-,-,pt_l,nt_l,-,-,oppost,-,acc,stat,-,-) -> 
+      mk_AS`ImplOpDef(-,-,-,pt_l,nt_l,-,-,oppost,-,acc,stat,-,-) ->
         def mk_(odom_l, parm_l) = SplitParameterTypes(pt_l);
         in
          (dcl rp_l : seq of AS`Pattern := [],
@@ -1444,7 +1444,7 @@ operations
               tp = mk_AS`TotalFnType(odom_l ^ rt_l ^ tp_l ^ tp_l, btp,cid);
               parm_l' = parm_l ^ rp_l ^ p_l;
               fnbdy = mk_AS`FnBody(oppost,cid)
-          in return 
+          in return
             mk_AS`ExplFnDef(fnm,[],tp,[parm_l'],fnbdy,nil,nil,acc,stat,nil,cid)
          )
 #endif VDMSL
@@ -1458,14 +1458,14 @@ operations
       def mk_AS`NameType(rnm, rtp, -) = hd nt_l;
           rep_rtp = FromAS2RepType(rtp)
       in
-        return mk_(mk_AS`PatternName(rnm, nil, CI`PushCGType(rep_rtp)), rtp) 
+        return mk_(mk_AS`PatternName(rnm, nil, CI`PushCGType(rep_rtp)), rtp)
     else
      (dcl pat_l : seq of AS`Pattern := [],
           type_l : seq of AS`Type := [];
       for mk_AS`NameType(rnm, rtp,-) in nt_l do
        (def rep_rtp = FromAS2RepType(rtp)
         in
-          pat_l  := pat_l ^ [mk_AS`PatternName(rnm, nil, CI`PushCGType(rep_rtp))]; 
+          pat_l  := pat_l ^ [mk_AS`PatternName(rnm, nil, CI`PushCGType(rep_rtp))];
         type_l := type_l ^ [rtp] );
       let cid = CI`NilContextId in
       def tp = mk_AS`ProductType(type_l,cid);
@@ -1503,7 +1503,7 @@ operations
               ti = FromAS2RepType(tp);
               cid_ti = CI`PushCGType(ti)
           in return
-          [mk_AS`RecordPattern(nm, p_l, cid_ti)]; 
+          [mk_AS`RecordPattern(nm, p_l, cid_ti)];
 #endif VDMSL
 #ifdef VDMPP
   StateDefToPattern(-,-) ==
@@ -1516,8 +1516,8 @@ operations
         cid_tp' = CI`PushCGType(tp')
     in
       cases mk_(nm, sdtp):
-        mk_(nil, -), mk_(-, nil)        -> return mk_AS`PatternName(nm, nil, cid_tp'), 
-        mk_(mk_AS`Name(id, cid), <OLD>) -> return mk_AS`PatternName(mk_AS`OldName(id, cid), nil, cid_tp') 
+        mk_(nil, -), mk_(-, nil)        -> return mk_AS`PatternName(nm, nil, cid_tp'),
+        mk_(mk_AS`Name(id, cid), <OLD>) -> return mk_AS`PatternName(mk_AS`OldName(id, cid), nil, cid_tp')
       end;
 \end{vdm_al}
 
@@ -1527,7 +1527,7 @@ functions
   SplitParameterTypes(pt_l) ==
 --  ( dcl dom_l : seq of AS`Type := [],
 --        parm_l : seq of AS`Pattern := [];
---    for mk_AS`PatTypePair(pat_l, tp,-) in pt_l do 
+--    for mk_AS`PatTypePair(pat_l, tp,-) in pt_l do
 --    ( dom_l := dom_l ^ [tp | - in set inds pat_l];
 --      parm_l := parm_l ^ pat_l
 --    );
@@ -1582,7 +1582,7 @@ cases pat:
   mk_AS`DefExpr(def_l, expr, cid) ->
         ( dcl localbind : set of AS`Name := lb,
               local_def : seq of (AS`PatternBind * AS`Expr) := [];
-          for as_def in def_l do 
+          for as_def in def_l do
            (
             def mk_(p,e) = as_def;
                 pnms = dom CGEXPR`FindPatternId(p)
@@ -1591,7 +1591,7 @@ cases pat:
                )
            );
           return mk_AS`DefExpr(local_def, QuotePMExprWithClNm(expr, clnm, localbind), cid);
-             
+
         ),
   mk_AS`LetExpr(locdef, body, cid) ->
         ( dcl localbind : set of AS`Name := lb,
@@ -1602,16 +1602,16 @@ cases pat:
                is_AS`ImplFnDef(as_localdef) or
                is_AS`ExtExplFnDef(as_localdef)
             then local_def := local_def ^ [as_localdef]
-            else 
+            else
             def mk_AS`ValueDef(pat, tp, expr, acc, static, cid) = as_localdef;
                 pnms = dom CGEXPR`FindPatternId(pat)
-            in (local_def := 
+            in (local_def :=
                  local_def ^
-                 [mk_AS`ValueDef(pat, 
+                 [mk_AS`ValueDef(pat,
                                  tp,
                                  QuotePMExprWithClNm(expr, clnm, localbind),
                                  acc,
-                                 static, 
+                                 static,
                                  cid)
                  ];
                 localbind := localbind union pnms;
@@ -1623,15 +1623,15 @@ cases pat:
       ( dcl localbind : set of AS`Name := lb,
         new_bind : AS`BindList := [];
         for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p)  | p in set elems pat_l }
                in ( localbind := localbind union pnms;
                     new_bind := new_bind ^
                                   [ mk_AS`MultSetBind(
                                         pat_l,
-                                        QuotePMExprWithClNm(Set, clnm, lb), 
+                                        QuotePMExprWithClNm(Set, clnm, lb),
                                         cid)
                                   ];
                   )
@@ -1646,7 +1646,7 @@ cases pat:
        return
       mk_AS`IfExpr( QuotePMExprWithClNm(test, clnm, lb),
                     QuotePMExprWithClNm(cons, clnm, lb),
-                    [ let mk_AS`ElseifExpr(test, cons, cid) = elsif(i) 
+                    [ let mk_AS`ElseifExpr(test, cons, cid) = elsif(i)
                       in mk_AS`ElseifExpr(QuotePMExprWithClNm(test, clnm,lb),
                                           QuotePMExprWithClNm(cons, clnm,lb),
                                           cid)
@@ -1656,10 +1656,10 @@ cases pat:
   mk_AS`CasesExpr(sel, altns, Others, cid) ->
        return
       mk_AS`CasesExpr(QuotePMExprWithClNm(sel, clnm, lb),
-                      [ let mk_AS`CaseAltn(match, body, cid) = altns(i) 
+                      [ let mk_AS`CaseAltn(match, body, cid) = altns(i)
                         in def pnms = dunion { dom CGEXPR`FindPatternId(p) | p in set elems match };
                                new_lb = pnms union lb
-                           in mk_AS`CaseAltn(match, QuotePMExprWithClNm(body, clnm, new_lb), cid) 
+                           in mk_AS`CaseAltn(match, QuotePMExprWithClNm(body, clnm, new_lb), cid)
                         | i in set inds altns ],
                       QuotePMExprWithClNm(Others, clnm, lb),
                       cid),
@@ -1676,8 +1676,8 @@ cases pat:
      ( dcl local_bind : set of AS`Name := lb,
            new_bind_l : AS`BindList := [];
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( local_bind := local_bind union pnms;
@@ -1694,9 +1694,9 @@ cases pat:
       if is_AS`TypeBind(bind)
       then new_bind := bind
       else let mk_AS`SetBind(pat, expr, cid) = bind
-           in 
+           in
               (local_bind := lb union dom CGEXPR`FindPatternId(pat);
-               new_bind := mk_AS`SetBind(pat, 
+               new_bind := mk_AS`SetBind(pat,
                                          QuotePMExprWithClNm(expr, clnm, lb),
                                          cid);
               );
@@ -1704,7 +1704,7 @@ cases pat:
                                     QuotePMExprWithClNm(pred,clnm,local_bind),
                                     cid);
     ),
-  mk_AS`IotaExpr(bind, pred, cid) -> 
+  mk_AS`IotaExpr(bind, pred, cid) ->
     ( dcl local_bind : set of AS`Name := lb,
           new_bind : AS`Bind;
       if is_AS`TypeBind(bind)
@@ -1712,7 +1712,7 @@ cases pat:
       else let mk_AS`SetBind(pat, expr, cid) = bind
            in (
                local_bind := lb union dom CGEXPR`FindPatternId(pat);
-               new_bind := mk_AS`SetBind(pat, 
+               new_bind := mk_AS`SetBind(pat,
                                         QuotePMExprWithClNm(expr, clnm, lb),
                                         cid);
               );
@@ -1729,8 +1729,8 @@ cases pat:
      ( dcl local_bind : set of AS`Name := lb,
            new_bind_l : AS`BindList := [];
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( local_bind := local_bind union pnms;
@@ -1759,7 +1759,7 @@ cases pat:
      def new_lb = lb union dom CGEXPR`FindPatternId(pat) in
      return mk_AS`SeqComprehensionExpr(
                    QuotePMExprWithClNm(elem, clnm, new_lb),
-                   mk_AS`SetBind(pat, 
+                   mk_AS`SetBind(pat,
                                  QuotePMExprWithClNm(Set, clnm, lb),
                                  cid_sb),
                    QuotePMExprWithClNm(pred, clnm, new_lb),
@@ -1782,14 +1782,14 @@ cases pat:
           in mk_AS`Maplet(QuotePMExprWithClNm(mapdom, clnm, lb),
                           QuotePMExprWithClNm(maprng, clnm, lb),
                           cid)
-          | i in set inds els], 
+          | i in set inds els],
         cid),
   mk_AS`MapComprehensionExpr(mk_AS`Maplet(md, mr, cid_ml), bind, pred, cid) ->
      ( dcl local_bind : set of AS`Name := lb,
            new_bind_l : AS`BindList := [];
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( local_bind := local_bind union pnms;
@@ -1834,8 +1834,8 @@ cases pat:
                            cid),
   mk_AS`FctTypeInstExpr(polyfct, inst, cid) ->
        return
-     mk_AS`FctTypeInstExpr(QuotePMExprWithClNm(polyfct, clnm, lb), 
-                           inst, 
+     mk_AS`FctTypeInstExpr(QuotePMExprWithClNm(polyfct, clnm, lb),
+                           inst,
                            cid),
   mk_AS`LambdaExpr(parm, body, type, cid) ->
        return
@@ -1889,7 +1889,7 @@ cases pat:
     then return pat
     else  if pat in set lb
           then return pat
-          else 
+          else
                let mk_AS`Name([nm], cid) = pat,
                    mk_AS`Name([cnm], -) = clnm
                in return mk_AS`Name([cnm, nm], cid)
@@ -1938,13 +1938,13 @@ cases pat:
                 in mk_AS`FieldPattern(nm, QuotePMExprWithTemp(pat,clnm, lb), cid)
                 | i in set inds fields], cid),
 #endif VDMPP
-  mk_AS`BracketedExpr(expr, cid) -> 
+  mk_AS`BracketedExpr(expr, cid) ->
        return
         mk_AS`BracketedExpr(QuotePMExprWithTemp(expr, clnm, lb), cid),
   mk_AS`DefExpr(def_l, expr, cid) ->
         ( dcl localbind : set of AS`Name := lb,
               local_def : seq of (AS`PatternBind * AS`Expr) := [];
-          for as_def in def_l do 
+          for as_def in def_l do
            (
             def mk_(p,e) = as_def;
                 pnms = dom CGEXPR`FindPatternId(p)
@@ -1953,7 +1953,7 @@ cases pat:
                )
            );
           return mk_AS`DefExpr(local_def, QuotePMExprWithTemp(expr, clnm, localbind), cid);
-             
+
         ),
   mk_AS`LetExpr(locdef, body, cid) ->
         ( dcl localbind : set of AS`Name := lb,
@@ -1964,16 +1964,16 @@ cases pat:
                is_AS`ImplFnDef(as_localdef) or
                is_AS`ExtExplFnDef(as_localdef)
             then local_def := local_def ^ [as_localdef]
-            else 
+            else
             def mk_AS`ValueDef(pat, tp, expr, acc, static, cid) = as_localdef;
                 pnms = dom CGEXPR`FindPatternId(pat)
-            in (local_def := 
+            in (local_def :=
                  local_def ^
-                 [mk_AS`ValueDef(pat, 
+                 [mk_AS`ValueDef(pat,
                                  tp,
                                  QuotePMExprWithTemp(expr, clnm, localbind),
                                  acc,
-                                 static, 
+                                 static,
                                  cid)
                  ];
                 localbind := localbind union pnms;
@@ -1987,8 +1987,8 @@ cases pat:
     ( dcl localbind : set of AS`Name := lb,
           new_bind : AS`BindList;
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( localbind := localbind union pnms;
@@ -2006,7 +2006,7 @@ cases pat:
        return
       mk_AS`IfExpr( QuotePMExprWithTemp(test, clnm, lb),
                     QuotePMExprWithTemp(cons, clnm, lb),
-                    [ let mk_AS`ElseifExpr(test, cons, cid) = elsif(i) 
+                    [ let mk_AS`ElseifExpr(test, cons, cid) = elsif(i)
                       in mk_AS`ElseifExpr(QuotePMExprWithTemp(test, clnm,lb),
                                           QuotePMExprWithTemp(cons, clnm,lb),
                                           cid)
@@ -2016,10 +2016,10 @@ cases pat:
   mk_AS`CasesExpr(sel, altns, Others, cid) ->
        return
       mk_AS`CasesExpr(QuotePMExprWithTemp(sel, clnm, lb),
-                      [ let mk_AS`CaseAltn(match, body, cid) = altns(i) 
+                      [ let mk_AS`CaseAltn(match, body, cid) = altns(i)
                         in def pnms = dunion { dom CGEXPR`FindPatternId(p) | p in set elems match };
                                new_lb = pnms union lb
-                           in mk_AS`CaseAltn(match, QuotePMExprWithTemp(body, clnm, new_lb), cid) 
+                           in mk_AS`CaseAltn(match, QuotePMExprWithTemp(body, clnm, new_lb), cid)
                         | i in set inds altns ],
                       QuotePMExprWithTemp(Others, clnm, lb),
                       cid),
@@ -2036,15 +2036,15 @@ cases pat:
      ( dcl local_bind : set of AS`Name := lb,
            new_bind_l : AS`BindList := [];
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( local_bind := local_bind union pnms;
                     new_bind_l := new_bind_l ^
                                   [ mk_AS`MultSetBind(
                                         pat_l,
-                                        QuotePMExprWithTemp(Set, clnm, lb), 
+                                        QuotePMExprWithTemp(Set, clnm, lb),
                                         cid)
                                   ];
                   )
@@ -2061,13 +2061,13 @@ cases pat:
       if is_AS`TypeBind(bind)
       then new_bind := bind
       else let mk_AS`SetBind(pat, expr, cid) = bind
-           in 
+           in
               (local_bind := lb union dom CGEXPR`FindPatternId(pat);
                new_bind := mk_AS`SetBind(pat, QuotePMExprWithTemp(expr, clnm, lb), cid);
               );
       return mk_AS`ExistsUniqueExpr(new_bind, QuotePMExprWithTemp(pred,clnm,local_bind), cid);
     ),
-  mk_AS`IotaExpr(bind, pred, cid) -> 
+  mk_AS`IotaExpr(bind, pred, cid) ->
     ( dcl local_bind : set of AS`Name := lb,
           new_bind : AS`Bind;
       if is_AS`TypeBind(bind)
@@ -2075,7 +2075,7 @@ cases pat:
       else let mk_AS`SetBind(pat, expr, cid) = bind
            in (
                local_bind := lb union dom CGEXPR`FindPatternId(pat);
-               new_bind := mk_AS`SetBind(pat, 
+               new_bind := mk_AS`SetBind(pat,
                                         QuotePMExprWithTemp(expr, clnm, lb),
                                         cid);
               );
@@ -2087,8 +2087,8 @@ cases pat:
      ( dcl local_bind : set of AS`Name := lb,
            new_bind_l : AS`BindList := [];
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( local_bind := local_bind union pnms;
@@ -2114,7 +2114,7 @@ cases pat:
      def new_lb = lb union dom CGEXPR`FindPatternId(pat) in
      return mk_AS`SeqComprehensionExpr(
                    QuotePMExprWithTemp(elem, clnm, new_lb),
-                   mk_AS`SetBind(pat, 
+                   mk_AS`SetBind(pat,
                                  QuotePMExprWithTemp(Set, clnm, lb),
                                  cid_sb),
                    QuotePMExprWithTemp(pred, clnm, new_lb),
@@ -2137,14 +2137,14 @@ cases pat:
           in mk_AS`Maplet(QuotePMExprWithTemp(mapdom, clnm, lb),
                           QuotePMExprWithTemp(maprng, clnm, lb),
                           cid)
-          | i in set inds els], 
+          | i in set inds els],
         cid),
   mk_AS`MapComprehensionExpr(mk_AS`Maplet(md, mr, cid_ml), bind, pred, cid) ->
      ( dcl local_bind : set of AS`Name := lb,
            new_bind_l : AS`BindList := [];
        for b in bind do
-          if is_AS`MultSetBind(b) 
-          then 
+          if is_AS`MultSetBind(b)
+          then
             let mk_AS`MultSetBind(pat_l, Set, cid) = b
             in def pnms = dunion {dom CGEXPR`FindPatternId(p) | p in set elems pat_l }
                in ( local_bind := local_bind union pnms;
@@ -2189,8 +2189,8 @@ cases pat:
                            cid),
   mk_AS`FctTypeInstExpr(polyfct, inst, cid) ->
        return
-     mk_AS`FctTypeInstExpr(QuotePMExprWithTemp(polyfct, clnm, lb), 
-                           inst, 
+     mk_AS`FctTypeInstExpr(QuotePMExprWithTemp(polyfct, clnm, lb),
+                           inst,
                            cid),
   mk_AS`LambdaExpr(parm, body, type, cid) ->
        return
@@ -2252,7 +2252,7 @@ cases pat:
                           else
                             if pat in set lb
                             then return pat
-                            else 
+                            else
                               let mk_AS`Name([nm], cid) = pat,
                                   mk_AS`Name([cnm], -) = clnm
                               in return mk_AS`Name([cnm, nm], cid)
@@ -2297,7 +2297,7 @@ BindToBindList(b) ==
 
 The function {\em FindAllNamesInExpr} finds all the names in expressions that possibly
 can be generated as expression (instead of a statement). The function is an auxiliary
-function to {\em 
+function to {\em
 
 
 \begin{vdm_al}
@@ -2311,7 +2311,7 @@ FindAllNamesInExpr(e) ==
     mk_AS`RecordConstructorExpr(-, e_l, -) -> dunion { FindAllNamesInExpr(e_l(i)) | i in set inds e_l},
     mk_AS`SeqEnumerationExpr(els, -)       -> dunion { FindAllNamesInExpr(els(i)) | i in set inds els},
     mk_AS`SetEnumerationExpr(els, -)       -> dunion { FindAllNamesInExpr(els(i)) | i in set inds els},
-    mk_AS`ApplyExpr(f, e_l, -)             -> dunion { FindAllNamesInExpr(e_l(i)) | i in set inds e_l} 
+    mk_AS`ApplyExpr(f, e_l, -)             -> dunion { FindAllNamesInExpr(e_l(i)) | i in set inds e_l}
                                                 union FindAllNamesInExpr(f),
     mk_AS`FieldSelectExpr(rec, nm, -)      -> FindAllNamesInExpr(rec) union FindAllNamesInExpr(nm),
     mk_AS`Name(-,-)                        -> { e },
@@ -2355,7 +2355,7 @@ The state {\em Aux} consists of the state:
 \item[c-s:] the state $c-s$ is a set of class names, used in
   the class currently being code generated.
 \item[r-tp:] the state r-tp contains the return type of the method or
-  operation that is currently generated code for. 
+  operation that is currently generated code for.
 \item[val:] the state {\em val} is set to true if generating code for
 values, otherwise it is false. If generating code for values we need
 to qualify all type name used, because the code generated of the
@@ -2365,9 +2365,9 @@ class/module generated.
 \item[nametab:] the state {\em nametab} is used to code generate name scoping in Java.
 \item[globalenv:] the state {\em globalenv} is used to code generate name scoping in Java.
 \item[lastenv:] the state {\em lastenv} is used to code generate name scoping in Java.
-\item[throwException:] the state {\em throwException} is set to true if a Java method in the the generated code throws an VDM\_Error exception. 
+\item[throwException:] the state {\em throwException} is set to true if a Java method in the the generated code throws an VDM\_Error exception.
 \item[throwNotSupported:] the state {\em throwNotSupported} is set to true if a Java method in the the generated code
-throws an not-supported exception. 
+throws an not-supported exception.
 \item[var\_in\_expr:] the state {\em var\_in\_expr} is  a set of variable names, used in
   the value definition currently being code generated.
 \item[quotes:] the state {\em quotes} is a set of quotes, used in the code generation of this class.
@@ -2386,25 +2386,25 @@ i.e. the first element in the sequence is an immediate super class,
 and the last element is a base class.
 \item[instanceVariables:] a table relating class names to the types of
 instance variables declared in that class. See
-Section~\ref{subsec:instvars} for details of why this is needed. 
+Section~\ref{subsec:instvars} for details of why this is needed.
 \item[classVisitOrder:] an order in which all the classes in the
 specification can be traversed, ensuring that superclasses are visited
 before subclasses.
 \item[methodNames:] Those public or protected method names for a given
-class. All names are mangled.  
+class. All names are mangled.
 \item[unhiddenNames:] Those public or protected method names for a
 given class, which includes names from super classes if the same name
-is reused in the current class. All names are mangled. 
+is reused in the current class. All names are mangled.
 \item[isConstr:] Flag indicating whether code for a constructor is
-currently being generated. 
+currently being generated.
 \item[classHasDefaultConstructor:] Flag indicating whether the current
 class defines its own default constructor or not.
 \item[usesSuper:] Flag indicating whether the body of the current
-operation being generated includes a call to "super" or not. 
+operation being generated includes a call to "super" or not.
 \item[isStatic:] Flag indicating whether the operation or function
 currently being code generated is static.
 \item[usesThis:] Flag indicating whether the  body of the current
-operation being generated includes a call to "this" or not. 
+operation being generated includes a call to "this" or not.
 \end{description}
 
 \begin{vdm_al}
@@ -2416,18 +2416,18 @@ state Aux of
   isabstract : bool
   c_s    : set of AS`Name
   r_tp   : REP`TypeRep
-  nametab  : Env 
+  nametab  : Env
   globalenv : BlkEnv
   lastenv : BlkEnv
   val : bool
   throwException : bool
-  throwNotSupported : bool   
+  throwNotSupported : bool
   var_in_expr : set of AS`Name
   quotes : set of seq of char
   import_s : set of seq of char
   abstractMethods : map AS`Name to set of AS`Ids
   nonAbstractMethods : map AS`Name to set of AS`Ids
-  allNonAbstractMethods : map AS`Name to set of AS`Ids  
+  allNonAbstractMethods : map AS`Name to set of AS`Ids
   superClasses : map AS`Name to set of AS`Name
   orderedSupers : map AS`Name to seq of AS`Name
   instanceVariables : map AS`Name to (map AS`Name to REP`TypeRep)
@@ -2448,21 +2448,19 @@ state Aux of
   noCheckSeqApply : set of (CPP`Expr * CPP`Expr)
 end
 
-types 
+types
 
 SortFct ::
   sort : CPP`Name * REP`TypeRep
   sortnls : CPP`Name * REP`TypeRep
   sortseq : CPP`Name * REP`TypeRep;
 
-  AuxFct ::
-    Permute : set of ( CPP`Name * REP`SeqTypeRep ) 
-    Sort    : set of SortFct;
-      
+AuxFct ::
+  Permute : set of ( CPP`Name * REP`SeqTypeRep )
+  Sort    : set of SortFct;
+
 BlkEnv = map (AS`Name|AS`OldName) to ((AS`Name|AS`OldName) * nat);
-Env = seq of BlkEnv;        
-
-
+Env = seq of BlkEnv;
 \end{vdm_al}
 
 
@@ -2473,31 +2471,30 @@ to allow computation of abstract classes.
 
 \begin{vdm_al}
 operations
-
   InitState: [AS`Name] ==> ()
   InitState(nm) ==
-   ( quotes := {};
-     import_s := {};
-     noCheckSeqApply := {};
-     if nm = nil 
-     then (
-       abstractMethods := {|->};
-       nonAbstractMethods := {|->};
-       allNonAbstractMethods := {|->};
-       superClasses := {|->};
-       orderedSupers := {|->};
-       instanceVariables := {|->};
-       classVisitOrder := [];
-       methodNames := {|->};
-       unhiddenNames := {|->};
-       packageNames := {|->};
+   (quotes := {};
+    import_s := {};
+    noCheckSeqApply := {};
+    if nm = nil
+    then
+     (abstractMethods := {|->};
+      nonAbstractMethods := {|->};
+      allNonAbstractMethods := {|->};
+      superClasses := {|->};
+      orderedSupers := {|->};
+      instanceVariables := {|->};
+      classVisitOrder := [];
+      methodNames := {|->};
+      unhiddenNames := {|->};
+      packageNames := {|->};
 #ifdef VDMPP
-       primitiveType := {|->};
-       InitJavaPrimitiveType();
+      primitiveType := {|->};
+      InitJavaPrimitiveType();
 #endif VDMPP
      )
-     else ( 
-       cc := nm;
+     else
+      (cc := nm;
        auxfct := false;
        isabstract := false;
        c_s := {};
@@ -2516,35 +2513,32 @@ operations
        isStatic := false;
        usesThis := false;
        cause := [ nil ];
-     )
+      )
    );
 \end{vdm_al}
-
 
 \begin{vdm_al}
 operations
   InitEnv: () ==> ()
   InitEnv() ==
-  (        
     nametab := [{|->}];
-  );
-  
+
   CurrentEnv:() ==> BlkEnv
   CurrentEnv() ==
     return hd nametab;
 
   PushEnv:() ==> ()
   PushEnv() ==
-    nametab := [{|->}] ^ nametab;
+   nametab := [{|->}] ^ nametab;
 
   PushThisEnv: BlkEnv ==> bool
   PushThisEnv(env) ==
-    (nametab := [env] ^ nametab;
+   (nametab := [env] ^ nametab;
     return true);
 
   PopLastEnv: () ==> bool
   PopLastEnv() ==
-    (nametab := tl nametab;
+   (nametab := tl nametab;
     return true);
 
   PopEnv:() ==> ()
@@ -2552,33 +2546,31 @@ operations
     nametab := tl nametab;
 
   InsertNamesinEnv: set of (AS`Name | AS`OldName) ==> bool
-  InsertNamesinEnv(nms) == 
-  (--dcl nm : (AS`Name | AS`OldName);    
-   for all elm in set nms do
-     --nm := InsertName(elm);
-     def - = InsertName(elm) in skip;
-   return true
-  );
+  InsertNamesinEnv(nms) ==
+   (for all elm in set nms do
+      def - = InsertName(elm) in skip;
+    return true
+   );
 
   InsertNamesinEnv2: set of (AS`Name | AS`OldName)  ==> ()
-  InsertNamesinEnv2(nms) == 
-  (--dcl nm : (AS`Name | AS`OldName);    
-   for all elm in set nms do
-     --nm := InsertName(elm);
-     def - = InsertName(elm) in skip;
-  );
+  InsertNamesinEnv2(nms) ==
+   (for all elm in set nms do
+    def - = InsertName(elm) in skip;
+   );
 
   InsertName: (AS`Name | AS`OldName) ==> (AS`Name | AS`OldName)
   InsertName(nm) ==
-  ( dcl blk : BlkEnv := hd nametab;
-    def mk_(exist,level,lastnum) = FindName(nm) in
-        (blk := if ((exist) and (level=0))
-                then blk
-                elseif exist
-                then blk munion { nm |-> mk_(nm,lastnum+1) }
-                else blk munion { nm |-> mk_(nm,0) };);
+   (dcl blk : BlkEnv := hd nametab;
+    def mk_(exist,level,lastnum) = FindName(nm)
+    in
+     (blk := if exist and (level=0)
+             then blk
+             elseif exist
+             then blk munion { nm |-> mk_(nm,lastnum+1) }
+             else blk munion { nm |-> mk_(nm,0) };
+     );
     nametab(1) := blk;
-    return nm               
+    return nm;
    );
 
 
@@ -2588,45 +2580,43 @@ operations
 
                  --if GiveCurCASName() = nm then globalenv munion {nm |-> mk_(nm,1)}
                  --else globalenv munion {nm |-> mk_(nm,0)};
-    return nm;           
+    return nm;
    );
 
   FindName: (AS`Name | AS`OldName) ==> bool * int * nat
   FindName( nm ) ==
-  (dcl level : int := 0; 
-   for blkenv in nametab do     
-       (if (nm in set dom blkenv) then
-          --(let mk_(name,num) = blkenv(nm)
-          (let mk_(-,num) = blkenv(nm)
-           in 
-           return mk_(true,level,num););
-        level := level +1;);
-   if (nm in set dom globalenv) then 
-      --(let mk_(name,num) = globalenv(nm)
-      (let mk_(-,num) = globalenv(nm)
-           in 
-           return mk_(true,-1,num)
-       )
-   else return mk_(false,-1,0);
-  );
+   (dcl level : int := 0;
+    for blkenv in nametab do
+     (if nm in set dom blkenv
+      then
+        let mk_(-,num) = blkenv(nm)
+        in return mk_(true,level,num);
+      level := level +1;
+     );
+    if nm in set dom globalenv
+    then
+      let mk_(-,num) = globalenv(nm)
+      in return mk_(true,-1,num)
+    else return mk_(false,-1,0);
+   );
 
   FindScope: (AS`Name | AS`OldName) ==> int
   FindScope( nm ) ==
-  (dcl level : int := 0;
-   for blkenv in nametab do     
-       (if (nm in set dom blkenv) then
-           let mk_(-,num) = blkenv(nm)
-           in 
-             return num; 
-        level := level +1;);
-   if (nm in set dom globalenv) then 
-          let mk_(-,num) = globalenv(nm)
-           in 
-             return num -- return -1
-   else return -2
+   (dcl level : int := 0;
+    for blkenv in nametab do
+     (if nm in set dom blkenv
+      then
+        let mk_(-,num) = blkenv(nm)
+        in return num;
+      level := level +1;
+     );
+    if nm in set dom globalenv
+    then
+      let mk_(-,num) = globalenv(nm)
+      in return num -- return -1
+    else return -2;
    );
-\end{vdm_al} 
-
+\end{vdm_al}
 
 #ifdef VDMPP
 The operation $IncludeClass$ updates the state $c-s$ with the class
@@ -2636,7 +2626,7 @@ name $nm$.
   IncludeClass: AS`Name ==> ()
   IncludeClass(nm) ==
     c_s := c_s union { nm };
-\end{vdm_al} 
+\end{vdm_al}
 
 The operation $GenClassIncls$ generates a sequence of inclusions,
 corresponding to the classes and aux functions used by the current
@@ -2668,7 +2658,7 @@ The next operation {\em GiveCurCName } gives the name of the
 current class being code generated for.
 
 \begin{vdm_al}
-GiveCurCName: () ==> AS`Id 
+GiveCurCName: () ==> AS`Id
 GiveCurCName() ==
 return GiveLastName( cc );
 
@@ -2703,7 +2693,7 @@ being code genarated, and the next ``free'' statement number.
 
   GiveCurMASName: () ==> AS`Name
   GiveCurMASName() ==
-  ( 
+  (
     return cm;
   );
 
@@ -2724,7 +2714,7 @@ UseAuxFct() ==
 A class is abstract if either
 \begin{itemize}
 \item It contains a function or operation declared as ``is subclass
-responsibility'' (indicated by the $isabstract$ flag); or 
+responsibility'' (indicated by the $isabstract$ flag); or
 \item It has a superclass with abstract methods which are not
 implemented in this class or in any superclass (indicated by the
 $HasAbstractMethods$ operation).
@@ -2733,7 +2723,7 @@ $HasAbstractMethods$ operation).
 
 IsAbstract: () ==> bool
 IsAbstract() ==
-return isabstract 
+return isabstract
        or HasAbstractMethods()
 ;
 
@@ -2750,7 +2740,7 @@ VariablesinValDef() ==
 return var_in_expr;
 
 UsedQuotes: () ==> set of seq of char
-UsedQuotes() == 
+UsedQuotes() ==
 return quotes;
 
 IsSuperClass : AS`Name * AS`Name ==> bool
@@ -2798,11 +2788,11 @@ InsertQuote(ch_l) ==
   return ch_l;);
 
 InsertImport: seq of char ==> ()
-InsertImport(ch_l) == 
+InsertImport(ch_l) ==
   import_s := import_s union {ch_l};
 
 InsertJDKImport: seq of char ==> ()
-InsertJDKImport(id) == 
+InsertJDKImport(id) ==
   let jdknm = mk_AS`Name(["JDK_" ^ id], CI`NilContextId)
   in
     if jdknm in set dom packageNames
@@ -2893,7 +2883,7 @@ FindSeqElemType(ti_) ==
       --others -> error
       others -> return mk_REP`AllTypeRep()
     end;
-    
+
 FindSetElemType: REP`TypeRep ==> [REP`TypeRep]
 FindSetElemType(ti_) ==
   def ti = RemoveInvType(ti_)
@@ -2903,7 +2893,7 @@ FindSetElemType(ti_) ==
       mk_REP`UnionTypeRep(ti_s)    -> (dcl ti'_s : set of REP`TypeRep := {};
                                        for all tp in set ti_s do
                                          def tp' = CleanFlatType(tp)
-                                         in 
+                                         in
                                            if IsSetType(tp')
                                            then ti'_s := ti'_s union {tp'};
                                        let mk_REP`SetTypeRep(tp) = CombineSetTypeRep(ti'_s)
@@ -2925,7 +2915,7 @@ FindMapDomType(ti_) ==
       mk_REP`AllTypeRep()              -> return ti,
       mk_REP`UnionTypeRep(ti_s)        -> (dcl ti'_s : set of REP`TypeRep := {};
                                            for all tp in set ti_s do
-                                             def tp' = CleanFlatType(tp) in 
+                                             def tp' = CleanFlatType(tp) in
                                                if IsMapType(tp') then
                                                  ti'_s := ti'_s union {FindMapDomType(tp')};
                                            cases ti'_s:
@@ -2949,14 +2939,14 @@ FindMapRngType(ti_) ==
     mk_REP`UnionTypeRep(ti_s) ->
       ( dcl ti'_s : set of REP`TypeRep := {};
         for all tp in set ti_s do
-          def tp' = CleanFlatType(tp) in 
+          def tp' = CleanFlatType(tp) in
             if IsMapType(tp') then
               ti'_s := ti'_s union {FindMapRngType(tp')};
         cases ti'_s:
           {} -> return nil,
           {e} -> return e,
           others -> return mk_REP`UnionTypeRep(ti'_s)
-        end; 
+        end;
       ),
     mk_REP`GeneralMapTypeRep(-,rp) -> return CleanFlatType(rp),
     mk_REP`InjectiveMapTypeRep(-,rp) -> return CleanFlatType(rp),
@@ -3008,14 +2998,14 @@ FindProductElemType(ti_, l) ==
 
 The operation {\em posFieldApplyTypes} computes the possible type of
 applying record select expression, where the selector is {\em sel}, to
-an expression of type {\em type}. 
+an expression of type {\em type}.
 
 \begin{vdm_al}
 posFieldApplyTypes: REP`TypeRep * AS`Name ==> REP`TypeRep
 posFieldApplyTypes(type, sel) ==
 def tp = CleanFlatType(RemoveInvType(type)) in
 cases tp:
-   mk_REP`CompositeTypeRep(-,fr_l) -> 
+   mk_REP`CompositeTypeRep(-,fr_l) ->
         let mk_REP`FieldRep(sel1, tp,-) in set elems fr_l be st sel = sel1
         in return CleanFlatType(tp),
    mk_REP`UnionTypeRep(tpf_s) ->
@@ -3029,7 +3019,7 @@ cases tp:
                 let mk_REP`FieldRep(sel1, tp, -) in set elems fields be st
                     sel1 = sel
                 in return CleanFlatType(tp),
-            others -> 
+            others ->
                 let pos_tp = { let mk_REP`FieldRep(sel1, tp,-) in set elems fields be st
                                    sel = sel1
                                in tp | mk_REP`CompositeTypeRep(-, fields) in set
@@ -3047,7 +3037,7 @@ end;
 
 The operation {posRnMgapOrIndsSeqType computes the possible type of a map
 or sequence apply with expression {\em expr} at an expression of type {\em type}.
-\begin{vdm_al}        
+\begin{vdm_al}
 posRngMapOrIndsSeqType: REP`TypeRep  ==> REP`TypeRep
 posRngMapOrIndsSeqType(type) ==
 def tp = CleanFlatType(RemoveInvType(type)) in
@@ -3055,26 +3045,26 @@ cases tp:
      mk_REP`GeneralMapTypeRep(-, maprng),
      mk_REP`InjectiveMapTypeRep(-, maprng) -> return CleanFlatType(maprng),
      mk_REP`SeqTypeRep(elemtp) -> return CleanFlatType(elemtp),
-     mk_REP`UnionTypeRep(tps) -> 
+     mk_REP`UnionTypeRep(tps) ->
         let pos_tps = { tp | tp in set tps &
                              (IsMapType(tp) or
                               IsSeqType(tp)) and
                               not (is_REP`EmptySeqTypeRep(tp) or
-                                   is_REP`EmptyMapTypeRep(tp))  }  
+                                   is_REP`EmptyMapTypeRep(tp))  }
         in cases pos_tps:
              { tp} -> posRngMapOrIndsSeqType(tp),
              others -> def tps={ posRngMapOrIndsSeqType(tp) | tp in set pos_tps}
                        in return CleanFlatType(mk_REP`UnionTypeRep(tps))
-           end, 
+           end,
   others -> return undefined
 end;
-    
+
 \end{vdm_al}
 
 The next operations are dummy operations which simulates the
-operations {\em LOT} and {\em LOTset} in the typechecker. 
+operations {\em LOT} and {\em LOTset} in the typechecker.
 
-The LOT is a simplified version of the typechecker`LOT as is doesn`t 
+The LOT is a simplified version of the typechecker`LOT as is doesn`t
 handles things such as scope
 
 They should not be implemented.
@@ -3160,7 +3150,7 @@ DownAlwaysLevel() ==
   alwaysLevel := alwaysLevel - 1;
 
 IsInAlways: () ==> bool
-IsInAlways() == 
+IsInAlways() ==
   return alwaysLevel > 0;
 
 PushCause: [CPP`Expr] ==> ()
@@ -3168,7 +3158,7 @@ PushCause(c) ==
   cause := [c] ^ cause;
 
 PopCause: () ==> ()
-PopCause() == 
+PopCause() ==
   cause := tl cause
 pre
   cause <> [];
@@ -3198,7 +3188,7 @@ operations
 The operation $AddAbstractMethods$ uses the abstract and
 non-abstract methods for the given class $cl$ to initialize the
 corresponding maplet in the instance
-variables $abstractMethods$ and $nonAbstractMethods$. 
+variables $abstractMethods$ and $nonAbstractMethods$.
 \begin{vdm_al}
   AddAbstractMethods : AS`Class ==> ()
   AddAbstractMethods(cl) ==
@@ -3239,7 +3229,7 @@ variables $abstractMethods$ and $nonAbstractMethods$.
                                      fctDefs(nm).access,
                                      --UTIL`GetFnRestype(fctDefs(nm)))
                                      GetFnRestype(fctDefs(nm)))
-                              | nm in set dom fctDefs 
+                              | nm in set dom fctDefs
                               & fctDefs(nm).access in set {<PUBLIC_AS>, <PROTECTED_AS>} } union
                               --{ mk_( UTIL`QualiName(cl.nm,
                               { mk_( QualiName(cl.nm,
@@ -3250,13 +3240,13 @@ variables $abstractMethods$ and $nonAbstractMethods$.
                                      opDefs(nm).access,
                                      --UTIL`GetOpRestype(opDefs(nm)))
                                      GetOpRestype(opDefs(nm)))
-                              | nm in set dom opDefs 
+                              | nm in set dom opDefs
                               & opDefs(nm).access in set {<PUBLIC_AS>, <PROTECTED_AS>} }
       );
 \end{vdm_al}
 
 A function is abstract if it is explicit and its body is ``is subclass
-responsibility''. 
+responsibility''.
 \begin{vdm_al}
 functions
 
@@ -3269,7 +3259,7 @@ functions
 \end{vdm_al}
 
 An operation is abstract if it is explicit and its body is ``is subclass
-responsibility''. 
+responsibility''.
 \begin{vdm_al}
   IsAbstractOperation : AS`OpDef -> bool
   IsAbstractOperation(opdef) ==
@@ -3287,14 +3277,14 @@ responsibility''.
 
 The operation $ProcessAbstractMethods$ processes all the classes in
 the inheritance hierarchy, following the order specified by
-\texttt{classVisitOrder}. . 
+\texttt{classVisitOrder}. .
 
 For each class $cl$, it adds any inherited abstract methods to
 $abstractMethods(cl)$, and then removes all non-abstract methods defined
 in $cl$. In this way the resulting value of $abstractMethods(cl)$
 contains exactly those methods declared in $cl$ or any of its
 superclasses, which are abstract but do not yet have any
-implementation. 
+implementation.
 \begin{vdm_al}
 operations
 
@@ -3330,10 +3320,10 @@ operations
 
   ProcessMethodNames : () ==> ()
   ProcessMethodNames() ==
-  ( for b_cl in classVisitOrder do    
+  ( for b_cl in classVisitOrder do
       let l_theseNames = methodNames(b_cl),
           l_superNames = dunion { unhiddenNames(b_sup) | b_sup in set superClasses(b_cl) }
-      in 
+      in
       --let l_theseUnmangled = { UTIL`UnqualiName(MANGLE`GetUnmangledName(b_nm.#1)) | b_nm in set l_theseNames },
       let l_theseUnmangled = { UnqualiName(MANGLE`GetUnmangledName(b_nm.#1)) | b_nm in set l_theseNames },
           --l_theseUnquali = { mk_(UTIL`UnqualiName(b_nm.#1), b_nm.#3) | b_nm in set l_theseNames },
@@ -3341,8 +3331,8 @@ operations
           --l_hidden = { b_nm | b_nm in set l_superNames & UTIL`UnqualiName(MANGLE`GetUnmangledName(b_nm.#1))
           l_hidden = { b_nm | b_nm in set l_superNames & UnqualiName(MANGLE`GetUnmangledName(b_nm.#1))
                                                          in set l_theseUnmangled },
-          --l_hiddenWithoutReps = { b_nm | b_nm in set l_hidden & mk_(UTIL`UnqualiName(b_nm.#1), b_nm.#3) 
-          l_hiddenWithoutReps = { b_nm | b_nm in set l_hidden & mk_(UnqualiName(b_nm.#1), b_nm.#3) 
+          --l_hiddenWithoutReps = { b_nm | b_nm in set l_hidden & mk_(UTIL`UnqualiName(b_nm.#1), b_nm.#3)
+          l_hiddenWithoutReps = { b_nm | b_nm in set l_hidden & mk_(UnqualiName(b_nm.#1), b_nm.#3)
                                                                 not in set l_theseUnquali }
       in
         unhiddenNames(b_cl) := l_theseNames union l_hiddenWithoutReps;
@@ -3356,8 +3346,8 @@ operations
   IsInClassNamespace : AS`Name * AS`Name==> bool
   IsInClassNamespace(p_cl, p_methNm) ==
     let l_meths = { if MANGLE`IsMangled(l_nm)
-                    then MANGLE`GetUnmangledName(l_nm) 
-                    else l_nm 
+                    then MANGLE`GetUnmangledName(l_nm)
+                    else l_nm
                   | mk_(l_nm,-,-) in set unhiddenNames(p_cl)
                   }
                   union
@@ -3371,7 +3361,7 @@ operations
                   }
     in
       return p_methNm in set l_meths;
-      
+
 \end{vdm_al}
 
 The operation $HasAbstractMethods$ returns true if the current class
@@ -3436,7 +3426,7 @@ ExpandClassName: AS`Name * AS`Name * set of AS`Name ==> bool * AS`Name
 ExpandClassName(name, clnm, nm_s) ==
   if name in set nm_s
   then return mk_(false, name)
-  else 
+  else
     if IsClass(name)
       then return mk_(true, name)
     else
@@ -3455,7 +3445,7 @@ AddPackageName: AS`Name * seq of AS`ValueDef ==> ()
 AddPackageName(clnm, vals) ==
   for v in vals do
     cases v:
-      mk_AS`ValueDef(mk_AS`PatternName(mk_AS`Name(["JCGControl_package"],-),-,-),-,mk_AS`TextLit(t,-),-,-,-) 
+      mk_AS`ValueDef(mk_AS`PatternName(mk_AS`Name(["JCGControl_package"],-),-,-),-,mk_AS`TextLit(t,-),-,-,-)
                -> packageNames := packageNames ++ { clnm |-> t },
       others -> skip
     end;
@@ -3559,7 +3549,7 @@ access the ordered superclasses for a given class.
 AddNoCheckSeqApply: set of (CPP`Expr * CPP`Expr) ==> ()
 AddNoCheckSeqApply(s) ==
   noCheckSeqApply := noCheckSeqApply union s;
- 
+
 RemNoCheckSeqApply: set of (CPP`Expr * CPP`Expr) ==> ()
 RemNoCheckSeqApply(s) ==
   noCheckSeqApply := noCheckSeqApply \ s;
@@ -3655,10 +3645,10 @@ structures based on hashing)
 operations
 
  GenJavaQuoteFiles: () ==> set of CPP`File
- GenJavaQuoteFiles() == 
+ GenJavaQuoteFiles() ==
   ( dcl files : set of CPP`File := {},
         decl : CPP`PackageAndImportDeclarations := BC`GenPackageAndImportDeclarations(BC`GenPackageDeclaration(BC`GenSimplePackageName("quotes")),[]),
-        pub_ml : seq of CPP`MemberDeclaration := []; 
+        pub_ml : seq of CPP`MemberDeclaration := [];
     def quotes' = UsedQuotes() in
        for all quotename in set quotes' do
         (pub_ml := [GenHashMember()];
@@ -3671,7 +3661,7 @@ operations
              package = PackageToDir(GenPackageName(["quotes"])) in
          files := files union { BC`GenFile(package, quotename ^ ".java", decl, cl) }
         );
-    return files; 
+    return files;
  );
 
  GenTypeImportDeclarations: () ==> seq of CPP`SingleTypeImportDeclaration
@@ -3696,7 +3686,7 @@ GenHashMember() ==
   BC`GenIdentDeclaration([], [BC`GenModifier(<STATIC>),
                               BC`GenModifier(<PRIVATE>),
                               BC`GenTypeSpecifier(BC`GenIdentifier("int"))],
-                         [BC`GenInitDecl(BC`GenIdentifier("hc"), 
+                         [BC`GenInitDecl(BC`GenIdentifier("hc"),
                                          BC`GenAsgnInit(BC`GenIntegerLit(0) ))]);
 \end{vdm_al}
 The $GenQuoteHashcodeMethod$ returns the current value of the hash
@@ -3726,7 +3716,7 @@ GenQuoteConstructor(ch_l) ==
       returnstmt = BC`GenAsgnStmt(BC`GenIdentifier("hc"),
                                      BC`GenFctCallObjMemAcc(DS`GenSuper(), "hashCode", []));
       ifstmt = BC`GenIfStmt(iftest, returnstmt, nil)
-  in return BC`GenJavaFctDef([], [BC`GenModifier(<PUBLIC>)], 
+  in return BC`GenJavaFctDef([], [BC`GenModifier(<PUBLIC>)],
                              [],
                              BC`GenFctDecl(BC`GenIdentifier(ch_l),[]),
                              nil,
@@ -3762,7 +3752,7 @@ GenQuoteToStringMethod(ch_l) ==
 
 The function \texttt{GenPackageName} takes a sequence of strings
 \texttt{xxx.yyy...zzz} and converts it into a value of type
-\texttt{CPP`PackageName}. 
+\texttt{CPP`PackageName}.
 \begin{vdm_al}
 functions
 
@@ -3787,7 +3777,7 @@ PackageToDir(package) ==
   elseif is_CPP`SimplePackageName(package)
   then [package.id.id ]
   else PackageToDir(package.pn) ^ [ package.id.id ];
-\end{vdm_al}         
+\end{vdm_al}
 
 #endif VDMPP
 
@@ -3846,7 +3836,7 @@ RemoveInvType(tp) ==
 functions
 RemoveExitType: REP`TypeRep +> REP`TypeRep
 RemoveExitType(type) ==
-  cases type: 
+  cases type:
     mk_REP`UnionTypeRep(tps) -> let ntps = { tp | tp in set tps & not is_REP`ExitTypeRep(tp) }
                                 in
                                   cases ntps:
@@ -3892,7 +3882,7 @@ ExpandCompoundStmt: seq of CPP`Stmt -> seq of CPP`Stmt
 ExpandCompoundStmt(stmts) ==
   cases stmts:
     sts ^ [mk_CPP`CompoundStmt(stms,-), mk_CPP`Return(-,-)],
-    sts ^ [mk_CPP`CompoundStmt(stms,-)] -> 
+    sts ^ [mk_CPP`CompoundStmt(stms,-)] ->
         if forall i in set inds sts & (is_CPP`DeclarationStmt(stmts(i)) or is_CPP`ExpressionStmt(stmts(i)))
         then
           if is_CPP`Return(stmts(len stmts))
@@ -3995,7 +3985,7 @@ AddClMod(tp, clmod, allClasses) ==
                                                  maprng |-> AddClMod(rtp, clmod, allClasses)),
     others                  -> tp
   end;
-\end{vdm_al}         
+\end{vdm_al}
 
 \begin{vdm_al}
 end CGAUX
