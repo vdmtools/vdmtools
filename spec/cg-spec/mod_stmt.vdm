@@ -1664,7 +1664,7 @@ CGSeqForLoopStmt(mk_AS`SeqForLoopStmt(cv, fseq, body,-), isLast) ==
                     others                        -> stmt
                   end;
           rti = BC`GenBlock([CGAUX`RunTime("Pattern did not match in sequence for loop")]);
-          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, inner, false);
+          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, inner, false, false);
           pm1 = if Is_Excl
                 then pm
                 else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
@@ -1795,7 +1795,7 @@ CGSetForLoopStmt(mk_AS`SetForLoopStmt(pat, fset, body,-), isLast) ==
                       [mk_CPP`CompoundStmt(stms,-)] -> stms,
                       others                        -> stmt
                     end;
-            mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, inner, true); -- third
+            mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, inner, true, false); -- third
             pm1 = if Is_Excl
                   then pm
                   else
@@ -2210,7 +2210,7 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
        if len p_l = 1
        then
           def inner = GenStmt(s, isLast);
-              mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false);
+              mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false, false);
           in
             cases pm:
               [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
@@ -2229,7 +2229,7 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
        else
          (rb := rb ^ decl;
           for i = 1 to len p_l do
-            def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false);
+            def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false, false);
                 pm1 = (if Is_Excl
                        then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
                        else []) ^ pm
@@ -2628,7 +2628,7 @@ CGRecTrapStmt(mk_AS`RecTrapStmt(traps,body,-), p_isLast) ==
       def mk_AS`Trap(l_pat,-,-) = traps(l_idx);
           mk_(pat, vt) = ConvertBind( l_pat, l_excValAsNm, l_excValNm );
           decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
-          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, l_matchNm, nil, nil, false);
+          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, l_matchNm, nil, nil, false, false);
           inner_rb = decls ^ pm ^ (if Is_Excl
                                    then [BC`GenAsgnStmt(l_matchNm, BC`GenBoolLit(true))]
                                    else [])
@@ -2799,7 +2799,7 @@ CGTrapStmt(mk_AS`TrapStmt(l_pat, l_handler, l_body, -), p_isLast) ==
       l_excType   = BC`GenTypeSpecifier(BC`GenIdentifier("VDMSpecException"));
       decls       = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExc
       vt          = mk_CGMAIN`VT(l_excValNm, mk_REP`AllTypeRep());
-      mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, l_matchNm, nil, nil, false);
+      mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, l_matchNm, nil, nil, false, false);
       pm1         = if Is_Excl
                     then pm
                     else [BC`GenDecl(DS`GenSmallBoolType(), l_matchNm,

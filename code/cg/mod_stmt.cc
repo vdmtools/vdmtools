@@ -2040,7 +2040,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstm
   }
   TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"Pattern did not match in sequence for loop"))));
 
-  Tuple cgpme(CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), inner, false));
+  Tuple cgpme(CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), inner, false, false));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
   bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -2173,7 +2173,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetForLoopStmt(const TYPE_AS_SetForLoopStmt & sflstm
     else {
       inner.ImpConc(stmt);
     }
-    Tuple cgpme (CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), inner, true));
+    Tuple cgpme (CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), inner, true, false));
     const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
     bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -2496,7 +2496,7 @@ TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
 
     if ( 1 == p_l.Length() ) {
       SEQ<TYPE_CPP_Stmt> inner (GenStmt(s, isLast));
-      Tuple cgpm (CGPatternMatchExcl(p_l[1], selRes_v, Set(), succ_v, Map(), inner, false));
+      Tuple cgpm (CGPatternMatchExcl(p_l[1], selRes_v, Set(), succ_v, Map(), inner, false, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
       bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
 //      if (Is_Excl) {
@@ -2530,7 +2530,7 @@ TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
 
       size_t len_p_l = p_l.Length();
       for (size_t i = 1; i <= len_p_l; i++) {
-        Tuple cgpm (CGPatternMatchExcl(p_l[i], selRes_v, Set(), succ_v, Map(), Nil(), false));
+        Tuple cgpm (CGPatternMatchExcl(p_l[i], selRes_v, Set(), succ_v, Map(), Nil(), false, false));
         const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
         bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -3049,7 +3049,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecTrapStmt(const TYPE_AS_RecTrapStmt & p_rts, bool 
 
     SEQ<TYPE_CPP_Stmt> decls (DeclarePatVars(pat)); // must be before CGPatternMatchExcl
 
-    Tuple cgpme(CGPatternMatchExcl(pat, vt, Set(), l_matchNm, Map(), nil, false));
+    Tuple cgpme(CGPatternMatchExcl(pat, vt, Set(), l_matchNm, Map(), nil, false, false));
 
     SEQ<TYPE_CPP_Stmt> inner_rb (decls);
     inner_rb.ImpConc(cgpme.GetSequence(1));
@@ -3365,7 +3365,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGTrapStmt(const TYPE_AS_TrapStmt & p_ts, bool p_isLas
 
   TYPE_CGMAIN_VT vt (mk_CG_VT(l_excValNm, mk_REP_AllTypeRep()));
 
-  Tuple cgpme(CGPatternMatchExcl(pat, vt, Set(), l_matchNm, Map(), nil, false));
+  Tuple cgpme(CGPatternMatchExcl(pat, vt, Set(), l_matchNm, Map(), nil, false, false));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
   bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 

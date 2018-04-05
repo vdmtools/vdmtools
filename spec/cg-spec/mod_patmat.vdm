@@ -54,9 +54,9 @@ definitions
   operations
 
     CGPatternMatchExcl: AS`Pattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                         ==> seq of CPP`Stmt * bool
-    CGPatternMatchExcl(p, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
+    CGPatternMatchExcl(p, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
         (dcl pm : seq of CPP`Stmt := [],
              tmpVar_v : CPP`Expr := varExpr_v;
          cases true:
@@ -65,6 +65,8 @@ definitions
            (is_AS`MapEnumPattern(p)),
            (is_AS`RecordPattern(p)),
            (is_AS`SeqConcPattern(p)),
+           (is_AS`SetUnionPattern(p)),
+           (is_AS`MapMergePattern(p)),
 #ifdef VDMPP
            (is_AS`ObjectPattern(p)),
 #endif VDMPP
@@ -73,49 +75,46 @@ definitions
                                            (tmpVar_v := BC`GiveName("tmpVar");
                                             pm := pm ^ DS`GenConstDeclInit(type, tmpVar_v, varExpr_v)),
            (is_AS`PatternName(p)),
-           (is_AS`MatchVal(p)),
-           (is_AS`SetUnionPattern(p)),
-           (is_AS`MapMergePattern(p)) -> skip,
+           (is_AS`MatchVal(p))        -> skip,
            others                     -> skip
          end;
-         def mk_(pm0, Is_excl) = CGPatternMatch(p, mk_CGMAIN`VT(tmpVar_v, type), pn_s, succ_v, pid_m, inner, nonstop)
-         in
-           return mk_(pm ^ pm0, Is_excl));
+         def mk_(pm0, Is_excl) = CGPatternMatch(p, mk_CGMAIN`VT(tmpVar_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal)
+         in return mk_(pm ^ pm0, Is_excl));
 
      CGPatternMatch: AS`Pattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                     [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                     [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                      ==> seq of CPP`Stmt * bool
-     CGPatternMatch( p , varExpr_v, pn_s, succ_v, pid_m, inner, nonstop) ==
+     CGPatternMatch( p , varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
        cases true:
-        (is_AS`PatternName(p))     -> CGMatchPatternName( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+        (is_AS`PatternName(p))     -> CGMatchPatternName( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
         (is_AS`MatchVal(p))        -> CGMatchVal( p, varExpr_v, pn_s, succ_v, inner, nonstop ),
-        (is_AS`SetEnumPattern(p))  -> CGMatchSetEnumPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
-        (is_AS`SeqEnumPattern(p))  -> CGMatchSeqEnumPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
-        (is_AS`MapEnumPattern(p))  -> CGMatchMapEnumPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
-        (is_AS`RecordPattern(p))   -> CGMatchRecordPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
-        (is_AS`TuplePattern(p))    -> CGMatchTuplePattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+        (is_AS`SetEnumPattern(p))  -> CGMatchSetEnumPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
+        (is_AS`SeqEnumPattern(p))  -> CGMatchSeqEnumPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
+        (is_AS`MapEnumPattern(p))  -> CGMatchMapEnumPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
+        (is_AS`RecordPattern(p))   -> CGMatchRecordPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
+        (is_AS`TuplePattern(p))    -> CGMatchTuplePattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
         (is_AS`SetUnionPattern(p)) ->
                 def pat = FlattenSetUnionPattern(p)
                 in
                   if is_AS`SetEnumPattern(pat)
-                  then CGMatchSetEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
-                  else CGMatchSetUnionPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+                  then CGMatchSetEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal )
+                  else CGMatchSetUnionPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
 
         (is_AS`SeqConcPattern(p))  ->
                 def pat = FlattenSeqConcPattern(p)
                 in
                   if is_AS`SeqEnumPattern(pat)
-                  then CGMatchSeqEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
-                  else CGMatchSeqConcPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+                  then CGMatchSeqEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal )
+                  else CGMatchSeqConcPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
 
         (is_AS`MapMergePattern(p)) -> 
                 def pat = FlattenMapMergePattern(p)
                 in
                   if is_AS`MapEnumPattern(pat)
-                  then CGMatchMapEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop )
-                  else CGMatchMapMergePattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+                  then CGMatchMapEnumPattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal )
+                  else CGMatchMapMergePattern( pat, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop, declLocal ),
 #ifdef VDMPP
-        (is_AS`ObjectPattern(p))   -> CGMatchObjectPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop ),
+        (is_AS`ObjectPattern(p))   -> CGMatchObjectPattern( p, varExpr_v, pn_s, succ_v, pid_m, inner, nonstop , declLocal),
 #endif VDMPP
         others -> error
        end;
@@ -146,9 +145,9 @@ succeed the variable {\em succ\_v} is not changed.
 
 \begin{vdm_al}
 CGMatchPatternName: AS`PatternName * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                    [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                    [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                     ==> seq of CPP`Stmt * bool
-CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
+CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
   let mk_AS`PatternName(n,-,-) = patnm
   in
     if n <> nil
@@ -193,11 +192,16 @@ CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                      then varExpr_v' := arg,
               others -> skip
             end;
-          rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), DS`GenExplicitCast(pttp, varExpr_v',type ))];
+          if declLocal
+          then rb := rb ^ DS`GenConstDeclInit(pttp, BC`Rename(n), DS`GenExplicitCast(pttp, varExpr_v',type ))
+          else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), DS`GenExplicitCast(pttp, varExpr_v',type ))];
          )
         else 
 #endif VDMPP
-          rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), varExpr_v')];
+          --rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), varExpr_v')];
+          if declLocal
+          then rb := rb ^ DS`GenConstDeclInit(pttp, BC`Rename(n), varExpr_v')
+          else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), varExpr_v')];
 
         if inner <> nil
         then rb := rb ^ inner;
@@ -514,9 +518,9 @@ For the solution of how this check is performed see Section
 \begin{vdm_al}
 
 CGMatchSetEnumPattern: AS`SetEnumPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                      [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                      [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                        ==> seq of CPP`Stmt * bool
-CGMatchSetEnumPattern(mk_AS`SetEnumPattern(p_l, -), mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop) ==
+CGMatchSetEnumPattern(mk_AS`SetEnumPattern(p_l, -), mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop, declLocal) ==
   if type <> nil and not CGAUX`IsPosSetType(type) 
   then return mk_([ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ], false)
   else
@@ -563,7 +567,7 @@ CGMatchSetEnumPattern(mk_AS`SetEnumPattern(p_l, -), mk_CGMAIN`VT(varExpr_v, type
         if len p_l = 1
         then
           def elem_v = BC`GiveName("elem");
-              mk_(pm, Is_excl) = CGPatternMatchExcl(hd p_l, mk_CGMAIN`VT(elem_v, p_type), pn_s, succ_v, pid_m, inner, nonstop);
+              mk_(pm, Is_excl) = CGPatternMatchExcl(hd p_l, mk_CGMAIN`VT(elem_v, p_type), pn_s, succ_v, pid_m, inner, nonstop, declLocal);
           in
            (dcl e : CPP`Expr,
                 ifBody : seq of CPP`Stmt := [],
@@ -589,7 +593,7 @@ CGMatchSetEnumPattern(mk_AS`SetEnumPattern(p_l, -), mk_CGMAIN`VT(varExpr_v, type
         else
           def permSL_v = BC`GiveName( "permSL" );
               permSL_t = mk_REP`SetTypeRep( mk_REP`SeqTypeRep( p_type ) );
-              mk_(pm, Is_excl) = CGMatchList( p_l, mk_CGMAIN`VT(perm_v, perm_t), succ_v, pn_s, pid_m, inner, false);
+              mk_(pm, Is_excl) = CGMatchList( p_l, mk_CGMAIN`VT(perm_v, perm_t), succ_v, pn_s, pid_m, inner, false, declLocal);
               inner_rb = (if Is_excl
                           then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
                           else []) ^ pm;
@@ -718,9 +722,9 @@ else
 \begin{vdm_al}
 
 CGMatchSeqEnumPattern: AS`SeqEnumPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                       [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                       [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                        ==> seq of CPP`Stmt * bool
-CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop) ==
+CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop, declLocal) ==
   if type <> nil and not CGAUX`IsPosSeqType(type)
   then return mk_([ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ], false)
   else
@@ -777,7 +781,7 @@ CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
         then tmpvarExpr_v := varExpr_v
         else tmpvarExpr_v := BC`GiveName( "tmpvarExpr" );
         def cg_vt = mk_CGMAIN`VT( tmpvarExpr_v, newtype_l);
-            mk_(pm, Is_excl) = CGMatchList( p_l, cg_vt, succ_v, pn_s, pid_m, inner, nonstop);
+            mk_(pm, Is_excl) = CGMatchList( p_l, cg_vt, succ_v, pn_s, pid_m, inner, nonstop, declLocal);
             trb = (if Is_excl and not nonstop
                    then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
                    else []) ^ pm
@@ -841,9 +845,9 @@ CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
      );
 
 CGMatchMapEnumPattern: AS`MapEnumPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                       [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                       [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                        ==> seq of CPP`Stmt * bool
-CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop) ==
+CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop, declLocal) ==
   let mk_AS`MapEnumPattern(mp_l, -) = pat
   in
     if type <> nil and not CGAUX`IsPosMapType(type) 
@@ -890,12 +894,12 @@ CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
                 rng_v = BC`GiveName("rng");
                 mk_(pmr, Is_execr) = CGPatternMatchExcl((hd mp_l).rp, mk_CGMAIN`VT(rng_v, rng_type),
                                                         pn_s union (dom CGEXPR`FindPatternId((hd mp_l).dp)),
-                                                        succ_v, pid_m, inner, nonstop);
+                                                        succ_v, pid_m, inner, nonstop, declLocal);
                 p = if pmr <> []
                     then pmr
                     else nil;
                 mk_(pmd, Is_execd) = CGPatternMatchExcl((hd mp_l).dp, mk_CGMAIN`VT(dom_v, dom_type),
-                                                        pn_s, succ_v, pid_m, p, nonstop);
+                                                        pn_s, succ_v, pid_m, p, nonstop, declLocal);
                 Is_excl = Is_execd and Is_execr;
                 re = DS`GenMapApply(mk_CGMAIN`VT(castVarExpr_v, mk_REP`GeneralMapTypeRep(dom_type, rng_type)), dom_v)
             in
@@ -940,7 +944,7 @@ CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
                           DS`GenImpAppend(perm_v, DS`GenMapApply(mk_CGMAIN`VT(castVarExpr_v,
                                                 mk_REP`GeneralMapTypeRep(dom_type, rng_type)), elem_v))];
                 mk_(pm, Is_excl) = CGMatchList (p_l, mk_CGMAIN`VT (perm_v, perm_t),
-                                                       succ_v, pn_s, pid_m, inner, false);
+                                                       succ_v, pn_s, pid_m, inner, false, declLocal);
                 inner_rb = DS`GenDeclEmptySeq (perm_v)
                            ^ DS`GenIterSeq(mk_CGMAIN`VT (tmpSeq_v, mk_REP`SeqTypeRep(dom_type)), nil,
                                            mk_CGMAIN`VT (elem_v, dom_type), stmt_l)
@@ -1003,9 +1007,9 @@ else
 \begin{vdm_al}
 
 CGMatchRecordPattern: AS`RecordPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                      [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                      [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                       ==> seq of CPP`Stmt * bool
-CGMatchRecordPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop ) ==
+CGMatchRecordPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
 #ifdef VDMSL
   def mk_AS`RecordPattern(-, p_l, -) = pat;
 #endif VDMSL
@@ -1048,7 +1052,7 @@ CGMatchRecordPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                                          BC`GenBlock(inner), nil)], false)
          else return mk_([BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(if_cond))], false)
     else
-      def mk_(pm, Is_excl) = CGMatchList(p_l, mk_CGMAIN`VT(newVarExpr, p_type), succ_v, pn_s, pid_m, inner, nonstop)
+      def mk_(pm, Is_excl) = CGMatchList(p_l, mk_CGMAIN`VT(newVarExpr, p_type), succ_v, pn_s, pid_m, inner, nonstop, declLocal)
       in
         if is_REP`CompositeTypeRep( type )
         then
@@ -1090,9 +1094,9 @@ else
 \begin{vdm_al}
 
 CGMatchTuplePattern: AS`TuplePattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                    [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                    [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                     ==> seq of CPP`Stmt * bool
-CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_m, inner, nonstop) == 
+CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_m, inner, nonstop, declLocal) == 
   def tp_l = CGAUX`FindProductElemType(varExpr_tp, len pat.fields)
   in
     if tp_l = nil
@@ -1105,7 +1109,7 @@ CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_
         then newVarExpr := DS`GenCastType (t_type, varExpr_v);
       
         def mk_AS`TuplePattern(p_l,-) = pat;
-            mk_(pm, Is_excl) = CGMatchList(p_l, mk_CGMAIN`VT(newVarExpr, t_type), succ_v, pn_s, pid_m, inner, nonstop);
+            mk_(pm, Is_excl) = CGMatchList(p_l, mk_CGMAIN`VT(newVarExpr, t_type), succ_v, pn_s, pid_m, inner, nonstop, declLocal);
             len_perm_v = DS`GenTupleLength(newVarExpr);
             len_p_l = BC`GenIntegerLit(len p_l);
             eq_len = BC`GenBracketedExpr(BC`GenEq(len_p_l, len_perm_v));
@@ -1134,9 +1138,9 @@ CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_
      );
 
 CGMatchSetUnionPattern: AS`SetUnionPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                         ==> seq of CPP`Stmt * bool
-CGMatchSetUnionPattern(mk_AS`SetUnionPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
+CGMatchSetUnionPattern(mk_AS`SetUnionPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
   if type <> nil and
      (is_AS`PatternName(lp) or is_AS`SetEnumPattern(lp)) and
      (is_AS`PatternName(rp) or is_AS`SetEnumPattern(rp))
@@ -1186,25 +1190,33 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, t
                       mk_(lp',rp') = if not is_AS`SetEnumPattern(lp) and is_AS`SetEnumPattern(rp)
                                    then mk_(rp,lp)
                                    else mk_(lp,rp);
-                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp', mk_CGMAIN`VT(tempSet1_v, mk_REP`SetTypeRep(elemtp)),
-                                                              pn_s, succ_v, pid_m, nil, false);
                       mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp', mk_CGMAIN`VT(tempSet2_v, mk_REP`SetTypeRep(elemtp)),
-                                                  pn_s union (dom CGEXPR`FindPatternId (lp')), succ_v, pid_m, inner, false);
-                      Is_excl = Is_exec_l and Is_exec_r
-                  in
-                    (dcl inner_rb_l : seq of CPP`Stmt := DS`GenDeclSet(tempSet1_v, alelem_v) ^
-                                                         [DS`GenSetInsert(tempSet1_v, elem_v),
-                                                          DS`GenSetInsert(alreadySet_v, tempSet1_v)] ^
-                                                          DS`GenDeclSet(tempSet2_v, castVarExpr_v) ^
-                                                         [DS`GenSetMinusStmt(tempSet2_v, tempSet1_v)];
-                     if Is_excl and inner = nil
-                     then inner_rb_l := inner_rb_l ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
-                     inner_rb_l := inner_rb_l ^ pml;
-                     if pmr <> []
-                     then inner_rb_l := inner_rb_l ^ if Is_exec_l
-                                                     then pmr
-                                                     else [BC`GenIfStmt(succ_v, BC`GenBlock(pmr), nil)];
-                     def outer_rb_l = DS`GenDeclSet(tempSet3_v, alreadySet_v) ^
+                                                  pn_s union (dom CGEXPR`FindPatternId (lp')), succ_v, pid_m, inner, false, declLocal);
+                       p = if pmr = []
+                           then nil
+                           else pmr;
+                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp', mk_CGMAIN`VT(tempSet1_v, mk_REP`SetTypeRep(elemtp)),
+                                                              pn_s, succ_v, pid_m, p, false, declLocal);
+                      Is_excl = Is_exec_l and Is_exec_r;
+                  --in
+                    --(dcl inner_rb_l : seq of CPP`Stmt := DS`GenDeclSet(tempSet1_v, alelem_v) ^
+                    --                                     [DS`GenSetInsert(tempSet1_v, elem_v),
+                    --                                      DS`GenSetInsert(alreadySet_v, tempSet1_v)] ^
+                    --                                      DS`GenDeclSet(tempSet2_v, castVarExpr_v) ^
+                    --                                     [DS`GenSetMinusStmt(tempSet2_v, tempSet1_v)];
+                    -- if Is_excl and inner = nil
+                    -- then inner_rb_l := inner_rb_l ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
+                    -- inner_rb_l := inner_rb_l ^ pml;
+                     inner_rb_l = DS`GenDeclSet(tempSet1_v, alelem_v) ^
+                                  [DS`GenSetInsert(tempSet1_v, elem_v),
+                                   DS`GenSetInsert(alreadySet_v, tempSet1_v)] ^
+                                   DS`GenDeclSet(tempSet2_v, castVarExpr_v) ^
+                                  [DS`GenSetMinusStmt(tempSet2_v, tempSet1_v)] ^
+                                  (if Is_excl and inner = nil
+                                   then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
+                                   else []) ^ pml;
+                     --def outer_rb_l = DS`GenDeclSet(tempSet3_v, alreadySet_v) ^
+                     outer_rb_l = DS`GenDeclSet(tempSet3_v, alreadySet_v) ^
                                       DS`GenIterSet (mk_CGMAIN`VT (tempSet3_v,
                                                                    mk_REP`SetTypeRep(mk_REP`SetTypeRep(elemtp))),
                                                      BC`GenNot(succ_v),
@@ -1221,9 +1233,10 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, t
                         then rb := ifBody
                         else rb := [BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsSet(varExpr_v))),
                                                  BC`GenBlock(ifBody), nil)];
-                        return mk_(rb, false))
-                    ) 
-      end
+                        return mk_(rb, false)
+                       )
+                    --) 
+      end;
     )
   else
    (ContainsNotSupportedConstruct := true;
@@ -1231,9 +1244,9 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, t
     return mk_(NotSupportedStmt, false));
 
 CGMatchSeqConcPattern: AS`SeqConcPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                       [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                       [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                        ==> seq of CPP`Stmt * bool
-CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop) ==
+CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
   if type <> nil and
      (is_AS`PatternName(lp) or is_AS`SeqEnumPattern(lp) or is_AS`MatchVal(lp) or is_AS`SeqConcPattern(lp)) and
      (is_AS`PatternName(rp) or is_AS`SeqEnumPattern(rp) or is_AS`MatchVal(rp))
@@ -1335,7 +1348,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                       index = DS`GenLenString_int(tmpVal_v);
                       sb2 = DS`GenSubSequence(castVarExpr_v, type, index, Max);
                       seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                      mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
+                      mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop, declLocal)
                   in
                     if pmr = []
                     then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
@@ -1371,7 +1384,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                       index = BC`GenMinus(Max, DS`GenLenString_int(tmpVal_v));
                       sb1 = DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(0), index);
                       seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
+                      mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop, declLocal)
                   in
                     if pml = []
                     then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
@@ -1404,7 +1417,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                         index = DS`GenLen_int(tmpVal_v);
                         sb2 = DS`GenSubSequence(castVarExpr_v, type, index, Max);
                         seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                        mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop)
+                        mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, nonstop, declLocal)
                     in
                       if pmr = []
                       then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
@@ -1432,7 +1445,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
                         index = BC`GenMinus(Max, DS`GenLen_int(tmpVal_v));
                         sb1 = DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(0), index);
                         seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                        mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
+                        mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop, declLocal)
                     in
                       if pml = []
                       then return mk_(e_stmt ^ [BC`GenAsgnStmt(succ_v, cond)], false)
@@ -1477,16 +1490,20 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
              );
 
             def seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
-                mk_(pml, Is_exec_l) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, false);
+                --mk_(pml, Is_exec_l) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, nil, false, declLocal);
                 mk_(pmr, Is_exec_r) = CGPatternMatchExcl(lp, mk_CGMAIN`VT(sb1, seqtp),
-                                          pn_s union(dom CGEXPR`FindPatternId (rp)), succ_v, pid_m, inner, false);
+                                          pn_s union(dom CGEXPR`FindPatternId (rp)), succ_v, pid_m, inner, false, declLocal);
+                p = if pmr = []
+                then nil
+                else pmr;
+                mk_(pml, Is_exec_l) = CGPatternMatchExcl(rp, mk_CGMAIN`VT(sb2, seqtp), pn_s, succ_v, pid_m, p, false, declLocal);
                 Is_excl = Is_exec_l and Is_exec_r;
                 inner_rb_l = (if Is_excl and inner = nil
                               then [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))]
                               else []) ^
-                              pml ^ if not Is_exec_l and pmr <> []
-                                    then [BC`GenIfStmt(succ_v, BC`GenBlock(pmr), nil)]
-                                    else pmr;
+                              pml;-- ^ if not Is_exec_l and pmr <> []
+                                  --  then [BC`GenIfStmt(succ_v, BC`GenBlock(pmr), nil)]
+                                  -- else pmr;
                 ifBody = javarb ^ [ BC`GenDecl(DS`GenSmallIntType(), Max, BC`GenAsgnInit(len_var)) ] ^
                     if is_AS`SeqEnumPattern(lp)
                     then
@@ -1542,9 +1559,9 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, typ
     return mk_(NotSupportedStmt, false));
 
 CGMatchMapMergePattern: AS`MapMergePattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                         ==> seq of CPP`Stmt * bool
-CGMatchMapMergePattern(mk_AS`MapMergePattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop) ==
+CGMatchMapMergePattern(mk_AS`MapMergePattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, inner, nonstop, declLocal) ==
   if type <> nil and
      (is_AS`PatternName(lp) or is_AS`MapEnumPattern(lp)) and
      (is_AS`PatternName(rp) or is_AS`MapEnumPattern(rp))
@@ -1627,21 +1644,21 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, t
                        else
                          tm2v := res2_v;
                       );
-                     def mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp',
-                                                  mk_CGMAIN`VT(tm1v, mk_REP`GeneralMapTypeRep(domtp, rngtp)),
-                                                  pn_s, succ_v, pid_m, nil, false);
-                         mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp', mk_CGMAIN`VT(tm2v,
+                     def mk_(pmr, Is_exec_r) = CGPatternMatchExcl(rp', mk_CGMAIN`VT(tm2v,
                                                   mk_REP`GeneralMapTypeRep(domtp, rngtp)),
-                                                  pn_s union (dom CGEXPR`FindPatternId (lp')), succ_v, pid_m, inner, false);
-                         Is_excl = Is_exec_l and Is_exec_r
+                                                  pn_s union (dom CGEXPR`FindPatternId (lp')), succ_v, pid_m, inner, false, declLocal);
+                         p = if pmr = []
+                             then nil
+                             else pmr;
+                         mk_(pml, Is_exec_l) = CGPatternMatchExcl(lp',
+                                                  mk_CGMAIN`VT(tm1v, mk_REP`GeneralMapTypeRep(domtp, rngtp)),
+                                                  pn_s, succ_v, pid_m, p, false, declLocal);
+                         Is_excl = Is_exec_l and Is_exec_r;
                      in
                       (if Is_excl and inner = nil
                        then inner_rb_l := inner_rb_l ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
                        inner_rb_l := inner_rb_l ^ pml;
-                       if pmr <> []
-                       then inner_rb_l := inner_rb_l ^ if Is_exec_l
-                                                       then pmr
-                                                       else [BC`GenIfStmt(succ_v, BC`GenBlock(pmr), nil)];);
+                      );
                      def outer_rb_l = DS`GenDeclSet(tempSet3_v, alreadySet_v) ^
                                       DS`GenIterSet (mk_CGMAIN`VT (tempSet3_v,
                                                                    mk_REP`SetTypeRep(mk_REP`SetTypeRep(domtp))),
@@ -1669,9 +1686,9 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(lp,rp,-), mk_CGMAIN`VT(varExpr_v, t
 
 #ifdef VDMPP
 CGMatchObjectPattern: AS`ObjectPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                      [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+                      [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                       ==> seq of CPP`Stmt * bool
-CGMatchObjectPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop ) ==
+CGMatchObjectPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, inner, nonstop, declLocal) ==
   def mk_AS`ObjectPattern(cls, fp_l, -) = pat;
       if_cond = DS`GenAuxType(varExpr_v, mk_REP`ObjRefTypeRep(cls))
   in
@@ -1704,7 +1721,7 @@ CGMatchObjectPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                   getfield := BC`GenPointerToObjectMemberAccess(cast, BC`Rename(nm)));
                 def f_type = CGAUX`FindType(p);
                     mk_(pm, Is_excl) = CGPatternMatchExcl(p, mk_CGMAIN`VT(getfield, f_type), pn_s, succ_v,
-                                                                              pid_m, inner, nonstop);
+                                                                              pid_m, inner, nonstop, declLocal);
                 in
                   if is_REP`ObjRefTypeRep( type )
                   then
@@ -1738,7 +1755,7 @@ CGMatchObjectPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
                      );
                   def new_p_type = mk_REP`ProductTypeRep(tp_l); 
                       mk_(pm, Is_excl) = CGMatchList(p_l, mk_CGMAIN`VT(tmpTuple, new_p_type), succ_v, pn_s,
-                                                     pid_m, inner, nonstop);
+                                                     pid_m, inner, nonstop, declLocal);
                       pm' = stmt_l ^ pm
                   in
                     if is_REP`ObjRefTypeRep( type )
@@ -1845,9 +1862,9 @@ An example of the corresponding pseudo code is listed below:
 
 \begin{vdm_al}
 CGMatchList: seq of AS`Pattern * CGMAIN`VT * CPP`Name * set of (AS`Name | AS`OldName) *
-             [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool
+             [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
               ==> seq of CPP`Stmt * bool
-CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) == 
+CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop, declLocal) == 
   def mk_CGMAIN`VT(perm1_v, permtp) = vt;
 #ifdef VDMPP
       charType = is_REP`SeqTypeRep(permtp) and def mk_REP`SeqTypeRep(t) = permtp;
@@ -1960,7 +1977,7 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
             end;
           for ii = 1 to i-1 do
             newp_s := newp_s union dom CGEXPR`FindPatternId(p_l(ii));
-          def mk_(pm, excl) = CGPatternMatchExcl(pat, mk_CGMAIN`VT(permI_v, type), newp_s, succ_v, pid_m, p, nonstop)
+          def mk_(pm, excl) = CGPatternMatchExcl(pat, mk_CGMAIN`VT(permI_v, type), newp_s, succ_v, pid_m, p, nonstop, declLocal)
           in
            (Is_excl := Is_excl and excl;
             ifBody := pm));

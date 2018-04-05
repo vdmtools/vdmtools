@@ -35,6 +35,7 @@ private:
                             const TYPE_CPP_Name &,
                             const Map &,
                             const Generic &,
+                            bool,
                             bool);
   Tuple CGPatternMatch (const TYPE_AS_Pattern &,
                         const TYPE_CGMAIN_VT &,
@@ -42,6 +43,7 @@ private:
                         const TYPE_CPP_Name &,
                         const Map &,
                         const Generic &,
+                        bool,
                         bool);
   Tuple CGMatchPatternName (const TYPE_AS_PatternName &,
                             const TYPE_CGMAIN_VT &,
@@ -49,6 +51,7 @@ private:
                             const TYPE_CPP_Name &,
                             const Map &,
                             const Generic &,
+                            bool,
                             bool);
   bool MatchType(const TYPE_REP_TypeRep & ptp, const TYPE_REP_TypeRep & vtp);
   Tuple CGMatchVal (const TYPE_AS_MatchVal & p,
@@ -63,6 +66,7 @@ private:
                                const TYPE_CPP_Name &,
                                const Map &,
                                const Generic &,
+                               bool,
                                bool);
   SEQ<TYPE_CPP_Stmt> GenValSetToSeq (const TYPE_CPP_Name & tovar_v,
                                      const TYPE_CPP_Expr & fromvar_v,
@@ -73,6 +77,7 @@ private:
                                const TYPE_CPP_Name &,
                                const Map &,
                                const Generic &,
+                               bool,
                                bool);
   Tuple CGMatchMapEnumPattern (const TYPE_AS_MapEnumPattern &,
                                const TYPE_CGMAIN_VT &,
@@ -80,6 +85,7 @@ private:
                                const TYPE_CPP_Name &,
                                const Map &,
                                const Generic &,
+                               bool,
                                bool);
   Tuple CGMatchRecordPattern (const TYPE_AS_RecordPattern &,
                               const TYPE_CGMAIN_VT &,
@@ -87,6 +93,7 @@ private:
                               const TYPE_CPP_Name &,
                               const Map &,
                               const Generic &,
+                              bool,
                               bool);
   Tuple CGMatchTuplePattern (const TYPE_AS_TuplePattern &,
                              const TYPE_CGMAIN_VT &,
@@ -94,6 +101,7 @@ private:
                              const TYPE_CPP_Name &,
                              const Map &,
                              const Generic &,
+                             bool,
                              bool);
   Tuple CGMatchSetUnionPattern (const TYPE_AS_SetUnionPattern &,
                                 const TYPE_CGMAIN_VT &,
@@ -101,6 +109,7 @@ private:
                                 const TYPE_CPP_Name &,
                                 const Map &,
                                 const Generic &,
+                                bool,
                                 bool);
   Tuple CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern &,
                                const TYPE_CGMAIN_VT &,
@@ -108,6 +117,7 @@ private:
                                const TYPE_CPP_Name &,
                                const Map &,
                                const Generic &,
+                               bool,
                                bool);
   Tuple CGMatchMapMergePattern (const TYPE_AS_MapMergePattern &,
                                const TYPE_CGMAIN_VT &,
@@ -115,6 +125,7 @@ private:
                                const TYPE_CPP_Name &,
                                const Map &,
                                const Generic &,
+                               bool,
                                bool);
 #ifdef VDMPP
   Tuple CGMatchObjectPattern (const TYPE_AS_ObjectPattern &,
@@ -123,6 +134,7 @@ private:
                               const TYPE_CPP_Name &,
                               const Map &,
                               const Generic &,
+                              bool,
                               bool);
 #endif // VDMPP
   Tuple CGMatchList (const SEQ<TYPE_AS_Pattern> &,
@@ -131,6 +143,7 @@ private:
                      const Set &,
                      const Map &,
                      const Generic &,
+                     bool,
                      bool);
   TYPE_AS_Pattern FlattenSetUnionPattern(const TYPE_AS_Pattern & p);
   TYPE_AS_Pattern FlattenSeqConcPattern(const TYPE_AS_Pattern & p);

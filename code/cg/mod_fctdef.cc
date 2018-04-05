@@ -1290,7 +1290,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenArgPatternMatch(const Map & pid_m,
   for (size_t idx = 1; idx <= len_parms; idx++) {
     const TYPE_AS_Pattern & pat (parms[idx]);
     if (! (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil())) {
-      Tuple cgpm (CGPatternMatchExcl(pat, var_l.Hd(), p_s, succ_v, Map(), Nil(), false));
+      Tuple cgpm (CGPatternMatchExcl(pat, var_l.Hd(), p_s, succ_v, Map(), Nil(), false, false));
       const SEQ<TYPE_CPP_Stmt> & match (cgpm.GetSequence(1));
       bool Is_Excl = cgpm.GetBoolValue(2);
 

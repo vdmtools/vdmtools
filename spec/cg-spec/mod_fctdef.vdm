@@ -46,7 +46,8 @@ imports
     from PM
     operations
     CGPatternMatchExcl: AS`Pattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
-                    [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool ==> seq of CPP`Stmt * bool
+                        [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
+                        ==> seq of CPP`Stmt * bool
 
 exports
   operations
@@ -1010,8 +1011,8 @@ GenArgPatternMatch(pid_m, nm, parms, isop, varlist) ==
     for tmp in parms do
      (if not (is_AS`PatternName(tmp) and tmp.nm = nil)
       then
-        def mk_(match, Is_Excl) = PM`CGPatternMatchExcl( tmp, hd var_l, p_s, succ_v, nil, nil, false );
-                  patId = dom CGEXPR`FindPatternId ( tmp )
+        def mk_(match, Is_Excl) = PM`CGPatternMatchExcl( tmp, hd var_l, p_s, succ_v, nil, nil, false, false );
+            patId = dom CGEXPR`FindPatternId ( tmp )
         in
          (tmp_fb := tmp_fb ^ match;
           if not Is_Excl

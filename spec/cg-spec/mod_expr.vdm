@@ -673,21 +673,23 @@ CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
         if len p_l = 1
         then
           def inner = CGExpr(e, resVar_v);
-              mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false);
+              --mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false, false);
+              mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false, true);
           in
            (if Is_Excl
             then rb := rb ^ [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))];
-            cases pm:
-              [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
-                   def stmts = MergeStmts( decl, stmt_l )
-                   in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))],
-              others -> rb := rb ^ MergeStmts( decl, pm )
-            end;
+            --cases pm:
+            --  [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
+            --       def stmts = MergeStmts( decl, stmt_l )
+            --       in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))],
+            --  others -> rb := rb ^ MergeStmts( decl, pm )
+            --end;
+            rb := rb ^ pm;
            )
         else
          (rb := rb ^ decl;
           for i = 1 to len p_l do
-            def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false);
+            def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(i), selRes_v, {}, succ_v, nil, nil, false, false);
                 pm1 = (if Is_Excl
                        then [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))]
                        else []) ^ pm
@@ -1666,7 +1668,7 @@ CGSeqComprehensionSetBind(rc1, vt) ==
             succbody := pred_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(elemStmt), nil)]
            );
         def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, mk_CGMAIN`VT(e_v, eType), {},
-                                                     succ_v, pid_m, succbody, false);
+                                                     succ_v, pid_m, succbody, false, false);
             pm' = (if not Is_excl
                    then [BC`GenDecl( DS`GenSmallBoolType(), succ_v,
                                      BC`GenAsgnInit( BC`GenBoolLit(false) ) )]
@@ -1786,7 +1788,8 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
                cond := DS`GenGetValue(pred_v, predType);
              succbody := pred_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(elemStmt), nil)]);
          def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, mk_CGMAIN`VT(e_v, eType), {},
-                                                      succ_v, pid_m, succbody, false);
+                                                      --succ_v, pid_m, succbody, false, false);
+                                                      succ_v, pid_m, succbody, false, true);
              pm' = (if not Is_excl
                     then [BC`GenDecl( DS`GenSmallBoolType(), succ_v,
                                       BC`GenAsgnInit( BC`GenBoolLit(false) ) )]
@@ -1794,7 +1797,8 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
        in
         (dcl cast : CPP`Expr,
              rb_inner : seq of CPP`Stmt := [],
-             todo : seq of CPP`Stmt := MergeStmts( decls, pm');
+             --todo : seq of CPP`Stmt := MergeStmts( decls, pm');
+             todo : seq of CPP`Stmt := pm';
 
 #ifdef VDMPP
          if CPP`isJAVA()
@@ -4222,7 +4226,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
     for i = len pat_l to 1 by -1 do
      (def p_s = dunion { dom FindPatternId(pat_l(j)) | j in set {1,...,i - 1} };
           p = if inner_stmts = [] then nil else inner_stmts;
-          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat_l(i), elemVT, p_s, succ, nil, p, false)
+          mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat_l(i), elemVT, p_s, succ, nil, p, false, false)
       in
         (inner_stmts := pm;
          need_decl := need_decl or not Is_Excl));
@@ -5755,7 +5759,7 @@ else
 
       def succ = BC`GiveName("succ");
           elemVT = mk_CGMAIN`VT(tmpElem, settp);
-          mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false); -- fourth
+          mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false, false); -- fourth
           pm1 = if Is_excl
                 then pm
                 else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
@@ -8367,7 +8371,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
                     e_t             = CGAUX`FindSetElemType(e_type);
                     p               = if inner = [] then nil else inner;
                     mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat,mk_CGMAIN`VT(e_g_v, e_t), pn_s,
-                                                             succ_v, pid_m, p, nonstop);
+                                                             succ_v, pid_m, p, nonstop, false);
                     pm1             = (if Is_Excl and p = nil
                                        then [asgn_succ_true]
                                        else []) ^ pm;

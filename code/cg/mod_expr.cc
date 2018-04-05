@@ -740,12 +740,14 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
 
     if ( p_l.Length() == 1) {
       SEQ<TYPE_CPP_Stmt> inner (CGExpr(e,resVar_v));
-      Tuple cgpm (CGPatternMatchExcl (p_l[1], selRes_v, eset, succ_v, Map(), inner, false));
+      //Tuple cgpm (CGPatternMatchExcl (p_l[1], selRes_v, eset, succ_v, Map(), inner, false, false));
+      Tuple cgpm (CGPatternMatchExcl (p_l[1], selRes_v, eset, succ_v, Map(), inner, false, true));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
       bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
       if (Is_Excl) {
         rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v,vdm_BC_GenBoolLit(true)));
       }
+/*
       if ((1 == pm.Length()) && pm[1].Is(TAG_TYPE_CPP_IfStmt) &&
             pm[1].GetRecord(pos_CPP_IfStmt_alt1).Is(TAG_TYPE_CPP_CompoundStmt)) {
         TYPE_CPP_Stmt stmt (pm[1]);
@@ -756,12 +758,14 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
       else {
         rb.ImpConc(MergeStmts(decl,pm));
       }
+*/
+      rb.ImpConc(pm);
     }
     else {
       rb.ImpConc( decl );
       size_t len_p_l = p_l.Length();
       for (size_t i = 1; i <= len_p_l; i++) {
-        Tuple cgpm (CGPatternMatchExcl (p_l[i], selRes_v, eset, succ_v, Map(), Nil(), false));
+        Tuple cgpm (CGPatternMatchExcl (p_l[i], selRes_v, eset, succ_v, Map(), Nil(), false, false));
         const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
         bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -1749,7 +1753,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSetBind (const TYPE_AS_SeqComprehens
     succbody.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(elemStmt), nil));
   }
 
-  Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false));
+  Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false, false));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
   bool Is_excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -1904,7 +1908,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
     succbody.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(elemStmt), nil));
   }
 
-  Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false));
+  //Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false, false));
+  Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false, true));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
   bool Is_excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -1916,7 +1921,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
   pm_q.ImpConc(pm);
 
   SEQ<TYPE_CPP_Stmt> todo;
-  todo.ImpConc(MergeStmts( decls, pm_q));
+  //todo.ImpConc(MergeStmts( decls, pm_q));
+  todo.ImpConc(pm_q);
 
   TYPE_CPP_Expr cast;
 #ifdef VDMPP
@@ -4830,7 +4836,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindVariables(const TYPE_AS_MultSetBind & MSB, cons
     if (!inner_stmts.IsEmpty()) {
       p = inner_stmts;
     }
-    Tuple cgpme (CGPatternMatchExcl(pat_l[i], elemVT, p_s, succ, Map(), p, false));
+    Tuple cgpme (CGPatternMatchExcl(pat_l[i], elemVT, p_s, succ, Map(), p, false, false));
     const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
     bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
     inner_stmts = pm;
@@ -6337,7 +6343,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
       TYPE_CPP_Identifier succ (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
       TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, settp));
-      Tuple cgpme (CGPatternMatchExcl(pat, elemVT, eset, succ, Map(), stmts, false));
+      Tuple cgpme (CGPatternMatchExcl(pat, elemVT, eset, succ, Map(), stmts, false, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -8951,7 +8957,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
         p = inner;
       }
 
-      Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop));
+      Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       const Bool & Is_Excl (cgpme.GetBool(2));
 

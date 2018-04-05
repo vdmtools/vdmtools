@@ -253,7 +253,7 @@ GenValDef(classname, vd_l) ==
                vt = if stmts = []
                     then mk_CGMAIN`VT(expr, valType)
                     else mk_CGMAIN`VT(tmpVal_v, valType);
-               mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ_v, nil, nil, false);
+               mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ_v, nil, nil, false, false);
                pm1 = pm ^ if not Is_Excl
                           then [ BC`GenIfStmt(BC`GenNot(succ_v), BC`GenBlock([rti]), nil) ]
                           else [];
@@ -602,7 +602,7 @@ in
                   mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, id.id, ptp);
                   vt = mk_CGMAIN`VT(pat_v, vtp);
                   decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
-                  mk_(pm, -) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false);
+                  mk_(pm, -) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false, false);
               in rb_l := rb_l ^ pat_stmt ^ CGEXPR`MergeStmts( decls, pm );
             local_s := local_s union {nm};
             if CGAUX`PossibleFnType(ptp)
@@ -638,7 +638,7 @@ in
             decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
             --vt = mk_CGMAIN`VT(expr, vtp);
             vt = mk_CGMAIN`VT(expr, CGAUX`RemoveInvType(vtp));
-            mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false);
+            mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false, false);
             pm1 = pm ^ if not Is_Excl
                        then [BC`GenIfStmt(BC`GenNot(succ), BC`GenBlock([rti]), nil)]
                        else []

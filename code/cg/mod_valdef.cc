@@ -116,7 +116,7 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
 
       TYPE_CGMAIN_VT vt (stmts.IsEmpty() ? mk_CG_VT(expr, valType) : mk_CG_VT(tmpVal_v, valType));
 
-      Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ_v, Map(), Nil(), false));
+      Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ_v, Map(), Nil(), false, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
@@ -659,7 +659,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
           rb_l.ImpConc(pat_stmt);
           TYPE_CGMAIN_VT vt (mk_CG_VT(pat_v, vtp));
           SEQ<TYPE_AS_Stmt> decls (DeclarePatVars(pat)); // must be before CGPatternMatchExcl
-          Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ, Map(), Nil(), false));
+          Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ, Map(), Nil(), false, false));
           const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
           bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
           rb_l.ImpConc(MergeStmts( decls, pm )); // experimental
@@ -717,7 +717,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
 
       SEQ<TYPE_AS_Stmt> decls (DeclarePatVars(pat)); // must be before CGPatternMatchExcl
 
-      Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ, Map(), Nil(), false));
+      Tuple cgpme (CGPatternMatchExcl(pat, vt, Set(), succ, Map(), Nil(), false, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
