@@ -198,7 +198,6 @@ CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
          )
         else 
 #endif VDMPP
-          --rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), varExpr_v')];
           if declLocal
           then rb := rb ^ DS`GenConstDeclInit(pttp, BC`Rename(n), varExpr_v')
           else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(n), varExpr_v')];
@@ -229,11 +228,15 @@ CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
             if (pid_m = nil) or (n not in set dom pid_m)
             then resType := CGAUX`FindType(patnm)
             else resType := pid_m(n);
-            alt1 := [BC`GenAsgnStmt(BC`Rename(n), DS`GenExplicitCast(resType, varExpr_v, type))];
+            if declLocal
+            then alt1 := DS`GenConstDeclInit(resType, BC`Rename(n), DS`GenExplicitCast(resType, varExpr_v,type ))
+            else alt1 := [BC`GenAsgnStmt(BC`Rename(n), DS`GenExplicitCast(resType, varExpr_v, type))];
            )
           else
 #endif VDMPP
-            alt1 := [BC`GenAsgnStmt(BC`Rename(n), varExpr_v)];
+            if declLocal
+            then alt1 := DS`GenConstDeclInit(tt, BC`Rename(n), varExpr_v)
+            else alt1 := [BC`GenAsgnStmt(BC`Rename(n), varExpr_v)];
           if inner <> nil
           then return mk_([BC`GenIfStmt(cond, BC`GenBlock(alt1 ^ inner), nil)], true)
           else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, cond), BC`GenBlock(alt1), nil)], false)

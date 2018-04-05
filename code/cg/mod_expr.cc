@@ -422,6 +422,7 @@ Tuple vdmcg::CGExprExcl(const TYPE_AS_Expr & expr, const Generic & e_name, const
             case TAG_TYPE_CPP_ClassInstanceCreationExpr:
 #endif // VDMPP
             case TAG_TYPE_CPP_FctCall:
+            case TAG_TYPE_CPP_ObjectMemberAccess:
             case TAG_TYPE_CPP_BracketedExpr: { retex = assignexpr; break; }
             case TAG_TYPE_CPP_CastExpr: {
 #ifdef VDMPP
@@ -501,83 +502,6 @@ Tuple vdmcg::CGExprExcl(const TYPE_AS_Expr & expr, const Generic & e_name, const
 #endif // VDMPP
       return mk_(exl_v, SEQ<TYPE_CPP_Stmt>());
   }
-}
-
-// MergeStmts
-// decl : seq of CPP`Stmt
-// pm : seq of CPP`Stmt
-// ==> seq of CPP`Stmt
-SEQ<TYPE_CPP_Stmt> vdmcg::MergeStmts (const SEQ<TYPE_CPP_Stmt> & decls, const SEQ<TYPE_CPP_Stmt> & pm) {
-  Map id_m;
-  size_t len_decls = decls.Length();
-  for ( size_t i = 1; i <= len_decls; i++ ) {
-    const TYPE_CPP_Stmt & stmt (decls[i]);
-    if ( stmt.Is(TAG_TYPE_CPP_DeclarationStmt) &&
-         stmt.GetRecord(pos_CPP_DeclarationStmt_decl).Is(TAG_TYPE_CPP_IdentDeclaration)) {
-      const TYPE_CPP_IdentDeclaration & iDecl (stmt.GetRecord(pos_CPP_DeclarationStmt_decl));
-      const SEQ<TYPE_CPP_InitDeclarator> & ids (iDecl.GetSequence(pos_CPP_IdentDeclaration_dl));
-      if ( ids.Length() == 1 ) {
-        const TYPE_CPP_Declarator & decl (ids[1].GetRecord(pos_CPP_InitDeclarator_decl));
-        if ( decl.Is(TAG_TYPE_CPP_Identifier) ) {
-          id_m.Insert( decl, stmt );
-        }
-      }
-    }
-  }
-  SEQ<TYPE_CPP_Stmt> new_decls (decls);
-  SEQ<TYPE_CPP_Stmt> stmts (pm);
-  size_t len_pm = pm.Length();
-  for  ( size_t index = 1; index <= len_pm; index++ ) {
-    TYPE_CPP_Stmt stmt (pm[index]);
-    if (stmt.Is(TAG_TYPE_CPP_ExpressionStmt) &&
-        stmt.GetField(pos_CPP_ExpressionStmt_expr).Is(TAG_TYPE_CPP_AssignExpr) &&
-        (stmt.GetRecord(pos_CPP_ExpressionStmt_expr).GetRecord(pos_CPP_AssignExpr_assignop)
-                            .GetField(pos_CPP_AssignOp_op) == Quote(L"ASEQUAL"))) {
-      const TYPE_CPP_Expr & unary (stmt.GetRecord(pos_CPP_ExpressionStmt_expr)
-                                       .GetRecord(pos_CPP_AssignExpr_unary));
-      if (id_m.DomExists( unary )) {
-        const TYPE_CPP_Expr & assignexpr (stmt.GetRecord(pos_CPP_ExpressionStmt_expr)
-                                              .GetRecord(pos_CPP_AssignExpr_assignexpr));
-        TYPE_CPP_DeclarationStmt declstmt ( id_m[unary] ); 
-        int64_t idx = new_decls.Find( declstmt );
-        new_decls.RemElem( idx ); 
-
-        TYPE_CPP_IdentDeclaration idecl (declstmt.GetRecord(pos_CPP_DeclarationStmt_decl));
-        SEQ<TYPE_CPP_DeclSpecifier> ds (idecl.GetSequence(pos_CPP_IdentDeclaration_ds));
-        TYPE_CPP_InitDeclarator inidec (idecl.GetSequence(pos_CPP_IdentDeclaration_dl)[1]);
-        ds.ImpPrepend(vdm_BC_GenTypeSpecifier(quote_CONST));
-        TYPE_CPP_Initializer initExpr;
-#ifdef VDMPP
-        if (vdm_CPP_isJAVA()) {
-          initExpr = vdm_BC_GenAsgnInit(assignexpr);
-        }
-        else
-#endif // VDMPP
-        {
-          if (assignexpr.Is(TAG_TYPE_CPP_FctCall) &&
-              assignexpr.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_Identifier) &&
-              assignexpr.GetSequence(pos_CPP_FctCall_arg).IsEmpty()) {
-            const SEQ<Char> & id (assignexpr.GetRecord(pos_CPP_FctCall_fct).GetSequence(pos_CPP_Identifier_id));
-            if ( id.StartsWith( SEQ<Char>(L"vdm_")) ) {
-              initExpr = vdm_BC_GenObjectInit(mk_sequence(assignexpr));
-            }
-            else {
-              initExpr = vdm_BC_GenAsgnInit(assignexpr);
-            }
-          }
-          else {
-            initExpr = vdm_BC_GenObjectInit(mk_sequence(assignexpr));
-          }
-        }
-        inidec.SetField(pos_CPP_InitDeclarator_i, initExpr);
-        idecl.SetField(pos_CPP_IdentDeclaration_ds, ds);
-        idecl.SetField(pos_CPP_IdentDeclaration_dl, mk_sequence(inidec));
-        declstmt.SetField(pos_CPP_DeclarationStmt_decl, idecl);
-        stmts.ImpModify(index, declstmt);
-      }
-    }
-  }
-  return new_decls.ImpConc(stmts);
 }
 
 // CGCasesExpr
@@ -740,25 +664,12 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
 
     if ( p_l.Length() == 1) {
       SEQ<TYPE_CPP_Stmt> inner (CGExpr(e,resVar_v));
-      //Tuple cgpm (CGPatternMatchExcl (p_l[1], selRes_v, eset, succ_v, Map(), inner, false, false));
       Tuple cgpm (CGPatternMatchExcl (p_l[1], selRes_v, eset, succ_v, Map(), inner, false, true));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
       bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
       if (Is_Excl) {
         rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v,vdm_BC_GenBoolLit(true)));
       }
-/*
-      if ((1 == pm.Length()) && pm[1].Is(TAG_TYPE_CPP_IfStmt) &&
-            pm[1].GetRecord(pos_CPP_IfStmt_alt1).Is(TAG_TYPE_CPP_CompoundStmt)) {
-        TYPE_CPP_Stmt stmt (pm[1]);
-        SEQ<TYPE_CPP_Stmt> stmts (MergeStmts(decl,stmt.GetRecord(pos_CPP_IfStmt_alt1).GetSequence(pos_CPP_CompoundStmt_stms)));
-        stmt.SetField(pos_CPP_IfStmt_alt1, vdm_BC_GenBlock(stmts));
-        rb.ImpAppend(stmt);
-      }
-      else {
-        rb.ImpConc(MergeStmts(decl,pm));
-      }
-*/
       rb.ImpConc(pm);
     }
     else {
@@ -1908,7 +1819,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
     succbody.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(elemStmt), nil));
   }
 
-  //Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false, false));
   Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_v, eType), eset, succ_v, pid_m, succbody, false, true));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
   bool Is_excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
@@ -1921,7 +1831,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
   pm_q.ImpConc(pm);
 
   SEQ<TYPE_CPP_Stmt> todo;
-  //todo.ImpConc(MergeStmts( decls, pm_q));
   todo.ImpConc(pm_q);
 
   TYPE_CPP_Expr cast;
@@ -6343,18 +6252,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
       TYPE_CPP_Identifier succ (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
       TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, settp));
-      Tuple cgpme (CGPatternMatchExcl(pat, elemVT, eset, succ, Map(), stmts, false, false));
+      Tuple cgpme (CGPatternMatchExcl(pat, elemVT, eset, succ, Map(), stmts, false, true));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
-      SEQ<TYPE_CPP_Stmt> pm1;
+      SEQ<TYPE_CPP_Stmt> body_l;
       if (!Is_Excl) {
-        pm1.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
+        body_l.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
       }
-      pm1.ImpConc(pm);
+      body_l.ImpConc(pm);
      
-      SEQ<TYPE_CPP_Stmt> body_l(MergeStmts( decl, pm1 ));
-
       TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(count, vdm_BC_GenIntegerLit(2))));
       TYPE_CGMAIN_VT setVT (mk_CG_VT(tmpSet, mk_REP_SetTypeRep(settp)));
 
@@ -8957,23 +8864,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
         p = inner;
       }
 
-      Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop, false));
+      //Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop, false));
+      Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop, nonstop));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       const Bool & Is_Excl (cgpme.GetBool(2));
 
-      SEQ<TYPE_CPP_Stmt> pm1;
-      if (Is_Excl && p.IsNil()) {
-        pm1.ImpAppend(asgn_succ_true);
-      }
-      pm1.ImpConc(pm);
-
       SEQ<TYPE_CPP_Stmt> this_bl;
-      if (nonstop && (i == len_pat_l) && (idx == len_msb)) {
-        this_bl.ImpConc(MergeStmts(rb_p, pm1));
+      if (Is_Excl && p.IsNil()) {
+        this_bl.ImpAppend(asgn_succ_true);
       }
-      else {
-        this_bl.ImpConc(pm1);
-      }
+      this_bl.ImpConc(pm);
 
       inner = GenIterSet(mk_CG_VT(e1_v, e_type), contexpr, mk_CG_VT(e_g_v, e_t), this_bl);
       need_succ = need_succ || !Is_Excl;

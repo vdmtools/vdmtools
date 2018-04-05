@@ -330,12 +330,22 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
         TYPE_REP_TypeRep resType (pid_m.DomExists(n) ? pid_m[n] : FindType(patnm));
-        alt1.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), GenExplicitCast(resType, varExpr_v, type)));
+        if (declLocal) {
+          alt1.ImpConc(GenConstDeclInit(resType, vdm_BC_Rename(n), GenExplicitCast(resType, varExpr_v, type)));
+        }
+        else {
+          alt1.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), GenExplicitCast(resType, varExpr_v, type)));
+        }
       }
       else
 #endif // VDMPP
       {
-        alt1.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v));
+        if (declLocal) {
+          alt1.ImpConc(GenConstDeclInit(tt, vdm_BC_Rename(n), varExpr_v));
+        }
+        else {
+          alt1.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v));
+        }
       }
  
       if (!inner.IsNil()) {

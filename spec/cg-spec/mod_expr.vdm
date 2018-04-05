@@ -275,6 +275,7 @@ CGExprExcl( expr, e_name, etp ) ==
                           (is_CPP`ClassInstanceCreationExpr(assignexpr)),
 #endif VDMPP
                           (is_CPP`FctCall(assignexpr)),
+                          (is_CPP`ObjectMemberAccess(assignexpr)),
                           (is_CPP`BracketedExpr(assignexpr)) -> retex := assignexpr,
                           (is_CPP`CastExpr(assignexpr))      ->
 #ifdef VDMPP
@@ -329,55 +330,6 @@ CGExprExcl( expr, e_name, etp ) ==
 #endif VDMPP
         return mk_(exl_v, []);
  );
-
-MergeStmts: seq of CPP`Stmt * seq of CPP`Stmt ==> seq of CPP`Stmt
-MergeStmts(decls,pm) ==
-  let id_m = { decls(i).decl.dl(1).decl |-> decls(i) | i in set inds decls &
-                  cases decls(i):
-                    mk_CPP`DeclarationStmt(
-                      mk_CPP`IdentDeclaration(
-                        -,[mk_CPP`InitDeclarator(mk_CPP`Identifier(-,-),-,-)],-,-),-) -> true,
-                    others -> false
-                  end }
-  in
-   (dcl new_decls : seq of CPP`Stmt := decls,
-        stmts : seq of CPP`Stmt := pm;
-    for index = 1 to len pm do
-      cases pm(index):
-        mk_CPP`ExpressionStmt(mk_CPP`AssignExpr(unary,
-                              mk_CPP`AssignOp(<ASEQUAL>,-),assignexpr,-),-)
-          -> if unary in set dom id_m
-             then
-              (dcl initExpr : CPP`Initializer;
-#ifdef VDMPP
-               if CPP`isJAVA()
-               then
-                 initExpr := BC`GenAsgnInit(assignexpr)
-               else
-#endif VDMPP
-                 cases assignexpr:
-                   mk_CPP`FctCall(mk_CPP`Identifier(-,-),[],-)
-                      -> cases assignexpr.fct:
-                           mk_CPP`Identifier("vdm_" ^ -,-) -> initExpr := BC`GenObjectInit([assignexpr]),
-                           others -> initExpr := BC`GenAsgnInit(assignexpr)
-                         end,
-                   others -> initExpr := BC`GenObjectInit([assignexpr])
-                 end;
-               def mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration(ds,[idec],-,-),-) = id_m(unary);
-                   stmt = mu (id_m(unary), decl |->
-                            mu (id_m(unary).decl,
-                                       ds |-> [ BC`GenTypeSpecifier(<CONST>) ] ^ ds,
-                                       dl |-> [ mu(idec, i |-> initExpr ) ] ))
-               in
-                (stmts := stmts ++ { index |-> stmt };
-                 let idx = iota i in set inds new_decls & new_decls(i) = id_m(unary)
-                 in new_decls := new_decls(1,...,idx - 1) ^ new_decls(idx + 1,..., len new_decls)
-                )
-               ),
-        others -> skip
-      end;
-    return new_decls ^ stmts;
-   );
 \end{vdm_al}
 
 \subsection{Cases Expression}
@@ -673,17 +625,10 @@ CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
         if len p_l = 1
         then
           def inner = CGExpr(e, resVar_v);
-              --mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false, false);
               mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false, true);
           in
            (if Is_Excl
             then rb := rb ^ [BC`GenAsgnStmt( succ_v, BC`GenBoolLit(true))];
-            --cases pm:
-            --  [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
-            --       def stmts = MergeStmts( decl, stmt_l )
-            --       in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))],
-            --  others -> rb := rb ^ MergeStmts( decl, pm )
-            --end;
             rb := rb ^ pm;
            )
         else
@@ -1770,7 +1715,8 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
                         [mk_CPP`CompoundStmt(stms,-)] -> stms,
                         others                        -> e_stmt
                        end) ^ [impappend];
-           decls = DeclPatVars( pid_m );
+           --decls = DeclPatVars( pid_m );
+           - = DeclPatVars( pid_m );
        in
         (dcl succbody : seq of CPP`Stmt;
          if pred = mk_AS`BoolLit(true, CI`NilContextId) or pred = nil
@@ -1788,7 +1734,6 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
                cond := DS`GenGetValue(pred_v, predType);
              succbody := pred_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(elemStmt), nil)]);
          def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, mk_CGMAIN`VT(e_v, eType), {},
-                                                      --succ_v, pid_m, succbody, false, false);
                                                       succ_v, pid_m, succbody, false, true);
              pm' = (if not Is_excl
                     then [BC`GenDecl( DS`GenSmallBoolType(), succ_v,
@@ -1797,7 +1742,6 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
        in
         (dcl cast : CPP`Expr,
              rb_inner : seq of CPP`Stmt := [],
-             --todo : seq of CPP`Stmt := MergeStmts( decls, pm');
              todo : seq of CPP`Stmt := pm';
 
 #ifdef VDMPP
@@ -5698,7 +5642,7 @@ else
       pid_pat_s = dom CGEXPR`FindPatternId(pat);
       pid_expr_s = CGAUX`FindAllNamesInExpr(expr);
       mk_(tmpSet1, set_stmt) = CGEXPR`CGExprExcl(expr, "tmpSet", nil); -- first
-      decl = DeclarePatVars(pat); -- second -- must be after CGExprExcl and before CGExprExcl and CGPatternMatchExcl
+      - = DeclarePatVars(pat); -- second -- must be after CGExprExcl and before CGExprExcl and CGPatternMatchExcl
   in
    (dcl rb_l : seq of CPP`Stmt := set_stmt,
         tmpSet : CPP`Expr := BC`GiveName("tmpSet");
@@ -5759,14 +5703,12 @@ else
 
       def succ = BC`GiveName("succ");
           elemVT = mk_CGMAIN`VT(tmpElem, settp);
-          mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false, false); -- fourth
-          pm1 = if Is_excl
-                then pm
-                else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
-                     ^ pm;
+          mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false, true); -- fourth
+          body_l = if Is_excl
+                   then pm
+                   else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))] ^ pm;
           cexpr = BC`GenBracketedExpr(BC`GenLt(count, BC`GenIntegerLit(2)));
           setVT = mk_CGMAIN`VT(tmpSet, mk_REP`SetTypeRep(settp));
-          body_l = MergeStmts( decl, pm1 );
           cond = BC`GenNeq(count, BC`GenIntegerLit(1));
           rti = BC`GenBlock([CGAUX`RunTime("No unique element in 'iota'")]);
       in
@@ -8305,7 +8247,7 @@ for (int cc = e_set_3.First(e_g); cc; cc = e_set_3.Next(e_g)) {
 \begin{vdm_al}
 CGComprehension: AS`BindList * [ AS`Expr ] * seq1 of CPP`Stmt * [ CPP`Expr ] *
                  bool * map AS`Name to REP`TypeRep * bool ==> seq of CPP`Stmt
-CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
+CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
   if exists b in set elems bind & is_AS`MultTypeBind(b)
   then return [CGAUX`NotSupported("type bind")]
   else
@@ -8371,16 +8313,12 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
                     e_t             = CGAUX`FindSetElemType(e_type);
                     p               = if inner = [] then nil else inner;
                     mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat,mk_CGMAIN`VT(e_g_v, e_t), pn_s,
-                                                             succ_v, pid_m, p, nonstop, false);
-                    pm1             = (if Is_Excl and p = nil
+                                                             succ_v, pid_m, p, nonstop, nonstop);
+                    this_bl         = (if Is_Excl and p = nil
                                        then [asgn_succ_true]
                                        else []) ^ pm;
                 in
-                 (dcl this_bl : seq of CPP`Stmt;
-                  if nonstop and idx = len msb and i = len pat_l
-                  then this_bl := MergeStmts(rb_p, pm1)
-                  else this_bl := pm1;
-                  inner := DS`GenIterSet(e_set_cg_vt, contexpr, mk_CGMAIN`VT(e_g_v, e_t), this_bl);
+                 (inner := DS`GenIterSet(e_set_cg_vt, contexpr, mk_CGMAIN`VT(e_g_v, e_t), this_bl);
                   need_succ := not Is_Excl or need_succ)
                ) -- end of inner loop
            ); -- end of for outer loop

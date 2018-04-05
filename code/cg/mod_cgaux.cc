@@ -7534,3 +7534,80 @@ TYPE_AS_Type vdmcg::AddClMod(const TYPE_AS_Type & tp, const TYPE_AS_Name & clmod
   }
 }
 
+// MergeStmts
+// decl : seq of CPP`Stmt
+// pm : seq of CPP`Stmt
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::MergeStmts (const SEQ<TYPE_CPP_Stmt> & decls, const SEQ<TYPE_CPP_Stmt> & pm) {
+  Map id_m;
+  size_t len_decls = decls.Length();
+  for ( size_t i = 1; i <= len_decls; i++ ) {
+    const TYPE_CPP_Stmt & stmt (decls[i]);
+    if ( stmt.Is(TAG_TYPE_CPP_DeclarationStmt) &&
+         stmt.GetRecord(pos_CPP_DeclarationStmt_decl).Is(TAG_TYPE_CPP_IdentDeclaration)) {
+      const TYPE_CPP_IdentDeclaration & iDecl (stmt.GetRecord(pos_CPP_DeclarationStmt_decl));
+      const SEQ<TYPE_CPP_InitDeclarator> & ids (iDecl.GetSequence(pos_CPP_IdentDeclaration_dl));
+      if ( ids.Length() == 1 ) {
+        const TYPE_CPP_Declarator & decl (ids[1].GetRecord(pos_CPP_InitDeclarator_decl));
+        if ( decl.Is(TAG_TYPE_CPP_Identifier) ) {
+          id_m.Insert( decl, stmt );
+        }
+      }
+    }
+  }
+  SEQ<TYPE_CPP_Stmt> new_decls (decls);
+  SEQ<TYPE_CPP_Stmt> stmts (pm);
+  size_t len_pm = pm.Length();
+  for  ( size_t index = 1; index <= len_pm; index++ ) {
+    TYPE_CPP_Stmt stmt (pm[index]);
+    if (stmt.Is(TAG_TYPE_CPP_ExpressionStmt) &&
+        stmt.GetField(pos_CPP_ExpressionStmt_expr).Is(TAG_TYPE_CPP_AssignExpr) &&
+        (stmt.GetRecord(pos_CPP_ExpressionStmt_expr).GetRecord(pos_CPP_AssignExpr_assignop)
+                            .GetField(pos_CPP_AssignOp_op) == Quote(L"ASEQUAL"))) {
+      const TYPE_CPP_Expr & unary (stmt.GetRecord(pos_CPP_ExpressionStmt_expr)
+                                       .GetRecord(pos_CPP_AssignExpr_unary));
+      if (id_m.DomExists( unary )) {
+        const TYPE_CPP_Expr & assignexpr (stmt.GetRecord(pos_CPP_ExpressionStmt_expr)
+                                              .GetRecord(pos_CPP_AssignExpr_assignexpr));
+        TYPE_CPP_DeclarationStmt declstmt ( id_m[unary] );
+        int64_t idx = new_decls.Find( declstmt );
+        new_decls.RemElem( idx );
+
+        TYPE_CPP_IdentDeclaration idecl (declstmt.GetRecord(pos_CPP_DeclarationStmt_decl));
+        SEQ<TYPE_CPP_DeclSpecifier> ds (idecl.GetSequence(pos_CPP_IdentDeclaration_ds));
+        TYPE_CPP_InitDeclarator inidec (idecl.GetSequence(pos_CPP_IdentDeclaration_dl)[1]);
+        ds.ImpPrepend(vdm_BC_GenTypeSpecifier(quote_CONST));
+        TYPE_CPP_Initializer initExpr;
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          initExpr = vdm_BC_GenAsgnInit(assignexpr);
+        }
+        else
+#endif // VDMPP
+        {
+          if (assignexpr.Is(TAG_TYPE_CPP_FctCall) &&
+              assignexpr.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_Identifier) &&
+              assignexpr.GetSequence(pos_CPP_FctCall_arg).IsEmpty()) {
+            const SEQ<Char> & id (assignexpr.GetRecord(pos_CPP_FctCall_fct).GetSequence(pos_CPP_Identifier_id));
+            if ( id.StartsWith( SEQ<Char>(L"vdm_")) ) {
+              initExpr = vdm_BC_GenObjectInit(mk_sequence(assignexpr));
+            }
+            else {
+              initExpr = vdm_BC_GenAsgnInit(assignexpr);
+            }
+          }
+          else {
+            initExpr = vdm_BC_GenObjectInit(mk_sequence(assignexpr));
+          }
+        }
+        inidec.SetField(pos_CPP_InitDeclarator_i, initExpr);
+        idecl.SetField(pos_CPP_IdentDeclaration_ds, ds);
+        idecl.SetField(pos_CPP_IdentDeclaration_dl, mk_sequence(inidec));
+        declstmt.SetField(pos_CPP_DeclarationStmt_decl, idecl);
+        stmts.ImpModify(index, declstmt);
+      }
+    }
+  }
+  return new_decls.ImpConc(stmts);
+}
+

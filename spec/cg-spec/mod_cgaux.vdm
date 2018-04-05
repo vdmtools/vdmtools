@@ -3985,6 +3985,56 @@ AddClMod(tp, clmod, allClasses) ==
                                                  maprng |-> AddClMod(rtp, clmod, allClasses)),
     others                  -> tp
   end;
+
+operations
+MergeStmts: seq of CPP`Stmt * seq of CPP`Stmt ==> seq of CPP`Stmt
+MergeStmts(decls,pm) ==
+  let id_m = { decls(i).decl.dl(1).decl |-> decls(i) | i in set inds decls &
+                  cases decls(i):
+                    mk_CPP`DeclarationStmt(
+                      mk_CPP`IdentDeclaration(
+                        -,[mk_CPP`InitDeclarator(mk_CPP`Identifier(-,-),-,-)],-,-),-) -> true,
+                    others -> false
+                  end }
+  in
+   (dcl new_decls : seq of CPP`Stmt := decls,
+        stmts : seq of CPP`Stmt := pm;
+    for index = 1 to len pm do
+      cases pm(index):
+        mk_CPP`ExpressionStmt(mk_CPP`AssignExpr(unary,
+                              mk_CPP`AssignOp(<ASEQUAL>,-),assignexpr,-),-)
+          -> if unary in set dom id_m
+             then
+              (dcl initExpr : CPP`Initializer;
+#ifdef VDMPP
+               if CPP`isJAVA()
+               then
+                 initExpr := BC`GenAsgnInit(assignexpr)
+               else
+#endif VDMPP
+                 cases assignexpr:
+                   mk_CPP`FctCall(mk_CPP`Identifier(-,-),[],-)
+                      -> cases assignexpr.fct:
+                           mk_CPP`Identifier("vdm_" ^ -,-) -> initExpr := BC`GenObjectInit([assignexpr]),
+                           others -> initExpr := BC`GenAsgnInit(assignexpr)
+                         end,
+                   others -> initExpr := BC`GenObjectInit([assignexpr])
+                 end;
+               def mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration(ds,[idec],-,-),-) = id_m(unary);
+                   stmt = mu (id_m(unary), decl |->
+                            mu (id_m(unary).decl,
+                                       ds |-> [ BC`GenTypeSpecifier(<CONST>) ] ^ ds,
+                                       dl |-> [ mu(idec, i |-> initExpr ) ] ))
+               in
+                (stmts := stmts ++ { index |-> stmt };
+                 let idx = iota i in set inds new_decls & new_decls(i) = id_m(unary)
+                 in new_decls := new_decls(1,...,idx - 1) ^ new_decls(idx + 1,..., len new_decls)
+                )
+               ),
+        others -> skip
+      end;
+    return new_decls ^ stmts;
+   );
 \end{vdm_al}
 
 \begin{vdm_al}

@@ -37,8 +37,7 @@ imports
     SamePatternIds: seq of AS`Pattern ==> bool * map (AS`Name | AS`OldName) to set of REP`TypeRep;
     DeclarePatterns: map (AS`Name | AS`OldName) to set of REP`TypeRep ==> seq of CPP`Stmt;
     FindPatternId: AS`Pattern ==> map (AS`Name | AS`OldName) to set of REP`TypeRep;
-    CGExprExcl: AS`Expr * ([seq of char] | CPP`Name) * [REP`TypeRep]==> CPP`Expr * seq of CPP`Stmt;
-    MergeStmts: seq of CPP`Stmt * seq of CPP`Stmt ==> seq of CPP`Stmt,
+    CGExprExcl: AS`Expr * ([seq of char] | CPP`Name) * [REP`TypeRep]==> CPP`Expr * seq of CPP`Stmt,
 
     from CGSTMT
     operations GenStmt: AS`Stmt * bool ==> seq of CPP`Stmt,
@@ -1047,7 +1046,7 @@ GenArgPatternMatch(pid_m, nm, parms, isop, varlist) ==
          (if need_succ
           then pattern_fb := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v,
                                   BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ pattern_fb;
-          fb := CGEXPR`MergeStmts(fb, pattern_fb);
+          fb := CGAUX`MergeStmts(fb, pattern_fb);
           if need_succ
           then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v),
                                   BC`GenBlock([CGAUX`RunTime(errMess)]), nil)]

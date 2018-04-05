@@ -23,7 +23,6 @@
 SEQ<TYPE_CPP_Stmt> CGExpr(const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);
 Generic  CGExpr_q(const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);
 Tuple    CGExprExcl(const TYPE_AS_Expr &, const Generic &, const Generic &);
-SEQ<TYPE_CPP_Stmt> MergeStmts (const SEQ<TYPE_CPP_Stmt> & decls, const SEQ<TYPE_CPP_Stmt> & pm);
 SEQ<TYPE_CPP_Stmt> CGCasesExpr(const TYPE_AS_CasesExpr &, const TYPE_CGMAIN_VT &);
 SET<TYPE_AS_Name> FindAllPatIdInCasesAlt(const SEQ<Record> &);
 SEQ<TYPE_CPP_Stmt> CGCasesExprAltn(const SEQ<TYPE_AS_CaseAltn> &,

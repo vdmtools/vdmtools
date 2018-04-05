@@ -320,4 +320,6 @@ private:
   static TYPE_AS_Id NameToId(const TYPE_AS_Name &);
 
   static TYPE_AS_Type AddClMod(const TYPE_AS_Type &, const TYPE_AS_Name &, const SET<TYPE_AS_Name> &);
+  SEQ<TYPE_CPP_Stmt> MergeStmts (const SEQ<TYPE_CPP_Stmt> & decls, const SEQ<TYPE_CPP_Stmt> & pm);
+
 #endif // __mod_aux_h__

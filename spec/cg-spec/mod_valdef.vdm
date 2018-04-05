@@ -603,7 +603,7 @@ in
                   vt = mk_CGMAIN`VT(pat_v, vtp);
                   decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
                   mk_(pm, -) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false, false);
-              in rb_l := rb_l ^ pat_stmt ^ CGEXPR`MergeStmts( decls, pm );
+              in rb_l := rb_l ^ pat_stmt ^ CGAUX`MergeStmts( decls, pm );
             local_s := local_s union {nm};
             if CGAUX`PossibleFnType(ptp)
             then FD`InsertLocFct(nm)
@@ -643,7 +643,7 @@ in
                        then [BC`GenIfStmt(BC`GenNot(succ), BC`GenBlock([rti]), nil)]
                        else []
         in
-         (rb_l := rb_l ^ stmts ^ CGEXPR`MergeStmts(decls, pm1);
+         (rb_l := rb_l ^ stmts ^ CGAUX`MergeStmts(decls, pm1);
           declSuc := declSuc or not Is_Excl);
    );
   if declSuc
