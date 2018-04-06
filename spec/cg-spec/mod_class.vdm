@@ -632,34 +632,37 @@ Note, that the library for VDM types always is included.
 
   GenInclusions: set of AS`Name ==> CPP`Preprocessors
   GenInclusions(name_s) ==
-  ( dcl incl : CPP`Preprocessors := [BC`GenSqIncl("math.h")];
-    incl := incl ^ [BC`GenInclusion(DS`GiveLibName())];
-    incl := incl ^ [BC`GenInclusion("cg.h")];
-    incl := incl ^ [BC`GenInclusion("cg_aux.h")];
-    incl := incl ^ [BC`GenInclusion("CGBase.h")];
+  ( dcl incl : CPP`Preprocessors := [];
+    if name_s = {}
+    then 
+      incl := [BC`GenSqIncl("math.h"),
+               BC`GenInclusion(DS`GiveLibName()),
+               BC`GenInclusion("cg.h"),
+               BC`GenInclusion("cg_aux.h"),
+               BC`GenInclusion("CGBase.h")];
     for all nm in set name_s do
-      def id = CGAUX`GiveLastName(nm) in
-      incl := incl ^ [BC`GenInclusion(id^".h")];
-    return incl
+      def id = CGAUX`GiveLastName(nm)
+      in incl := incl ^ [BC`GenInclusion(id ^ ".h")];
+    return incl;
   );
 
   GenLibMethods: AS`Name ==> seq of CPP`MemberDeclaration
   GenLibMethods(nm) ==
     def rnm = BC`Rename(nm);
         cls = BC`Rename(nm);
-        obj = BC`GenIdentifier("ObjectRef") in
-    let getprefix_v = BC`PrefixClassName("Get",cls),
-        clid = BC`PrefixName("Get",rnm) in
-    def decl1 = BC`GenIndirection(BC`GenFctDecl(getprefix_v,[]));
+        obj = BC`GenIdentifier("ObjectRef");
+        getprefix_v = BC`PrefixClassName("Get",cls);
+        clid = BC`PrefixName("Get",rnm);
+        decl1 = BC`GenIndirection(BC`GenFctDecl(getprefix_v,[]));
         decl2 = BC`GenFctDecl(BC`GenIdentifier("Self"),[]);
         decl3 = BC`GenFctDecl(BC`GenIdentifier("vdm_GetId"),[]);
         stmt1 = BC`GenReturnStmt(DS`GenThis());
         stmt2 = BC`GenReturnStmt(BC`GenFctCall(obj,[BC`GenFctCall(clid,[])]));
-        stmt3 = BC`GenReturnStmt(BC`GiveMacroName(nm)) in
-    let this = [BC`GenFctDef([BC`GenTypeSpecifier(cls)],decl1,nil,stmt1)],
-        self = [BC`GenFctDef([BC`GenTypeSpecifier(obj)],decl2,nil,stmt2)],
-        getid = [BC`GenFctDef([BC`GenTypeSpecifier(BC`GenInt())],decl3,nil,stmt3)] in
-    return this ^ self ^ getid;
+        stmt3 = BC`GenReturnStmt(BC`GiveMacroName(nm));
+        this = [BC`GenFctDef([BC`GenTypeSpecifier(cls)],decl1,nil,stmt1)];
+        selffn = [BC`GenFctDef([BC`GenTypeSpecifier(obj)],decl2,nil,stmt2)];
+        getid = [BC`GenFctDef([BC`GenTypeSpecifier(BC`GenInt())],decl3,nil,stmt3)]
+    in return this ^ selffn ^ getid;
 \end{vdm_al}         
 
 The operation $GenCCFile$ generates a `.cc' file corresponding to one

@@ -215,11 +215,8 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
   SEQ<TYPE_CPP_MemberDeclaration> pro_l;
   SEQ<TYPE_CPP_MemberDeclaration> pub_l;
 
-//
   bool needinit = false;
-//
-  if (!defs.IsNil ())
-  {
+  if (!defs.IsNil ()) {
     TYPE_AS_Definitions defin (defs);
     const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & tps (defin.GetMap(pos_AS_Definitions_typem));
     const SEQ<TYPE_AS_ValueDef> & vals             (defin.GetSequence(pos_AS_Definitions_valuem));
@@ -229,18 +226,15 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
 
     pub_l.ImpConc (GenLibMethods(nm));
 
-// 20110525 -->
     // merge static instance variables to values
     SEQ<TYPE_AS_ValueDef> new_vals (vals);
     SEQ<TYPE_AS_InstanceVarDef> new_iVars;
     size_t len_iVars = iVars.Length();
-    for (size_t idx = 1; idx <= len_iVars; idx++)
-    {
+    for (size_t idx = 1; idx <= len_iVars; idx++) {
       const TYPE_AS_InstanceVarDef & ivd (iVars[idx]);
       if (ivd.Is(TAG_TYPE_AS_InstAssignDef) &&
           ivd.GetBool(pos_AS_InstAssignDef_stat) &&
-          !ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil())
-      {
+          !ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil()) {
         const TYPE_AS_AssignDef & ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
         const TYPE_AS_Name & var (ad.GetRecord(pos_AS_AssignDef_var));
         TYPE_AS_PatternName pn;
@@ -256,25 +250,22 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
         vd.SetField(pos_AS_ValueDef_cid,    ivd.GetInt(pos_AS_InstAssignDef_cid));
         new_vals.ImpAppend(vd);
       }
-      else
+      else {
         new_iVars.ImpAppend(ivd);
+      }
     }
     Map acs_vals_m (GenValues(nm, new_vals));
     access_m = MergeMemberDecl (acs_vals_m, access_m);
     access_m = MergeMemberDecl (GenInstVars(new_iVars), access_m);
 
-// 20160609 -->
     needinit = !new_vals.IsEmpty();
-// <-- 20160609
     SEQ<TYPE_AS_TypeDef> type_l;
     Set dom_tps (tps.Dom());
     Generic tp;
     for (bool bb = dom_tps.First (tp); bb; bb = dom_tps.Next (tp)) {
       type_l.ImpAppend (tps[tp]);
-// 20160609 -->
       const TYPE_AS_TypeDef & td (tps[tp]);
       needinit |= td.GetRecord(pos_AS_TypeDef_shape).Is(TAG_TYPE_AS_CompositeType);
-// <-- 20160609
     }
 
     Sequence typedefs (GenTypeDef_DS(nm, type_l)); // seq of CPP`MemberDeclaration
@@ -284,8 +275,9 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
         pub_l.ImpAppend(md);
         cl_l.ImpConc(typedefs.Tl());
       }
-      else
+      else {
         cl_l.ImpConc(typedefs);
+      }
     }
 
     pub_l.ImpConc(GenInvEqOrdDecl(vdm_BC_Rename(nm), type_l));
@@ -307,30 +299,29 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
       Map acs_op_m;
       acs_op_m.Insert (GetOpDefAccess (ExchangeDefAccess (opas)), GenFctOpDecl (onm, opas, nil, nil));
       access_m = MergeMemberDecl (acs_op_m, access_m);
-      if (ASTAUX::GetConstr(opas) && GetOpParms(opas).IsEmpty())
+      if (ASTAUX::GetConstr(opas) && GetOpParms(opas).IsEmpty()) {
         SetHasDefaultConstr();
+      }
     }
 
     Set uhn (GetUnhiddenNames(nm));
     Generic g;
-    for (bool ee = uhn.First(g); ee; ee = uhn.Next(g))
-    {
+    for (bool ee = uhn.First(g); ee; ee = uhn.Next(g)) {
       Tuple t (g);
       const TYPE_AS_Name & l_mn (t.GetRecord(1));
       TYPE_AS_Name thisNm (l_mn);
       TYPE_AS_Ids ids (l_mn.get_ids());
       thisNm.set_ids(TYPE_AS_Ids().ImpAppend(ids.Hd()));
-      if (thisNm != nm)
-      {
+      if (thisNm != nm) {
         Map acs_m_m;
         acs_m_m.Insert(t.GetField(2), GenHiddenFctDecl(l_mn, t.GetField(3)));
         access_m = MergeMemberDecl(acs_m_m, access_m);
       }
     }
 
-    if (!GetHasDefaultConstr())
+    if (!GetHasDefaultConstr()) {
       pub_l.ImpConc(GenConstructorDef(nm));
-
+    }
     TYPE_CPP_Identifier initid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")));
 
     TYPE_CPP_FctDecl fdecl (vdm_BC_GenFctDecl(initid, type_dL()));
@@ -338,12 +329,10 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
     pub_l.ImpAppend(vdm_BC_GenMemberSpec(mk_sequence(vdm_BC_GenTypeSpecifier(vdm_BC_GenVoid())), fdecl));
 
     bool exists = false;
-    for (size_t idx2 = 1; idx2 <= len_iVars && !exists; idx2++)
-    {
+    for (size_t idx2 = 1; idx2 <= len_iVars && !exists; idx2++) {
       exists = iVars[idx2].Is(TAG_TYPE_AS_InstanceInv);
     }
-    if (exists)
-    {
+    if (exists) {
       TYPE_CPP_Identifier invid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"inv")));
       TYPE_CPP_FctDecl invdecl (vdm_BC_GenFctDecl(invid, type_dL()));
 
@@ -354,9 +343,9 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
   cl_l.ImpConc(GenModuleHPart());
   cl_l.ImpConc(GenObjRefClass(nm,inh.Elems ()));
 
-  if (!useslib.IsNil())
+  if (!useslib.IsNil()) {
     pp_l.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"dlclass.h" )));
-
+  }
   pp_l.ImpConc(GenInclusions(inh.Elems()));
   pp_l.ImpConc(GenModuleHIncludes());
   pp_l.ImpConc(GenHIncludes(inh.Elems()));
@@ -365,12 +354,12 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
 
   SEQ<TYPE_CPP_MemberDeclaration> mem_l;
 //
-  if ( needinit )
+  if ( needinit ) {
     mem_l.ImpConc(vdm_BC_GenClassFriend (vdm_BC_GenIdentifier (i)));
+  }
   mem_l.ImpConc(vdm_BC_GenPublic(pub_l));
 
-  if (!useslib.IsNil())
-  {
+  if (!useslib.IsNil()) {
     TYPE_CPP_Identifier dlClassName (vdm_BC_GenIdentifier(DlClass_Name));
     TYPE_CPP_IndirectionDecl indirect (vdm_BC_GenIndirection(GenDlMember()));
     TYPE_CPP_MemberSpecifier memberSpec (
@@ -390,8 +379,9 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
   // TODO: "MATH" must be renamed for Windows
   TYPE_AS_Id clnm (GiveLastName(nm));
 #ifdef _MSC_VER
-    if (clnm == ASTAUX::MkId(L"MATH"))
+  if (clnm == ASTAUX::MkId(L"MATH")) {
       clnm = ASTAUX::MkId(L"vdm_MATH");
+  }
 #endif // _MSC_VER
   return vdm_BC_GenFile2(nil, clnm.ImpConc(ASTAUX::MkId(L".h")), pp_l, cl_l.ImpConc(cpp_l),
                           cs.GetInt(pos_AS_Class_cid));
@@ -403,16 +393,17 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
 SEQ<TYPE_CPP_Preprocessor> vdmcg::GenInclusions(const SET<TYPE_AS_Name> & name_s)
 {
   SEQ<TYPE_CPP_Preprocessor> incl;
-  incl.ImpAppend(vdm_BC_GenSqIncl(ASTAUX::MkId(L"math.h")));
-  incl.ImpAppend(vdm_BC_GenInclusion(GiveLibName()));
-  incl.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"cg.h")));
-  incl.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"cg_aux.h")));
-  incl.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"CGBase.h")));
+  if (name_s.IsEmpty()) {
+    incl.ImpAppend(vdm_BC_GenSqIncl(ASTAUX::MkId(L"math.h")));
+    incl.ImpAppend(vdm_BC_GenInclusion(GiveLibName()));
+    incl.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"cg.h")));
+    incl.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"cg_aux.h")));
+    incl.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"CGBase.h")));
+  }
 
   SET<TYPE_AS_Name> name_s_q (name_s);
   Generic nm;
-  for (bool bb = name_s_q.First(nm); bb; bb = name_s_q.Next(nm))
-  {
+  for (bool bb = name_s_q.First(nm); bb; bb = name_s_q.Next(nm)) {
     TYPE_AS_Id id (GiveLastName(nm));
     incl.ImpAppend(vdm_BC_GenInclusion(id.ImpConc(ASTAUX::MkId(L".h"))));
   }
@@ -476,18 +467,19 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Class & cs)
 
   Sequence pp_l;
 #ifdef _MSC_VER
-  if (id == ASTAUX::MkId(L"MATH"))
+  if (id == ASTAUX::MkId(L"MATH")) {
     pp_l.ImpAppend(vdm_BC_GenInclusion(ASTAUX::MkId(L"vdm_MATH.h")));
-  else
+  }
+  else {
     pp_l.ImpAppend(vdm_BC_GenInclusion(GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h"))));
+  }
 #else
   pp_l.ImpAppend(vdm_BC_GenInclusion(GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h"))));
 #endif // _MSC_VER
   pp_l.ImpConc(GenModuleCCIncludes());
 
   TYPE_CPP_CPPAS cpp_l;
-  if (!defs.IsNil ())
-  {
+  if (!defs.IsNil ()) {
     TYPE_AS_Definitions defin (defs);
     const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & tps (defin.GetMap(pos_AS_Definitions_typem));
     const MAP<TYPE_AS_Name, TYPE_AS_FnDef> & fcts  (defin.GetMap(pos_AS_Definitions_fnm));
@@ -505,9 +497,9 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Class & cs)
     cpp_l.ImpConc(GenClassInit(nm, type_l));
     cpp_l.ImpConc(GenInvEqOrdDef(type_l));
 
-    if (!GetHasDefaultConstr())
+    if (!GetHasDefaultConstr()) {
       cpp_l.ImpConc (GenConstructorDef_cc (nm, iVars, inh.IsEmpty(), !useslib.IsNil()));
-
+    }
     SEQ<TYPE_CPP_Stmt> base_l;
     base_l.ImpConc(GenInitBaseVars(inh.IsEmpty()));
     base_l.ImpConc(GenVarInits(iVars));
@@ -542,11 +534,11 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Class & cs)
     //pp_l.ImpConc(GenClassIncls());
     Sequence cincls (GenClassIncls());
     size_t len_cincls = cincls.Length();
-    for (size_t idx = 1; idx <= len_cincls; idx++)
-    {
+    for (size_t idx = 1; idx <= len_cincls; idx++) {
       //if (!pp_l.Elems().InSet(cincls[idx]))
-      if ( 0 == pp_l.Find(cincls[idx]))
+      if ( 0 == pp_l.Find(cincls[idx])) {
         pp_l.ImpAppend(cincls[idx]);
+      }
     }
 // <-- 20120530
     pp_l.ImpConc(IncludeExternalCC());
@@ -577,17 +569,17 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
 
 //  ClearUncaught(); // 20061204 for clear static member list
 
-  if (isInterface && !IsPossibleInterface(cs))
+  if (isInterface && !IsPossibleInterface(cs)) {
     CannotCG(L"Erroneous attempt to generate an interface for class ", nm);
-
+  }
   if (get_conc_option()) {
     InitClassState( nm );
-    if (!isInterface)
+    if (!isInterface) {
       evpp = GenEvaluatePP( nm );
+    }
   }
 
-  if (!defs.IsNil ())
-  {
+  if (!defs.IsNil ()) {
     TYPE_AS_Definitions defin (defs);
     const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & tps (defin.GetMap(pos_AS_Definitions_typem));
 // 20120208 -->
@@ -634,8 +626,7 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
       Set dom_fcts (fcts.Dom());
       Map cidtocpp;
       Generic fnm;
-      for (bool cc = dom_fcts.First (fnm); cc; cc = dom_fcts.Next (fnm))
-      {
+      for (bool cc = dom_fcts.First (fnm); cc; cc = dom_fcts.Next (fnm)) {
         TYPE_AS_FnDef fn (fcts[fnm]);
         TYPE_CI_ContextId fcid (ASTAUX::GetCid(fn));
         CurrentMethod(fnm);
@@ -646,30 +637,27 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
 
       Set dom_oper (oper.Dom());
       Generic onm;
-      for (bool dd = dom_oper.First (onm); dd; dd = dom_oper.Next (onm))
-      {
+      for (bool dd = dom_oper.First (onm); dd; dd = dom_oper.Next (onm)) {
         TYPE_AS_OpDef op (oper[onm]);
         TYPE_CI_ContextId fcid (ASTAUX::GetCid(op));
 //        bool constr = ASTAUX::GetConstr(onm);
         CurrentMethod(onm);
         TYPE_CPP_CPPAS opdefcpp (GenOpDef_FD(onm, op, Nil(), false));
 
-        if (!opdefcpp.IsEmpty())
+        if (!opdefcpp.IsEmpty()) {
             cidtocpp.Insert(fcid, opdefcpp);
+        }
       }
 
-      if ((!isInterface) && !GetHasDefaultConstr())
-      {
+      if ((!isInterface) && !GetHasDefaultConstr()) {
         cpp_l.ImpConc (GenJavaConstructorDef(nm, iVars));
       }
 
-      while (!cidtocpp.Dom().IsEmpty())
-      {
+      while (!cidtocpp.Dom().IsEmpty()) {
         SET<TYPE_CI_ContextId> cidtocppdom (cidtocpp.Dom());
         TYPE_CI_ContextId cid (cidtocppdom.GetElem());
         Generic gg;
-        for (bool ff = cidtocppdom.First (gg); ff; ff = cidtocppdom.Next (gg))
-        {
+        for (bool ff = cidtocppdom.First (gg); ff; ff = cidtocppdom.Next (gg)) {
           TYPE_CI_ContextId tempcid (gg);
           Tuple gfp1 (GetCI().GetFilePos(cid));
           const TYPE_CI_TokenPos & tst (gfp1.GetRecord(3));
@@ -677,8 +665,9 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
           Tuple gfp2 (GetCI().GetFilePos(tempcid));
           const TYPE_CI_TokenPos & tst2 (gfp2.GetRecord(3));
           int ast_startf = tst2.GetIntValue(pos_CI_TokenPos_abs_uline);
-          if (ast_start > ast_startf)
+          if (ast_start > ast_startf) {
             cid = tempcid;
+          }
         }
         cpp_l.ImpConc(cidtocpp[cid]);
         cidtocpp.RemElem(cid);
@@ -686,8 +675,7 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
     }
   }
 
-  if (get_conc_option() && !isInterface)
-  {
+  if (get_conc_option() && !isInterface) {
     pr_l.ImpConc(GenLocalSentinel( nm, defs ));
     pr_l.ImpConc(evpp);
     pr_l.ImpAppend(GenSetSentinelMethod( nm));
@@ -711,19 +699,19 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
   SEQ<TYPE_CPP_ImportDeclaration> impdecls (GenImportDeclarations());
 
   Generic pack;
-  if (get_package_option().IsNil())
+  if (get_package_option().IsNil()) {
     pack = nil;
-  else
+  }
+  else {
     pack = vdm_BC_GenPackageDeclaration(get_package_option());
-
+  }
   TYPE_CPP_PackageAndImportDeclarations decl (vdm_BC_GenPackageAndImportDeclarations(pack, impdecls));
 
-  if (ContainsImplicitFct() && !isInterface)
-  {
+  if (ContainsImplicitFct() && !isInterface) {
     type_dL childArg;
-    if (!ContainsStaticImplicit())
+    if (!ContainsStaticImplicit()) {
       childArg.ImpAppend(GenThis());
-
+    }
     TYPE_CPP_Identifier cn (vdm_BC_GenIdentifier(ASTAUX::MkId(L"external_").ImpConc(GiveCurCName())));
     TYPE_CPP_Identifier obj (vdm_BC_GenIdentifier(ASTAUX::MkId(L"child")));
     TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(vdm_BC_GenClassInstanceCreationExpr(cn, childArg)));
@@ -735,8 +723,9 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
 
     TYPE_CPP_Modifier pro (vdm_BC_GenModifier(quote_PROTECTED));
     ds_l.ImpPrepend(pro);
-    if (ContainsStaticImplicit())
+    if (ContainsStaticImplicit()) {
       ds_l.ImpPrepend(vdm_BC_GenModifier(quote_STATIC));
+    }
     pr_l.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), ds_l, dl));
   }
 
@@ -748,11 +737,12 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
   classbody.ImpConc(cpp_l);
 
   type_dL cs_l;
-  if (isInterface)
+  if (isInterface) {
     cs_l.ImpAppend(vdm_BC_GenTypeInterfaceSpecifier((const TYPE_CPP_InterfaceHead &)head, classbody));
-  else
+  }
+  else {
     cs_l.ImpAppend(vdm_BC_GenTypeClassSpecifier((const TYPE_CPP_ClassHead &)head, classbody));
-
+  }
   TYPE_CPP_CPPAS new_cpp_l;
   new_cpp_l.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), cs_l, nil));
   Generic package_name (get_package_option());

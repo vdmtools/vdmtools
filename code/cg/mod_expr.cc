@@ -4273,7 +4273,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenInvoke(const Generic & res,
                                     const Bool & last)
 {
   if ( res.IsNil() ) {
-    //return vdm_BC_GenExpressionStmt(fcall);
     SEQ<TYPE_CPP_Stmt> rb_l;
     rb_l.ImpAppend(vdm_BC_GenExpressionStmt(fcall));
     return rb_l;

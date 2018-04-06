@@ -3618,7 +3618,7 @@ of the following statements:
           else return [BC`GenAsgnStmt(id,fcall)];
 \end{vdm_al}
 
-#endif
+#endif VDMPP
 
 Although, it is possible only to construct apply expression on maps,
 sequences and functions identifier, it is legal to construct an
