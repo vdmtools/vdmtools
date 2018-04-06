@@ -398,10 +398,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenDeclInit_DS(const Generic & type,
         initExpr.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_Identifier) && 
         initExpr.GetSequence(pos_CPP_FctCall_arg).IsEmpty()) {
       const SEQ<Char> & id (initExpr.GetRecord(pos_CPP_FctCall_fct).GetSequence(pos_CPP_Identifier_id));
-      if ( id.StartsWith( SEQ<Char>(L"vdm_")) )
+      if ( id.StartsWith( SEQ<Char>(L"vdm_")) ) {
         return GenDecl_DS(type, name, vdm_BC_GenObjectInit(mk_sequence(initExpr)));
-      else
+      }
+      else {
         return GenDecl_DS(type, name, vdm_BC_GenAsgnInit(initExpr));
+      }
     }
     else {
       TYPE_CPP_Expr e (initExpr);
@@ -5477,7 +5479,7 @@ TYPE_CPP_Expr vdmcg::GenInvokeExpr(const TYPE_REP_ObjRefTypeRep & ort,
     TYPE_CPP_Identifier cnm (vdm_BC_Rename(nm));
     TYPE_CPP_Identifier clid (vdm_BC_PrefixName (ASTAUX::MkId(L"ObjGet"), cnm));
     TYPE_CPP_Expr fct (vdm_BC_GenFctCall (clid, mk_sequence(obj)));
-    return vdm_BC_GenGenericFctCallPtrToObjMemAcc(fct, mthd, parms);
+    return vdm_BC_GenFctCallPtrToObjMemAcc(fct, mthd, parms);
   }
 }
 

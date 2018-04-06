@@ -95,7 +95,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStmt(const TYPE_AS_Stmt & stmt, bool isLast)
       cpp = CGCallStmt(stmt);
       break;
     case TAG_TYPE_AS_ErrorStmt:
-      cpp = CGErrorStmt();
+      cpp = CGErrorStmt(isLast);
       break;
     case TAG_TYPE_AS_AlwaysStmt:
       cpp = CGAlwaysStmt(stmt, isLast);
@@ -1816,14 +1816,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGLetBeSTStmt(const TYPE_AS_LetBeSTStmt & stmt, bool i
   if (exists) {
     SEQ<TYPE_CPP_Stmt> res;
     res.ImpConc(GenNotSupported(L"type bind", stmt, isLast));
-#ifdef VDMPP
-    if (vdm_CPP_isJAVA()) {
+    if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep)) {
       res.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
-    }
-    else
-#endif // VDMPP
-    {
-      res.ImpAppend(vdm_BC_GenGenericReturnStmt(GenEmptyValue(GiveCurrentRType())));
     }
     return res;
   }
@@ -2403,15 +2397,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmt(const TYPE_AS_CasesStmt & cs, bool isLast)
   if (Others.IsNil()) {
     if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep)) {
       rb.ImpAppend(RunTime (L"The operation did not return a value"));
-#ifdef VDMPP
-      if (vdm_CPP_isJAVA()) {
-        rb.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
-      }
-      else
-#endif // VDMPP
-      {
-        rb.ImpAppend(vdm_BC_GenGenericReturnStmt(GenEmptyValue(GiveCurrentRType())));
-      }
+      rb.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
     }
   }
   return rb;
@@ -2621,15 +2607,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
     if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep)) {
       SEQ<TYPE_CPP_Stmt> lrb;
       lrb.ImpAppend(RunTime (L"The operation did not return a value"));
-#ifdef VDMPP
-      if (vdm_CPP_isJAVA()) {
-        lrb.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
-      }
-      else
-#endif // VDMPP
-      {
-        lrb.ImpAppend(vdm_BC_GenGenericReturnStmt(GenEmptyValue(GiveCurrentRType())));
-      }
+      lrb.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
       tmpb = lrb;
     }
   }
@@ -2661,7 +2639,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
     }
 
     TYPE_CPP_Expr elif_cond (GenGetValue(elif_cond_v, btype));
-    TYPE_CPP_Stmt elif_cons_stmt (GenIfConsCPPStmt(GenStmt(elif_cons, isLast)));
+    TYPE_CPP_Stmt elif_cons_stmt (vdm_BC_GenBlock(GenStmt(elif_cons, isLast)));
 
     Generic elif_cons2_stmt;
     if (tmpb.IsNil()) {
@@ -2680,7 +2658,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   }
 
   TYPE_CPP_Expr cond (GenGetValue(cond_v, btype));
-  TYPE_CPP_Stmt cons_stmt (GenIfConsCPPStmt(GenStmt(cons, isLast)));
+  TYPE_CPP_Stmt cons_stmt (vdm_BC_GenBlock(GenStmt(cons, isLast)));
 
   Generic alt2;
   if (tmpb.IsNil()) {
@@ -2694,42 +2672,17 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   return rb;
 }
 
-// GenIfConsCPPStmt
-// s_l : seq of CPP`Stmt
-// ==> CPP`Stmt
-//FIXME: Should be type_dL
-TYPE_CPP_Stmt vdmcg::GenIfConsCPPStmt(const SEQ<TYPE_CPP_Stmt> & s_l)
-{
-/*
-  if (s_l.Length() == 1 )
-  {
-    TYPE_CPP_Stmt stmt (s_l.Hd());
-    if (stmt.Is(TAG_TYPE_CPP_IfStmt))
-      return vdm_BC_GenBlock(s_l);
-    else
-      return stmt;
-  }
-  else
-*/
-    return vdm_BC_GenBlock(s_l);
-}
-
 // CGErrorStmt
+// isLast : bool
 // ==> seq of CPP`Stmt
-SEQ<TYPE_CPP_Stmt> vdmcg::CGErrorStmt()
+SEQ<TYPE_CPP_Stmt> vdmcg::CGErrorStmt(bool isLast)
 {
-  SEQ<TYPE_CPP_Stmt> res;
-  res.ImpAppend(RunTime(L"Can not evaluate 'error' statement"));
-#ifdef VDMPP
-  if (vdm_CPP_isJAVA()) {
-    res.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
+  SEQ<TYPE_CPP_Stmt> rb;
+  rb.ImpAppend(RunTime(L"Can not evaluate 'error' statement"));
+  if (isLast && !GiveCurrentRType().Is(TAG_TYPE_REP_UnitTypeRep)) {
+    rb.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(GiveCurrentRType())));
   }
-  else
-#endif // VDMPP
-  {
-    res.ImpAppend(vdm_BC_GenGenericReturnStmt(GenEmptyValue(GiveCurrentRType())));
-  }
-  return res;
+  return rb;
 }
 
 // GenSpecTopStmt

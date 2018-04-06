@@ -1023,24 +1023,27 @@ operations
     let l = len ids in
       if l > 1 then
         def i1 = CGAUX`CleanIdentifier(hd ids);
-            i2 = CGAUX`CleanIdentifier(ids(l)) in
-        if CPP`isCPP()
-        then return GenIdentifier("vdm_" ^ i1 ^ "_" ^ i2,nm.cid)
-        else return GenIdentifier(i2,nm.cid)
+            i2 = CGAUX`CleanIdentifier(ids(l))
+        in
+          --if CPP`isJAVA()
+          --then return GenIdentifier(i2,nm.cid)
+          --else return GenIdentifier("vdm_" ^ i1 ^ "_" ^ i2,nm.cid)
+          return GenIdentifier("vdm_" ^ i1 ^ "_" ^ i2,nm.cid)
       else
         def md = CGAUX`GiveCurCName();
-            --num = if CPP`isJAVA() then CGAUX`FindScope(nm) else 0,
             num = CGAUX`FindScope(nm);
             id = CGAUX`CleanIdentifier(hd ids)
         in
-          if CPP`isJAVA()
-          then if ((num = 0) or (num=-1) or (num=-2))
-               then return GenIdentifier(id,nm.cid)
-               else return GenIdentifier(id ^ "_" ^ CGAUX`StringNumber(num),nm.cid)
-          --else return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid);
-          else if ((num = 0) or (num=-1) or (num=-2))
-               then return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid)
-               else return GenIdentifier("vdm_" ^ md ^ "_" ^ id ^ "_" ^ CGAUX`StringNumber(num),nm.cid);
+          --if CPP`isJAVA()
+          --then if ((num = 0) or (num=-1) or (num=-2))
+          --     then return GenIdentifier(id,nm.cid)
+          --     else return GenIdentifier(id ^ "_" ^ CGAUX`StringNumber(num),nm.cid)
+          --else if ((num = 0) or (num=-1) or (num=-2))
+          --     then return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid)
+          --     else return GenIdentifier("vdm_" ^ md ^ "_" ^ id ^ "_" ^ CGAUX`StringNumber(num),nm.cid);
+          if ((num = 0) or (num=-1) or (num=-2))
+          then return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid)
+          else return GenIdentifier("vdm_" ^ md ^ "_" ^ id ^ "_" ^ CGAUX`StringNumber(num),nm.cid);
 #endif VDMSL
 #ifdef VDMPP
 --    cases ids:
@@ -1048,7 +1051,6 @@ operations
     if len ids = 1
     then
       if CPP`isCPP()
---      then return MkPrefix(id)
       then def num = CGAUX`FindScope(nm);
                nid = MkPrefix(id)
            in
@@ -1065,17 +1067,13 @@ operations
           else return GenIdentifier(CGAUX`CleanIdentifier(id) ^ "_" ^ CGAUX`StringNumber(num),nm.cid)
 --      [cls^"::<"^ind^">", id], [cls^"::"^ind, id] ->
     elseif len id = 2 and
-           exists j in set inds (hd ids) &
-             (hd ids)(j,...,j+1) = "::"
-    then let k = iota j in set inds (hd ids) &
-                   (hd ids)(j,...,j+1) = "::"
+           exists j in set inds (hd ids) & (hd ids)(j,...,j+1) = "::"
+    then let k = iota j in set inds (hd ids) & (hd ids)(j,...,j+1) = "::"
          in
          let cls = (hd ids)(1,...,k),
              ind = if (hd ids)(k+2) = '<'
-                   then
-                     (hd ids)(k+3,...,len (hd ids) - 1)
-                   else
-                     (hd ids)(k+2,...,len (hd ids))
+                   then (hd ids)(k+3,...,len (hd ids) - 1)
+                   else (hd ids)(k+2,...,len (hd ids))
          in
          def ind' = CGAUX`CleanIdentifier(ind);
              cls' = CGAUX`CleanIdentifier(cls);
@@ -1093,9 +1091,7 @@ operations
       in
        (CGAUX`IncludeClass(mk_AS`Name([cls], CI`NilContextId));
         if CPP`isCPP()
-        then
-          return GenQualifiedName(cls',id',nm.cid)
-        --elseif TI`IsInstVar(nm)
+        then return GenQualifiedName(cls',id',nm.cid)
         elseif CGAUX`IsInstVar(nm)
         then
           return GenObjectMemberAccess(GenBracketedExpr(GenCastExpr(mk_CPP`TypeSpecifier(cls',nm.cid),

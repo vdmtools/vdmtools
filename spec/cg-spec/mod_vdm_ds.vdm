@@ -3971,7 +3971,7 @@ information in $ti$.
       def cnm = BC`Rename(nm);
           clid = BC`PrefixName("ObjGet",cnm);
           fct = BC`GenFctCall(clid,[obj])
-      in return BC`GenGenericFctCallPtrToObjMemAcc(fct,mthd,parms);
+      in return BC`GenFctCallPtrToObjMemAcc(fct,mthd,parms);
 \end{vdm_al}
 
 

@@ -61,11 +61,10 @@ TYPE_CPP_Stmt CGAltnStmt(const TYPE_AS_CasesStmtAltn &, const TYPE_CGMAIN_VT &,
                          const TYPE_CPP_Name &, const Generic &, bool);
 SEQ<TYPE_CPP_Stmt> CGIdentStmt();
 SEQ<TYPE_CPP_Stmt> CGIfStmt(const TYPE_AS_IfStmt &, bool);
-TYPE_CPP_Stmt GenIfConsCPPStmt(const SEQ<TYPE_CPP_Stmt> &);
 bool IsReturnStmtAtLast (const TYPE_CPP_Stmt & stmt);
 SEQ<TYPE_CPP_Stmt> CGNonDetStmt(const TYPE_AS_NonDetStmt &, bool);
 SEQ<TYPE_CPP_Stmt> CGCallStmt(const TYPE_AS_CallStmt &);
-SEQ<TYPE_CPP_Stmt> CGErrorStmt();
+SEQ<TYPE_CPP_Stmt> CGErrorStmt(bool);
 SEQ<TYPE_CPP_Stmt> GenSpecTopStmt(const TYPE_AS_SpecificationStmt &);
 SEQ<TYPE_CPP_Stmt> CGAlwaysStmt(const TYPE_AS_AlwaysStmt&, bool);
 SEQ<TYPE_CPP_Stmt> CGExitStmt(const TYPE_AS_ExitStmt&);

@@ -71,7 +71,7 @@ GenStmt( stmt, isLast ) ==
      (is_AS`DefStmt(stmt))           -> CGDefStmt(stmt, isLast),
      (is_AS`NonDetStmt(stmt))        -> CGNonDetStmt(stmt, isLast),
      (is_AS`CallStmt(stmt))          -> CGCallStmt(stmt),
-     (is_AS`ErrorStmt(stmt))         -> CGErrorStmt(),
+     (is_AS`ErrorStmt(stmt))         -> CGErrorStmt(isLast),
      (is_AS`AlwaysStmt(stmt))        -> CGAlwaysStmt(stmt, isLast),
      (is_AS`ExitStmt(stmt))          -> CGExitStmt(stmt),
      (is_AS`TrapStmt(stmt))          -> CGTrapStmt(stmt, isLast),
@@ -1459,16 +1459,12 @@ CGLetBeSTStmt: AS`LetBeSTStmt * bool ==> seq of CPP`Stmt
 CGLetBeSTStmt(mk_AS`LetBeSTStmt(bind, St, In,-), isLast) ==
   if exists e in set elems bind & is_AS`MultTypeBind(e)
   then
-   (def stmts = GenNotSupported("type bind", isLast)
+    def stmts = GenNotSupported("type bind", isLast);
+        r_tp = CGAUX`GiveCurrentRType();
     in 
-#ifdef VDMPP
-      if CPP`isJAVA()
-      then
-        return stmts ^ [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
-      else
-#endif VDMPP
-        return stmts ^ [BC`GenGenericReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
-   )
+      if isLast and not is_REP`UnitTypeRep(r_tp)
+      then return stmts ^ [ BC`GenReturnStmt(DS`GenEmptyValue(r_tp)) ]
+      else return stmts
   else
    (CGAUX`PushEnv();
     def rb_l = CGEXPR`GenBindListVariables(bind, St) ^ GenStmt(In, isLast)
@@ -2081,17 +2077,10 @@ CGCasesStmt(mk_AS`CasesStmt(sel, altns, Others, -), isLast) ==
     if Others = nil
     then
       if isLast and not is_REP`UnitTypeRep(CGAUX`GiveCurrentRType())
-      then
-       (rb := rb ^ [CGAUX`RunTime ("The operation did not return a value")];
-#ifdef VDMPP
-        if CPP`isJAVA()
-        then
-          rb := rb ^ [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
-        else
-#endif VDMPP
-          rb := rb ^ [BC`GenGenericReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
-       );
-    return rb);
+      then rb := rb ^ [CGAUX`RunTime ("The operation did not return a value"),
+                       BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))];
+    return rb;
+   );
 \end{vdm_al}
 
 
@@ -2333,75 +2322,54 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
    (dcl cond_v : CPP`Expr := cond1_v,
         rb : seq of CPP`Stmt := cond_stmt,
         tmpb : [seq of CPP`Stmt] ;
-    if not CGAUX`IsBoolType(condType)
-    then cond_v := DS`GenCastType(btype, cond1_v);
+
     if not CGAUX`IsBoolType(condType)
     then
+     (cond_v := DS`GenCastType(btype, cond1_v);
       rb := rb ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsBool(cond1_v)),
-                      BC`GenBlock([CGAUX`RunTime ("A boolean was expected")]), nil) ];
+                   BC`GenBlock([CGAUX`RunTime ("A boolean was expected")]), nil) ];
+     );
+
     if altn = nil
     then
-     (tmpb := nil;
       if isLast and not is_REP`UnitTypeRep(CGAUX`GiveCurrentRType())
-      then
-        (dcl lrb : [seq of CPP`Stmt] := [CGAUX`RunTime ("The operation did not return a value")];
-#ifdef VDMPP
-         if CPP`isJAVA()
-         then
-           lrb := lrb ^ [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
-         else
-#endif VDMPP
-           lrb := lrb ^ [BC`GenGenericReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))];
-         tmpb := lrb;))
+      then tmpb := [CGAUX`RunTime ("The operation did not return a value"),
+                    BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
+      else tmpb := nil
     elseif is_AS`IdentStmt(altn)
     then tmpb := nil
     else tmpb := GenStmt( altn, isLast );
-    for i = len elif to 1 by -1 do
-      let mk_AS`ElseifStmt(elif_test, elif_cons, -) = elif(i)
+
+    for mk_AS`ElseifStmt(elif_test, elif_cons, -) in reverse elif do
+      def mk_(elif_cond1_v, elif_cond_stmt) = CGEXPR`CGExprExcl(elif_test, "cond", nil);
+          elif_condType = CGAUX`FindType(elif_test);
       in
-       (dcl body : seq of CPP`Stmt;
-        def mk_(elif_cond1_v, elif_cond_stmt) = CGEXPR`CGExprExcl(elif_test, "cond", nil);
-            elif_condType = CGAUX`FindType(elif_test);
-        in
-         (dcl elif_cond_v : CPP`Expr := elif_cond1_v;
-          if not CGAUX`IsBoolType(elif_condType)
-          then elif_cond_v := DS`GenCastType(btype, elif_cond1_v);
-
-          body := elif_cond_stmt;
-          if not CGAUX`IsBoolType(elif_condType)
-          then
-            body := body ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsBool(elif_cond1_v)),
-                          BC`GenBlock([CGAUX`RunTime ("A boolean was expected")]), nil) ];
-          def elif_cons_stmt = def stmt = GenStmt(elif_cons, isLast)
-                               in GenIfConsCPPStmt(stmt);
-              elif_cons2_stmt = if tmpb = nil
-                                then nil
-                                else BC`GenBlock(tmpb);
-              ifstmt = BC`GenIfStmt(DS`GenGetValue( elif_cond_v, btype ), elif_cons_stmt, elif_cons2_stmt);
-              ifseq = if tmpb = nil
-                      then BC`GenBlock([ifstmt])
-                      else ifstmt
-          in
-            body := body ^ [ifseq];
-          tmpb := body)
+       (dcl body : seq of CPP`Stmt := elif_cond_stmt,
+            elif_cond_v : CPP`Expr := elif_cond1_v;
+        if not CGAUX`IsBoolType(elif_condType)
+        then
+         (elif_cond_v := DS`GenCastType(btype, elif_cond1_v);
+          body := body ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsBool(elif_cond1_v)),
+                           BC`GenBlock([CGAUX`RunTime ("A boolean was expected")]), nil) ];
+         );
+        def elif_cons_stmt = def stmt = GenStmt(elif_cons, isLast)
+                             in BC`GenBlock(stmt);
+            elif_cons2_stmt = if tmpb = nil
+                              then nil
+                              else BC`GenBlock(tmpb);
+            ifstmt = BC`GenIfStmt(DS`GenGetValue( elif_cond_v, btype ), elif_cons_stmt, elif_cons2_stmt);
+            ifseq = if tmpb = nil
+                    then BC`GenBlock([ifstmt])
+                    else ifstmt
+        in body := body ^ [ifseq];
+        tmpb := body
        );
-    def cons_stmt = GenIfConsCPPStmt(GenStmt(cons, isLast))
-    in
-      rb := rb ^ [BC`GenIfStmt(DS`GenGetValue( cond_v, btype ), cons_stmt, if tmpb = nil
-                                                                           then nil
-                                                                           else BC`GenBlock( tmpb ))];
-    return rb);
-\end{vdm_al}
-
-\begin{vdm_al}
-GenIfConsCPPStmt: seq of CPP`Stmt ==> CPP`Stmt
-GenIfConsCPPStmt(s_l) ==
---cases s_l:
---  [ mk_CPP`IfStmt(-,-,nil,-) ] -> return BC`GenBlock(s_l),
---  [ stmt ]                   -> return stmt,
---  others                     -> return BC`GenBlock(s_l)
---end;
-  return BC`GenBlock(s_l);
+    def cons_stmt = BC`GenBlock(GenStmt(cons, isLast))
+    in rb := rb ^ [BC`GenIfStmt(DS`GenGetValue( cond_v, btype ), cons_stmt, if tmpb = nil
+                                                                            then nil
+                                                                            else BC`GenBlock( tmpb ))];
+    return rb;
+   );
 \end{vdm_al}
 
 \subsection{Specification and Topology Statements}
@@ -2877,20 +2845,14 @@ undefined expression.
 \begin{vdm_al}
 operations
 
-CGErrorStmt: () ==> seq of CPP`Stmt
-CGErrorStmt() ==
+CGErrorStmt: bool ==> seq of CPP`Stmt
+CGErrorStmt(isLast) ==
   def r_tp = CGAUX`GiveCurrentRType();
-      rti  = CGAUX`RunTime("Can not evaluate 'error' statement");
   in
-   (dcl r_stmt : CPP`Stmt;
-#ifdef VDMPP
-    if CPP`isJAVA()
-    then
-      r_stmt := BC`GenReturnStmt(DS`GenEmptyValue(r_tp))
-    else
-#endif VDMPP
-      r_stmt := BC`GenGenericReturnStmt(DS`GenEmptyValue(r_tp));
-    return [ rti, r_stmt ];
+   (dcl rb : seq of CPP`Stmt := [ CGAUX`RunTime("Can not evaluate 'error' statement") ];
+    if isLast and not is_REP`UnitTypeRep(r_tp)
+    then rb := rb ^ [ BC`GenReturnStmt(DS`GenEmptyValue(r_tp)) ];
+    return rb;
    );
 \end{vdm_al}
 
