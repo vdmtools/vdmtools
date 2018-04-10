@@ -142,6 +142,7 @@ TYPE_CPP_Expr CGLiteral(const TYPE_AS_Literal &, const TYPE_CGMAIN_VT &);
 SEQ<TYPE_CPP_Stmt> CGUndefinedExpr();
 Generic CGBinaryExpr(const TYPE_AS_BinaryExpr &, const TYPE_CGMAIN_VT &);
 Generic CGLogBinaryExpr(const TYPE_AS_Expr &, int, const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);
+Generic CGEqualityBinaryExpr(const TYPE_AS_Expr &, int, const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);
 Generic CGNumBinaryExpr(const TYPE_AS_Expr &, int, const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);
 Generic CGSetBinaryExpr(const TYPE_AS_Expr &, int, const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);
 Generic CGInSet(const TYPE_AS_Expr &, const TYPE_AS_Expr &, const TYPE_CGMAIN_VT &);

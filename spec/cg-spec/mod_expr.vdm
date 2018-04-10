@@ -7090,7 +7090,7 @@ CGBinaryExpr( mk_AS`BinaryExpr(le, opr, re, -), vt ) ==
       <IMPLY>,
       <EQUIV>         -> return CGLogBinaryExpr(le, opr, re, vt),
       <EQ>,
-      <NE>            -> return CGLogBinaryExpr(le, opr, re, vt),
+      <NE>            -> return CGEqualityBinaryExpr(le, opr, re, vt),
       <NUMMINUS>,
       <NUMPLUS>,
       <NUMMULT>,
@@ -7153,100 +7153,104 @@ else
 \begin{vdm_al}
 CGLogBinaryExpr: AS`Expr * AS`BinaryOp * AS`Expr * CGMAIN`VT ==> CPP`Expr | seq of CPP`Stmt
 CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
-  cases opr:
-    <EQUIV>,
-    <EQ>,
-    <NE>    -> def type1  = CGAUX`FindType( le );
-                   type2  = CGAUX`FindType( re );
-                   mk_(var1, stmt1) = CGExprExcl(le, "var1", type1);
-                   mk_(var2, stmt2) = CGExprExcl(re, "var2", type2)
-               in
-                (dcl expr : CPP`Expr;
-                 if <NE> = opr
-                 then expr := DS`GenNeq(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2))
-                 else expr := DS`GenEq(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2));
-                 if stmt1 = [] and stmt2 = []
-                 then return expr
-                 else return stmt1 ^ stmt2 ^ [BC`GenAsgnStmt(resVar_v, expr)]
-                ),
-    others  -> def type1  = CGAUX`FindType( le );
-                   type2  = CGAUX`FindType( re );
-                   mk_(var1, stmt1) = CGExprExcl(le, "var1", type1);
-                   mk_(var2, stmt2) = CGExprExcl(re, "var2", type2);
-                   errmess = BC`GenBlock([CGAUX`RunTime("A boolean was expected" )]);
-               in
-                (dcl expr1 : CPP`Expr := var1,
-                     expr2 : CPP`Expr := var2,
-                     rb1new : seq of CPP`Stmt := stmt1,
-                     rb2new : seq of CPP`Stmt := stmt2;
+  def type1  = CGAUX`FindType( le );
+      type2  = CGAUX`FindType( re );
+      mk_(var1, stmt1) = CGExprExcl(le, "var1", type1);
+      mk_(var2, stmt2) = CGExprExcl(re, "var2", type2);
+      errmess = BC`GenBlock([CGAUX`RunTime("A boolean was expected" )]);
+  in
+   (dcl expr1 : CPP`Expr := var1,
+        expr2 : CPP`Expr := var2,
+        rb1new : seq of CPP`Stmt := stmt1,
+        rb2new : seq of CPP`Stmt := stmt2;
 
-                 if not CGAUX`IsBoolType( type1 )
-                 then
-                  (if not is_CPP`Identifier(var1)
-                   then
-                     def v1 = BC`GiveName("ver1")
-                     in
-                      (rb1new := rb1new ^ DS`GenDecl(type1, v1, BC`GenAsgnInit(var1));
-                       expr1 := v1;);
-                   rb1new := rb1new ^ [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( expr1 ) ),
-                                                      errmess, nil ) ];
-                   expr1 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr1 );
-                  );
+    if not CGAUX`IsBoolType( type1 )
+    then
+     (if not is_CPP`Identifier(var1)
+      then
+        def v1 = BC`GiveName("ver1")
+        in
+         (rb1new := rb1new ^ DS`GenDecl(type1, v1, BC`GenAsgnInit(var1));
+          expr1 := v1;);
+      rb1new := rb1new ^ [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( expr1 ) ),
+                                         errmess, nil ) ];
+      expr1 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr1 );
+     );
 
-                 if not CGAUX`IsBoolType( type2 )
-                 then
-                  (if not is_CPP`Identifier(var2)
-                   then
-                     def v2 = BC`GiveName("ver2")
-                     in
-                      (rb2new := rb2new ^ DS`GenDecl(type2, v2, BC`GenAsgnInit(var2));
-                       expr2 := v2;);
-                   rb2new := rb2new ^ [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( expr2 ) ),
-                                                      errmess, nil ) ];
-                   expr2 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr2 );
-                  );
+    if not CGAUX`IsBoolType( type2 )
+    then
+     (if not is_CPP`Identifier(var2)
+      then
+        def v2 = BC`GiveName("ver2")
+        in
+         (rb2new := rb2new ^ DS`GenDecl(type2, v2, BC`GenAsgnInit(var2));
+          expr2 := v2;);
+      rb2new := rb2new ^ [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( expr2 ) ),
+                                         errmess, nil ) ];
+      expr2 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr2 );
+     );
 
-                 if rb2new <> []
-                 then
-                  (def cond = DS`GenGetValue(expr1, mk_REP`BooleanTypeRep());
-                       asgnstmt = BC`GenAsgnStmt(resVar_v, expr2);
-                       alt1 = BC`GenBlock(rb2new ^ [asgnstmt]);
-                   in
-                     cases opr :
-                       <AND>   -> return rb1new ^ [BC`GenIfStmt(cond, alt1,
-                              BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(false))]))],
-                       <OR>    -> return rb1new ^ [BC`GenIfStmt(BC`GenNot(cond), alt1,
-                              BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true))]))],
-                       <IMPLY> -> return rb1new ^ [BC`GenIfStmt(cond, alt1,
-                              BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true))]))],
-                       others  -> return rb1new ^ stmt2
-                     end;
-                  )
-                 else
-                  (def cond = DS`GenGetValue(expr1, mk_REP`BooleanTypeRep());
-                       alt1 = DS`GenGetValue(expr2, mk_REP`BooleanTypeRep());
-                   in
-                     cases opr :
-                       <AND>   -> def e = DS`GenBoolExpr(BC`GenCondExpr(cond, alt1, BC`GenBoolLit(false)))
-                                  in
-                                    if rb1new = []
-                                    then return e
-                                    else return rb1new ^ [BC`GenAsgnStmt(resVar_v, e)],
-                       <OR>    -> def e = DS`GenBoolExpr(BC`GenCondExpr(cond, BC`GenBoolLit(true), alt1))
-                                  in
-                                    if rb1new = []
-                                    then return e
-                                    else return rb1new ^ [BC`GenAsgnStmt(resVar_v, e)],
-                       <IMPLY> -> def e = DS`GenBoolExpr(BC`GenCondExpr(cond, alt1, BC`GenBoolLit(true)))
-                                  in
-                                    if rb1new = []
-                                    then return e
-                                    else return rb1new ^ [BC`GenAsgnStmt(resVar_v, e)],
-                       others  -> return rb1new
-                     end;
-                  )
-                )
-  end;
+    if opr = <EQUIV>
+    then
+      return rb1new ^ rb2new ^
+       [BC`GenAsgnStmt(resVar_v, DS`GenBoolExpr(
+                                  BC`GenEq(DS`GenGetValue(expr1, mk_REP`BooleanTypeRep()),
+                                           DS`GenGetValue(expr2, mk_REP`BooleanTypeRep()))))]
+    else
+      if rb2new <> []
+      then
+        def cond = DS`GenGetValue(expr1, mk_REP`BooleanTypeRep());
+            asgnstmt = BC`GenAsgnStmt(resVar_v, expr2);
+            alt1 = BC`GenBlock(rb2new ^ [asgnstmt]);
+        in
+          cases opr :
+            <AND>   -> return rb1new ^ [BC`GenIfStmt(cond, alt1,
+                          BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(false))]))],
+            <OR>    -> return rb1new ^ [BC`GenIfStmt(BC`GenNot(cond), alt1,
+                          BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true))]))],
+            <IMPLY> -> return rb1new ^ [BC`GenIfStmt(cond, alt1,
+                          BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true))]))],
+            others  -> return rb1new ^ stmt2
+          end
+      else
+        def cond = DS`GenGetValue(expr1, mk_REP`BooleanTypeRep());
+            alt1 = DS`GenGetValue(expr2, mk_REP`BooleanTypeRep());
+        in
+          cases opr :
+            <AND>   -> def e = DS`GenBoolExpr(BC`GenCondExpr(cond, alt1, BC`GenBoolLit(false)))
+                       in
+                         if rb1new = []
+                         then return e
+                         else return rb1new ^ [BC`GenAsgnStmt(resVar_v, e)],
+            <OR>    -> def e = DS`GenBoolExpr(BC`GenCondExpr(cond, BC`GenBoolLit(true), alt1))
+                       in
+                         if rb1new = []
+                         then return e
+                         else return rb1new ^ [BC`GenAsgnStmt(resVar_v, e)],
+            <IMPLY> -> def e = DS`GenBoolExpr(BC`GenCondExpr(cond, alt1, BC`GenBoolLit(true)))
+                       in
+                         if rb1new = []
+                         then return e
+                         else return rb1new ^ [BC`GenAsgnStmt(resVar_v, e)],
+            others  -> return rb1new
+          end;
+   );
+
+CGEqualityBinaryExpr: AS`Expr * AS`BinaryOp * AS`Expr * CGMAIN`VT ==> CPP`Expr | seq of CPP`Stmt
+CGEqualityBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
+  def type1  = CGAUX`FindType( le );
+      type2  = CGAUX`FindType( re );
+      mk_(var1, stmt1) = CGExprExcl(le, "var1", type1);
+      mk_(var2, stmt2) = CGExprExcl(re, "var2", type2)
+  in
+   (dcl expr : CPP`Expr;
+    if <NE> = opr
+    then expr := DS`GenNeq(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2))
+    else expr := DS`GenEq(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2));
+    if stmt1 = [] and stmt2 = []
+    then return expr
+    else return stmt1 ^ stmt2 ^ [BC`GenAsgnStmt(resVar_v, expr)]
+   );
 
 CGNumBinaryExpr: AS`Expr * AS`BinaryOp * AS`Expr * CGMAIN`VT ==> CPP`Expr | seq of CPP`Stmt
 CGNumBinaryExpr(le, opr, re, vtres ) ==

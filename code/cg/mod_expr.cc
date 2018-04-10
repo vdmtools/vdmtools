@@ -7442,7 +7442,7 @@ Generic vdmcg::CGBinaryExpr(const TYPE_AS_BinaryExpr & be, const TYPE_CGMAIN_VT 
     case EQUIV:        { return CGLogBinaryExpr(le, op, re, vt); break; }
 
     case EQ:
-    case NE:           { return CGLogBinaryExpr(le, op, re, vt); break; }
+    case NE:           { return CGEqualityBinaryExpr(le, op, re, vt); break; }
 
     case NUMMINUS:
     case NUMPLUS:
@@ -7498,136 +7498,159 @@ Generic vdmcg::CGLogBinaryExpr(const TYPE_AS_Expr & le,
   TYPE_REP_TypeRep type1 (FindType(le));
   TYPE_REP_TypeRep type2 (FindType(re));
 
-  switch(opr) {
-    case EQUIV:
-    case EQ:
-    case NE: {
-      Tuple cgeel (CGExprExcl(le, ASTAUX::MkId(L"var1"), type1));
-      const TYPE_CPP_Expr & var1 (cgeel.GetRecord(1));
-      const SEQ<TYPE_CPP_Stmt> & stmt1 (cgeel.GetSequence(2));
+  Tuple cgeel (CGExprExcl(le, ASTAUX::MkId(L"var1"), type1));
+  const TYPE_CPP_Expr & var1 (cgeel.GetRecord(1));
+  const SEQ<TYPE_CPP_Stmt> & stmt1 (cgeel.GetSequence(2));
 
-      Tuple cgeer (CGExprExcl(re, ASTAUX::MkId(L"var2"), type2));
-      const TYPE_CPP_Expr & var2 (cgeer.GetRecord(1));
-      const SEQ<TYPE_CPP_Stmt> & stmt2 (cgeer.GetSequence(2));
+  Tuple cgeer (CGExprExcl(re, ASTAUX::MkId(L"var2"), type2));
+  const TYPE_CPP_Expr & var2 (cgeer.GetRecord(1));
+  const SEQ<TYPE_CPP_Stmt> & stmt2 (cgeer.GetSequence(2));
 
-      TYPE_CGMAIN_VT vt1 (mk_CG_VT(var1, type1));
-      TYPE_CGMAIN_VT vt2 (mk_CG_VT(var2, type2));
+  TYPE_CPP_Stmt errmess (vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected"))));
 
-      TYPE_CPP_Expr expr (NE == opr ? GenNeq_DS(vt1, vt2) : GenEq_DS(vt1, vt2));
-      if (stmt1.IsEmpty() && stmt2.IsEmpty()) {
-        return expr;
-      }
-      else {
-        SEQ<TYPE_CPP_Stmt> rb_l (stmt1);
-        rb_l.ImpConc(stmt2);
-        rb_l.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, expr));
-        return rb_l;
-      }
-      break;
+  SEQ<TYPE_CPP_Stmt> rb1new (stmt1);
+  SEQ<TYPE_CPP_Stmt> rb2new (stmt2);
+  TYPE_CPP_Expr expr1 (var1);
+  TYPE_CPP_Expr expr2 (var2);
+
+  if (!IsBoolType(type1)) {
+    if (!var1.Is(TAG_TYPE_CPP_Identifier)) {
+      TYPE_CPP_Identifier v1 (vdm_BC_GiveName(ASTAUX::MkId(L"ver1")));
+      rb1new.ImpConc(GenDecl_DS(type1, v1, vdm_BC_GenAsgnInit(var1)));
+      expr1 = v1; 
     }
-    default: {
-      Tuple cgeel (CGExprExcl(le, ASTAUX::MkId(L"var1"), type1));
-      const TYPE_CPP_Expr & var1 (cgeel.GetRecord(1));
-      const SEQ<TYPE_CPP_Stmt> & stmt1 (cgeel.GetSequence(2));
-    
-      Tuple cgeer (CGExprExcl(re, ASTAUX::MkId(L"var2"), type2));
-      const TYPE_CPP_Expr & var2 (cgeer.GetRecord(1));
-      const SEQ<TYPE_CPP_Stmt> & stmt2 (cgeer.GetSequence(2));
-    
-      TYPE_CPP_Stmt errmess (vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected"))));
+    rb1new.ImpAppend( vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(expr1)), errmess, nil) );
+    expr1 = GenCastType(mk_REP_BooleanTypeRep(), expr1);
+  }
 
-      SEQ<TYPE_CPP_Stmt> rb1new (stmt1);
-      SEQ<TYPE_CPP_Stmt> rb2new (stmt2);
-      TYPE_CPP_Expr expr1 (var1);
-      TYPE_CPP_Expr expr2 (var2);
-    
-      if (!IsBoolType(type1)) {
-        if (!var1.Is(TAG_TYPE_CPP_Identifier)) {
-          TYPE_CPP_Identifier v1 (vdm_BC_GiveName(ASTAUX::MkId(L"ver1")));
-          rb1new.ImpConc(GenDecl_DS(type1, v1, vdm_BC_GenAsgnInit(var1)));
-          expr1 = v1; 
-        }
-        rb1new.ImpAppend( vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(expr1)), errmess, nil) );
-        expr1 = GenCastType(mk_REP_BooleanTypeRep(), expr1);
-      }
-    
-      if (!IsBoolType(type2)) {
-        if (!var2.Is(TAG_TYPE_CPP_Identifier)) {
-          TYPE_CPP_Identifier v2 (vdm_BC_GiveName(ASTAUX::MkId(L"ver2")));
-          rb1new.ImpConc(GenDecl_DS(type1, v2, vdm_BC_GenAsgnInit(var2)));
-          expr2 = v2; 
-        }
-        rb2new.ImpAppend( vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(expr2)), errmess, nil) );
-        expr2 = GenCastType(mk_REP_BooleanTypeRep(), expr2);
-      }
-    
-      if (!rb2new.IsEmpty()) {
-        TYPE_CPP_Expr cond (GenGetValue(expr1, mk_REP_BooleanTypeRep()));
-    
-        TYPE_CPP_Stmt asgnstmt (vdm_BC_GenAsgnStmt(resVar_v, expr2));
-        TYPE_CPP_Stmt alt1 (vdm_BC_GenBlock(rb2new.ImpAppend(asgnstmt)));
+  if (!IsBoolType(type2)) {
+    if (!var2.Is(TAG_TYPE_CPP_Identifier)) {
+      TYPE_CPP_Identifier v2 (vdm_BC_GiveName(ASTAUX::MkId(L"ver2")));
+      rb1new.ImpConc(GenDecl_DS(type1, v2, vdm_BC_GenAsgnInit(var2)));
+      expr2 = v2; 
+    }
+    rb2new.ImpAppend( vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(expr2)), errmess, nil) );
+    expr2 = GenCastType(mk_REP_BooleanTypeRep(), expr2);
+  }
 
-        switch (opr) {
-          case AND: {
-            rb1new.ImpAppend(vdm_BC_GenIfStmt(cond, alt1,
-                         vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v,
-                                     GenBoolLit_DS(Bool (false)))))));
-            return rb1new;
+  if (opr == EQUIV) {
+    SEQ<TYPE_CPP_Stmt> rb (rb1new);
+    rb.ImpConc(rb2new);
+    rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, GenBoolExpr(vdm_BC_GenEq(
+                                                GenGetValue(expr1, mk_REP_BooleanTypeRep()),
+                                                GenGetValue(expr2, mk_REP_BooleanTypeRep())))));
+    return rb;
+  }
+  else {
+    if (!rb2new.IsEmpty()) {
+      TYPE_CPP_Expr cond (GenGetValue(expr1, mk_REP_BooleanTypeRep()));
+  
+      TYPE_CPP_Stmt asgnstmt (vdm_BC_GenAsgnStmt(resVar_v, expr2));
+      TYPE_CPP_Stmt alt1 (vdm_BC_GenBlock(rb2new.ImpAppend(asgnstmt)));
+
+      switch (opr) {
+        case AND: {
+          rb1new.ImpAppend(vdm_BC_GenIfStmt(cond, alt1,
+                       vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v,
+                                   GenBoolLit_DS(Bool (false)))))));
+          return rb1new;
+        }
+        case OR: {
+          rb1new.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), alt1,
+                       vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v,
+                                   GenBoolLit_DS(Bool (true)))))));
+          return rb1new;
+        }
+        case IMPLY: {
+          rb1new.ImpAppend(vdm_BC_GenIfStmt(cond, alt1,
+                       vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v,
+                                   GenBoolLit_DS(Bool (true)))))));
+          return rb1new;
+        }
+        default: {
+          rb1new.ImpConc(stmt2);
+          return rb1new;
+        }
+      }
+    } else {
+      TYPE_CPP_Expr cond (GenGetValue(expr1, mk_REP_BooleanTypeRep()));
+      TYPE_CPP_Expr alt1 (GenGetValue(expr2, mk_REP_BooleanTypeRep()));
+      switch (opr) {
+        case AND: {
+          TYPE_CPP_Expr e (GenBoolExpr(vdm_BC_GenCondExpr(cond, alt1, vdm_BC_GenBoolLit(false))));
+          if (rb1new.IsEmpty()) {
+            return e;
           }
-          case OR: {
-            rb1new.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), alt1,
-                         vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v,
-                                     GenBoolLit_DS(Bool (true)))))));
-            return rb1new;
-          }
-          case IMPLY: {
-            rb1new.ImpAppend(vdm_BC_GenIfStmt(cond, alt1,
-                         vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v,
-                                     GenBoolLit_DS(Bool (true)))))));
-            return rb1new;
-          }
-          default: {
-            rb1new.ImpConc(stmt2);
+          else {
+            rb1new.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, e));
             return rb1new;
           }
         }
-      } else {
-        TYPE_CPP_Expr cond (GenGetValue(expr1, mk_REP_BooleanTypeRep()));
-        TYPE_CPP_Expr alt1 (GenGetValue(expr2, mk_REP_BooleanTypeRep()));
-        switch (opr) {
-          case AND: {
-            TYPE_CPP_Expr e (GenBoolExpr(vdm_BC_GenCondExpr(cond, alt1, vdm_BC_GenBoolLit(false))));
-            if (rb1new.IsEmpty())
-              return e;
-            else {
-              rb1new.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, e));
-              return rb1new;
-            }
+        case OR: {
+          TYPE_CPP_Expr e (GenBoolExpr(vdm_BC_GenCondExpr(cond, vdm_BC_GenBoolLit(true), alt1)));
+          if (rb1new.IsEmpty()) {
+            return e;
           }
-          case OR: {
-            TYPE_CPP_Expr e (GenBoolExpr(vdm_BC_GenCondExpr(cond, vdm_BC_GenBoolLit(true), alt1)));
-            if (rb1new.IsEmpty())
-              return e;
-            else {
-              rb1new.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, e));
-              return rb1new;
-            }
-          }
-          case IMPLY: {
-            TYPE_CPP_Expr e (GenBoolExpr(vdm_BC_GenCondExpr(cond, alt1, vdm_BC_GenBoolLit(true))));
-            if (rb1new.IsEmpty())
-              return e;
-            else {
-              rb1new.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, e));
-              return rb1new;
-            }
-          }
-          default: {
+          else {
+            rb1new.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, e));
             return rb1new;
           }
+        }
+        case IMPLY: {
+          TYPE_CPP_Expr e (GenBoolExpr(vdm_BC_GenCondExpr(cond, alt1, vdm_BC_GenBoolLit(true))));
+          if (rb1new.IsEmpty()) {
+            return e;
+          }
+          else {
+            rb1new.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, e));
+            return rb1new;
+          }
+        }
+        default: {
+          return rb1new;
         }
       }
     }
+  }
+}
+
+// CGEqualityBinaryExpr
+// le : AS`Expr
+// opr : AS`BinaryOp
+// re : AS`Expr
+// vt : CGMAIN`VT
+// ==> CPP`Expr | seq of CPP`Stmt
+Generic vdmcg::CGEqualityBinaryExpr(const TYPE_AS_Expr & le,
+                                    int opr,
+                                    const TYPE_AS_Expr & re,
+                                    const TYPE_CGMAIN_VT & vt)
+{
+  const TYPE_CPP_Expr & resVar_v (vt.GetRecord(pos_CGMAIN_VT_name));
+  const TYPE_REP_TypeRep & rType  (vt.GetRecord(pos_CGMAIN_VT_type));
+
+  TYPE_REP_TypeRep type1 (FindType(le));
+  TYPE_REP_TypeRep type2 (FindType(re));
+
+  Tuple cgeel (CGExprExcl(le, ASTAUX::MkId(L"var1"), type1));
+  const TYPE_CPP_Expr & var1 (cgeel.GetRecord(1));
+  const SEQ<TYPE_CPP_Stmt> & stmt1 (cgeel.GetSequence(2));
+
+  Tuple cgeer (CGExprExcl(re, ASTAUX::MkId(L"var2"), type2));
+  const TYPE_CPP_Expr & var2 (cgeer.GetRecord(1));
+  const SEQ<TYPE_CPP_Stmt> & stmt2 (cgeer.GetSequence(2));
+
+  TYPE_CGMAIN_VT vt1 (mk_CG_VT(var1, type1));
+  TYPE_CGMAIN_VT vt2 (mk_CG_VT(var2, type2));
+
+  TYPE_CPP_Expr expr (NE == opr ? GenNeq_DS(vt1, vt2) : GenEq_DS(vt1, vt2));
+  if (stmt1.IsEmpty() && stmt2.IsEmpty()) {
+    return expr;
+  }
+  else {
+    SEQ<TYPE_CPP_Stmt> rb_l (stmt1);
+    rb_l.ImpConc(stmt2);
+    rb_l.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, expr));
+    return rb_l;
   }
 }
 
