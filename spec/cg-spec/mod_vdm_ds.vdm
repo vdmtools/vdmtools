@@ -856,90 +856,106 @@ GenExplicitCast(restp, e, tp) ==
     if isnil
     then return e
     else
-       (dcl restype : REP`TypeRep,
-            type : [REP`TypeRep] := nil;
-        cases restp:                        --- skal udvides!!!!!!!
-          mk_REP`OpTypeRep(-,Rng) -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(Rng)),
-          mk_REP`TypeNameRep(-) -> if is_REP`UnionTypeRep(CGAUX`CleanFlatType(restp)) and
-                                       CGAUX`IsCompositeType(CGAUX`CleanFlatType(restp))
-                                   then restype := CGAUX`RemoveNil(restp)
-                                   else restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp)),
-          others -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp))
-        end;
-        if tp <> nil
-        then
-          def ptp = DeclaredAs(e)
-          in
-            if (ptp = nil)
-            then
-              cases tp:                        --- skal udvides!!!!!!!
-                mk_REP`OpTypeRep(-,Rng) -> type := CGAUX`CleanFlatType(Rng),
-                mk_REP`OverTypeRep(tp_s) -> let rtp_s = { cases t:
-                                                            mk_REP`OpTypeRep(-,Rng)          -> Rng,
-                                                            mk_REP`PartialFnTypeRep(-,fnrng) -> fnrng,
-                                                            mk_REP`TotalFnTypeRep(-,fnrng)   -> fnrng,
-                                                            others                           -> undefined
-                                                          end | t in set tp_s }
-                                            in
-                                              cases rtp_s:
-                                                {}     -> error,
-                                                {e}    -> type := CGAUX`CleanFlatType(e),
-                                                others -> type := CGAUX`CleanFlatType(mk_REP`UnionTypeRep(rtp_s))
-                                              end,
-                others -> type := CGAUX`CleanFlatType(tp)
-              end
-            else type := ptp;
-        if (type = nil)
-        then
-         (if CGAUX`IsRealType(restype)
-          then return GetRealVal(e)
-          elseif CGAUX`IsIntType(restype)
-          then (CGAUX`SetException(true);
-                return GetIntVal(e);)
-          elseif CGAUX`IsStringType(restype)
-          then return GetStringVal(e)
-          elseif CGAUX`IsSeqType(restype)
-          then if CGAUX`IsPossibleStringType(restype)
-               then return GetStringVal(e)
-               else return GetListVal(e)
-          elseif CGAUX`IsProductType(restype)
-          then return  BC`GenCastExpr(GenType(restype),e)
-          elseif not is_REP`UnionTypeRep(restype)
-          then return BC`GenCastExpr(GenType(restype),e)
-          elseif CGAUX`IsCompositeType(restype)
-          then return GenCastRecord(e, nil)
-          else return e)
-        else
-         (if (CGAUX`IsRealType(restype) and not CGAUX`IsRealType(type))
+     (dcl restype : REP`TypeRep,
+          type : [REP`TypeRep] := nil;
+      cases restp:                        --- skal udvides!!!!!!!
+        mk_REP`OpTypeRep(-,Rng) -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(Rng)),
+        mk_REP`TypeNameRep(-) -> if is_REP`UnionTypeRep(CGAUX`CleanFlatType(restp)) and
+                                     CGAUX`IsCompositeType(CGAUX`CleanFlatType(restp))
+                                 then restype := CGAUX`RemoveNil(restp)
+                                 else restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp)),
+        others -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp))
+      end;
+
+      if tp <> nil
+      then
+        def ptp = DeclaredAs(e)
+        in
+          if (ptp = nil)
           then
-             if CGAUX`IsIntExpr(e)
-             --then return GenRealExpr(e.arg)
-             then return GenRealExpr(GenGetValue(e, mk_REP`NumericTypeRep(<INTEGER>)))
-             else return GetRealVal(e)
-           elseif (CGAUX`IsIntType(restype) and not CGAUX`IsIntType(type))
-           then (CGAUX`SetException(true);
-                 return GetIntVal(e);)
-           elseif (CGAUX`IsStringType(restype) and not (CGAUX`IsStringType(type) or is_REP`EmptySetTypeRep(type)))
-           then return GetStringVal(e)
-           elseif ((CGAUX`IsSeqType(restype) and not CGAUX`IsStringType(restype)) and
-                  ((not CGAUX`IsSeqType(type)) or CGAUX`IsStringType(type)))
-           then if CGAUX`IsStringType(type)
-                then return GetListVal(e)
-                else return BC`GenCastExpr(GenType(restype), e)
-           elseif (not CGAUX`AreOfSameType(restype,type))
-           then if (is_REP`UnionTypeRep(restype) or is_REP`UnitTypeRep(restype))
-                then if (CGAUX`IsStringType(type) and not CGAUX`IsPossibleStringType(restype))
-                     then return GetListVal(e)
-                     else if (CGAUX`IsPossibleStringType(restype) and (CGAUX`IsSeqType(type) and
-                             not CGAUX`IsPossibleStringType(type)))
-                          then return GetStringVal(e)
-                          else return e
-                elseif CGAUX`IsSubType(type, CGAUX`RemoveInvType(restype))
-                then return e
-                elseif GenType(type) = BC`GenGeneric()
-                then return BC`GenCastExpr(GenType(restype),e)
-                else return BC`GenCastExpr(GenType(restype),BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(),e)))
-           else return e));
+            cases tp:                        --- skal udvides!!!!!!!
+              mk_REP`OpTypeRep(-,Rng) -> type := CGAUX`CleanFlatType(Rng),
+              mk_REP`OverTypeRep(tp_s) -> let rtp_s = { cases t:
+                                                          mk_REP`OpTypeRep(-,Rng)          -> Rng,
+                                                          mk_REP`PartialFnTypeRep(-,fnrng) -> fnrng,
+                                                          mk_REP`TotalFnTypeRep(-,fnrng)   -> fnrng,
+                                                          others                           -> undefined
+                                                        end | t in set tp_s }
+                                          in
+                                            cases rtp_s:
+                                              {}     -> error,
+                                              {e}    -> type := CGAUX`CleanFlatType(e),
+                                              others -> type := CGAUX`CleanFlatType(mk_REP`UnionTypeRep(rtp_s))
+                                            end,
+              --others -> type := CGAUX`CleanFlatType(tp)
+              others -> type := CGAUX`CleanFlatType(CGAUX`ExpandTypeRep(tp, {}))
+            end
+          else type := ptp;
+
+      if (type = nil)
+      then
+       (if CGAUX`IsRealType(restype)
+        then return GetRealVal(e)
+        elseif CGAUX`IsIntType(restype)
+        then (CGAUX`SetException(true);
+              return GetIntVal(e);)
+        elseif CGAUX`IsStringType(restype)
+        then return GetStringVal(e)
+        elseif CGAUX`IsSeqType(restype)
+        then if CGAUX`IsPossibleStringType(restype)
+             then return GetStringVal(e)
+             else return GetListVal(e)
+        elseif CGAUX`IsProductType(restype)
+        then return BC`GenCastExpr(GenType(restype),e)
+        elseif not is_REP`UnionTypeRep(restype)
+        then return BC`GenCastExpr(GenType(restype),e)
+        elseif CGAUX`IsCompositeType(restype)
+        then return GenCastRecord(e, nil)
+        else return e)
+      else
+       (if (CGAUX`IsRealType(restype) and not CGAUX`IsRealType(type))
+        then
+          if CGAUX`IsIntExpr(e)
+          --then return GenRealExpr(e.arg)
+          then return GenRealExpr(GenGetValue(e, mk_REP`NumericTypeRep(<INTEGER>)))
+          else return GetRealVal(e)
+        elseif (CGAUX`IsIntType(restype) and not CGAUX`IsIntType(type))
+        then (CGAUX`SetException(true);
+              return GetIntVal(e);)
+        elseif (CGAUX`IsStringType(restype) and not (CGAUX`IsStringType(type) or is_REP`EmptySetTypeRep(type)))
+        then return GetStringVal(e)
+        elseif ((CGAUX`IsSeqType(restype) and not CGAUX`IsStringType(restype)) and
+               ((not CGAUX`IsSeqType(type)) or CGAUX`IsStringType(type)))
+        then if CGAUX`IsStringType(type)
+             then return GetListVal(e)
+             else return BC`GenCastExpr(GenType(restype), e)
+        elseif not CGAUX`AreOfSameType(restype,type)
+        then
+          if is_REP`UnionTypeRep(restype) or is_REP`UnitTypeRep(restype)
+          then
+            if (CGAUX`IsStringType(type) and not CGAUX`IsPossibleStringType(restype))
+            then return GetListVal(e)
+            elseif CGAUX`IsPossibleStringType(restype) and CGAUX`IsSeqType(type) and
+                    not CGAUX`IsPossibleStringType(type)
+            then return GetStringVal(e)
+            elseif CGAUX`IsCompositeType(restype)
+            then
+              if CGAUX`IsSubType(type, restype)
+              then return e
+              elseif CGAUX`IsSubType(restype, type)
+              then return BC`GenCastExpr(GenType(restype),e)
+              else return e
+            else return e
+          elseif CGAUX`IsSubType(type, CGAUX`RemoveInvType(restype))
+            then return e
+            elseif GenType(type) = BC`GenGeneric()
+            then return BC`GenCastExpr(GenType(restype),e)
+            elseif CGAUX`IsSubType(restype, type)
+            then return BC`GenCastExpr(GenType(restype),e)
+            else return BC`GenCastExpr(GenType(restype),BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(),e)))
+          else return e;
+       )
+     );
 #endif VDMPP
 \end{vdm_al}
 

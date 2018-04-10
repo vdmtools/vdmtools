@@ -1353,32 +1353,28 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
 {
   bool isnil (e.Is(TAG_TYPE_CPP_Identifier) ? (vdm_BC_GenIdentifier(ASTAUX::MkId(L"null")) == e) : false);
 
-  if (isnil)
+  if (isnil) {
     return e;
-
+  }
   Generic type;
-  if (tp.IsNil())
+  if (tp.IsNil()) {
     type = tp;
-  else
-  {
+  }
+  else {
     Generic ptp = DeclaredAs(e);
-    if (ptp.IsNil())
-    {
+    if (ptp.IsNil()) {
       switch (((Record) tp).GetTag()) {
         case TAG_TYPE_REP_OpTypeRep: {
           TYPE_REP_OpTypeRep otr (tp);
-          TYPE_REP_TypeRep Rng (otr.get_Rng());
+          TYPE_REP_TypeRep Rng (otr.GetRecord(pos_REP_OpTypeRep_Rng));
           type = CleanFlatType(Rng);
           break;
         }
-// 20120216 -->
-//#ifdef VDMPP
         case TAG_TYPE_REP_OverTypeRep: {
           SET<TYPE_REP_TypeRep> tp_s (Record(tp).GetSet(pos_REP_OverTypeRep_tps));
           SET<TYPE_REP_TypeRep> rtp_s;
           Generic t;
-          for (bool bb = tp_s.First(t); bb; bb = tp_s.Next(t))
-          {
+          for (bool bb = tp_s.First(t); bb; bb = tp_s.Next(t)) {
             TYPE_REP_TypeRep ti (t);
             switch (ti.GetTag()) {
               case TAG_TYPE_REP_OpTypeRep: {
@@ -1395,139 +1391,156 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
               }
             }
           }
-          if (rtp_s.Card() == 1)
+          if (rtp_s.Card() == 1) {
             type = CleanFlatType(rtp_s.GetElem());
-          else
+          }
+          else {
             type = CleanFlatType(mk_REP_UnionTypeRep(rtp_s));
+          }
           break;
         }
-//#endif // VDMPP
-// <-- 20120216
         default: {
-          type = CleanFlatType(tp);
+          //type = CleanFlatType(tp);
+          type = CleanFlatType(ExpandTypeRep(tp, Set()));
           break;
         }
       }
     }
-    else
+    else {
       type = ptp;
+    }
   }
 
-  TYPE_REP_TypeRep restype_q;
+  TYPE_REP_TypeRep restype;
   switch (restp.GetTag()) {
     case TAG_TYPE_REP_OpTypeRep:{
       const TYPE_REP_TypeRep & Rng (restp.GetRecord(pos_REP_OpTypeRep_Rng));
-      restype_q = CleanFlatType(Rng);
+      restype = RemoveNil(CleanFlatType(Rng));
       break;
     }
     case TAG_TYPE_REP_TypeNameRep: {
       TYPE_REP_TypeRep cftp (CleanFlatType(restp));
-      if (cftp.Is(TAG_TYPE_REP_UnionTypeRep) && IsCompositeType(cftp))
-        restype_q = restp;
-      else
-        restype_q = cftp;
+      if (cftp.Is(TAG_TYPE_REP_UnionTypeRep) && IsCompositeType(cftp)) {
+        restype = RemoveNil(restp);
+      }
+      else {
+        restype = RemoveNil(cftp);
+      }
       break;
     }
     default: {
-      restype_q = CleanFlatType(restp);
+      restype = RemoveNil(CleanFlatType(restp));
       break;
     }
   }
-  TYPE_REP_TypeRep restype (RemoveNil(restype_q));
 
-  if(type.IsNil())
-  {
-    if (IsRealType(restype))
-    {
+  if(type.IsNil()) {
+    if (IsRealType(restype)) {
       return GetRealVal(e);
     }
-    else if (IsIntType(restype))
-    {
+    else if (IsIntType(restype)) {
       SetException(true);
       return GetIntVal(e);
     }
-    else if (IsStringType(restype))
-    {
+    else if (IsStringType(restype)) {
       return GetStringVal(e);
     }
-    else if (IsSeqType(restype))
-    {
-      if (IsPossibleStringType(restype))
+    else if (IsSeqType(restype)) {
+      if (IsPossibleStringType(restype)) {
         return GetStringVal(e);
-      else
-        return GetListVal(e);
-    }
-    else if (IsProductType(restype))
-      return vdm_BC_GenCastExpr(GenType(restype),e);
-    else if (! restype.Is(TAG_TYPE_REP_UnionTypeRep))
-      return vdm_BC_GenCastExpr(GenType(restype),e);
-    else if (IsCompositeType(restype))
-      return GenCastRecord(e, Nil());
-    else
-      return e;
-  }
-  else
-  { // !type.IsNil()
-    if (IsRealType(restype) && (!IsRealType(type)))
-    {
-      if (IsIntExpr(e))
-        //return GenRealExpr(e.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg));
-        return GenRealExpr(GenGetValue(e, mk_REP_NumericTypeRep(Int(INTEGER))));
-      else
-        return GetRealVal(e);
-    }
-    else if (IsIntType(restype) && (!IsIntType(type)))
-    {
-      SetException(true);
-      return GetIntVal(e);
-    }
-    else if (IsStringType(restype) && (!(IsStringType(type) || type.Is(TAG_TYPE_REP_EmptySetTypeRep))))
-    {
-      return GetStringVal(e);
-    }
-    else if ((IsSeqType(restype) && !IsStringType(restype)) && ((!IsSeqType(type)) || IsStringType(type)))
-    {
-      if (IsStringType(type))
-      {
+      }
+      else {
         return GetListVal(e);
       }
-      else
-      {
+    }
+    else if (IsProductType(restype)) {
+      return vdm_BC_GenCastExpr(GenType(restype),e);
+    }
+    else if (! restype.Is(TAG_TYPE_REP_UnionTypeRep)) {
+      return vdm_BC_GenCastExpr(GenType(restype),e);
+    }
+    else if (IsCompositeType(restype)) {
+      return GenCastRecord(e, Nil());
+    }
+    else {
+      return e;
+    }
+  }
+  else { // !type.IsNil()
+    if (IsRealType(restype) && (!IsRealType(type))) {
+      if (IsIntExpr(e)) {
+        //return GenRealExpr(e.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg));
+        return GenRealExpr(GenGetValue(e, mk_REP_NumericTypeRep(Int(INTEGER))));
+      }
+      else {
+        return GetRealVal(e);
+      }
+    }
+    else if (IsIntType(restype) && (!IsIntType(type))) {
+      SetException(true);
+      return GetIntVal(e);
+    }
+    else if (IsStringType(restype) && (!(IsStringType(type) || type.Is(TAG_TYPE_REP_EmptySetTypeRep)))) {
+      return GetStringVal(e);
+    }
+    else if ((IsSeqType(restype) && !IsStringType(restype)) && ((!IsSeqType(type)) || IsStringType(type))) {
+      if (IsStringType(type)) {
+        return GetListVal(e);
+      }
+      else {
         // hack for Arrays.asList
         if (e.Is(TAG_TYPE_CPP_FctCall) &&
             e.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess) &&
             (e.GetRecord(pos_CPP_FctCall_fct).GetRecord(pos_CPP_ObjectMemberAccess_object)
                             == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Arrays"))) &&
             (e.GetRecord(pos_CPP_FctCall_fct).GetRecord(pos_CPP_ObjectMemberAccess_name)
-                            == vdm_BC_GenIdentifier(ASTAUX::MkId(L"asList"))))
-        {
+                            == vdm_BC_GenIdentifier(ASTAUX::MkId(L"asList")))) {
           return GenSeqExpr(e);
         }
         return vdm_BC_GenCastExpr(GenType(restype), e);
       }
     }
-    else if (! AreOfSameType(restype,type))
-    {
-      if (restype.Is(TAG_TYPE_REP_UnionTypeRep) || restype.Is(TAG_TYPE_REP_UnitTypeRep))
-      {
-         if (IsStringType(type) && !IsPossibleStringType(restype))
+    else if (! AreOfSameType(restype,type)) {
+      if (restype.Is(TAG_TYPE_REP_UnionTypeRep) || restype.Is(TAG_TYPE_REP_UnitTypeRep)) {
+         if (IsStringType(type) && !IsPossibleStringType(restype)) {
            return GetListVal(e);
-         else if (IsPossibleStringType(restype) && (IsSeqType(type) && !IsPossibleStringType(type)))
+         }
+         else if (IsPossibleStringType(restype) && (IsSeqType(type) && !IsPossibleStringType(type))) {
            return GetStringVal(e);
-         else
+         }
+         else if (IsCompositeType(restype)) {
+           //if (type == restype) {
+           if (IsSubType(type, restype)) {
+             return e;
+           }
+           else if (IsSubType(restype, type)) {
+             return vdm_BC_GenCastExpr(GenType(restype),e);
+           }
+           else {
+             return e;
+           }
+         }
+         else {
            return e;
+         }
       }
-//#ifdef VDMPP
-      else if (IsSubType(type, RemoveInvType(restype)))
+      else if (IsSubType(type, RemoveInvType(restype))) {
         return e;
-//#endif // VDMPP
-      else
-        if (GenType(type) == vdm_BC_GenGeneric())
+      }
+      else {
+        if (GenType(type) == vdm_BC_GenGeneric()) {
           return vdm_BC_GenCastExpr(GenType(restype),e);
-        return vdm_BC_GenCastExpr(GenType(restype),vdm_BC_GenBracketedExpr(vdm_BC_GenCastExpr(vdm_BC_GenGeneric(),e)));
+        }
+//
+        else if (IsSubType(restype, type)) {
+          return vdm_BC_GenCastExpr(GenType(restype),e);
+        }
+        else {
+          return vdm_BC_GenCastExpr(GenType(restype),vdm_BC_GenBracketedExpr(vdm_BC_GenCastExpr(vdm_BC_GenGeneric(),e)));
+        }
+      }
     }
-    else
-    {
+    else {
       return e;
     }
   }
