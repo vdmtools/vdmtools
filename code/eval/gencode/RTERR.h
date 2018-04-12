@@ -240,6 +240,7 @@ typedef Int TYPE_RTERR_ERR;
 #define RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED 307
 #define RTERR_PURE_OP_EXIT               308
 #define RTERR_PURE_OP_CALL               309
+#define RTERR_STATE_COMPONENT_PURE_OP    310
 
 #define RTERR_UNKNOWN_AS_TYPE            950
 #define RTERR_UNKNOWN_OPERATOR           951

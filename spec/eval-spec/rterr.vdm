@@ -369,6 +369,7 @@ GetErrorMessage(err) ==
     (NAT_OR_TUPLE_OF_NAT_EXPECTED) -> "A natural number or a tuple of natural numbers was expected",
     (PURE_OP_EXIT) -> "Pure operation exited",
     (PURE_OP_CALL) -> "Pure operation call impure operation",
+    (STATE_COMPONENT_PURE_OP) -> "Pure operation uses state component",
   
     (UNKNOWN_AS_TYPE) -> "Internal Error: unknown AS type",
     (UNKNOWN_OPERATOR) -> "Internal Error: Unknown operator",
@@ -628,6 +629,7 @@ NO_RUNNING_THREAD : ERR = 306;
 NAT_OR_TUPLE_OF_NAT_EXPECTED : ERR = 307;
 PURE_OP_EXIT : ERR = 308;
 PURE_OP_CALL : ERR = 309;
+STATE_COMPONENT_PURE_OP : ERR = 310;
 
 UNKNOWN_AS_TYPE : ERR = 950;
 UNKNOWN_OPERATOR : ERR = 951;

@@ -470,6 +470,8 @@ string RTERR::GetErrorMessageJP(int num)
     case RTERR_PURE_OP_EXIT:         return "純操作が例外を発生しました";
 //    case RTERR_PURE_OP_CALL:         return wstring(L"Pure operation call impure operation");
     case RTERR_PURE_OP_CALL:         return "純操作が非純操作を呼び出しました";
+//    case RTERR_STATE_COMPONENT_PURE_OP return wstring(L"Pure operation uses state component");
+    case RTERR_STATE_COMPONENT_PURE_OP: return "純操作が状態構成要素を使用しました";
 
 //    case RTERR_UNKNOWN_AS_TYPE:      return "Internal Error: unknown AS type";
     case RTERR_UNKNOWN_AS_TYPE:      return "Internal Error: unknown AS type";

@@ -2958,7 +2958,11 @@ LookUpSD (sd) ==
           def igs = IsGlobalState(sd, STKM`CurrentModule())
           in
             cases igs:
-              mk_(true, mk_GLOBAL`State(val,tp)) -> if is_SEM`UNDEF(val)
+              mk_(true, mk_GLOBAL`State(val,tp)) -> if STKM`HdContext() = <PUREOP>
+                                                    then
+                                                      def - = RTERR`ErrorVal(RTERR`STATE_COMPONENT_PURE_OP, nil, nil, [])
+                                                      in return mk_(mk_SEM`UNDEF(), [], nil, nil)
+                                                    elseif is_SEM`UNDEF(val)
                                                     then return mk_(CreateUndefVal(tp), [ sd ], igs, nil)
                                                     else return mk_(val, [ sd ], igs, nil)
             end;
@@ -2970,6 +2974,10 @@ LookUpSD (sd) ==
               mk_(true,-,val,type,-,-) -> if val = nil
                                           then
                                             def - = RTERR`ErrorVal(RTERR`INSTVAR_NOT_IN_SCOPE, nil, nil, [])
+                                            in return mk_(mk_SEM`UNDEF(), [], nil, nil)
+                                          elseif STKM`HdContext() = <PUREOP>
+                                          then
+                                            def - = RTERR`ErrorVal(RTERR`STATE_COMPONENT_PURE_OP, nil, nil, [])
                                             in return mk_(mk_SEM`UNDEF(), [], nil, nil)
                                           else
                                             if is_SEM`UNDEF(val)

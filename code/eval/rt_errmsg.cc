@@ -484,7 +484,7 @@ wstring RTERR::GetErrorMessage(int num)
     case RTERR_NAT_OR_TUPLE_OF_NAT_EXPECTED: return wstring(L"A natural number or a tuple of natural numbers was expected");
     case RTERR_PURE_OP_EXIT:         return wstring(L"Pure operation exited");
     case RTERR_PURE_OP_CALL:         return wstring(L"Pure operation call impure operation");
-
+    case RTERR_STATE_COMPONENT_PURE_OP: return wstring(L"Pure operation uses state component");
 
     case RTERR_UNKNOWN_AS_TYPE:      return wstring(L"Internal Error: unknown AS type");
     case RTERR_UNKNOWN_OPERATOR:     return wstring(L"Internal Error: Unknown operator");

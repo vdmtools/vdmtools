@@ -355,6 +355,10 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
 #ifdef VDMSL
       Tuple igs (IsGlobalState(sd, theStackMachine().CurrentModule())); // bool * [GLOBAL`State]
       if (igs.GetBoolValue(1)) { // sd is in Global State
+        if (theStackMachine().HdContext() == Int(PUREOP)) {
+          RTERR::Error (L"LookUpSD", RTERR_STATE_COMPONENT_PURE_OP,
+                        M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
+        }
         const TYPE_GLOBAL_State & gs_var (igs.GetRecord(2));
         const TYPE_SEM_VAL & val (gs_var.GetRecord(pos_GLOBAL_State_val));
         const TYPE_AS_Type & type (gs_var.GetRecord(pos_GLOBAL_State_tp));
@@ -375,6 +379,10 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
       if (iios.GetBoolValue(1)) { // sd is in Object Scope
         if (iios.GetField(3).IsNil()) { // [SEM`VAL]
           RTERR::Error (L"LookUpSD", RTERR_INSTVAR_NOT_IN_SCOPE,
+                        M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
+        }
+        if (theStackMachine().HdContext() == Int(PUREOP)) {
+          RTERR::Error (L"LookUpSD", RTERR_STATE_COMPONENT_PURE_OP,
                         M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
         }
         const TYPE_SEM_VAL & val (iios.GetRecord(3));
