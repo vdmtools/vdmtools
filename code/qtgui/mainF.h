@@ -494,6 +494,8 @@ private:
 
   QString getFilter();
   void setLastFilter(const QStringList & files);
+
+  void showHideWindow(QWidget *,QWidget *);
 };
 
 #endif // __mainF_h__

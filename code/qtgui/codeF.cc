@@ -85,15 +85,14 @@ bool codeW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
 #ifdef __APPLE_CC__
-  if (e->type() == QEvent::Paint)
-  {
-    if (this->pcount < 2)
-    {
+  if (e->type() == QEvent::Paint) {
+    if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
     }
-    else
+    else {
       this->pcount = 0;
+    }
   }
 #endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
@@ -104,8 +103,9 @@ bool codeW::event (QEvent * e)
 void codeW::resizeEvent(QResizeEvent * e)
 {
   QWidget::resizeEvent(e);
-  if( this->mainTAB != NULL )
+  if( this->mainTAB != NULL ) {
     this->mainTAB->setMaximumSize(this->size());
+  }
 }
 
 //
@@ -120,8 +120,7 @@ void codeW::open(const QString & title, const QString & filenameI, bool coloring
 #endif // QT_VERSION >= 0x040000
 
   //test if exists
-  if (this->tabMap.contains(title))
-  {
+  if (this->tabMap.contains(title)) {
     //if exists show it
 #if QT_VERSION >= 0x040000
     this->mainTAB->setCurrentIndex(this->mainTAB->indexOf( this->tabMap[title] ));
@@ -130,8 +129,7 @@ void codeW::open(const QString & title, const QString & filenameI, bool coloring
 #endif // QT_VERSION >= 0x040000
     return;
   }
-  else
-  {
+  else {
     //if doesn't exist create it
     QFile f( filenameI );
 #if QT_VERSION >= 0x040000
@@ -213,29 +211,26 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
 #else
   QTextCodec * codec = QTextCodec::codecForTr();
 #endif // QT_VERSION >= 0x040000
-  if( codec != 0 ) t.setCodec( codec );
-
+  if( codec != 0 ) {
+    t.setCodec( codec );
+  }
   GUITokenList tl;
   GUITokenList::Iterator git;
-  if (coloring)
-  {
+  if (coloring) {
     tl = Qt2TB::getGUITokenListI( title );
     git = tl.begin();
   }
 
   int count = 1;
   char buf[ HEADER_SIZE + 1 ];
-  while ( !t.atEnd() )
-  {
+  while ( !t.atEnd() ) {
     QString s (t.readLine());
     sprintf( buf, "%5d: ", count );
     QString line_number( buf ); 
-    if( !coloring )
-    {
+    if( !coloring ) {
       edit->append( line_number + s );
     }
-    else
-    {
+    else {
 #if QT_VERSION >= 0x040000
       edit->setTextColor( *c_header );
       edit->setFontWeight( QFont::Normal );
@@ -247,16 +242,14 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
       QColor * pcolor = c_header;
 
       // coloring
-      if( git == tl.end() )
-      {
+      if( git == tl.end() ) {
 #if QT_VERSION >= 0x040000
         if( !s.simplified().isEmpty() )
 #else
         if( !s.stripWhiteSpace().isEmpty() )
 #endif // QT_VERSION >= 0x040000
         {
-          if( pcolor != c_comment )
-          {
+          if( pcolor != c_comment ) {
 #if QT_VERSION >= 0x040000
             edit->setTextColor( *c_comment );
             edit->setFontWeight( QFont::Normal );
@@ -273,19 +266,16 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
 #endif // QT_VERSION >= 0x040000
         }
       }
-      else
-      {
+      else {
         int line = (*git).getLine();
-        if( count < line )
-        {
+        if( count < line ) {
 #if QT_VERSION >= 0x040000
           if( !s.simplified().isEmpty() )
 #else
           if( !s.stripWhiteSpace().isEmpty() )
 #endif // QT_VERSION >= 0x040000
           {
-            if( pcolor != c_comment )
-            {
+            if( pcolor != c_comment ) {
 #if QT_VERSION >= 0x040000
               edit->setTextColor( *c_comment );
               edit->setFontWeight( QFont::Normal );
@@ -302,17 +292,13 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
 #endif // QT_VERSION >= 0x040000
           }
         }
-        else
-        {
+        else {
           int index = 0;
           int offset = 0;
-          while( index < (int)s.length() )
-          {
+          while( index < (int)s.length() ) {
             int col = (*git).getCol() - 1 + offset;
             int len = (*git).getLen();
-//            int adjust = 0;
-            if( index < col )
-            {
+            if( index < col ) {
               QString tmp = s.mid( index, col - index );
 #if QT_VERSION >= 0x040000
               if( !s.simplified().isEmpty() )
@@ -320,8 +306,7 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
               if( !s.stripWhiteSpace().isEmpty() )
 #endif // QT_VERSION >= 0x040000
               {
-                if( pcolor != c_comment )
-                {
+                if( pcolor != c_comment ) {
 #if QT_VERSION >= 0x040000
                   edit->setTextColor( *c_comment );
                   edit->setFontWeight( QFont::Normal );
@@ -340,58 +325,38 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
               index = col;
             }
             QColor * color = this->c_comment;
-            if( (*git).isComment() )
-            {
+            if( (*git).isComment() ) {
               color = this->c_comment;
             }
-            else if( (*git).isDefinition() ) // 
-            {
+            else if( (*git).isDefinition() ) { // 
               color = this->c_definition;
             }
-            else if( (*git).isReserve() ) // reserved word
-            {
+            else if( (*git).isReserve() ) { // reserved word
               color = this->c_reserve;
             }
-            else if( (*git).isOperator() ) // operator
-            {
+            else if( (*git).isOperator() ) { // operator
               color = this->c_reserve;
             }
-            else if( (*git).isPoly() ) // @
-            {
+            else if( (*git).isPoly() ) { // @
               color = this->c_poly;
             }
-            else if( (*git).isParenthesis() ) // parenthesis
-            {
+            else if( (*git).isParenthesis() ) { // parenthesis
               color = this->c_parenthesis;
             }
-            else if( (*git).isLiteral() ) // literal
-            {
+            else if( (*git).isLiteral() ) { // literal
               color = this->c_literal;
             }
-            else if( (*git).isCharLiteral() )
-            {
+            else if( (*git).isCharLiteral() ) {
               color = this->c_literal;
-#if QT_VERSION >= 0x040000
-#else
-/*
-              adjust = 2;
-              if( len == 2 )
-              {
-                QString str = s.mid( index, len );
-                if( str == "\"\"" ) adjust = 0;
-              }
-              offset += adjust;
-              len += adjust;
-*/
-#endif // QT_VERSION >= 0x040000
             }
-            else if( (*git).isIdentifier() )
-            {
+            else if( (*git).isIdentifier() ) {
               QString str = s.mid( index, len );
-              if( str == "RESULT" )
+              if( str == "RESULT" ) {
                 color = this->c_reserve;
-              else
+              }
+              else {
                 color = this->c_identifier;
+              }
             }
             QString tmp = s.mid( index , len );
 #if QT_VERSION >= 0x040000
@@ -400,20 +365,23 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
             if( !s.stripWhiteSpace().isEmpty() )
 #endif // QT_VERSION >= 0x040000
             {
-              if( pcolor != color )
-              {
+              if( pcolor != color ) {
 #if QT_VERSION >= 0x040000
                 edit->setTextColor( *color );
-                if ((color == this->c_reserve) || (color == this->c_definition))
+                if ((color == this->c_reserve) || (color == this->c_definition)) {
                   edit->setFontWeight( QFont::Bold );
-                else
+                }
+                else {
                   edit->setFontWeight( QFont::Normal );
+                }
 #else
                 edit->setColor( *color );
-                if ((color == this->c_reserve) || (color == this->c_definition))
+                if ((color == this->c_reserve) || (color == this->c_definition)) {
                   edit->setBold( true );
-                else
+                }
+                else {
                   edit->setBold( false );
+                }
 #endif // QT_VERSION >= 0x040000
                 pcolor = color;
               }
@@ -425,17 +393,14 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
 #endif // QT_VERSION >= 0x040000
             index += len;
             git++;
-            if( git == tl.end() )
-            {
+            if( git == tl.end() ) {
               QString tmp = s.mid( index );
 #if QT_VERSION >= 0x040000
-              if( !s.simplified().isEmpty() )
+              if( !s.simplified().isEmpty() ) {
 #else
-              if( !s.stripWhiteSpace().isEmpty() )
+              if( !s.stripWhiteSpace().isEmpty() ) {
 #endif // QT_VERSION >= 0x040000
-              {
-                if( pcolor != c_comment )
-                {
+                if( pcolor != c_comment ) {
 #if QT_VERSION >= 0x040000
                   edit->setTextColor( *c_comment );
                   edit->setFontWeight( QFont::Normal );
@@ -454,17 +419,14 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
               break;
             }
             line = (*git).getLine();
-            if( count < line )
-            {
+            if( count < line ) {
               QString tmp = s.mid( index );
 #if QT_VERSION >= 0x040000
-              if( !s.simplified().isEmpty() )
+              if( !s.simplified().isEmpty() ) {
 #else
-              if( !s.stripWhiteSpace().isEmpty() )
+              if( !s.stripWhiteSpace().isEmpty() ) {
 #endif // QT_VERSION >= 0x040000
-              {
-                if( pcolor != c_comment )
-                {
+                if( pcolor != c_comment ) {
 #if QT_VERSION >= 0x040000
                   edit->setTextColor( *c_comment );
                   edit->setFontWeight( QFont::Normal );
@@ -491,11 +453,11 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
 }
 
 // openIn
-void codeW::openIn(const QString & title, const QString & filenameI_, int lineI, int colI, int length, bool coloring)
+void codeW::openIn(const QString & title, const QString & filenameI_,
+                   int lineI, int colI, int length, bool coloring)
 {
   QString filenameI (filenameI_);
-  if (filenameI.isEmpty())
-  {
+  if (filenameI.isEmpty()) {
     filenameI = Qt2TB::getSourceNameI(title); // TODO
   }
 
@@ -509,20 +471,18 @@ void codeW::openIn(const QString & title, const QString & filenameI_, int lineI,
 
   this->open(title, filenameI, coloring && syntaxOk);
 
-  if (!this->tabMap.contains(title))
+  if (!this->tabMap.contains(title)) {
     return ; //something wicked has happened
-
+  }
 #if QT_VERSION >= 0x040000
-  if (this->windowState() == Qt::WindowMinimized)
-  {
+  if (this->windowState() == Qt::WindowMinimized) {
     this->openAtMinimized = true;
     return;
   }
   this->openAtMinimized = false;
 #endif // QT_VERSION >= 0x040000
 
-  if ((lineI == 1) && (colI == 1) && (length == 1))
-  {
+  if ((lineI == 1) && (colI == 1) && (length == 1)) {
 #if QT_VERSION >= 0x040000
     QTextCursor tc (this->editMap[title]->textCursor());
     tc.clearSelection();
@@ -541,20 +501,18 @@ void codeW::openIn(const QString & title, const QString & filenameI_, int lineI,
     tc.movePosition(QTextCursor::Start);
 
     int count = 0;
-    while (tc.blockNumber() < para)
-    {
+    while (tc.blockNumber() < para) {
       tc.movePosition(QTextCursor::Down);
       count++;
-      if (!syntaxOk && (count >= para))
+      if (!syntaxOk && (count >= para)) {
         break;
+      }
     }
 
-    if (syntaxOk)
-    {
+    if (syntaxOk) {
       int cpos = colI - 1 + codeW::offset();
       int oldpos = tc.columnNumber() - 1;
-      while ((tc.columnNumber() < cpos) && (oldpos < tc.columnNumber()))
-      {
+      while ((tc.columnNumber() < cpos) && (oldpos < tc.columnNumber())) {
         oldpos = tc.columnNumber();
         tc.movePosition(QTextCursor::Right);
       }
@@ -590,26 +548,24 @@ void codeW::openIn(const QString & title, const QString & filenameI_, int lineI,
 
 void codeW::closeFile(const QString & title)
 {
-  if (!this->tabMap.contains(title))
-    return ; //file not open
-
+  if (this->tabMap.contains(title)) {
 #if QT_VERSION >= 0x040000
-  this->mainTAB->removeTab(this->mainTAB->indexOf(this->tabMap[title]));
+    this->mainTAB->removeTab(this->mainTAB->indexOf(this->tabMap[title]));
 #else
-  this->mainTAB->removePage(this->tabMap[title]);
+    this->mainTAB->removePage(this->tabMap[title]);
 #endif // QT_VERSION >= 0x040000
 
-  delete this->tabMap[title];
-  this->tabMap.remove(title);
-  this->editMap.remove(title);
-  this->fileMap.remove(title);
-  if (this->tabMap.isEmpty())
-  {
+    delete this->tabMap[title];
+    this->tabMap.remove(title);
+    this->editMap.remove(title);
+    this->fileMap.remove(title);
+    if (this->tabMap.isEmpty()) {
 #if QT_VERSION >= 0x040000
-    this->parentWidget()->hide();
+      this->parentWidget()->hide();
 #else
-    this->hide();
+      this->hide();
 #endif // QT_VERSION >= 0x040000
+    }
   }
 }
 
@@ -619,8 +575,7 @@ void codeW::closeFile(const QString & title)
 void codeW::closeSelectedFile()
 {
   QString title (getCurrentTitle());
-  if (!title.isEmpty())
-  {
+  if (!title.isEmpty()) {
     this->closeFile(title);
   }
 }
@@ -636,8 +591,7 @@ int codeW::offset()
 //
 void codeW::externalEdit(const QStringList& files, const QString& editorName)
 {
-  for (QStringList::ConstIterator it = files.begin(); it != files.end(); it++)
-  {
+  for (QStringList::ConstIterator it = files.begin(); it != files.end(); it++) {
 #ifdef _MSC_VER  
     wstring winName (TBUTILS::MakeWindowsName(Qt2TB::qstring2wstring(*it)));
     QString winNameSpace (Qt2TB::wstring2qstring(winName));
@@ -651,8 +605,7 @@ void codeW::externalEdit(const QStringList& files, const QString& editorName)
             (const wchar_t*) NULL);
 #else
     int pid = fork();
-    if (pid == 0) // child process
-    {
+    if (pid == 0) { // child process
 #ifdef __APPLE_CC__
 #if QT_VERSION >= 0x040000
       execlp("open",
@@ -690,8 +643,7 @@ void codeW::externalEdit(const QStringList& files, const QString& editorName)
 void codeW::openCurrentFileWithEditor(const QString & editor, const QString & format)
 {
   QString title (getCurrentTitle());
-  if (!title.isEmpty())
-  {
+  if (!title.isEmpty()) {
 #if QT_VERSION >= 0x040000
     QTextCursor tc = this->editMap[title]->textCursor();
     int paraFrom = tc.blockNumber();
@@ -713,18 +665,15 @@ void codeW::openCurrentFileWithEditor(const QString & editor, const QString & fo
 void codeW::openFileWithEditor(const QString & editor_, const QString & format_, const QString & file,
                                int line, int col)
 {
-  if (editor_.isEmpty() || file.isEmpty())
+  if (editor_.isEmpty() || file.isEmpty()) {
     return;
-
+  }
   QString format (format_);
 #if QT_VERSION >= 0x040000
-  if (file.toLower().endsWith(".rtf"))
+  if (file.toLower().endsWith(".rtf")) {
 #else
-  if (file.lower().endsWith(".rtf"))
+  if (file.lower().endsWith(".rtf")) {
 #endif // QT_VERSION >= 0x040000
-  {
-//    emit logWrite(QString(tr("External editor function does't support to edit rtf file.")));
-//    return;
 #ifdef _MSC_VER  
     format = QString("\"%f\"");
 #else
@@ -737,31 +686,38 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
 #else
   QString editor (editor_);
 #endif // _MSC_VER
-  if (format.isEmpty())
-  {
+  if (format.isEmpty()) {
 #ifdef _MSC_VER  
 #if QT_VERSION >= 0x040000
     QString lweditor (editor.toLower());
 #else
     QString lweditor (editor.lower());
 #endif // QT_VERSION >= 0x040000
-    if(lweditor.endsWith("sakura.exe"))
+    if(lweditor.endsWith("sakura.exe")) {
       format = QString("-Y=%l -X=%c \"%f\"");
-    else if(lweditor.endsWith("hidemaru.exe"))
+    }
+    else if(lweditor.endsWith("hidemaru.exe")) {
       format = QString("/j%l,%c \"%f\"");
-    else if(lweditor.endsWith("terapad.exe"))
+    }
+    else if(lweditor.endsWith("terapad.exe")) {
       format = QString("/jl=%l \"%f\"");
-    else if(lweditor.endsWith("gvim.exe"))
+    }
+    else if(lweditor.endsWith("gvim.exe")) {
       format = QString("%l \"%f\"");
-    else if(lweditor.endsWith("emacs.exe"))
+    }
+    else if(lweditor.endsWith("emacs.exe")) {
       format = QString("+%l:%c \"%f\"");
-    else
+    }
+    else {
       format = QString("\"%f\"");
+    }
 #else
-    if(editor.endsWith("emacs"))
+    if(editor.endsWith("emacs")) {
       format = QString("+%l:%c %f");
-    else
+    }
+    else {
       format = QString("%f");
+    }
 #endif // _MSC_VER
   }
 
@@ -777,8 +733,7 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
 #endif // QT_VERSION >= 0x040000
 
   QStringList args;
-  for (QStringList::const_iterator it0 = arg_l.begin(); it0 != arg_l.end(); ++it0)
-  {
+  for (QStringList::const_iterator it0 = arg_l.begin(); it0 != arg_l.end(); ++it0) {
     QString arg (*it0);
 #ifdef _MSC_VER  
     arg.replace("%f", ConvertToShortPathName(file));
@@ -797,8 +752,7 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
   argv[0] = new wchar_t[len_cstrapp];
   wcscpy_s(argv[0], len_cstrapp, cstrapp.c_str());
   int index = 1;
-  for (QStringList::const_iterator it = args.begin(); it != args.end(); ++it)
-  {
+  for (QStringList::const_iterator it = args.begin(); it != args.end(); ++it) {
     wstring cstr (Qt2TB::qstring2wstring(*it));
     size_t len_cstr = cstr.length() + 1;
     argv[index] = new wchar_t[len_cstr];
@@ -809,16 +763,16 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
   
   _wspawnv(_P_NOWAIT, cstrapp.c_str(), argv);
 
-  for (int i = 0; i <= (int)args.size(); i++)
+  for (int i = 0; i <= (int)args.size(); i++) {
     delete[] argv[i];
+  }
   delete[] argv;
 #else
   QString eapp (editor);
   QStringList eargs (args);
 
 #ifdef __APPLE_CC__
-  if (editor.endsWith(".app"))
-  {
+  if (editor.endsWith(".app")) {
     eapp = QString("open");
     eargs.prepend(QString(editor)); 
     eargs.prepend(QString("-a"));
@@ -826,16 +780,14 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
 #endif // __APPLE_CC__
 
   int pid = fork();
-  if (pid == 0) // child process
-  {
+  if (pid == 0) { // child process
     char ** argv = new char *[eargs.size() + 2];
     string cstrapp (TBWSTR::wstring2coutstr(Qt2TB::qstring2wstring(eapp)));
     size_t len_cstrapp = cstrapp.length() + 1;
     argv[0] = new char[len_cstrapp];
     memcpy(argv[0], cstrapp.c_str(), len_cstrapp);
     int index = 1;
-    for (QStringList::const_iterator it = eargs.begin(); it != eargs.end(); ++it)
-    {
+    for (QStringList::const_iterator it = eargs.begin(); it != eargs.end(); ++it) {
       string cstr (TBWSTR::wstring2coutstr(Qt2TB::qstring2wstring(*it)));
       size_t len_cstr = cstr.length() + 1;
       argv[index] = new char[len_cstr];
@@ -846,8 +798,9 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
 
     execvp(cstrapp.c_str(), argv);
 
-    for (int i = 0; i <= (int)eargs.size(); i++)
+    for (int i = 0; i <= (int)eargs.size(); i++) {
       delete[] argv[i];
+    }
     delete[] argv;
   }
 #endif // _MSC_VER
@@ -873,19 +826,19 @@ void codeW::openFileWithEditor(const QString & editor_, const QString & format_,
 // Returns: no return value
 void codeW::refreshWindow(const QString & title, const QString & filenameI, bool coloring)
 {
-  if (!this->tabMap.contains(title)) // File is not currently loaded in source viewer
-    return;
-
-  bool isShown = isVisible();
-  this->closeFile(title);
-  this->open(title, filenameI, coloring);
+  if (this->tabMap.contains(title)) { // File is not currently loaded in source viewer
+    bool isShown = isVisible();
+    this->closeFile(title);
+    this->open(title, filenameI, coloring);
 #if QT_VERSION >= 0x040000
-  this->mainTAB->setCurrentIndex(this->mainTAB->indexOf( this->tabMap[title] ));
+    this->mainTAB->setCurrentIndex(this->mainTAB->indexOf( this->tabMap[title] ));
 #else
-  this->mainTAB->showPage(this->tabMap[title]);
+    this->mainTAB->showPage(this->tabMap[title]);
 #endif // QT_VERSION >= 0x040000
-  if (isShown)
-    this->show();
+    if (isShown) {
+      this->show();
+    }
+  }
 }
 
 // 
@@ -894,9 +847,9 @@ void codeW::refreshWindow(const QString & title, const QString & filenameI, bool
 void codeW::closeAll()
 {
   QStringList keyList (this->tabMap.keys());
-  for (QStringList::const_iterator it = keyList.begin(); it != keyList.end(); ++it)
+  for (QStringList::const_iterator it = keyList.begin(); it != keyList.end(); ++it) {
     this->closeFile(*it);
-
+  }
 #if QT_VERSION >= 0x040000
   this->parentWidget()->hide();
 #else
@@ -910,8 +863,7 @@ void codeW::closeAll()
 void codeW::setBreakPoint()
 {
   QString title (getCurrentTitle());
-  if (!title.isEmpty())
-  {
+  if (!title.isEmpty()) {
 #if QT_VERSION >= 0x040000
     QTextCursor tc = this->editMap[title]->textCursor();
     int paraFrom = tc.blockNumber();

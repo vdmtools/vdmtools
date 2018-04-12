@@ -31,7 +31,6 @@
 
 const QString prompt = ">> ";
 
-//BufferedQTextEdit::BufferedQTextEdit(QWidget *parent=0, const char * name=0)
 BufferedQTextEdit::BufferedQTextEdit(QWidget *parent, const char * name)
 #if QT_VERSION >= 0x040000
   : QTextEdit(parent)
@@ -68,90 +67,80 @@ void BufferedQTextEdit::clearBuffer()
 void BufferedQTextEdit::keyPressEvent( QKeyEvent *e )
 {
 #if QT_VERSION >= 0x040000
-  if( e->key() == Qt::Key_Up )
-#else
-  if( e->key() == Key_Up )
-#endif // QT_VERSION >= 0x040000
-  {
+  if( e->key() == Qt::Key_Up ) {
     this->cursorUp( false );
   }
-#if QT_VERSION >= 0x040000
-  else if( e->key() == Qt::Key_Down )
-#else
-  else if( e->key() == Key_Down )
-#endif // QT_VERSION >= 0x040000
-  {
+  else if( e->key() == Qt::Key_Down ) {
     this->cursorDown( false );
   }
-#if QT_VERSION >= 0x040000
-  else if( e->key() == Qt::Key_Home )
-#else
-  else if( e->key() == Key_Home )
-#endif // QT_VERSION >= 0x040000
-  {
-#if QT_VERSION >= 0x040000
+  else if( e->key() == Qt::Key_Home ) {
     QTextCursor tc (this->textCursor());
     tc.movePosition(QTextCursor::Start);
-    for (int i = 0; i < (int)prompt.length(); i++)
+    for (int i = 0; i < (int)prompt.length(); i++) {
       tc.movePosition(QTextCursor::Right);
+    }
     this->setTextCursor(tc);
-#else
-//    int para, index;
-//    this->getCursorPosition( &para, &index );
-    this->setCursorPosition(0, prompt.length());
-#endif // QT_VERSION >= 0x040000
   }
-#if QT_VERSION >= 0x040000
-  else if( ( e->key() == Qt::Key_Left ) || ( e->key() == Qt::Key_Backspace ) )
-#else
-  else if( ( e->key() == Key_Left ) || ( e->key() == Key_Backspace ) )
-#endif // QT_VERSION >= 0x040000
-  {
-#if QT_VERSION >= 0x040000
+  else if( ( e->key() == Qt::Key_Left ) || ( e->key() == Qt::Key_Backspace ) ) {
     QTextCursor tc (this->textCursor());
     int index = tc.columnNumber();
-#else
-    int para, index;
-    this->getCursorPosition( &para, &index );
-#endif // QT_VERSION >= 0x040000
     if( index > (int)(prompt.length()) ) QTextEdit::keyPressEvent( e );
   }
-#if QT_VERSION >= 0x040000
-  else if(( e->key() == Qt::Key_Return ) || ( e->key() == Qt::Key_Enter ))
-#else
-  else if(( e->key() == Key_Return ) || ( e->key() == Key_Enter ))
-#endif // QT_VERSION >= 0x040000
-  {
+  else if(( e->key() == Qt::Key_Return ) || ( e->key() == Qt::Key_Enter )) {
     emit returnPressed2();
   }
-  else
-  {
+  else {
     QTextEdit::keyPressEvent( e );
   }
+#else
+  if( e->key() == Key_Up ) {
+    this->cursorUp( false );
+  }
+  else if( e->key() == Key_Down ) {
+    this->cursorDown( false );
+  }
+  else if( e->key() == Key_Home ) {
+    this->setCursorPosition(0, prompt.length());
+  }
+  else if( ( e->key() == Key_Left ) || ( e->key() == Key_Backspace ) ) {
+    int para, index;
+    this->getCursorPosition( &para, &index );
+    if( index > (int)(prompt.length()) ) QTextEdit::keyPressEvent( e );
+  }
+  else if(( e->key() == Key_Return ) || ( e->key() == Key_Enter )) {
+    emit returnPressed2();
+  }
+  else {
+    QTextEdit::keyPressEvent( e );
+  }
+#endif // QT_VERSION >= 0x040000
 }
 
 void BufferedQTextEdit::cursorUp ( bool mark = false ) 
 {
-  if(curIndex>0)
+  if(curIndex>0) {
     curIndex--;
-  else
+  }
+  else {
     curIndex = this->buffer.count() -1;
+  }
   this->showCurrent();
 }
 
 void BufferedQTextEdit::cursorDown ( bool mark = false ) 
 {
-  if(curIndex < (int)this->buffer.count() - 1)
+  if(curIndex < (int)this->buffer.count() - 1) {
     curIndex++;
-  else
+  }
+  else {
     curIndex = 0;
+  }
   this->showCurrent();
 }
 
 void BufferedQTextEdit::showCurrent()
 {
-  if (curIndex >= 0 && curIndex < (int)this->buffer.count())
-  {
+  if (curIndex >= 0 && curIndex < (int)this->buffer.count()) {
     this->clear();
 #if QT_VERSION >= 0x040000
 #if QT_VERSION >= 0x040300
@@ -219,8 +208,7 @@ bool interpreterW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
 #ifdef __APPLE_CC__
-  if (e->type() == QEvent::Paint)
-  {
+  if (e->type() == QEvent::Paint) {
     if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
@@ -289,11 +277,6 @@ QLayout* interpreterW::createToggleAndLogOperationBox( QWidget* parent )
 QWidget* interpreterW::createToggleB( QWidget* parent )
 {
   QPushButton* button = new QPushButton( parent );
-//#ifdef __APPLE_CC__
-//  button->setMaximumSize( QSize( 32767, 30 ) );
-//#else
-//  button->setMaximumSize( QSize( 32767, 16 ) );
-//#endif
 #if QT_VERSION >= 0x040000
   button->setCheckable( true );
   button->setText( ">" );

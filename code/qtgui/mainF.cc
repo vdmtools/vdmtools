@@ -260,18 +260,6 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
 
   this->isModified = false;
   this->mayBeModified = false;
-
-//#ifdef _MSC_VER
-//  this->logWrite(QString("rect.left: %1").arg(rect.left));
-//  this->logWrite(QString("rect.top: %1").arg(rect.top));
-//  this->logWrite(QString("rect.right: %1").arg(rect.right));
-//  this->logWrite(QString("rect.bottom: %1").arg(rect.bottom));
-//#endif // _MSC_VER
-//  const QRect rec = QApplication::desktop()->screenGeometry();
-//  this->logWrite(QString("rect.left: %1").arg(rec.left()));
-//  this->logWrite(QString("rect.top: %1").arg(rec.top()));
-//  this->logWrite(QString("rect.width: %1").arg(rec.width()));
-//  this->logWrite(QString("rect.height: %1").arg(rec.height()));
 }
 
 void mainW::periodicAction()
@@ -914,11 +902,11 @@ codeW * mainW::createCodeWindow(QWidget * parent)
   w->setWindowIcon(QIcon(this->getImage( "source.png", false )));
   QWidget * sw = ((QMdiArea*)parent)->addSubWindow(w);
   sw->setAttribute(Qt::WA_DeleteOnClose, false);
-  sw->setGeometry(200, 30, 600, 400);
+  sw->setGeometry(200, 30, 800, 400);
   sw->hide();
 #else
   w->setIcon(this->getImage( "source.png", false ));
-  w->setGeometry(200, 30, 600, 400);
+  w->setGeometry(200, 30, 800, 400);
   w->hide();
 #endif // QT_VERSION >= 0x040000
 
@@ -942,11 +930,11 @@ errorW * mainW:: createErrorWindow(QWidget * parent)
   w->setWindowIcon(QIcon(this->getImage( "error.png", false )));
   QWidget * sw = ((QMdiArea*)parent)->addSubWindow(w);
   sw->setAttribute(Qt::WA_DeleteOnClose, false);
-  sw->setGeometry(350, 250, 500, 200);
+  sw->setGeometry(350, 250, 600, 200);
   sw->hide();
 #else
   w->setIcon(this->getImage( "error.png", false ));
-  w->setGeometry(350, 250, 500, 200);
+  w->setGeometry(350, 250, 600, 200);
   w->hide();
 #endif // QT_VERSION >= 0x040000
 
@@ -963,11 +951,11 @@ interpreterW * mainW:: createInterpreterWindow(QWidget * parent)
   w->setWindowIcon(QIcon(this->getImage( "interpreter.png", false )));
   QWidget * sw = ((QMdiArea*)parent)->addSubWindow(w);
   sw->setAttribute(Qt::WA_DeleteOnClose, false);
-  sw->setGeometry(50,50,600,400);
+  sw->setGeometry(50,50,800,500);
   sw->hide();
 #else
   w->setIcon(this->getImage( "interpreter.png", false ));
-  w->setGeometry(50,50,600,400);
+  w->setGeometry(50,50,800,500);
   w->hide();
 #endif // QT_VERSION >= 0x040000
 
@@ -990,11 +978,11 @@ logW * mainW:: createLogWindow(QWidget * parent)
   w->setWindowIcon(QIcon(this->getImage( "log.png", false )));
   QWidget * sw = ((QMdiArea*)parent)->addSubWindow(w);
   sw->setAttribute(Qt::WA_DeleteOnClose, false);
-  sw->setGeometry(300,300,500,150);
+  sw->setGeometry(300,300,600,150);
   sw->hide();
 #else
   w->setIcon(this->getImage( "log.png", false ));
-  w->setGeometry(300,300,500,150);
+  w->setGeometry(300,300,600,150);
   w->hide();
 #endif // QT_VERSION >= 0x040000
 
@@ -1079,21 +1067,24 @@ toolOptionsDialog * mainW::createToolOptionsDialog(QWidget * parent)
 void mainW::disableGUI()
 {
   this->stopTimer();
-  //  logWrite("disableGUI");
-//  this->setCursor(QCursor(Qt::waitCursor));
-  if( NULL != this->browserw )
+  if( NULL != this->browserw ) {
     this->browserw->setBusy(true);
-  if( NULL != this->codew )
+  }
+  if( NULL != this->codew ) {
     this->codew->setBusy(true);
-  if( NULL != this->logw )
+  }
+  if( NULL != this->logw ) {
     this->logw->setBusy(true);
-  if( NULL != this->errorw )
+  }
+  if( NULL != this->errorw ) {
     this->errorw->setBusy(true);
-  if( NULL != this->pogw )
+  }
+  if( NULL != this->pogw ) {
     this->pogw->setBusy(true);
-  if( NULL != this->interpreterw )
+  }
+  if( NULL != this->interpreterw ) {
     this->interpreterw->setBusy(true);
-  //  setDisabled(true);
+  }
 
   this->newProjectA->setEnabled(false);
   this->loadProjectA->setEnabled(false);
@@ -1136,21 +1127,24 @@ void mainW::disableGUI()
 
 void mainW::enableGUI()
 {
-  //  setDisabled(false);
-//  this->setCursor(QCursor(Qt::arrowCursor));
-  if( NULL != this->browserw )
+  if( NULL != this->browserw ) {
     this->browserw->setBusy(false);
-  if( NULL != this->codew )
+  }
+  if( NULL != this->codew ) {
     this->codew->setBusy(false);
-  if( NULL != this->logw )
+  }
+  if( NULL != this->logw ) {
     this->logw->setBusy(false);
-  if( NULL != this->errorw )
+  }
+  if( NULL != this->errorw ) {
     this->errorw->setBusy(false);
-  if( NULL != this->pogw )
+  }
+  if( NULL != this->pogw ) {
     this->pogw->setBusy(false);
-  if( NULL != this->interpreterw )
+  }
+  if( NULL != this->interpreterw ) {
     this->interpreterw->setBusy(false);
-
+  }
   this->newProjectA->setEnabled(true);
   this->loadProjectA->setEnabled(true);
   this->saveProjectA->setEnabled(true);
@@ -1260,8 +1254,7 @@ void mainW::loadProject_qt3()
   
   QString filter ("Project files (*.prj);; all (*.*)");
   QString files (QtPort::QtGetOpenFileName(this, tr("Open Project File..."), this->lastDir, filter));
-  if (! files.isEmpty()) //at least one item 
-  {
+  if (! files.isEmpty()) { //at least one item 
     this->loadProject( files );
   }
 }
@@ -1276,14 +1269,12 @@ void mainW::loadProject(const QString & filename)
   this->openProject(filename);
   this->addProjectHistory( filename );
 
-  if (this->browserw->isVisible())
-  {
+  if (this->browserw->isVisible()) {
     this->browserw->parentWidget()->raise();
     this->browserw->setFocus();
   }
 
-  if (Qt2TB::CallLog())
-  {
+  if (Qt2TB::CallLog()) {
     Qt2TB::ToggleCallLog();
     this->setCallLogMenu();
   }
@@ -1297,8 +1288,7 @@ void mainW::openProject(const QString & file)
   this->loading = true;
   // TODO: set codec
   QString cnm (this->ow->getCodecName(file));
-  if (!cnm.isEmpty())
-  {
+  if (!cnm.isEmpty()) {
     this->setEncoding(cnm);
     this->tw->setCurrentCodec(cnm);
   }
@@ -1318,8 +1308,7 @@ void mainW::saveProject_qt4(bool)
 void mainW::saveProject_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if (Qt2TB::getProjectNameI().isNull())
-  {
+  if (Qt2TB::getProjectNameI().isNull()) {
 #if QT_VERSION >= 0x040000
     this->saveAsProject_qt4(true);
 #else
@@ -1460,8 +1449,7 @@ void mainW::saveNewFileAs(const QString & clmodnm)
   bool appended = false;
 #endif // QT_VERSION >= 0x040000
 #ifdef VDMSL
-  if ((filenm.right(4) != ".vdm") && (filenm.right(6) != ".vdmsl"))
-  {
+  if ((filenm.right(4) != ".vdm") && (filenm.right(6) != ".vdmsl")) {
     filenm.append(".vdmsl");
 #if QT_VERSION >= 0x040000
     appended = true;
@@ -1469,8 +1457,7 @@ void mainW::saveNewFileAs(const QString & clmodnm)
   }
 #endif //VDMSL
 #ifdef VDMPP
-  if ((filenm.right(4) != ".vpp") && (filenm.right(6) != ".vdmpp"))
-  {
+  if ((filenm.right(4) != ".vpp") && (filenm.right(6) != ".vdmpp")) {
     filenm.append(".vdmpp");
 #if QT_VERSION >= 0x040000
     appended = true;
@@ -1481,8 +1468,7 @@ void mainW::saveNewFileAs(const QString & clmodnm)
   QFile clmodFile(filenm);
   QString confText (tr( confirmFileOverwriteText ) + " " + filenm);
 #if QT_VERSION >= 0x040000
-  if (appended)
-  {
+  if (appended) {
     if (clmodFile.open(QIODevice::ReadOnly)) {
       clmodFile.close();
       // File already exists
@@ -2113,32 +2099,14 @@ void mainW::fileCloseAll_qt3()
 void mainW::browser_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * sw = this->browserw->parentWidget();
-  if (sw->isVisible()) {
-    sw->hide();
-  }
-  else {
-    if (!this->browserw->isVisible()) {
-      this->browserw->show();
-    }
-    sw->show();
-    sw->raise();
-    this->browserw->setFocus();
-  }
+  this->showHideWindow(this->browserw, NULL);
 #endif // QT_VERSION >= 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::browser_qt3()
 {
-  if (this->browserw->isVisible()) {
-    this->browserw->hide();
-  }
-  else {
-    this->browserw->show();
-    this->browserw->parentWidget()->raise();
-    this->browserw->setFocus();
-  }
+  this->showHideWindow(this->browserw, NULL);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2148,32 +2116,14 @@ void mainW::browser_qt3()
 void mainW::codeInspector_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * w = this->codew->parentWidget();
-  if (w->isVisible()) {
-    w->hide();
-  }
-  else {
-    if (!this->codew->isVisible()) {
-      this->codew->show();
-    }
-    w->show();
-    w->raise();
-    this->codew->setFocus();
-  }
+  this->showHideWindow(this->codew, NULL);
 #endif // QT_VERSION >= 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::codeInspector_qt3()
 {
-  if (this->codew->isVisible() ) {
-    this->codew->hide();
-  }
-  else {
-    this->codew->show();
-    this->codew->parentWidget()->raise();
-    this->codew->setFocus();
-  }
+  this->showHideWindow(this->codew, NULL);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2183,32 +2133,14 @@ void mainW::codeInspector_qt3()
 void mainW::errorlist_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * w = this->errorw->parentWidget();
-  if (w->isVisible()) {
-    w->hide();
-  }
-  else {
-    if (!this->errorw->isVisible()) {
-      this->errorw->show();
-    }
-    w->show();
-    w->raise();
-    this->errorw->setFocus();
-  }
+  this->showHideWindow(this->errorw, NULL);
 #endif // QT_VERSION >= 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::errorlist_qt3()
 {
-  if (this->errorw->isVisible()) {
-    this->errorw->hide();
-  }
-  else {
-    this->errorw->show();
-    this->errorw->parentWidget()->raise();
-    this->errorw->setFocus();
-  }
+  this->showHideWindow(this->errorw, NULL);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2218,32 +2150,14 @@ void mainW::errorlist_qt3()
 void mainW::search_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * w = this->searchw->parentWidget();
-  if (w->isVisible()) {
-    w->hide();
-  }
-  else {
-    if (!this->searchw->isVisible()) {
-      this->searchw->show();
-    }
-    w->show();
-    w->raise();
-    this->searchw->setFocus();
-  }
+  this->showHideWindow(this->searchw, NULL);
 #endif // QT_VERSION >= 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::search_qt3()
 {
-  if (this->searchw->isVisible()) {
-    this->searchw->hide();
-  }
-  else {
-    this->searchw->show();
-    this->searchw->parentWidget()->raise();
-    this->searchw->setFocus();
-  }
+  this->showHideWindow(this->searchw, NULL);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2253,34 +2167,14 @@ void mainW::search_qt3()
 void mainW::interpreterWindow_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * w = this->interpreterw->parentWidget();
-  if (w->isVisible()) {
-    w->hide();
-  }
-  else {
-    if (!this->interpreterw->isVisible()) {
-      this->interpreterw->show();
-    }
-    w->show();
-    w->raise();
-    this->interpreterw->setFocus();
-    this->interpreterTools->show();
-  }
+  this->showHideWindow(this->interpreterw, this->interpreterTools);
 #endif // QT_VERSION < 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::interpreterWindow_qt3()
 {
-  if (this->interpreterw->isVisible()) {
-    this->interpreterw->hide();
-  }
-  else {
-    this->interpreterw->show();
-    this->interpreterw->parentWidget()->raise();
-    this->interpreterw->setFocus();
-    this->interpreterTools->show();
-  }
+  this->showHideWindow(this->interpreterw, this->interpreterTools);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2307,30 +2201,14 @@ void mainW::references_qt3()
 void mainW::log_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * w = this->logw->parentWidget();
-  if (w->isVisible()) {
-    w->hide();
-  }
-  else {
-    if (!this->logw->isVisible()) {
-      this->logw->show();
-    }
-    w->show();
-    this->logw->setFocus();
-  }
+  this->showHideWindow(this->logw, NULL);
 #endif // QT_VERSION >= 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::log_qt3()
 {
-  if (this->logw->isVisible()) {
-    this->logw->hide();
-  }
-  else {
-    this->logw->show();
-    this->logw->setFocus();
-  }
+  this->showHideWindow(this->logw, NULL);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2340,30 +2218,14 @@ void mainW::log_qt3()
 void mainW::pog_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
-  QWidget * w = this->pogw->parentWidget();
-  if (w->isVisible()) {
-    w->hide();
-  }
-  else {
-    if (!this->pogw->isVisible()) {
-      this->pogw->show();
-    }
-    w->show();
-    this->pogw->setFocus();
-  }
+  this->showHideWindow(this->pogw, NULL);
 #endif // QT_VERSION >= 0x040300
 }
 
 #if QT_VERSION < 0x040000
 void mainW::pog_qt3()
 {
-  if (this->pogw->isVisible()) {
-    this->pogw->hide();
-  }
-  else {
-    this->pogw->show();
-    this->pogw->setFocus();
-  }
+  this->showHideWindow(this->pogw, NULL);
 }
 #endif // QT_VERSION < 0x040300
 
@@ -2479,8 +2341,7 @@ void mainW::cpp_qt3()
 #endif // QT_VERSION >= 0x040000
 {
   QStringList moduleList (this->browserw->getSelectedModules());
-  if( !moduleList.empty() )
-  {
+  if( !moduleList.empty() ) {
     this->sendCommand(new CodeGenerateCMD(moduleList));
   }
 }
@@ -4515,10 +4376,12 @@ void mainW::loadWindowsGeometry(const QString& prjname)
   QString version (wgmStream.readLine());
   wgmFile.close();
 
-  if( version == "FormatVersion:2" )
+  if( version == "FormatVersion:2" ) {
     this->loadWindowsGeometryV2(prjname);
-  else
+  }
+  else {
     this->loadWindowsGeometryV1(prjname);
+  }
 }
 
 void mainW::loadWindowsGeometryV1(const QString& prjname)
@@ -4535,8 +4398,7 @@ void mainW::loadWindowsGeometryV1(const QString& prjname)
   QTextStream wgmStream( &wgmFile );
   QTextCodec * codec = QTextCodec::codecForName("UTF-8");
   wgmStream.setCodec(codec);
-  if( this->loadMainGeometry(wgmStream, this) )
-  {
+  if( this->loadMainGeometry(wgmStream, this) ) {
     this->loadQWSGeometry(wgmStream, this->browserw);
     this->loadQWSGeometry(wgmStream, this->codew);
     this->loadQWSGeometry(wgmStream, this->errorw);
@@ -4568,8 +4430,7 @@ void mainW::loadWindowsGeometryV2(const QString& prjname)
   wgmStream.setCodec(codec);
 
   QMap<QString, QString> wgmMap;
-  while( !wgmStream.atEnd() )
-  {
+  while( !wgmStream.atEnd() ) {
     QString tmp (wgmStream.readLine());
     if( tmp.isEmpty() ) continue;
 #if QT_VERSION >= 0x040000
@@ -4589,8 +4450,7 @@ void mainW::loadWindowsGeometryV2(const QString& prjname)
   }
   wgmFile.close();
 
-  if( this->loadMainGeometry(wgmMap, this) )
-  {
+  if( this->loadMainGeometry(wgmMap, this) ) {
     this->loadQWSGeometry(wgmMap, this->browserw->getWindowName(), this->browserw);
     this->loadQWSGeometry(wgmMap, this->codew->getWindowName(), this->codew);
     this->loadQWSGeometry(wgmMap, this->errorw->getWindowName(), this->errorw);
@@ -4601,13 +4461,15 @@ void mainW::loadWindowsGeometryV2(const QString& prjname)
 //    this->loadGeometry(wgmMap, this->tw->getWindowName(), this->tw);
     this->codew->parentWidget()->lower();
 #if QT_VERSION >= 0x040000
-    if (!this->interpreterw->isHidden())
+    if (!this->interpreterw->isHidden()) {
 #else
-    if (this->interpreterw->isShown())
+    if (this->interpreterw->isShown()) {
 #endif // QT_VERSION >= 0x040000
       this->interpreterTools->show();
-    else
+    }
+    else {
       this->interpreterTools->hide();
+    }
   }
 //  this->repaint();
   this->update();
@@ -4856,8 +4718,7 @@ void mainW::createTimer(bool use_corba)
 
 void mainW::startTimer()
 {
-  if ((this->timer != NULL) && !this->timer->isActive() && this->useCorba)
-  {
+  if ((this->timer != NULL) && !this->timer->isActive() && this->useCorba) {
 #if QT_VERSION >= 0x040000
     this->timer->setSingleShot(false);
     this->timer->start( 200 );
@@ -4869,8 +4730,7 @@ void mainW::startTimer()
 
 void mainW::stopTimer()
 {
-  if ((this->timer != NULL) && this->timer->isActive() && this->useCorba)
-  {
+  if ((this->timer != NULL) && this->timer->isActive() && this->useCorba) {
     this->timer->stop();
   }
 }
@@ -4884,14 +4744,16 @@ void mainW::sendUMLDiffCommand(QStringList selectedClasses)
 
 void mainW::setMaxLogLines(int num)
 {
-  if (this->logw != NULL)
+  if (this->logw != NULL) {
     this->logw->setMaxLogLines(num);
+  }
 }
 
 void mainW::setMaxInterpreterLogLines(int num)
 {
-  if (this->interpreterw != NULL)
+  if (this->interpreterw != NULL) {
     this->interpreterw->setMaxLogLines(num);
+  }
 }
 
 void mainW::setEncoding(const QString & cnm)
@@ -4908,8 +4770,7 @@ void mainW::setEncoding(const QString & cnm)
   QTextCodec* pCodec = QTextCodec::codecForName (codecName);
 #endif // QT_VERSION >= 0x040000
 
-  if( NULL != pCodec )
-  {
+  if( NULL != pCodec ) {
 #if QT_VERSION >= 0x050000
     QTextCodec::setCodecForLocale( pCodec );
 #else
@@ -4994,4 +4855,49 @@ void mainW::saveInterpreterLog()
       }
     }
   }
+}
+
+void mainW::showHideWindow(QWidget * w, QWidget * tool)
+{
+#if QT_VERSION >= 0x040000
+  QWidget * sw = w->parentWidget();
+  if (sw->isVisible()) {
+    QList<QMdiSubWindow *> swl = this->ws->subWindowList(QMdiArea::StackingOrder);
+    int len_swl = swl.size();
+    if (sw == swl[len_swl - 1]) {
+      //sw->hide();
+      sw->lower();
+      if (len_swl > 1) {
+        swl[len_swl - 2]->widget()->setFocus();
+      }
+    }
+    else {
+      sw->raise();
+      w->setFocus();
+    }
+  }
+  else {
+    if (!w->isVisible()) {
+      w->show();
+    }
+    sw->show();
+    sw->raise();
+    w->setFocus();
+    if (NULL != tool) {
+      tool->show();
+    }
+  }
+#else
+  if (w->isVisible()) {
+    w->hide();
+  }
+  else {
+    w->show();
+    w->parentWidget()->raise();
+    w->setFocus();
+    if (NULL != tool) {
+      tool->show();
+    }
+  }
+#endif // QT_VERSION >= 0x040000
 }
