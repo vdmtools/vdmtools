@@ -993,3 +993,5 @@ Pure operation cannot exit
 Impure operation call "%1" in pure operation
 461
 Impure operation "%1" override pure operation
+469
+State is modified in override pure operation

@@ -533,16 +533,6 @@ Tuple StatSem::wf_Dcl (const Int & i, const TYPE_AS_AssignDef & dcl)
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_AssignStmt (const Int & i, const TYPE_AS_AssignStmt & stmt, const TYPE_REP_TypeRep & /*exptp*/)
 {
-  if (!stmt.Is(TAG_TYPE_AS_AssignStmt))
-  {
-    //------------------------------------
-    // Error message #308
-    // State designator is not well-formed
-    //------------------------------------
-    GenErr (stmt, ERR, 308, Sequence());
-    return mk_(Bool(false), rep_unittp);
-  }
-
   const TYPE_AS_StateDesignator & lhs (stmt.GetRecord(pos_AS_AssignStmt_lhs));
   const TYPE_AS_Expr & rhs (stmt.GetRecord(pos_AS_AssignStmt_rhs));
 
@@ -553,35 +543,33 @@ Tuple StatSem::wf_AssignStmt (const Int & i, const TYPE_AS_AssignStmt & stmt, co
   Tuple infer2;
   if (rhs.Is(TAG_TYPE_AS_ApplyExpr) &&
       rhs.GetRecord(pos_AS_ApplyExpr_fct).Is(TAG_TYPE_AS_Name) &&
-      CheckOperationName (rhs.GetField(pos_AS_ApplyExpr_fct)))
+      CheckOperationName (rhs.GetField(pos_AS_ApplyExpr_fct))) {
     infer2 = wf_Stmt (i, ApplyToCall (rhs), sd_tp);
-  else
+  }
+  else {
     infer2 = wf_Expr (i, rhs, sd_tp);
-
+  }
   const Bool & wf_s (infer2.GetBool(1));
   const TYPE_REP_TypeRep & s_tp (infer2.GetRecord(2));
 
 #ifdef VDMPP
-  if (rhs.Is(TAG_TYPE_AS_ApplyExpr) && rhs.GetRecord(pos_AS_ApplyExpr_fct).Is(TAG_TYPE_AS_FieldSelectExpr))
-  {
+  if (rhs.Is(TAG_TYPE_AS_ApplyExpr) && rhs.GetRecord(pos_AS_ApplyExpr_fct).Is(TAG_TYPE_AS_FieldSelectExpr)) {
     const TYPE_AS_FieldSelectExpr & rhs_fct (rhs.GetRecord(pos_AS_ApplyExpr_fct));
-    if (rhs_fct.GetRecord(pos_AS_FieldSelectExpr_nm).Is(TAG_TYPE_AS_Name))
-    {
+    if (rhs_fct.GetRecord(pos_AS_FieldSelectExpr_nm).Is(TAG_TYPE_AS_Name)) {
       const TYPE_AS_Name & rhs_fct_nm (rhs_fct.GetRecord(pos_AS_FieldSelectExpr_nm));
 
       Tuple t (wf_Expr(i, rhs_fct.GetRecord(pos_AS_FieldSelectExpr_rec), rep_alltp));
       const Bool & wf (t.GetBool(1));
       const TYPE_REP_TypeRep & tp (t.GetRecord(2));
 
-      if (wf)
-      {
+      if (wf) {
         Generic clstp (ExtractObjRefType(tp));
-        if (clstp.Is(TAG_TYPE_REP_ObjRefTypeRep))
-        {
+        if (clstp.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
           TYPE_REP_ObjRefTypeRep otr (clstp);
           Generic lookUp (LookUpInObject(otr.get_nm(), rhs_fct_nm, false, true));
-          if (lookUp.Is(TAG_TYPE_SSENV_AccessOpTypeRep))
+          if (lookUp.Is(TAG_TYPE_SSENV_AccessOpTypeRep)) {
             InsertOpCall(rhs_fct_nm);
+          }
         }
       }
     }
@@ -589,19 +577,16 @@ Tuple StatSem::wf_AssignStmt (const Int & i, const TYPE_AS_AssignStmt & stmt, co
 #endif //VDMPP
 
   Bool comp (true);
-  if (!wf_sd)
-  {
+  if (!wf_sd) {
     //------------------------------------
     // Error message #308
     // State designator is not well-formed
     //------------------------------------
     GenErr (stmt, ERR, 308, Sequence());
   }
-  else
-  {
+  else {
     comp = IsCompatible (i, s_tp, sd_tp);
-    if (!comp)
-    {
+    if (!comp) {
       //----------------------------------------------------------
       // Error message #309
       // Rhs not compatible with defining type of state designator
@@ -775,8 +760,7 @@ Tuple StatSem::wf_IfStmt (const Int & i, const TYPE_AS_IfStmt & stmt, const TYPE
   const Bool & wf_t (infer1.GetBool(1));
   const TYPE_REP_TypeRep & ttp (infer1.GetRecord(2));
   Bool tcomp (IsCompatible (i, ttp, btp_bool));
-  if (! tcomp)
-  {
+  if (! tcomp) {
     //-----------------------------------------------
     // Error message #115
     // Test expression in L"%1" is not of boolean type

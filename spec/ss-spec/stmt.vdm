@@ -408,18 +408,10 @@ wf_LetBeSTStmt (i, stmt, exptp) ==
   wf_Dcl (i, mk_AS`AssignDef (var, tp, dclinit, -)) == 
     def typewf = DEF`wf_Type(i,tp);
         tp' = ENV`TransType(nil,tp);
-        --resbd = { var |-> tp'}
         resbd = { var |-> mk_(tp', 1)}
     in
       if dclinit <> nil
       then 
---        def mk_(wf,itp) = if is_AS`ApplyExpr(dclinit) and
---                             is_AS`Name(dclinit.fct) and
---                               ENV`CheckOperationName(dclinit.fct)
---                             -- See comment in wf_DefStmt
---                           then wf_Stmt(i,ApplyToCall(dclinit),tp')
---                           else EXPR`wf_Expr(i,dclinit,tp');
---            icomp = TYPE`IsCompatible (i, itp, tp')
        (dcl infer : bool * [REP`TypeRep];
         if is_AS`ApplyExpr(dclinit) and is_AS`Name(dclinit.fct) and
                                ENV`CheckOperationName(dclinit.fct)

@@ -916,13 +916,15 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
         GenErr(nm, ERR, 18, mk_sequence(PrintName(nm)));
       }
     }
-    else if (GetContext() == AS_PURE) {
+    //else if (GetContext() == AS_PURE) {
+    else if ((GetContext() == AS_PURE) || (GetContext() == PUREOP)) {
       //-----------------------------------------------
       // Error message #37
       // The state component L"%1" must not be used here
       //-----------------------------------------------
       GenErr (nm, ERR, 37, mk_sequence(PrintName (nm)));
     }
+
     TYPE_SSENV_TypeRepElem rc (this->StateEnv[nm]);
     rc.SetField(pos_SSENV_TypeRepElem_used, Bool(true));
     this->StateEnv.ImpModify (nm, rc);
@@ -1062,7 +1064,8 @@ Generic StatSem::LookUpState (const TYPE_AS_Name & nm, const Bool & use, const I
           GenErr(nm, ERR, 18, mk_sequence(PrintName(nm)));
         }
       }
-      else if (GetContext() == AS_PURE) {
+      //else if (GetContext() == AS_PURE) {
+      else if ((GetContext() == AS_PURE) || (GetContext() == PUREOP)) {
         //-----------------------------------------------
         // Error message #37
         // The state component L"%1" must not be used here

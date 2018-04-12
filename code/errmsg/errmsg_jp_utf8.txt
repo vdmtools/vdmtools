@@ -1428,3 +1428,6 @@ delay引数は、"%1"中のperiodより小さくなければなりません
 461
 純操作が非純操作"%1"でオーバーライドされています
 #Impure operation "%1" override pure operation 
+469
+純操作内で状態が変更されています
+#State is modified in override pure operation
