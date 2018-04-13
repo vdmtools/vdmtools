@@ -111,11 +111,11 @@ types
 
 #ifdef VDMSL
   CppTpEnv     = map Identifier to [CPP`CPPAS] ;
-#endif
+#endif VDMSL
 #ifdef VDMPP
   CppTpEnv     = map Identifier to [CPP`CPPAS | seq of CPP`MemberDeclaration] ;
   InhTree      = map AS`Name to set of AS`Name
-#endif
+#endif VDMPP
 
 
 \end{vdm_al}
@@ -173,12 +173,12 @@ state Sigma of
   record_types: map AS`Name to seq of AS`Name
 #ifdef VDMSL
   imported_types : set of AS`Name
-#endif
+#endif VDMSL
 #ifdef VDMPP
   inh_tree : InhTree
   obj_refs : set of AS`Name
   classTypes : set of AS`Name
-#endif
+#endif VDMPP
   anonym_decl: seq of CPP`Identifier
   anonym_comp_decl: seq of CPP`Identifier
   mod_decl   : seq of CPP`Identifier
@@ -191,18 +191,24 @@ state Sigma of
   ifdefs     : CPP`CPPAS
   modnm      : [AS`Name]
   inclgh     : set of AS`Name
+#ifdef VDMPP
   inclh      : set of AS`Name
+#endif VDMPP
   lottps     : set of REP`TypeNameRep -- check for recursive LOT
   typeDefs   : map AS`Name to (map AS`Name to AS`TypeDef)
 init s == s =
         mk_Sigma({|->},{|->},{|->},{},{|->},{|->},
 #ifdef VDMSL
                 {},
-#endif
+#endif VDMSL
 #ifdef VDMPP
                 {|->},{},{},
-#endif
-                [],[],[],[],[],[],[],1,[],[],nil,{}, {},{},{|->})
+#endif VDMPP
+                [],[],[],[],[],[],[],1,[],[],nil,{},
+#ifdef VDMPP
+                {},
+#endif VDMPP
+                {},{|->})
 end
 
 \end{vdm_al}
@@ -228,12 +234,12 @@ InitState(nm) ==
 #ifdef VDMSL
   if nm <> nil then
   imported_types := {};
-#endif
+#endif VDMSL
 #ifdef VDMPP
   if nm = nil then inh_tree := {|->};  -- build up knowledge about the inheritance structure of the classes
   obj_refs := {};
   if nm = nil then classTypes := {};
-#endif
+#endif VDMPP
   anonym_decl := [];
   anonym_comp_decl := [];
   mod_decl    := [];
@@ -247,7 +253,9 @@ InitState(nm) ==
   ifdefs    := [];
   modnm     := nm;
   inclgh    := {};
+#ifdef VDMPP
   inclh     := {};
+#endif VDMPP
   lottps    := {};
 );
 
@@ -264,10 +272,11 @@ AddInclGH: AS`Name ==> ()
 AddInclGH(nm) ==
 inclgh := inclgh union {nm};
 
-
+#ifdef VDMPP
 AddInclH: AS`Name ==> ()
 AddInclH(nm) ==
 inclh := inclh union {nm};
+#endif VDMPP
 \end{vdm_al}
 
 
@@ -298,11 +307,10 @@ DeclAnonymCppTp(id,cpptp) ==
 
 #ifdef VDMSL
 AddNewCppTp: Identifier * CPP`CPPAS ==> ()
-#endif
+#endif VDMSL
 #ifdef VDMPP
 AddNewCppTp: Identifier * (CPP`CPPAS | seq of CPP`MemberDeclaration) ==> ()
-#endif
-
+#endif VDMPP
 AddNewCppTp(id,cpptp) ==
 (
   cppenv := cppenv ++ { id |-> cpptp };
@@ -350,7 +358,6 @@ AddClassTypes(mk_AS`Class(nm,-,inh,defs,-,-)) ==
  );
 
 \end{vdm_al}
-
 #endif VDMPP
 
 #ifdef VDMSL
@@ -461,9 +468,9 @@ GenTypeDefsForImportedTypes(md) ==
 
 \end{vdm_al}
 
-#endif
+#endif LTO_OUT
 
-#endif
+#endif VDMSL
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% THE SIMPLE LOT FUNCTION %%%%%%%%%%%%%%%%
@@ -2786,8 +2793,8 @@ then
      mk_REP`InvTypeRep(-,shape,-) -> GenVDMTpName(shape, incl, names),
      mk_REP`TypeNameRep(nm) -> (
 #ifdef VDMPP
-          let mk_AS`Name(l,-) =nm
-          in if len l = 2
+          let mk_AS`Name(ids,-) =nm
+          in if len ids = 2
              then
                 cases incl :
                    <ANONYM> -> AddInclGH(CGAUX`GiveFirstName(nm)),
@@ -2925,13 +2932,15 @@ GenModuleHIncludes() ==
   return code;
  );
 
+#ifdef VDMPP
 GenHIncludes: set of AS`Name ==> CPP`Preprocessors
-GenHIncludes(IsIncluded) ==
+GenHIncludes(included) ==
  (dcl code : CPP`Preprocessors := [];
-  for all nm in set inclh \ IsIncluded do
+  for all nm in set inclh \ (included union {CGAUX`GiveCurCASName()}) do
     code := code^[BC`GenInclusion(CGAUX`GiveLastName(nm) ^ ".h")];
   return code;
  );
+#endif VDMPP
 
 GenModuleCCPart : () ==> CPP`CPPAS
 GenModuleCCPart() ==

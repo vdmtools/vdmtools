@@ -53,7 +53,9 @@ private:
 //  TYPE_CPP_CPPAS ifdefs; // not used
   Generic modnm;
   SET<TYPE_AS_Name> inclgh;
+#ifdef VDMPP
   SET<TYPE_AS_Name> inclh;
+#endif //VDMPP
   Map typeDefs;
 
 private:
@@ -66,7 +68,9 @@ private:
 
   TYPE_CPP_IntegerLit new_tag();
   void AddInclGH(const TYPE_AS_Name&);
+#ifdef VDMPP
   void AddInclH(const TYPE_AS_Name&);
+#endif //VDMPP
   void DeclModCppTp(const TYPE_AS_Id &, const TYPE_CPP_CPPAS &);
   void DeclAnonymCppTp(const TYPE_AS_Id & id, const TYPE_CPP_CPPAS &);
   void AddNewCppTp(const TYPE_AS_Id &, const Sequence &);
@@ -239,7 +243,9 @@ private:
 #endif //VDMPP
   SEQ<TYPE_CPP_Preprocessor> GenModuleCCIncludes();
   SEQ<TYPE_CPP_Preprocessor> GenModuleHIncludes();
+#ifdef VDMPP
   SEQ<TYPE_CPP_Preprocessor> GenHIncludes(const SET<TYPE_AS_Name> &);
+#endif //VDMPP
   TYPE_CPP_CPPAS GenModuleCCPart();
   TYPE_CPP_CPPAS GenModuleHPart();
 #ifdef VDMSL

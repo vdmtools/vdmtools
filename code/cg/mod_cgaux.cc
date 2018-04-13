@@ -1790,8 +1790,7 @@ void vdmcg::CannotCG(const wstring & cst, const TYPE_AS_Name & r)
 // -> AS`Id
 TYPE_AS_Id vdmcg::GiveLastName(const Record & p_name)
 {
-  switch(p_name.GetTag())
-  {
+  switch(p_name.GetTag()) {
     case TAG_TYPE_AS_Name: {
       TYPE_AS_Ids l_ids (p_name.GetSequence(pos_AS_Name_ids));
       return CleanIdentifier(l_ids[l_ids.Length()]);

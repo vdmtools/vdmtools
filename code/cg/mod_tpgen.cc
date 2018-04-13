@@ -74,7 +74,9 @@ void vdmcg::InitState_TPGEN(const Generic & nm)
 //  this->ifdefs = TYPE_CPP_CPPAS(); // not used
   this->modnm = nm;
   this->inclgh = SET<TYPE_AS_Name>();
+#ifdef VDMPP
   this->inclh = SET<TYPE_AS_Name>();
+#endif // VDMPP
 }
 
 Map vdmcg::get_known_types ()
@@ -111,6 +113,7 @@ void vdmcg::AddInclGH(const TYPE_AS_Name & nm)
   this->inclgh.Insert(nm);
 }
 
+#ifdef VDMPP
 // AddInclH
 // nm : AS`Name
 // ==> ()
@@ -118,6 +121,7 @@ void vdmcg::AddInclH(const TYPE_AS_Name & nm)
 {
   this->inclh.Insert(nm);
 }
+#endif // VDMPP
 
 // DeclModCppTp
 // id : Identifier
@@ -3099,16 +3103,19 @@ TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl,
         break;
       }
       case TAG_TYPE_REP_TypeNameRep: {
-        TYPE_AS_Name nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
-        TYPE_AS_Ids ids (nm.get_ids());
+        const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
+        const TYPE_AS_Ids & ids (nm.GetSequence(pos_AS_Name_ids));
         if ( ids.Length() == 2 ) {
-          if (ids.Hd() == GiveCurCName())
+          if (ids.Hd() == GiveCurCName()) {
             return vdm_BC_GenIdentifier(GiveLastName(nm)) ;
-          else
+          }
+          else {
             return (TYPE_CPP_Identifier) vdm_BC_Rename(nm) ;
+          }
         }
-        else
+        else {
           return vdm_BC_GenIdentifier(GiveLastName(nm)) ;
+        }
       }
       case TAG_TYPE_REP_ProductTypeRep: {
         return GenProductType().get_tp();
@@ -3117,33 +3124,32 @@ TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl,
         return GenSetType().get_tp();
       }
       case TAG_TYPE_REP_SeqTypeRep: {
-        if (IsStringType(tp))
+        if (IsStringType(tp)) {
           return GenStringType().get_tp();
-        else
+        }
+        else {
           return GenSeq0Type().get_tp();
+        }
       }
       case TAG_TYPE_REP_UnionTypeRep: {
-        if (IsMapType(tp))
-        {
+        if (IsMapType(tp)) {
           return GenMapType().get_tp();
         }
-        else if (IsSetType(tp))
-        {
+        else if (IsSetType(tp)) {
           return GenSetType().get_tp();
         }
-        else if (IsSeqType(tp))
-        {
-          if (IsPossibleStringType(tp))
+        else if (IsSeqType(tp)) {
+          if (IsPossibleStringType(tp)) {
             return GenStringType().get_tp();
-          else
+          }
+          else {
             return GenSeq0Type().get_tp();
+          }
         }
-        else if (IsNumType(tp))
-        {
+        else if (IsNumType(tp)) {
           return GenNumType().get_tp();
         }
-        else if (IsCompositeType(tp))
-        {
+        else if (IsCompositeType(tp)) {
           return GenRecordType(Nil()).get_tp();
         }
         return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
@@ -3161,15 +3167,19 @@ TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl,
         return vdm_BC_GenIdentifier(ASTAUX::MkId(L"quotes.").ImpConc(id));
       }
       case TAG_TYPE_REP_CompositeTypeRep: {
-        TYPE_AS_Name nm (tp.GetRecord(pos_REP_CompositeTypeRep_nm));
-        TYPE_AS_Ids ids (nm.get_ids());
-        if (ids.Length() > 1)
-          if (ids.Hd() == GiveCurCName())
+        const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_CompositeTypeRep_nm));
+        const TYPE_AS_Ids & ids (nm.GetSequence(pos_AS_Name_ids));
+        if (ids.Length() > 1) {
+          if (ids.Hd() == GiveCurCName()) {
             return vdm_BC_GenIdentifier(GiveLastName(nm));
-          else
+          }
+          else {
             return (TYPE_CPP_Identifier)vdm_BC_Rename(nm);
-        else
+          }
+        }
+        else {
           return vdm_BC_GenIdentifier(GiveLastName(nm));
+        }
       }
       default: {
         return Id2JavaGTpId(GenCppTpDecl(tp, names));
@@ -3185,10 +3195,10 @@ TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl,
         break;
       }
       case TAG_TYPE_REP_TypeNameRep: {
-        TYPE_AS_Name nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
+        const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
 #ifdef VDMPP
-        TYPE_AS_Ids l (nm.get_ids());
-        if (l.Length() == 2) {
+        const TYPE_AS_Ids & ids (nm.GetSequence(pos_AS_Name_ids));
+        if (ids.Length() == 2) {
           switch (incl.GetValue()) {
             case TAG_quote_ANONYM : AddInclGH(GiveFirstName(nm)); break;
             case TAG_quote_CC : IncludeClass(GiveFirstName(nm)); break;
@@ -3329,38 +3339,24 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenModuleHIncludes()
   return code;
 }
 
+#ifdef VDMPP
 // GenHIncludes
-// IsIncluded : set of AS`Name
+// included : set of AS`Name
 // ==> CPP`Preprocessors
-SEQ<TYPE_CPP_Preprocessor> vdmcg::GenHIncludes(const SET<TYPE_AS_Name> & IsIncluded)
+SEQ<TYPE_CPP_Preprocessor> vdmcg::GenHIncludes(const SET<TYPE_AS_Name> & included)
 {
   SEQ<TYPE_CPP_Preprocessor> code;
   SET<TYPE_AS_Name> i_set(this->inclh);
-  i_set.ImpDiff(IsIncluded);
+  i_set.ImpDiff(included);
+  i_set.ImpDiff(mk_set(GiveCurCASName()));
 
-  Generic g;
-  for (bool bb = i_set.First(g); bb; bb = i_set.Next(g)) {
-    code.ImpAppend(vdm_BC_GenInclusion(GiveLastName(g).ImpConc(ASTAUX::MkId(L".h"))));
-  }
-
-// 20121113 -->
-/*
-#ifdef VDMPP
-  SET<TYPE_AS_Name> orefs (this->obj_refs);
   Generic nm;
-  for (bool bb = orefs.First(nm); bb; bb = orefs.Next(nm))
-  {
-    SET<TYPE_AS_Name> supers1 (GetOrderedSupers(nm).Elems());
-    SET<TYPE_AS_Name> supers2 (GetOrderedSupers(this->modnm).Elems().Insert(this->modnm));
-    if (supers1.Intersect(supers2).IsEmpty())
-      code.ImpAppend(vdm_BC_GenInclusion(GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h"))));
+  for (bool bb = i_set.First(nm); bb; bb = i_set.Next(nm)) {
+    code.ImpAppend(vdm_BC_GenInclusion(GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h"))));
   }
-#endif // VDMPP
-*/
-// <-- 20121113
-
   return code;
 }
+#endif // VDMPP
 
 // GenModuleCCPart
 // ==> CPP`CPPAS
