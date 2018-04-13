@@ -523,10 +523,12 @@ TYPE_REP_ObjRefTypeRep vdmcg::UnQClassType (const TYPE_REP_ObjRefTypeRep& tp)
 {
   const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_ObjRefTypeRep_nm));
   const TYPE_AS_Ids & ids (nm.GetSequence(pos_AS_Name_ids));
-  if ((ids.Length () == 2) && isclassType (nm))
+  if ((ids.Length () == 2) && isclassType (nm)) {
     return mk_REP_ObjRefTypeRep(ASTAUX::MkNameFromIds (ids.Tl (), nm.GetInt(pos_AS_Name_cid)));
-  else
+  }
+  else {
     return tp;
+  }
 }
 #endif //VDMPP
 
@@ -857,8 +859,7 @@ MAP<TYPE_AS_Name, TYPE_REP_TypeRep> vdmcg::FindPatIdMap(const TYPE_AS_Expr& expr
 // -> bool
 bool vdmcg::IsSeqOfCPPStmt(const Generic & cp )
 {
-  if (cp.IsSequence() && !Sequence (cp).IsEmpty())
-  {
+  if (cp.IsSequence() && !Sequence (cp).IsEmpty()) {
     SEQ<TYPE_CPP_Stmt> stmts (cp);
     TYPE_CPP_Stmt stmt (stmts.Hd());
     switch(stmt.GetTag()) {
@@ -927,7 +928,6 @@ TYPE_REP_TypeRep vdmcg::CleanFlatType(const TYPE_REP_TypeRep & reptp)
   { // C++
     tp = reptp;
   }
-
   Generic exp_tp (ExpandTypeRep(tp, ss));
   return CleanAndFlattenType(exp_tp);
 }
@@ -1032,8 +1032,9 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
         const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
         SEQ<TYPE_REP_TypeRep> new_dtpl;
         size_t len_dtpl = dtpl.Length();
-        for (size_t idx = 1; idx <= len_dtpl; idx++)
+        for (size_t idx = 1; idx <= len_dtpl; idx++) {
           new_dtpl.ImpAppend(ExpandTypeRep(dtpl[idx], nms));
+        }
         return mk_REP_PartialFnTypeRep(new_dtpl,
                                        ExpandTypeRep(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), nms));
       }
@@ -1049,8 +1050,9 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
         const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
         SEQ<TYPE_REP_TypeRep> new_dtpl;
         size_t len_dtpl = dtpl.Length();
-        for (size_t idx = 1; idx <= len_dtpl; idx++)
+        for (size_t idx = 1; idx <= len_dtpl; idx++) {
           new_dtpl.ImpAppend(ExpandTypeRep(dtpl[idx], nms));
+        }
         return mk_REP_TotalFnTypeRep(new_dtpl, ExpandTypeRep(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), nms));
       }
     }
@@ -1066,10 +1068,12 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
 TYPE_REP_TypeRep vdmcg::CleanAndFlattenType (const TYPE_REP_TypeRep& type)
 {
   SET<TYPE_REP_TypeRep> tps_clean (CleanAndFlattenTypeAux(type));
-  if (tps_clean.Card() == 1)
+  if (tps_clean.Card() == 1) {
     return tps_clean.GetElem();
-  else
+  }
+  else {
     return mk_REP_UnionTypeRep(tps_clean);
+  }
 }
 
 // CleanAndFlattenTypeAux
@@ -1095,8 +1099,7 @@ SET<TYPE_REP_TypeRep> vdmcg::CleanAndFlattenTypeAux (const TYPE_REP_TypeRep& typ
       const SEQ<TYPE_REP_FieldRep> & fl (type.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> fl_new;
       size_t len_fl = fl.Length(); 
-      for (size_t idx = 1; idx <= len_fl; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fl; idx++) {
         TYPE_REP_FieldRep f (fl[idx]);
         f.SetField(pos_REP_FieldRep_tp, CleanAndFlattenType(fl[idx].GetRecord(pos_REP_FieldRep_tp)));
         fl_new.ImpAppend(f);
@@ -1109,13 +1112,12 @@ SET<TYPE_REP_TypeRep> vdmcg::CleanAndFlattenTypeAux (const TYPE_REP_TypeRep& typ
       SET<TYPE_REP_TypeRep> ts (type.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> type_s;
       Generic t;
-      for (bool bb = ts.First(t); bb; bb = ts.Next(t))
+      for (bool bb = ts.First(t); bb; bb = ts.Next(t)) {
         type_s.ImpUnion(CleanAndFlattenTypeAux(t));
-
+      }
       SET<TYPE_REP_TypeRep> emset;
       Generic s;
-      for (bool cc = type_s.First(s); cc; cc = type_s.Next(s))
-      {
+      for (bool cc = type_s.First(s); cc; cc = type_s.Next(s)) {
         TYPE_REP_TypeRep t (s);
         switch (t.GetTag()) {
           case TAG_TYPE_REP_SetTypeRep: {
@@ -1190,8 +1192,7 @@ SET<TYPE_REP_TypeRep> vdmcg::OptimizeType(const SET<TYPE_REP_TypeRep>& tps_)
   SET<TYPE_REP_TypeRep> settypes, seqtypes, genmaptypes, injmaptypes;
   SET<TYPE_REP_TypeRep> tps (tps_);
   Generic t;
-  for (bool bb = tps.First(t); bb; bb = tps.Next(t))
-  {
+  for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
     switch (Record(t).GetTag()) {
       case TAG_TYPE_REP_SetTypeRep: {
         settypes.Insert(t);
@@ -1232,27 +1233,31 @@ SET<TYPE_REP_TypeRep> vdmcg::OptimizeType(const SET<TYPE_REP_TypeRep>& tps_)
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::CombineSetTypeRep(const SET<TYPE_REP_TypeRep> & ts)
 {
-  if ( ts.Card() == 1 )
+  if ( ts.Card() == 1 ) {
     return ts.GetElem();
-  else
-  {
+  }
+  else {
     SET<TYPE_REP_TypeRep> tsc_s;
     SET<TYPE_REP_TypeRep> ts_q (ts);
     Generic e;
-    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e))
-    {
+    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e)) {
       TYPE_REP_TypeRep t (e);
-      if (t.Is(TAG_TYPE_REP_SetTypeRep))
+      if (t.Is(TAG_TYPE_REP_SetTypeRep)) {
         tsc_s.Insert(t.GetRecord(pos_REP_SetTypeRep_elemtp) );
-      else if (t.Is(TAG_TYPE_REP_EmptySetTypeRep))
+      }
+      else if (t.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
         tsc_s.Insert(t.GetRecord(pos_REP_EmptySetTypeRep_elemtp) );
-      else
+      }
+      else {
         ReportError(L"CombineSetTypeRep");
+      }
     }
-    if (tsc_s.Card() == 1)
+    if (tsc_s.Card() == 1) {
       return mk_REP_SetTypeRep(tsc_s.GetElem());
-    else
+    }
+    else {
       return mk_REP_SetTypeRep(mk_REP_UnionTypeRep(tsc_s));
+    }
   }
 }
 
@@ -1261,27 +1266,31 @@ TYPE_REP_TypeRep vdmcg::CombineSetTypeRep(const SET<TYPE_REP_TypeRep> & ts)
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::CombineSeqTypeRep(const SET<TYPE_REP_TypeRep>& ts)
 {
-  if ( ts.Card() == 1 )
+  if ( ts.Card() == 1 ) {
     return ts.GetElem();
-  else
-  {
+  }
+  else {
     SET<TYPE_REP_TypeRep> ts_q (ts);
     SET<TYPE_REP_TypeRep> tsc_s;
     Generic e;
-    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e))
-    {
+    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e)) {
       TYPE_REP_TypeRep t (e);
-      if (t.Is(TAG_TYPE_REP_SeqTypeRep))
+      if (t.Is(TAG_TYPE_REP_SeqTypeRep)) {
         tsc_s.Insert(t.GetRecord(pos_REP_SeqTypeRep_elemtp) );
-      else if (t.Is(TAG_TYPE_REP_EmptySeqTypeRep))
+      }
+      else if (t.Is(TAG_TYPE_REP_EmptySeqTypeRep)) {
         tsc_s.Insert(t.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) );
-      else
+      }
+      else {
         ReportError(L"CombineSeqTypeRep");
+      }
     }
-    if (tsc_s.Card() == 1)
+    if (tsc_s.Card() == 1) {
       return mk_REP_SeqTypeRep(tsc_s.GetElem());
-    else
+    }
+    else {
       return mk_REP_SeqTypeRep(mk_REP_UnionTypeRep(tsc_s));
+    }
   }
 }
 
@@ -1290,15 +1299,14 @@ TYPE_REP_TypeRep vdmcg::CombineSeqTypeRep(const SET<TYPE_REP_TypeRep>& ts)
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::CombineInjectiveMapTypeRep(const SET<TYPE_REP_TypeRep>& ts)
 {
-  if ( ts.Card() == 1 )
+  if ( ts.Card() == 1 ) {
     return ts.GetElem();
-  else
-  {
+  }
+  else {
     SET<TYPE_REP_TypeRep> md_s, mr_s;
     SET<TYPE_REP_TypeRep> ts_q (ts);
     Generic e;
-    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e))
-    {
+    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e)) {
       TYPE_REP_TypeRep t (e);
       if (t.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) {
         md_s.Insert(t.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom));
@@ -1308,8 +1316,9 @@ TYPE_REP_TypeRep vdmcg::CombineInjectiveMapTypeRep(const SET<TYPE_REP_TypeRep>& 
         md_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_mapdom));
         mr_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_maprng));
       }
-      else
+      else {
         ReportError(L"CombineInjectiveMapTypeRep");
+      }
     }
     return mk_REP_InjectiveMapTypeRep(mk_REP_UnionTypeRep(md_s), mk_REP_UnionTypeRep(mr_s));
   }
@@ -1320,15 +1329,14 @@ TYPE_REP_TypeRep vdmcg::CombineInjectiveMapTypeRep(const SET<TYPE_REP_TypeRep>& 
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::CombineGeneralMapTypeRep(const SET<TYPE_REP_TypeRep>& ts)
 {
-  if ( ts.Card() == 1 )
+  if ( ts.Card() == 1 ) {
     return ts.GetElem();
-  else
-  {
+  }
+  else {
     SET<TYPE_REP_TypeRep> md_s, mr_s;
     SET<TYPE_REP_TypeRep> ts_q (ts);
     Generic e;
-    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e))
-    {
+    for (bool bb = ts_q.First(e); bb; bb = ts_q.Next(e)) {
       TYPE_REP_TypeRep t (e);
       if (t.Is(TAG_TYPE_REP_GeneralMapTypeRep)) {
         md_s.Insert(t.GetRecord(pos_REP_GeneralMapTypeRep_mapdom));
@@ -1338,8 +1346,9 @@ TYPE_REP_TypeRep vdmcg::CombineGeneralMapTypeRep(const SET<TYPE_REP_TypeRep>& ts
         md_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_mapdom));
         mr_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_maprng));
       }
-      else
+      else {
         ReportError(L"CombineGeneralMapTypeRep");
+      }
     }
     return mk_REP_GeneralMapTypeRep(mk_REP_UnionTypeRep(md_s), mk_REP_UnionTypeRep(mr_s));
   }
@@ -1352,10 +1361,12 @@ TYPE_REP_TypeRep vdmcg::FindPossibleMapType(const TYPE_REP_TypeRep & arg)
 {
   switch(arg.GetTag()) {
     case TAG_TYPE_REP_GeneralMapTypeRep:
-    case TAG_TYPE_REP_InjectiveMapTypeRep:
+    case TAG_TYPE_REP_InjectiveMapTypeRep: {
       return arg;
-    case TAG_TYPE_REP_UnionTypeRep:
+    }
+    case TAG_TYPE_REP_UnionTypeRep: {
       return mk_REP_GeneralMapTypeRep(mk_REP_AllTypeRep(), mk_REP_AllTypeRep());
+    }
     default: {
       ReportError(L"FindPossibleMapType");
       return TYPE_REP_TypeRep();
@@ -1381,11 +1392,11 @@ TYPE_REP_TypeRep vdmcg::FindPosResSetTypeInSetDistrUnion(const TYPE_REP_TypeRep 
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tps (argtype.GetSet(pos_REP_UnionTypeRep_tps));
       Generic tp;
-      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp))
-      {
+      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp)) {
         TYPE_REP_TypeRep s (CleanFlatType(tp));
-        if (s.Is(TAG_TYPE_REP_SetTypeRep))
+        if (s.Is(TAG_TYPE_REP_SetTypeRep)) {
           return FindPosResSetTypeInSetDistrUnion(s);
+        }
       }
       break;
     }
@@ -1410,11 +1421,11 @@ TYPE_REP_TypeRep vdmcg::FindPosResSeqTypeInSeqDistr(const TYPE_REP_TypeRep & arg
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tps (argtype.GetSet(pos_REP_UnionTypeRep_tps));
       Generic tp;
-      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp))
-      {
+      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp)) {
         TYPE_REP_TypeRep s (CleanFlatType(tp));
-        if (s.Is(TAG_TYPE_REP_SeqTypeRep))
+        if (s.Is(TAG_TYPE_REP_SeqTypeRep)) {
           return FindPosResSeqTypeInSeqDistr(s);
+        }
       }
       break;
     }
@@ -1443,9 +1454,9 @@ SET<TYPE_REP_SetTypeRep> vdmcg::CombineSetTypes(const SET<TYPE_REP_SetTypeRep> &
       SET<TYPE_REP_SetTypeRep> tps (s);
       SET<TYPE_REP_TypeRep> st;
       Generic e;
-      for (bool bb = tps.First(e); bb; bb = tps.Next(e))
+      for (bool bb = tps.First(e); bb; bb = tps.Next(e)) {
         st.Insert (Record(e).GetRecord(pos_REP_SetTypeRep_elemtp));
-
+      }
       SET<TYPE_REP_SetTypeRep>  res;
       res.Insert (mk_REP_SetTypeRep(mk_REP_UnionTypeRep(st)));
       return res;
@@ -1467,9 +1478,9 @@ SET<TYPE_REP_SeqTypeRep> vdmcg::CombineSeqTypes(const SET<TYPE_REP_SeqTypeRep> &
       SET<TYPE_REP_SeqTypeRep> tps (s);
       SET<TYPE_REP_TypeRep> st;
       Generic e;
-      for (bool bb = tps.First(e); bb; bb = tps.Next(e))
+      for (bool bb = tps.First(e); bb; bb = tps.Next(e)) {
         st.Insert (Record(e).GetRecord(pos_REP_SeqTypeRep_elemtp));
-
+      }
       SET<TYPE_REP_SeqTypeRep> res;
       res.Insert (mk_REP_SeqTypeRep(mk_REP_UnionTypeRep(st)));
       return res;
@@ -1492,8 +1503,7 @@ SET<TYPE_REP_GeneralMapTypeRep> vdmcg::CombineGenMapTypes(
       SET<TYPE_REP_GeneralMapTypeRep> tps (s);
       SET<TYPE_REP_TypeRep> md_s, mr_s;
       Generic e;
-      for (bool bb = tps.First(e); bb; bb = tps.Next(e))
-      {
+      for (bool bb = tps.First(e); bb; bb = tps.Next(e)) {
         TYPE_REP_GeneralMapTypeRep t (e);
         md_s.Insert (t.GetRecord(pos_REP_GeneralMapTypeRep_mapdom));
         mr_s.Insert (t.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
@@ -1522,8 +1532,7 @@ SET<TYPE_REP_InjectiveMapTypeRep> vdmcg::CombineInjMapTypes(
       SET<TYPE_REP_InjectiveMapTypeRep> tps (s);
       SET<TYPE_REP_TypeRep> md_s, mr_s;
       Generic e;
-      for (bool bb = tps.First(e); bb; bb = tps.Next(e))
-      {
+      for (bool bb = tps.First(e); bb; bb = tps.Next(e)) {
         TYPE_REP_InjectiveMapTypeRep t (e);
         md_s.Insert (t.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom));
         mr_s.Insert (t.GetRecord(pos_REP_InjectiveMapTypeRep_maprng));
@@ -1551,9 +1560,9 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepType(const Generic & atype)
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
 {
-  if (atype.IsNil())
+  if (atype.IsNil()) {
     return  TYPE_REP_NilTypeRep();
-
+  }
   TYPE_AS_Type at (atype);
   switch (at.GetTag()) {
     case TAG_TYPE_AS_BooleanType: {
@@ -1596,16 +1605,18 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
       const SEQ<TYPE_AS_Type> & type_l (at.GetSequence(pos_AS_UnionType_tps));
       SET<TYPE_REP_TypeRep> ti_s;
       size_t len_type_l = type_l.Length();
-      for (size_t idx = 1; idx <= len_type_l; idx++)
+      for (size_t idx = 1; idx <= len_type_l; idx++) {
         ti_s.Insert(FromAS2RepTypeAux(type_l[idx]));
+      }
       return mk_REP_UnionTypeRep(ti_s);
     }
     case TAG_TYPE_AS_ProductType: {
       const SEQ<TYPE_AS_Type> & type_l (at.GetSequence(pos_AS_ProductType_tps));
       SEQ<TYPE_REP_TypeRep> ti_l;
       size_t len_type_l = type_l.Length();
-      for (size_t idx = 1; idx <= len_type_l; idx++)
+      for (size_t idx = 1; idx <= len_type_l; idx++) {
         ti_l.ImpAppend(FromAS2RepTypeAux(type_l[idx]));
+      }
       return mk_REP_ProductTypeRep(ti_l);
     }
     case TAG_TYPE_AS_OptionalType: {
@@ -1650,8 +1661,9 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
       const SEQ<TYPE_AS_Type> & dom_l (at.GetSequence(pos_AS_OpType_opdom));
       SEQ<TYPE_REP_TypeRep> domrep_l;
       size_t len_dom_l = dom_l.Length();
-      for (size_t idx = 1; idx <= len_dom_l; idx++)
+      for (size_t idx = 1; idx <= len_dom_l; idx++) {
         domrep_l.ImpAppend(FromAS2RepTypeAux(dom_l[idx]));
+      }
       return mk_REP_OpTypeRep(domrep_l, FromAS2RepTypeAux(at.GetRecord(pos_AS_OpType_oprng)));
     }
     case TAG_TYPE_AS_TypeVar: {
@@ -1661,16 +1673,18 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
       const SEQ<TYPE_AS_Type> & dom_l (at.GetSequence(pos_AS_PartialFnType_fndom));
       SEQ<TYPE_REP_TypeRep> domrep_l;
       size_t len_dom_l = dom_l.Length();
-      for (size_t idx = 1; idx <= len_dom_l; idx++)
+      for (size_t idx = 1; idx <= len_dom_l; idx++) {
         domrep_l.ImpAppend(FromAS2RepTypeAux(dom_l[idx]));
+      }
       return mk_REP_PartialFnTypeRep(domrep_l, FromAS2RepTypeAux(at.GetRecord(pos_AS_PartialFnType_fnrng)));
     }
     case TAG_TYPE_AS_TotalFnType: {
       const SEQ<TYPE_AS_Type> & dom_l (at.GetSequence(pos_AS_TotalFnType_fndom));
       SEQ<TYPE_REP_TypeRep> domrep_l;
       size_t len_dom_l = dom_l.Length();
-      for (size_t idx = 1; idx <= len_dom_l; idx++)
+      for (size_t idx = 1; idx <= len_dom_l; idx++) {
         domrep_l.ImpAppend(FromAS2RepTypeAux(dom_l[idx]));
+      }
       return mk_REP_TotalFnTypeRep(domrep_l, FromAS2RepTypeAux(at.GetRecord(pos_AS_TotalFnType_fnrng)));
     }
     case TAG_TYPE_AS_BracketedType: {
@@ -1682,23 +1696,20 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
       return mk_REP_TypeNameRep(qnm);
 #endif // VDMSL
 #ifdef VDMPP
-// 20110608 -->
       const TYPE_AS_Name & nm (at.GetRecord(pos_AS_TypeName_name));
-      if (IsClass(nm))
+      if (IsClass(nm)) {
         return mk_REP_ObjRefTypeRep(nm); 
-// <-- 20110608
+      }
       Generic gqm (GenQName(at.GetRecord(pos_AS_TypeName_name)));
       Generic qnm (GenRootType(gqm));
   
-      if (qnm.IsNil())
-      {
+      if (qnm.IsNil()) {
         return mk_REP_TypeNameRep(at.GetRecord(pos_AS_TypeName_name));
       }
       // Note here that this differs from the spec, since in the spec
       // composite types are automatically qualified with the class
       // name; here this has to be done manually.
-      else
-      {
+      else {
         switch(Record(qnm).GetTag()) {
           case TAG_TYPE_AS_Name: {
             return mk_REP_TypeNameRep(qnm);
@@ -1709,8 +1720,9 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
               ctr.set_nm(QualiName(GiveCurCASName(), ctr.get_nm()));
               return ctr;
             }
-            else
+            else {
               return qnm;
+            }
           }
           default: {
             return qnm;
@@ -1846,10 +1858,12 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
           if ( ( (i == 2) && (str.find(L"eq") == 0) ) ||
                ( (i == 3) && ( (str.find(L"inv") == 0) || (str.find(L"pre") == 0) ||
                                (str.find(L"ord") == 0) ) ) ||
-               ( (i == 4) && ( str.find(L"post") == 0 ) ) )
+               ( (i == 4) && ( str.find(L"post") == 0 ) ) ) {
             res +=L"_";
-          else
+          }
+          else {
             res += L"_u";
+          }
         }
         break;
       }
@@ -1861,48 +1875,42 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
   }
 
 #ifdef VDMPP
-  if (vdm_CPP_isJAVA())
-  {
+  if (vdm_CPP_isJAVA()) {
     bool isbasic = false;
-    if ((res.size() > 4) && (res.substr(0,4) == wstring(L"JDK_")))
-    {
+    if ((res.size() > 4) && (res.substr(0,4) == wstring(L"JDK_"))) {
       wstring nres = res.substr(4);
       InsertJDKImport(nres);
       res = nres;
     }
-    else if ((res.size() > 5) && (res.substr(0,5) == wstring(L"STUB_")))
-    {
+    else if ((res.size() > 5) && (res.substr(0,5) == wstring(L"STUB_"))) {
       wstring nres = res.substr(5);
       res = nres;
     }
-    else if ((res.size() > 11) && (res.substr(0,11) == wstring(L"JDKArrayOf_")))
-    {
+    else if ((res.size() > 11) && (res.substr(0,11) == wstring(L"JDKArrayOf_"))) {
       wstring nres = res.substr(11) + L"[]";
       res = nres;
     }
-    else
-    if (get_java_rename_option())
-    {
+    else if (get_java_rename_option()) {
       int index = 0;
-      while (!javabasics[index].empty() && !isbasic)
-      {
-        if (javabasics[index] == res)
+      while (!javabasics[index].empty() && !isbasic) {
+        if (javabasics[index] == res) {
           isbasic = true;
+        }
         index++;
       }
     }
-    else
-    {
+    else {
       int index = 0;
-      while (!javabasics2[index].empty() && !isbasic)
-      {
-        if (javabasics2[index] == res)
+      while (!javabasics2[index].empty() && !isbasic) {
+        if (javabasics2[index] == res) {
           isbasic = true;
+        }
         index++;
       }
     }
-    if (isbasic)
+    if (isbasic) {
       res = L"vdm_" + res;
+    }
   }
 #endif // VDMPP
 
@@ -1915,12 +1923,12 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
 // -> bool
 bool vdmcg::AreOfSameType(const TYPE_REP_TypeRep & tp1, const TYPE_REP_TypeRep & tp2)
 {
-  if (tp1.Is(TAG_TYPE_REP_InvTypeRep))
+  if (tp1.Is(TAG_TYPE_REP_InvTypeRep)) {
     return AreOfSameType(tp1.GetRecord(pos_REP_InvTypeRep_shape), tp2);
-
-  if (tp2.Is(TAG_TYPE_REP_InvTypeRep))
+  }
+  if (tp2.Is(TAG_TYPE_REP_InvTypeRep)) {
     return AreOfSameType(tp1, tp2.GetRecord(pos_REP_InvTypeRep_shape));
-
+  }
   int tag1 = tp1.GetTag();
   int tag2 = tp2.GetTag();
 
@@ -1945,20 +1953,24 @@ bool vdmcg::IsMapType(const TYPE_REP_TypeRep & type) const
   switch (type.GetTag()) {
     case TAG_TYPE_REP_GeneralMapTypeRep:
     case TAG_TYPE_REP_InjectiveMapTypeRep:
-    case TAG_TYPE_REP_EmptyMapTypeRep:
+    case TAG_TYPE_REP_EmptyMapTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsMapType(tp);
+      }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsMapType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default :
+    }
+    default : {
       return false;
+    }
   }
 }
 
@@ -1970,8 +1982,9 @@ bool vdmcg::IsPosMapType(const TYPE_REP_TypeRep & type) const
   switch (type.GetTag()) {
     case TAG_TYPE_REP_GeneralMapTypeRep:
     case TAG_TYPE_REP_InjectiveMapTypeRep:
-    case TAG_TYPE_REP_EmptyMapTypeRep:
+    case TAG_TYPE_REP_EmptyMapTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
@@ -1986,8 +1999,9 @@ bool vdmcg::IsPosMapType(const TYPE_REP_TypeRep & type) const
     case TAG_TYPE_REP_AllTypeRep: {
       return true;
     }
-    default :
+    default : {
       return false;
+    }
   }
 }
 
@@ -1998,8 +2012,9 @@ bool vdmcg::IsSeqType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
     case TAG_TYPE_REP_EmptySeqTypeRep:
-    case TAG_TYPE_REP_SeqTypeRep:
+    case TAG_TYPE_REP_SeqTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
@@ -2008,10 +2023,12 @@ bool vdmcg::IsSeqType(const TYPE_REP_TypeRep & type) const
         forall = IsSeqType(tp);
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsSeqType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default :
+    }
+    default : {
       return false;
+    }
   }
 }
 
@@ -2022,23 +2039,27 @@ bool vdmcg::IsPosSeqType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
     case TAG_TYPE_REP_EmptySeqTypeRep:
-    case TAG_TYPE_REP_SeqTypeRep:
+    case TAG_TYPE_REP_SeqTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         exists = IsPosSeqType(tp);
+      }
       return exists;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsPosSeqType(type.GetRecord(pos_REP_InvTypeRep_shape));
+    }
     case TAG_TYPE_REP_AllTypeRep: {
       return true;
     }
-    default :
+    default : {
       return false;
+    }
   }
 }
 
@@ -2048,23 +2069,28 @@ bool vdmcg::IsPosSeqType(const TYPE_REP_TypeRep & type) const
 bool vdmcg::IsStringType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_EmptySeqTypeRep:
+    case TAG_TYPE_REP_EmptySeqTypeRep: {
       //return false;
       return IsCharType(type.GetRecord(pos_REP_EmptySeqTypeRep_elemtp));
-    case TAG_TYPE_REP_SeqTypeRep:
+    }
+    case TAG_TYPE_REP_SeqTypeRep: {
       return IsCharType(type.GetRecord(pos_REP_SeqTypeRep_elemtp));
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsStringType(tp);
+      }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsStringType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default:
+    }
+    default: {
       return false;
+    }
   }
 }
 
@@ -2074,42 +2100,33 @@ bool vdmcg::IsStringType(const TYPE_REP_TypeRep & type) const
 bool vdmcg::IsPossibleStringType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_EmptySeqTypeRep:
-      //return false;
+    case TAG_TYPE_REP_EmptySeqTypeRep: {
       return IsCharType(type.GetRecord(pos_REP_EmptySeqTypeRep_elemtp));
+    }
     case TAG_TYPE_REP_SeqTypeRep: {
       return IsCharType(type.GetRecord(pos_REP_SeqTypeRep_elemtp));
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
-// 20110526 -->
       tp_s.ImpDiff(mk_set(TYPE_REP_EmptySeqTypeRep()));
-      if (tp_s.IsEmpty())
+      if (tp_s.IsEmpty()) {
         return false;
-// <-- 20110526
+      }
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
-      {
-        if (IsSeqType(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
+        if (IsSeqType(tp)) {
           forall = IsStringType(tp);
+        }
       }
       return forall;
-/*
-      bool exists = false;
-      Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
-      {
-        if (IsSeqType(tp))
-          exists = IsPossibleStringType(tp);
-      }
-      return exists;
-*/
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsPossibleStringType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default :
+    }
+    default : {
       return false;
+    }
   }
 }
 
@@ -2120,20 +2137,24 @@ bool vdmcg::IsSetType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
     case TAG_TYPE_REP_EmptySetTypeRep:
-    case TAG_TYPE_REP_SetTypeRep:
+    case TAG_TYPE_REP_SetTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsSetType(tp);
+      }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsSetType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default:
+    }
+    default: {
       return false;
+    }
   }
 }
 
@@ -2144,23 +2165,27 @@ bool vdmcg::IsPosSetType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
     case TAG_TYPE_REP_EmptySetTypeRep:
-    case TAG_TYPE_REP_SetTypeRep:
+    case TAG_TYPE_REP_SetTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         exists = IsPosSetType(tp);
+      }
       return exists;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsPosSetType(type.GetRecord(pos_REP_InvTypeRep_shape));
+    }
     case TAG_TYPE_REP_AllTypeRep: {
       return true;
     }
-    default :
+    default : {
       return false;
+    }
   }
 }
 
@@ -2170,8 +2195,9 @@ bool vdmcg::IsPosSetType(const TYPE_REP_TypeRep & type) const
 bool vdmcg::IsNumType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_NumericTypeRep:
+    case TAG_TYPE_REP_NumericTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
@@ -2189,10 +2215,12 @@ bool vdmcg::IsNumType(const TYPE_REP_TypeRep & type) const
       }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsNumType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default :
+    }
+    default : {
       return false;
+    }
   }
 }
 
@@ -2206,16 +2234,20 @@ bool vdmcg::IsIntType(const TYPE_REP_TypeRep & type) const
       switch (type.GetIntValue(pos_REP_NumericTypeRep_qtp)) {
         case INTEGER:
         case NATONE:
-        case NAT:
+        case NAT: {
           return true;
-        default:
+        }
+        default: {
           return false;
+        }
       }
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsIntType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default :
+    }
+    default : {
       return false;
+    }
   }
 }
 
@@ -2228,16 +2260,20 @@ bool vdmcg::IsRealType(const TYPE_REP_TypeRep & type) const
     case TAG_TYPE_REP_NumericTypeRep: {
       switch (type.GetIntValue(pos_REP_NumericTypeRep_qtp)) {
         case RAT:
-        case REAL:
+        case REAL: {
           return true;
-        default:
+        }
+        default: {
           return false;
+        }
       }
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsRealType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default :
+    }
+    default : {
       return false;
+    }
   }
 }
 
@@ -2247,20 +2283,24 @@ bool vdmcg::IsRealType(const TYPE_REP_TypeRep & type) const
 bool vdmcg::IsPosNumType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_NumericTypeRep:
+    case TAG_TYPE_REP_NumericTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsPosNumType(tp);
+      }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsPosNumType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default:
+    }
+    default: {
       return false;
+    }
   }
 }
 
@@ -2270,20 +2310,24 @@ bool vdmcg::IsPosNumType(const TYPE_REP_TypeRep & type) const
 bool vdmcg::IsPosIntType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_NumericTypeRep:
+    case TAG_TYPE_REP_NumericTypeRep: {
       return IsIntType(type);
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsPosIntType(tp);
+      }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsPosIntType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default:
+    }
+    default: {
       return false;
+    }
   }
 }
 
@@ -2316,8 +2360,9 @@ bool vdmcg::IsPosCharType(const TYPE_REP_TypeRep & type) const
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         exists = IsPosCharType(tp);
+      }
       return exists; 
     }
     default: {
@@ -2339,8 +2384,7 @@ bool vdmcg::IsCompositeType(const TYPE_REP_TypeRep & type)
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
-      {
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         TYPE_REP_TypeRep t (LOT(tp));
         forall = IsCompositeType(t);
       }
@@ -2361,30 +2405,31 @@ bool vdmcg::IsCompositeType(const TYPE_REP_TypeRep & type)
 bool vdmcg::IsPosCompositeType (const TYPE_REP_TypeRep & ti)
 {
   switch (ti.GetTag()) {
-    case TAG_TYPE_REP_CompositeTypeRep:
+    case TAG_TYPE_REP_CompositeTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> ti_s (ti.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = ti_s.First (tp); bb && !exists; bb = ti_s.Next (tp))
-      {
+      for (bool bb = ti_s.First (tp); bb && !exists; bb = ti_s.Next (tp)) {
         TYPE_REP_TypeRep t (LOT(tp));
         exists = IsPosCompositeType(t);
       }
       return exists;
     }
-    case TAG_TYPE_REP_TypeNameRep:
-    {
+    case TAG_TYPE_REP_TypeNameRep: {
       return IsPosCompositeType(LOT(ti));
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsPosCompositeType(ti.GetRecord(pos_REP_InvTypeRep_shape));
+    }
     case TAG_TYPE_REP_AllTypeRep: {
       return true;
     }
-    default:
+    default: {
       return false;
+    }
   }
 }
 
@@ -2401,8 +2446,7 @@ bool vdmcg::IsProductType(const TYPE_REP_TypeRep & type)
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
-      {
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         TYPE_REP_TypeRep t (LOT(tp));
         forall = IsProductType(t);
       }
@@ -2430,8 +2474,7 @@ bool vdmcg::IsPosProductType(const TYPE_REP_TypeRep & type)
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
-      {
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         TYPE_REP_TypeRep t (LOT(tp));
         exists = IsPosProductType(t);
       }
@@ -2455,24 +2498,26 @@ bool vdmcg::IsPosProductType(const TYPE_REP_TypeRep & type)
 bool vdmcg::IsQuoteType(const TYPE_REP_TypeRep& type)
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_QuoteTypeRep:
+    case TAG_TYPE_REP_QuoteTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
-      {
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         //forall = LOT (tp).Is(TAG_TYPE_REP_QuoteTypeRep);
         TYPE_REP_TypeRep t (LOT (tp));
         forall = IsQuoteType(t);
       }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsQuoteType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default:
+    }
+    default: {
       return false;
+    }
   }
 }
 
@@ -2483,25 +2528,29 @@ bool vdmcg::IsQuoteType(const TYPE_REP_TypeRep& type)
 bool vdmcg::IsObjRefType(const TYPE_REP_TypeRep& type)
 {
   switch (type.GetTag()) {
-    case TAG_TYPE_REP_ObjRefTypeRep:
+    case TAG_TYPE_REP_ObjRefTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
-      {
-        if (tp.Is(TAG_TYPE_REP_NilTypeRep))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
+        if (tp.Is(TAG_TYPE_REP_NilTypeRep)) {
           forall = vdm_CPP_isJAVA();
-        else
+        }
+        else {
           forall = IsObjRefType(LOT (tp));
+        }
       }
       return forall;
     }
-    case TAG_TYPE_REP_InvTypeRep:
+    case TAG_TYPE_REP_InvTypeRep: {
       return IsObjRefType(type.GetRecord(pos_REP_InvTypeRep_shape));
-    default:
+    }
+    default: {
       return false;
+    }
   }
 }
 #endif //VDMPP
@@ -2513,14 +2562,16 @@ bool vdmcg::PossibleFnType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
     case TAG_TYPE_REP_PartialFnTypeRep:
-    case TAG_TYPE_REP_TotalFnTypeRep:
+    case TAG_TYPE_REP_TotalFnTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         exists = PossibleFnType(tp);
+      }
       return exists;
     }
 #ifdef VDMPP
@@ -2528,13 +2579,15 @@ bool vdmcg::PossibleFnType(const TYPE_REP_TypeRep & type) const
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_OverTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && !exists; bb = tp_s.Next(tp)) {
         exists = PossibleFnType(tp);
+      }
       return exists;
     }
 #endif // VDMPP
-    default:
+    default: {
       return false;
+    }
   }
 }
 
@@ -2544,14 +2597,16 @@ bool vdmcg::IsFctType(const TYPE_REP_TypeRep & type) const
 {
   switch (type.GetTag()) {
     case TAG_TYPE_REP_PartialFnTypeRep:
-    case TAG_TYPE_REP_TotalFnTypeRep:
+    case TAG_TYPE_REP_TotalFnTypeRep: {
       return true;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsFctType(tp);
+      }
       return forall;
     }
 #ifdef VDMPP
@@ -2559,8 +2614,9 @@ bool vdmcg::IsFctType(const TYPE_REP_TypeRep & type) const
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_OverTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
         forall = IsFctType(tp);
+      }
       return forall;
     }
 #endif // VDMPP
@@ -2578,8 +2634,7 @@ bool vdmcg::IsUnionFunctionType (const TYPE_REP_TypeRep & ti) const
       SET<TYPE_REP_TypeRep> tps (ti.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic t;
-      for (bool bb = tps.First (t); bb && !exists; bb = tps.Next (t))
-      {
+      for (bool bb = tps.First (t); bb && !exists; bb = tps.Next (t)) {
         switch (Record(t).GetTag()) {
           case TAG_TYPE_REP_OpTypeRep:
           case TAG_TYPE_REP_TotalFnTypeRep:
@@ -3024,8 +3079,7 @@ TYPE_AS_ExplFnDef vdmcg::MakePostFct(const Record & fd, const Generic & sd)
 // ==> AS`Pattern * AS`Type
 Tuple vdmcg::MakeReturnPattern(const SEQ<TYPE_AS_NameType> & nt_l)
 {
-  if (nt_l.Length() == 1)
-  {
+  if (nt_l.Length() == 1) {
     const TYPE_AS_NameType & nt (nt_l[1]);
     const TYPE_AS_Name & rnm (nt.GetRecord(pos_AS_NameType_nm));
     const TYPE_AS_Type & rtp (nt.GetRecord(pos_AS_NameType_tp));
@@ -3037,13 +3091,11 @@ Tuple vdmcg::MakeReturnPattern(const SEQ<TYPE_AS_NameType> & nt_l)
 
     return mk_( pnm, rtp );
   }
-  else
-  {
+  else {
     SEQ<TYPE_AS_Pattern> pat_l;
     SEQ<TYPE_AS_Type> type_l;
     size_t len_nt_l = nt_l.Length();
-    for (size_t idx = 1; idx <= len_nt_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_nt_l; idx++) {
       const TYPE_AS_NameType & nt (nt_l[idx]);
       const TYPE_AS_Name & rnm (nt.GetRecord(pos_AS_NameType_nm));
       const TYPE_AS_Type & rtp (nt.GetRecord(pos_AS_NameType_tp));
@@ -3074,8 +3126,9 @@ Tuple vdmcg::MakeReturnPattern(const SEQ<TYPE_AS_NameType> & nt_l)
 SEQ<TYPE_AS_Type> vdmcg::StateDefToType(const Generic & sd)
 {
 #ifdef VDMSL
-  if (sd.IsNil())
+  if (sd.IsNil()) {
     return SEQ<TYPE_AS_Type>();
+  }
   else {
     TYPE_AS_StateDef tsd (sd);
     SEQ<TYPE_AS_Type> tp_l;
@@ -3095,10 +3148,10 @@ SEQ<TYPE_AS_Type> vdmcg::StateDefToType(const Generic & sd)
 SEQ<TYPE_AS_Pattern> vdmcg::StateDefToPattern(const Generic & sd, int sdtp)
 {
 #ifdef VDMSL
-  if (sd.IsNil())
+  if (sd.IsNil()) {
     return SEQ<TYPE_AS_Pattern>();
-  else
-  {
+  }
+  else {
     TYPE_AS_StateDef tsd (sd);
     const TYPE_AS_CompositeType & tp (tsd.GetRecord(pos_AS_StateDef_tp));
     const TYPE_AS_Name & nm (tp.GetRecord(pos_AS_CompositeType_name));
@@ -3106,9 +3159,9 @@ SEQ<TYPE_AS_Pattern> vdmcg::StateDefToPattern(const Generic & sd, int sdtp)
 
     SEQ<TYPE_AS_Pattern> p_l;
     size_t len_f_l = f_l.Length();
-    for (size_t idx = 1; idx <= len_f_l; idx++)
+    for (size_t idx = 1; idx <= len_f_l; idx++) {
       p_l.ImpAppend(Field2Pattern(f_l[idx], sdtp));
-
+    }
     TYPE_REP_TypeRep ti (FromAS2RepType(tp));
     TYPE_CI_ContextId cid_ti (GetCI().PushCGType(ti));
 
@@ -3134,10 +3187,10 @@ TYPE_AS_PatternName vdmcg::Field2Pattern(const TYPE_AS_Field & f, int sdtp)
   const Generic & nm (f.GetField(pos_AS_Field_sel));
   TYPE_REP_TypeRep ttp (FromAS2RepType(f.GetRecord(pos_AS_Field_type)));
   TYPE_CI_ContextId cid_tpp (GetCI().PushCGType(ttp));
-  if (nm.IsNil() || sdtp != OLD)
+  if (nm.IsNil() || sdtp != OLD) {
     return TYPE_AS_PatternName().Init(nm, Nil(), cid_tpp);
-  else
-  {
+  }
+  else {
     TYPE_AS_Name nnm (nm);
     TYPE_AS_OldName old;
     old.Init(nnm.get_ids(), NilContextId);
@@ -3153,16 +3206,15 @@ Tuple vdmcg::SplitParameterTypes(const SEQ<TYPE_AS_PatTypePair> & pt_l)
   SEQ<TYPE_AS_Type> dom_l;
   SEQ<TYPE_AS_Pattern> parm_l;
   size_t len_pt_l = pt_l.Length();
-  for (size_t idx = 1; idx <= len_pt_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_pt_l; idx++) {
     const TYPE_AS_PatTypePair & ptp (pt_l[idx]);
     const SEQ<TYPE_AS_Pattern> & pat_l (ptp.GetSequence(pos_AS_PatTypePair_pats));
     const TYPE_AS_Type & tp (ptp.GetRecord(pos_AS_PatTypePair_tp));
 
     size_t len_pat_l = pat_l.Length();
-    for (size_t i = 1; i <= len_pat_l; i++)
+    for (size_t i = 1; i <= len_pat_l; i++) {
       dom_l.ImpAppend(tp);
-
+    }
     parm_l.ImpConc(pat_l);
   }
   return mk_(dom_l, parm_l);
@@ -3183,12 +3235,14 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
   switch (pat.GetTag()) {
     case TAG_TYPE_AS_PatternName: {
       const Generic & nm (pat.GetField(pos_AS_PatternName_nm));
-      if (nm.IsNil())
+      if (nm.IsNil()) {
         return pat;
-
-      TYPE_AS_PatternName pn (pat);
-      pn.SetField(pos_AS_PatternName_nm, ASTAUX::Combine2Names(clnm, nm));
-      return pn;
+      }
+      else {
+        TYPE_AS_PatternName pn (pat);
+        pn.SetField(pos_AS_PatternName_nm, ASTAUX::Combine2Names(clnm, nm));
+        return pn;
+      }
     }
     case TAG_TYPE_AS_MatchVal: {
       return pat;
@@ -3200,7 +3254,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i <= len_Elems; i++) {
         newElems.ImpAppend(QuotePMExprWithClNm(Elems[i], clnm, lb));
       }
-
       TYPE_AS_SetEnumPattern sep (pat);
       sep.SetField(pos_AS_SetEnumPattern_Elems, newElems);
       return sep;
@@ -3221,7 +3274,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i <= len_els; i++) {
         new_els.ImpAppend(QuotePMExprWithClNm(els[i], clnm, lb));
       }
-
       TYPE_AS_SeqEnumPattern sep (pat);
       sep.SetField(pos_AS_SeqEnumPattern_els, new_els);
       return sep;
@@ -3268,7 +3320,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i <= len_fields; i++) {
         newfields.ImpAppend(QuotePMExprWithClNm(fields[i], clnm, lb));
       }
-
       TYPE_AS_TuplePattern tp (pat);
       tp.SetField(pos_AS_TuplePattern_fields, newfields);
       return tp;
@@ -3281,7 +3332,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i<= len_fields; i++) {
         newfields.ImpAppend(QuotePMExprWithClNm(fields[i], clnm, lb));
       }
-
       TYPE_AS_RecordPattern rp (pat);
       rp.SetField(pos_AS_RecordPattern_nm, QuotePMExprWithClNm(nm, clnm, lb));
       rp.SetField(pos_AS_RecordPattern_fields, newfields);
@@ -3316,8 +3366,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> localbind (lb);
       type_dd2PL local_def;
       size_t len_def_l = def_l.Length();
-      for (size_t i = 1; i <= len_def_l; i++)
-      {
+      for (size_t i = 1; i <= len_def_l; i++) {
         type_dd2P as_def (def_l[i]);
         const TYPE_AS_PatternBind & p (as_def.GetRecord(1));
         const TYPE_AS_Expr & e (as_def.GetRecord(2));
@@ -3339,8 +3388,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> localbind (lb);
       SEQ<TYPE_AS_LocalDef> local_def;
       size_t len_locdef = locdef.Length();
-      for (size_t i = 1; i <= len_locdef; i++)
-      {
+      for (size_t i = 1; i <= len_locdef; i++) {
         const TYPE_AS_LocalDef & as_localdef (locdef[i]);
         switch(as_localdef.GetTag()) {
           case TAG_TYPE_AS_ExplFnDef:
@@ -3362,7 +3410,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
           }
         }
       }
-
       TYPE_AS_LetExpr le (pat);
       le.SetField(pos_AS_LetExpr_localdef, local_def);
       le.SetField(pos_AS_LetExpr_body, QuotePMExprWithClNm(body, clnm, localbind));
@@ -3398,8 +3445,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> localbind (lb);
       SEQ<TYPE_AS_MultBind> newbind;
       size_t len_bind = bind.Length(); 
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & mb (bind[idx]);
         switch(mb.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -3443,8 +3489,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_ElseifExpr> newelsif;
       size_t len_elsif = elsif.Length();
-      for (size_t i = 1; i <= len_elsif; i++)
-      {
+      for (size_t i = 1; i <= len_elsif; i++) {
         const TYPE_AS_ElseifExpr & eie (elsif[i]);
         const TYPE_AS_Expr & else_test (eie.GetRecord(pos_AS_ElseifExpr_test));
         const TYPE_AS_Expr & else_cons (eie.GetRecord(pos_AS_ElseifExpr_cons));
@@ -3468,8 +3513,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
   
       size_t len_altns = altns.Length();
       SEQ<TYPE_AS_CaseAltn> newaltns;
-      for (size_t idx = 1; idx <= len_altns; idx++)
-      {
+      for (size_t idx = 1; idx <= len_altns; idx++) {
         const TYPE_AS_CaseAltn & ca (altns[idx]);
         const SEQ<TYPE_AS_Pattern> & match (ca.GetSequence(pos_AS_CaseAltn_match));
         const TYPE_AS_Expr & body (ca.GetRecord(pos_AS_CaseAltn_body));
@@ -3512,8 +3556,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> local_bind (lb);
       SEQ<TYPE_AS_MultBind> new_bind_l;
       size_t len_bind = bind.Length(); 
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & mb (bind[idx]);
         switch(mb.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -3618,7 +3661,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i <= len_els; i++) {
         newels.ImpAppend(QuotePMExprWithClNm(els[i], clnm, lb));
       };
-  
       TYPE_AS_SetEnumerationExpr see (pat);
       see.SetField(pos_AS_SetEnumerationExpr_els, newels);
       return see;
@@ -3631,8 +3673,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> local_bind(lb);
       SEQ<TYPE_AS_MultBind> new_bind_l;
       size_t len_bind = bind.Length();
-      for (size_t idx = 1; idx <= len_bind; idx++) 
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & mb (bind[idx]);
         switch(mb.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {

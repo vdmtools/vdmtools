@@ -27,24 +27,23 @@ public class external_ImplSort {
   public List Merge (final List _l1, final List _l2) throws CGException {
     List l1 = (List)UTIL.clone(_l1);
     List l2 = (List)UTIL.clone(_l2);
-    if (l1.size() == 0)
+    if (l1.size() == 0) {
       return l2;
-    else if (l2.size() == 0)
+    }
+    else if (l2.size() == 0) {
       return l1;
-    else
-    {
+    }
+    else {
       List res = new ArrayList();
       Number e1 = (Number)l1.get(0);
       Number e2 = (Number)l2.get(0);
-      if (e1.intValue() <= e2.intValue())
-      {
+      if (e1.intValue() <= e2.intValue()) {
         res.add(e1);
         l1.remove(0);
         res.addAll(Merge(l1, l2));
         return res;
       }
-      else
-      {
+      else {
         res.add(e2);
         l2.remove(0);
         res.addAll(Merge(l1, l2));
@@ -74,19 +73,14 @@ public class external_ImplSort {
 
 // ***** VDMTOOLS START Name=impl_ImplSorter#1|List KEEP=YES
   public List impl_ImplSorter (final List l) throws CGException {
-    if (l.size() <= 1)
+    if (l.size() <= 1) {
       return l;
-    else
-    {
+    }
+    else {
       int len = l.size();
       int l2 = len/2;
-      List l_l = new ArrayList();
-      List l_r = new ArrayList();
-      int i = 0;
-      for (; i < l2; i++)
-        l_l.add(l.get(i));
-      for (; i < len; i++)
-        l_r.add(l.get(i));
+      List l_l = new ArrayList(l.subList(0, l2));
+      List l_r = new ArrayList(l.subList(l2, len));
       return Merge(parent.ImplSorter(l_l), parent.ImplSorter(l_r));
     }
   }
