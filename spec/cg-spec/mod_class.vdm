@@ -1294,7 +1294,7 @@ operations
   GenConstructorDef_cc(nm, -, -, isDlClass) ==
     def fnm = BC`Rename(nm);
         initid = BC`GivePrePostNm(nm, "init");
-        base_l = [BC`GenExpressionStmt(BC`GenFctCall(initid, []))];
+        base_l = [BC`GenExpressionStmt(DS`GenFctCallOnThis(initid, []))];
     in
      (dcl Dl_Init : seq of CPP`Stmt := [];
       if isDlClass 
@@ -1302,18 +1302,16 @@ operations
       def body  = BC`GenBlock(base_l ^ Dl_Init);
           qname = BC`GenQualifiedName(fnm, fnm);
           decl = BC`GenFctDecl(qname, [])
-      in
-        return [BC`GenFctDef([], decl, nil, body)];
+      in return [BC`GenFctDef([], decl, nil, body)];
      );
 
   GenInitBaseVars: bool ==> seq of CPP`Stmt
   GenInitBaseVars(isBaseClass) ==
-    let arg_l = [ BC`GenFctCall(BC`GenIdentifier("vdm_GetId"),[]) ],
+    def arg_l = [ DS`GenFctCallOnThis(BC`GenIdentifier("vdm_GetId"),[]) ];
         id = if isBaseClass
              then BC`GenIdentifier("RegisterAsBase") 
              else BC`GenIdentifier("RegisterAsDerived")
-    in
-      return [BC`GenExpressionStmt(BC`GenFctCall(id,arg_l))];
+    in return [BC`GenExpressionStmt(DS`GenFctCallOnThis(id,arg_l))];
 
   GenDlInit : AS`Name ==> CPP`Stmt
   GenDlInit(nm) ==
@@ -1335,7 +1333,7 @@ constructors for the Java classes.
   GenJavaConstructorDef: AS`Name * seq of AS`InstanceVarDef ==> seq of CPP`FunctionDefinition
   GenJavaConstructorDef(nm, -) ==
     def fnm = BC`Rename(nm);
-        initfc = BC`GenFctCall(BC`GivePrePostNm(nm, "init"), []);
+        initfc = DS`GenFctCallOnThis(BC`GivePrePostNm(nm, "init"), []);
         body = BC`GenBlock([BC`GenExpressionStmt(initfc)]);
         decl = BC`GenFctDecl (fnm, []);
         excs = FD`GenExceptionsHdr()

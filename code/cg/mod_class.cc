@@ -855,9 +855,9 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenJavaClassInit()
   SEQ<TYPE_CPP_Stmt> l_uncaughtBody (GetUncaught());
 
   SEQ<TYPE_CPP_Stmt> l_init;
-  if (!l_uncaughtBody.IsEmpty())
+  if (!l_uncaughtBody.IsEmpty()) {
     l_init.ImpAppend(vdm_BC_GenTryBlock(l_uncaughtBody, l_handlers, Nil()));
-
+  }
   TYPE_CPP_Identifier cpp_id (vdm_BC_GenIdentifier(ASTAUX::MkId(L"static")));
   TYPE_CPP_FctDecl fdecl (vdm_BC_GenStaticInitializerDecl(cpp_id));
 
@@ -885,13 +885,11 @@ TYPE_CPP_CPPAS vdmcg::GenClassInit(const TYPE_AS_Name& nm,
 {
   SEQ<TYPE_CPP_Stmt> body;
   size_t len_tps = tps.Length();
-  for (size_t i = 1; i <= len_tps; i++)
-  {
+  for (size_t i = 1; i <= len_tps; i++) {
     TYPE_AS_TypeDef td (tps[i]);
     TYPE_AS_Type type (td.get_shape());
     Generic acc (td.get_access());
-    if (type.Is(TAG_TYPE_AS_CompositeType))
-    {
+    if (type.Is(TAG_TYPE_AS_CompositeType)) {
       TYPE_AS_CompositeType ct (type);
       TYPE_AS_Name name (ct.get_name());
       SEQ<TYPE_AS_Field> field_l (ct.get_fields());
@@ -903,8 +901,9 @@ TYPE_CPP_CPPAS vdmcg::GenClassInit(const TYPE_AS_Name& nm,
 
       size_t len(field_l.Length());
       for (size_t no = 1; no <= len; no++ ) {
-        if ( field_l[no].get_dc().GetValue() )
-              body.ImpAppend(GenSetDontCare(tag, no));
+        if ( field_l[no].get_dc().GetValue() ) {
+          body.ImpAppend(GenSetDontCare(tag, no));
+        }
       }
       body.ImpAppend(GenSetRecordTag(tag, name, nm));
     }
@@ -966,8 +965,9 @@ SEQ<TYPE_CPP_Declaration> vdmcg::GenStaticInstVarInit(const SEQ<TYPE_AS_Instance
         TYPE_AS_Stmt stmt (l_cppinit.Hd());
         if (stmt.Is(TAG_TYPE_CPP_ExpressionStmt)) {
           TYPE_CPP_Expr r2 (TYPE_CPP_ExpressionStmt(stmt).get_expr());
-          if (r2.Is(TAG_TYPE_CPP_AssignExpr))
+          if (r2.Is(TAG_TYPE_CPP_AssignExpr)) {
             l_initval = vdm_BC_GenAsgnInit( TYPE_CPP_AssignExpr(r2).get_assignexpr());
+          }
         }
       }
 
@@ -1118,10 +1118,10 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenConstructorDef_cc(const TYPE_AS_Name& 
   TYPE_CPP_Name fnm (vdm_BC_Rename(nm));
   TYPE_CPP_Identifier initid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")));
   SEQ<TYPE_CPP_Stmt> base_l;
-  base_l.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenFctCall(initid, SEQ<TYPE_CPP_Expr>())));
-  if (isDlClass)
+  base_l.ImpAppend(vdm_BC_GenExpressionStmt(GenFctCallOnThis(initid, SEQ<TYPE_CPP_Expr>())));
+  if (isDlClass) {
     base_l.ImpAppend(GenDlInit(nm));
-
+  }
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(base_l));
   TYPE_CPP_QualifiedName qname (vdm_BC_GenQualifiedName (fnm, fnm));
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl (qname, type_dL()));
@@ -1141,7 +1141,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenJavaConstructorDef(const TYPE_AS_Name
 {
   TYPE_CPP_Name fnm (vdm_BC_Rename(nm));
 
-  TYPE_CPP_Expr initfc (vdm_BC_GenFctCall(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")),
+  TYPE_CPP_Expr initfc (GenFctCallOnThis(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")),
                                           SEQ<TYPE_CPP_Expr>()));
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(type_dL().ImpAppend(vdm_BC_GenExpressionStmt(initfc))));
 
@@ -1207,12 +1207,13 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenConstructorExternalJavaDef()
 // ==> seq of CPP`Stmt
 SEQ<TYPE_CPP_Stmt> vdmcg::GenInitBaseVars(bool isBaseClass)
 {
-  TYPE_CPP_Expr fcall_vgi (vdm_BC_GenFctCall (vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_GetId")), SEQ<TYPE_CPP_Expr>()));
+  TYPE_CPP_Expr fcall_vgi (GenFctCallOnThis (vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_GetId")),
+                                             SEQ<TYPE_CPP_Expr>()));
   TYPE_CPP_Identifier id (isBaseClass ? vdm_BC_GenIdentifier(ASTAUX::MkId(L"RegisterAsBase"))
                                       : vdm_BC_GenIdentifier(ASTAUX::MkId(L"RegisterAsDerived")));
 
   SEQ<TYPE_CPP_Stmt> stmt_l;
-  stmt_l.ImpAppend(vdm_BC_GenExpressionStmt (vdm_BC_GenFctCall (id, mk_sequence(fcall_vgi))));
+  stmt_l.ImpAppend(vdm_BC_GenExpressionStmt (GenFctCallOnThis (id, mk_sequence(fcall_vgi))));
   return stmt_l;
 }
 
@@ -1235,36 +1236,32 @@ TYPE_CPP_Stmt vdmcg::GenDlInit(const TYPE_AS_Name& nm)
 // ==> AccessMemberDecl | seq of CPP`MemberDeclaration
 Generic vdmcg::GenInstVars(const SEQ<TYPE_AS_InstanceVarDef> & var_l)
 {
-  if (vdm_CPP_isCPP())
-  {
+  if (vdm_CPP_isCPP()) {
     SEQ<TYPE_AS_InstanceVarDef> var_l_q;
     size_t len_var_l = var_l.Length();
-    for(size_t i = 1; i <= len_var_l; i++)
-    {
+    for(size_t i = 1; i <= len_var_l; i++) {
       var_l_q.ImpAppend( ExchangeDefAccess (var_l[i]) );
     }
 
     SET<TYPE_AS_Access> acs_s;
     size_t len_var_l_q = var_l_q.Length();
-    for (size_t j = 1; j <= len_var_l_q; j++)
-    {
+    for (size_t j = 1; j <= len_var_l_q; j++) {
       const TYPE_AS_InstanceVarDef & ivd (var_l_q[j]);
-      if (ivd.Is(TAG_TYPE_AS_InstAssignDef))
+      if (ivd.Is(TAG_TYPE_AS_InstAssignDef)) {
         acs_s.Insert (ivd.GetField(pos_AS_InstAssignDef_access));
+      }
     }
 
     Map res; // map AS`Access to seq of CPP`MemberDeclaration
     Generic a;
-    for (bool dd = acs_s.First(a); dd; dd = acs_s.Next (a))
-    {
+    for (bool dd = acs_s.First(a); dd; dd = acs_s.Next (a)) {
       SEQ<TYPE_CPP_MemberDeclaration> giv_l;
-      for (size_t k = 1; k <= len_var_l_q; k++)
-      {
+      for (size_t k = 1; k <= len_var_l_q; k++) {
         const TYPE_AS_InstanceVarDef & ivd (var_l_q[k]);
-        if (ivd.Is(TAG_TYPE_AS_InstAssignDef))
-        {
-          if (ivd.GetField(pos_AS_InstAssignDef_access) == a)
+        if (ivd.Is(TAG_TYPE_AS_InstAssignDef)) {
+          if (ivd.GetField(pos_AS_InstAssignDef_access) == a) {
             giv_l.ImpAppend (GenInstVar (ivd));
+          }
         }
       }
       res.Insert (a, giv_l);
@@ -1275,24 +1272,20 @@ Generic vdmcg::GenInstVars(const SEQ<TYPE_AS_InstanceVarDef> & var_l)
   {
     Map cidtocpp; // map CI`ContextId to CPP`IdentDeclaration
     size_t len_var_l = var_l.Length();
-    for(size_t i = 1; i <= len_var_l; i++)
-    {
+    for(size_t i = 1; i <= len_var_l; i++) {
       const TYPE_AS_InstanceVarDef & ivd (var_l[i]);
-      if (ivd.Is (TAG_TYPE_AS_InstAssignDef))
-      {
+      if (ivd.Is (TAG_TYPE_AS_InstAssignDef)) {
         cidtocpp.Insert(ivd.GetInt(pos_AS_InstAssignDef_cid), GenInstVar(ivd));
       }
     }
 
     SEQ<TYPE_CPP_MemberDeclaration> instvars;
-    while (!cidtocpp.Dom().IsEmpty())
-    {
+    while (!cidtocpp.Dom().IsEmpty()) {
       SET<TYPE_CI_ContextId> cidtocppdom (cidtocpp.Dom());
       TYPE_CI_ContextId cid (cidtocppdom.GetElem());
 
       Generic gg;
-      for (bool cc = cidtocppdom.First(gg); cc; cc = cidtocppdom.Next(gg))
-      {
+      for (bool cc = cidtocppdom.First(gg); cc; cc = cidtocppdom.Next(gg)) {
         TYPE_CI_ContextId tempcid (gg);
 
         Tuple gfp1 (GetCI().GetFilePos(cid));
@@ -1303,8 +1296,9 @@ Generic vdmcg::GenInstVars(const SEQ<TYPE_AS_InstanceVarDef> & var_l)
         const TYPE_CI_TokenPos & tst2 (gfp2.GetRecord(3));
         int ast_startf = tst2.GetIntValue(pos_CI_TokenPos_abs_uline);
 
-        if (ast_start > ast_startf)
+        if (ast_start > ast_startf) {
           cid = tempcid;
+        }
       }
       instvars.ImpAppend(cidtocpp[cid]);
       cidtocpp.RemElem(cid);
@@ -1335,8 +1329,7 @@ TYPE_CPP_MemberDeclaration vdmcg::GenInstVar(const TYPE_AS_InstAssignDef & iad)
     //  else
     //    var = vdm_BC_Rename(InsertGlobalName(nm));
 
-  if (vdm_CPP_isCPP())
-  {
+  if (vdm_CPP_isCPP()) {
     SEQ<TYPE_CPP_Stmt> dstmts (GenDecl_DS(rtp, var, nil));
     TYPE_CPP_DeclarationStmt dstmt (dstmts[1]);
     TYPE_CPP_IdentDeclaration idcl (dstmt.get_decl());
@@ -1347,19 +1340,17 @@ TYPE_CPP_MemberDeclaration vdmcg::GenInstVar(const TYPE_AS_InstAssignDef & iad)
     SEQ<TYPE_CPP_InitDeclarator> dl (idcl.get_dl());
     TYPE_CPP_InitDeclarator init (dl.Hd());
 
-    if (stat)
+    if (stat) {
       ds_l.ImpPrepend(vdm_BC_GenModifier(quote_STATIC));
-
+    }
     return vdm_BC_GenMemberSpec( ds_l, init.get_decl() );
   }
-  else
-  { // for Java
+  else { // for Java
     bool inStaticInitializer = false;
 //    ClearUncaught(); // 20060710 for clear static member list
 
     Generic arg = Nil();
-    if (stat)
-    {
+    if (stat) {
       TYPE_AS_ValueDef vd;
       vd.Init(TYPE_AS_PatternName().Init(nm, Nil(), nm.get_cid()), tp, ex, acc, stat, cid);
       //      if (AreDefinedDirectly(Sequence().ImpAppend(vd)))
@@ -1371,13 +1362,11 @@ TYPE_CPP_MemberDeclaration vdmcg::GenInstVar(const TYPE_AS_InstAssignDef & iad)
 
         if (AreDefinedDirectly(Sequence().ImpAppend(vd)) &&
             (!((l_expr.Length() != 1) ||
-             !(l_expr.Hd().Is(TAG_TYPE_CPP_ExpressionStmt)))))
-        {
+             !(l_expr.Hd().Is(TAG_TYPE_CPP_ExpressionStmt))))) {
           TYPE_CPP_AssignExpr ae (TYPE_CPP_ExpressionStmt(l_expr.Hd()).get_expr());
           arg = vdm_BC_GenAsgnInit(ae.get_assignexpr());
         }
-        else
-        {
+        else {
           AddUncaughtValInit(l_expr);
           inStaticInitializer = true;
         }
@@ -1385,8 +1374,7 @@ TYPE_CPP_MemberDeclaration vdmcg::GenInstVar(const TYPE_AS_InstAssignDef & iad)
     }
 
     Generic newarg (arg);
-    if (!newarg.IsNil() && ex.Is(TAG_TYPE_AS_ApplyExpr) && !inStaticInitializer)
-    {
+    if (!newarg.IsNil() && ex.Is(TAG_TYPE_AS_ApplyExpr) && !inStaticInitializer) {
       TYPE_CPP_TypeSpecifier l_ts (vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Throwable"))));
       TYPE_CPP_ExceptionDeclaration l_ed (vdm_BC_GenExceptionDeclaration(
                                             SEQ<TYPE_CPP_TypeSpecifier>().ImpAppend(l_ts),
@@ -1632,27 +1620,22 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
 {
   type_dL Init_l;
 
-  if (get_conc_option())
+  if (get_conc_option()) {
     Init_l.ImpConc(GenConstrExtensions(nm));
-
+  }
   Init_l.ImpConc(GenVarInits(iVars));
 
   Generic body = Nil();
-  if (!Init_l.IsEmpty())
-  {
+  if (!Init_l.IsEmpty()) {
 // 20120213 -->
     bool allsimple = !get_conc_option();
-    if (!iVars.IsEmpty() )
-    {
+    if (!iVars.IsEmpty() ) {
       size_t len_iVars = iVars.Length();
-      for (size_t i = 1; (i <= len_iVars) && allsimple; i++)
-      {
+      for (size_t i = 1; (i <= len_iVars) && allsimple; i++) {
         const TYPE_AS_InstanceVarDef & ivd (iVars[i]);
-        if (ivd.Is(TAG_TYPE_AS_InstAssignDef))
-        {
+        if (ivd.Is(TAG_TYPE_AS_InstAssignDef)) {
           if (!ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil () &&
-              !ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) // 20110510
-          {
+              !ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) { // 20110510
             const TYPE_AS_Expr & dclinit (ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit));
             switch (dclinit.GetTag()) {
               case TAG_TYPE_AS_BoolLit:
@@ -1671,10 +1654,10 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
         }
       }
     }
-    if (allsimple)
+    if (allsimple) {
       body = vdm_BC_GenBlock(Init_l);
-    else
-    {
+    }
+    else {
 // <-- 20120213
       SEQ<TYPE_CPP_TypeSpecifier> res;
       res.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Exception"))));
@@ -1700,8 +1683,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
     }
 // <-- 20120213
   }
-  else
-  {
+  else {
     body = vdm_BC_GenBlock(type_dL());
   }
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
@@ -1723,24 +1705,19 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenInstanceInv(const TYPE_AS_Name& nm,
                                                        const SEQ<TYPE_AS_InstanceVarDef> & iVars)
 {
   SEQ<TYPE_CPP_FunctionDefinition> res;
-  if (!iVars.IsEmpty() )
-  {
+  if (!iVars.IsEmpty() ) {
     SEQ<TYPE_AS_Expr> expr_l;
     size_t len_iVars = iVars.Length();
-    for (size_t i = 1; i <= len_iVars; i++)
-    {
+    for (size_t i = 1; i <= len_iVars; i++) {
       const TYPE_AS_InstanceVarDef & ivd (iVars[i]);
-      if (ivd.Is(TAG_TYPE_AS_InstanceInv))
-      {
+      if (ivd.Is(TAG_TYPE_AS_InstanceInv)) {
         expr_l.ImpAppend(ivd.GetRecord(pos_AS_InstanceInv_expr));
       }
     }
-    if (!expr_l.IsEmpty())
-    {
+    if (!expr_l.IsEmpty()) {
       size_t len_expr_l = expr_l.Length();
       TYPE_AS_Expr expr = expr_l[len_expr_l];
-      for (size_t idx = len_expr_l - 1; idx > 0; idx--)
-      {
+      for (size_t idx = len_expr_l - 1; idx > 0; idx--) {
         TYPE_AS_BinaryExpr e;
         e.Init(expr_l[idx], Int(AND), expr, ASTAUX::GetCid (expr_l[idx]));
         expr = e;
@@ -1751,8 +1728,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenInstanceInv(const TYPE_AS_Name& nm,
       CurrentRType(TYPE_REP_BooleanTypeRep());
       TYPE_CPP_Stmt body (vdm_BC_GenBlock(GenStmt(rs, true)));
 
-      if (vdm_CPP_isCPP())
-      {
+      if (vdm_CPP_isCPP()) {
         res.ImpAppend(vdm_BC_GenFctDef(
                         mk_sequence(GenBoolType()),
                         vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName(vdm_BC_Rename(nm),
@@ -1761,8 +1737,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenInstanceInv(const TYPE_AS_Name& nm,
                         nil,
                         body));
       }
-      else
-      {
+      else {
         res.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                        SEQ<TYPE_CPP_Modifier>().ImpAppend(vdm_BC_GenModifier(quote_PUBLIC)),
                         mk_sequence(GenBoolType()),
@@ -1772,8 +1747,9 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenInstanceInv(const TYPE_AS_Name& nm,
                         body));
       }
     }
-    if (!res.IsEmpty())
+    if (!res.IsEmpty()) {
       SetHasInv();
+    }
   }
   return res;
 }

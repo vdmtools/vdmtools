@@ -1439,21 +1439,16 @@ GenGetFunctionDef : (<PRODUCT> | <COMPOSITE>) * CPP`Identifier *
                     CPP`FunctionDefinition
 GenGetFunctionDef(-,s,t,i,cnm,tp) ==
   def meth = DS`GenGetMethod(tp); -- "GetField";
-  in
-  let ts   = BC`GenTypeSpecifier(t),
-      dsl  = [ts],
-      --ds_l = [BC`GenTypeSpecifier(<CONST>), ts, BC`GenTypeSpecifier(<REFERENCE>)],
-      decl = BC`GenConstFctDecl( BC`GenQualifiedName(cnm,BC`GenIdentifier("get_"^s.id)), []),
-      fcall = BC`GenFctCall(BC`GenIdentifier(meth), [BC`GenIntegerLit(i)]),
-      body = BC`GenBlock([ BC`GenReturnStmt( fcall ) ])
-  in BC`GenFctDef(dsl,decl,nil,body);
+      ts   = BC`GenTypeSpecifier(t);
+      --ds_l = [BC`GenTypeSpecifier(<CONST>), ts, BC`GenTypeSpecifier(<REFERENCE>)];
+      decl = BC`GenConstFctDecl( BC`GenQualifiedName(cnm,BC`GenIdentifier("get_"^s.id)), []);
+      fcall = DS`GenRecGetFieldOnThis(BC`GenIdentifier(meth), BC`GenIntegerLit(i));
+      body = BC`GenBlock([ BC`GenReturnStmt( fcall ) ]);
+  in BC`GenFctDef([ts],decl,nil,body);
 
 GenGetFunctionDecl : CPP`Identifier * CPP`Identifier +> CPP`MemberSpecifier
 GenGetFunctionDecl(s,t) ==
-(
-  BC`GenMemberSpec([BC`GenTypeSpecifier(t)], BC`GenConstFctDecl(BC`GenIdentifier("get_" ^ s.id),[]))
-)
-
+  BC`GenMemberSpec([BC`GenTypeSpecifier(t)], BC`GenConstFctDecl(BC`GenIdentifier("get_" ^ s.id),[]));
 \end{vdm_al}
 
 %
@@ -1479,25 +1474,19 @@ functions
 
 GenSetFunctionDecl : CPP`Identifier * CPP`Identifier +> CPP`MemberSpecifier
 GenSetFunctionDecl(s,t) ==
-(
-   let arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier(t.id))],
-                           BC`GenRef(BC`GenIdentifier("p"))),
-       decl = BC`GenFctDecl(BC`GenIdentifier("set_" ^ s.id),[arg])
-   in
-     BC`GenMemberSpec([BC`GenTypeSpecifier(BC`GenVoid())],decl)
-);
+  let arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier(t.id))],
+                          BC`GenRef(BC`GenIdentifier("p"))),
+      decl = BC`GenFctDecl(BC`GenIdentifier("set_" ^ s.id),[arg])
+  in BC`GenMemberSpec([BC`GenTypeSpecifier(BC`GenVoid())],decl);
 
 GenSetFunctionDef : CPP`Identifier * CPP`Identifier * FieldTag * CPP`Identifier +> CPP`FunctionDefinition
 GenSetFunctionDef(s, t, i, cnm) ==
-(
-  let dsl = [BC`GenTypeSpecifier(BC`GenVoid())],
+  def dsl = [BC`GenTypeSpecifier(BC`GenVoid())];
       arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier(t.id))],
-                          BC`GenRef(BC`GenIdentifier("p"))),
-      decl = BC`GenFctDecl(BC`GenQualifiedName(cnm, BC`GenIdentifier("set_" ^ s.id)),[arg]),
-      body = BC`GenBlock([BC`GenExpressionStmt(
-                            BC`GenFctCall(BC`GenIdentifier("SetField"), [BC`GenIntegerLit(i), BC`GenIdentifier("p")])) ])
-  in BC`GenFctDef(dsl, decl, nil, body)
-);
+                          BC`GenRef(BC`GenIdentifier("p")));
+      decl = BC`GenFctDecl(BC`GenQualifiedName(cnm, BC`GenIdentifier("set_" ^ s.id)),[arg]);
+      body = BC`GenBlock([DS`GenRecSetFieldOnThis(BC`GenIntegerLit(i), BC`GenIdentifier("p"))]);
+  in BC`GenFctDef(dsl, decl, nil, body);
 \end{vdm_al}
 
 %
@@ -1515,24 +1504,19 @@ functions
 #ifdef 0
 GenGetTypeDecl : TypeTag +> CPP`FunctionDefinition
 GenGetTypeDecl(tag) ==
-(
   let dsl  = [BC`GenTypeSpecifier(BC`GenIdentifier("int"))],
       decl = BC`GenConstFctDecl(BC`GenIdentifier("GetType"),[]),
       body = BC`GenBlock([BC`GenReturnStmt(tag)])
-  in BC`GenFctDef(dsl,decl,nil,body)
-);
+  in BC`GenFctDef(dsl,decl,nil,body);
 #endif //0
 
 
 GenGetTypeNameDecl : CPP`Identifier +> CPP`FunctionDefinition
 GenGetTypeNameDecl(id) ==
-(
   def dsl = [BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier(DS`GenCppCharType() ^ " *"))];
       decl = BC`GenConstFctDecl(BC`GenIdentifier("GetTypeName"), []);
       body = BC`GenBlock([BC`GenReturnStmt(BC`GenStringLit(id.id))])
-  in BC`GenFctDef(dsl, decl, nil, body)
-)
-
+  in BC`GenFctDef(dsl, decl, nil, body);
 \end{vdm_al}
 
 %
@@ -1579,26 +1563,21 @@ functions
 GenVDMBasePConstrDecl: CPP`Identifier * (CPP`Identifier | CPP`CompleteClassName | CPP`TemplateClassName)
  +> CPP`FunctionDefinition
 GenVDMBasePConstrDecl(cnm, supid) ==
-(
   let dsl = [],
       arg = BC`GenArgDecl([BC`GenTypeSpecifier(BC`GenIdentifier("vdmBase"))], BC`GenIndirection(BC`GenIdentifier("p"))),
       decl = BC`GenFctDecl(cnm, [arg]),
       body = BC`GenBlock([]),
       inh  = BC`GenInitBaseN(supid, [BC`GenIdentifier("p")])
-  in BC`GenConstructorDef([], dsl, decl, inh, body)
-);
+  in BC`GenConstructorDef([], dsl, decl, inh, body);
 
 GenTemplateConstrDecl : CPP`Identifier * CPP`TemplateClassName +> CPP`FunctionDefinition
 GenTemplateConstrDecl(cnm, supid) ==
-(
   let dsl = [],
       arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(supid)], BC`GenRef(BC`GenIdentifier("c"))),
       decl = BC`GenFctDecl(cnm, [arg]),
       body = BC`GenBlock([]),
       inh = BC`GenInitBaseN(supid, [BC`GenIdentifier("c")])
-  in
-    BC`GenConstructorDef([], dsl, decl, inh, body)
-);
+  in BC`GenConstructorDef([], dsl, decl, inh, body);
 
 operations
 GenDefaultConstrDecl : CPP`Identifier * (CPP`Identifier | CPP`CompleteClassName | CPP`TemplateClassName)
@@ -1682,7 +1661,7 @@ GenInitFunctionDef(cnm,sl,tenv) ==
 
   -- Generate list of SetField stmts
   for j = 1 to len(sl) do
-   (stmtl := stmtl ^ [DS`GenRecSetFieldonThis(BC`GenIntegerLit(j),
+   (stmtl := stmtl ^ [DS`GenRecSetFieldOnThis(BC`GenIntegerLit(j),
                       BC`GenIdentifier("p" ^ CGAUX`StringNumber(j)))]
    );
 

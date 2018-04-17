@@ -1507,7 +1507,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenGetFunctionDef(const Int &,
     meth = ASTAUX::MkId(L"GetField");
   }
   TYPE_CPP_TypeSpecifier ts (vdm_BC_GenTypeSpecifier(t));
-  SEQ<TYPE_CPP_DeclSpecifier> dsl (mk_sequence(ts));
 
   TYPE_CPP_FctDecl decl (vdm_BC_GenConstFctDecl(
                             vdm_BC_GenQualifiedName(
@@ -1519,9 +1518,9 @@ TYPE_CPP_FunctionDefinition vdmcg::GenGetFunctionDef(const Int &,
   //                                              ts,
   //                                              vdm_BC_GenTypeSpecifier(quote_REFERENCE)));
 
-  TYPE_CPP_Expr fcall (vdm_BC_GenFctCall(vdm_BC_GenIdentifier(meth), mk_sequence(vdm_BC_GenIntegerLit(i))));
+  TYPE_CPP_Expr fcall (GenRecGetFieldOnThis(vdm_BC_GenIdentifier(meth), vdm_BC_GenIntegerLit(i)));
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenReturnStmt(fcall))));
-  return vdm_BC_GenFctDef(dsl, decl, nil, body);
+  return vdm_BC_GenFctDef(mk_sequence(ts), decl, nil, body);
 }
 
 // GenGetFunctionDecl
@@ -1576,15 +1575,11 @@ TYPE_CPP_FunctionDefinition vdmcg::GenSetFunctionDef(const TYPE_CPP_Identifier &
 
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(
                            vdm_BC_GenQualifiedName(cnm,
-                                                    vdm_BC_GenIdentifier(ASTAUX::MkId(L"set_").ImpConc(s.get_id()))),
+                               vdm_BC_GenIdentifier(ASTAUX::MkId(L"set_").ImpConc(s.get_id()))),
                            mk_sequence(arg)));
 
-  SEQ<TYPE_CPP_Expr> setfield_arg (mk_sequence(vdm_BC_GenIntegerLit(i),
-                                               vdm_BC_GenIdentifier(ASTAUX::MkId(L"p"))));
-
-  TYPE_CPP_Expr e (vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"SetField")), setfield_arg));
-
-  TYPE_CPP_Stmt body (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenExpressionStmt(e))));
+  TYPE_CPP_Stmt body (vdm_BC_GenBlock(mk_sequence(GenRecSetFieldOnThis(vdm_BC_GenIntegerLit(i),
+                                                           vdm_BC_GenIdentifier(ASTAUX::MkId(L"p"))))));
 
   return vdm_BC_GenFctDef(dsl, decl, nil, body);
 }
@@ -2056,7 +2051,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInitFunctionDef(const TYPE_CPP_Identifier 
                                               vdm_BC_GenIdentifier(ASTAUX::MkId(L"p").ImpConc(StringNumber(i))))));
     arglist.ImpAppend(arg);
 
-    stmtl.ImpAppend(GenRecSetFieldonThis(vdm_BC_GenIntegerLit(i),
+    stmtl.ImpAppend(GenRecSetFieldOnThis(vdm_BC_GenIntegerLit(i),
                                          vdm_BC_GenIdentifier(ASTAUX::MkId(L"p").ImpConc(StringNumber(i)))));
   }
   stmtl.ImpAppend (vdm_BC_GenReturnStmt (vdm_BC_GenIndirection (GenThis())));

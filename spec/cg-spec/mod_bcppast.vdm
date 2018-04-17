@@ -691,7 +691,6 @@ functions
   GenGenericFctCallObjMemAcc( obj, fname, par, cid ) ==
     GenGenericFctCall( mk_CPP`ObjectMemberAccess(obj, GenIdentifier(fname,cid), cid), par, cid );
 
-#ifdef VDMPP
   GenFctCallPtrToObjMemAcc: CPP`Expr * CPP`Expr * CPP`Exprs * CI`ContextId -> CPP`Expr
   GenFctCallPtrToObjMemAcc(obj,fnm,parms,cid) ==
     let acc = mk_CPP`PointerToObjectMemberAccess(obj,fnm,cid)
@@ -705,7 +704,6 @@ functions
   GenPointerToObjectMemberAccess: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
   GenPointerToObjectMemberAccess(obj, mem, cid) ==
     mk_CPP`PointerToObjectMemberAccess(obj, mem, cid);
-#endif VDMPP
 
   GenIdentifier: AS`Id * CI`ContextId -> CPP`Identifier
   GenIdentifier( name,cid ) ==

@@ -1766,7 +1766,12 @@ constructions of composite type.
   GenRecGetFieldNo(mk_REP`CompositeTypeRep(tagnm, -), fsnm) ==
     return BC`GenPosName(tagnm, fsnm);
 
-  GenGetMethod: REP`TypeRep ==> seq of char
+  GenRecGetFieldOnThis: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenRecGetFieldOnThis( meth, field ) ==
+    --return BC`GenFctCall(GenObjectMemberAccessOnThis( meth ), [field] );
+    return GenFctCallOnThis( meth, [field] );
+
+  GenGetMethod: REP`TypeRep ==> seq1 of char
   GenGetMethod(tp') ==
     def tp = CGAUX`CleanFlatType(tp')
     in
@@ -1783,6 +1788,19 @@ constructions of composite type.
       (CGAUX`IsProductType(tp))   -> return "GetTuple",
       others                      -> return "GetField"
    end;
+
+  GenFctCallOnThis: CPP`Expr * seq of CPP`Expr ==> CPP`Expr
+  GenFctCallOnThis( meth, args ) ==
+    return BC`GenFctCall(GenObjectMemberAccessOnThis( meth ), args );
+
+  GenObjectMemberAccessOnThis: CPP`Expr ==> CPP`Expr
+  GenObjectMemberAccessOnThis( field ) ==
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then return BC`GenObjectMemberAccess(DS`GenThis(), field)
+    else
+#endif VDMPP
+      return BC`GenPointerToObjectMemberAccess(DS`GenThis(), field);
 
   GenIsThisRecord: REP`CompositeTypeRep * CPP`Expr ==> CPP`Expr
   GenIsThisRecord(mk_REP`CompositeTypeRep(tagnm, -), name) ==
@@ -1801,9 +1819,11 @@ constructions of composite type.
   GenRecSetField( rec, field, elem ) ==
     return BC`GenExpressionStmt(GenRecSetFieldExpr(rec, field, elem));
 
-  GenRecSetFieldonThis: CPP`Expr * CPP`Expr ==> CPP`Stmt
-  GenRecSetFieldonThis( field, elem ) ==
-    return BC`GenExpressionStmt(BC`GenFctCall(BC`GenIdentifier("SetField"), [field, elem]));
+  GenRecSetFieldOnThis: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenRecSetFieldOnThis( field, elem ) ==
+    --def fcall = BC`GenFctCall(GenObjectMemberAccessOnThis( BC`GenIdentifier("SetField") ), [field, elem] );
+    def fcall = GenFctCallOnThis( BC`GenIdentifier("SetField"), [field, elem] );
+    in return BC`GenExpressionStmt(fcall);
 
   GenRecSetFieldExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
   GenRecSetFieldExpr( rec, field, elem ) ==

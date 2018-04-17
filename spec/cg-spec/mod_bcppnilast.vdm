@@ -570,7 +570,6 @@ some optional initialization expression.
     GenGenericFctCallObjMemAcc( obj, fname, par ) ==
       BCCI`GenGenericFctCallObjMemAcc( obj, fname, par,CI`NilContextId );
 
-#ifdef VDMPP
     GenFctCallPtrToObjMemAcc: CPP`Expr * CPP`Expr * CPP`Exprs -> CPP`Expr
     GenFctCallPtrToObjMemAcc(obj,fnm,parms) ==
       BCCI`GenFctCallPtrToObjMemAcc(obj,fnm,parms,CI`NilContextId);
@@ -582,7 +581,6 @@ some optional initialization expression.
     GenPointerToObjectMemberAccess: CPP`Expr * CPP`Expr -> CPP`Expr
     GenPointerToObjectMemberAccess(obj, mem) ==
       BCCI`GenPointerToObjectMemberAccess(obj, mem,CI`NilContextId);
-#endif
 
     GenIdentifier: AS`Id -> CPP`Identifier
     GenIdentifier( name ) ==

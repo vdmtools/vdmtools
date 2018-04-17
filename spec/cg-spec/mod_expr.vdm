@@ -4330,7 +4330,7 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
   in
    (dcl getval : CPP`Expr := res1,
         cond : CPP`Expr,
-        tmpb : seq of CPP`Stmt := altn_stmt ^ [BC`GenAsgnStmt(resVar_v, altn_expr)];
+        tmpb : seq of CPP`Stmt := CGExpr(altn, mk_CGMAIN`VT(resVar_v, resVarType));
 
     if not CGAUX`IsBoolType(condType)
     then getval := BC`GenCastExpr( DS`GenBoolType(), res1 );
@@ -4403,7 +4403,7 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
           tmpb := res2_stmt ^ [ BC`GenIfStmt( elif_cond, elif_alt1, elif_alt2) ];
          );
 
-    def alt1 = BC`GenBlock(cons_stmt ^ [BC`GenAsgnStmt(resVar_v, cons_expr)]);
+    def alt1 = BC`GenBlock(CGExpr(cons, mk_CGMAIN`VT(resVar_v, resVarType)));
         alt2 = BC`GenBlock(tmpb);
     in return cond_stmt ^ [ BC`GenIfStmt(cond, alt1, alt2) ];
    );

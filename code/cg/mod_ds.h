@@ -107,10 +107,13 @@ private:
   TYPE_CPP_Expr GenRecGetField(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &, const TYPE_REP_TypeRep &);
   TYPE_CPP_Expr GenRecGetFieldNm(const TYPE_CPP_Expr &, const TYPE_REP_CompositeTypeRep &, const TYPE_AS_Name &);
   TYPE_CPP_Expr GenRecGetFieldNo(const TYPE_REP_CompositeTypeRep &, const TYPE_AS_Name &);
+  TYPE_CPP_Expr GenRecGetFieldOnThis(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_AS_Id GenGetMethod(const TYPE_REP_TypeRep & tp);
+  TYPE_CPP_Expr GenFctCallOnThis(const TYPE_CPP_Expr &, const SEQ<TYPE_CPP_Expr> &);
+  TYPE_CPP_Expr GenObjectMemberAccessOnThis(const TYPE_CPP_Expr & );
   TYPE_CPP_Expr GenIsThisRecord(const TYPE_REP_CompositeTypeRep &, const TYPE_CPP_Expr &);
   TYPE_CPP_Stmt GenRecSetField(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
-  TYPE_CPP_Stmt GenRecSetFieldonThis(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
+  TYPE_CPP_Stmt GenRecSetFieldOnThis(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenRecSetFieldExpr(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenIsRecord(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenGetTag(const TYPE_CPP_Expr &);

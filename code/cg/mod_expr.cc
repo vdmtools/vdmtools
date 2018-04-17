@@ -4938,8 +4938,9 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
   }
   else
 #endif // VDMPP
+  {
     cond = GenGetValue(getval, condType);
-
+  }
   if (elif.IsEmpty() && cons_stmt.IsEmpty() && altn_stmt.IsEmpty()) {
     Generic cons_type (FindType(cons));
     Generic altn_type (FindType(altn));
@@ -4949,8 +4950,7 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
 #ifdef VDMPP
           (vdm_CPP_isJAVA() && IsQuoteType(cons_type) && IsQuoteType(altn_type)) ||
 #endif // VDMPP
-          (vdm_CPP_isCPP() && cons.Is(TAG_TYPE_AS_QuoteLit) && altn.Is(TAG_TYPE_AS_QuoteLit)))
-      {
+          (vdm_CPP_isCPP() && cons.Is(TAG_TYPE_AS_QuoteLit) && altn.Is(TAG_TYPE_AS_QuoteLit))) {
         TYPE_CPP_Expr expr (vdm_BC_GenCondExpr(cond, cons_expr, altn_expr));
         if (cond_stmt.IsEmpty()) {
           return vdm_BC_GenBracketedExpr(expr);
@@ -4977,11 +4977,9 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
     }
   }
 
-  SEQ<TYPE_CPP_Stmt> tmpb (altn_stmt);
-  tmpb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, altn_expr));
+  SEQ<TYPE_CPP_Stmt> tmpb (CGExpr(altn, mk_CG_VT(resVar_v, resVarType)));
 
-  for (size_t i = elif.Length (); i >= 1; i--)
-  {
+  for (size_t i = elif.Length (); i >= 1; i--) {
     const TYPE_AS_ElseifExpr & tpl (elif[i]);
     const TYPE_AS_Expr & elif_test (tpl.GetRecord(pos_AS_ElseifExpr_test));
     const TYPE_AS_Expr & elif_cons (tpl.GetRecord(pos_AS_ElseifExpr_cons));
@@ -5003,14 +5001,14 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
     }
     else
 #endif // VDMPP
+    {
       elif_cond = GenGetValue(nres2, testType);
-
+    }
     SEQ<TYPE_CPP_Stmt> body (res2_stmt);
     body.ImpAppend(vdm_BC_GenIfStmt(elif_cond, elif_alt1, elif_alt2));
     tmpb = body;
   }
-
-  TYPE_CPP_Stmt alt1 (vdm_BC_GenBlock(cons_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, cons_expr)))));
+  TYPE_CPP_Stmt alt1 (vdm_BC_GenBlock(CGExpr(cons, mk_CG_VT(resVar_v, resVarType))));
   TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(tmpb));
 
   SEQ<TYPE_CPP_Stmt> rb (cond_stmt);
@@ -5063,8 +5061,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqModifyMapOverrideExpr (const TYPE_AS_SeqModifyMap
   }
   TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"A map or sequence was expected in sequence or map override expression"))));
 
-  if (IsPosMapType(seqmapType1) && !IsPosSeqType(seqmapType1))
-  {
+  if (IsPosMapType(seqmapType1) && !IsPosSeqType(seqmapType1)) {
     SEQ<TYPE_CPP_Stmt> mapover (GenMapOvwr (mk_CG_VT (seqmap_v, seqmapType1),
                                 mk_CG_VT (modmap_v, modmapType),
                                 mk_CG_VT (resVar_v, restp),
@@ -5076,8 +5073,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqModifyMapOverrideExpr (const TYPE_AS_SeqModifyMap
       rb.ImpAppend(vdm_BC_GenIfStmt(GenIsMap(seqmap_v), vdm_BC_GenBlock(mapover), rre));
     }
   }
-  else if (IsPosSeqType(seqmapType1) && !IsPosMapType(seqmapType1))
-  {
+  else if (IsPosSeqType(seqmapType1) && !IsPosMapType(seqmapType1)) {
     SEQ<TYPE_CPP_Stmt> seqover (GenSeqOvwr (mk_CG_VT (seqmap_v, seqmapType1),
                                 mk_CG_VT (modmap_v, modmapType),
                                 mk_CG_VT (resVar_v, restp),
@@ -5101,8 +5097,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqModifyMapOverrideExpr (const TYPE_AS_SeqModifyMap
       }
     }
   }
-  else
-  {
+  else {
     SEQ<TYPE_CPP_Stmt> mapover (GenMapOvwr (mk_CG_VT (seqmap_v, seqmapType1),
                                 mk_CG_VT (modmap_v, modmapType),
                                 mk_CG_VT (resVar_v, restp),
@@ -5143,8 +5138,9 @@ TYPE_REP_TypeRep vdmcg::FindPosApplyTypes(const TYPE_REP_TypeRep & tp)
   switch (tp.GetTag()) {
     case TAG_TYPE_REP_SeqTypeRep:
     case TAG_TYPE_REP_GeneralMapTypeRep:
-    case TAG_TYPE_REP_InjectiveMapTypeRep:
+    case TAG_TYPE_REP_InjectiveMapTypeRep: {
       return tp;
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> tps_res;
@@ -5152,13 +5148,15 @@ TYPE_REP_TypeRep vdmcg::FindPosApplyTypes(const TYPE_REP_TypeRep & tp)
       for (bool bb = tps.First(t_g); bb; bb = tps.Next(t_g)) {
         TYPE_REP_TypeRep t (t_g);
         if (t.Is(TAG_TYPE_REP_SeqTypeRep) ||
-            (IsMapType(t) && ! t.Is(TAG_TYPE_REP_EmptyMapTypeRep) ))
+            (IsMapType(t) && ! t.Is(TAG_TYPE_REP_EmptyMapTypeRep) )) {
           tps_res.Insert(FindPosApplyTypes(t));
+        }
       }
       return mk_REP_UnionTypeRep(tps_res);
     }
-    default:
+    default: {
       ReportError(L"FindPosApplyTypes");
+    }
   }
   return Record(); // To avoid warnings
 }
@@ -5206,7 +5204,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
     {
       e_decl.ImpConc(GenDeclInit_DS(nattp, e_v, edom));
     }
-
     isint_part.ImpAppend(ifisint).ImpConc(e_decl);
   }
 
@@ -5223,21 +5220,20 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
   }
   else
 #endif // VDMPP
+  {
     if_body = alt2;
-
+  }
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(isint_part.ImpAppend(if_body)));
   TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(seqtype)));
 
   SEQ<TYPE_CPP_Stmt> rb;
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
-    if (IsStringType(seqtype) || IsPossibleStringType(seqtype))
-    {
+    if (IsStringType(seqtype) || IsPossibleStringType(seqtype)) {
       TYPE_CPP_Expr caste (GenExplicitCast(mk_REP_SeqTypeRep(nattp), seq_v, nil));
       rb.ImpConc(GenDeclInit_DS(seqtp, s_v, caste));
     }
-    else
-    {
+    else {
       TYPE_CPP_Expr seq_v_q (cast ? GenCastSeq(seq_v, nil) : seq_v);
       TYPE_CPP_Expr seq_v_c (GenSeqExpr(seq_v_q));
       if (cast) {
@@ -5317,8 +5313,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapOvwr (const TYPE_CGMAIN_VT & rc1,
   else
 #endif // VDMPP
   { // C++
-    if (cast)
-    {
+    if (cast) {
       TYPE_CPP_Identifier tmpMap_v (vdm_BC_GiveName(ASTAUX::MkId(L"tmpMap")));
       SEQ<TYPE_CPP_Stmt> rb;
       rb.ImpConc (GenDecl_DS (FindPossibleMapType (seqmapType), tmpMap_v, vdm_BC_GenAsgnInit (seqmap_v)));
