@@ -964,6 +964,7 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
   const SEQ<TYPE_CPP_Annotation> & annos (rc.GetSequence(pos_CPP_IdentDeclaration_annos));
 
   if (isCPP()) { // c++
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " */";
     if ((GetContext() != CSTMT) && (GetContext() != BLOCK)) {
       if (dl.IsSequence()) {
         SEQ<TYPE_CPP_InitDeclarator> dl_l (dl);
@@ -975,6 +976,7 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
               SetContext(FDECL);
             }
             else {
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> BE_DECL 1 GenIdentDeclaration */";
               SetContext(BE_DECL);
             }
 
@@ -1061,6 +1063,7 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
   }
 
   if (isCPP() || (dl.IsSequence() && !Sequence(dl).IsEmpty())) {
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> BE_DECL 2 GenIdentDeclaration */";
     SetContext(BE_DECL);
   }
   else {
@@ -1083,10 +1086,10 @@ void CGBackEnd::GenEnumSpecifier(const TYPE_CPP_EnumSpecifier & rc)
   const Generic & id (rc.GetField(pos_CPP_EnumSpecifier_id));
   const SEQ<TYPE_CPP_Enumerator> & el (rc.GetSequence(pos_CPP_EnumSpecifier_el));
 
-  if (!el.IsEmpty())
-  {
-    if (isJAVA())
+  if (!el.IsEmpty()) {
+    if (isJAVA()) {
       m4code << "no enumeration in Java!!!";
+    }
     else {
       m4code << "enum ";
       if (!id.IsNil()) {
@@ -1099,12 +1102,10 @@ void CGBackEnd::GenEnumSpecifier(const TYPE_CPP_EnumSpecifier & rc)
       GenNewLine(m4code);
 
       size_t len = el.Length();
-      for (size_t i = 1; i <= len; i++)
-      {
+      for (size_t i = 1; i <= len; i++) {
         IND(m4code);
         GenCode(el[i]);
-        if ( i < len )
-        {
+        if ( i < len ) {
           m4code << "," << endl << flush;
         }
       }
@@ -1113,6 +1114,7 @@ void CGBackEnd::GenEnumSpecifier(const TYPE_CPP_EnumSpecifier & rc)
 
       CloseBlock();
     }
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> BE_DECL 3 GenEnumSpecifier */";
     SetContext(BE_DECL);
   }
 }
@@ -1140,20 +1142,15 @@ void CGBackEnd::GenFunctionDefinition(const TYPE_CPP_FunctionDefinition & rc)
 {
   const TYPE_CPP_Declarator & decl (rc.GetRecord(pos_CPP_FunctionDefinition_decl));
 
-// 20150123 -->
-//  GenNewLine(m4code);
-// <-- 20150123
   GenNewLine(m4code);
 
   string existingCode;
 //  if ((existingCode = CheckExisting(GetName(decl))) != L"")
-  if ((existingCode = CheckExisting(GetMangleName(decl))) != "")
-  {
+  if ((existingCode = CheckExisting(GetMangleName(decl))) != "") {
     m4code << StartKeepTag(decl, false, true);
     m4code << existingCode;
   }
-  else
-  {
+  else {
     const TYPE_CPP_AnnotationSpec & annos (rc.GetSequence(pos_CPP_FunctionDefinition_annos));
     const TYPE_CPP_Modifiers & ms (rc.GetRecord(pos_CPP_FunctionDefinition_m));
     const SEQ<TYPE_CPP_DeclSpecifier> & ds (rc.GetSequence(pos_CPP_FunctionDefinition_ds));
@@ -1177,8 +1174,9 @@ void CGBackEnd::GenFunctionDefinition(const TYPE_CPP_FunctionDefinition & rc)
     if (!ms.IsNil()) {
       TYPE_CPP_Modifiers mss (ms);
       size_t len_mss = mss.Length();
-      for (size_t i = 1; i <= len_mss; i++)
+      for (size_t i = 1; i <= len_mss; i++) {
         m4code << Quote2String(Quote(mss[i].get_ma())) << " ";
+      }
     }
 
     if (!ds.IsEmpty()) {
@@ -1206,12 +1204,17 @@ void CGBackEnd::GenFunctionDefinition(const TYPE_CPP_FunctionDefinition & rc)
       }
     }
 
-    SetContext(BE_DECL);
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> BE_DECL 4 GenFunctionDefinition */";
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> CSTMT 4 GenFunctionDefinition */";
+    //SetContext(BE_DECL);
+    SetContext(CSTMT);
 
-    if (!body.IsNil())
+    if (!body.IsNil()) {
       GenCode(body);
-    else
+    }
+    else {
       m4code << ";";
+    }
 
     GenNewLine(m4code);
     //level--;
@@ -1559,6 +1562,7 @@ void CGBackEnd::GenCode(const Generic & ast)
         m4code <<  " ";
         GenCodeSeq(cvlist, " ");
       }
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> BE_DECL 5 GenCode */";
       SetContext(BE_DECL);
       break;
     }
@@ -1954,6 +1958,7 @@ void CGBackEnd::GenCode(const Generic & ast)
 
       SetContext(BLOCK);
       GenStmt(stmt);
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> CSTMT 1 ForStmt */";
       break;
     }
 
@@ -2011,11 +2016,13 @@ void CGBackEnd::GenCode(const Generic & ast)
     case TAG_TYPE_CPP_Return: {
       const Generic & expr (rc.GetField(pos_CPP_Return_expr));
 
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " */";
       if (isJAVA()) {
         GenNewLine(m4code);
       }
-      else if (GetContext() == BE_DECL) {
-        GenNewLine(m4code);
+      //else if (GetContext() == BE_DECL) {
+      else if (GetContext() == CSTMT) {
+        //GenNewLine(m4code);
       }
       IND(m4code);
       m4code << "return";
@@ -3042,8 +3049,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_PackageName & id (rc.GetRecord(pos_CPP_GenericsClasses_id));
       const SEQ<TYPE_CPP_PackageName> & extends (rc.GetSequence(pos_CPP_GenericsClasses_exteds));
       GenCode(id);
-      if (!extends.IsEmpty())
-      {
+      if (!extends.IsEmpty()) {
         m4code << " extends ";
         GenCodeSeq(extends, " & ");
       }
@@ -3064,20 +3070,22 @@ void CGBackEnd::GenCode(const Generic & ast)
   else if (ast.IsSequence()) {
     Sequence seq (ast);
     Generic g;
-    for (bool bb = seq.First(g); bb; bb = seq.Next(g))
+    for (bool bb = seq.First(g); bb; bb = seq.Next(g)) {
       GenCode(g);
+    }
   }
 
   else if (ast.IsSet()) {
     Set set(ast);
     Generic g;
-    for (bool bb = set.First(g); bb; bb = set.Next(g))
+    for (bool bb = set.First(g); bb; bb = set.Next(g)) {
       GenCode(g);
+    }
   }
 
-  else if (ast.IsQuote())
+  else if (ast.IsQuote()) {
     m4code << Quote2String((Quote) ast);
-
+  }
   else {
     OutputErr(L"Internal error in the code generator backend (3).");
     OutputErr(L"Please report this error.");
@@ -3303,8 +3311,7 @@ void CGBackEnd::GenInterfaceHead(const TYPE_CPP_InterfaceHead & rc)
   const TYPE_CPP_Identifier & name (rc.GetRecord(pos_CPP_InterfaceHead_name));
   const SEQ<TYPE_CPP_PackageName> & ispec (rc.GetSequence(pos_CPP_InterfaceHead_bs));
 
-  if (!ms.IsEmpty())
-  {
+  if (!ms.IsEmpty()) {
     GenCodeSeq(ms, " ");
     m4code << " ";
   }
@@ -3387,6 +3394,7 @@ void CGBackEnd::GenIfStmt(const TYPE_CPP_IfStmt & rc)
     }
     m4code << flush;
   }
+//m4code << "/* " << TBWSTR::wstring2string(PrintContext()) << " -> CSTMT 1 GenIfStmt */";
   SetContext(CSTMT);
 }
 
@@ -3394,33 +3402,28 @@ void CGBackEnd::GenExpressionStmt(const TYPE_CPP_ExpressionStmt & rc)
 {
   const Generic & expr (rc.GetField(pos_CPP_ExpressionStmt_expr));
 
-  if (GetContext() == FOR)
-  {
+  if (GetContext() == FOR) {
     SetContext(CSTMT);
-    if (!expr.IsNil())
+    if (!expr.IsNil()) {
       GenCode(expr);
-
+    }
     m4code << ";";
   }
-  else if(!expr.IsNil())
-  {
-    if (isJAVA())
+  else if(!expr.IsNil()) {
+    if (isJAVA()) {
       GenNewLine(m4code);
-
+    }
     SetContext(CSTMT);
     IND(m4code);
     GenCode(expr);
     m4code << ";";
   }
-  else
-  {
-// 20110908 -->
-    if (isJAVA())
+  else {
+    if (isJAVA()) {
       GenNewLine(m4code);
-
+    }
     SetContext(CSTMT);
     IND(m4code);
-// <-- 20110908
     m4code << ";";
   }
 }
@@ -3454,22 +3457,17 @@ void CGBackEnd::GenCompoundStmt(const TYPE_CPP_CompoundStmt & rc)
           break;
         }
         default: { //
-// 20110908 -->
-          if (isCPP())
-            if (last != BLOCK)
+          if (isCPP()) {
+            if (last != BLOCK) {
               IND(m4code);
-// <-- 20110908
-
+            }
+          }
           OpenBlock();
 
-// 20070918
-// hack for accessor
-//              if(isCPP())
-          if(isCPP() && (!st.Is(TAG_TYPE_CPP_Return) || (this->indent > 2)))
+          if(isCPP()) {
             GenNewLine(m4code);
-
+          }
           GenCode(st);
-
           GenNewLine(m4code);
           CloseBlock();
           break;
@@ -3478,16 +3476,16 @@ void CGBackEnd::GenCompoundStmt(const TYPE_CPP_CompoundStmt & rc)
       break;
     }
     default: { // stmts.Length() > 1
-      if (isCPP())
-        if (GetContext() != BLOCK)
+      if (isCPP()) {
+        if (GetContext() != BLOCK) {
           IND(m4code);
-
+        }
+      }
       OpenBlock();
 
-// 20120321 -->
-      if (isCPP())
-// <-- 20120321
+      if (isCPP()) {
         GenNewLine(m4code);
+      }
 
       SetContext(CSTMT);
 
@@ -3506,25 +3504,24 @@ void CGBackEnd::GenCompoundStmt(const TYPE_CPP_CompoundStmt & rc)
       for (size_t idx = 1; idx <= len_stmts; idx++) {
         const TYPE_CPP_Stmt & stmt (stmts[idx]);
         if (isJAVA()) {
-//          if (stmt.IsRecord())
           if (stmt.Is(TAG_TYPE_CPP_CompoundStmt)) {
             GenNewLine(m4code);
             IND(m4code);
           }
         }
         GenCode(stmt);
-        //if (isCPP())
-        if (isCPP())
+        if (isCPP()) {
           GenNewLine(m4code);
+        }
       }
-//      if( stmts.IsEmpty() ) GenNewLine();
-      if ( isJAVA() || stmts.IsEmpty() )
+      if ( isJAVA() || stmts.IsEmpty() ) {
         GenNewLine(m4code);
-
+      }
       CloseBlock();
       break;
     }
   }
+//m4code << "/* GenCompoundStmt End */";
 }
 
 int CGBackEnd::Quote2Int(const Quote & op)
@@ -4258,8 +4255,9 @@ int CGBackEnd::OpPrec(const Generic & g)
       break;
     }
   }
-  else
+  else {
     prec = 20;
+  }
   return prec;
 }
 
@@ -4296,10 +4294,10 @@ void CGBackEnd::GenStmt(const TYPE_CPP_Stmt & stmt, bool sw)
 void CGBackEnd::GenCodeSeq(const Sequence & s, const string & delim)
 {
   size_t len = s.Length();
-  for (size_t i = 1; i <= len; i++)
-  {
-    if ( i > 1 )
+  for (size_t i = 1; i <= len; i++) {
+    if ( i > 1 ) {
       m4code << delim;
+    }
     GenCode(s[i]);
   }
 }
