@@ -279,9 +279,14 @@ attribute is not already generated as an association.
 
   Pair : (AS`FnType | AS`OpType) * AS`Parameters +> seq of AUML`PatType
   Pair(tp, params) ==
-    let tps = if is_AS`OpType(tp) 
-              then tp.opdom
-              else tp.fndom 
+    --let tps = if is_AS`OpType(tp) 
+    --          then tp.opdom
+    --          else tp.fndom 
+    let tps = cases tp:
+                mk_AS`OpType(opdom,-,-)         -> opdom,
+                mk_AS`PartialFnType(fndom,-,-)  -> fndom,
+                mk_AS`TotalFnType(fndom,-,-)    -> fndom
+              end
     in 
     [ let pat = params(i), tp = tps(i) in mk_AUML`PatType(pat, tp) | i in set inds tps ];
 
@@ -302,9 +307,13 @@ attribute is not already generated as an association.
   IsAbstract : map AS`Name to AS`OpDef +> bool
   IsAbstract(opm) ==
     exists m in set rng opm 
-    & is_AS`ExplOpDef(m) and m.body.body = <SUBRESP>
-      or is_AS`ExtExplOpDef(m) and m.body.body = <SUBRESP>;
-
+--    & is_AS`ExplOpDef(m) and m.body.body = <SUBRESP>
+--      or is_AS`ExtExplOpDef(m) and m.body.body = <SUBRESP>;
+    & cases m:
+        mk_AS`ExplOpDef(-,-,-,-,-,mk_AS`OpBody(<SUBRESP>,-),-,-,-,-,-,-)        -> true,
+        mk_AS`ExtExplOpDef(-,-,-,-,-,mk_AS`OpBody(<SUBRESP>,-),-,-,-,-,-,-,-,-) -> true,
+        others -> false
+      end;
 
   MkName : AS`Name -> AUML`Name
   MkName(nm) ==
