@@ -1492,11 +1492,6 @@ Tuple vdmcg::GenInlineBody(const TYPE_AS_ExplOpDef & opdef,
     }
   }
   //return mk_(implfb, fb);
-  if (!fb.IsEmpty() && fb[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
-    SEQ<TYPE_CPP_Stmt> res (ExpandCompoundStmt(fb[1].GetSequence(pos_CPP_CompoundStmt_stms)));
-    res.ImpConc(fb.SubSequence(2, fb.Length()));
-    return mk_(implfb, res);
-  }
   return mk_(implfb, ExpandCompoundStmt(fb));
 }
 

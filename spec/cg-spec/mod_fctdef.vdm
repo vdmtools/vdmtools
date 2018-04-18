@@ -1148,10 +1148,7 @@ GenInlineBody(mk_AS`ExplOpDef(nm,-,-,tp,-,opbody,-,-,-,stat,constr,-), rngtype, 
           fb := CGSTMT`GenStmt(body, true);
   
     --return mk_(implfb, fb);
-    cases fb:
-      [mk_CPP`CompoundStmt(stms,-)] ^ s -> return mk_(implfb, CGAUX`ExpandCompoundStmt(stms) ^ s),
-      others -> return mk_(implfb, fb)
-    end;
+    return mk_(implfb, CGAUX`ExpandCompoundStmt(fb));
    );
 
 GenMethPreCall : AS`Name * seq of CPP`Expr * bool ==> CPP`Stmt

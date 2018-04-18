@@ -598,8 +598,10 @@ in
                   stmts = DS`GenConstDeclInit(ptp, nm_v, pat_v);
               in rb_l := rb_l ^ pat_stmt ^ stmts
             else -- let x = ... (the name of x is't already defined)
-              def id = BC`Rename(CGAUX`InsertName(nm)); -- must be before CGExprExcl
-                  mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, id.id, ptp);
+              --def id = BC`Rename(CGAUX`InsertName(nm)); -- must be before CGExprExcl
+              def - = CGAUX`InsertName(nm); -- must be before CGExprExcl
+                  --mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, id.id, ptp);
+                  mk_(pat_v, pat_stmt) = CGEXPR`CGExprExcl(val, "tmpVal", ptp);
                   vt = mk_CGMAIN`VT(pat_v, vtp);
                   decls = CGEXPR`DeclarePatVars(pat); -- must be before CGPatternMatchExcl
                   mk_(pm, -) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false, false);

@@ -650,9 +650,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
         }
         else {
           // let x = ... (the name of x is't already defined
-          TYPE_CPP_Identifier id (vdm_BC_Rename(InsertName_CGAUX(nm)));
+          //TYPE_CPP_Identifier id (vdm_BC_Rename(InsertName_CGAUX(nm)));
+          //TYPE_CPP_Identifier id (vdm_BC_Rename(nm));
+          InsertName_CGAUX(nm);
 
-          Tuple cgee (CGExprExcl(val, id.GetSequence(pos_CPP_Identifier_id), ptp));
+          //Tuple cgee (CGExprExcl(val, id.GetSequence(pos_CPP_Identifier_id), ptp));
+          Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), ptp));
           const TYPE_CPP_Expr & pat_v (cgee.GetRecord(1));
           const SEQ<TYPE_CPP_Stmt> & pat_stmt (cgee.GetSequence(2));
 
