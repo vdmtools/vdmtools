@@ -649,8 +649,9 @@ TYPE_CPP_Expr vdmcg::GenAuxType (const TYPE_CPP_Expr & e, const TYPE_REP_TypeRep
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
 {
-  if ( vdm_CPP_isCPP() && tp.IsNil() )
+  if ( vdm_CPP_isCPP() && tp.IsNil() ) {
     return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"GetValue"), SEQ<TYPE_CPP_Expr>() );
+  }
   else if (StripBracketedExpr(name).Is(TAG_TYPE_CPP_ConditionalExpr)) {
     TYPE_CPP_Expr expr (StripBracketedExpr(name));
     const TYPE_CPP_Expr & cond (expr.GetRecord(pos_CPP_ConditionalExpr_cond));
@@ -658,8 +659,7 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
     const TYPE_CPP_Expr & expr2 (expr.GetRecord(pos_CPP_ConditionalExpr_expr2));
     return vdm_BC_GenBracketedExpr(vdm_BC_GenCondExpr(cond, GenGetValue(expr1, tp), GenGetValue(expr2, tp)));
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep type (tp);
     switch ( type.GetTag() ) {
       case TAG_TYPE_REP_BooleanTypeRep: {
@@ -760,13 +760,14 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
               break;
             }
             case TAG_TYPE_CPP_FctCall: {
-              if (expr.GetRecord(pos_CPP_FctCall_fct) == GenBoolType().get_tp())
-              {
+              if (expr.GetRecord(pos_CPP_FctCall_fct) == GenBoolType().get_tp()) {
                 TYPE_CPP_Expr arg (expr.GetSequence(pos_CPP_FctCall_arg).Hd());
-                if (arg.Is(TAG_TYPE_CPP_BoolLit))
+                if (arg.Is(TAG_TYPE_CPP_BoolLit)) {
                   return arg;
-                else
+                }
+                else {
                   return vdm_BC_GenBracketedExpr(arg);
+                }
               }
               return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"GetValue"), SEQ<TYPE_CPP_Expr>() );
             }
@@ -867,21 +868,17 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
               switch(name.GetTag()) {
                 case TAG_TYPE_CPP_CastExpr: {
                   const Record & r (name.GetRecord(pos_CPP_CastExpr_typenm));
-                  if (r.Is(TAG_TYPE_CPP_TypeName))
-                  {
+                  if (r.Is(TAG_TYPE_CPP_TypeName)) {
                     const SEQ<TYPE_CPP_TypeSpecifier> & tps (r.GetSequence(pos_CPP_TypeName_tsp));
                     //if (tps[1] == vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Int"))))
-                    if (tps[1] == GenIntType())
-                    {
+                    if (tps[1] == GenIntType()) {
                       const TYPE_CPP_Expr & expr (name.GetRecord(pos_CPP_CastExpr_expr));
                       if (expr.Is(TAG_TYPE_CPP_FctCall) &&
-                          expr.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess))
-                      {
+                          expr.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess)) {
                         const TYPE_CPP_Expr & nm (expr.GetRecord(pos_CPP_FctCall_fct)
                                                       .GetRecord(pos_CPP_ObjectMemberAccess_name));
                         if ((nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Length"))) ||
-                            (nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Card"))))
-                        {
+                            (nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Card")))) {
                           return name.GetRecord(pos_CPP_CastExpr_expr);
                         }
                       }
@@ -890,24 +887,32 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
                   return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"GetValue"), SEQ<TYPE_CPP_Expr>() );
                 }
                 case TAG_TYPE_CPP_FctCall: {
-                  if (name.GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp())
-                  {
-                    TYPE_CPP_Expr arg (name.GetSequence(pos_CPP_FctCall_arg).Hd());
-                    if (arg.Is(TAG_TYPE_CPP_IntegerLit))
-                      return arg;
-                    else
-                      return vdm_BC_GenBracketedExpr(arg);
+                  if (name.GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp() ) {
+                    TYPE_CPP_Expr expr (name.GetSequence(pos_CPP_FctCall_arg).Hd());
+                    if (expr.Is(TAG_TYPE_CPP_IntegerLit)) {
+                      return expr;
+                    }
+                    else {
+                      if (expr.Is(TAG_TYPE_CPP_FctCall) &&
+                          expr.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess)) {
+                        const TYPE_CPP_Expr & nm (expr.GetRecord(pos_CPP_FctCall_fct)
+                                                      .GetRecord(pos_CPP_ObjectMemberAccess_name));
+                        if ((nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Length"))) ||
+                            (nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Card")))) {
+                          return expr;
+                        }
+                      }
+                      return vdm_BC_GenBracketedExpr(expr);
+                    }
                   }
                   return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"GetValue"), SEQ<TYPE_CPP_Expr>() );
                 }
                 case TAG_TYPE_CPP_UnaryOpExpr: {
                   if ((name.GetRecord(pos_CPP_UnaryOpExpr_op).GetField(pos_CPP_UnaryOp_val) == Quote(L"MINUS")) &&
                       name.GetRecord(pos_CPP_UnaryOpExpr_expr).Is(TAG_TYPE_CPP_FctCall) &&
-                      (name.GetRecord(pos_CPP_UnaryOpExpr_expr).GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp()))
-                  {
+                      (name.GetRecord(pos_CPP_UnaryOpExpr_expr).GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp())) {
                     TYPE_CPP_Expr arg (name.GetRecord(pos_CPP_UnaryOpExpr_expr).GetSequence(pos_CPP_FctCall_arg).Hd());
-                    if (arg.Is(TAG_TYPE_CPP_IntegerLit))
-                    {
+                    if (arg.Is(TAG_TYPE_CPP_IntegerLit)) {
                       return TYPE_CPP_IntegerLit().Init(-(arg.GetIntValue(pos_CPP_IntegerLit_val)), NilContextId);
                     }
                   }
@@ -918,13 +923,14 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
             case REAL: {
               switch(name.GetTag()) {
                 case TAG_TYPE_CPP_FctCall: {
-                  if (name.GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp())
-                  {
+                  if (name.GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp()) {
                     TYPE_CPP_Expr arg (name.GetSequence(pos_CPP_FctCall_arg).Hd());
-                    if (arg.Is(TAG_TYPE_CPP_IntegerLit))
+                    if (arg.Is(TAG_TYPE_CPP_IntegerLit)) {
                       return arg;
-                    else
+                    }
+                    else {
                       return vdm_BC_GenBracketedExpr(arg);
+                    }
                   }
                   return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"GetValue"), SEQ<TYPE_CPP_Expr>() );
                 }
@@ -963,10 +969,12 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
       case TAG_TYPE_REP_InjectiveMapTypeRep: {
         return name;
       }
-      case TAG_TYPE_REP_TypeNameRep:
+      case TAG_TYPE_REP_TypeNameRep: {
         return GenGetValue (name, type);
-      case TAG_TYPE_REP_InvTypeRep:
+      }
+      case TAG_TYPE_REP_InvTypeRep: {
         return GenGetValue (name, type.GetRecord(pos_REP_InvTypeRep_shape));
+      }
       case TAG_TYPE_REP_UnionTypeRep: {
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
@@ -1021,16 +1029,16 @@ TYPE_CPP_Expr vdmcg::GenValue(const TYPE_AS_Literal & lit, const TYPE_CGMAIN_VT 
       if (vdm_CPP_isJAVA()) {
         tp = vt.GetField(pos_CGMAIN_VT_type);
       }
-      else
-      {
+      else {
         tp = GetCI().GetTypeInfo(lit.GetInt(pos_AS_RealLit_cid));
       }
-      if (IsRealType(tp))
+      if (IsRealType(tp)) {
         if (vdm_CPP_isJAVA() && val.IsInt()) {
           return GenNumLit(val);
         }
         else 
           return GenRealLit(val);
+      }
       else if (val.IsInt()) {
         return GenNumLit(val);
       }
@@ -1044,8 +1052,7 @@ TYPE_CPP_Expr vdmcg::GenValue(const TYPE_AS_Literal & lit, const TYPE_CGMAIN_VT 
       if (vdm_CPP_isJAVA()) {
         tp = vt.GetField(pos_CGMAIN_VT_type);
       }
-      else
-      {
+      else {
         tp =  GetCI().GetTypeInfo(lit.GetInt(pos_AS_RealLit_cid));
       }
       if (IsRealType(tp)) {
@@ -6393,16 +6400,17 @@ TYPE_CPP_Expr vdmcg::GenEq_DS(const TYPE_CGMAIN_VT & vt1, const TYPE_CGMAIN_VT &
   {
 #ifdef VDMPP
     // Object ?
-    if (tp1.Is(TAG_TYPE_REP_ObjRefTypeRep) && tp2.Is(TAG_TYPE_REP_ObjRefTypeRep))
-    {
+    if (tp1.Is(TAG_TYPE_REP_ObjRefTypeRep) && tp2.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
       return vdm_BC_GenCastExpr(GenBoolType(), vdm_BC_GenEq(var1, var2));
     }
 #endif // VDMPP
     TYPE_CPP_Expr expr;
-    if (IsNumType(tp1) && IsNumType(tp2))
+    if (IsNumType(tp1) && IsNumType(tp2)) {
       expr = vdm_BC_GenEq(GenGetValue(var1, tp1), GenGetValue(var2, tp2));
-    else 
+    }
+    else {
       expr = vdm_BC_GenEq(var1, var2);
+    }
     return GenBoolExpr(expr);
   }
 }

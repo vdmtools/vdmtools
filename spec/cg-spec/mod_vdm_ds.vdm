@@ -566,10 +566,14 @@ GenGetValue( name, type ) ==
                          expr.fct.name = BC`GenIdentifier("Card"))
                       then return expr
                       else return BC`GenFctCallObjMemAcc(name, "GetValue", []),
-                  mk_CPP`FctCall((GenImplIntType().tp),arg,-) ->
-                      if is_CPP`IntegerLit(hd arg)
-                      then return hd arg
-                      else return BC`GenBracketedExpr(hd arg),
+                  mk_CPP`FctCall((GenImplIntType().tp),[expr],-) ->
+                      if is_CPP`IntegerLit(expr)
+                      then return expr
+                      elseif is_CPP`FctCall (expr) and is_CPP`ObjectMemberAccess(expr.fct) and
+                             (expr.fct.name = BC`GenIdentifier("Length") or
+                              expr.fct.name = BC`GenIdentifier("Card"))
+                      then return expr
+                      else return BC`GenBracketedExpr(expr),
                   mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp(<MINUS>,-),
                                      mk_CPP`FctCall((GenImplIntType().tp),arg,-),-) ->
                       if is_CPP`IntegerLit(hd arg)
