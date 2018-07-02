@@ -1,0 +1,29 @@
+class VDMToolsWizard
+
+functions
+public allClassNames : () +> set of seq of char
+allClassNames() == is not yet specified;
+
+public classAST : seq of char +> [AS`Class]
+classAST(cls) == is not yet specified;
+
+public classASTs : set of seq of char +> map seq of char to AS`Class
+classASTs(cls_s) == is not yet specified;
+
+public classToFileMap : () +> map seq of char to seq of char
+classToFileMap() == is not yet specified;
+
+public docTokenInfoSeq : seq of char +> [seq of CI`TokenInfo]
+docTokenInfoSeq(spec_file_name) == is not yet specified;
+
+public docContextNodeInfoSeq : seq of char * [seq of char] +> [seq of CI`ContextNodeInfo]
+docContextNodeInfoSeq(spec_file_name, coverage_info_file_name) == is not yet specified;
+
+public docTokenInfoSeqes : set of seq of char +> map seq of char to seq of CI`TokenInfo
+docTokenInfoSeqes(spec_file_name) == is not yet specified;
+
+public docContextNodeInfoSeqes : set of seq of char * [seq of char] +> map seq of char to seq of CI`ContextNodeInfo
+docContextNodeInfoSeqes(spec_file_name, coverage_info_file_name) == is not yet specified;
+
+end VDMToolsWizard
+

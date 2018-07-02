@@ -1,0 +1,7 @@
+r common_as.vdmsl
+r contextinfo.vdmsl
+r rep.vdmsl
+r wizard.vdm
+tc * pos
+init
+d VDMToolsWizard`moduleAST("VDMToolsWizard")

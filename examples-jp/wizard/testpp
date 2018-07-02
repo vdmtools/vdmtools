@@ -1,0 +1,7 @@
+r common_as.vdmpp
+r contextinfo.vdmpp
+r rep.vdmpp
+r wizard.vpp
+tc * pos
+init
+d new VDMToolsWizard().classAST("VDMToolsWizard")

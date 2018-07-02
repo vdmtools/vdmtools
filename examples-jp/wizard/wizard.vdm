@@ -1,0 +1,38 @@
+module VDMToolsWizard
+
+imports
+  from REP all,
+  from AS all,
+  from CI all
+
+exports
+    all
+
+definitions
+
+functions
+allModuleNames : () +> set of seq of char
+allModuleNames() == is not yet specified;
+
+moduleAST : seq of char +> [AS`Module]
+moduleAST(md) == is not yet specified;
+
+moduleASTs : set of seq of char +> map seq of char to AS`Module
+moduleASTs(md_s) == is not yet specified;
+
+moduleToFileMap : () +> map seq of char to seq of char
+moduleToFileMap() == is not yet specified;
+
+docTokenInfoSeq : seq of char +> [seq of CI`TokenInfo]
+docTokenInfoSeq(spec_file_name) == is not yet specified;
+
+docContextNodeInfoSeq : seq of char * [seq of char] +> [seq of CI`ContextNodeInfo]
+docContextNodeInfoSeq(spec_file_name, coverage_info_file_name) == is not yet specified;
+
+docTokenInfoSeqes : set of seq of char +> map seq of char to seq of CI`TokenInfo
+docTokenInfoSeqes(spec_file_name) == is not yet specified;
+
+docContextNodeInfoSeqes : set of seq of char * [seq of char] +> map seq of char to seq of CI`ContextNodeInfo
+docContextNodeInfoSeqes(spec_file_name, coverage_info_file_name) == is not yet specified;
+
+end VDMToolsWizard
