@@ -21,10 +21,10 @@
 // ==> bool
 bool StatSem::AuxIsUnionRec (const TYPE_REP_TypeRep & tp, const SET<TYPE_REP_TypeRep> & union_types)
 {
-  if (union_types.InSet(tp))
+  if (union_types.InSet(tp)) {
     return true;
-  else
-  {
+  }
+  else {
     switch(tp.GetTag()) {
       case TAG_TYPE_REP_TypeNameRep: {
 #ifdef VDMSL
@@ -34,10 +34,10 @@ bool StatSem::AuxIsUnionRec (const TYPE_REP_TypeRep & tp, const SET<TYPE_REP_Typ
         Generic newtp (StripAccessType (LookUpTypeName(tp.GetRecord(pos_REP_TypeNameRep_nm), true)));
 #endif // VDMPP
 
-        if (newtp.IsNil())
+        if (newtp.IsNil()) {
           return false;
-        else
-        {
+        }
+        else {
           return AuxIsUnionRec(newtp, SET<TYPE_REP_TypeRep>(union_types).Insert(tp));
         }
       }
@@ -47,14 +47,17 @@ bool StatSem::AuxIsUnionRec (const TYPE_REP_TypeRep & tp, const SET<TYPE_REP_Typ
         ut.Insert (tp);
         bool exists (false);
         Generic utp;
-        for (bool bb = Utps.First(utp); bb && !exists; bb = Utps.Next(utp))
+        for (bool bb = Utps.First(utp); bb && !exists; bb = Utps.Next(utp)) {
           exists = AuxIsUnionRec (utp, ut);
+        }
         return exists;
       }
-      case TAG_TYPE_REP_InvTypeRep:
+      case TAG_TYPE_REP_InvTypeRep: {
         return AuxIsUnionRec(tp.GetRecord(pos_REP_InvTypeRep_shape), union_types);
-      default:
+      }
+      default: {
         return false;
+      }
     }
   }
 }
@@ -64,8 +67,7 @@ bool StatSem::AuxIsUnionRec (const TYPE_REP_TypeRep & tp, const SET<TYPE_REP_Typ
 // ==> bool
 bool StatSem::IsUnionRecursive (const TYPE_REP_TypeRep & tp)
 {
-  if (!this->UnionRecursiveResults.DomExists (tp))
-  {
+  if (!this->UnionRecursiveResults.DomExists (tp)) {
     this->UnionRecursiveResults.Insert (tp, Bool(AuxIsUnionRec (tp, Set())));
   }
   return this->UnionRecursiveResults[tp].GetValue();
@@ -78,10 +80,12 @@ bool StatSem::IsUnionRecursive (const TYPE_REP_TypeRep & tp)
 // ==> bool
 bool StatSem::IsCompatible (const Int & i, const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep & TpR2)
 {
-  if (TpR1 == TpR2)
+  if (TpR1 == TpR2) {
     return true;
-  else
+  }
+  else {
     return ((i == POS) ? IsOverlapping(TpR1, TpR2, Set()) : IsSubType(TpR1, TpR2, Set()));
+  }
 }
 
 // IsEmpty
@@ -99,19 +103,18 @@ bool StatSem::IsEmpty (const Int & i, const TYPE_REP_TypeRep & tp)
 // ==> bool
 bool StatSem::IsEmptyAux (const Int & i, const TYPE_REP_TypeRep & tp, const SET<TYPE_REP_TypeRep> & empty_tps)
 {
-  if (empty_tps.InSet(tp))
+  if (empty_tps.InSet(tp)) {
     return true;
-  else
-  {
+  }
+  else {
     SET<TYPE_REP_TypeRep> new_tps (empty_tps);
     new_tps.Insert(tp);
-    switch (tp.GetTag())
-    {
+    switch (tp.GetTag()) {
       case TAG_TYPE_REP_TypeNameRep: {
-        if (IsUnionRecursive (tp))
+        if (IsUnionRecursive (tp)) {
           return (i == POS);
-        else
-        {
+        }
+        else {
 #ifdef VDMSL
           Generic newtp (LookUpTypeName(tp.GetRecord(pos_REP_TypeNameRep_nm)));
 #endif // VDMSL
@@ -125,39 +128,39 @@ bool StatSem::IsEmptyAux (const Int & i, const TYPE_REP_TypeRep & tp, const SET<
       case TAG_TYPE_REP_SeqTypeRep: {
         return IsEmptyAux (i, tp.GetRecord(pos_REP_SeqTypeRep_elemtp), new_tps);
       }
-// 20090817 -->
       case TAG_TYPE_REP_SetTypeRep: {
         return IsEmptyAux (i, tp.GetRecord(pos_REP_SetTypeRep_elemtp), new_tps);
       }
-// <-- 20090817
       case TAG_TYPE_REP_UnionTypeRep: {
         SET<TYPE_REP_TypeRep> t_s (tp.GetSet(pos_REP_UnionTypeRep_tps));
         bool forall(true);
         Generic t;
-        for(bool bb = t_s.First(t); bb && forall; bb = t_s.Next(t))
+        for(bool bb = t_s.First(t); bb && forall; bb = t_s.Next(t)) {
           forall = IsEmptyAux(i, t, new_tps);
+        }
         return forall;
       }
       case TAG_TYPE_REP_ProductTypeRep: {
         const SEQ<TYPE_REP_TypeRep> & t_l (tp.GetSequence(pos_REP_ProductTypeRep_tps));
         bool exists(false);
         size_t len_t_l = t_l.Length();
-        for(size_t idx = 1; (idx <= len_t_l) && !exists; idx++)
+        for(size_t idx = 1; (idx <= len_t_l) && !exists; idx++) {
           exists = IsEmptyAux(i, t_l[idx], new_tps);
+        }
         return exists;
       }
       case TAG_TYPE_REP_CompositeTypeRep: {
         const SEQ<TYPE_REP_FieldRep> & f_l (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
         bool exists(false);
         size_t len_f_l = f_l.Length();
-        for(size_t idx = 1; (idx <= len_f_l) && !exists; idx++)
+        for(size_t idx = 1; (idx <= len_f_l) && !exists; idx++) {
           exists = IsEmptyAux(i, f_l[idx].GetRecord(pos_REP_FieldRep_tp), new_tps);
+        }
         return exists;
       }
       case TAG_TYPE_REP_InvTypeRep: {
         return (i == POS) || (IsEmptyAux(i, tp.GetRecord(pos_REP_InvTypeRep_shape), new_tps));
       }
-// 20090817 -->
       case TAG_TYPE_REP_BooleanTypeRep:
       case TAG_TYPE_REP_NumericTypeRep:
       case TAG_TYPE_REP_TokenTypeRep:
@@ -169,7 +172,6 @@ bool StatSem::IsEmptyAux (const Int & i, const TYPE_REP_TypeRep & tp, const SET<
       case TAG_TYPE_REP_PartialFnTypeRep:
       case TAG_TYPE_REP_TotalFnTypeRep:
       case TAG_TYPE_REP_OpTypeRep:
-// <-- 20090817
       default: {
         return false;
       }
@@ -193,9 +195,9 @@ Int StatSem::NegWfClass (const Int & i) const
 // ==> bool
 bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep & TpR2, const Set & assump)
 {
-  if (TpR1 == TpR2)
+  if (TpR1 == TpR2) {
     return true;
-
+  }
   switch (TpR1.GetTag()) {
     case TAG_TYPE_REP_ExitTypeRep: { return true; }
     case TAG_TYPE_REP_AllTypeRep: { return false; }
@@ -204,16 +206,18 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
       SET<TYPE_REP_TypeRep> Lhs (TpR1.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = Lhs.First(tp); bb && forall; bb = Lhs.Next(tp))
+      for (bool bb = Lhs.First(tp); bb && forall; bb = Lhs.Next(tp)) {
         forall = IsSubType(tp, TpR2, assump);
+      }
       return forall;
     }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (TpR2.Is(TAG_TYPE_REP_TypeNameRep) && assump.InSet(mk_(TpR1, TpR2)))
+      if (TpR2.Is(TAG_TYPE_REP_TypeNameRep) && assump.InSet(mk_(TpR1, TpR2))) {
         return true;
-
-      if (IsUnionRecursive(TpR1))
+      }
+      if (IsUnionRecursive(TpR1)) {
         return false;
+      }
       else {
 #ifdef VDMSL
         Generic newtp (LookUpTypeName(TpR1.GetRecord(pos_REP_TypeNameRep_nm)));
@@ -222,18 +226,20 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
         Generic newtp (StripAccessType (LookUpTypeName(TpR1.GetRecord(pos_REP_TypeNameRep_nm), true)));
 #endif // VDMPP
         Set new_assump (assump);
-        if (TpR2.Is(TAG_TYPE_REP_TypeNameRep))
-          new_assump.Insert(mk_(TpR1, TpR2))          ;
+        if (TpR2.Is(TAG_TYPE_REP_TypeNameRep)) {
+          new_assump.Insert(mk_(TpR1, TpR2));
+        }
         return (newtp.IsNil() ? false : IsSubType(newtp, TpR2, new_assump));
+      }
     }
-  }
 #ifdef VDMPP
     case TAG_TYPE_REP_OverTypeRep: {
       SET<TYPE_REP_TypeRep> Lhs (TpR1.GetSet(pos_REP_OverTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = Lhs.First(tp); bb && forall; bb = Lhs.Next(tp))
+      for (bool bb = Lhs.First(tp); bb && forall; bb = Lhs.Next(tp)) {
         forall = IsSubType(tp, TpR2, assump);
+      }
       return forall;
     }
 #endif // VDMPP
@@ -242,16 +248,18 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
   switch (TpR2.GetTag()) {
     case TAG_TYPE_REP_AllTypeRep: { return true; }
     case TAG_TYPE_REP_InvTypeRep: {
-      if (Settings.ErrorLevel() >= ERR)
+      if (Settings.ErrorLevel() >= ERR) {
         return false;
-      else
+      }
+      else {
         return IsSubType (TpR1, TpR2.GetRecord(pos_REP_InvTypeRep_shape), assump);
+      }
     }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive(TpR2))
+      if (IsUnionRecursive(TpR2)) {
         return false;
-      else
-      {
+      }
+      else {
 #ifdef VDMSL
         Generic newtp (LookUpTypeName(TpR2.GetRecord(pos_REP_TypeNameRep_nm)));
 #endif // VDMSL
@@ -277,8 +285,9 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
           default: { return false; }
         }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_SetTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_SetTypeRep)) {
@@ -286,8 +295,9 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
                           TpR2.GetRecord(pos_REP_SetTypeRep_elemtp),
                           assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_SeqTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_SeqTypeRep)) {
@@ -295,8 +305,9 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
                           TpR2.GetRecord(pos_REP_SeqTypeRep_elemtp),
                           assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_ProductTypeRep)) {
@@ -305,12 +316,14 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
 
         bool forall (PTp1.Length() == PTp2.Length());
         size_t len_PTp1 = PTp1.Length();
-        for (size_t index = 1; (index <= len_PTp1) && forall; index++)
+        for (size_t index = 1; (index <= len_PTp1) && forall; index++) {
           forall = IsSubType(PTp1[index], PTp2[index], assump);
+        }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_CompositeTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_CompositeTypeRep)) {
@@ -319,10 +332,10 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
         const SEQ<TYPE_REP_FieldRep> & LhsFields (TpR1.GetSequence(pos_REP_CompositeTypeRep_fields));
         const SEQ<TYPE_REP_FieldRep> & RhsFields (TpR2.GetSequence(pos_REP_CompositeTypeRep_fields));
 
-        if (IsEmptyName (RhsName) && (RhsFields.IsEmpty()))
+        if (IsEmptyName (RhsName) && (RhsFields.IsEmpty())) {
           return true;
-        else
-        {
+        }
+        else {
 #ifdef VDMSL
           TYPE_AS_Name lnm (LhsName.GetSequence(pos_AS_Name_ids).Length() > 1 ? LhsName
                                                                               : ExtName(GetCurMod(), LhsName));
@@ -337,14 +350,16 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
 #endif // VDMPP
           bool forall = (lnm == rnm) && (LhsFields.Length() == RhsFields.Length());
           size_t len_LhsFields = LhsFields.Length();
-          for (size_t i = 1; (i <= len_LhsFields) && forall; i++)
+          for (size_t i = 1; (i <= len_LhsFields) && forall; i++) {
             forall = IsSubType(LhsFields[i].GetRecord(pos_REP_FieldRep_tp),
                                RhsFields[i].GetRecord(pos_REP_FieldRep_tp), assump);
+          }
           return forall;
         }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_PartialFnTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_PartialFnTypeRep) || TpR1.Is(TAG_TYPE_REP_TotalFnTypeRep)) {
@@ -355,12 +370,14 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
 
         bool forall (LhsDom.Length() == RhsDom.Length ());
         size_t len_LhsDom = LhsDom.Length();
-        for (size_t index = 1; (index <= len_LhsDom) && forall; index++)
+        for (size_t index = 1; (index <= len_LhsDom) && forall; index++) {
           forall = IsSubType(LhsDom[index], RhsDom[index], assump);
+        }
         return forall && IsSubType(LhsRng, RhsRng, assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_TotalFnTypeRep)) {
@@ -371,12 +388,14 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
 
         bool forall (LhsDom.Length() == RhsDom.Length ());
         size_t len_LhsDom = LhsDom.Length();
-        for (size_t index = 1; (index <= len_LhsDom) && forall; index++)
+        for (size_t index = 1; (index <= len_LhsDom) && forall; index++) {
           forall = IsSubType(LhsDom[index], RhsDom[index], assump);
+        }
         return forall && IsSubType(LhsRng, RhsRng, assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_GeneralMapTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_GeneralMapTypeRep) || TpR1.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) {
@@ -386,8 +405,9 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
         const TYPE_REP_TypeRep & RhsRng (TpR2.GetRecord(2));
         return IsSubType(LhsDom, RhsDom, assump) && IsSubType(LhsRng, RhsRng, assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_InjectiveMapTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) {
@@ -397,8 +417,7 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
         const TYPE_REP_TypeRep & RhsRng (TpR2.GetRecord(2));
         return IsSubType(LhsDom, RhsDom, assump) && IsSubType(LhsRng, RhsRng, assump);
       }
-      else if (TpR1.Is(TAG_TYPE_REP_GeneralMapTypeRep))
-      {
+      else if (TpR1.Is(TAG_TYPE_REP_GeneralMapTypeRep)) {
         const TYPE_REP_TypeRep & LhsDom (TpR1.GetRecord(pos_REP_GeneralMapTypeRep_mapdom));
         const TYPE_REP_TypeRep & LhsRng (TpR1.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
         const TYPE_REP_TypeRep & RhsDom (TpR2.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom));
@@ -407,42 +426,49 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
                IsSubType(LhsRng, RhsRng, assump) &&
                IsOneValueType(POS, LhsDom);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_QuoteTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_QuoteTypeRep)) {
         return (TpR1.GetRecord(pos_REP_QuoteTypeRep_lit) == TpR2.GetRecord(pos_REP_QuoteTypeRep_lit));
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> Rhs (TpR2.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists (false);
       Generic tp;
-      for (bool bb = Rhs.First(tp); bb && !exists; bb = Rhs.Next(tp))
+      for (bool bb = Rhs.First(tp); bb && !exists; bb = Rhs.Next(tp)) {
         exists = IsSubType(TpR1, tp, assump);
+      }
       return exists;
     }
 #ifdef VDMPP
     case TAG_TYPE_REP_ObjRefTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
-        if (IsEmptyName (TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm)))
+        if (IsEmptyName (TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm))) {
           return true;
-        else
+        }
+        else {
           return IsSubClass (TpR1.GetRecord(pos_REP_ObjRefTypeRep_nm),
                              TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm));
+        }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_OverTypeRep: {
       SET<TYPE_REP_TypeRep> Rhs (TpR2.GetSet(pos_REP_OverTypeRep_tps));
       bool exists (false);
       Generic tp;
-      for (bool bb = Rhs.First(tp); bb && !exists; bb = Rhs.Next(tp))
+      for (bool bb = Rhs.First(tp); bb && !exists; bb = Rhs.Next(tp)) {
         exists = IsSubType(TpR1, tp, assump);
+      }
       return exists;
     }
 #endif //VDMPP
@@ -453,27 +479,30 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
         const TYPE_REP_TypeRep & LhsRng (TpR1.GetRecord(pos_REP_OpTypeRep_Rng));
         TYPE_REP_TypeRep RhsRng (TpR2.GetRecord(pos_REP_OpTypeRep_Rng));
 
-        if (RhsRng.Is (TAG_TYPE_REP_ExitTypeRep))
+        if (RhsRng.Is (TAG_TYPE_REP_ExitTypeRep)) {
           RhsRng = rep_unittp;
-        else
+        }
+        else {
           RhsRng = MergeTypes(RhsRng, mk_REP_ExitTypeRep(rep_alltp));
-
+        }
         bool forall (LhsDom.Length() == RhsDom.Length ());
         size_t len_LhsDom = LhsDom.Length();
-        for (size_t index = 1; (index <= len_LhsDom) && forall; index++)
+        for (size_t index = 1; (index <= len_LhsDom) && forall; index++) {
           forall = IsSubType(LhsDom[index], RhsDom[index], assump);
+        }
         return forall && IsSubType(LhsRng, RhsRng, assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_TypeVarRep: {
       if (TpR1.Is(TAG_TYPE_REP_TypeVarRep)) {
-        //return false;
         return this->MeasureCheck();
       }
-      else
+      else {
         return false;
+      }
     }
     default: {
       return false;
@@ -489,9 +518,9 @@ bool StatSem::IsSubType (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep &
 // ==> bool
 bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep & TpR2, const Set & assump)
 {
-  if (TpR1 == TpR2)
+  if (TpR1 == TpR2) {
      return true;
-
+  }
   switch (TpR1.GetTag()) {
     case TAG_TYPE_REP_ExitTypeRep:
     case TAG_TYPE_REP_AllTypeRep: { return true; }
@@ -514,30 +543,29 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
                                                                     mk_REP_EmptySetTypeRep(rep_alltp),
                                                                     mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)))));
                                        
-      if ((Lhs.Intersect(tmpS).InSet(TpR2)))
+      if ((Lhs.Intersect(tmpS).InSet(TpR2))) {
         return true;
-
+      }
  //     SET<TYPE_REP_TypeRep> tps (Lhs.Diff(mk_set(rep_emptyseq, rep_emptyset, rep_emptymap)));
       SET<TYPE_REP_TypeRep> tps (Lhs.Diff(tmpS));
 
-// 20100701 -->
-      //bool exists = false;
       bool exists = tps.IsEmpty();
-// <-- 20100701
       Generic tp;
-      for (bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp))
+      for (bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp)) {
         exists = IsOverlapping(tp, TpR2, assump);
+      }
       return exists;
     }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (TpR2.Is(TAG_TYPE_REP_TypeNameRep))
-        if (assump.InSet(mk_(TpR1, TpR2)) || assump.InSet(mk_(TpR2, TpR1)))
+      if (TpR2.Is(TAG_TYPE_REP_TypeNameRep)) {
+        if (assump.InSet(mk_(TpR1, TpR2)) || assump.InSet(mk_(TpR2, TpR1))) {
           return true;
-
-      if (IsUnionRecursive(TpR1))
+        }
+      } 
+      if (IsUnionRecursive(TpR1)) {
         return true;
-      else
-      {
+      }
+      else {
 #ifdef VDMSL
         Generic newtp (LookUpTypeName(TpR1.GetRecord(pos_REP_TypeNameRep_nm)));
 #endif // VDMSL
@@ -545,8 +573,9 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
         Generic newtp (StripAccessType (LookUpTypeName(TpR1.GetRecord(pos_REP_TypeNameRep_nm), true)));
 #endif // VDMPP
         Set new_assump (assump);
-        if (TpR2.Is(TAG_TYPE_REP_TypeNameRep))
+        if (TpR2.Is(TAG_TYPE_REP_TypeNameRep)) {
           new_assump.Insert(mk_(TpR1, TpR2)).Insert(mk_(TpR2, TpR1));
+        }
         return (newtp.IsNil() ? false : IsOverlapping (newtp, TpR2, new_assump));
       }
     }
@@ -555,8 +584,9 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
       SET<TYPE_REP_TypeRep> lhs (TpR1.GetSet(pos_REP_OverTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = lhs.First(tp); bb && !exists; bb = lhs.Next(tp))
+      for (bool bb = lhs.First(tp); bb && !exists; bb = lhs.Next(tp)) {
         exists = IsOverlapping(tp, TpR2, assump);
+      }
       return exists;
     }
 #endif // VDMPP
@@ -569,10 +599,10 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
   switch (TpR2.GetTag()) {
     case TAG_TYPE_REP_AllTypeRep: { return true; }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive(TpR2))
+      if (IsUnionRecursive(TpR2)) {
         return true;
-      else
-      {
+      }
+      else {
 #ifdef VDMSL
         Generic newtp (LookUpTypeName(TpR2.GetRecord(pos_REP_TypeNameRep_nm)));
 #endif // VDMSL
@@ -589,8 +619,9 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
                               TpR2.GetRecord(pos_REP_SetTypeRep_elemtp),
                               assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_SeqTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_SeqTypeRep)) {
@@ -598,8 +629,9 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
                               TpR2.GetRecord(pos_REP_SeqTypeRep_elemtp),
                               assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_ProductTypeRep)) {
@@ -608,12 +640,14 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
 
         bool forall = (PTp1.Length() == PTp2.Length());
         size_t len_PTp1 = PTp1.Length();
-        for (size_t i = 1; (i <= len_PTp1) && forall; i++)
+        for (size_t i = 1; (i <= len_PTp1) && forall; i++) {
           forall = IsOverlapping(PTp1[i], PTp2[i], assump);
+        }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_CompositeTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_CompositeTypeRep)) {
@@ -622,10 +656,10 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
         const SEQ<TYPE_REP_FieldRep> & LhsFields (TpR1.GetSequence(pos_REP_CompositeTypeRep_fields));
         const SEQ<TYPE_REP_FieldRep> & RhsFields (TpR2.GetSequence(pos_REP_CompositeTypeRep_fields));
 
-        if (IsEmptyName (RhsName) && (RhsFields.IsEmpty()))
+        if (IsEmptyName (RhsName) && (RhsFields.IsEmpty())) {
           return true;
-        else
-        {
+        }
+        else {
 #ifdef VDMSL
           TYPE_AS_Name lnm (LhsName.GetSequence(pos_AS_Name_ids).Length() > 1 ? LhsName
                                                                               : ExtName(GetCurMod(), LhsName));
@@ -640,15 +674,17 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
 #endif // VDMPP
           bool forall = (lnm == rnm) && (LhsFields.Length() == RhsFields.Length());
           size_t len_LhsFields = LhsFields.Length();
-          for (size_t i = 1; (i <= len_LhsFields) && forall; i++)
+          for (size_t i = 1; (i <= len_LhsFields) && forall; i++) {
             forall = IsOverlapping(LhsFields[i].GetRecord(pos_REP_FieldRep_tp),
                                    RhsFields[i].GetRecord(pos_REP_FieldRep_tp),
                                    assump);
+          }
           return forall;
         }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_PartialFnTypeRep:
     case TAG_TYPE_REP_TotalFnTypeRep: {
@@ -660,12 +696,14 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
 
         bool forall (LhsDom.Length() == RhsDom.Length ());
         size_t len_LhsDom = LhsDom.Length();
-        for (size_t index = 1; (index <= len_LhsDom) && forall; index++)
+        for (size_t index = 1; (index <= len_LhsDom) && forall; index++) {
           forall = IsOverlapping(LhsDom[index], RhsDom[index], assump);
+        }
         return forall && IsOverlapping(LhsRng, RhsRng, assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_GeneralMapTypeRep:
     case TAG_TYPE_REP_InjectiveMapTypeRep: {
@@ -673,8 +711,9 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
         return IsOverlapping(TpR1.GetRecord(1), TpR2.GetRecord(1), assump) &&
                IsOverlapping(TpR1.GetRecord(2), TpR2.GetRecord(2), assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_InvTypeRep: {
       return IsOverlapping (TpR1, TpR2.GetRecord(pos_REP_InvTypeRep_shape), assump);
@@ -694,25 +733,21 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
                                          mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySeqTypeRep(rep_alltp),
                                                                     mk_REP_EmptySetTypeRep(rep_alltp),
                                                                     mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)))));
-      if ((Rhs.Intersect(tmpS).InSet(TpR1)))
-      {
-// 20110520 -->
+      if ((Rhs.Intersect(tmpS).InSet(TpR1))) {
         switch (TpR1.GetTag()) {
           case TAG_TYPE_REP_EmptySeqTypeRep: {
-            if (TpR1.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) != rep_alltp)
-            {
+            if (TpR1.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) != rep_alltp) {
               SET<TYPE_REP_TypeRep> tp_s (Rhs.Intersect(tmpS));
               Generic e;
-              for (bool bb = tp_s.First(e); bb; bb = tp_s.Next(e))
-                if (e.Is(TAG_TYPE_REP_EmptySeqTypeRep))
-                {
+              for (bool bb = tp_s.First(e); bb; bb = tp_s.Next(e)) {
+                if (e.Is(TAG_TYPE_REP_EmptySeqTypeRep)) {
                   return IsOverlapping(TpR1.GetRecord(pos_REP_EmptySeqTypeRep_elemtp),
                                        Record(e).GetRecord(pos_REP_EmptySeqTypeRep_elemtp), assump);
                 }
+              }
             }
           }
         }
-// <--20110520
         return true;
       }
 
@@ -722,32 +757,38 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
       bool exists = false;
       Generic tp;
       //for (bool bb = Rhs.First(tp); bb && !exists; bb = Rhs.Next(tp))
-      for (bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp))
+      for (bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp)) {
         exists = IsOverlapping(TpR1, tp, assump);
-
+      }
       return exists;
     }
 #ifdef VDMPP
     case TAG_TYPE_REP_ObjRefTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
-        if (IsEmptyName (TpR1.GetRecord(pos_REP_ObjRefTypeRep_nm)))
+        if (IsEmptyName (TpR1.GetRecord(pos_REP_ObjRefTypeRep_nm))) {
           return true;
-        else if (IsEmptyName (TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm)))
+        }
+        else if (IsEmptyName (TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm))) {
           return true;
-        else if (IsSubClass (TpR1.GetRecord(pos_REP_ObjRefTypeRep_nm), TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm)))
+        }
+        else if (IsSubClass (TpR1.GetRecord(pos_REP_ObjRefTypeRep_nm), TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm))) {
           return true;
-        else
+        }
+        else {
           return IsSubClass (TpR2.GetRecord(pos_REP_ObjRefTypeRep_nm), TpR1.GetRecord(pos_REP_ObjRefTypeRep_nm));
+        }
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_OverTypeRep: {
       SET<TYPE_REP_TypeRep> rhs (TpR2.GetSet(pos_REP_OverTypeRep_tps));
       bool exists = false;
       Generic tp;
-      for (bool bb = rhs.First(tp); bb && !exists; bb = rhs.Next(tp))
+      for (bool bb = rhs.First(tp); bb && !exists; bb = rhs.Next(tp)) {
         exists = IsOverlapping(TpR1, tp, assump);
+      }
       return exists;
     }
 #endif //VDMPP
@@ -758,21 +799,24 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
         const TYPE_REP_TypeRep & LhsRng (TpR1.GetRecord(pos_REP_OpTypeRep_Rng));
         TYPE_REP_TypeRep RhsRng (TpR2.GetRecord(pos_REP_OpTypeRep_Rng));
 
-        if (RhsRng.Is (TAG_TYPE_REP_ExitTypeRep))
+        if (RhsRng.Is (TAG_TYPE_REP_ExitTypeRep)) {
           RhsRng = rep_unittp;
-
+        }
         bool forall (LhsDom.Length() == RhsDom.Length ());
         size_t len_LhsDom = LhsDom.Length();
-        for (size_t index = 1; (index <= len_LhsDom) && forall; index++)
+        for (size_t index = 1; (index <= len_LhsDom) && forall; index++) {
           forall = IsOverlapping(LhsDom[index], RhsDom[index], assump);
+        }
         return forall && IsOverlapping(LhsRng, RhsRng, assump); 
       }
 #ifdef VICE
-      else if (TpR1.Is(TAG_TYPE_REP_AnyOpTypeRep))
+      else if (TpR1.Is(TAG_TYPE_REP_AnyOpTypeRep)) {
         return true;
+      }
 #endif // VICE
-      else
+      else {
         return false;
+     }
     }
 #ifdef VICE
     case TAG_TYPE_REP_AnyOpTypeRep: { return TpR1.Is(TAG_TYPE_REP_OpTypeRep); }
@@ -782,8 +826,9 @@ bool StatSem::IsOverlapping (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeR
         return IsOverlapping(TpR1.GetRecord (pos_REP_ExitTypeRep_tp),
                              TpR2.GetRecord (pos_REP_ExitTypeRep_tp), assump);
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_REP_TypeVarRep: { return true; }
     case TAG_TYPE_REP_PolyTypeRep: {
@@ -822,33 +867,32 @@ bool StatSem::IsOneValueType (const Int & i, const TYPE_REP_TypeRep & tp)
 // ==> bool
 bool StatSem::IsOneValueTypeAux (const Int & i, const TYPE_REP_TypeRep & tp, const SET<TYPE_REP_TypeRep> & tps)
 {
-  if (tps.InSet(tp))
+  if (tps.InSet(tp)) {
     return true;
-  else
-  {
+  }
+  else {
     Set new_tps (tps);
     new_tps.Insert(tp);
     switch (tp.GetTag()) {
       case TAG_TYPE_REP_TypeNameRep: {
-        if (IsUnionRecursive(tp))
+        if (IsUnionRecursive(tp)) {
           return i == Int (POS);
+        }
         else {
 #ifdef VDMSL
           Generic newtp (LookUpTypeName(tp.GetRecord(pos_REP_TypeNameRep_nm)));
+          if (newtp.IsNil()) {
 #endif // VDMSL
 #ifdef VDMPP
           Generic newtp_q (LookUpTypeName(tp.GetRecord(pos_REP_TypeNameRep_nm), true));
           Generic newtp (StripAccessType(newtp_q));
-#endif // VDMPP
-#ifdef VDMSL
-          if (newtp.IsNil())
-#endif // VDMSL
-#ifdef VDMPP
-          if (newtp.IsNil() || CheckAccessCurClass (newtp_q).IsNil ())
+          if (newtp.IsNil() || CheckAccessCurClass (newtp_q).IsNil ()) {
 #endif // VDMPP
             return false;
-          else
+          }
+          else {
             return IsOneValueTypeAux (i, newtp, new_tps);
+          }
         }
       }
       case TAG_TYPE_REP_InvTypeRep: {
@@ -861,23 +905,23 @@ bool StatSem::IsOneValueTypeAux (const Int & i, const TYPE_REP_TypeRep & tp, con
         const SEQ<TYPE_REP_FieldRep> & f_l (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
         bool forall = true;
         size_t len_f_l = f_l.Length();
-        for (size_t idx = 1; (idx <= len_f_l) && forall; idx++)
+        for (size_t idx = 1; (idx <= len_f_l) && forall; idx++) {
           forall = IsOneValueTypeAux(i, f_l[idx].GetRecord(pos_REP_FieldRep_tp), new_tps);
+        }
         return forall;
       }
       case TAG_TYPE_REP_UnionTypeRep: {
         SET<TYPE_REP_TypeRep> t_s (tp.GetSet(pos_REP_UnionTypeRep_tps));
         bool exists (false);
         Generic t;
-        for (bool bb = t_s.First(t); bb && !exists; bb = t_s.Next(t))
-        {
-          if (IsOneValueTypeAux(i, t, new_tps))
-          {
+        for (bool bb = t_s.First(t); bb && !exists; bb = t_s.Next(t)) {
+          if (IsOneValueTypeAux(i, t, new_tps)) {
             SET<TYPE_REP_TypeRep> t_ss (t_s);
             bool forall = true;
             Generic t_;
-            for (bool bb = t_ss.First(t_); bb && forall; bb = t_ss.Next(t_))
+            for (bool bb = t_ss.First(t_); bb && forall; bb = t_ss.Next(t_)) {
               forall = (IsEquivalent(i, t, t_) || IsEmpty(i, t_));
+            }
             exists = forall;
           }
         }
@@ -887,8 +931,9 @@ bool StatSem::IsOneValueTypeAux (const Int & i, const TYPE_REP_TypeRep & tp, con
         const SEQ<TYPE_REP_TypeRep> & t_l (tp.GetSequence(pos_REP_ProductTypeRep_tps));
         bool forall (true);
         size_t len_t_l = t_l.Length();
-        for (size_t idx = 1; (idx <= len_t_l) && forall; idx++)
+        for (size_t idx = 1; (idx <= len_t_l) && forall; idx++) {
           forall = IsOneValueTypeAux(i, t_l[idx], new_tps);
+        }
         return forall;
       }
       case TAG_TYPE_REP_SetTypeRep: {
@@ -911,8 +956,7 @@ bool StatSem::IsOneValueTypeAux (const Int & i, const TYPE_REP_TypeRep & tp, con
 
         bool b1 (true), b2 (true);
         size_t len_d_l = d_l.Length();
-        for (size_t idx = 1; idx <= len_d_l; idx++)
-        {
+        for (size_t idx = 1; idx <= len_d_l; idx++) {
           const TYPE_REP_TypeRep & d (d_l[idx]);
           b1 = b1 && (IsEmpty (i, d) || (IsEmpty (i, r)));
           b2 = b2 && (IsOneValueTypeAux (i, d, new_tps) && (IsOneValueTypeAux (i, r, new_tps)));
@@ -920,7 +964,6 @@ bool StatSem::IsOneValueTypeAux (const Int & i, const TYPE_REP_TypeRep & tp, con
         b1 = b1 || b2;
         return b1;
       }
-// 20090817 -->
       case TAG_TYPE_REP_EmptySeqTypeRep:
       case TAG_TYPE_REP_EmptySetTypeRep:
       case TAG_TYPE_REP_EmptyMapTypeRep: {
@@ -932,7 +975,6 @@ bool StatSem::IsOneValueTypeAux (const Int & i, const TYPE_REP_TypeRep & tp, con
       case TAG_TYPE_REP_CharTypeRep: {
         return false;
       }
-// <-- 20090817
       default: {
         return false;
       }

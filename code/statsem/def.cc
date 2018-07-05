@@ -27,8 +27,7 @@ bool StatSem::wf_Class(const Int & i, const TYPE_AS_Class & as_class)
 
   const SEQ<TYPE_AS_Name> & super (as_class.GetSequence(pos_AS_Class_supercls));
   size_t len_super = super.Length();
-  for (size_t idx = 1; idx <= len_super; idx++)
-  {
+  for (size_t idx = 1; idx <= len_super; idx++) {
     const TYPE_AS_Name & cls (super[idx]);
     if (!CheckClassName(cls)) {
       //----------------------------------------
@@ -75,8 +74,7 @@ bool StatSem::wf_Class(const Int & i, const TYPE_AS_Class & as_class)
     reswf = false;
   }
 
-  if (! as_class.GetField(pos_AS_Class_defs).IsNil ())
-  {
+  if (! as_class.GetField(pos_AS_Class_defs).IsNil ()) {
     const TYPE_AS_Name & clsnm (as_class.GetRecord(pos_AS_Class_nm));
 
     SetDefClass(clsnm);                 // 20070305
@@ -137,14 +135,14 @@ bool StatSem::wf_Module (const Int & i, const Record & mod)
       reswf = wf_Functions (i, defs.GetMap(pos_AS_Definitions_fnm)) && reswf;
       reswf = wf_TypeDefs (i, defs.GetMap(pos_AS_Definitions_typem)) && reswf;
   
-      if ( !defs.GetField(pos_AS_Definitions_State).IsNil() )
+      if ( !defs.GetField(pos_AS_Definitions_State).IsNil() ) {
         reswf = wf_State (i, defs.GetRecord(pos_AS_Definitions_State)) && reswf;
-  
+      } 
       reswf = wf_Traces (i, defs.GetMap(pos_AS_Definitions_tracem)) && reswf;
   
-      if (!exp.IsNil() )
+      if (!exp.IsNil() ) {
         LeaveCurModule (modid, exp);
-  
+      } 
       InitEnv();
       return reswf;
       break;
@@ -169,8 +167,7 @@ bool StatSem::wf_TypeDefs (const Int & i, const Map & tp_m)
 
   Set dom_tp_m (tp_m.Dom());
   Generic tp;
-  for (bool bb = dom_tp_m.First (tp) ; bb ; bb = dom_tp_m.Next(tp))
-  {
+  for (bool bb = dom_tp_m.First (tp) ; bb ; bb = dom_tp_m.Next(tp)) {
     TYPE_AS_TypeDef rc (tp_m[tp]);
     const TYPE_AS_Name & nm    (rc.GetRecord(pos_AS_TypeDef_nm));
     const TYPE_AS_Type & Tp    (rc.GetRecord(pos_AS_TypeDef_shape));
@@ -190,8 +187,7 @@ bool StatSem::wf_TypeDefs (const Int & i, const Map & tp_m)
 #endif //VDMPP
       wf_Type (i, Tp) && reswf;
 
-    if (IsUnionRecursive(tprep))
-    {
+    if (IsUnionRecursive(tprep)) {
       //---------------------------
       // Error message #3
       // Type name L"%1" is infinite
@@ -226,16 +222,18 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
       const SEQ<TYPE_AS_Type> & tp_l (type.GetSequence(pos_AS_ProductType_tps));
       size_t len_tp_l = tp_l.Length();
       bool reswf = true;
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         reswf = wf_Type(i, tp_l[idx]) && reswf;
+      }
       return reswf;
     }
     case TAG_TYPE_AS_UnionType: {
       const SEQ<TYPE_AS_Type> & tp_l (type.GetSequence(pos_AS_UnionType_tps));
       size_t len_tp_l = tp_l.Length();
       bool reswf = true;
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         reswf = wf_Type(i, tp_l[idx]) && reswf;
+      }
       return reswf;
     }
     case TAG_TYPE_AS_CompositeType: {
@@ -244,14 +242,12 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
       Set UsedSelectors;
       bool reswf = true;
       size_t len_flds = flds.Length();
-      for(size_t idx = 1; idx <= len_flds; idx++)
-      {
+      for(size_t idx = 1; idx <= len_flds; idx++) {
         const TYPE_AS_Field & fld (flds[idx]);
         const Generic & sel (fld.GetField(pos_AS_Field_sel));
         const TYPE_AS_Type & tp (fld.GetRecord(pos_AS_Field_type));
         reswf = wf_Type(i, tp) && reswf;
-        if (sel.IsRecord () && UsedSelectors.InSet (sel))
-        {
+        if (sel.IsRecord () && UsedSelectors.InSet (sel)) {
           //----------------------------------
           // Error message #4
           // Selector L"%1" is multiple defined
@@ -259,17 +255,19 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
           GenErr (sel, ERR, 4, mk_sequence(PrintName (sel)));
           reswf = false;
         }
-        else if (!sel.IsNil())
+        else if (!sel.IsNil()) {
           UsedSelectors.Insert (sel);
+        }
       }
       bool wf (CheckTag(tag));
-      if (!wf)
+      if (!wf) {
         //--------------------
         // Error message #5
         // Unknown tag L"%1"
         //--------------------
         GenErr (tag, ERR, 5, mk_sequence(PrintName (tag)));
-        return reswf && wf;
+      }
+      return reswf && wf;
     }
     case TAG_TYPE_AS_Set0Type: {
       bool reswf = wf_Type (i, type.GetRecord(pos_AS_Set0Type_elemtp))
@@ -321,9 +319,9 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
       const SEQ<TYPE_AS_Type> & dtp_l (type.GetSequence(pos_AS_OpType_opdom));
       bool reswf = true;
       size_t len_dtp_l = dtp_l.Length();
-      for (size_t idx = 1; idx <= len_dtp_l; idx++)
+      for (size_t idx = 1; idx <= len_dtp_l; idx++) {
         reswf = reswf && wf_Type (i, dtp_l[idx]);
-
+      }
       reswf = wf_Type (i, type.GetRecord(pos_AS_OpType_oprng)) && reswf;
       return reswf;
     }
@@ -331,9 +329,9 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
       const SEQ<TYPE_AS_Type> & dtp_l (type.GetSequence(pos_AS_PartialFnType_fndom));
       bool reswf = true;
       size_t len_dtp_l = dtp_l.Length();
-      for (size_t idx = 1; idx <= len_dtp_l; idx++)
+      for (size_t idx = 1; idx <= len_dtp_l; idx++) {
         reswf = reswf && wf_Type (i, dtp_l[idx]);
-
+      }
       reswf = wf_Type (i, type.GetRecord(pos_AS_PartialFnType_fnrng)) && reswf;
       return reswf;
     }
@@ -341,9 +339,9 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
       const SEQ<TYPE_AS_Type> & dtp_l (type.GetSequence(pos_AS_TotalFnType_fndom));
       bool reswf = true;
       size_t len_dtp_l = dtp_l.Length();
-      for (size_t idx = 1; idx <= len_dtp_l; idx++)
+      for (size_t idx = 1; idx <= len_dtp_l; idx++) {
         reswf = reswf && wf_Type (i, dtp_l[idx]);
-
+      }
       reswf = wf_Type (i, type.GetRecord(pos_AS_TotalFnType_fnrng)) && reswf;
       return reswf;
     }
@@ -358,8 +356,7 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
         return false;
       }
 #ifdef VICE
-      else if (CpuOrBusOutSideSys(nm))
-      {
+      else if (CpuOrBusOutSideSys(nm)) {
         if (nm == ASTAUX::MkNameFromId(ASTAUX::MkId(L"CPU"), NilContextId)) {
           //------------------------------------------
           //-- Error message #408
@@ -384,12 +381,14 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
           GenErr (nm, ERR, 410, mk_sequence(PrintName(nm)));
           return false;
         }
-        else
+        else {
           return true;
+        }
       }
 #endif // VICE
-      else
+      else {
         return true;
+      }
     }
     case TAG_TYPE_AS_TypeVar: {
       const TYPE_AS_Name & nm (type.GetRecord(1));
@@ -401,8 +400,9 @@ bool StatSem::wf_Type (const Int & i, const TYPE_AS_Type & type)
         GenErr (nm, ERR, 7, mk_sequence(PrintName(nm)));
         return false;
       }
-      else
+      else {
         return true;
+      }
     }
     case TAG_TYPE_AS_AllType: {
       return true;
@@ -601,8 +601,7 @@ bool StatSem::wf_TypeList (const Int & i, const SEQ<TYPE_AS_Type> & tp_l)
   bool reswf = true;
 
   size_t len_tp_l = tp_l.Length();
-  for (size_t idx = 1; idx <= len_tp_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_tp_l; idx++) {
     reswf = reswf && wf_Type (i, tp_l[idx]);
   }
 
@@ -688,8 +687,7 @@ bool StatSem::wf_Functions (const Int & i, const Map & fn_m)
 
   SET<TYPE_AS_Name> dom_fn_m (fn_m.Dom());
   Generic nm;
-  for (bool bb = dom_fn_m.First(nm) ; bb ; bb = dom_fn_m.Next(nm))
-  {
+  for (bool bb = dom_fn_m.First(nm) ; bb ; bb = dom_fn_m.Next(nm)) {
     const TYPE_AS_FnDef & fn (fn_m[nm]);
     switch(fn.GetTag()) {
       case TAG_TYPE_AS_ImplFnDef: {
@@ -701,12 +699,10 @@ bool StatSem::wf_Functions (const Int & i, const Map & fn_m)
         const Bool & stat                   (fn.GetBool    (pos_AS_ImplFnDef_stat));
 
         TYPE_REP_TypeRep fntp (ExportImplicitFunction(GetCurClass(), fn));
-        if (params.IsEmpty())
-        {
+        if (params.IsEmpty()) {
           reswf = CheckDefAccess (MakeFnRng (fntp, access, stat), fnm) && reswf;
         }
-        else
-        {
+        else {
           SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (GetCurClass(), params));
           reswf = CheckDefAccess (MakePolyRng (mk_REP_PolyTypeRep(r_l, fntp), access, stat), fnm) && reswf;
         }
@@ -722,12 +718,10 @@ bool StatSem::wf_Functions (const Int & i, const Map & fn_m)
         const Bool & stat                    (fn.GetBool(pos_AS_ExplFnDef_stat));
 
         TYPE_REP_TypeRep fntp (ExportExplicitFunction(GetCurClass(), fn));
-        if (tpparms.IsEmpty())
-        {
+        if (tpparms.IsEmpty()) {
           reswf = CheckDefAccess (MakeFnRng (fntp, accs, stat), fnm) && reswf;
         }
-        else
-        {
+        else {
           SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (GetCurClass(), tpparms));
           reswf = CheckDefAccess (MakePolyRng (mk_REP_PolyTypeRep(r_l, fntp), accs, stat), nm) && reswf;
         }
@@ -743,20 +737,19 @@ bool StatSem::wf_Functions (const Int & i, const Map & fn_m)
         const Bool & stat                   (fn.GetBool(pos_AS_ExtExplFnDef_stat));
 
         TYPE_REP_TypeRep fntp (ExportExtExplicitFunction(GetCurClass(), fn));
-        if (params.IsEmpty())
-        {
+        if (params.IsEmpty()) {
           reswf = CheckDefAccess (MakeFnRng (fntp, accs, stat), fnm) && reswf;
         }
-        else
-        {
+        else {
           SEQ<TYPE_REP_TypeRep> r_l (TransTypeList (GetCurClass(), params));
           reswf = CheckDefAccess (MakePolyRng (mk_REP_PolyTypeRep(r_l, fntp), accs, stat), fnm) && reswf;
         }
 #endif // VDMPP
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
   PopContext ();
@@ -815,24 +808,20 @@ bool StatSem::wf_ImplFunction (const Int & i, const TYPE_AS_ImplFnDef & vFnDef)
       wf_Type (i, fnrng) && wf_rng;
   }
 
-// 20110719 -->
-  if (CheckAllType(fnrng))
-  {
+  if (CheckAllType(fnrng)) {
     //--------------------------------------------------------------
     // Error message #447
     // '?' must not be in function/operation return type
     //--------------------------------------------------------------
     GenErr (nm, WRN1, 447, Sequence());
   }
-// <-- 20110719
 
   //SET<TYPE_AS_Name> dombind (bind.Dom());
   //dombind.ImpIntersect(valtp_bd.Dom());
   SET<TYPE_AS_Name> dombind (bind.Dom().Intersect(valtp_bd.Dom()));
   bool ok_bd (dombind.IsEmpty());
 
-  if (!ok_bd)
-  {
+  if (!ok_bd) {
     //--------------------------------------------------------------
     // Error message #9
     // Parameter identifiers overlap the result identifiers for L"%1"
@@ -917,8 +906,7 @@ Tuple StatSem::wf_Body(const Int & i,
     }
     return mk_(Bool(true), rng_tp);
   }
-  else
-  {
+  else {
     switch(body.GetTag()) {
       case TAG_TYPE_AS_FnBody: {
         const TYPE_AS_Expr & bd (body.GetRecord(pos_AS_FnBody_body));
@@ -926,16 +914,13 @@ Tuple StatSem::wf_Body(const Int & i,
       }
       case TAG_TYPE_AS_OpBody: {
         const TYPE_AS_Stmt & bd (body.GetRecord(pos_AS_OpBody_body));
-// 20081119 -->
 //        return wf_Stmt(i, bd, rng_tp); // bool * REP`TypeRep
         Tuple infer (wf_Stmt(i, bd, rng_tp)); // bool * REP`TypeRep
         const TYPE_CI_ContextId & cid (body.GetInt(pos_AS_OpBody_cid)); 
-        if (cid != NilContextId)
-        {
+        if (cid != NilContextId) {
           GetCI().SetTypeInfo(cid, infer.GetRecord(2));
         }
         return infer;
-// <-- 20081119
       }
       default: {
         return Tuple(2); // dummy
@@ -974,8 +959,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
   Sequence fndom;
   while ((fnrng.Is(TAG_TYPE_REP_TotalFnTypeRep) ||
           fnrng.Is(TAG_TYPE_REP_PartialFnTypeRep)) &&
-         (size_t)(fndom.Length ()) < len_parms)
-  {
+         (size_t)(fndom.Length ()) < len_parms) {
     fndom.ImpAppend (fnrng.GetField (1));
     fnrng = fnrng.GetField (2);
   }
@@ -993,8 +977,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
 #endif //VDMPP
             && ((tprep = tprep2).Is (TAG_TYPE_REP_PartialFnTypeRep)
             || tprep.Is (TAG_TYPE_REP_TotalFnTypeRep)))) ||
-          fnrng.Is (TAG_TYPE_REP_PartialFnTypeRep)))
-  {
+          fnrng.Is (TAG_TYPE_REP_PartialFnTypeRep))) {
     if (fnrng.Is (TAG_TYPE_REP_TypeNameRep)) {
       fndom.ImpAppend (tprep.GetField (1));
       fnrng = tprep.GetField (2);
@@ -1006,8 +989,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
   }
 
   bool ok_in = true;
-  if ((size_t)(fndom.Length ()) != len_parms)
-  {
+  if ((size_t)(fndom.Length ()) != len_parms) {
     //----------------------------------------------------------
     // Error message #10
     // There is too many Curried parameters in the function L"%1"
@@ -1016,21 +998,19 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
 
     ok_in = false;
     //size_t len_parms = parms.Length();
-    for (size_t idx = 1; idx <= len_parms; idx++)
-    {
+    for (size_t idx = 1; idx <= len_parms; idx++) {
       const SEQ<TYPE_AS_Pattern> & parm (parms[idx]);
       size_t len_parm = parm.Length();
-      for (size_t idp = 1; idp <= len_parm; idp++)
+      for (size_t idp = 1; idp <= len_parm; idp++) {
         bindings.ImpOverride (ExtractBindings (parm[idp]));
+      }
     }
   }
   else {
-// 20130111 ->
     // for curry
     size_t ccount = 0;
     TYPE_AS_Type tp_q (tp);
-    while(tp_q.Is(TAG_TYPE_AS_PartialFnType) || tp_q.Is(TAG_TYPE_AS_TotalFnType))
-    {
+    while(tp_q.Is(TAG_TYPE_AS_PartialFnType) || tp_q.Is(TAG_TYPE_AS_TotalFnType)) {
       ccount++;
       switch (tp_q.GetTag()) {
         case TAG_TYPE_AS_PartialFnType: {
@@ -1043,8 +1023,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
         }
       }
     }
-    if (ccount < len_parms)
-    {
+    if (ccount < len_parms) {
       //----------------------------------------------------------
       // Error message #10
       // There is too many Curried parameters in the function L"%1"
@@ -1052,20 +1031,16 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
       GenErr (nm, ERR, 10, mk_sequence(PrintName (nm)));
       ok_in = false;
     }
-// <-- 20130111
 
-    for (size_t index = 1; index <= len_parms && index; index++)
-    {
+    for (size_t index = 1; index <= len_parms && index; index++) {
       Tuple infer (wf_PatternList (i, parms[index], fndom[index],nm));
       const Bool & ok (infer.GetBool(1)); // bool
       const MAP<TYPE_AS_Name,Tuple> & bind (infer.GetMap(2));
 
       SET<TYPE_AS_Name> overlap (bind.Dom ().Intersect (bindings.Dom ()));
-      if (!overlap.IsEmpty())
-      {
+      if (!overlap.IsEmpty()) {
         Generic id;
-        for (bool bb = overlap.First(id); bb; bb = overlap.Next(id))
-        {
+        for (bool bb = overlap.First(id); bb; bb = overlap.Next(id)) {
           //---------------------------------------------------------------------------------
           // Error message #11
           // L"%1" is used multiple times in the Curried argument list for the function L"%2"
@@ -1082,10 +1057,8 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
 // 20100913 -->
 #ifdef VDMPP
   bool ok_subresp = true;
-  if (fnbody.GetField(pos_AS_FnBody_body) == Int(SUBRESP))
-  {
-    if ((access != Int(PUBLIC_AS)) && (access != Int(PROTECTED_AS)))
-    {
+  if (fnbody.GetField(pos_AS_FnBody_body) == Int(SUBRESP)) {
+    if ((access != Int(PUBLIC_AS)) && (access != Int(PROTECTED_AS))) {
       // ------------------------------------------------------------
       // -- Error message #438
       // -- Abstract function/operation "%1" must be defined as public or protected
@@ -1121,8 +1094,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
 
   bool ok_out = (IsCompatible (i, tpe, fnrng));
 
-  if (!ok_out)
-  {
+  if (!ok_out) {
     //-------------------------------------------------------------
     // Error message #12
     // Return type of function for L"%1" is different from signature
@@ -1130,22 +1102,18 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
     GenErrTp (nm, ERR, 12, tpe, fnrng, mk_sequence(PrintName(nm)));
   }
  
-// 20110719 -->
-  if (CheckAllType(fnrng))
-  {
+  if (CheckAllType(fnrng)) {
     //--------------------------------------------------------------
     // Error message #447
     // '?' must not be in function/operation return type
     //--------------------------------------------------------------
     GenErr (nm, WRN1, 447, Sequence());
   }
-// <-- 20110719
 
   Tuple infer2 (wf_Pred (i, fnpre, PRE));
   const Bool & wf_pre (infer2.GetBool(1));
 
-  if (!fnpost.IsNil () && (fndom.Length () > 1))
-  {
+  if (!fnpost.IsNil () && (fndom.Length () > 1)) {
     //------------------------------------------------
     // Error message #13
     // A Curried function cannot have a post-condition
@@ -1158,8 +1126,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
     return false;
   }
 
-  if (!fnpost.IsNil ())
-  {
+  if (!fnpost.IsNil ()) {
     MAP<TYPE_AS_Name,Tuple> mp;
     mp.Insert (ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), NilContextId),
                mk_(TransType(Nil (), tp.GetField (2)), Int(1)));
@@ -1169,9 +1136,9 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
   Tuple infer3 (wf_Pred (i, fnpost, POST));
   const Bool & wf_post (infer3.GetBool(1));
 
-  if (!fnpost.IsNil ())
+  if (!fnpost.IsNil ()) {
     LeaveScope();
-
+  }
   LeaveScope ();
 
   PopTypeVarContext ();
@@ -1180,8 +1147,7 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
 #endif //VDMPP
 
 #ifdef VDMSL
-  if (Settings.VDMSLmode() && !fnpost.IsNil ())
-  {
+  if (Settings.VDMSLmode() && !fnpost.IsNil ()) {
     //------------------------------------------------------------------------
     // Error message #353
     // Post conditions in explicit functions are not supported in standard
@@ -1244,8 +1210,7 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
     wf_TypeList (i, fndom);
 
   bool wf_rng = false;
-  if (!resnmtps.IsEmpty())
-  {
+  if (!resnmtps.IsEmpty()) {
     wf_rng =
 #ifdef VDMPP
       CheckTypeAccess (nm, tprng) &&
@@ -1257,8 +1222,7 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
 
   bool ok_bd = (dombind.IsEmpty());
 
-  if (!ok_bd)
-  {
+  if (!ok_bd) {
     //--------------------------------------------------------------
     // Error message #9
     // Parameter identifiers overlap the result identifiers for L"%1"
@@ -1269,10 +1233,8 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
 // 20100913 -->
 #ifdef VDMPP
   bool ok_subresp = true;
-  if (fnbody.GetField(pos_AS_FnBody_body) == Int(SUBRESP))
-  {
-    if ((access != Int(PUBLIC_AS)) && (access != Int(PROTECTED_AS)))
-    {
+  if (fnbody.GetField(pos_AS_FnBody_body) == Int(SUBRESP)) {
+    if ((access != Int(PUBLIC_AS)) && (access != Int(PROTECTED_AS))) {
       // ------------------------------------------------------------
       // -- Error message #438
       // -- Abstract function/operation "%1" must be defined as public or protected
@@ -1296,8 +1258,7 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
 
   SET<TYPE_AS_Name> parmsNames;
   size_t len_parms = parms.Length();
-  for (size_t idx = 1; idx <= len_parms; idx++)
-  {
+  for (size_t idx = 1; idx <= len_parms; idx++) {
     parmsNames.ImpUnion(ExtractPatternName(parms[idx]).Dom());
   }
   SET<TYPE_AS_Name> resNames (valtp_bd.Dom().Union(parmsNames));
@@ -1308,8 +1269,7 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
 
   bool ok_out = (IsCompatible (i, tpe, fnrng));
 
-  if (!ok_out)
-  {
+  if (!ok_out) {
     //-------------------------------------------------------------
     // Error message #12
     // Return type of function for L"%1" is different from signature
@@ -1317,16 +1277,13 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
     GenErrTp (nm, ERR, 12, tpe, fnrng, mk_sequence(PrintName(nm)));
   }
 
-// 20110719 -->
-  if (CheckAllType(fnrng))
-  {
+  if (CheckAllType(fnrng)) {
     //--------------------------------------------------------------
     // Error message #447
     // '?' must not be in function/operation return type
     //--------------------------------------------------------------
     GenErr (nm, WRN1, 447, Sequence());
   }
-// <-- 20110719
 
   Tuple infer4 (wf_Pred (i, fnpost, POST));
   const Bool & wf_post (infer.GetBool(1));
@@ -1441,16 +1398,17 @@ bool StatSem::wf_Operations (const Int & i, const Map & opmap)
 
   Set dom_opmap (opmap.Dom());
   Generic nm;
-  for (bool bb = dom_opmap.First(nm) ; bb ; bb = dom_opmap.Next(nm))
-  {
+  for (bool bb = dom_opmap.First(nm) ; bb ; bb = dom_opmap.Next(nm)) {
     TYPE_AS_OpDef op (opmap[nm]);
     switch(op.GetTag()) {
       case TAG_TYPE_AS_ImplOpDef: {
         const Bool & oppure           (op.GetBool(pos_AS_ImplOpDef_oppure));
-        if (oppure)
+        if (oppure) {
           PushContext(Int(PUREOP));
-        else
+        }
+        else {
           PushContext(Int(ALL));
+        }
         reswf = wf_ImplOperation (i, op) && reswf;
 #ifdef VDMPP
         const TYPE_AS_Name & onm      (op.GetRecord(pos_AS_ImplOpDef_nm));
@@ -1465,10 +1423,12 @@ bool StatSem::wf_Operations (const Int & i, const Map & opmap)
       }
       case TAG_TYPE_AS_ExplOpDef: {
         const Bool & oppure        (op.GetBool  (pos_AS_ExplOpDef_oppure));
-        if (oppure)
+        if (oppure) {
           PushContext(Int(PUREOP));
-        else
+        }
+        else {
           PushContext(Int(ALL));
+        }
         reswf = wf_ExplOperation (i, op) && reswf;
 #ifdef VDMPP
         const TYPE_AS_Name & onm   (op.GetRecord(pos_AS_ExplOpDef_nm));
@@ -1483,10 +1443,12 @@ bool StatSem::wf_Operations (const Int & i, const Map & opmap)
       }
       case TAG_TYPE_AS_ExtExplOpDef: {
         const Bool & oppure           (op.GetBool  (pos_AS_ExtExplOpDef_oppure));
-        if (oppure)
+        if (oppure) {
           PushContext(Int(PUREOP));
-        else
+        }
+        else {
           PushContext(Int(ALL));
+        }
         reswf = wf_ExtExplOperation (i, op) && reswf;
 #ifdef VDMPP
         const TYPE_AS_Name & onm      (op.GetRecord(pos_AS_ExtExplOpDef_nm));
@@ -1499,8 +1461,9 @@ bool StatSem::wf_Operations (const Int & i, const Map & opmap)
         PopContext();
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
 
@@ -1508,8 +1471,7 @@ bool StatSem::wf_Operations (const Int & i, const Map & opmap)
   FullOpTest(true);
   SET<TYPE_AS_OpDef> trops (this->trapops);
   Generic defi;
-  for (bool cc = trops.First (defi); cc; cc = trops.Next (defi))
-  {
+  for (bool cc = trops.First (defi); cc; cc = trops.Next (defi)) {
     switch(Record(defi).GetTag()) {
       case TAG_TYPE_AS_ExtExplOpDef: {
         reswf = wf_ExtExplOperation (i, defi) && reswf;
@@ -1519,8 +1481,9 @@ bool StatSem::wf_Operations (const Int & i, const Map & opmap)
         reswf = wf_ExplOperation (i, defi) && reswf;
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
   PopContext();
@@ -1572,11 +1535,9 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
   SetOpContext (opnm);
 
   Set usi (UsedStateIds (bindings.Dom ()));
-  if (!usi.IsEmpty())
-  {
+  if (!usi.IsEmpty()) {
     Generic stid;
-    for (bool bb = usi.First (stid); bb; bb = usi.Next (stid))
-    {
+    for (bool bb = usi.First (stid); bb; bb = usi.Next (stid)) {
       //----------------------------------------------------
       // Error message #18
       // The scope of the state component L"%1" is now hidden
@@ -1591,49 +1552,50 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
 #endif //VDMPP
   SET<TYPE_AS_Name> pnms;
   size_t len_parms = parms.Length();
-  for (size_t idx = 1; idx <= len_parms; idx++)
+  for (size_t idx = 1; idx <= len_parms; idx++) {
     pnms.ImpUnion(ExtractPatternName(parms[idx]).Dom());
-
+  }
   const TYPE_AS_Type & oprng (optp.GetRecord(pos_AS_OpType_oprng));
 
-// 20110719 -->
-  if (CheckAllType(oprng))
-  {
+  if (CheckAllType(oprng)) {
     //--------------------------------------------------------------
     // Error message #447
     // '?' must not be in function/operation return type
     //--------------------------------------------------------------
     GenErr (opnm, WRN1, 447, Sequence());
   }
-// <-- 20110719
 
 #ifdef VDMSL
   TYPE_REP_TypeRep rng_tp;
-  if (oprng.Is(TAG_TYPE_AS_VoidType))
+  if (oprng.Is(TAG_TYPE_AS_VoidType)) {
     rng_tp = mk_REP_UnionTypeRep(mk_set(rep_unittp, rep_rettp));
-  else
+  }
+  else {
     rng_tp = TransType(Nil (), oprng);
+  }
 #endif //VDMSL
 
 #ifdef VDMPP
   TYPE_REP_TypeRep rng_tp;
-  if (constr)
+  if (constr) {
     rng_tp = mk_REP_UnionTypeRep(mk_set(rep_unittp, mk_REP_ObjRefTypeRep(GetCurClass()), rep_rettp));
-  else if (oprng.Is(TAG_TYPE_AS_VoidType))
+  }
+  else if (oprng.Is(TAG_TYPE_AS_VoidType)) {
     rng_tp = mk_REP_UnionTypeRep(mk_set(rep_unittp, rep_rettp));
-  else
+  }
+  else {
     rng_tp = TransType(Nil (), oprng);
+  }
 #endif //VDMPP
 
   Tuple infer2 (wf_Body(i, opbody, rng_tp, pnms));
   const Bool & wf_body (infer2.GetBool(1));
   const TYPE_REP_TypeRep & tp (infer2.GetRecord(2));
 
-  if (AnyTraps())
+  if (AnyTraps()) {
     this->trapops.Insert (vOpDef);
-
-  if (oppure && oprng.Is(TAG_TYPE_AS_VoidType))
-  {
+  }
+  if (oppure && oprng.Is(TAG_TYPE_AS_VoidType)) {
     // ------------------------------------------------------------
     // -- Error message #454
     // -- Pure operation %1 must return a value
@@ -1642,8 +1604,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
     reswf = false;
   }
 #ifdef VDMPP
-  if (!sync && !oprng.Is(TAG_TYPE_AS_VoidType))
-  {
+  if (!sync && !oprng.Is(TAG_TYPE_AS_VoidType)) {
     // ------------------------------------------------------------
     // -- Error message #436
     // -- Asynchronous operation %1 cannot return a value
@@ -1651,10 +1612,8 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
     GenErr(opnm, ERR, 436, mk_sequence(PrintName(opnm)));
     reswf = false;
   }
-  if (constr)
-  {
-    if (!sync)
-    {
+  if (constr) {
+    if (!sync) {
       // ------------------------------------------------------------
       // -- Error message #432
       // -- Constructors like "%1" cannot be defined async
@@ -1662,8 +1621,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
       GenErr(opnm, ERR, 432, mk_sequence(PrintName(GetCurClass())));
       reswf = false;
     }
-    if (oppure)
-    {
+    if (oppure) {
       // ------------------------------------------------------------
       // -- Error message #455
       // -- Constructors like "%1" cannot be defined pure
@@ -1671,8 +1629,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
       GenErr(opnm, ERR, 455, mk_sequence(PrintName(opnm)));
       reswf = false;
     }
-    if (stat)
-    {
+    if (stat) {
       // ------------------------------------------------------------
       // -- Error message #445
       // -- Constructor cannot be defined static
@@ -1681,8 +1638,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
       reswf = false;
     }
     if(oprng.Is(TAG_TYPE_AS_VoidType) ||
-       !(oprng.Is(TAG_TYPE_AS_TypeName) && (Record(oprng).GetRecord(pos_AS_TypeName_name) == GetCurClass()) ) )
-    {
+       !(oprng.Is(TAG_TYPE_AS_TypeName) && (Record(oprng).GetRecord(pos_AS_TypeName_name) == GetCurClass()) ) ) {
       // ------------------------------------------------------------
       // -- Error message #393
       // -- Constructor does not have correct return type: "%1"
@@ -1691,8 +1647,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
       reswf = false;
     }
   }
-  if ((opbody.GetField(pos_AS_OpBody_body) == Int(SUBRESP)) && (acc != Int(PUBLIC_AS)) && (acc != Int(PROTECTED_AS)))
-  {
+  if ((opbody.GetField(pos_AS_OpBody_body) == Int(SUBRESP)) && (acc != Int(PUBLIC_AS)) && (acc != Int(PROTECTED_AS))) {
     // ------------------------------------------------------------
     // -- Error message #438
     // -- Abstract function/operation "%1" must be defined as public or protected
@@ -1708,8 +1663,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
 #ifdef VDMPP
       && !(constr && (tp.Is(TAG_TYPE_REP_UnitTypeRep)))
 #endif //VDMPP
-     )
-  {
+     ) {
 #ifdef VDMPP
     if (constr) {
       // ------------------------------------------------------------
@@ -1741,8 +1695,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
 
   PopContext();
 
-  if (!oppost.IsNil ())
-  {
+  if (!oppost.IsNil ()) {
     PushContext(Int(POST)); // need ext
 
     if (!tp.Is (TAG_TYPE_REP_UnitTypeRep)) {
@@ -1756,8 +1709,9 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
 
     PopContext();
 
-    if (!tp.Is (TAG_TYPE_REP_UnitTypeRep))
+    if (!tp.Is (TAG_TYPE_REP_UnitTypeRep)) {
       LeaveScope ();
+    }
     reswf = reswf && wf_post;
   }
 
@@ -1767,8 +1721,7 @@ bool StatSem::wf_ExplOperation (const Int & i, const TYPE_AS_ExplOpDef & vOpDef)
 #endif //VDMPP
 
 #ifdef VDMSL
-  if (Settings.VDMSLmode() && !oppost.IsNil ())
-  {
+  if (Settings.VDMSLmode() && !oppost.IsNil ()) {
     //--------------------------------------------------------------------------
     // Error message #354
     // Post conditions in explicit operations are not supported in standard
@@ -1826,9 +1779,9 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
 
   Set pnms;
   Generic g;
-  for (bool bb = parms.First(g); bb; bb = parms.Next(g))
+  for (bool bb = parms.First(g); bb; bb = parms.Next(g)) {
     pnms.ImpUnion(ExtractPatternName(g).Dom());
-
+  }
   bool wf_dom (true);
   wf_dom =
 #ifdef VDMPP
@@ -1837,8 +1790,9 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
     wf_TypeList (i, opdom) && wf_dom;
   bool wf_rng = true;
   bool wf_ext;
-  if (resnmtps.IsEmpty())
+  if (resnmtps.IsEmpty()) {
     wf_ext = SetExt(opext, pnms);
+  }
   else {
     wf_rng =
 #ifdef VDMPP
@@ -1848,23 +1802,19 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
     wf_ext = SetExt(opext, pnms.ImpUnion(valtp_bd.Dom()));
   }
 
-// 20110719 -->
-  if (CheckAllType(oprng))
-  {
+  if (CheckAllType(oprng)) {
     //--------------------------------------------------------------
     // Error message #447
     // '?' must not be in function/operation return type
     //--------------------------------------------------------------
     GenErr (opnm, WRN1, 447, Sequence());
   }
-// <-- 20110719
 
   SET<TYPE_AS_Name> dombind (bind.Dom());
   dombind.ImpIntersect(valtp_bd.Dom());
   bool ok_bd = dombind.IsEmpty();
 
-  if (!ok_bd)
-  {
+  if (!ok_bd) {
     //--------------------------------------------------------------
     // Error message #9
     // Parameter identifiers overlap the result identifiers for L"%1"
@@ -1873,8 +1823,7 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
     reswf = false;
   }
 
-  if (oppure && oprng.Is(TAG_TYPE_AS_VoidType))
-  {
+  if (oppure && oprng.Is(TAG_TYPE_AS_VoidType)) {
     // ------------------------------------------------------------
     // -- Error message #454
     // -- Pure operation %1 must return a value
@@ -1883,8 +1832,7 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
     reswf = false;
   }
 #ifdef VDMPP
-  if (!sync && !resnmtps.IsEmpty())
-  {
+  if (!sync && !resnmtps.IsEmpty()) {
     // ------------------------------------------------------------
     // -- Error message #436
     // -- Asynchronous operation %1 cannot return a value
@@ -1892,11 +1840,10 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
     GenErr(opnm, ERR, 436, mk_sequence(PrintName(opnm)));
     reswf = false;
   }
-  if (constr)
-  {
+
+  if (constr) {
     if (oprng.Is(TAG_TYPE_AS_VoidType) ||
-        (oprng.Is(TAG_TYPE_AS_TypeName) && (oprng.GetRecord(pos_AS_TypeName_name) != GetCurClass())))
-    {
+        (oprng.Is(TAG_TYPE_AS_TypeName) && (oprng.GetRecord(pos_AS_TypeName_name) != GetCurClass()))) {
       // ------------------------------------------------------------
       // -- Error message #390
       // -- Constructor does not return a reference to class L"%1"
@@ -1904,8 +1851,7 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
       GenErr(opnm, ERR, 390, mk_sequence(PrintName(opnm)));
       reswf = false;
     }
-    if (!sync)
-    {
+    if (!sync) {
       // ------------------------------------------------------------
       // -- Error message #432
       // -- Constructors like "%1" cannot be defined async
@@ -1913,8 +1859,7 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
       GenErr(opnm, ERR, 432, mk_sequence(PrintName(GetCurClass())));
       reswf = false;
     }
-    if (oppure)
-    {
+    if (oppure) {
       // ------------------------------------------------------------
       // -- Error message #455
       // -- Constructors like "%1" cannot be defined pure
@@ -1922,8 +1867,7 @@ bool StatSem::wf_ImplOperation (const Int & i, const TYPE_AS_ImplOpDef & vOpDef)
       GenErr(opnm, ERR, 455, mk_sequence(PrintName(opnm)));
       reswf = false;
     }
-    if (stat)
-    {
+    if (stat) {
       // ------------------------------------------------------------
       // -- Error message #445
       // -- Constructor cannot be defined static
@@ -1988,11 +1932,12 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
   SEQ<TYPE_REP_TypeRep> dom_l (TransTypeList(Nil(), opdom));
 
   TYPE_REP_TypeRep rng_tp;
-  if (oprng.Is(TAG_TYPE_AS_VoidType))
+  if (oprng.Is(TAG_TYPE_AS_VoidType)) {
     rng_tp = mk_REP_UnionTypeRep(mk_set(rep_unittp, rep_rettp));
-  else
+  }
+  else {
     rng_tp = TransType(Nil (), oprng);
-
+  }
 #ifdef VDMPP
   bool ok_optps = CheckParmsInHierarchy(opnm, dom_l, access, true);
 #endif //VDMPP
@@ -2003,9 +1948,9 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
 
   Set pnms;
   Generic g;
-  for (bool bb = parms.First(g); bb; bb = parms.Next(g))
+  for (bool bb = parms.First(g); bb; bb = parms.Next(g)) {
     pnms.ImpUnion(ExtractPatternName(g).Dom());
-
+  }
   bool wf_dom =
 #ifdef VDMPP
     CheckTypeListAccess (opnm, opdom) &&
@@ -2013,8 +1958,9 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
     wf_TypeList (i, opdom);
   bool wf_rng = true;
   bool wf_ext;
-  if (resnmtps.IsEmpty())
+  if (resnmtps.IsEmpty()) {
     wf_ext = SetExt(opext, pnms);
+  }
   else {
     wf_rng =
 #ifdef VDMPP
@@ -2024,24 +1970,20 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
 
     wf_ext = SetExt(opext, pnms.ImpUnion(valtp_bd.Dom()));
 
-// 20110719 -->
-    if (CheckAllType(oprng))
-    {
+    if (CheckAllType(oprng)) {
       //--------------------------------------------------------------
       // Error message #447
       // '?' must not be in function/operation return type
       //--------------------------------------------------------------
       GenErr (opnm, WRN1, 447, Sequence());
     }
-// <-- 20110719
   }
 
   Set dombind (bind.Dom());
   dombind.ImpIntersect(valtp_bd.Dom());
   bool ok_bd = Bool(dombind.IsEmpty ());
 
-  if (!ok_bd)
-  {
+  if (!ok_bd) {
     //--------------------------------------------------------------
     // Error message #9
     // Parameter identifiers overlap the result identifiers for L"%1"
@@ -2049,8 +1991,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
     GenErr (opnm, ERR, 9, mk_sequence(PrintName(opnm)));
   }
 
-  if (oppure && oprng.Is(TAG_TYPE_AS_VoidType))
-  {
+  if (oppure && oprng.Is(TAG_TYPE_AS_VoidType)) {
     // ------------------------------------------------------------
     // -- Error message #454
     // -- Pure operation %1 must return a value
@@ -2060,8 +2001,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
   }
 
 #ifdef VDMPP
-  if (!sync && !resnmtps.IsEmpty())
-  {
+  if (!sync && !resnmtps.IsEmpty()) {
     // ------------------------------------------------------------
     // -- Error message #436
     // -- Asynchronous operation %1 cannot return a value
@@ -2069,11 +2009,9 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
     GenErr(opnm, ERR, 436, mk_sequence(PrintName(opnm)));
     reswf = false;
   }
-  if (constr)
-  {
+  if (constr) {
     if (oprng.Is(TAG_TYPE_AS_VoidType) ||
-        (oprng.Is(TAG_TYPE_AS_TypeName) && oprng.GetRecord(pos_AS_TypeName_name) != GetCurClass()))
-    {
+        (oprng.Is(TAG_TYPE_AS_TypeName) && oprng.GetRecord(pos_AS_TypeName_name) != GetCurClass())) {
       // ------------------------------------------------------------
       // -- Error message #390
       // -- Constructor does not return a reference to class L"%1"
@@ -2081,8 +2019,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
       GenErr(opnm, ERR, 390, mk_sequence(PrintName(opnm)));
       reswf = false;
     }
-    if(!sync)
-    {
+    if(!sync) {
       // ------------------------------------------------------------
       // -- Error message #432
       // -- Constructors like "%1" cannot be defined async
@@ -2090,8 +2027,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
       GenErr(opnm, ERR, 432, mk_sequence(PrintName(GetCurClass())));
       reswf = false;
     }
-    if (oppure)
-    {
+    if (oppure) {
       // ------------------------------------------------------------
       // -- Error message #455
       // -- Constructors like "%1" cannot be defined pure
@@ -2099,8 +2035,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
       GenErr(opnm, ERR, 455, mk_sequence(PrintName(opnm)));
       reswf = false;
     }
-    if (stat)
-    {
+    if (stat) {
       // ------------------------------------------------------------
       // -- Error message #445
       // -- Constructor cannot be defined static
@@ -2109,10 +2044,8 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
       reswf = false;
     }
   } 
-  if (opbody.GetField(pos_AS_OpBody_body) == Int(SUBRESP))
-  {
-    if ((access != Int(PUBLIC_AS)) && (access != Int(PROTECTED_AS)))
-    {
+  if (opbody.GetField(pos_AS_OpBody_body) == Int(SUBRESP)) {
+    if ((access != Int(PUBLIC_AS)) && (access != Int(PROTECTED_AS))) {
       // ------------------------------------------------------------
       // -- Error message #438
       // -- Abstract function/operation "%1" must be defined as public or protected
@@ -2129,8 +2062,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
 
   bool wf = true;
   size_t len_excps = excps.Length();
-  for (size_t idx = 1; idx <= len_excps; idx++)
-  {
+  for (size_t idx = 1; idx <= len_excps; idx++) {
     const TYPE_AS_Error & err (excps[idx]);
     Tuple infer2 (wf_Pred (i, err.get_cond (), EXCEP));
     wf = wf && infer2.GetBool (1);
@@ -2144,10 +2076,8 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
   SetOpContext (opnm);
 
   Set usi (UsedStateIds (bind.Dom ()));
-  if (!usi.IsEmpty())
-  {
-    for (bool dd = usi.First (g); dd; dd = usi.Next (g))
-    {
+  if (!usi.IsEmpty()) {
+    for (bool dd = usi.First (g); dd; dd = usi.Next (g)) {
       //----------------------------------------------------
       // Error message #18
       // The scope of the state component L"%1" is now hidden
@@ -2170,9 +2100,9 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
   const Bool & wf_body (infer4.GetBool(1));
   const TYPE_REP_TypeRep & tp (infer4.GetRecord(2));
 
-  if (AnyTraps())
+  if (AnyTraps()) {
     this->trapops.Insert (vOpDef);
-
+  }
   bool ok_out = (IsCompatible (i, tp, rng_tp));
 
   if (!ok_out) {
@@ -2184,8 +2114,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
     reswf = false;
   }
 
-  if (!oppost.IsNil ())
-  {
+  if (!oppost.IsNil ()) {
     PushContext(Int(POST));
 
 //     Generic p;
@@ -2194,11 +2123,9 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
 //       pnms.ImpUnion(ExtractPatternName (p).Dom());
 //     reswf = SetExtAll(pnms) && reswf;
 
-// 20070228
     bool wf = true;
     size_t len_excps = excps.Length(); 
-    for (size_t idx = 1; idx <= len_excps; idx++)
-    {
+    for (size_t idx = 1; idx <= len_excps; idx++) {
       const TYPE_AS_Error & err (excps[idx]);
       Tuple infer5 (wf_Pred (i, err.get_action (), EXCEP));
       wf = wf && infer5.GetBool (1);
@@ -2238,8 +2165,7 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
   PushContext(Int(ALL));
 
   size_t len_instdef_l = instdef_l.Length();
-  for(size_t idx = 1; idx <= len_instdef_l; idx++)
-  {
+  for(size_t idx = 1; idx <= len_instdef_l; idx++) {
     const TYPE_AS_InstanceVarDef & ivd (instdef_l[idx]);
     switch(ivd.GetTag()) {
       case TAG_TYPE_AS_InstAssignDef: {
@@ -2252,8 +2178,7 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
         reswf = CheckTypeAccess (var, tp) && wf_Type (i, tp) && reswf;
         reswf = CheckInstAccess(access, var) && reswf;
 
-        if (!ini.IsNil())
-        {
+        if (!ini.IsNil()) {
           TYPE_REP_TypeRep rtp (TransType(Nil(), tp));
           Tuple t (wf_Expr (i, ini, rtp));
           const TYPE_REP_TypeRep & var_tp (t.GetRecord(2));
@@ -2263,19 +2188,18 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
           bool cmp = IsCompatible(i, var_tp, rtp);
           //bool cmp = IsCompatible(DEF, var_tp, rtp); // 20090827
           reswf = t.GetBool (1) && cmp && reswf;
-          if (!cmp)
-          {
+          if (!cmp) {
             //------------------------------------------------------------------------
             // Error message #307
             // Initialization expression is not compatible with defining type of L"%1"
             //------------------------------------------------------------------------
             GenErrTp (var, ERR, 307, var_tp, rtp, mk_sequence(PrintName (var)));
           }
-          else
+          else {
             GetCI().SetTypeInfo(var.get_cid(), var_tp);
+          }
         }
-        else
-        {
+        else {
           //--------------------------------------
           // Error message #25
           // The instance L"%1" is not initialized
@@ -2289,17 +2213,16 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
         Tuple t (wf_Pred (i, expr, INV));
         reswf = t.GetBool (1) && reswf;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
 
-  if (!instdef_l.IsEmpty())
+  if (!instdef_l.IsEmpty()) {
     this->WhileChecking = L"while checking instance variables";
-
-  // 20110829 -->
+  }
   PopContext();
-  // <-- 20110829
   return reswf;
 }
 
@@ -2310,8 +2233,9 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
 // ==> bool
 bool StatSem::wf_Sync (const Int & i, const TYPE_AS_Name & clsnm, const SEQ<TYPE_AS_SyncDef> & syncs)
 {
-  if (syncs.IsEmpty ())
+  if (syncs.IsEmpty ()) {
     return true;
+  }
   else {
     return wf_DeclarativeSync (i, clsnm, syncs);
   }
@@ -2332,8 +2256,7 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
   PushContext(Int(PERM));
 
   size_t len_syncs = syncs.Length();
-  for (size_t idx = 1; idx <= len_syncs; idx++)
-  {
+  for (size_t idx = 1; idx <= len_syncs; idx++) {
     const TYPE_AS_SyncDef & sd (syncs[idx]);
     switch(sd.GetTag()) {
       case TAG_TYPE_AS_Permission: {
@@ -2346,8 +2269,7 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
         const TYPE_REP_TypeRep & guardtp (infer.GetRecord (2));
         Set mthtp (LookUpOperationName (Nil (), mthd, Nil ()));
   
-        if (mthd == clsnm)
-        {
+        if (mthd == clsnm) {
           //-----------------------------------
           // Error message #430
           // annot put permission guard on constructor "%1"
@@ -2355,8 +2277,7 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
           GenErr (mthd, ERR, 430, mk_sequence(PrintName(mthd)));
           reswf = false;
         }
-        else if (permis_nms.InSet(mthd))
-        {
+        else if (permis_nms.InSet(mthd)) {
           //-----------------------------------
           // Error message #426
           // Multiple permission predicates are defined for "%1"
@@ -2364,13 +2285,11 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
           GenErr (mthd, ERR, 426, mk_sequence(PrintName(mthd)));
           reswf = false;
         }
-        else
-        {
+        else {
           permis_nms.Insert(mthd);
         }
 
-        if (!IsCompatible (i, guardtp, ExpectedGuardType))
-        {
+        if (!IsCompatible (i, guardtp, ExpectedGuardType)) {
           //-----------------------------------
           // Error message #27
           // Guard must be a boolean expression
@@ -2387,13 +2306,11 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
           GenErr (mthd, ERR, 28, mk_sequence(PrintName (mthd)));
           reswf = false;
         }
-        else
-        {
+        else {
           bool forallFnOp = true;
           bool forallFn = true;
           Generic tp;
-          for (bool cc = mthtp.First(tp); cc && forallFnOp; cc = mthtp.Next(tp))
-          {
+          for (bool cc = mthtp.First(tp); cc && forallFnOp; cc = mthtp.Next(tp)) {
             switch(Record(tp).GetTag()) {
               case TAG_TYPE_SSENV_AccessFnTypeRep: {
                 break;
@@ -2411,16 +2328,14 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
               }
             }
           }
-          if (forallFnOp && (mthtp.Card() > 1))
-          {
+          if (forallFnOp && (mthtp.Card() > 1)) {
             //------------------------------
             // Error message #424
             // Permission guard for overloaded operation "%1"
             //------------------------------
             GenErr (mthd, WRN1, 424, mk_sequence(PrintName (mthd)));
           }
-          if (forallFn)
-          {
+          if (forallFn) {
             //------------------------------
             // Error message #428
             // Permission predicates can only be defined for operations
@@ -2438,13 +2353,11 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
       }
       case TAG_TYPE_AS_Mutex: {
         const Generic & nm_l (sd.GetField(pos_AS_Mutex_ops));
-        if (!nm_l.IsNil ())
-        {
+        if (!nm_l.IsNil ()) {
           SEQ<TYPE_AS_Name> nmlist (nm_l);
           SET<TYPE_AS_Name> prev_nm;
           Generic nm;
-          for (bool cc = nmlist.First (nm); cc; cc = nmlist.Next (nm))
-          {
+          for (bool cc = nmlist.First (nm); cc; cc = nmlist.Next (nm)) {
             Set look (LookUpOperationName (Nil (), nm, Nil ()));
             if (look.IsEmpty ()) {
               //------------------------------
@@ -2456,8 +2369,7 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
             }
             bool forall = true;
             Generic tp;
-            for (bool dd = look.First(tp); dd && forall; dd = look.Next(tp))
-            {
+            for (bool dd = look.First(tp); dd && forall; dd = look.Next(tp)) {
               switch(Record(tp).GetTag()) {
                 case TAG_TYPE_SSENV_AccessFnTypeRep:
                 case TAG_TYPE_SSENV_AccessOpTypeRep: {
@@ -2469,28 +2381,30 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
                 }
               }
             }
-            if (forall && (look.Card() > 1))
-            {
+            if (forall && (look.Card() > 1)) {
               //------------------------------
               // Error message #425
               // Mutex includes overloaded operation "%1"
               //------------------------------
               GenErr (nm, WRN1, 425, mk_sequence(PrintName (nm)));
             }
-            if (prev_nm.InSet (nm))
+            if (prev_nm.InSet (nm)) {
               //------------------------------
               // Error message #73
               // L"%1" multiple defined
               //------------------------------
               GenErr (nm, WRN1, 73, mk_sequence(PrintName (nm)));
-            else
+            }
+            else {
               prev_nm.Insert (nm);
+            }
           }
         }
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
   PopContext();
@@ -2504,17 +2418,15 @@ bool StatSem::wf_DeclarativeSync (const Int & i,
 // ==> bool
 bool StatSem::wf_Thread (const Int & i, const Generic & thread, const TYPE_AS_Name & clsnm)
 {
-  if (thread.IsNil ())
+  if (thread.IsNil ()) {
     return true;
+  }
   else {
     TYPE_AS_ThreadDef threadRec (thread);
     switch(threadRec.GetTag()) {
-      case TAG_TYPE_AS_PerObl:
-        return wf_PeriodicThread (i, thread, clsnm);
-      case TAG_TYPE_AS_SpoObl:
-        return wf_SporadicThread (i, thread, clsnm);
-      default:
-        return wf_ProceduralThread (i, thread);
+      case TAG_TYPE_AS_PerObl: { return wf_PeriodicThread (i, thread, clsnm); }
+      case TAG_TYPE_AS_SpoObl: { return wf_SporadicThread (i, thread, clsnm); }
+      default:                 { return wf_ProceduralThread (i, thread); }
     }
   }
 }
@@ -2552,8 +2464,7 @@ bool StatSem::wf_PeriodicThread (const Int & i, const TYPE_AS_PerObl& thread, co
 
   if ( (period.Is(TAG_TYPE_AS_RealLit) && period.GetReal(pos_AS_RealLit_val) == Real(0)) ||
        (period.Is(TAG_TYPE_AS_NumLit) && period.GetReal(pos_AS_NumLit_val) == Real(0)) ||
-       !IsCompatible (i, periodtp, btp_natone) )
-  {
+       !IsCompatible (i, periodtp, btp_natone) ) {
     //----------------------------------------------------
     // Error message #32
     // Duration must evaluate to a positive natural number
@@ -2590,8 +2501,7 @@ bool StatSem::wf_PeriodicThread (const Int & i, const TYPE_AS_PerObl& thread, co
   --  reswf := false
   --);
 */
-  if (delay.GetReal(pos_AS_RealLit_val).GetValue() >= period.GetReal(pos_AS_RealLit_val).GetValue())
-  {
+  if (delay.GetReal(pos_AS_RealLit_val).GetValue() >= period.GetReal(pos_AS_RealLit_val).GetValue()) {
     //------------------------------
     // Error message #434
     // Delay argument must be less than the period in %1
@@ -2726,8 +2636,7 @@ bool StatSem::wf_ProceduralThread (const Int & i, const TYPE_AS_Stmt & thread)
   bool reswf (tmp.GetBool (1));
   const TYPE_REP_TypeRep & stmttp (tmp.GetRecord (2));
 
-  if (!IsCompatible (i, stmttp, rep_unittp))
-  {
+  if (!IsCompatible (i, stmttp, rep_unittp)) {
     //---------------------------------------
     // Error message #337
     // Statement must not have a return value
@@ -2751,8 +2660,7 @@ bool StatSem::wf_Traces(const Int & i, const Map & trace_m)
   bool reswf = true;
   Set nml_s (trace_m.Dom());
   Generic nml;
-  for (bool bb = nml_s.First(nml); bb; bb = nml_s.Next(nml))
-  {
+  for (bool bb = nml_s.First(nml); bb; bb = nml_s.Next(nml)) {
     reswf = wf_TraceDefList(i, trace_m[nml]) & reswf;
   }
 
@@ -2768,8 +2676,7 @@ bool StatSem::wf_TraceDefList(const Int & i, const TYPE_AS_TraceDefList & tdl)
 {
   bool reswf = true;
   size_t len_tdl = tdl.Length();
-  for (size_t index = 1; index <= len_tdl; index++)
-  {
+  for (size_t index = 1; index <= len_tdl; index++) {
     reswf = wf_TraceDefTerm(i, tdl[index]) & reswf;
   }
   return reswf;
@@ -2840,20 +2747,16 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
 
   Generic oprep (LookUp(opnm, true));
 
-  if (oprep.Is(TAG_TYPE_REP_OpTypeRep))
-  {
+  if (oprep.Is(TAG_TYPE_REP_OpTypeRep)) {
     TYPE_REP_OpTypeRep otr (oprep);
     SEQ<TYPE_REP_TypeRep> opdomtpl (otr.GetSequence(pos_REP_OpTypeRep_Dom));
-    if (opdomtpl.Length() == args.Length())
-    {
+    if (opdomtpl.Length() == args.Length()) {
       size_t len = args.Length();
-      for (size_t i = 1; i <= len; i++)
-      {
+      for (size_t i = 1; i <= len; i++) {
         Tuple infer (wf_Expr(POS, args[i], opdomtpl[i]));
 //        const Bool & arg_ok (infer.GetBool(1)); // unused
         const TYPE_REP_TypeRep & arg_tp (infer.GetRecord(2));
-        if (!IsCompatible(POS, arg_tp, opdomtpl[i]))
-        {
+        if (!IsCompatible(POS, arg_tp, opdomtpl[i])) {
           //-------------------------------------------------------------
           // Error message #274
           // Operation is not applied with parameters of the correct type
@@ -2911,8 +2814,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
       reswf = false;
     }
   }
-  else
-  {
+  else {
     //-----------------------------------------------------------
     // Error message #28
     // Operation \"%1\" is not defined
@@ -2938,50 +2840,45 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
   bool reswf = true;
 
   Generic oprep = Nil();
-  if (objnm.IsNil())
-  {
+  if (objnm.IsNil()) {
     oprep = LookUp(opnm, true);
-    if (!oprep.IsRecord())
+    if (!oprep.IsRecord()) {
       return false;
+    }
   }
-  else
-  {
+  else {
     Generic objtp_ (LookUp(objnm, true));
 
-    if (objtp_.IsRecord())
-    {
+    if (objtp_.IsRecord()) {
       Record objtp (objtp_);
       if (objtp.Is(TAG_TYPE_REP_ObjRefTypeRep) ||
-          (objtp.Is(TAG_TYPE_REP_TypeNameRep) && IsClassName(objtp.GetRecord(pos_REP_TypeNameRep_nm))))
-      {
+          (objtp.Is(TAG_TYPE_REP_TypeNameRep) && IsClassName(objtp.GetRecord(pos_REP_TypeNameRep_nm)))) {
         TYPE_AS_Name nm (objtp.Is(TAG_TYPE_REP_ObjRefTypeRep)
                           ? objtp.GetRecord(pos_REP_ObjRefTypeRep_nm)
                           : objtp.GetRecord(pos_REP_TypeNameRep_nm));
         //Generic oprep (LookUpInObject(nm, opnm, false));
         oprep = (LookUpInObject(nm, opnm, false, true));
       }
-      else
+      else {
         return false;
+      }
     }
-    else
+    else {
       return false;
+    }
   }
 
-  if (oprep.Is(TAG_TYPE_SSENV_AccessOpTypeRep))
-  {
+  if (oprep.Is(TAG_TYPE_SSENV_AccessOpTypeRep)) {
     TYPE_SSENV_AccessOpTypeRep aotr (oprep);
     SEQ<TYPE_REP_TypeRep> opdomtpl (aotr.GetRecord(pos_SSENV_AccessOpTypeRep_tp)
                                         .GetSequence(pos_REP_OpTypeRep_Dom));
-    if (opdomtpl.Length() == args.Length())
-    {
+    if (opdomtpl.Length() == args.Length()) {
       size_t len_args = args.Length();
-      for (size_t i = 1; i <= len_args; i++)
-      {
+      for (size_t i = 1; i <= len_args; i++) {
         Tuple infer (wf_Expr(POS, args[i], opdomtpl[i]));
         //const Bool & arg_ok (infer.GetBool(1)); // unused
         const TYPE_REP_TypeRep & arg_tp (infer.GetRecord(2));
-        if (!IsCompatible(POS, arg_tp, opdomtpl[i]))
-        {
+        if (!IsCompatible(POS, arg_tp, opdomtpl[i])) {
           //-------------------------------------------------------------
           // Error message #274
           // Operation is not applied with parameters of the correct type
@@ -2991,8 +2888,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
         }
       }
     }
-    else
-    {
+    else {
       //-----------------------------------------------------------
       // Error message #275
       // Operation applied with wrong number of arguments
@@ -3001,8 +2897,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
       reswf = false;
     }
   }
-  else if (oprep.Is(TAG_TYPE_SSENV_AccessFnTypeRep))
-  {
+  else if (oprep.Is(TAG_TYPE_SSENV_AccessFnTypeRep)) {
     TYPE_SSENV_AccessFnTypeRep aftr (oprep);
     const TYPE_REP_FnTypeRep & ftr (aftr.GetRecord(pos_SSENV_AccessFnTypeRep_tp));
     SEQ<TYPE_REP_TypeRep> fndomtpl;
@@ -3016,16 +2911,13 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
         break;
       }
     }
-    if (fndomtpl.Length() == args.Length())
-    {
+    if (fndomtpl.Length() == args.Length()) {
       size_t len_args = args.Length();
-      for (size_t i = 1; i <= len_args; i++)
-      {
+      for (size_t i = 1; i <= len_args; i++) {
         Tuple infer (wf_Expr(POS, args[i], fndomtpl[i]));
         //const Bool & arg_ok (infer.GetBool(1)); // unused
         const TYPE_REP_TypeRep & arg_tp (infer.GetRecord(2));
-        if (!IsCompatible(POS, arg_tp, fndomtpl[i]))
-        {
+        if (!IsCompatible(POS, arg_tp, fndomtpl[i])) {
           //-----------------------------------------------------------
           // Error message #272
           // Function is not applied with parameters
@@ -3036,8 +2928,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
         }
       }
     }
-    else
-    {
+    else {
       //-----------------------------------------------------------
       // Error message #273
       // Function applied with wrong number of arguments
@@ -3046,8 +2937,7 @@ bool StatSem::wf_TraceApplyExpr(const Int & i,
       reswf = false;
     }
   }
-  else
-  {
+  else {
     //-----------------------------------------------------------
     // Error message #28
     // Operation \"%1\" is not defined
@@ -3071,15 +2961,13 @@ bool StatSem::wf_QualifiedTrace(const Int & i,
   bool reswf (true);
 
   size_t len_binds = binds.Length();
-  for (size_t index = 1; index <= len_binds; index++)
-  {
+  for (size_t index = 1; index <= len_binds; index++) {
     TYPE_AS_TraceBind bind (binds[index]);
     Tuple infer (wf_TraceBind(i, bind));
     const Generic & wf_b (infer.GetField(1));
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap(2));
 
-    if (wf_b != Bool(true))
-    {
+    if (wf_b != Bool(true)) {
       //-----------------------------------------------------------
       // Error message #420
       // Pattern in qualified repeat trace cannot match
@@ -3092,8 +2980,7 @@ bool StatSem::wf_QualifiedTrace(const Int & i,
 
   reswf = wf_TraceDefTerm(i, tdef) && reswf;
 
-  for (size_t i = 1; i <= len_binds; i++)
-  {
+  for (size_t i = 1; i <= len_binds; i++) {
     LeaveScope();
   }
 
@@ -3127,15 +3014,13 @@ bool StatSem::wf_QualifiedRepeatTrace(const Int & i,
   bool reswf (true);
   
   size_t len_binds = binds.Length();
-  for (size_t index = 1; index <= len_binds; index++)
-  {
+  for (size_t index = 1; index <= len_binds; index++) {
     TYPE_AS_TraceBind bind (binds[index]);
     Tuple infer (wf_TraceBind(i, bind));
     const Generic & wf_b (infer.GetField(1));
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap(2));
 
-    if (wf_b != Bool(true))
-    {
+    if (wf_b != Bool(true)) {
       //-----------------------------------------------------------
       // Error message #420
       // Pattern in qualified repeat trace cannot match
@@ -3149,8 +3034,7 @@ bool StatSem::wf_QualifiedRepeatTrace(const Int & i,
   reswf = wf_TraceDefTerm(i, tdef) && reswf;
   reswf = wf_TraceRepeatPattern(i, pat) && reswf;
 
-  for (size_t i = 1; i <= len_binds; i++)
-  {
+  for (size_t i = 1; i <= len_binds; i++) {
     LeaveScope();
   }
 
@@ -3177,12 +3061,10 @@ bool StatSem::wf_TraceDefAltn(const Int & i,
 // ==> bool
 bool StatSem::wf_TraceRepeatPattern(const Int & i, const TYPE_AS_TraceRepeatPattern & trp)
 {
-  if (trp.Is(TAG_TYPE_AS_RepeatInterval))
-  {
+  if (trp.Is(TAG_TYPE_AS_RepeatInterval)) {
     int low = (int)(Record(trp).GetRecord(pos_AS_RepeatInterval_low).GetRealValue(pos_AS_RealLit_val));
     int high = (int)(Record(trp).GetRecord(pos_AS_RepeatInterval_high).GetRealValue(pos_AS_RealLit_val));
-    if (low >= high)
-    {
+    if (low >= high) {
       //-----------------------------------------------------------
       // Error message #419
       // Higher repeat pattern should be larger than lower repeat pattern
@@ -3201,22 +3083,10 @@ bool StatSem::wf_TraceRepeatPattern(const Int & i, const TYPE_AS_TraceRepeatPatt
 Tuple StatSem::wf_TraceBind(const Int & i, const TYPE_AS_TraceBind & bind)
 {
   switch(bind.GetTag()) {
-    case TAG_TYPE_AS_LocalTraceBind: {
-/*
-      const SEQ<TYPE_AS_LocalDef> & ldef_l (bind.GetSequence(pos_AS_LocalTraceBind_localdefs));
-      // TODO
-      return mk_(wf_LocalDefs(i, ldef_l), Map());
-*/
-      return wf_LocalTraceBind(i, bind);
-    }
-    case TAG_TYPE_AS_LetTraceBind: {
-      return wf_LetTraceBind(i, bind);
-    }
-    case TAG_TYPE_AS_LetBeTraceBind: {
-      return wf_LetBeTraceBind(i, bind);
-    }
-    default: {
-      return mk_(Bool(true), Map()); // dummy
+    case TAG_TYPE_AS_LocalTraceBind: { return wf_LocalTraceBind(i, bind); }
+    case TAG_TYPE_AS_LetTraceBind:   { return wf_LetTraceBind(i, bind); }
+    case TAG_TYPE_AS_LetBeTraceBind: { return wf_LetBeTraceBind(i, bind); }
+    default:                         { return mk_(Bool(true), Map()); // dummy
     }
   }
 }
@@ -3237,13 +3107,11 @@ Tuple StatSem::wf_LocalTraceBind(const Int & i, const TYPE_AS_LocalTraceBind & b
   MAP<TYPE_AS_Name,Tuple> nbd;
   Set dom_bd (bd.Dom());
   Generic nm;
-  for (bool bb = dom_bd.First(nm); bb; bb = dom_bd.Next(nm))
+  for (bool bb = dom_bd.First(nm); bb; bb = dom_bd.Next(nm)) {
     nbd.Insert(nm, mk_(bd[nm].GetRecord(1), Int(1)));
-
-  //UpdateScope (nbd);
+  }
   size_t len_ldef_l = ldef_l.Length();
-  for (size_t idx = 1; idx <= len_ldef_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_ldef_l; idx++) {
     const TYPE_AS_LocalDef & val (ldef_l[idx]);
     Bool wf_def;
     MAP<TYPE_AS_Name,Tuple> realbd;
@@ -3254,11 +3122,11 @@ Tuple StatSem::wf_LocalTraceBind(const Int & i, const TYPE_AS_LocalTraceBind & b
         realbd = infer2.GetField (2);
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
     reswf = reswf && wf_def;
-    //UpdateScope (realbd);
     nbd.ImpOverride(realbd);
   }
   return mk_(reswf, nbd);
@@ -3277,11 +3145,10 @@ Tuple StatSem::wf_LetTraceBind(const Int & i, const TYPE_AS_LetTraceBind & bind)
 
   bool exists = false;
   size_t len_p = p.Length();
-  for (size_t idx = 1; (idx <= len_p) && !exists; idx++)
+  for (size_t idx = 1; (idx <= len_p) && !exists; idx++) {
     exists = p[idx].Is(TAG_TYPE_AS_MultTypeBind);
-
-  if (exists)
-  {
+  }
+  if (exists) {
     //-----------------------------------------------------------
     // Error message #421
     // A type binding cannot be used in traces
@@ -3289,8 +3156,9 @@ Tuple StatSem::wf_LetTraceBind(const Int & i, const TYPE_AS_LetTraceBind & bind)
     GenErr (bind, ERR, 421, Sequence());
     return mk_(Bool(false), bd); 
   }
-  else
+  else {
     return mk_(wf_b, bd); 
+  }
 }
 
 // wf_LetBeTraceBind
@@ -3308,11 +3176,10 @@ Tuple StatSem::wf_LetBeTraceBind(const Int & i, const TYPE_AS_LetBeTraceBind & b
 
   bool exists = false;
   size_t len_p = p.Length();
-  for (size_t idx = 1; (idx <= len_p) && !exists; idx++)
+  for (size_t idx = 1; (idx <= len_p) && !exists; idx++) {
     exists = p[idx].Is(TAG_TYPE_AS_MultTypeBind);
-
-  if (exists)
-  {
+  }
+  if (exists) {
     //-----------------------------------------------------------
     // Error message #421
     // A type binding cannot be used in traces
@@ -3320,10 +3187,8 @@ Tuple StatSem::wf_LetBeTraceBind(const Int & i, const TYPE_AS_LetBeTraceBind & b
     GenErr (bind, ERR, 421, Sequence());
     return mk_(Bool(false), bd); 
   }
-  else
-  {
-    if (wf_b != Bool(true))
-    {
+  else {
+    if (wf_b != Bool(true)) {
       //-----------------------------------------------------------
       // Error message #113
       // Pattern in Let-Be-Expr cannot match
@@ -3331,8 +3196,7 @@ Tuple StatSem::wf_LetBeTraceBind(const Int & i, const TYPE_AS_LetBeTraceBind & b
       GenErr (p, ERR, 113, Sequence());
     }
 
-    if (!e.IsNil())
-    {
+    if (!e.IsNil()) {
       EnterScope(bd);
       Tuple infer2 (wf_Expr(i, e, btp_bool));
       const Bool & wf_st (infer2.GetBool(1));
@@ -3341,8 +3205,9 @@ Tuple StatSem::wf_LetBeTraceBind(const Int & i, const TYPE_AS_LetBeTraceBind & b
       LeaveScope();
       return mk_(Bool((wf_b == Bool(true)) && wf_st && stcomp), bd);
     }
-    else
+    else {
       return mk_(wf_b, bd);
+    }
   }
 }
 
@@ -3359,8 +3224,7 @@ bool StatSem::wf_State (const Int & i, const TYPE_AS_StateDef & state)
 
   bool reswf = wf_Type (i, tp);
 
-  if (!Invar.IsNil ())
-  {
+  if (!Invar.IsNil ()) {
     TYPE_AS_Invariant Inv (Invar);
     const TYPE_AS_Pattern & pat (Inv.GetRecord(pos_AS_Invariant_pat));
     const TYPE_AS_Expr & expr   (Inv.GetRecord(pos_AS_Invariant_expr));
@@ -3379,8 +3243,7 @@ bool StatSem::wf_State (const Int & i, const TYPE_AS_StateDef & state)
     const Bool & wf_pat (infer.GetField (1) == Bool(true)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
 
-    if (!wf_pat)
-    {
+    if (!wf_pat) {
       //----------------------------------------
       // Error message #346
       // Pattern in state invariant cannot match
@@ -3398,8 +3261,7 @@ bool StatSem::wf_State (const Int & i, const TYPE_AS_StateDef & state)
     reswf = reswf && wf_body && wf_pat;
   }
 
-  if (!Init.IsNil ())
-  {
+  if (!Init.IsNil ()) {
     TYPE_AS_StateInit Ini (Init);
     const TYPE_AS_Pattern & pat (Ini.GetRecord(pos_AS_StateInit_pat));
     const TYPE_AS_Expr & expr   (Ini.GetRecord(pos_AS_StateInit_expr));
@@ -3418,8 +3280,7 @@ bool StatSem::wf_State (const Int & i, const TYPE_AS_StateDef & state)
     Bool wf_pat (infer.GetField (1) == Bool(true)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
 
-    if (!wf_pat)
-    {
+    if (!wf_pat) {
       //----------------------------------------
       // Error message #346
       // Pattern in state invariant cannot match
@@ -3452,8 +3313,7 @@ bool StatSem::wf_State (const Int & i, const TYPE_AS_StateDef & state)
 // -> (seq of REP`TypeRep) * REP`TypeRep
 Tuple StatSem::extractDomRng(const Generic & g)
 {
-  if (g.IsRecord())
-  {
+  if (g.IsRecord()) {
     Record r (g);
     switch(r.GetTag()) {
       case TAG_TYPE_REP_PartialFnTypeRep: {
@@ -3497,14 +3357,12 @@ bool StatSem::VerifyRng(const TYPE_REP_TypeRep & tp)
       return (tp.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT));
     }
 // for curry
-// 20130109 -->
     case TAG_TYPE_REP_PartialFnTypeRep: {
       return VerifyRng(tp.GetRecord(pos_AS_PartialFnType_fnrng));
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
       return VerifyRng(tp.GetRecord(pos_AS_TotalFnType_fnrng));
     }
-// <-- 20130109
     default: {
       return false;
     }
@@ -3525,16 +3383,13 @@ bool StatSem::VerifyMutRec(const SET<TYPE_AS_Name> & mutRec,
 
   size_t len_mutRecL = mutRecL.Length();
 //  while(!mutRecL.IsEmpty())
-  for (size_t idx = 1; idx <= len_mutRecL; idx++)
-  {
+  for (size_t idx = 1; idx <= len_mutRecL; idx++) {
 //    TYPE_AS_Name h (mutRecL.Hd());
 //    Generic fndef (GetFuncDefWOCtxt(h));
     Generic fndef (GetFuncDefWOCtxt(mutRecL[idx]));
-    if (!fndef.IsNil())
-    {
+    if (!fndef.IsNil()) {
       Generic fnmeasu_ (ASTAUX::GetFnMeasu(fndef));
-      if (fnmeasu_.IsNil())
-      {
+      if (fnmeasu_.IsNil()) {
         //----------------------------------------------------
         // Error message #415
         // "%1" is mutual recursive with %2 and %2 does not have measure defined
@@ -3543,17 +3398,14 @@ bool StatSem::VerifyMutRec(const SET<TYPE_AS_Name> & mutRec,
         GenErr(nmq, WRN1, 415, mk_sequence(PrintName(nmq), PrintName(mutRecL[idx])));
         res = false;
       }
-      else
-      {
+      else {
         TYPE_AS_Name fnmeasu (fnmeasu_);
         //TYPE_AS_Name measunmwcl (ExtName(h, fnmeasu));
         TYPE_AS_Name measunmwcl (ExtName(mutRecL[idx], fnmeasu));
         Generic othmeasdef_ (GetFuncDefWOCtxt(measunmwcl));
-        if (!othmeasdef_.IsNil())
-        {
+        if (!othmeasdef_.IsNil()) {
           TYPE_AS_FnDef othmeasdef (othmeasdef_);
-          if (ASTAUX::GetFnRestype(othmeasdef) != ASTAUX::GetFnRestype(measdef))
-          {
+          if (ASTAUX::GetFnRestype(othmeasdef) != ASTAUX::GetFnRestype(measdef)) {
             //----------------------------------------------------
             // Error message #416
             // The measures of "%1" and "%2" must to have the same range
@@ -3563,16 +3415,15 @@ bool StatSem::VerifyMutRec(const SET<TYPE_AS_Name> & mutRec,
             res = false;
           }
         }
-        else
-        {
+        else {
           // this happens if the measure is unexisting identifier so it is reported there.
           res = false;
         }
       }
     }
-    else
+    else {
       res = false;
-//    mutRecL.ImpTl();
+    }
   }
   return res;
 }
@@ -3707,7 +3558,6 @@ bool StatSem::wf_Measure(const Int & i,
             TYPE_REP_TypeRep rfnrt (TransType(Nil(), tp.GetRecord(2)));
             Generic t;
             for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
-
               SEQ<TYPE_REP_TypeRep> mfndt (Record(t).GetSequence(1));
               TYPE_REP_TypeRep mfnrt (Record(t).GetRecord(2));
               if (EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)) {
@@ -3787,9 +3637,10 @@ bool StatSem::EquivDomFn(const Int & i, const SEQ<TYPE_REP_TypeRep> & mfndom, co
                                              const TYPE_REP_TypeRep & mfnrng, const TYPE_REP_TypeRep & rfnrng)
 {
 //  bool res = false;
-  if (mfndom == rfndom)
+  if (mfndom == rfndom) {
     //res = true;
     return true;
+  }
 
   SEQ<TYPE_REP_TypeRep> mdom (mfndom);
   TYPE_REP_TypeRep mrng (mfnrng);
@@ -3800,16 +3651,14 @@ bool StatSem::EquivDomFn(const Int & i, const SEQ<TYPE_REP_TypeRep> & mfndom, co
 //  }
   SEQ<TYPE_REP_TypeRep> rdom (rfndom);
   TYPE_REP_TypeRep rrng (rfnrng);
-  while ((rrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-  {
+  while ((rrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rrng.Is(TAG_TYPE_REP_TotalFnTypeRep))) {
     rdom.ImpConc(rrng.GetSequence(1));
     rrng = rrng.GetRecord(2);
   }
   bool forall = (mdom.Length() <= rdom.Length());
   this->MeasureCheckOn();
   size_t len = mdom.Length();
-  for (size_t idx = 1; (idx <= len) && forall; idx++)
-  {
+  for (size_t idx = 1; (idx <= len) && forall; idx++) {
     forall = IsEquivalent(i, mdom[idx], rdom[idx]);
   }
   this->MeasureCheckOff();
@@ -3899,24 +3748,27 @@ bool StatSem::CheckAllType(const TYPE_AS_Type & tp)
       const SEQ<TYPE_AS_Field> & flds (tp.GetSequence(pos_AS_CompositeType_fields));
       bool exists = false;
       size_t len_flds = flds.Length();
-      for(size_t idx = 1; (idx <= len_flds) && !exists; idx++)
+      for(size_t idx = 1; (idx <= len_flds) && !exists; idx++) {
         exists = CheckAllType(flds[idx].GetRecord(pos_AS_Field_type));
+      }
       return exists;
     }
     case TAG_TYPE_AS_UnionType: {
       const SEQ<TYPE_AS_Type> & tps (tp.GetSequence(pos_AS_UnionType_tps));
       size_t len_tps = tps.Length();
       bool exists = false;
-      for (size_t idx = 1; (idx <= len_tps) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_tps) && !exists; idx++) {
         exists = CheckAllType(tps[idx]);
+      }
       return exists;
     }
     case TAG_TYPE_AS_ProductType: {
       const SEQ<TYPE_AS_Type> & tp_l (tp.GetSequence(pos_AS_ProductType_tps));
       bool exists = false;
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; (idx <= len_tp_l) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_tp_l) && !exists; idx++) {
         exists = CheckAllType(tp_l[idx]);
+      }
       return exists;
     }
     case TAG_TYPE_AS_OptionalType: {
@@ -3957,24 +3809,27 @@ bool StatSem::CheckAllType(const TYPE_AS_Type & tp)
       const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(pos_AS_PartialFnType_fndom));
       bool exists (CheckAllType(tp.GetRecord(pos_AS_PartialFnType_fnrng)));
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; (idx <= len_fndom) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_fndom) && !exists; idx++) {
         exists = CheckAllType(fndom[idx]);
+      }
       return exists;
     }
     case TAG_TYPE_AS_TotalFnType: {
       const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(pos_AS_TotalFnType_fndom));
       bool exists (CheckAllType(tp.GetRecord(pos_AS_TotalFnType_fnrng)));
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; (idx <= len_fndom) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_fndom) && !exists; idx++) {
         exists = CheckAllType(fndom[idx]);
+      }
       return exists;
     }
     case TAG_TYPE_AS_OpType: {
       const SEQ<TYPE_AS_Type> & opdom (tp.GetSequence(pos_AS_OpType_opdom));
       bool exists (CheckAllType(tp.GetRecord(pos_AS_OpType_oprng)));
       size_t len_opdom = opdom.Length();
-      for (size_t idx = 1; (idx <= len_opdom) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_opdom) && !exists; idx++) {
         exists = CheckAllType(opdom[idx]);
+      }
       return exists;
     }
     default: {

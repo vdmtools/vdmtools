@@ -31,12 +31,10 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
       const Bool & wf_s (infer.GetBool (1));
       const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
   
-      if (IsCompatible (i, stp, mk_REP_SetTypeRep(rep_alltp)))
-      {
+      if (IsCompatible (i, stp, mk_REP_SetTypeRep(rep_alltp))) {
         Generic elemtp (UnmaskSetType (i, ExtractSetType (stp)));
   
-        if (elemtp.IsNil())
-        {
+        if (elemtp.IsNil()) {
           //-----------------------------------
           // Error message #293
           // An empty set is used in a set bind
@@ -46,24 +44,26 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
           const Generic & wf_p (infer2.GetField (1)); // [bool]
           const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
   
-          if (wf_p.IsNil())
+          if (wf_p.IsNil()) {
             return mk_(Nil(), bd);
-          else
+          }
+          else {
             return mk_(wf_s && Bool (wf_p), bd);
+          }
         }
-        else if (IsCompatible (i, tp, elemtp))
-        {
+        else if (IsCompatible (i, tp, elemtp)) {
           Tuple infer3 (wf_Pattern (i, p, tp)); // [bool] * map AS`Name to (REP`TypeRep * nat1)
           const Generic & wf_p (infer3.GetField (1)); // [bool]
           const MAP<TYPE_AS_Name,Tuple> & bd (infer3.GetMap (2));
   
-          if (wf_p.IsNil())
+          if (wf_p.IsNil()) {
             return mk_(Nil(), bd);
-          else
+          }
+          else {
             return mk_(Bool (wf_p) && wf_s, bd);
+          }
         }
-        else
-        {
+        else {
           //-----------------------------------------------------------
           // Error message #294
           // Type of defining expression is not compatible with binding
@@ -73,14 +73,15 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
           const Generic & wf_p (infer4.GetField (1)); // [bool]
           const MAP<TYPE_AS_Name,Tuple> & bd (infer4.GetMap (2));
   
-          if (wf_p.IsNil())
+          if (wf_p.IsNil()) {
             return mk_(Nil(), bd);
-          else
+          }
+          else {
             return mk_(Bool(false), bd);
+          }
         }
       }
-      else
-      {
+      else {
         //-------------------------------------
         // Error message #295
         // Type of expression is not a set type
@@ -93,14 +94,14 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
       const TYPE_AS_Pattern & p (patbind.GetRecord(pos_AS_TypeBind_pat));
       const TYPE_AS_Type & t (patbind.GetRecord(pos_AS_TypeBind_tp));
 #ifdef VDMPP
-      if (t.Is (TAG_TYPE_AS_TypeName))
-      {
+      if (t.Is (TAG_TYPE_AS_TypeName)) {
         TYPE_AS_Name tname (t.GetRecord(pos_AS_TypeName_name));
         Generic tnm (LookUpTypeName (tname, true));
         Generic defcl (LookUpDefClassForTypeName (tname));
         TYPE_AS_Name tmpname (tname);
-        if (!defcl.IsNil ())
+        if (!defcl.IsNil ()) {
           tmpname = defcl;
+        }
         Generic ca (CheckAccess (tmpname,tnm));
         if (ca.IsNil ()) {
           //-------------------
@@ -114,13 +115,11 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
 #endif // VDMPP
       TYPE_REP_TypeRep ttp (TransType(Nil (), t));
   
-      if (IsCompatible (i, tp, ttp))
-      {
+      if (IsCompatible (i, tp, ttp)) {
         Tuple tpl (wf_Pattern (i, p, ttp)); // [bool] * map AS`Name to REP`TypeRep
         return tpl;
       }
-      else
-      {
+      else {
         //-----------------------------------------------------------
         // Error message #294
         // Type of defining expression is not compatible with binding
@@ -131,10 +130,12 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
         const Generic & wf_p (infer.GetField (1)); // [bool]
         const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
   
-        if (wf_p.IsNil())
+        if (wf_p.IsNil()) {
           return mk_(Nil(), bd);
-        else
+        }
+        else {
           return mk_(Bool(false), bd);
+        }
       }
     }
     default: {
@@ -183,10 +184,10 @@ Tuple StatSem::wf_PatternName (const Int & /*i*/, const TYPE_AS_PatternName & pa
 
   GetCI().SetTypeInfo (cid, tp);
 
-  if (nm.IsNil())
+  if (nm.IsNil()) {
     return mk_(Bool(true), Map());
-  else
-  {
+  }
+  else {
     Map bd;
     bd.Insert(nm, mk_(tp, Int(1)));
     return mk_(Bool(true), bd);
@@ -209,21 +210,17 @@ Tuple StatSem::wf_MatchVal (const Int & i, const TYPE_AS_MatchVal & pat, const T
 
   GetCI().SetTypeInfo (cid, tp_e);
 
-  if (IsCompatible (i, tp_e, tp))
-  {
-    if (wf_e)
-    {
+  if (IsCompatible (i, tp_e, tp)) {
+    if (wf_e) {
       // TODO
-// 20100804 -->
       //return mk_(Bool(i == POS) || IsOneValueType (i, tp), Map());
       return mk_(Bool(i == POS) || IsOneValueType (i, tp_e), Map());
-// <-- 20100804
     }
-    else
+    else {
       return mk_(Nil(), Map());
+    }
   }
-  else
-  {
+  else {
     return mk_(Bool(false), Map());
   }
 }
@@ -243,28 +240,24 @@ Tuple StatSem::wf_SetEnumPattern (const Int & i, const TYPE_AS_SetEnumPattern & 
   GetCI().SetTypeInfo (cid, stp);
   Generic elemtp (UnmaskSetType (i, stp));
 
-  if (elemtp.IsNil())
-  {
-    if (els.IsEmpty())
-    {
+  if (elemtp.IsNil()) {
+    if (els.IsEmpty()) {
       return mk_(Bool(true), MAP<TYPE_AS_Name,Tuple>());
     }
-    else
-    {
+    else {
       MAP<TYPE_AS_Name,TYPE_REP_TypeRep> bd;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         bd.ImpOverride (ExtractBindings (els[idx]));
+      }
       return mk_(Bool(false), bd);
     }
   }
-  else
-  {
+  else {
     Set wf;
     Sequence b_s;
     size_t len_els = els.Length();
-    for (size_t idx = 1; idx <= len_els; idx++)
-    {
+    for (size_t idx = 1; idx <= len_els; idx++) {
       Tuple t (wf_Pattern (i, els[idx], elemtp)); // [bool] * map AS`Name to REP`TypeRep
       wf.Insert (t.GetField (1)); // [bool]
       b_s.ImpAppend (t.GetMap (2)); // map AS`Name to REP`TypeRep
@@ -274,12 +267,13 @@ Tuple StatSem::wf_SetEnumPattern (const Int & i, const TYPE_AS_SetEnumPattern & 
     const Bool & wf_b (infer.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer.GetMap (2));
 
-    if (wf.InSet(Nil()))
+    if (wf.InSet(Nil())) {
       return mk_(Nil(), bind);
-    else if (wf.InSet(Bool (false)))
+    }
+    else if (wf.InSet(Bool (false))) {
       return mk_(Bool(false), bind);
-    else
-    {
+    }
+    else {
       Bool tmpb (!(i == DEF) || (stp == tp));
       return mk_(wf_b && tmpb, bind);
     }
@@ -300,8 +294,7 @@ Tuple StatSem::wf_SetUnionPattern (const Int & i, const TYPE_AS_SetUnionPattern 
   TYPE_REP_TypeRep tp_stp (ExtractSetType(tp));
   GetCI().SetTypeInfo(cid, tp_stp);
 
-  if (IsCompatible (i, tp, set_alltp))
-  {
+  if (IsCompatible (i, tp, set_alltp)) {
     Tuple infer (wf_Pattern (i, lp, tp));  // bool * map AS`Name to REP`TypeRep
     const Generic & wf_lp (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd_l (infer.GetMap (2));
@@ -314,13 +307,14 @@ Tuple StatSem::wf_SetUnionPattern (const Int & i, const TYPE_AS_SetUnionPattern 
     const Bool & wf_b (infer3.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer3.GetMap (2));
 
-    if (wf_lp.IsNil() || wf_rp.IsNil())
+    if (wf_lp.IsNil() || wf_rp.IsNil()) {
       return mk_(Nil(), bind);
-    else
+    }
+    else {
       return mk_(wf_b && Bool(wf_lp) && Bool(wf_rp), bind);
+    }
   }
-  else
-  {
+  else {
     MAP<TYPE_AS_Name,Tuple> bind (ExtractBindings (lp));
     bind.ImpOverride (ExtractBindings (rp));
     return mk_(Bool(false), bind);
@@ -342,26 +336,24 @@ Tuple StatSem::wf_SeqEnumPattern (const Int & i, const TYPE_AS_SeqEnumPattern & 
 
   Generic elemtp (UnmaskSeqType (i, stp));
 
-  if (elemtp.IsNil())
-  {
-    if (els.IsEmpty())
+  if (elemtp.IsNil()) {
+    if (els.IsEmpty()) {
       return mk_(Bool(true), MAP<TYPE_AS_Name,Tuple>());
-    else
-    {
+    }
+    else {
       MAP<TYPE_AS_Name,Tuple> bd;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         bd.ImpOverride (ExtractBindings (els[idx]));
+      }
       return mk_(Bool(false), bd);
     }
   }
-  else
-  {
+  else {
     Set wf;
     Sequence b_s;
     size_t len_els = els.Length();
-    for (size_t idx = 1; idx <= len_els; idx++)
-    {
+    for (size_t idx = 1; idx <= len_els; idx++) {
       Tuple t (wf_Pattern (i, els[idx], elemtp)); // [bool] * map AS`Name to REP`TypeRep
       wf.Insert (t.GetField (1)); // [bool]
       b_s.ImpAppend (t.GetMap (2)); // map AS`Name to REP`TypeRep
@@ -371,12 +363,13 @@ Tuple StatSem::wf_SeqEnumPattern (const Int & i, const TYPE_AS_SeqEnumPattern & 
     const Bool & wf_b (infer.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer.GetMap (2));
 
-    if (wf.InSet(Nil()))
+    if (wf.InSet(Nil())) {
       return mk_(Nil(), bind);
-    else if (wf.InSet(Bool (false)))
+    }
+    else if (wf.InSet(Bool (false))) {
       return mk_(Bool(false), bind);
-    else
-    {
+    }
+    else {
       Bool tmpb (!(i == DEF) || (stp == tp));
       return mk_(wf_b && tmpb, bind);
     }
@@ -394,8 +387,7 @@ Tuple StatSem::wf_SeqConcPattern (const Int & i, const TYPE_AS_SeqConcPattern & 
   const TYPE_AS_Pattern & rp (pat.GetRecord(pos_AS_SeqConcPattern_rp));
   const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_SeqConcPattern_cid));
 
-  if (IsCompatible (i, tp, seq_alltp))
-  {
+  if (IsCompatible (i, tp, seq_alltp)) {
     Tuple infer (wf_Pattern (i, lp, tp)); // bool * map AS`Name to REP`TypeRep
     const Generic & wf_lp (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd_l (infer.GetMap (2));
@@ -408,19 +400,18 @@ Tuple StatSem::wf_SeqConcPattern (const Int & i, const TYPE_AS_SeqConcPattern & 
     const Bool & wf_b (infer3.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer3.GetMap (2));
 
-// 20101020 -->
     //TYPE_REP_TypeRep stp (ExtractSeqType(tp));
     TYPE_REP_TypeRep stp (RemoveEmptySeqType(ExtractSeqType(tp)));
-// <-- 20101020
     GetCI().SetTypeInfo(cid, stp);
 
-    if (wf_lp.IsNil() || wf_rp.IsNil())
+    if (wf_lp.IsNil() || wf_rp.IsNil()) {
       return mk_(Nil(), bind);
-    else
+    }
+    else {
       return mk_(wf_b && Bool(wf_lp) && Bool(wf_rp), bind);
+    }
   }
-  else
-  {
+  else {
     MAP<TYPE_AS_Name,Tuple> bind (ExtractBindings (lp));
     bind.ImpOverride (ExtractBindings (rp));
     return mk_(Bool(false), bind);
@@ -442,19 +433,15 @@ Tuple StatSem::wf_MapEnumPattern (const Int & i, const TYPE_AS_MapEnumPattern & 
   GetCI().SetTypeInfo (cid, mtp);
   Generic elemtp = mtp;
 
-  if (elemtp.IsNil())
-  {
-    if (mls.IsEmpty())
-    {
+  if (elemtp.IsNil()) {
+    if (mls.IsEmpty()) {
       return mk_(Bool(true), MAP<TYPE_AS_Name,Tuple>());
     }
-    else
-    {
+    else {
       MAP<TYPE_AS_Name,Tuple> dombd;
       MAP<TYPE_AS_Name,Tuple> rngbd;
       size_t len_mls = mls.Length();
-      for (size_t idx = 1; idx <= len_mls; idx++)
-      {
+      for (size_t idx = 1; idx <= len_mls; idx++) {
         dombd.ImpOverride (ExtractBindings (mls[idx].GetRecord(pos_AS_MapletPattern_dp)));
         rngbd.ImpOverride (ExtractBindings (mls[idx].GetRecord(pos_AS_MapletPattern_rp)));
       }
@@ -462,13 +449,11 @@ Tuple StatSem::wf_MapEnumPattern (const Int & i, const TYPE_AS_MapEnumPattern & 
       return mk_(Bool(false), t.GetField(2));
     }
   }
-  else
-  {
+  else {
     Set wf;
     Sequence b_s;
     size_t len_mls = mls.Length();
-    for (size_t idx = 1; idx <= len_mls; idx++)
-    {
+    for (size_t idx = 1; idx <= len_mls; idx++) {
       Tuple t (wf_MapletPattern (i, mls[idx], mtp)); // [bool] * map AS`Name to REP`TypeRep
       wf.Insert (t.GetField (1)); // [bool]
       b_s.ImpAppend (t.GetMap (2)); // map AS`Name to REP`TypeRep
@@ -478,12 +463,13 @@ Tuple StatSem::wf_MapEnumPattern (const Int & i, const TYPE_AS_MapEnumPattern & 
     const Bool & wf_b (infer.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer.GetMap (2));
 
-    if (wf.InSet(Nil()))
+    if (wf.InSet(Nil())) {
       return mk_(Nil(), bind);
-    else if (wf.InSet(Bool (false)))
+    }
+    else if (wf.InSet(Bool (false))) {
       return mk_(Bool(false), bind);
-    else
-    {
+    }
+    else {
       Bool tmpb (!(i == DEF) || (mtp == tp));
       return mk_(wf_b && tmpb, bind);
     }
@@ -504,8 +490,7 @@ Tuple StatSem::wf_MapMergePattern (const Int & i, const TYPE_AS_MapMergePattern 
   TYPE_REP_TypeRep mtp (ExtractMapType(tp));
   GetCI().SetTypeInfo(cid, mtp);
 
-  if (IsCompatible (i, tp, map_alltp))
-  {
+  if (IsCompatible (i, tp, map_alltp)) {
     Tuple infer (wf_Pattern (i, lp, tp));  // bool * map AS`Name to REP`TypeRep
     const Generic & wf_lp (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd_l (infer.GetMap (2));
@@ -518,13 +503,14 @@ Tuple StatSem::wf_MapMergePattern (const Int & i, const TYPE_AS_MapMergePattern 
     const Bool & wf_b (infer3.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer3.GetMap (2));
 
-    if (wf_lp.IsNil() || wf_rp.IsNil())
+    if (wf_lp.IsNil() || wf_rp.IsNil()) {
       return mk_(Nil(), bind);
-    else
+    }
+    else {
       return mk_(wf_b && Bool(wf_lp) && Bool(wf_rp), bind);
+    }
   }
-  else
-  {
+  else {
     MAP<TYPE_AS_Name,Tuple> bind (ExtractBindings (lp));
     bind.ImpOverride (ExtractBindings (rp));
     return mk_(Bool(false), bind);
@@ -545,8 +531,7 @@ Tuple StatSem::wf_MapletPattern(const Int & i, const TYPE_AS_MapletPattern & pat
   TYPE_REP_TypeRep mtp (ExtractMapType(tp));
   GetCI().SetTypeInfo(cid, mtp);
 
-  if (IsCompatible (i, tp, map_alltp))
-  {
+  if (IsCompatible (i, tp, map_alltp)) {
     Generic domtp = UnmaskMapDomType(i, mtp);
     Generic rngtp = UnmaskMapRngType(i, mtp);
 
@@ -564,13 +549,14 @@ Tuple StatSem::wf_MapletPattern(const Int & i, const TYPE_AS_MapletPattern & pat
     const Bool & wf_b (infer3.GetBool (1));
     const MAP<TYPE_AS_Name,Tuple> & bind (infer3.GetMap (2));
 
-    if (wf_dp.IsNil() || wf_rp.IsNil())
+    if (wf_dp.IsNil() || wf_rp.IsNil()) {
       return mk_(Nil(), bind);
-    else
+    }
+    else {
       return mk_(wf_b && Bool(wf_dp) && Bool(wf_rp), bind);
+    }
   }
-  else
-  {
+  else {
     MAP<TYPE_AS_Name,Tuple> bind (ExtractBindings (dp));
     bind.ImpOverride (ExtractBindings (rp));
     return mk_(Bool(false), bind);
@@ -596,19 +582,18 @@ Tuple StatSem::wf_RecordPattern (const Int & i, const TYPE_AS_RecordPattern & pa
   Generic pair (LookUpTag (i, nm, Set()));
   Generic comptp (ExtractCompositeType (tp));
 
-  if (comptp.IsNil())
-  {
+  if (comptp.IsNil()) {
     GetCI().SetTypeInfo (cid, rep_alltp);
 
     MAP<TYPE_AS_Name,Tuple> bind;
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       bind.ImpOverride (ExtractBindings (flds[idx]));
+    }
     return mk_(Bool(false), bind);
   }
 
-  if (pair.IsNil())
-  {
+  if (pair.IsNil()) {
     //-----------------------------------
     // Error message #296
     // There exists no type with tag L"%1"
@@ -619,8 +604,9 @@ Tuple StatSem::wf_RecordPattern (const Int & i, const TYPE_AS_RecordPattern & pa
 
     MAP<TYPE_AS_Name,Tuple> bind;
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       bind.ImpOverride (ExtractBindings (flds[idx]));
+    }
     return mk_(Nil (), bind);
   }
 #ifdef VDMPP
@@ -652,8 +638,7 @@ Tuple StatSem::wf_RecordPattern (const Int & i, const TYPE_AS_RecordPattern & pa
   SEQ<TYPE_REP_FieldRep> def_flds (StripAccessType (Tuple(pair).GetSequence (2)));
 #endif // VDMPP
 
-  if (flds.Length() != def_flds.Length())
-  {
+  if (flds.Length() != def_flds.Length()) {
     //--------------------------------
     // Error message #297
     // Wrong number of fields for L"%1"
@@ -664,22 +649,20 @@ Tuple StatSem::wf_RecordPattern (const Int & i, const TYPE_AS_RecordPattern & pa
 
     MAP<TYPE_AS_Name,Tuple> bind;
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       bind.ImpOverride (ExtractBindings (flds[idx]));
+    }
     return mk_(Nil (), bind);
   }
 
   Generic realtp (GetRealType (tp));
 
   size_t len_def_flds = def_flds.Length();
-  for (size_t index = 1; index <= len_def_flds; index++)
-  {
+  for (size_t index = 1; index <= len_def_flds; index++) {
     const TYPE_REP_FieldRep & field (def_flds[index]);
-    if (field.GetBoolValue(pos_REP_FieldRep_dc))
-    {
+    if (field.GetBoolValue(pos_REP_FieldRep_dc)) {
       const TYPE_AS_Pattern & pat (flds[index]);
-      if (! pat.Is(TAG_TYPE_AS_PatternName))
-      {
+      if (! pat.Is(TAG_TYPE_AS_PatternName)) {
         const TYPE_AS_Name & sel_name (field.GetRecord(pos_REP_FieldRep_sel));
         //-----------------------------------------------------------------
         // Error message #298
@@ -694,8 +677,7 @@ Tuple StatSem::wf_RecordPattern (const Int & i, const TYPE_AS_RecordPattern & pa
   Set wf;
   Sequence b_s;
   size_t len_flds = flds.Length();
-  for (size_t idx = 1; idx <= len_flds; idx++)
-  {
+  for (size_t idx = 1; idx <= len_flds; idx++) {
     Tuple t (wf_Pattern (i, flds[idx], def_flds[idx].GetRecord(pos_REP_FieldRep_tp)));
                                                    // [bool] * map AS`Name to REP`TypeRep
     wf.Insert (t.GetField (1)); // [bool]
@@ -709,50 +691,52 @@ Tuple StatSem::wf_RecordPattern (const Int & i, const TYPE_AS_RecordPattern & pa
   TYPE_REP_CompositeTypeRep ctp (mk_REP_CompositeTypeRep(newtag, def_flds));
 
   Bool wf_tp;
-  if (i == DEF)
-  {
-    if (realtp.IsNil ())
+  if (i == DEF) {
+    if (realtp.IsNil ()) {
       wf_tp = Bool(false);
-    else
-    {
+    }
+    else {
       TYPE_REP_TypeRep l_tp (realtp); // *****
-      if (l_tp == ctp)
-      {
+      if (l_tp == ctp) {
         wf_tp = Bool(true);
       }
-      else if (l_tp.Is(TAG_TYPE_REP_InvTypeRep))
-      {
+      else if (l_tp.Is(TAG_TYPE_REP_InvTypeRep)) {
         TYPE_REP_TypeRep t (GetRealType (l_tp.GetRecord (pos_REP_InvTypeRep_shape)));
-        if (t == ctp)
-        {
+        if (t == ctp) {
           bool forall = true;
-          for (size_t idx = 1; (idx <= len_flds) && forall; idx++)
+          for (size_t idx = 1; (idx <= len_flds) && forall; idx++) {
             forall = SimplePatterns (flds[idx]);
+          }
           wf_tp = Bool(forall);
         }
-        else
+        else {
           wf_tp = Bool(false);
+        }
       }
-      else
+      else {
         wf_tp = Bool(true);
+      }
     }
   }
-  else
-  {
+  else {
     wf_tp = IsCompatible (i, ctp, comptp);
   }
 
-  if (i == DEF)
+  if (i == DEF) {
     GetCI().SetTypeInfo (cid, comptp);
-  else
+  }
+  else {
     GetCI().SetTypeInfo (cid, ctp);
-
-  if (wf.InSet(Nil()))
+  }
+  if (wf.InSet(Nil())) {
     return mk_(Nil(), bind);
-  else if (wf.InSet(Bool (false)))
+  }
+  else if (wf.InSet(Bool (false))) {
     return mk_(Bool(false), bind);
-  else
+  }
+  else {
     return mk_(reswf && wf_b && wf_tp, bind);
+  }
 }
 
 // wf_TuplePattern
@@ -765,21 +749,18 @@ Tuple StatSem::wf_TuplePattern (const Int & i, const TYPE_AS_TuplePattern & pat,
   const SEQ<TYPE_AS_Pattern> & flds (pat.GetSequence(pos_AS_TuplePattern_fields));
   const TYPE_CI_ContextId & cid (pat.GetInt(pos_AS_TuplePattern_cid));
 
-// 20131216 -->
   //TYPE_REP_ProductTypeRep ptp (ExtractProductType (tp, flds.Length(), EQ));
   //const SEQ<TYPE_REP_TypeRep> & tp_l (ptp.GetSequence (pos_REP_ProductTypeRep_tps));
 
   Generic ptp (ExtractProductType (tp, flds.Length(), EQ));
-  if (ptp.IsNil())
-  {
+  if (ptp.IsNil()) {
     MAP<TYPE_AS_Name,Tuple> bind;
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       bind.ImpOverride (ExtractBindings (flds[idx]));
-
+    }
     SEQ<TYPE_REP_TypeRep> tp_l;
-    for (size_t idx2 = 1; idx2 <= len_flds; idx2++)
-    { 
+    for (size_t idx2 = 1; idx2 <= len_flds; idx2++) { 
       wf_Pattern(i, flds[idx2], rep_alltp);
       tp_l.ImpAppend(rep_alltp);
     }
@@ -789,19 +770,16 @@ Tuple StatSem::wf_TuplePattern (const Int & i, const TYPE_AS_TuplePattern & pat,
   }
 
   const SEQ<TYPE_REP_TypeRep> & tp_l (Record(ptp).GetSequence (pos_REP_ProductTypeRep_tps));
-// <-- 20131216
 
 
-  if (tp_l.Length() != flds.Length())
-  {
+  if (tp_l.Length() != flds.Length()) {
     MAP<TYPE_AS_Name,Tuple> bind;
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       bind.ImpOverride (ExtractBindings (flds[idx]));
-
+    }
     SEQ<TYPE_REP_TypeRep> tp_l;
-    for (size_t idx2 = 1; idx2 <= len_flds; idx2++)
-    { 
+    for (size_t idx2 = 1; idx2 <= len_flds; idx2++) { 
       wf_Pattern(i, flds[idx2], rep_alltp);
       tp_l.ImpAppend(rep_alltp);
     }
@@ -809,15 +787,13 @@ Tuple StatSem::wf_TuplePattern (const Int & i, const TYPE_AS_TuplePattern & pat,
 
     return mk_(Bool(false), bind);
   }
-  else
-  {
+  else {
     Generic realtp (GetRealType (tp));
 
     Set wf;
     Sequence b_s;
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
-    {
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       Tuple infer (wf_Pattern (i, flds[idx], tp_l[idx])); // [bool] * map AS`Name to REP`TypeRep
       wf.Insert (infer.GetField (1)); // [bool]
       b_s.ImpAppend (infer.GetMap (2)); // map AS`Name to REP`TypeRep
@@ -828,27 +804,24 @@ Tuple StatSem::wf_TuplePattern (const Int & i, const TYPE_AS_TuplePattern & pat,
     const MAP<TYPE_AS_Name,Tuple> & bind (infer.GetMap (2));
 
     Bool wf_tp (true);
-    if (i == DEF)
-    {
-      if (realtp.IsNil ())
+    if (i == DEF) {
+      if (realtp.IsNil ()) {
         wf_tp = Bool(false);
-      else
-      {
-        if (realtp == ptp)
+      }
+      else {
+        if (realtp == ptp) {
           wf_tp = Bool(true);
-        else
-        {
+        }
+        else {
           TYPE_REP_TypeRep rtp (realtp);
           switch(rtp.GetTag()) {
             case TAG_TYPE_REP_UnionTypeRep: {
               SET<TYPE_REP_TypeRep> tps (rtp.GetSet(pos_REP_UnionTypeRep_tps));
               bool forall = true;
               Generic gt;
-              for (bool bb = tps.First(gt); bb && forall; bb = tps.Next(gt))
-              {
+              for (bool bb = tps.First(gt); bb && forall; bb = tps.Next(gt)) {
                 TYPE_REP_TypeRep t (gt);
-                if (t.Is(TAG_TYPE_REP_ProductTypeRep))
-                {
+                if (t.Is(TAG_TYPE_REP_ProductTypeRep)) {
                   const SEQ<TYPE_REP_TypeRep> & t_l (t.GetSequence(pos_REP_ProductTypeRep_tps));
                   forall = (t_l.Length() == tp_l.Length());
                 }
@@ -860,15 +833,16 @@ Tuple StatSem::wf_TuplePattern (const Int & i, const TYPE_AS_TuplePattern & pat,
             }
             case TAG_TYPE_REP_InvTypeRep: {
               TYPE_REP_TypeRep t (GetRealType (rtp.GetRecord(pos_REP_InvTypeRep_shape)));
-              if (t == ptp)
-              {
+              if (t == ptp) {
                 bool forall = true;
-                for (size_t idx = 1; (idx <= len_flds) && forall; idx++)
+                for (size_t idx = 1; (idx <= len_flds) && forall; idx++) {
                   forall = SimplePatterns (flds[idx]);
+                }
                 wf_tp = Bool(forall);
               }
-              else
+              else {
                 wf_tp = Bool(false);
+              }
               break;
             }
             default: {
@@ -879,19 +853,21 @@ Tuple StatSem::wf_TuplePattern (const Int & i, const TYPE_AS_TuplePattern & pat,
         }
       }
     }
-    else // (i == POS) 
-    {
+    else { // (i == POS) 
       wf_tp = IsCompatible (i, ptp, tp);
     }
 
     GetCI().SetTypeInfo (cid, ptp);
 
-    if (wf.InSet(Nil()))
+    if (wf.InSet(Nil())) {
       return mk_(Nil(), bind);
-    else if (wf.InSet(Bool (false)))
+    }
+    else if (wf.InSet(Bool (false))) {
       return mk_(Bool(false), bind);
-    else
+    }
+    else {
       return mk_(wf_b && wf_tp, bind);
+    }
   }
 }
 
@@ -916,8 +892,7 @@ Tuple StatSem::wf_ObjectPattern (const Int & i, const TYPE_AS_ObjectPattern & pa
       const TYPE_AS_Pattern & p (fp.GetRecord(pos_AS_FieldPattern_pat));
 
       Generic gtp (LookUpInObject (cls, field, false, false));
-      if (gtp.IsNil())
-      {
+      if (gtp.IsNil()) {
         //--------------------------------------------
         // Error message #280
         // The field L"%1" is not defined in class "%2"
@@ -925,8 +900,7 @@ Tuple StatSem::wf_ObjectPattern (const Int & i, const TYPE_AS_ObjectPattern & pa
         GenErr (field, ERR, 280, mk_sequence(PrintName(field), PrintName(cls)));
         wf.Insert (Nil());
       }
-      else
-      {
+      else {
         Generic ca (CheckAccessCurClass(gtp));
         if (ca.IsNil ()) {
           //-------------------
@@ -948,15 +922,17 @@ Tuple StatSem::wf_ObjectPattern (const Int & i, const TYPE_AS_ObjectPattern & pa
     TYPE_REP_TypeRep ptp (mk_REP_ObjRefTypeRep(cls));
     bool wf_tp = IsCompatible (i, ptp, tp);
     GetCI().SetTypeInfo (pat.GetInt(pos_AS_ObjectPattern_cid), ptp);
-    if (wf.InSet(Nil()))
+    if (wf.InSet(Nil())) {
       return mk_(Nil(), bind);
-    else if (wf.InSet(Bool (false)))
+    }
+    else if (wf.InSet(Bool (false))) {
       return mk_(Bool(false), bind);
-    else
+    }
+    else {
       return mk_(wf_b && wf_tp, bind);
+    }
   }
-  else
-  {
+  else {
     //------------------------------
     // Error message #284
     // L"%1" is not an existing class
@@ -978,8 +954,7 @@ Tuple StatSem::wf_PatternList (const Int & i,
                                const SEQ<TYPE_REP_TypeRep> & tp_l,
                                const TYPE_AS_Name & Pos)
 {
-  if (p_l.Length() != tp_l.Length())
-  {
+  if (p_l.Length() != tp_l.Length()) {
     //--------------------------------------------------
     // Error message #299
     // Number of patterns different than number of types
@@ -988,13 +963,10 @@ Tuple StatSem::wf_PatternList (const Int & i,
 
     MAP<TYPE_AS_Name,Tuple> mp;
     size_t len_p_l = p_l.Length();
-    for (size_t index = 1; index <= len_p_l; index++)
-    {
+    for (size_t index = 1; index <= len_p_l; index++) {
       mp.ImpOverride (ExtractBindings (p_l[index]));
-// 20100804 -->
       // for POG Error
       GetCI().SetTypeInfo (ASTAUX::GetCid(p_l[index]), rep_alltp);
-// <-- 20100804
     }
     return mk_(Bool (false), mp);
   }
@@ -1004,26 +976,22 @@ Tuple StatSem::wf_PatternList (const Int & i,
   resbd.ImpAppend(Map());
 
   size_t len_p_l = p_l.Length();
-  for (size_t idx = 1; idx <= len_p_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_p_l; idx++) {
     Tuple infer (wf_Pattern (i, p_l[idx], tp_l[idx])); // [bool] * map AS`Name to REP`TypeRep
     const Generic & wf_bd (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
 
-    if (wf_bd == Bool (false))
-    {
+    if (wf_bd == Bool (false)) {
       //---------------------
       // Error message #104
       // Pattern cannot match
       //---------------------
-// 20100713 -->
-      if (p_l[idx].Is(TAG_TYPE_AS_PatternName) && !p_l[idx].GetField(pos_AS_PatternName_tp).IsNil())
-      {
+      if (p_l[idx].Is(TAG_TYPE_AS_PatternName) && !p_l[idx].GetField(pos_AS_PatternName_tp).IsNil()) {
         GenErrTp (p_l[idx], ERR, 104, p_l[idx].GetField(pos_AS_PatternName_tp), tp_l[idx], Sequence());
       }
-      else
-// <-- 20100713
-      GenErr (p_l[idx], ERR, 104, Sequence());
+      else {
+        GenErr (p_l[idx], ERR, 104, Sequence());
+      }
     }
 
     reswf &= (wf_bd == Bool (true));
@@ -1059,19 +1027,15 @@ Tuple StatSem::wf_SetBind (const Int & i, const TYPE_AS_SetBind & bind)
   const TYPE_AS_Pattern & p (bind.GetRecord(pos_AS_SetBind_pat));
   const TYPE_AS_Expr & s (bind.GetRecord(pos_AS_SetBind_Set));
   
-// 20101025 -->
   //Tuple infer (wf_Expr (i, s, rep_alltp));
   Tuple infer (wf_Expr (i, s, mk_REP_SetTypeRep(rep_alltp)));
-// <-- 20101025
   const Bool & wf_s (infer.GetBool (1));
   const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
   
-  if (IsCompatible (i, stp, set_alltp))
-  {
+  if (IsCompatible (i, stp, set_alltp)) {
     Generic elemtp (UnmaskSetType (i, ExtractSetType (stp)));
 
-    if (elemtp.IsNil())
-    {
+    if (elemtp.IsNil()) {
       //-----------------------------------
       // Error message #293
       // An empty set is used in a set bind
@@ -1079,20 +1043,20 @@ Tuple StatSem::wf_SetBind (const Int & i, const TYPE_AS_SetBind & bind)
       GenErr (s, WRN1, 293, Sequence());
       return mk_(Bool(false), ExtractBindings (p));
     }
-    else
-    {
+    else {
       Tuple infer2 (wf_Pattern (i, p, elemtp)); // [bool] * map AS`Name to REP`TypeRep
       const Generic & wf_p (infer2.GetField (1)); // [bool]
       const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
   
-      if (wf_p.IsNil())
+      if (wf_p.IsNil()) {
         return mk_(Nil(), bd);
-      else
+      }
+      else {
         return mk_(wf_s && Bool (wf_p), bd);
+      }
     }
   }
-  else
-  {
+  else {
     //-------------------------------------
     // Error message #295
     // Type of expression is not a set type
@@ -1127,12 +1091,10 @@ Tuple StatSem::wf_SeqBind (const Int & i, const TYPE_AS_SeqBind & bind)
   const Bool & wf_s (infer.GetBool (1));
   const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
   
-  if (IsCompatible (i, stp, seq_alltp))
-  {
+  if (IsCompatible (i, stp, seq_alltp)) {
     Generic elemtp (UnmaskSeqType (i, ExtractSeqType (stp)));
 
-    if (elemtp.IsNil())
-    {
+    if (elemtp.IsNil()) {
       //-----------------------------------
       // Error message #462
       // An empty seq is used in a seq bind
@@ -1140,20 +1102,20 @@ Tuple StatSem::wf_SeqBind (const Int & i, const TYPE_AS_SeqBind & bind)
       GenErr (s, WRN1, 462, Sequence());
       return mk_(Bool(false), ExtractBindings (p));
     }
-    else
-    {
+    else {
       Tuple infer2 (wf_Pattern (i, p, elemtp)); // [bool] * map AS`Name to REP`TypeRep
       const Generic & wf_p (infer2.GetField (1)); // [bool]
       const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
 
-      if (wf_p.IsNil())
+      if (wf_p.IsNil()) {
         return mk_(Nil(), bd);
-      else
+      }
+      else {
         return mk_(wf_s && Bool (wf_p), bd);
+      }
     }
   }
-  else
-  {
+  else {
     //-------------------------------------
     // Error message #237
     // Expression is not a sequence type
@@ -1174,19 +1136,15 @@ Tuple StatSem::wf_BindAndType (const Int & i, const TYPE_AS_Bind & bind)
       const TYPE_AS_Pattern & p (bind.GetRecord(pos_AS_SetBind_pat));
       const TYPE_AS_Expr & s (bind.GetRecord(pos_AS_SetBind_Set));
   
-// 20101025 -->
       //Tuple infer (wf_Expr (i, s, rep_alltp));
       Tuple infer (wf_Expr (i, s, set_alltp));
-// <-- 20101025
       const Bool & wf_s (infer.GetBool (1));
       const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
   
-      if (IsCompatible (i, stp, set_alltp))
-      {
+      if (IsCompatible (i, stp, set_alltp)) {
         Generic elemtp (UnmaskSetType (i, ExtractSetType (stp)));
   
-        if (elemtp.IsNil())
-        {
+        if (elemtp.IsNil()) {
           //-----------------------------------
           // Error message #293
           // An empty set is used in a set bind
@@ -1194,20 +1152,20 @@ Tuple StatSem::wf_BindAndType (const Int & i, const TYPE_AS_Bind & bind)
           GenErr (s, WRN1, 293, Sequence());
           return mk_(Bool(false), ExtractBindings (p), rep_alltp);
         }
-        else
-        {
+        else {
           Tuple  infer2 (wf_Pattern (i, p, elemtp)); // [bool] * map AS`Name to REP`TypeRep
           const Generic & wf_p (infer2.GetField (1)); // [bool]
           const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
   
-          if (wf_p.IsNil())
+          if (wf_p.IsNil()) {
             return mk_(Nil(), bd, elemtp);
-          else
+          }
+          else {
             return mk_(wf_s && Bool (wf_p), bd, elemtp);
+          }
         }
       }
-      else
-      {
+      else {
         //-------------------------------------
         // Error message #295
         // Type of expression is not a set type
@@ -1244,25 +1202,24 @@ Tuple StatSem::wf_TypeBindList (const Int & i, const SEQ<TYPE_AS_TypeBind> & par
   SEQ<TYPE_REP_TypeRep> restp;
 
   size_t len_parms = parms.Length();
-  for (size_t idx = 1; idx <= len_parms; idx++)
-  {
+  for (size_t idx = 1; idx <= len_parms; idx++) {
     const TYPE_AS_TypeBind & tb (parms[idx]);
     Tuple infer (wf_BindAndType (i, tb));
     const Generic & wf (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
     const TYPE_REP_TypeRep & tp (infer.GetRecord (3));
 
-    if (reswf.IsNil () || wf.IsNil ())
+    if (reswf.IsNil () || wf.IsNil ()) {
       reswf = Nil ();
-    else
+    }
+    else {
       reswf = Bool (reswf) && Bool (wf);
-
+    }
     resbd.ImpAppend (bd);
     restp.ImpAppend (tp);
 //    if (bd.Dom().SubSet (altbd))
     Set dom_bd (bd.Dom());
-    if (!altbd.Intersect(dom_bd).IsEmpty())
-    {
+    if (!altbd.Intersect(dom_bd).IsEmpty()) {
       //----------------------------------------------------------------
       // Error message #300
       // Multiple use of pattern identifier in parameters to Lambda-Expr
@@ -1275,23 +1232,24 @@ Tuple StatSem::wf_TypeBindList (const Int & i, const SEQ<TYPE_AS_TypeBind> & par
   Bool ok (false);
   MAP<TYPE_AS_Name,Tuple> binds;
   
-  if (reswf == Bool(true))
-  {
+  if (reswf == Bool(true)) {
     Tuple infer2 (MergeBindings (i, resbd)); // bool * map AS`Name to REP`TypeRep
     ok = infer2.GetBool (1);
     binds = infer2.GetField (2);
   }
-  else
-  {
+  else {
     Generic nm;
-    for (bool cc = altbd.First(nm); cc; cc = altbd.Next(nm))
+    for (bool cc = altbd.First(nm); cc; cc = altbd.Next(nm)) {
       binds.Insert (nm, mk_(rep_alltp, Int(1)));
+    }
   }
 
-  if (reswf.IsNil())
+  if (reswf.IsNil()) {
     return mk_(Nil(), binds, restp);
-  else
+  }
+  else {
     return mk_(ok && Bool (reswf), binds, restp);
+  }
 }
 
 // wf_MultiBindList
@@ -1305,18 +1263,18 @@ Tuple StatSem::wf_MultiBindList (const Int & i, const SEQ<TYPE_AS_MultBind> & mb
   SET<TYPE_AS_Name> altbd;
 
   size_t len_mbs = mbs.Length();
-  for (size_t idx = 1; idx <= len_mbs; idx++)
-  {
+  for (size_t idx = 1; idx <= len_mbs; idx++) {
     const TYPE_AS_MultBind & mb (mbs[idx]);
     Tuple infer (mb.Is(TAG_TYPE_AS_MultSetBind) ? wf_MultiSetBind (i, mb, mustmatch) : wf_MultiTypeBind (i, mb));
     const Generic & wf (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
 
-    if (reswf.IsNil() || wf.IsNil())
+    if (reswf.IsNil() || wf.IsNil()) {
       reswf = Nil();
-    else
+    }
+    else {
       reswf = Bool (reswf) && Bool (wf);
-
+    }
     resbd.ImpAppend (bd);
     altbd.ImpUnion (bd.Dom());
   }
@@ -1324,23 +1282,24 @@ Tuple StatSem::wf_MultiBindList (const Int & i, const SEQ<TYPE_AS_MultBind> & mb
   Bool ok (false);
   MAP<TYPE_AS_Name,Tuple> binds;
 
-  if (reswf == Bool(true))
-  {
+  if (reswf == Bool(true)) {
     Tuple infer2 (MergeBindings (i, resbd)); // bool * map AS`Name to REP`TypeRep
     ok = infer2.GetBool (1);
     binds = infer2.GetField (2);
   }
-  else
-  {
+  else {
     Generic nm;
-    for (bool cc = altbd.First(nm); cc; cc = altbd.Next(nm))
+    for (bool cc = altbd.First(nm); cc; cc = altbd.Next(nm)) {
       binds.Insert (nm, mk_(rep_alltp, Int(1)));
+    }
   }
 
-  if (reswf.IsNil())
+  if (reswf.IsNil()) {
     return mk_(Nil(), binds);
-  else
+  }
+  else {
     return mk_(ok && Bool (reswf), binds);
+  }
 }
 
 // wf_MultiSetBind
@@ -1356,52 +1315,47 @@ Tuple StatSem::wf_MultiSetBind (const Int & i, const TYPE_AS_MultSetBind & msb, 
   MAP<TYPE_AS_Name,Tuple> altbinds;
 
   size_t len_pats = pats.Length();
-  for (size_t idx = 1; idx <= len_pats; idx++)
+  for (size_t idx = 1; idx <= len_pats; idx++) {
     altbinds.ImpOverride (ExtractBindings (pats[idx]));
-
-// 20101025 -->
+  }
   //Tuple infer (wf_Expr (i, e, rep_alltp));
   Tuple infer (mustmatch ? wf_Expr (i, e, mk_REP_SetTypeRep(rep_alltp)) : wf_Expr (i, e, set_alltp));
-// <-- 20101025
   const Bool & wf_e (infer.GetBool(1));
   const TYPE_REP_TypeRep & etp (infer.GetRecord (2));
 
-  if (IsCompatible (i, etp, set_alltp))
-  {
+  if (IsCompatible (i, etp, set_alltp)) {
     Generic reswf = Bool(true);
     Generic sttp (UnmaskSetType (POS, ExtractSetType (etp)));
 
-// 2010-720 -->
-    //if (sttp.IsNil()) //|| etp.Is(EmptySetTypeRep))
-    if (sttp.IsNil() || (mustmatch && (i == DEF) && IsCompatible (POS, etp, mk_REP_EmptySetTypeRep(rep_alltp))))
-// <-- 20100720
-    {
+    //if (sttp.IsNil()) //|| etp.Is(EmptySetTypeRep)) {
+    if (sttp.IsNil() || (mustmatch && (i == DEF) && IsCompatible (POS, etp, mk_REP_EmptySetTypeRep(rep_alltp)))) {
       //-----------------------------------
       // Error message #293
       // An empty set is used in a set bind
       //-----------------------------------
       GenErr (e, WRN1, 293, Sequence());
 
-      if (mustmatch)
+      if (mustmatch) {
         reswf = Nil();
+      }
     }
 
     Generic sttp_q (sttp);
-    if (sttp.IsNil())
+    if (sttp.IsNil()) {
       sttp_q = rep_alltp;
-
+    }
     Sequence resbd;
-    for (size_t idx = 1; idx <= len_pats; idx++)
-    {
+    for (size_t idx = 1; idx <= len_pats; idx++) {
       Tuple infer2 (wf_Pattern (i, pats[idx], sttp_q)); // [bool] * map AS`Name to REP`TypeRep
       const Generic & match (infer2.GetField (1)); // [bool]
       const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
 
-      if (reswf.IsNil() || match.IsNil())
+      if (reswf.IsNil() || match.IsNil()) {
         reswf = Nil();
-      else
+      }
+      else {
         reswf = Bool (reswf) && Bool (match);
-
+      }
       resbd.ImpAppend (bd);
     }
 
@@ -1409,21 +1363,24 @@ Tuple StatSem::wf_MultiSetBind (const Int & i, const TYPE_AS_MultSetBind & msb, 
     const Bool & ok (infer3.GetBool(1));
     const MAP<TYPE_AS_Name,Tuple> & binds (infer3.GetMap(2));
 
-    if (reswf.IsNil() || !wf_e)
+    if (reswf.IsNil() || !wf_e) {
       return mk_(Nil(), binds);
-    else
+    }
+    else {
       return mk_(ok && Bool (reswf), binds);
+    }
   }
-  else
-  {
+  else {
     //-------------------------------------
     // Error message #295
     // Type of expression is not a set type
     //-------------------------------------
-    if (mustmatch)
+    if (mustmatch) {
       GenErrTp (e, ERR, 295, etp, mk_REP_SetTypeRep(rep_alltp), Sequence());
-    else
+    }
+    else {
       GenErrTp (e, ERR, 295, etp, set_alltp, Sequence());
+    }
     return mk_(Nil(), altbinds);
   }
 }
@@ -1439,22 +1396,22 @@ Tuple StatSem::wf_MultiTypeBind (const Int & i, const TYPE_AS_MultTypeBind & msb
 
   MAP<TYPE_AS_Name,Tuple> altbinds;
   size_t len_pats = pats.Length();
-  for (size_t idx = 1; idx <= len_pats; idx++)
+  for (size_t idx = 1; idx <= len_pats; idx++) {
     altbinds.ImpOverride (ExtractBindings (pats[idx]));
-
+  }
   Generic reswf = Bool(true);
   Sequence resbd;
-  for (size_t idp = 1; idp <= len_pats; idp++)
-  {
+  for (size_t idp = 1; idp <= len_pats; idp++) {
     Tuple infer (wf_Pattern (i, pats[idp], TransType(Nil (),tp))); // [bool] * map AS`Name to REP`TypeRep
     const Generic & match (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
 
-    if (reswf.IsNil() || match.IsNil())
+    if (reswf.IsNil() || match.IsNil()) {
       reswf = Nil();
-    else
+    }
+    else {
       reswf = Bool (reswf) && Bool (match);
-
+    }
     resbd.ImpAppend (bd);
   }
 
@@ -1463,10 +1420,12 @@ Tuple StatSem::wf_MultiTypeBind (const Int & i, const TYPE_AS_MultTypeBind & msb
   const Bool & ok (infer2.GetBool(1));
   const MAP<TYPE_AS_Name,Tuple> & binds (infer2.GetMap(2));
 
-  if (reswf.IsNil())
+  if (reswf.IsNil()) {
     return mk_(Nil(), binds);
-  else
+  }
+  else {
     return mk_(ok && Bool (reswf), binds);
+  }
 }
 
 // MergeBindings
@@ -1476,10 +1435,12 @@ Tuple StatSem::wf_MultiTypeBind (const Int & i, const TYPE_AS_MultTypeBind & msb
 Tuple StatSem::MergeBindings (const Int & i, const Sequence & l)
 {
   switch(l.Length()) {
-    case 0:
+    case 0: {
       return mk_(Bool(true), MAP<TYPE_AS_Name,Tuple>());
-    case 1:
+    }
+    case 1: {
       return mk_(Bool(true), l.Hd());
+    }
     default: {
       MAP<TYPE_AS_Name,Tuple> bind (l.Hd());
       Sequence l_s (l.Tl());
@@ -1491,31 +1452,29 @@ Tuple StatSem::MergeBindings (const Int & i, const Sequence & l)
       SET<TYPE_AS_Name> common (bind.Dom());
       common.ImpIntersect (bd.Dom());
   
-      if (common.IsEmpty())
+      if (common.IsEmpty()) {
         return mk_(ok, bind.ImpOverride(bd));
-      else
-      {
+      }
+      else {
         Bool all_ok (true);
         MAP<TYPE_AS_Name,Tuple> newbd;
   
         Generic el;
-        for (bool bb = common.First(el); bb; bb = common.Next(el))
-        {
+        for (bool bb = common.First(el); bb; bb = common.Next(el)) {
           TYPE_REP_TypeRep t1 (bind[el].GetRecord(1)), t2 (bd[el].GetRecord(1));
           Int num (bind[el].GetInt(2) + bd[el].GetInt(2));
-          if (!(t1 == t2))
-          {
-            if (IsCompatible (i, t1, t2))
-            {
+          if (!(t1 == t2)) {
+            if (IsCompatible (i, t1, t2)) {
               Generic t (IntersectTypes(t1, t2));
-              if (t.IsNil ()) // Safty check (HV)
+              if (t.IsNil ()) { // Safty check (HV)
                 t = t1;
+              }
               newbd.ImpModify (el, mk_(t, num));
             }
-            else if ((i == DEF) && IsCompatible (i, t2, t1))
+            else if ((i == DEF) && IsCompatible (i, t2, t1)) {
               newbd.ImpModify (el, mk_(t2, num));
-            else
-            {
+            }
+            else {
               //-----------------------------------------------------
               // Error message #301
               // L"%1" is bound multiple times with incompatible types
@@ -1524,7 +1483,8 @@ Tuple StatSem::MergeBindings (const Int & i, const Sequence & l)
               newbd.ImpModify (el, mk_(MergeTypes (t1, t2), Int(1)));
               all_ok = Bool(false);
             }
-          } else {
+          }
+          else {
             newbd.ImpModify (el, mk_(t1, num));
           }
         }
@@ -1547,8 +1507,9 @@ MAP<TYPE_AS_Name, Int> StatSem::ExtractPatternName (const TYPE_AS_Pattern & pat)
     case TAG_TYPE_AS_PatternName : {
       const Generic & nm (pat.GetField(pos_AS_PatternName_nm));
       MAP<TYPE_AS_Name, Int> st;
-      if (!nm.IsNil())
+      if (!nm.IsNil()) {
         st.Insert (nm, Int(1));
+      }
       return st;
     }
     case TAG_TYPE_AS_MatchVal: {
@@ -1558,8 +1519,9 @@ MAP<TYPE_AS_Name, Int> StatSem::ExtractPatternName (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & pats (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       SEQ<Map> st;
       size_t len_pats = pats.Length();
-      for (size_t idx = 1; idx <= len_pats; idx++)
+      for (size_t idx = 1; idx <= len_pats; idx++) {
         st.ImpAppend (ExtractPatternName (pats[idx]));
+      }
       return MergePatternName(st);
     }
     case TAG_TYPE_AS_SetUnionPattern: {
@@ -1573,8 +1535,9 @@ MAP<TYPE_AS_Name, Int> StatSem::ExtractPatternName (const TYPE_AS_Pattern & pat)
 
       SEQ<Map> st;
       size_t len_pats = pats.Length();
-      for (size_t idx = 1; idx <= len_pats; idx++)
+      for (size_t idx = 1; idx <= len_pats; idx++) {
         st.ImpAppend (ExtractPatternName (pats[idx]));
+      }
       return MergePatternName(st);
     }
     case TAG_TYPE_AS_SeqConcPattern: {
@@ -1605,16 +1568,18 @@ MAP<TYPE_AS_Name, Int> StatSem::ExtractPatternName (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & pats (pat.GetSequence(pos_AS_RecordPattern_fields));
       SEQ<Map> st;
       size_t len_pats = pats.Length();
-      for (size_t idx = 1; idx <= len_pats; idx++)
+      for (size_t idx = 1; idx <= len_pats; idx++) {
         st.ImpAppend (ExtractPatternName (pats[idx]));
+      }
       return MergePatternName(st);
     }
     case TAG_TYPE_AS_TuplePattern: {
       const SEQ<TYPE_AS_Pattern> & pats (pat.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<Map> st;
       size_t len_pats = pats.Length();
-      for (size_t idx = 1; idx <= len_pats; idx++)
+      for (size_t idx = 1; idx <= len_pats; idx++) {
         st.ImpAppend (ExtractPatternName (pats[idx]));
+      }
       return MergePatternName(st);
     }
 #ifdef VDMPP
@@ -1752,14 +1717,15 @@ TYPE_REP_TypeRep StatSem::GetRealType (const TYPE_REP_TypeRep & tp)
 {
   TYPE_REP_TypeRep realtp (tp);
 
-  while (realtp.Is(TAG_TYPE_REP_TypeNameRep) && !IsUnionRecursive (realtp))
-  {
+  while (realtp.Is(TAG_TYPE_REP_TypeNameRep) && !IsUnionRecursive (realtp)) {
 #ifdef VDMPP
     Record l_tp (LookUpTypeName (realtp.GetRecord(pos_REP_TypeNameRep_nm), true));
-    if (IsAccessType(l_tp))
+    if (IsAccessType(l_tp)) {
       realtp = StripAccessType(l_tp);
-    else
+    }
+    else {
       realtp = l_tp;
+    }
 #endif //VDMPP
 #ifdef VDMSL
     Record l_tp (LookUpTypeName (realtp.GetRecord(pos_REP_TypeNameRep_nm)));
@@ -1779,10 +1745,12 @@ TYPE_REP_TypeRep StatSem::PatternBind2TypeRep (const TYPE_AS_PatternBind & patbi
       const TYPE_AS_Expr & s (patbind.GetRecord(pos_AS_SetBind_Set));
       Tuple infer (wf_Expr (POS, s, mk_REP_SetTypeRep(rep_alltp)));
       const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
-      if (stp.Is(TAG_TYPE_REP_SetTypeRep))
+      if (stp.Is(TAG_TYPE_REP_SetTypeRep)) {
         return stp.GetRecord(pos_REP_SetTypeRep_elemtp);
-      else
+      }
+      else {
         return rep_alltp;
+      }
     }
     case TAG_TYPE_AS_TypeBind: {
       const TYPE_AS_Type & tp (patbind.GetRecord(pos_AS_TypeBind_tp));
@@ -1808,8 +1776,9 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & Elems (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       SET<TYPE_REP_TypeRep> tp_s;
       size_t len_Elems = Elems.Length();
-      for (size_t idx = 1; idx <= len_Elems; idx++)
+      for (size_t idx = 1; idx <= len_Elems; idx++) {
         tp_s.Insert(Pattern2TypeRep(Elems[idx]));
+      }
       switch (tp_s.Card()) {
         case 0: {
           return mk_REP_SetTypeRep(rep_alltp);
@@ -1826,8 +1795,9 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
       const SEQ<TYPE_AS_Pattern> & els (pat.GetSequence(pos_AS_SeqEnumPattern_els));
       SET<TYPE_REP_TypeRep> tp_s;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         tp_s.Insert(Pattern2TypeRep(els[idx]));
+      }
       switch (tp_s.Card()) {
         case 0: {
           return mk_REP_SeqTypeRep(rep_alltp);
@@ -1845,8 +1815,7 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
       SET<TYPE_REP_TypeRep> dtp_s;
       SET<TYPE_REP_TypeRep> rtp_s;
       size_t len_mls = mls.Length();
-      for (size_t idx = 1; idx <= len_mls; idx++)
-      {
+      for (size_t idx = 1; idx <= len_mls; idx++) {
         dtp_s.Insert(Pattern2TypeRep(mls[idx].GetRecord(pos_AS_MapletPattern_dp)));
         rtp_s.Insert(Pattern2TypeRep(mls[idx].GetRecord(pos_AS_MapletPattern_rp)));
       }
@@ -1886,21 +1855,23 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
       TYPE_REP_TypeRep lp (Pattern2TypeRep(pat.GetRecord(pos_AS_SetUnionPattern_lp)));
       TYPE_REP_TypeRep rp (Pattern2TypeRep(pat.GetRecord(pos_AS_SetUnionPattern_rp)));
       SET<TYPE_REP_TypeRep> tp_s; 
-      if (lp.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      if (lp.Is(TAG_TYPE_REP_SetTypeRep)) {
         TYPE_REP_TypeRep tp (lp.GetRecord(pos_REP_SetTypeRep_elemtp));
-        if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
+        if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           tp_s.ImpUnion(tp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           tp_s.Insert(tp);
+        }
       }
-      if (rp.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      if (rp.Is(TAG_TYPE_REP_SetTypeRep)) {
         TYPE_REP_TypeRep tp (rp.GetRecord(pos_REP_SetTypeRep_elemtp));
-        if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
+        if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           tp_s.ImpUnion(tp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           tp_s.Insert(tp);
+        }
       }
       switch (tp_s.Card()) {
         case 0: {
@@ -1918,21 +1889,23 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
       TYPE_REP_TypeRep ltp (Pattern2TypeRep(pat.GetRecord(pos_AS_SeqConcPattern_lp)));
       TYPE_REP_TypeRep rtp (Pattern2TypeRep(pat.GetRecord(pos_AS_SeqConcPattern_rp)));
       SET<TYPE_REP_TypeRep> tp_s; 
-      if (ltp.Is(TAG_TYPE_REP_SeqTypeRep))
-      {
+      if (ltp.Is(TAG_TYPE_REP_SeqTypeRep)) {
         TYPE_REP_TypeRep tp (ltp.GetRecord(pos_REP_SeqTypeRep_elemtp));
-        if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
+        if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           tp_s.ImpUnion(tp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           tp_s.Insert(tp);
+        }
       }
-      if (rtp.Is(TAG_TYPE_REP_SeqTypeRep))
-      {
+      if (rtp.Is(TAG_TYPE_REP_SeqTypeRep)) {
         TYPE_REP_TypeRep tp (rtp.GetRecord(pos_REP_SeqTypeRep_elemtp));
-        if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
+        if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           tp_s.ImpUnion(tp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           tp_s.Insert(tp);
+        }
       }
       switch (tp_s.Card()) {
         case 0: {
@@ -1951,33 +1924,39 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
       TYPE_REP_TypeRep rtp (Pattern2TypeRep(pat.GetRecord(pos_AS_MapMergePattern_rp)));
       SET<TYPE_REP_TypeRep> dtp_s; 
       SET<TYPE_REP_TypeRep> rtp_s; 
-      if (ltp.Is(TAG_TYPE_REP_GeneralMapTypeRep))
-      {
+      if (ltp.Is(TAG_TYPE_REP_GeneralMapTypeRep)) {
         TYPE_REP_TypeRep domtp (ltp.GetRecord(pos_REP_GeneralMapTypeRep_mapdom));
         TYPE_REP_TypeRep rngtp (ltp.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
      
-        if (domtp.Is(TAG_TYPE_REP_UnionTypeRep))
+        if (domtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           dtp_s.ImpUnion(domtp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           dtp_s.Insert(domtp);
-        if (rngtp.Is(TAG_TYPE_REP_UnionTypeRep))
+        }
+        if (rngtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           rtp_s.ImpUnion(rngtp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           rtp_s.Insert(rngtp);
+        }
       }
-      if (rtp.Is(TAG_TYPE_REP_GeneralMapTypeRep))
-      {
+      if (rtp.Is(TAG_TYPE_REP_GeneralMapTypeRep)) {
         TYPE_REP_TypeRep domtp (rtp.GetRecord(pos_REP_GeneralMapTypeRep_mapdom));
         TYPE_REP_TypeRep rngtp (rtp.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
      
-        if (domtp.Is(TAG_TYPE_REP_UnionTypeRep))
+        if (domtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           dtp_s.ImpUnion(domtp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           dtp_s.Insert(domtp);
-        if (rngtp.Is(TAG_TYPE_REP_UnionTypeRep))
+        }
+        if (rngtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
           rtp_s.ImpUnion(rngtp.GetSet(pos_REP_UnionTypeRep_tps));
-        else
+        }
+        else {
           rtp_s.Insert(rngtp);
+        }
       }
       TYPE_REP_TypeRep domtp;
       switch (dtp_s.Card()) {
@@ -2019,17 +1998,20 @@ TYPE_REP_TypeRep StatSem::Pattern2TypeRep (const TYPE_AS_Pattern & pat)
 #ifdef VDMPP
       Generic tp (LookUpTypeName(tag, false));
 #endif // VDMPP
-      if (tp.IsNil())
+      if (tp.IsNil()) {
         return rep_alltp;
-      else
+      }
+      else {
         return tp;
+      }
     }
     case TAG_TYPE_AS_TuplePattern: {
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_REP_TypeRep> tp_l;
       size_t len_p_l = p_l.Length();
-      for (size_t idx = 1; idx <= len_p_l; idx++)
+      for (size_t idx = 1; idx <= len_p_l; idx++) {
         tp_l.ImpAppend(Pattern2TypeRep(p_l[idx]));
+      }
       return mk_REP_ProductTypeRep(tp_l);
     }
 #ifdef VDMPP
