@@ -29,22 +29,17 @@ Map EXPANDED::ExpandSpecTraces(const TYPE_AS_Document & spec, const SET<TYPE_AS_
 {
   Map res_m;
   size_t len_spec = spec.Length();
-  for (size_t idx = 1; idx <= len_spec; idx++)
-  {
+  for (size_t idx = 1; idx <= len_spec; idx++) {
 #ifdef VDMSL
-    if (spec[idx].Is(TAG_TYPE_AS_Module))
-    {
-      if (clmod_s.InSet(spec[idx].GetRecord(pos_AS_Module_nm)))
-      {
+    if (spec[idx].Is(TAG_TYPE_AS_Module)) {
+      if (clmod_s.InSet(spec[idx].GetRecord(pos_AS_Module_nm))) {
         res_m.ImpOverride(ExpandModuleTraces(spec[idx], wos));
       }
     }
 #endif // VDMLL
 #ifdef VDMPP
-    if (spec[idx].Is(TAG_TYPE_AS_Class))
-    {
-      if (clmod_s.InSet(spec[idx].GetRecord(pos_AS_Class_nm)))
-      {
+    if (spec[idx].Is(TAG_TYPE_AS_Class)) {
+      if (clmod_s.InSet(spec[idx].GetRecord(pos_AS_Class_nm))) {
         res_m.ImpOverride(ExpandClassTraces(spec[idx], wos));
       }
     }
@@ -61,12 +56,10 @@ Map EXPANDED::ExpandModuleTraces(const TYPE_AS_Module & mod, wostream & wos)
 {
   const TYPE_AS_Name & nm (mod.GetRecord(pos_AS_Module_nm));
   const Generic & defsg (mod.GetField(pos_AS_Module_defs));
-  if (!defsg.IsNil())
-  {
+  if (!defsg.IsNil()) {
     TYPE_AS_Definitions defs (defsg);
     const Map & tracem (defs.GetMap(pos_AS_Definitions_tracem));
-    if (!tracem.IsEmpty())
-    {
+    if (!tracem.IsEmpty()) {
       EXPANDED::curcl = nm;
       //Map res (ExpandTraceDefs(nm, tracem));
       Map res (ConvertTestCases(ExpandTraceDefs(nm, tracem, wos), wos));
@@ -85,21 +78,19 @@ Map EXPANDED::ExpandClassTraces(const TYPE_AS_Class & cl, wostream & wos)
 {
   const TYPE_AS_Name & nm (cl.GetRecord(pos_AS_Class_nm));
   const Generic & defsg (cl.GetField(pos_AS_Class_defs));
-  if (!defsg.IsNil())
-  {
+  if (!defsg.IsNil()) {
     TYPE_AS_Definitions defs (defsg);
     const Map & tracem (defs.GetMap(pos_AS_Definitions_tracem));
-    if (!tracem.IsEmpty())
-    {
+    if (!tracem.IsEmpty()) {
       EXPANDED::curcl = nm;
       TYPE_AS_NewExpr ne;
       ne.Init(nm, SEQ<TYPE_AS_Expr>(), NilContextId);
 
       Tuple crres (theStackMachine().EvalPrint(ne, Sequence(L"Create Pushed Object")));
 
-      if (!crres.GetRecord(1).Is(TAG_TYPE_STKM_Success))
+      if (!crres.GetRecord(1).Is(TAG_TYPE_STKM_Success)) {
         RTERR::Error(L"ExpandClassTraces", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-
+      }
       EXPANDED::curobj = crres.GetRecord(2);
       theStackMachine().SetLastRes(sem_undef);
 
@@ -124,8 +115,7 @@ Map EXPANDED::ExpandTraceDefs(const TYPE_AS_Name & clid, const MAP<TYPE_AS_NameL
   Set dom_def_m (def_m.Dom());
   Map res;
   Generic nm_l;
-  for (bool bb = dom_def_m.First(nm_l); bb; bb = dom_def_m.Next(nm_l))
-  {
+  for (bool bb = dom_def_m.First(nm_l); bb; bb = dom_def_m.Next(nm_l)) {
     TYPE_AS_NameList nml (nm_l);
     TYPE_AS_Name nm (AUX::ConstructDoubleName(clid, nml[1]));
     wos << L"Expanding " << ASTAUX::ASName2String(nm) << L" ... ";
@@ -144,8 +134,7 @@ Set EXPANDED::ExpandTraceDefList(const TYPE_AS_TraceDefList & tdef_l, const SET<
 {
   Set res_s (mk_set(Sequence()));
   size_t len_tdef_l = tdef_l.Length();
-  for (size_t idx = 1; idx <= len_tdef_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_tdef_l; idx++) {
     Set e_l_s (ExpandTraceDef(tdef_l[idx], ctx_s));
     res_s = CombineTraces(res_s, e_l_s);
   }
@@ -192,10 +181,12 @@ Set EXPANDED::ExpandTraceApplyExpr(const TYPE_AS_TraceApplyExpr & tdef, const SE
 
 #ifdef VDMPP
   Record fct;
-  if (obj.IsNil())
+  if (obj.IsNil()) {
     fct = op;
-  else
+  }
+  else {
     fct = TYPE_AS_FieldSelectExpr().Init(obj, op, NilContextId);
+  }
   TYPE_AS_ApplyExpr expr;
   expr.Init(fct, args, NilContextId);
 #endif // VDMPP
@@ -215,8 +206,7 @@ Set EXPANDED::ExpandTraceBracketedExpr(const TYPE_AS_TraceBracketedExpr & tdef, 
 
   Set res;
   Generic e_l;
-  for (bool bb = e_l_s.First(e_l); bb; bb = e_l_s.Next(e_l))
-  {
+  for (bool bb = e_l_s.First(e_l); bb; bb = e_l_s.Next(e_l)) {
     res.ImpUnion(AddContextToExprList(e_l, EXPANDED::cxt_s_stack[1]));
   }
   PopCxt();
@@ -234,15 +224,13 @@ Set EXPANDED::ExpandTracePermuteExpr(const TYPE_AS_TracePermuteExpr & tdef, cons
   Set ps (list.Permute());
   Set e_l_s;
   Generic td_l;
-  for (bool bb = ps.First(td_l); bb; bb = ps.Next(td_l))
-  {
+  for (bool bb = ps.First(td_l); bb; bb = ps.Next(td_l)) {
     e_l_s.ImpUnion(ExpandTraceDefList(td_l, mk_set(AUX::MkEmptyBlkEnv(sem_read_only))));
   }
 
   Set res;
   Generic e_l;
-  for (bool cc = e_l_s.First(e_l); cc; cc = e_l_s.Next(e_l))
-  {
+  for (bool cc = e_l_s.First(e_l); cc; cc = e_l_s.Next(e_l)) {
     res.ImpUnion(AddContextToExprList(e_l, EXPANDED::cxt_s_stack[1]));
   }
   PopCxt();
@@ -284,8 +272,7 @@ Set EXPANDED::ExpandQualifiedRepeatTrace(const TYPE_AS_QualifiedRepeatTrace & td
 
   Set res;
   Generic e_l;
-  for (bool bb = e_l_s.First(e_l); bb; bb = e_l_s.Next(e_l))
-  {
+  for (bool bb = e_l_s.First(e_l); bb; bb = e_l_s.Next(e_l)) {
     res.ImpUnion(AddContextToExprList(e_l, EXPANDED::cxt_s_stack[1]));
   }
   PopCxt();
@@ -314,18 +301,9 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandTraceBind(const SEQ<TYPE_AS_TraceBind> & bi
   for (size_t idx = 1; idx <= len_bind_l; idx++) {
     const TYPE_AS_TraceBind & bind (bind_l[idx]);
     switch(bind.GetTag()) {
-      case TAG_TYPE_AS_LocalTraceBind: {
-        c_s = CombineContext(c_s, ExpandLocalBinding(bind, c_s));
-        break;
-      }
-      case TAG_TYPE_AS_LetTraceBind: {
-        c_s = CombineContext(c_s, ExpandLetBinding(bind, c_s));
-        break;
-      }
-      case TAG_TYPE_AS_LetBeTraceBind: {
-        c_s = CombineContext(c_s, ExpandLetBeBinding(bind, c_s));
-        break;
-      }
+      case TAG_TYPE_AS_LocalTraceBind: { c_s = CombineContext(c_s, ExpandLocalBinding(bind, c_s)); break; }
+      case TAG_TYPE_AS_LetTraceBind:   { c_s = CombineContext(c_s, ExpandLetBinding(bind, c_s));   break; }
+      case TAG_TYPE_AS_LetBeTraceBind: { c_s = CombineContext(c_s, ExpandLetBeBinding(bind, c_s)); break; }
     }
   }
   return c_s;
@@ -500,28 +478,23 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandLetBeBinding(const TYPE_AS_LetBeTraceBind &
   const Generic & pred (lbbind.GetField(pos_AS_LetBeTraceBind_stexpr));
 
   Tuple t (TypeBindToSetBind(bind_l_q));
-  if (t.GetBoolValue(1))
-  {
+  if (t.GetBoolValue(1)) {
     const SEQ<TYPE_AS_MultBind> & bind_l (t.GetSequence(2));
     size_t len_bind_l = bind_l.Length();
     SET<TYPE_SEM_BlkEnv> res;
     SET<TYPE_SEM_BlkEnv> ctx_s_q (ctx_s); 
     Generic cxt;
-    for (bool bb = ctx_s_q.First(cxt); bb; bb = ctx_s_q.Next(cxt))
-    {
+    for (bool bb = ctx_s_q.First(cxt); bb; bb = ctx_s_q.Next(cxt)) {
       SEQ<TYPE_STKM_Pattern> pat_l;
       SEQ<TYPE_SEM_VAL> val_l;
-      for (size_t i = 1; i <= len_bind_l; i++)
-      {
+      for (size_t i = 1; i <= len_bind_l; i++) {
         const TYPE_AS_MultSetBind & msb (bind_l[i]);
         const SEQ<TYPE_AS_Pattern> & p_l (msb.GetSequence(pos_AS_MultSetBind_pat));
         const TYPE_AS_Expr & expr (msb.GetRecord(pos_AS_MultSetBind_Set));
         TYPE_SEM_VAL val (evaluateExpression(expr, cxt));
-        if (val.Is(TAG_TYPE_SEM_SET))
-        {
+        if (val.Is(TAG_TYPE_SEM_SET)) {
           size_t len_p_l = p_l.Length();
-          for (size_t j = 1; j <= len_p_l; j++)
-          {
+          for (size_t j = 1; j <= len_p_l; j++) {
             pat_l.ImpAppend(theCompiler().P2P(p_l[j]));
             val_l.ImpAppend(val);
           }
@@ -545,8 +518,7 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::ExpandLetBeBinding(const TYPE_AS_LetBeTraceBind &
     }
     return res;
   }
-  else   
-  {
+  else {
     // error
     RTERR::InitError(L"ExpandLetBinding", RTERR_TYPE_BIND_EVAL, Nil(), Nil(), ASTAUX::GetCid(lbbind), Sequence());
     return Set();
@@ -595,21 +567,20 @@ TYPE_SEM_BlkEnv EXPANDED::MergeContextSet(const SET<TYPE_SEM_BlkEnv> & c_s)
 // -> set of SEM`BlkEnv
 SET<TYPE_SEM_BlkEnv> EXPANDED::CombineContext(const SET<TYPE_SEM_BlkEnv> & c_s, const SET<TYPE_SEM_BlkEnv> & c_s2)
 {
-  if (c_s.IsEmpty())
+  if (c_s.IsEmpty()) {
     return c_s2;
-  else if (c_s2.IsEmpty())
+  }
+  else if (c_s2.IsEmpty()) {
     return c_s;
-  else
-  {
+  }
+  else {
     Set res;
     Set s1 (c_s);
     Set s2 (c_s2);
     Generic c1;
-    for (bool bb = s1.First(c1); bb; bb = s1.Next(c1))
-    {
+    for (bool bb = s1.First(c1); bb; bb = s1.Next(c1)) {
       Generic c2;
-      for (bool cc = s2.First(c2); cc; cc = s2.Next(c2))
-      {
+      for (bool cc = s2.First(c2); cc; cc = s2.Next(c2)) {
         res.Insert(AUX::CombineBlkEnv(c1, c2));
       }
     }
@@ -623,23 +594,22 @@ SET<TYPE_SEM_BlkEnv> EXPANDED::CombineContext(const SET<TYPE_SEM_BlkEnv> & c_s, 
 // -> set of seq of AS`Expr
 Set EXPANDED::AddContextToExpr(const TYPE_AS_Expr & expr, const SET<TYPE_SEM_BlkEnv> & cxt_s)
 {
-  if (cxt_s.IsEmpty())
-  {
+  if (cxt_s.IsEmpty()) {
     return mk_set(mk_sequence(expr));
   }
-  else
-  {
+  else {
     Set res;
     Set cxt_s_q (cxt_s);
     Generic cxt;
-    for (bool bb = cxt_s_q.First(cxt); bb; bb = cxt_s_q.Next(cxt))
-    {
+    for (bool bb = cxt_s_q.First(cxt); bb; bb = cxt_s_q.Next(cxt)) {
      TYPE_SEM_BlkEnv env (cxt);
       SEQ<TYPE_AS_ValueDef> def_l (Context2ValShapeL(env.GetMap(pos_SEM_BlkEnv_id_um)));
-      if (def_l.IsEmpty())
+      if (def_l.IsEmpty()) {
         res.Insert(mk_sequence(expr));
-      else
+      }
+      else {
         res.Insert(mk_sequence(TYPE_AS_LetExpr().Init(def_l, expr, NilContextId)));
+      }
     }
     return res;
   }
@@ -651,27 +621,23 @@ Set EXPANDED::AddContextToExpr(const TYPE_AS_Expr & expr, const SET<TYPE_SEM_Blk
 // -> set of seq of AS`Expr
 Set EXPANDED::AddContextToExprList(const SEQ<TYPE_AS_Expr> & e_l, const SET<TYPE_SEM_BlkEnv> & cxt_s)
 {
-  if (cxt_s.IsEmpty())
-  {
+  if (cxt_s.IsEmpty()) {
     return mk_set(e_l);
   }
-  else
-  {
+  else {
     Set res;
     Set cxt_s_q (cxt_s);
     Generic cxt;
-    for (bool bb = cxt_s_q.First(cxt); bb; bb = cxt_s_q.Next(cxt))
-    {
+    for (bool bb = cxt_s_q.First(cxt); bb; bb = cxt_s_q.Next(cxt)) {
       TYPE_SEM_BlkEnv env (cxt);
       SEQ<TYPE_AS_ValueDef> def_l (Context2ValShapeL(env.GetMap(pos_SEM_BlkEnv_id_um)));
-      if (def_l.IsEmpty())
+      if (def_l.IsEmpty()) {
         res.Insert(e_l);
-      else
-      {
+      }
+      else {
         SEQ<TYPE_AS_Expr> expr_l;
         size_t len_e_l = e_l.Length();
-        for (size_t i = 1; i <= len_e_l; i++)
-        {
+        for (size_t i = 1; i <= len_e_l; i++) {
           expr_l.ImpAppend(TYPE_AS_LetExpr().Init(def_l, e_l[i], NilContextId));
         }
         res.Insert(expr_l);
@@ -691,12 +657,10 @@ Set EXPANDED::CombineTraces(const Set & e_l_s1, const Set & e_l_s2)
   Set s1 (e_l_s1);
   Set s2 (e_l_s2);
   Generic e_l1;
-  for (bool bb = s1.First(e_l1); bb; bb = s1.Next(e_l1))
-  {
+  for (bool bb = s1.First(e_l1); bb; bb = s1.Next(e_l1)) {
     Sequence l1 (e_l1);
     Generic e_l2;
-    for (bool cc = s2.First(e_l2); cc; cc = s2.Next(e_l2))
-    {
+    for (bool cc = s2.First(e_l2); cc; cc = s2.Next(e_l2)) {
       res.Insert(l1.Conc(e_l2));  
     }
   }
@@ -711,8 +675,7 @@ SEQ<TYPE_AS_ValueDef> EXPANDED::Context2ValShapeL(const MAP<TYPE_AS_Name, TYPE_S
   SET<TYPE_AS_Name> d (id_m.Dom());
   SEQ<TYPE_AS_ValueDef> res;
   Generic id;
-  for (bool bb = d.First(id); bb; bb = d.Next(id))
-  {
+  for (bool bb = d.First(id); bb; bb = d.Next(id)) {
     const TYPE_SEM_ValTp & vt (id_m[id]);
     const TYPE_SEM_VAL & val (vt.GetRecord(pos_SEM_ValTp_val));
     const Generic & tp (vt.GetField(pos_SEM_ValTp_tp));
@@ -755,26 +718,24 @@ Tuple EXPANDED::TypeBindToSetBind(const SEQ<TYPE_AS_MultBind> & bind_l)
   SEQ<TYPE_AS_MultBind> new_bind_l;
   bool forall = true;
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; (idx <= len_bind_l) && forall; idx++)
-  {
+  for (size_t idx = 1; (idx <= len_bind_l) && forall; idx++) {
     const TYPE_AS_MultBind & mb (bind_l[idx]);
     switch(mb.GetTag()) {
       case TAG_TYPE_AS_MultTypeBind: {
         Tuple t (TypeToSet(mb.GetRecord(pos_AS_MultTypeBind_tp)));
 
-        if (t.GetBoolValue(1))
-        {
+        if (t.GetBoolValue(1)) {
           SET<TYPE_AS_Expr> e_s (t.GetSet(2));
           SEQ<TYPE_AS_Expr> e_l;
           Generic e;
-          for (bool bb = e_s.First(e); bb; bb = e_s.Next(e))
+          for (bool bb = e_s.First(e); bb; bb = e_s.Next(e)) {
             e_l.ImpAppend(e);
+          }
           new_bind_l.ImpAppend(TYPE_AS_MultSetBind().Init(mb.GetSequence(pos_AS_MultTypeBind_pat),
                                                           TYPE_AS_SetEnumerationExpr().Init(e_l, NilContextId),
                                                           NilContextId));
         }
-        else
-        {
+        else {
           forall = false;
         }
         break;
@@ -789,10 +750,13 @@ Tuple EXPANDED::TypeBindToSetBind(const SEQ<TYPE_AS_MultBind> & bind_l)
       }
     }
   }
-  if (forall)
-    return mk_(Bool(true), new_bind_l);
-  else
-    return mk_(Bool(false), Nil());
+//  if (forall) {
+//    return mk_(Bool(true), new_bind_l);
+//  }
+//  else {
+//    return mk_(Bool(false), Nil());
+//  }
+  return (forall ? mk_(Bool(true), new_bind_l) : mk_(Bool(false), Nil()));
 }
 
 // TypeToSet
@@ -813,30 +777,30 @@ Tuple EXPANDED::TypeToSet(const TYPE_AS_Type & tp)
       bool forall = true;
       SET<TYPE_AS_Expr> e_s;
       size_t len_tp_l = tp_l.Length();
-      for (size_t idx = 1; idx <= len_tp_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_tp_l; idx++) {
         Tuple t (TypeToSet(tp_l[idx]));
-        if (t.GetBoolValue(1))
+        if (t.GetBoolValue(1)) {
           e_s.ImpUnion(t.GetSet(2));
-        else
+        }
+        else {
           forall = false;
+        }
       }
-      if (forall)
-        return mk_(Bool(true), e_s);
-      else
-        return mk_(Bool(false), Nil());
+      //if (forall)
+      //  return mk_(Bool(true), e_s);
+      //else
+      //  return mk_(Bool(false), Nil());
+      return (forall ? mk_(Bool(true), e_s) : mk_(Bool(false), Nil()));
     }
 #ifdef VDMSL
     case TAG_TYPE_AS_TypeName: {
       Tuple itd (AUX::IsTypeDef(tp.GetRecord(pos_AS_TypeName_name)));
-      if (itd.GetBoolValue(1))
-      {
+      if (itd.GetBoolValue(1)) {
         Tuple t (TypeToSet(itd.GetRecord(2)));
         // TODO: inv is not considerd
         return t;
       }
-      else
-      {
+      else {
         return mk_(Bool(false), Nil());
       }
     }
@@ -844,14 +808,12 @@ Tuple EXPANDED::TypeToSet(const TYPE_AS_Type & tp)
 #ifdef VDMPP
     case TAG_TYPE_AS_TypeName: {
       Tuple itd (AUX::IsTypeDef(tp));
-      if (itd.GetBoolValue(1))
-      {
+      if (itd.GetBoolValue(1)) {
         Tuple t (TypeToSet(itd.GetField(2)));
         // TODO: inv is not considerd
         return t;
       }
-      else
-      {
+      else {
         return mk_(Bool(false), Nil());
       }
     }
@@ -871,8 +833,7 @@ Map EXPANDED::ConvertTestCases(const Map & cases, wostream & wos)
   Map res_m;
   Set dom_cases (cases.Dom());
   Generic nm;
-  for (bool bb = dom_cases.First(nm); bb; bb = dom_cases.Next(nm))
-  {
+  for (bool bb = dom_cases.First(nm); bb; bb = dom_cases.Next(nm)) {
 //    if (trnm.IsNil() || (nm == tpnm))
 //    {
       res_m.ImpModify(nm, ConvertTestExprs(cases[nm]));
@@ -893,36 +854,30 @@ Set EXPANDED::ConvertTestExprs(const Set & expr_l_s)
   Map cache_ex, cache_ma, cache_vl;
 
   Generic e_l;
-  for (bool cc = e_l_s.First(e_l); cc; cc = e_l_s.Next(e_l))
-  {
+  for (bool cc = e_l_s.First(e_l); cc; cc = e_l_s.Next(e_l)) {
     SEQ<TYPE_AS_Expr> new_expl_l;
     SEQ<TYPE_AS_Expr> expl_l (e_l);
     size_t len_expl_l = expl_l.Length();
-    for (size_t idx = 1; idx <= len_expl_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_expl_l; idx++) {
       TYPE_SEM_BlkEnv env (emptyenv);
       TYPE_AS_Expr e (expl_l[idx]);
-      while (e.Is(TAG_TYPE_AS_LetExpr))
-      {
-        const SEQ<TYPE_AS_LocalDef> & def_l (e.GetSequence(pos_AS_LocalTraceBind_localdefs));
+      while (e.Is(TAG_TYPE_AS_LetExpr)) {
+        const SEQ<TYPE_AS_LocalDef> & def_l (e.GetSequence(pos_AS_LetExpr_localdef));
         size_t len_def_l = def_l.Length();
-        for (size_t i = 1; i <= len_def_l; i++)
-        {
+        for (size_t i = 1; i <= len_def_l; i++) {
           const TYPE_AS_ValueDef & vd (def_l[i]);
           const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
           const TYPE_AS_Expr & expr (vd.GetRecord(pos_AS_ValueDef_val));
           //TYPE_SEM_VAL val (evaluateExpression(expr, env));
           Tuple key (mk_(expr, env));
-          if (!cache_ex.DomExists(key))
-          {
+          if (!cache_ex.DomExists(key)) {
             cache_ex.ImpModify(key, evaluateExpression(expr, env)); 
           }
           const TYPE_SEM_VAL & val (cache_ex[key]);
           //SET<TYPE_SEM_BlkEnv> newc_s (PAT::PatternMatch(p, val));
           //env = AUX::CombineBlkEnv(env, newc_s.GetElem());
           Tuple key2 (mk_(pat, val));
-          if (!cache_ma.DomExists(key2))
-          {
+          if (!cache_ma.DomExists(key2)) {
             TYPE_STKM_Pattern p (theCompiler().P2P(pat));
             cache_ma.ImpModify(key2, PAT::PatternMatch(p, val).GetElem());
           }
@@ -930,18 +885,15 @@ Set EXPANDED::ConvertTestExprs(const Set & expr_l_s)
         }
         e = e.GetRecord(pos_AS_LetExpr_body);
       }
-      if (e.Is(TAG_TYPE_AS_ApplyExpr))
-      {
+      if (e.Is(TAG_TYPE_AS_ApplyExpr)) {
         const SEQ<TYPE_AS_Expr> & arg (e.GetSequence(pos_AS_ApplyExpr_arg));
         SEQ<TYPE_AS_Expr> arg2;
         size_t len_arg = arg.Length();
-        for (size_t i = 1; i <= len_arg; i++)
-        {
+        for (size_t i = 1; i <= len_arg; i++) {
           //TYPE_SEM_VAL val (evaluateExpression(arg[i], env));
           //arg2.ImpAppend(SemRec::VAL2Expr(val));
           Tuple key (mk_(arg[i], env));
-          if (!cache_vl.DomExists(key))
-          {
+          if (!cache_vl.DomExists(key)) {
             TYPE_SEM_VAL val (evaluateExpression(arg[i], env));
             cache_vl.ImpModify(key, SemRec::VAL2Expr(val));
           }
@@ -951,8 +903,7 @@ Set EXPANDED::ConvertTestExprs(const Set & expr_l_s)
         ae2.SetField(pos_AS_ApplyExpr_arg, arg2);
         new_expl_l.ImpAppend(ae2);
       }
-      else
-      {
+      else {
         // error
         new_expl_l.ImpAppend(e);
       }

@@ -88,8 +88,8 @@ by the Tcl/Tk interpreter.
 //************************************************************
 #define MAJOR 9
 #define MINOR 0
-#define SUBMINOR 7
-#define SUBSUBMINOR 0 //L'b' // 0, L'a', L'b'
+#define SUBMINOR 8
+#define SUBSUBMINOR L'b' //0 //L'b' // 0, L'a', L'b'
 #define SUBSUBMINORRT L'b'  // 0, L'a', L'b'
 const TB_Version tb_version_sl(L"The VDM-SL Toolbox",
                                L"VDM-SL Toolbox",
