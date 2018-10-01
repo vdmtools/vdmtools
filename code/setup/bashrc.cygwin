@@ -208,7 +208,7 @@ export DISPLAY=localhost:0.0
 
 export PATH=${PATH}:${HOME}/bin:.
 export JDKHOME=/usr/java/default
-export ANTHOME=/usr/local/apache-ant-1.9.4
+export ANTHOME=/usr/local/apache-ant-1.9.13
 export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
 
 export QTVERSION=4
