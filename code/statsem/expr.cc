@@ -1212,8 +1212,7 @@ Tuple StatSem::wf_SeqComprehensionExpr (const Int & i,
   bool only_one = (bd.Dom().Card() <= 1);
 // <-- 20110428
 
-  if ((wf_bd == Bool(true)) && (!only_num || !only_one))
-  {
+  if ((wf_bd == Bool(true)) && (!only_num || !only_one) && bind.Is(TAG_TYPE_AS_SetBind)) {
     //------------------------------------------------------------------------
     // Error message #236
     // Binding in Seq-Comprh-Expr uses non-numeric values or multiple bindings
@@ -1221,8 +1220,7 @@ Tuple StatSem::wf_SeqComprehensionExpr (const Int & i,
     GenErr (vSeqComprehension, ERR, 236, Sequence());
   }
 
-  if (wf_bd.IsNil())
-  {
+  if (wf_bd.IsNil()) {
     //------------------------------
     // Error message #229
     // Binding for L"%1" is erroneous

@@ -2907,7 +2907,7 @@ operations
        (dcl reswf : bool := (wf_bd = true) and only_num and only_one;
         --CI`SetPidM(cid,bd);
         CI`SetPidM(cid,{ nm |-> bd(nm).#1 | nm in set dom bd});
-        if wf_bd = true and (not only_num or not only_one)
+        if wf_bd = true and (not only_num or not only_one) and is_AS`SetBind(bind)
              -------------------------------------------------------------------
              -- Error message #236
              -- Binding in Seq-Comprh-Expr uses non-numeric values or multiple
