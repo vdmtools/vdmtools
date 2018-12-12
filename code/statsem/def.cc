@@ -3350,7 +3350,7 @@ bool StatSem::VerifyRng(const TYPE_REP_TypeRep & tp)
       for (size_t idx = 1; (idx <= len_tps) && forall; idx++) {
         const TYPE_REP_TypeRep & t (tps[idx]);
         forall = (t.Is(TAG_TYPE_REP_NumericTypeRep) && ((t.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT))
-                                        || (t.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT)) ));
+                                        || (t.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NATONE)) ));
       }
       return forall;
     }
