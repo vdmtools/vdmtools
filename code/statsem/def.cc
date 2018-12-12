@@ -3343,20 +3343,19 @@ Tuple StatSem::extractDomRng(const Generic & g)
 bool StatSem::VerifyRng(const TYPE_REP_TypeRep & tp)
 {
   switch(tp.GetTag()) {
+    case TAG_TYPE_REP_NumericTypeRep: {
+      return (tp.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT)) ||
+             (tp.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NATONE));
+    }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tps (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       bool forall = true;
       size_t len_tps = tps.Length();
       for (size_t idx = 1; (idx <= len_tps) && forall; idx++) {
         const TYPE_REP_TypeRep & t (tps[idx]);
-        forall = (t.Is(TAG_TYPE_REP_NumericTypeRep) && ((t.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT))
-                                        || (t.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NATONE)) ));
+        forall = VerifyRng(t);
       }
       return forall;
-    }
-    case TAG_TYPE_REP_NumericTypeRep: {
-      return (tp.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NAT)) ||
-             (tp.GetInt(pos_REP_NumericTypeRep_qtp) == Int(NATONE));
     }
 // for curry
     case TAG_TYPE_REP_PartialFnTypeRep: {

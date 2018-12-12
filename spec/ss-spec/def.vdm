@@ -1040,10 +1040,9 @@ extractDomRng(x) ==
 VerifyRng : REP`TypeRep -> bool
 VerifyRng(tp) == 
   cases tp:
-    mk_REP`ProductTypeRep(tps)      -> forall i in set inds tps & tps(i) = mk_REP`NumericTypeRep(<NAT>) or
-                                                                           mk_REP`NumericTypeRep(<NATONE>), 
     mk_REP`NumericTypeRep(<NAT>),
     mk_REP`NumericTypeRep(<NATONE>) -> true,
+    mk_REP`ProductTypeRep(tps)      -> forall t in set elems tps & VerifyRng(t),
     mk_REP`PartialFnTypeRep(-,r)    -> VerifyRng(r),
     mk_REP`TotalFnTypeRep(-,r)      -> VerifyRng(r),
     others                          -> false
