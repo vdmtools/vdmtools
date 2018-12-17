@@ -131,7 +131,11 @@ if [ -f /etc/os-release ]; then
   ID=$(grep -e '^ID=' /etc/os-release | awk -F '=' '{print $2}' | sed -e 's:"::g')
   VERSION=$(grep -e '^VERSION_ID=' /etc/os-release | awk -F '=' '{print $2}'| sed -e 's:"::g')
   if [ "ubuntu" = ${ID} ]; then
-    export ARFLAGS=rv
+    if [ "14.04" = ${VERSION} ]; then
+      export ARFLAGS=rv
+    else
+      export ARFLAGS=rvU
+    fi
   else
     export ARFLAGS=rvU
   fi

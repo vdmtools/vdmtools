@@ -1031,18 +1031,16 @@ bool toolOptionsDialog::loadOptionsV1()
   // Get codec index
   QString codecname = initStream.readLine();
   int num = codecname.toInt();
-  if( num > 0 || codecname == "0" )
+  if( num > 0 || codecname == "0" ) {
     codecname = QTLOCALE::NumberToMenuName( num );
-
+  }
   QString menuname (QTLOCALE::Q3CodecNameToMenuName(codecname));
 
   QStringList menulist (QTLOCALE::getMenuList());
   this->currentTextCodec = 0;
   int index = 0;
-  for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++)
-  {
-    if( menuname == *itr )
-    {
+  for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++) {
+    if( menuname == *itr ) {
       this->currentTextCodec = index;
       break;
     }
@@ -1063,23 +1061,22 @@ bool toolOptionsDialog::loadOptionsV1()
   this->multiLoadFormat = initStream.readLine();
   this->printCommand = initStream.readLine();
 
-  if( !initStream.atEnd() )
-  {
+  if( !initStream.atEnd() ) {
     QString style = initStream.readLine();
     QStringList list = QStyleFactory::keys();
-    if( list.contains( style ) > 0 )
-    {
+    if( list.contains( style ) ) {
       this->selectStyle( style );
     }
   }
 
-  if( !initStream.atEnd() )
-  {
+  if( !initStream.atEnd() ) {
     QString syntaxColoringStr = initStream.readLine();
-    if( syntaxColoringStr == "true" )
+    if( syntaxColoringStr == "true" ) {
       this->syntaxColoring = true;
-    else
+    }
+    else {
       this->syntaxColoring = false;
+    }
   }
   initFile.close();
   return true;
@@ -1098,8 +1095,7 @@ bool toolOptionsDialog::loadOptionsV2()
   initStream.setCodec(codec);
 
   QMap<QString, QString> initMap;
-  while( !initStream.atEnd() )
-  {
+  while( !initStream.atEnd() ) {
     QString tmp = initStream.readLine();
     if( tmp.isEmpty() ) continue;
 #if QT_VERSION >= 0x040000
@@ -1120,17 +1116,21 @@ bool toolOptionsDialog::loadOptionsV2()
   initFile.close();
 
   QString fontFamily = this->currentFont.family();
-  if( initMap.contains( "FontFamily" ) )
+  if( initMap.contains( "FontFamily" ) ) {
     fontFamily = initMap[ "FontFamily" ];
+  }
   int fontPtSize = this->currentFont.pointSize();
-  if( initMap.contains( "FontPointSize" ) )
+  if( initMap.contains( "FontPointSize" ) ) {
     fontPtSize = initMap[ "FontPointSize" ].toInt();
+  }
   int fontWeight = this->currentFont.weight();
-  if( initMap.contains( "FontWeight" ) )
+  if( initMap.contains( "FontWeight" ) ) {
     fontWeight = initMap[ "FontWeight" ].toInt();
+  }
   int fontItalic = this->currentFont.italic();
-  if( initMap.contains( "FontItalic" ) )
+  if( initMap.contains( "FontItalic" ) ) {
     fontItalic = initMap[ "FontItalic" ].toInt();
+  }
   this->currentFont = QFont(fontFamily, fontPtSize, fontWeight, fontItalic);
 
   // Get codec index
@@ -1158,10 +1158,12 @@ bool toolOptionsDialog::loadOptionsV2()
   // Get interface settings
   if( initMap.contains( "UseExternalEditor" ) ) {
     if( initMap[ "UseExternalEditor" ] == "1" ||
-        initMap[ "UseExternalEditor" ] == "true" )
+        initMap[ "UseExternalEditor" ] == "true" ) {
       this->useExternalEditor = true;
-    else
+    }
+    else {
       this->useExternalEditor = false;
+    }
   }
   if( initMap.contains( "EditorName" ) ) {
     this->editorName = initMap[ "EditorName" ];
@@ -1252,13 +1254,16 @@ bool toolOptionsDialog::loadOptionsV2()
     }
   }
   if( initMap.contains( "UseNewFile" ) ) {
-    if( initMap[ "UseNewFile" ] == "true" )
+    if( initMap[ "UseNewFile" ] == "true" ) {
       this->useNewFile = true;
-    else
+    }
+    else {
       this->useNewFile = false;
+    }
   }
-  if( initMap.contains( "NewFileName" ) )
+  if( initMap.contains( "NewFileName" ) ) {
     this->newFileName = initMap[ "NewFileName" ];
+  }
 #endif // VDMPP
 
   if (initMap.contains( "MaxLogLines" )) {
@@ -1281,8 +1286,7 @@ bool toolOptionsDialog::loadOptionsV2()
     this->if_interpreterLogMax->setValue(max);
   }
 
-  if (initMap.contains( "JCGHackParser" ))
-  {
+  if (initMap.contains( "JCGHackParser" )) {
     Qt2TB::SetJCGHackParser(initMap[ "JCGHackParser" ] == "true");
   }
 
@@ -1294,10 +1298,8 @@ void toolOptionsDialog::setCurrentCodec(const QString & cnm)
   QStringList menulist (QTLOCALE::getMenuList());
   this->currentTextCodec = 0;
   int index = 0;
-  for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++)
-  {
-    if( cnm == *itr )
-    {
+  for (QStringList::const_iterator itr = menulist.begin(); itr != menulist.end(); itr++) {
+    if( cnm == *itr ) {
       this->currentTextCodec = index;
       break;
     }
@@ -1320,15 +1322,12 @@ void toolOptionsDialog::reject()
 {
 #if QT_VERSION >= 0x040000
   QString style = QApplication::style()->objectName();
-  if (style != this->currentStyle)
-  {
+  if (style != this->currentStyle) {
     int count = this->styleList->count();
     bool found = false;
-    for (int idx = 1; (idx <= count) && ! found; idx++)
-    {
+    for (int idx = 1; (idx <= count) && ! found; idx++) {
       QString st (this->styleList->itemText(idx));
-      if (st.toLower() == style.toLower())
-      {
+      if (st.toLower() == style.toLower()) {
         this->styleList->setCurrentIndex(idx);
         found = true;
       }
@@ -1337,15 +1336,12 @@ void toolOptionsDialog::reject()
   }
 #else
   QString style = QApplication::style().name();
-  if (style != this->currentStyle)
-  {
+  if (style != this->currentStyle) {
     int count = this->styleList->count();
     bool found = false;
-    for (int idx = 1; (idx <= count) && ! found; idx++)
-    {
+    for (int idx = 1; (idx <= count) && ! found; idx++) {
       QString st (this->styleList->text(idx));
-      if (st.lower() == style.lower())
-      {
+      if (st.lower() == style.lower()) {
         this->styleList->setCurrentItem(idx);
         found = true;
       }
@@ -1369,8 +1365,7 @@ void toolOptionsDialog::selectEditor()
   QString file (QtPort::QtGetOpenFileName( this,
                                            tr("Select Editor..."),
                                            this->getHome()));
-  if (! file.isEmpty()) //at least one item
-  {
+  if (! file.isEmpty()) { //at least one item
     this->editorName = file;
     this->if_editorName->setText(this->editorName);
   }
@@ -1446,13 +1441,14 @@ void toolOptionsDialog::applyDialog()
 
 QString toolOptionsDialog::getHome()
 {
-  if(this->homeDir.isEmpty())
-  {
+  if(this->homeDir.isEmpty()) {
     const char* home = getenv( HOME_ENV_NAME );
-    if( NULL != home )
+    if( NULL != home ) {
       this->homeDir = Qt2TB::wstring2qstring(TBWSTR::fsstr2wstring(home));
-    else
+    }
+    else {
       this->homeDir = ".";
+    }
   }
   return this->homeDir;
 }
@@ -1588,12 +1584,12 @@ void toolOptionsDialog::setOptions()
 
 void toolOptionsDialog::setEditor()
 {
-  if( ( this->useExternalEditor == true ) &&
-      ( this->editorName.length() > 0 ) )
+  if( ( this->useExternalEditor == true ) && ( this->editorName.length() > 0 ) ) {
     emit enableEditor(true);
-  else
-//    emit enableEditor(false);
+  }
+  else {
     emit enableEditor(true);
+  }
 }
 
 void toolOptionsDialog::editerNameEnabled()
