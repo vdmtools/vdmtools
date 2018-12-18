@@ -643,13 +643,14 @@ pre is_REP`UnionTypeRep(argtype) or is_REP`SetTypeRep(argtype);
 FindPosResSeqTypeInSeqDistr: REP`TypeRep ==> REP`TypeRep
 FindPosResSeqTypeInSeqDistr(argtype) ==
   cases argtype:
+    mk_REP`InvTypeRep(-,shape,-) -> FindPosResSeqTypeInSeqDistr(shape),
     mk_REP`UnionTypeRep(tps) -> def tps' = {CleanFlatType(tp) | tp in set tps}
                                 in
                                   let s in set tps' be st is_REP`SeqTypeRep(s)
                                   in FindPosResSeqTypeInSeqDistr(s),
     mk_REP`SeqTypeRep(tp)    -> CleanFlatType(tp)
   end
-pre is_REP`UnionTypeRep(argtype) or is_REP`SeqTypeRep(argtype);
+pre is_REP`UnionTypeRep(argtype) or is_REP`SeqTypeRep(argtype) or is_REP`InvTypeRep(argtype);
 \end{vdm_al}
 
 The function {\em FlattenRepType} takes a {\em REP} type and returns

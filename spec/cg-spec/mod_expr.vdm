@@ -1683,7 +1683,7 @@ CGSeqComprehensionSeqBind(rc1, vt) ==
   in
    (FD`PushEnv();
     VD`PushFctLoc(dom pid_m);
-    def exprType = CGAUX`FindType(expr);
+    def exprType = CGAUX`RemoveInvType(CGAUX`FindType(expr));
         resL_v = BC`GiveName( "res_l" );
         --bindL_v   = BC`GiveName( "bind_l" );
         --bindLType = exprType;
@@ -2809,6 +2809,8 @@ CGApplyExpr(ae, resVar_v, expr1, type1, sd) ==
      (dcl ti : [REP`TypeRep] := type1;
       if expr1 = nil
       then ti := CGAUX`FindType(expr);
+      if is_(ti, REP`TypeRep)
+      then ti := CGAUX`RemoveInvType(ti);
       cases true:
        (is_REP`GeneralMapTypeRep(ti)),
        (is_REP`InjectiveMapTypeRep(ti)) -> CGMapApplyExpr(ae, resVar_v, expr1, type1, sd),

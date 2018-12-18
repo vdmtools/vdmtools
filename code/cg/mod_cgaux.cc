@@ -1416,8 +1416,11 @@ TYPE_REP_TypeRep vdmcg::FindPosResSetTypeInSetDistrUnion(const TYPE_REP_TypeRep 
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::FindPosResSeqTypeInSeqDistr(const TYPE_REP_TypeRep & argtype)
 {
-//  return FindPosSetSeq(argtype, TAG_TYPE_REP_SeqTypeRep);
   switch(argtype.GetTag()) {
+    case TAG_TYPE_REP_InvTypeRep: {
+      const TYPE_REP_TypeRep & shape (argtype.GetRecord(pos_REP_InvTypeRep_shape));
+      return FindPosResSeqTypeInSeqDistr(shape);
+    }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tps (argtype.GetSet(pos_REP_UnionTypeRep_tps));
       Generic tp;

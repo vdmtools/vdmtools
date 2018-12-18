@@ -1749,7 +1749,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSeqBind (const TYPE_AS_SeqComprehens
   PushEnv();
   PushFctLoc (pid_m.Dom());
 
-  TYPE_REP_SetTypeRep exprType (FindType (expr)); //
+  TYPE_REP_SetTypeRep exprType (RemoveInvType(FindType (expr))); //
   TYPE_CPP_Identifier resL_v (vdm_BC_GiveName(ASTAUX::MkId(L"res_l")));
   TYPE_REP_TypeRep resSType (exprType);
   TYPE_CPP_Identifier succ_v (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
@@ -2997,13 +2997,9 @@ Generic vdmcg::CGApplyExpr (const TYPE_AS_ApplyExpr & rc1,
   }
 
   Generic ti = (expr1.IsNil() ? FindType (expr) : type1);
-// 20110626 -->
   if (ti.IsRecord()) {
-    if (ti.Is(TAG_TYPE_REP_InvTypeRep)) {
-      ti = Record(ti).GetRecord(pos_REP_InvTypeRep_shape);
-    }
+    ti = RemoveInvType(ti);
   }
-// <-- 20110626
 
   if (ti.IsRecord()) {
     switch ( Record(ti).GetTag() ) {
