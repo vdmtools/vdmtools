@@ -982,8 +982,11 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
                                     ExpandTypeRep(tp.GetRecord(pos_REP_EmptyMapTypeRep_maprng), nms));
     }
     case TAG_TYPE_REP_InvTypeRep: {
-      return mk_REP_InvTypeRep(tp.GetRecord(pos_REP_InvTypeRep_name),
-                               ExpandTypeRep(tp.GetRecord(pos_REP_InvTypeRep_shape), nms),
+      const TYPE_AS_Name & name (tp.GetRecord(pos_REP_InvTypeRep_name));
+      SET<TYPE_REP_TypeNameRep> new_nms (nms);
+      new_nms.Insert(TYPE_REP_TypeNameRep().Init(name));
+      return mk_REP_InvTypeRep(name,
+                               ExpandTypeRep(tp.GetRecord(pos_REP_InvTypeRep_shape), new_nms),
                                tp.GetRecord(pos_REP_InvTypeRep_invariant));
     }
     case TAG_TYPE_REP_TypeNameRep: {

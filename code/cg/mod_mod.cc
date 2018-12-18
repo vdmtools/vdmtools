@@ -45,7 +45,6 @@ SET<TYPE_CPP_File> vdmcg::GenModule(const TYPE_AS_Module & md)
   InitState_CGAUX(md.GetRecord(pos_AS_Module_nm));
   vdm_BC_ResetVarno();
 
-// 20071115
   InitState_FCTDEF();
   
   SET<TYPE_CPP_File> file_s;
@@ -77,8 +76,7 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Module & mod)
   SET<TYPE_AS_Name> efn_s (fn_m.Dom());
   SET<TYPE_AS_Name> eop_s (op_m.Dom());
 
-  if (! exp.IsNil())
-  {
+  if (! exp.IsNil()) {
     TYPE_AS_ExportSig exrec (exp);
     const Map & val_m (exrec.GetMap(pos_AS_ExportSig_val)); // map Name to Type
     const Map & efn_m (exrec.GetMap(pos_AS_ExportSig_fns)); // map Name to (TypeVarList * FnType)
@@ -112,20 +110,17 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Module & mod)
   Map m;
   Generic nm2;
   if (cg_OptionGenFctOps() ) {
-    for (bool bb = efn_s.First(nm2); bb; bb = efn_s.Next(nm2))
+    for (bool bb = efn_s.First(nm2); bb; bb = efn_s.Next(nm2)) {
       m.Insert(nm2, fn_m[nm2]);
-
-    for (bool cc = eop_s.First(nm2); cc; cc = eop_s.Next(nm2))
+    }
+    for (bool cc = eop_s.First(nm2); cc; cc = eop_s.Next(nm2)) {
       m.Insert(nm2, op_m[nm2]);
-
+    }
     cpp.ImpConc(GenExpSigs(m, sd, mod));
   }
 
-// 20120522 -->
-//  return vdm_BC_GenFile(Nil(), GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h")), pp, cpp);
   return vdm_BC_GenFile2(Nil(), GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h")), pp, cpp,
                           mod.GetInt(pos_AS_Module_cid));
-// <-- 20120522
 }
 
 // RemPrePost
@@ -137,8 +132,7 @@ SET<TYPE_AS_Name> vdmcg::RemPrePost(const Map & fnop_m)
   Set dom_fnop_m (fnop_m.Dom());
   SET<TYPE_AS_Name> res;
   Generic name_g;
-  for (bool bb = dom_fnop_m.First(name_g); bb; bb = dom_fnop_m.Next(name_g))
-  {
+  for (bool bb = dom_fnop_m.First(name_g); bb; bb = dom_fnop_m.Next(name_g)) {
     TYPE_AS_Name name (name_g);
     const TYPE_AS_Ids & ids (name.GetSequence(pos_AS_Name_ids));
     TYPE_AS_Id id (ids.Index(ids.Length()));
@@ -196,13 +190,13 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Module & mod)
     Map m;
     Set dom_fn_m (fn_m.Dom().Diff(efn_s));
     Generic nm2;
-    for (bool bb = dom_fn_m.First(nm2); bb; bb = dom_fn_m.Next(nm2))
+    for (bool bb = dom_fn_m.First(nm2); bb; bb = dom_fn_m.Next(nm2)) {
         m.Insert(nm2, fn_m[nm2]);
-
+    }
     Set dom_op_m (op_m.Dom().Diff(eop_s));
-    for (bool cc = dom_op_m.First(nm2); cc; cc = dom_op_m.Next(nm2))
+    for (bool cc = dom_op_m.First(nm2); cc; cc = dom_op_m.Next(nm2)) {
         m.Insert(nm2, op_m[nm2]);
-
+    }
     cpp.ImpConc(GenLocalSigs(m, sd));
   }
 
@@ -214,13 +208,13 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Module & mod)
   // INITIALISATION OF THE VDM LIB W.R.T RECORDS
   //cpp.ImpConc(GenVDMLibInit(nm, type_m, sd));
   SEQ<TYPE_CPP_FunctionDefinition> fd (GenVDMLibInit(nm, type_m, sd));
-  if ( !fd.IsEmpty() )
+  if ( !fd.IsEmpty() ) {
     cpp.ImpConc( fd );
+  }
   
   // MODULE FUNCTIONS/OPERATIONS
   TYPE_CPP_CPPAS def_l;
-  if (cg_OptionGenFctOps())
-  {
+  if (cg_OptionGenFctOps()) {
     def_l.ImpAppend(GenInitFct(nm, !fd.IsEmpty()));
     def_l.ImpConc(GenFctDef_MOD(fn_m, sd));
     def_l.ImpConc(GenOpDef_MOD(op_m, sd));
@@ -246,9 +240,9 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenImports(const SET<TYPE_AS_Name> & imp_s)
 
   Set imp_s_q (imp_s);
   Generic nm;
-  for (bool bb = imp_s_q.First(nm); bb; bb = imp_s_q.Next(nm))
+  for (bool bb = imp_s_q.First(nm); bb; bb = imp_s_q.Next(nm)) {
     pp.ImpAppend(vdm_BC_GenInclusion(GiveLastName(nm).ImpConc(ASTAUX::MkId(L".h"))));
-
+  }
   return pp;
 }
 
@@ -262,11 +256,9 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenRename(const TYPE_AS_Name & curmod, const M
   TYPE_AS_Id modid (ASTAUX::MkId(L"vdm_").ImpConc(GiveLastName(curmod)).ImpConc(ASTAUX::MkId(L"_")));
   SEQ<TYPE_CPP_Preprocessor> pp;
   Generic nm;
-  for (bool bb = dom_imp_m.First(nm); bb; bb = dom_imp_m.Next(nm))
-  {
+  for (bool bb = dom_imp_m.First(nm); bb; bb = dom_imp_m.Next(nm)) {
     Generic isig (imp_m[nm]);
-    if (! isig.IsNil())
-    {
+    if (! isig.IsNil()) {
       TYPE_AS_ImportSig irec (isig);
       const Map & tp_m  (irec.GetMap(pos_AS_ImportSig_tps)); // map Name to [TypeDef]
       const Map & ren_m (irec.GetMap(pos_AS_ImportSig_ren)); // map Name to Name
@@ -274,8 +266,7 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenRename(const TYPE_AS_Name & curmod, const M
       TYPE_AS_Id imod (ASTAUX::MkId(L"vdm_").ImpConc((GiveLastName(nm)).ImpConc(ASTAUX::MkId(L"_"))));
       Set dom_ren_m (ren_m.Dom());
       Generic newnm;
-      for (bool cc = dom_ren_m.First(newnm); cc; cc = dom_ren_m.Next(newnm))
-      {
+      for (bool cc = dom_ren_m.First(newnm); cc; cc = dom_ren_m.Next(newnm)) {
         TYPE_AS_Name oldnm (ren_m[newnm]);
         TYPE_AS_Id newmac (modid);
         newmac.ImpConc(GiveLastName(newnm));
@@ -285,15 +276,12 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenRename(const TYPE_AS_Name & curmod, const M
         // TODO: nm in fns or ops
         pp.ImpAppend(vdm_BC_GenIdMacroDef(newmac, oldmac));
 
-        if (tp_m.DomExists(oldnm))
-        {
+        if (tp_m.DomExists(oldnm)) {
           Generic gtd (tp_m[oldnm]);
-          if (!gtd.IsNil())
-          {
+          if (!gtd.IsNil()) {
             TYPE_AS_TypeDef td (gtd);
             TYPE_AS_Type tp (td.GetRecord(pos_AS_TypeDef_shape));
-            if (tp.Is(TAG_TYPE_AS_CompositeType))
-            {
+            if (tp.Is(TAG_TYPE_AS_CompositeType)) {
               pp.ImpConc(GenRenameRecord(nm, newnm, tp));
               pp.ImpConc(GenRenameInv(nm, newnm, td));
             }
@@ -340,8 +328,7 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenRenameRecord(const TYPE_AS_Name & oldmod,
   pp.ImpAppend(vdm_BC_GenIdMacroDef(vdm_BC_GenLengthId(newnm), vdm_BC_GenLengthId(oldnm2)));
 
   size_t len_field_l = field_l.Length();
-  for (size_t idx = 1; idx <= len_field_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_field_l; idx++) {
     const TYPE_AS_Field & field (field_l[idx]);
     const Generic & sel (field.GetField(pos_AS_Field_sel));
     if (!sel.IsNil()) {
@@ -349,14 +336,11 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenRenameRecord(const TYPE_AS_Name & oldmod,
     }
   }
 
-// 20060317
-// -------------
   TYPE_AS_Id oldname (ASTAUX::MkId(L"TYPE_").ImpConc(GiveLastName(oldmod)).ImpConc(ASTAUX::MkId(L"_"))
                                             .ImpConc(GiveLastName(oldnm)));
   TYPE_AS_Id newname (ASTAUX::MkId(L"TYPE_").ImpConc(GiveCurCName()).ImpConc(ASTAUX::MkId(L"_"))
                                             .ImpConc(GiveLastName(newnm)));
   pp.ImpAppend(vdm_BC_GenIdMacroDef(newname, oldname));
-// -------------
   return pp;
 }
 
@@ -371,10 +355,10 @@ SEQ<TYPE_CPP_Preprocessor> vdmcg::GenRenameInv(const TYPE_AS_Name & oldmod,
 {
   const Generic & Inv (td.GetField(pos_AS_TypeDef_Inv));
 
-  if (Inv.IsNil())
+  if (Inv.IsNil()) {
     return SEQ<TYPE_CPP_Preprocessor>();
-  else
-  {
+  }
+  else {
     const TYPE_AS_Name & oldnm (td.GetRecord(pos_AS_TypeDef_nm));
     TYPE_AS_Name ppnm (vdm_BC_GivePrePostName(oldnm, ASTAUX::MkId(L"inv")));
     TYPE_CI_ContextId cid (ppnm.get_cid());
@@ -400,8 +384,7 @@ SEQ<TYPE_AS_TypeDef> vdmcg::TypeMapToSeq(const MAP<TYPE_AS_Name, TYPE_AS_TypeDef
 {
   SEQ<TYPE_AS_TypeDef> type_l;
 
-  if (!sdg.IsNil())
-  {
+  if (!sdg.IsNil()) {
     TYPE_AS_StateDef sd (sdg);
     const TYPE_AS_CompositeType & tp (sd.GetRecord(pos_AS_StateDef_tp));
     const Generic & Inv (sd.GetField(pos_AS_StateDef_Inv));
@@ -410,8 +393,9 @@ SEQ<TYPE_AS_TypeDef> vdmcg::TypeMapToSeq(const MAP<TYPE_AS_Name, TYPE_AS_TypeDef
 
   Set dom_type_m (type_m.Dom());
   Generic tpnm;
-  for (bool bb = dom_type_m.First(tpnm); bb; bb = dom_type_m.Next(tpnm))
+  for (bool bb = dom_type_m.First(tpnm); bb; bb = dom_type_m.Next(tpnm)) {
     type_l.ImpAppend(type_m[tpnm]);
+  }
   return type_l;
 }
 
@@ -449,9 +433,9 @@ TYPE_CPP_CPPAS vdmcg::GenTypeInvFcts(const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & 
 SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenExportedValues(const Generic & nms, const SEQ<TYPE_AS_ValueDef> & vd_l)
 {
   // ==> (seq of (CPP`DeclSpecifier * CPP`Name)) * (seq of CPP`Stmt);
-  PushEnv(); // 20110510
+  PushEnv();
   Tuple tmp (GenValDef(vd_l));
-  PopEnv(); // 20110510
+  PopEnv();
   const Sequence & decl_l (tmp.GetSequence(1)); // seq of (CPP`DeclSpecifier * CPP`Name))
   const SEQ<TYPE_CPP_Stmt> & stmt_l (tmp.GetSequence(2)); // (seq of CPP`Stmt)
 
@@ -459,16 +443,15 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenExportedValues(const Generic & nms, con
 
   this->idecl_l.Clear();
 
-  if (! decl_l.IsEmpty())
+  if (! decl_l.IsEmpty()) {
     this->vi_l = stmt_l;
-  else
+  }
+  else {
     this->vi_l.Clear();
-
-  if (nms.IsNil())
-  {
+  }
+  if (nms.IsNil()) {
     size_t len_decl_l = decl_l.Length();
-    for (size_t idx = 1; idx <= len_decl_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_decl_l; idx++) {
       const Tuple & t (decl_l[idx]); // (CPP`DeclSpecifier * CPP`Name)
       SEQ<TYPE_CPP_DeclSpecifier> d_l;
       d_l.ImpAppend(t.GetRecord(1));
@@ -479,16 +462,14 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenExportedValues(const Generic & nms, con
       res_l.ImpAppend(vdm_BC_GenIdentDecl(SEQ<TYPE_CPP_Annotation>(), d_l, nm, Nil()));
     }
   }
-  else
-  {
+  else {
     Set id_s, nm_s (nms);
     Generic nm;
-    for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
+    for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
       id_s.Insert(vdm_BC_Rename(nm));
-
+    }
     size_t len_decl_l = decl_l.Length();
-    for (size_t idx = 1; idx <= len_decl_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_decl_l; idx++) {
       const Tuple & t (decl_l[idx]); // (CPP`DeclSpecifier * CPP`Name)
       SEQ<TYPE_CPP_DeclSpecifier> d_l;
       d_l.ImpAppend(t.GetRecord(1));
@@ -515,7 +496,6 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenExportedValues(const Generic & nms, con
 // ==> CPP`FunctionDefinition
 TYPE_CPP_FunctionDefinition vdmcg::GenInitFct(const TYPE_AS_Name & nm, bool genvdmlib)
 {
-  //SEQ<TYPE_CPP_Stmt> rb_l (this->vi_l);
   SEQ<TYPE_CPP_Stmt> rb_l;
   if (genvdmlib) {
     TYPE_AS_Id id_lib (ASTAUX::MkId(L"init_").ImpConc(GiveLastName(nm)).ImpConc(ASTAUX::MkId(L"_VDMLib")));
@@ -551,10 +531,10 @@ TYPE_CPP_IdentDeclaration vdmcg::GenInitDecl(const TYPE_AS_Name & nm)
 // ==> seq of CPP`IdentDeclaration
 SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenStaticVars(const Generic & sd)
 {
-  if (sd.IsNil())
+  if (sd.IsNil()) {
     return this->idecl_l;
-  else
-  {
+  }
+  else {
     Tuple t (GenStateDef(sd)); // CPP`CPPAS * seq of CPP`Stmt
     this->vi_l.ImpConc(t.GetSequence(2));
     return this->idecl_l.ImpConc(t.GetSequence(1));
@@ -571,14 +551,12 @@ TYPE_CPP_CPPAS vdmcg::GenExpSigs(const Map & def_m, const Generic & sd, const TY
   TYPE_CPP_CPPAS cpp;
   Set dom_def_m (def_m.Dom());
   Generic nm;
-  for (bool bb = dom_def_m.First(nm); bb; bb = dom_def_m.Next(nm))
-  {
+  for (bool bb = dom_def_m.First(nm); bb; bb = dom_def_m.Next(nm)) {
     cpp.ImpConc(GenExpFctOpDecl(nm, def_m[nm], Nil(), sd, md));
   }
   if (!sd.IsNil()) {
     Generic fn (GenInitStateFnDef(sd));
-    if (!fn.IsNil())
-    {
+    if (!fn.IsNil()) {
       TYPE_AS_Name inm (Record(fn).GetRecord(pos_AS_ExplFnDef_nm));
       cpp.ImpConc(GenExpFctOpDecl(inm, fn, Nil(), sd, md));
     }
@@ -596,8 +574,9 @@ TYPE_CPP_CPPAS vdmcg::GenLocalSigs(const Map & fn_m, const Generic & sd)
   TYPE_CPP_Modifier sta(vdm_BC_GenModifier(quote_STATIC));
   Set dom_fn_m (fn_m.Dom());
   Generic nm;
-  for (bool bb = dom_fn_m.First(nm); bb; bb = dom_fn_m.Next(nm))
+  for (bool bb = dom_fn_m.First(nm); bb; bb = dom_fn_m.Next(nm)) {
     cpp.ImpConc(GenFctOpDecl(nm, fn_m[nm], sta, sd));
+  }
   return cpp;
 }
 
@@ -610,12 +589,12 @@ TYPE_CPP_CPPAS vdmcg::GenFctDef_MOD(const MAP<TYPE_AS_Name, TYPE_AS_FnDef> & fn_
   TYPE_CPP_CPPAS cpp;
   Set dom_fn_m (fn_m.Dom());
   Generic nm;
-  for (bool bb = dom_fn_m.First(nm); bb; bb = dom_fn_m.Next(nm))
+  for (bool bb = dom_fn_m.First(nm); bb; bb = dom_fn_m.Next(nm)) {
     cpp.ImpConc(GenFctDef_FD(fn_m[nm], false));
+  }
   if (!sd.IsNil()) {
     Generic fn (GenInitStateFnDef(sd));
-    if (!fn.IsNil())
-    {
+    if (!fn.IsNil()) {
       cpp.ImpConc(GenFctDef_FD(fn, false));
     }
   }
@@ -632,8 +611,7 @@ TYPE_CPP_CPPAS vdmcg::GenOpDef_MOD(const MAP<TYPE_AS_Name, TYPE_AS_OpDef> & op_m
   TYPE_CPP_CPPAS cpp;
   Set dom_op_m (op_m.Dom());
   Generic nm;
-  for (bool bb = dom_op_m.First(nm); bb; bb = dom_op_m.Next(nm))
-  {
+  for (bool bb = dom_op_m.First(nm); bb; bb = dom_op_m.Next(nm)) {
     CurrentMethod (nm);
     cpp.ImpConc(GenOpDef_FD(nm, op_m[nm], sd, false));
   }

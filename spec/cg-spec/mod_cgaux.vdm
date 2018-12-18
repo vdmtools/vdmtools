@@ -383,7 +383,7 @@ ExpandTypeRep(tp,nms) ==
    mk_REP`GeneralMapTypeRep(dtp, rtp)   -> return mk_REP`GeneralMapTypeRep(ExpandTypeRep(dtp,nms), ExpandTypeRep(rtp,nms)),
    mk_REP`InjectiveMapTypeRep(dtp, rtp) -> return mk_REP`InjectiveMapTypeRep(ExpandTypeRep(dtp,nms), ExpandTypeRep(rtp,nms)),
    mk_REP`EmptyMapTypeRep(dtp, rtp)     -> return mk_REP`EmptyMapTypeRep(ExpandTypeRep(dtp,nms), ExpandTypeRep(rtp,nms)),
-   mk_REP`InvTypeRep(name,shape,i)      -> return mk_REP`InvTypeRep(name,ExpandTypeRep(shape,nms), i),
+   mk_REP`InvTypeRep(name,shape,i)      -> return mk_REP`InvTypeRep(name,ExpandTypeRep(shape,nms union {mk_REP`TypeNameRep(name)}), i),
    mk_REP`TypeNameRep(-)                -> if tp in set nms
                                            then return tp
                                            else ExpandTypeRep(LOT(tp),nms union {tp}),

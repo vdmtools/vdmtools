@@ -663,6 +663,7 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
       return GenerateDlCall(nm, p_arg_l, false, false);
     }
     else {
+      TYPE_REP_TypeRep trp(FromAS2RepType(tp.GetRecord(2)));
       //return CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2)));
       Tuple cgee (CGExprExcl(body, ASTAUX::MkId(L"varRes"), FromAS2RepType(tp.GetRecord(2))));
       return mk_(cgee.GetField(1), ExpandCompoundStmt(cgee.GetSequence(2)));

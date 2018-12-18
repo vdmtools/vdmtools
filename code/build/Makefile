@@ -5174,6 +5174,7 @@ clean: bin_clean distclean $(CLEANJAVALIB)
 	rm -f dlclass_test1.o dlclass_test1.so
 	rm -f VDM.jar javaapi.jar ToolboxAPI.jar
 	rm -rf jp libdoc javaapi javaapi-doc
+	rm -f FlexLexer.h
 ifeq ($(strip $(OSTYPE)),win32)
 	rm -f *.lib *.ilk *.pdb *.files *.wse *.exp *.rch *.res *.map *.WS~
 	rm -f *.manifest
