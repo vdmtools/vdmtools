@@ -120,13 +120,9 @@ export JDKHOME=/usr/java/default
 export ANTHOME=/usr/local/apache-ant-1.9.13
 export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
 
-#export QTVERSION=3
 export QTVERSION=4
 #export QTVERSION=5
-if [ "3" = ${QTVERSION} ]; then
-  export QTDIR=C:/Qt/3.3.8
-elif [ "4" = ${QTVERSION} ]; then
-#  export QTDIR=C:/Qt/4.8.6
+if [ "4" = ${QTVERSION} ]; then
   export QTDIR=C:/Qt/4.8.7
 else
   export QTDIR=C:/Qt/5.5.1
@@ -135,7 +131,7 @@ fi
 export QTBIN=`cygpath -u ${QTDIR}`/bin
 export PATH=${PATH}:${QTBIN}
 
-export CORBADIR=C:/omniORB-4.2.1
+export CORBADIR=C:/omniORB-4.2.3
 export CORBABIN=`cygpath -u ${CORBADIR}`/bin/x86_win32
 export PATH=${PATH}:${CORBABIN}
 
