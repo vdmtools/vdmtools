@@ -844,10 +844,15 @@ MAP<TYPE_AS_Name, TYPE_REP_TypeRep> vdmcg::FindPatIdMap(const TYPE_AS_Expr& expr
   Generic nm;
   for (bool bb = dom_pid_m.First(nm); bb; bb = dom_pid_m.Next(nm)) {
     TYPE_REP_TypeRep tp (pid_m[nm]);
-    TYPE_REP_TypeRep newtp (RemoveInvType(CleanFlatType(tp)));
-    while (tp != newtp) {
-      tp = newtp;
-      newtp = RemoveInvType(CleanFlatType(tp));
+    if (IsCyclicTypeRep(tp)) {
+      tp = RemoveInvType(CleanFlatType(tp));
+    }
+    else {
+      TYPE_REP_TypeRep newtp (RemoveInvType(CleanFlatType(tp)));
+      while (tp != newtp) {
+        tp = newtp;
+        newtp = RemoveInvType(CleanFlatType(tp));
+      }
     }
     res_m.Insert(nm, tp);
   }
@@ -7657,3 +7662,113 @@ SEQ<TYPE_CPP_Stmt> vdmcg::MergeStmts (const SEQ<TYPE_CPP_Stmt> & decls, const SE
   return new_decls.ImpConc(stmts);
 }
 
+// IsCyclicType
+// tp : REP`TypeRep
+// ==> bool
+bool vdmcg::IsCyclicTypeRep(const TYPE_REP_TypeRep & tp) {
+  switch (tp.GetTag()) {
+    case TAG_TYPE_REP_TypeNameRep: {
+      return FindTypeNameRep(tp, CleanFlatType(tp));
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
+// FindTypeNameRep
+// tnr : REP`TypeNameRep
+// tp : REP`TypeRep
+// ==> bool
+bool vdmcg::FindTypeNameRep(const TYPE_REP_TypeNameRep & tnr, const TYPE_REP_TypeRep & tp) {
+  switch (tp.GetTag()) {
+    case TAG_TYPE_REP_TypeNameRep: {
+      return (tnr == tp);
+    }
+    case TAG_TYPE_REP_UnionTypeRep: {
+      SET<TYPE_REP_TypeRep> ts (tp.GetSet(pos_REP_UnionTypeRep_tps));
+      bool exists = false; 
+      Generic t;
+      for (bool bb = ts.First(t); bb && !exists; bb = ts.Next(t) ) {
+        exists = FindTypeNameRep(tnr, t);
+      }
+      return exists;
+    }
+    case TAG_TYPE_REP_ProductTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & tpl (tp.GetSequence(pos_REP_ProductTypeRep_tps));
+      bool exists = false; 
+      size_t len_tpl = tpl.Length();
+      for (size_t idx = 1; (idx <= len_tpl && !exists); idx++) {
+        exists = FindTypeNameRep(tnr, tpl[idx]);
+      }
+      return exists;
+    }
+    case TAG_TYPE_REP_SetTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_SetTypeRep_elemtp));
+    }
+    case TAG_TYPE_REP_EmptySetTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_EmptySetTypeRep_elemtp));
+    }
+    case TAG_TYPE_REP_SeqTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_SeqTypeRep_elemtp));
+    }
+    case TAG_TYPE_REP_EmptySeqTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_EmptySeqTypeRep_elemtp));
+    }
+    case TAG_TYPE_REP_GeneralMapTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)) ||
+             FindTypeNameRep(tnr, tp.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
+    }
+    case TAG_TYPE_REP_InjectiveMapTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)) ||
+             FindTypeNameRep(tnr, tp.GetRecord(pos_REP_InjectiveMapTypeRep_maprng));
+    }
+    case TAG_TYPE_REP_EmptyMapTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_EmptyMapTypeRep_mapdom)) ||
+             FindTypeNameRep(tnr, tp.GetRecord(pos_REP_EmptyMapTypeRep_maprng));
+    }
+    case TAG_TYPE_REP_InvTypeRep: {
+      return FindTypeNameRep(tnr, tp.GetRecord(pos_REP_InvTypeRep_shape));
+    }
+    case TAG_TYPE_REP_CompositeTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & fields (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
+      bool exists = false; 
+      size_t len_fields = fields.Length();
+      for (size_t idx = 1; (idx <= len_fields && !exists); idx++) {
+        const TYPE_REP_FieldRep & fr (fields[idx]);
+        exists = FindTypeNameRep(tnr, fr.GetRecord(pos_REP_FieldRep_tp));
+      }
+      return exists;
+    }
+    case TAG_TYPE_REP_OpTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_OpTypeRep_Dom));
+      bool exists = FindTypeNameRep(tnr, tp.GetRecord(pos_REP_OpTypeRep_Rng));
+      size_t len_dtpl = dtpl.Length();
+      for (size_t idx = 1; (idx <= len_dtpl && !exists); idx++) {
+        exists = FindTypeNameRep(tnr,dtpl[idx]);
+      }
+      return exists;
+    }
+    case TAG_TYPE_REP_PartialFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
+      bool exists = FindTypeNameRep(tnr, tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng));
+      size_t len_dtpl = dtpl.Length();
+      for (size_t idx = 1; (idx <= len_dtpl && !exists); idx++) {
+        exists = FindTypeNameRep(tnr,dtpl[idx]);
+      }
+      return exists;
+    }
+    case TAG_TYPE_REP_TotalFnTypeRep: {
+      const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
+      bool exists = FindTypeNameRep(tnr, tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng));
+      size_t len_dtpl = dtpl.Length();
+      for (size_t idx = 1; (idx <= len_dtpl && !exists); idx++) {
+        exists = FindTypeNameRep(tnr,dtpl[idx]);
+      }
+      return exists;
+    }
+    default: {
+      return false;
+    }
+  }
+}

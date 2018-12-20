@@ -2436,6 +2436,16 @@ Generic vdmcg::CGTypeJudgementExpr(const TYPE_AS_TypeJudgementExpr & tj, const T
   const TYPE_AS_Type & type (tj.GetRecord(pos_AS_TypeJudgementExpr_type));
   const TYPE_CI_ContextId & cid (tj.GetInt(pos_AS_TypeJudgementExpr_cid));
 
+  if (type.Is(TAG_TYPE_AS_TypeName)) {
+    TYPE_REP_TypeNameRep tnr;
+    tnr.Init(type.GetRecord(pos_AS_TypeName_name));
+    if (IsCyclicTypeRep(tnr)) {
+      SEQ<TYPE_CPP_Stmt> rb_l;
+      rb_l.ImpAppend(NotSupported(L"type judgement expression for cyclic type", type));
+      return rb_l;
+    }
+  }
+
   if (!expr.Is(TAG_TYPE_AS_Name)) {
     TYPE_CI_ContextId ecid (GetCI().PushCGType(FindType(expr)));
     TYPE_CPP_Identifier tjTempId (vdm_BC_GiveName(ASTAUX::MkId(L"tjTemp")));

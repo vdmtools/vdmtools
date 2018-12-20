@@ -322,4 +322,6 @@ private:
   static TYPE_AS_Type AddClMod(const TYPE_AS_Type &, const TYPE_AS_Name &, const SET<TYPE_AS_Name> &);
   SEQ<TYPE_CPP_Stmt> MergeStmts (const SEQ<TYPE_CPP_Stmt> & decls, const SEQ<TYPE_CPP_Stmt> & pm);
 
+  bool IsCyclicTypeRep(const TYPE_REP_TypeRep & tp);
+  bool FindTypeNameRep(const TYPE_REP_TypeNameRep & tnr, const TYPE_REP_TypeRep & tp);
 #endif // __mod_aux_h__

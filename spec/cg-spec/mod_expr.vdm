@@ -2306,6 +2306,12 @@ CGTokenConstExpr(mk_AS`TokenConstructorExpr(elem, -), mk_CGMAIN`VT(resVar,-)) ==
 \begin{vdm_al}
 CGTypeJudgementExpr: AS`TypeJudgementExpr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGTypeJudgementExpr(mk_AS`TypeJudgementExpr(expr,type,cid), vt) ==
+ (if is_AS`TypeName(type)
+  then
+    let mk_AS`TypeName(name,-) = type
+    in
+      if CGAUX`IsCyclicTypeRep(mk_REP`TypeNameRep(name))
+      then return [CGAUX`NotSupported("type judgement expression for cyclic type")];
   if not is_AS`Name(expr)
   then
    (def ecid = CI`PushCGType(CGAUX`FindType(expr));
@@ -2322,6 +2328,7 @@ CGTypeJudgementExpr(mk_AS`TypeJudgementExpr(expr,type,cid), vt) ==
     then return CGExpr'(e, vt)
     else return [CGAUX`NotSupported("type judgement expression")];
    );
+  );
 
 ConvertTypeJudgementExprAS: AS`Expr * AS`Type ==> [AS`Expr]
 ConvertTypeJudgementExprAS(expr, tp) ==

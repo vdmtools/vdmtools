@@ -4036,6 +4036,39 @@ MergeStmts(decls,pm) ==
       end;
     return new_decls ^ stmts;
    );
+
+
+IsCyclicTypeRep: REP`TypeRep ==> bool
+IsCyclicTypeRep(tp) ==
+  cases true: 
+    (is_REP`TypeNameRep(tp)) -> FindTypeNameRep(tp, CleanFlatType(tp)),
+    others                   -> return false
+  end;
+    
+functions
+FindTypeNameRep: REP`TypeNameRep * REP`TypeRep -> bool
+FindTypeNameRep(tnr, tp) ==
+  cases tp:
+    mk_REP`TypeNameRep(-)                      -> (tnr = tp),
+    mk_REP`UnionTypeRep(tps)                   -> forall t in set tps & FindTypeNameRep(tnr, t),
+    mk_REP`ProductTypeRep(tpl)                 -> forall t in set elems tpl & FindTypeNameRep(tnr, t),
+    mk_REP`SetTypeRep(elemtp),
+    mk_REP`EmptySetTypeRep(elemtp),
+    mk_REP`SeqTypeRep(elemtp),
+    mk_REP`EmptySeqTypeRep(elemtp)             -> FindTypeNameRep(tnr, elemtp), 
+    mk_REP`GeneralMapTypeRep(mapdom,maprng),
+    mk_REP`InjectiveMapTypeRep(mapdom,maprng),
+    mk_REP`EmptyMapTypeRep(mapdom,maprng)      -> FindTypeNameRep(tnr, mapdom) or
+                                                  FindTypeNameRep(tnr, maprng),
+    mk_REP`InvTypeRep(-,shape,-)               -> FindTypeNameRep(tnr, shape),
+    mk_REP`CompositeTypeRep(-,fields)          -> forall mk_REP`FieldRep(-,t,-) in set elems fields & FindTypeNameRep(tnr, t),
+    mk_REP`OpTypeRep(Dom,Rng)                  -> FindTypeNameRep(tnr, Rng) or
+                                                  forall t in set elems Dom & FindTypeNameRep(tnr, t),
+    mk_REP`PartialFnTypeRep(fndom,fnrng),
+    mk_REP`TotalFnTypeRep(fndom,fnrng)         -> FindTypeNameRep(tnr, fnrng) or
+                                                  forall t in set elems fndom & FindTypeNameRep(tnr, t),
+    others                                     -> false
+  end;
 \end{vdm_al}
 
 \begin{vdm_al}
