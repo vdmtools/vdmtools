@@ -3069,7 +3069,21 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
     {  // C++
       TYPE_CPP_Expr val;
       if(IsTpRecursive(nm, rtp, Set())) {
-        val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
+        if (IsSeqType(rtp)) {
+          val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Sequence"));
+        }
+        else if (IsSetType(rtp)) {
+          val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set"));
+        }
+        else if (IsMapType(rtp)) {
+          val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Map"));
+        }
+        else if (IsCompositeType(rtp)) {
+          val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Record"));
+        }
+        else {
+          val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
+        }
       }
       else {
         val = GenVDMTpName( rtp, (Int) TAG_quote_ANONYM, Set().Insert(GenQName(nm)));

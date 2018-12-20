@@ -2706,7 +2706,16 @@ GenCppTypeDef(nm,tp,acc) ==
 #endif VDMPP
        (dcl val : CPP`Name;
         if IsTpRecursive(nm, rtp, {})
-        then val := BC`GenIdentifier("Generic")
+        then
+          if CGAUX`IsSeqType(rtp)
+          then val := BC`GenIdentifier("Generic")
+          else if CGAUX`IsSetType(rtp)
+          then val := BC`GenIdentifier("Set")
+          else if CGAUX`IsMapType(rtp)
+          then val := BC`GenIdentifier("Map")
+          else if CGAUX`IsCompositeType(rtp)
+          then val := BC`GenIdentifier("Record")
+          else val := BC`GenIdentifier("Generic")
         else val := GenVDMTpName(rtp, <ANONYM>, {GenQName(nm)});
         def tpdef = BC`GenPreDefine(Name2CppTpId(nm), val) 
         in
