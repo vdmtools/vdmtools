@@ -483,15 +483,16 @@ with the name of the current module.
 \begin{vdm_al}
 
 LOT : REP`TypeNameRep ==> [REP`TypeRep]
-LOT(mk_REP`TypeNameRep(nm)) ==
+LOT(tnr) ==
 #ifdef VDMSL
  (
 --
-  if mk_REP`TypeNameRep(nm) in set lottps
-  then return mk_REP`TypeNameRep(nm)
-  else lottps := lottps union {mk_REP`TypeNameRep(nm)};
+  if tnr in set lottps
+  then return tnr
+  else lottps := lottps union {tnr};
 --
-  def qnm = GenQName(nm);
+  def mk_REP`TypeNameRep(nm) = tnr;
+      qnm = GenQName(nm);
       tp = if qnm in set dom known_types
            then known_types(qnm)
            else nil
@@ -501,7 +502,7 @@ LOT(mk_REP`TypeNameRep(nm)) ==
     --return CGAUX`FromAS2RepType(tp)
       def reptp = CGAUX`FromAS2RepType(tp)
       in 
-       (lottps := lottps \ {mk_REP`TypeNameRep(nm)};
+       (lottps := lottps \ {tnr};
         if qnm in set dom invariant_types
         then return mk_REP`InvTypeRep(qnm, reptp, invariant_types(qnm))
         else return reptp)
@@ -511,52 +512,55 @@ LOT(mk_REP`TypeNameRep(nm)) ==
  );
 #endif VDMSL
 #ifdef VDMPP
- (
---
-  if mk_REP`TypeNameRep(nm) in set lottps
-  then if isclassType(nm)
-       then
-         let uqnm = if len nm.ids = 2
-                    then mk_AS`Name(tl nm.ids, nm.cid)
-                    else nm
-         in return mk_REP`ObjRefTypeRep(uqnm)
-       else return mk_REP`TypeNameRep(nm)
-  else lottps := lottps union {mk_REP`TypeNameRep(nm)};
---
-  def qnm = GenQName(nm);
-  --    tp_nm = LOTrec(qnm, {mk_AS`Name([hd qnm.ids], CI`NilContextId)}, {});
+  let mk_REP`TypeNameRep(nm) = tnr
   in
-   (dcl clnm : AS`Name;
-    if len qnm.ids = 2
-    then clnm := mk_AS`Name([hd qnm.ids], CI`NilContextId)
-    else clnm := CGAUX`GiveCurCASName();
-    def tp_nm = LOTrec(qnm, {clnm}, {});
-        tp    = if tp_nm = nil
-                then nil
-                else known_types(tp_nm)
-    in
-      if tp <> nil
-      then
-      --return CGAUX`FromAS2RepType(tp)
-        def reptp = CGAUX`FromAS2RepType(tp)
-        in
-         (lottps := lottps \ {mk_REP`TypeNameRep(nm)};
-          if tp_nm in set dom invariant_types
-          then return mk_REP`InvTypeRep(tp_nm, reptp, invariant_types(tp_nm))
-          else return reptp)
-      elseif isclassType (nm)
+   (
+--
+    if tnr in set lottps
+    then
+      if isclassType(nm)
       then
         let uqnm = if len nm.ids = 2
                    then mk_AS`Name(tl nm.ids, nm.cid)
                    else nm
-        in
-         (lottps := lottps \ {mk_REP`TypeNameRep(nm)};
-          return mk_REP`ObjRefTypeRep (uqnm))
-      else
-       (ReportErrorStmt("Internal error: the type " ^ Name2Id(qnm) ^ " is unknown", nil);
-        error);
+        in return mk_REP`ObjRefTypeRep(uqnm)
+      else return tnr
+    else lottps := lottps union {tnr};
+--
+    def qnm = GenQName(nm);
+    --    tp_nm = LOTrec(qnm, {mk_AS`Name([hd qnm.ids], CI`NilContextId)}, {});
+    in
+     (dcl clnm : AS`Name;
+      if len qnm.ids = 2
+      then clnm := mk_AS`Name([hd qnm.ids], CI`NilContextId)
+      else clnm := CGAUX`GiveCurCASName();
+      def tp_nm = LOTrec(qnm, {clnm}, {});
+          tp    = if tp_nm = nil
+                  then nil
+                  else known_types(tp_nm)
+      in
+        if tp <> nil
+        then
+        --return CGAUX`FromAS2RepType(tp)
+          def reptp = CGAUX`FromAS2RepType(tp)
+          in
+           (lottps := lottps \ {tnr};
+            if tp_nm in set dom invariant_types
+            then return mk_REP`InvTypeRep(tp_nm, reptp, invariant_types(tp_nm))
+            else return reptp)
+        elseif isclassType (nm)
+        then
+          let uqnm = if len nm.ids = 2
+                     then mk_AS`Name(tl nm.ids, nm.cid)
+                     else nm
+          in
+           (lottps := lottps \ {tnr};
+            return mk_REP`ObjRefTypeRep (uqnm))
+        else
+         (ReportErrorStmt("Internal error: the type " ^ Name2Id(qnm) ^ " is unknown", nil);
+          error);
+     );
    );
- );
 #endif VDMPP
 
 #ifdef VDMPP

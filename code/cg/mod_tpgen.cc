@@ -331,8 +331,9 @@ Generic vdmcg::GenQualifiedTypeName(const TYPE_AS_Name & qnm)
   Tuple t (GetStatSem().PublicLookUpTypeName (qnm, GiveCurCASName()));
   const Generic & DefiningClass (t.GetField(2));
 
-  if (DefiningClass.IsNil())
+  if (DefiningClass.IsNil()) {
     return qnm;   // some kind of error
+  }
   else {
     IncludeClass(DefiningClass);
     return ASTAUX::Combine2Names(DefiningClass, qnm);
@@ -497,10 +498,12 @@ TYPE_AS_Type vdmcg::GenQType(const TYPE_AS_Name & mnm, const TYPE_AS_Type & tp)
       res.SetField(pos_AS_OpType_oprng, GenQType(mnm, tp.GetRecord(pos_AS_OpType_oprng)));
       return res;
     }
-    case TAG_TYPE_AS_TypeVar:
+    case TAG_TYPE_AS_TypeVar: {
       return tp;
-    default:
+    }
+    default: {
       ReportError(L"GenQType");
+    }
   }
   return tp; // To keep VC++ happy.
 }
@@ -528,8 +531,7 @@ SEQ<TYPE_AS_Field> vdmcg::GenQFieldSeq(const TYPE_AS_Name & mnm, const SEQ<TYPE_
 {
   SEQ<TYPE_AS_Field> f_l;
   size_t len_fl = fl.Length();
-  for (size_t i = 1; i <= len_fl; i++)
-  {
+  for (size_t i = 1; i <= len_fl; i++) {
     const TYPE_AS_Field & f (fl[i]);
     f_l.ImpAppend(TYPE_AS_Field().Init(f.GetField(pos_AS_Field_sel),
                                        GenQType(mnm, f.GetRecord(pos_AS_Field_type)),
@@ -554,24 +556,21 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
     case TAG_TYPE_REP_SeqTypeRep: {
       return IsTpRecursive(nm, tp.GetRecord(pos_REP_SeqTypeRep_elemtp), names);
     }
-
     case TAG_TYPE_REP_EmptySetTypeRep :
     case TAG_TYPE_REP_EmptySeqTypeRep :
-    case TAG_TYPE_REP_EmptyMapTypeRep :  {
+    case TAG_TYPE_REP_EmptyMapTypeRep : {
       return false;
     }
-
     case TAG_TYPE_REP_CompositeTypeRep : {
       return false;
     }
-
     case TAG_TYPE_REP_UnionTypeRep : {
       SET<TYPE_REP_TypeRep> ts (tp.GetSet(pos_REP_UnionTypeRep_tps));
       bool exists = false;
       Generic t;
       for (bool bb = ts.First(t); bb && !exists; bb = ts.Next(t)) {
         exists = IsTpRecursive(nm, t, names);
-      };
+      }
       return exists;
     }
 
@@ -581,7 +580,7 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
       size_t len_ts = ts.Length();
       for (size_t idx = 1; (idx <= len_ts) && !exists; idx++) {
         exists = IsTpRecursive(nm, ts[idx], names);
-      };
+      }
       return exists;
     }
 
@@ -597,13 +596,13 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
     case TAG_TYPE_REP_TypeNameRep : {
       TYPE_AS_Name n (tp.GetRecord(pos_REP_TypeNameRep_nm));
 
-      if ( n == nm || names.InSet(n) )
+      if ( n == nm || names.InSet(n) ) {
         return true;
-
+      }
       Generic lot_tp (LOT(tp));
-      if (lot_tp.IsNil())
+      if (lot_tp.IsNil()) {
         return false;
-
+      }
       SET<TYPE_AS_Name> res_names (names);
       return IsTpRecursive(nm, lot_tp, res_names.Insert(n));
     }
@@ -615,7 +614,7 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
       size_t len_fndom = fndom.Length();
       for (size_t idx = 1; (idx <= len_fndom) && !exists; idx++) {
         exists = IsTpRecursive(nm, fndom[idx], names);
-      };
+      }
       return exists || IsTpRecursive(nm, fnrng, names);
     }
     case TAG_TYPE_REP_TotalFnTypeRep : {
@@ -625,7 +624,7 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
       size_t len_fndom = fndom.Length();
       for (size_t idx = 1; (idx <= len_fndom) && !exists; idx++) {
         exists = IsTpRecursive(nm, fndom[idx], names);
-      };
+      }
       return exists || IsTpRecursive(nm, fnrng, names);
     }
     case TAG_TYPE_REP_OpTypeRep : {
@@ -635,7 +634,7 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
       size_t len_opdom = opdom.Length();
       for (size_t idx = 1; (idx <= len_opdom) && !exists; idx++) {
         exists = IsTpRecursive(nm, opdom[idx], names);
-      };
+      }
       return exists || IsTpRecursive(nm, oprng, names);
     }
 #ifdef VDMPP
@@ -652,13 +651,12 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
     case TAG_TYPE_REP_UnitTypeRep : {
         return false;
     }
-
     case TAG_TYPE_REP_InvTypeRep: {
       return IsTpRecursive(nm, tp.GetRecord(pos_REP_InvTypeRep_shape), names);
     }
-
-    default:
+    default: {
       vdmcg::ReportUndefined(L"IsTpRecursive");
+    }
   }
   return false; // Should never be reached
 }
@@ -673,10 +671,12 @@ bool vdmcg::IsTpRecursive(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp, 
 TYPE_AS_Id vdmcg::ConcatIds(const TYPE_AS_Ids & il)
 {
   switch(il.Length()) {
-    case 0:
+    case 0: {
       return TYPE_AS_Id();
-    case 1:
+    }
+    case 1: {
       return CleanIdentifier(il.Hd());
+    }
     default: { // il.Length() > 1
       TYPE_AS_Id res (CleanIdentifier(il.Hd()));
       res.ImpConc(ASTAUX::MkId(L"_"));
@@ -703,24 +703,19 @@ Map vdmcg::ModuleTypes2TpEnv(const TYPE_AS_Name & mdnm, const MAP<TYPE_AS_Name,T
   MAP<TYPE_AS_Name,TYPE_AS_Type> res;
   Set dom_tps (tps.Dom());
   Generic id;
-  for (bool bb = dom_tps.First(id); bb; bb = dom_tps.Next(id))
-  {
+  for (bool bb = dom_tps.First(id); bb; bb = dom_tps.Next(id)) {
     TYPE_AS_TypeDef td (tps[id]);
 // /ModuleTypes2TpEnv
 
     res.ImpModify(id, GenQComp(mdnm, td.get_shape()));
 
-// 20110607 -->
     const TYPE_AS_Type & shape (td.GetRecord(pos_AS_TypeDef_shape));
-    if (shape.Is(TAG_TYPE_AS_CompositeType))
-    {
+    if (shape.Is(TAG_TYPE_AS_CompositeType)) {
       const TYPE_AS_Name & tag (shape.GetRecord(pos_AS_CompositeType_name));
-      if (!res.DomExists(tag)) 
-      {
+      if (!res.DomExists(tag)) {
         res.ImpModify(tag, GenQComp(mdnm, shape));
       }
     }
-// <-- 20110607
   }
   return res;
 }
@@ -731,39 +726,55 @@ Map vdmcg::ModuleTypes2TpEnv(const TYPE_AS_Name & mdnm, const MAP<TYPE_AS_Name,T
 TYPE_CPP_Identifier vdmcg::Id2CppGTpId(const TYPE_AS_Id & i)
 {
   wstring str (i.GetString());
-  if (str.compare(L"i") == 0 )
+  if (str.compare(L"i") == 0 ) {
     return GenIntType().get_tp();
-  else if (str.compare(L"b") == 0)
+  }
+  else if (str.compare(L"b") == 0) {
     return GenBoolType().get_tp();
-  else if (str.compare(L"r") == 0)
+  }
+  else if (str.compare(L"r") == 0) {
     return GenRealType().get_tp();
-  else if (str.compare(L"c") == 0)
+  }
+  else if (str.compare(L"c") == 0) {
     return GenCharType().get_tp();
-  else if (str.compare(L"t") == 0)
+  }
+  else if (str.compare(L"t") == 0) {
     return GenTokenType().get_tp();
-  else if (str.compare(L"s") == 0)
+  }
+  else if (str.compare(L"s") == 0) {
     return GenSetType().get_tp();
-  else if (str.compare(L"l") == 0)
+  }
+  else if (str.compare(L"l") == 0) {
     return GenSeq0Type().get_tp();
-  else if (str.compare(L"m") == 0)
+  }
+  else if (str.compare(L"m") == 0) {
     return GenMapType().get_tp();
-  else if (str.compare(L"p") == 0)
+  }
+  else if (str.compare(L"p") == 0) {
     return GenProductType().get_tp();
-  else if (str.compare(L"d") == 0)
+  }
+  else if (str.compare(L"d") == 0) {
     return GenRecordType(Nil()).get_tp();
-  else if (str.compare(L"v") == 0)
+  }
+  else if (str.compare(L"v") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"void"));
-  else if (str.compare(L"n") == 0)
+  }
+  else if (str.compare(L"n") == 0) {
     return GenRealType().get_tp();
-  else if (str.compare(L"F") == 0 )
+  }
+  else if (str.compare(L"F") == 0 ) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
-  else if (str.compare(L"Q") == 0)
+  }
+  else if (str.compare(L"Q") == 0) {
     return GenQuoteType(Nil()).get_tp();
-  else if (str.compare(L"U") == 0)
+  }
+  else if (str.compare(L"U") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
+  }
 #ifdef VDMPP
-  else if (str.compare(L"o") == 0)
+  else if (str.compare(L"o") == 0) {
     return GenObjRefType_DS(Nil()).get_tp();
+  }
 #endif // VDMPP
   //  else if (str.compare(L"US") == 0)
   //    return GenSetType().get_tp();
@@ -771,38 +782,50 @@ TYPE_CPP_Identifier vdmcg::Id2CppGTpId(const TYPE_AS_Id & i)
   //    return GenSeq0Type().get_tp();
   //  else if (str.compare(L"UUM") == 0)
   //    return GenMapType().get_tp();
-  else if (str.compare(L"void") == 0)
+  else if (str.compare(L"void") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"void"));
-  else if (str.compare(L"Set") == 0)
+  }
+  else if (str.compare(L"Set") == 0) {
     return GenSetType().get_tp();
-  else if (str.compare(L"Sequence") == 0)
+  }
+  else if (str.compare(L"Sequence") == 0) {
     return GenSeq0Type().get_tp();
-  else if (str.compare(L"Map") == 0)
+  }
+  else if (str.compare(L"Map") == 0) {
     return GenMapType().get_tp();
-  else if (str.compare(L"Record") == 0)
+  }
+  else if (str.compare(L"Record") == 0) {
     return GenRecordType(Nil()).get_tp();
-  else if (str.compare(L"Tuple") == 0)
+  }
+  else if (str.compare(L"Tuple") == 0) {
     return GenProductType().get_tp();
-  else if (str.compare(L"Generic") == 0)
+  }
+  else if (str.compare(L"Generic") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
+  }
 #ifdef VDMPP
-  else if (str.compare(L"ObjectRef") == 0)
+  else if (str.compare(L"ObjectRef") == 0) {
     return GenObjRefType_DS(Nil()).get_tp();
+  }
 #endif // VDMPP
-  else if (str.compare(L"operation") == 0)
+  else if (str.compare(L"operation") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
-  else if (str.compare(L"typevariable") == 0)
+  }
+  else if (str.compare(L"typevariable") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
-  else if (str.compare(L"function") == 0)
+  }
+  else if (str.compare(L"function") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
+  }
   else if (str[str.size()-1] == L'C' || str[str.size()-1] == L'N') {
     return vdm_BC_GenIdentifier(PrefixModuleType(RemPrefixNum(ASTAUX::MkId(str.substr(0,str.size()-1)))));
   }
   else if (str[str.size()-1] == L'R') {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"type_ref_").ImpConc(RemPrefixNum(ASTAUX::MkId(str.substr(0,str.size()-1)))));
   }
-  else
+  else {
     return vdm_BC_GenIdentifier(PrefixAnonymType(ASTAUX::MkId(str)));
+  }
 }
 
 #ifdef VDMPP
@@ -820,78 +843,109 @@ TYPE_CPP_Identifier vdmcg::Id2JavaGTpId(const TYPE_AS_Id & i)
       return GenIntType().get_tp();
     }
   }
-  else if (str.compare(L"b") == 0)
-    if (get_smalltypes_option())
+  else if (str.compare(L"b") == 0) {
+    if (get_smalltypes_option()) {
       return GenSmallBoolType().get_tp();
-    else
+    }
+    else {
       return GenBoolType().get_tp();
-  else if (str.compare(L"r") == 0)
-    if (get_smalltypes_option())
+    }
+  }
+  else if (str.compare(L"r") == 0) {
+    if (get_smalltypes_option()) {
       return GenSmallRealType().get_tp();
-    else
+    }
+    else {
       return GenRealType().get_tp();
-  else if (str.compare(L"c") == 0)
+    }
+  }
+  else if (str.compare(L"c") == 0) {
     return GenCharType().get_tp();
-  else if (str.compare(L"t") == 0)
+  }
+  else if (str.compare(L"t") == 0) {
     return GenTokenType().get_tp();
-  else if (str.compare(L"s") == 0)
+  }
+  else if (str.compare(L"s") == 0) {
     return GenSetType().get_tp();
-  else if (str.compare(L"l") == 0)
+  }
+  else if (str.compare(L"l") == 0) {
     return GenSeq0Type().get_tp();
-  else if (str.compare(L"m") == 0)
+  }
+  else if (str.compare(L"m") == 0) {
     return GenMapType().get_tp();
-  else if (str.compare(L"p") == 0)
+  }
+  else if (str.compare(L"p") == 0) {
     return GenProductType().get_tp();
-  else if (str.compare(L"d") == 0)
+  }
+  else if (str.compare(L"d") == 0) {
     return GenRecordType(nil).get_tp();
-  else if (str.compare(L"v") == 0)
+  }
+  else if (str.compare(L"v") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"void"));
-  else if (str.compare(L"n") == 0)
+  }
+  else if (str.compare(L"n") == 0) {
     return GenNumType().get_tp();
-  else if (str.compare(L"F") == 0 )
+  }
+  else if (str.compare(L"F") == 0 ) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
-  else if (str.compare(L"Q") == 0)
+  }
+  else if (str.compare(L"Q") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Quote"));
-  else if (str.compare(L"U") == 0)
+  }
+  else if (str.compare(L"U") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
-  else if (str.compare(L"o") == 0)
+  }
+  else if (str.compare(L"o") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
+  }
   //  else if (str.compare(L"US") == 0)
   //    return GenSetType().get_tp();
   //  else if (str.compare(L"UL") == 0)
   //    return GenSeq0Type().get_tp();
   //  else if (str.compare(L"UUM") == 0)
   //    return GenMapType().get_tp();
-  else if (str.compare(L"void") == 0)
+  else if (str.compare(L"void") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"void"));
-  else if (str.compare(L"Set") == 0)
+  }
+  else if (str.compare(L"Set") == 0) {
     return GenSetType().get_tp();
-  else if (str.compare(L"Sequence") == 0)
+  }
+  else if (str.compare(L"Sequence") == 0) {
     return GenSeq0Type().get_tp();
-  else if (str.compare(L"Map") == 0)
+  }
+  else if (str.compare(L"Map") == 0) {
     return GenMapType().get_tp();
-  else if (str.compare(L"Record") == 0)
+  }
+  else if (str.compare(L"Record") == 0) {
     return GenRecordType(nil).get_tp();
-  else if (str.compare(L"Tuple") == 0)
+  }
+  else if (str.compare(L"Tuple") == 0) {
     return GenProductType().get_tp();
-  else if (str.compare(L"Generic") == 0)
+  }
+  else if (str.compare(L"Generic") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
-  else if (str.compare(L"ObjectRef") == 0)
+  }
+  else if (str.compare(L"ObjectRef") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
-  else if (str.compare(L"operation") == 0)
+  }
+  else if (str.compare(L"operation") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
-  else if (str.compare(L"typevariable") == 0)
+  }
+  else if (str.compare(L"typevariable") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
-  else if (str.compare(L"function") == 0)
+  }
+  else if (str.compare(L"function") == 0) {
     return vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"));
+  }
   else if (str[str.size()-1] == L'C') {
     return vdm_BC_GenIdentifier(ReplaceUnderscore(RemPrefixNum(ASTAUX::MkId(str.substr(0,str.size()-1)))));
   }
   else if (str[str.size()-1] == L'R') {
     return vdm_BC_GenIdentifier(RemPrefixNum(ASTAUX::MkId(str.substr(0,str.size()-1))));
   }
-  else
+  else {
     return vdm_BC_GenIdentifier(PrefixAnonymType(ASTAUX::MkId(str)));
+  }
 }
 #endif // VDMPP
 
@@ -918,8 +972,9 @@ TYPE_AS_Id vdmcg::RemPrefixNum(const TYPE_AS_Id & i)
 {
   wstring str (i.GetString());
   unsigned int pos = 0;
-  while (pos < str.size() && str[pos] >= '0' && str[pos] <= '9')
+  while (pos < str.size() && str[pos] >= '0' && str[pos] <= '9') {
     pos++;
+  }
   return ASTAUX::MkId(str.substr(pos,str.size()-pos));
 }
 
@@ -930,8 +985,9 @@ TYPE_AS_Id vdmcg::ReplaceUnderscore(const TYPE_AS_Id & i)
 {
   wstring res (i.GetString());
   unsigned int pos=0;
-  while (pos<res.size() && res[pos] == L'_')
+  while (pos<res.size() && res[pos] == L'_') {
     pos++;
+  }
   pos--;
   res[pos] = L'.';
   return ASTAUX::MkId(res);
@@ -1000,24 +1056,26 @@ TYPE_CPP_Identifier vdmcg::GenModuleTypeTag()
 // ==> AS`Name
 TYPE_AS_Name vdmcg::GenQName(const TYPE_AS_Name& n)
 {
-  if (this->modnm.IsNil())
+  if (this->modnm.IsNil()) {
     ReportError(L"GenQName");
+  }
   else {
 #ifdef VDMSL
     return GenQName2(this->modnm, n);
 #endif //VDMSL
 #ifdef VDMPP
-    if (n.get_ids().Length() == 1)
-    {
-      if (this->known_types.DomExists(ASTAUX::Combine2Names(this->modnm, n)))
+    if (n.get_ids().Length() == 1) {
+      if (this->known_types.DomExists(ASTAUX::Combine2Names(this->modnm, n))) {
         return GenQName2(this->modnm, n);
+      }
       SEQ<TYPE_AS_Name> cs_l (GetOrderedSupers(GiveCurCASName()));
-      if (!cs_l.IsEmpty())
-      {
+      if (!cs_l.IsEmpty()) {
         size_t len_cs_l = cs_l.Length();
-        for (size_t idx = 1; idx <= len_cs_l; idx++)
-          if (this->known_types.DomExists(ASTAUX::Combine2Names(cs_l[idx], n)))
+        for (size_t idx = 1; idx <= len_cs_l; idx++) {
+          if (this->known_types.DomExists(ASTAUX::Combine2Names(cs_l[idx], n))) {
             return GenQName2(cs_l[idx], n);
+          }
+        }
       }
     }
     return n;
@@ -1850,14 +1908,17 @@ TYPE_CPP_FunctionDefinition vdmcg::GenAsciiMethod(const TYPE_CPP_Identifier& cn,
       const TYPE_CPP_Identifier & tag (sl[i]);
       const TYPE_CPP_Name & id (tenv[tag]);
       if (get_smalltypes_option()) {
-        if (id == vdm_BC_GenIdentifier(ASTAUX::MkId(L"char")))
+        if (id == vdm_BC_GenIdentifier(ASTAUX::MkId(L"char"))) {
           expr = vdm_BC_GenPlus(expr, vdm_BC_GenPlus(vdm_BC_GenPlus(vdm_BC_GenStringLit(ASTAUX::MkId(L"'")), tag),
                                                      vdm_BC_GenStringLit(ASTAUX::MkId(L"'"))));
-        else if (basic.InSet(id))
+        }
+        else if (basic.InSet(id)) {
           expr = vdm_BC_GenPlus(expr, tag);
-        else
+        }
+        else {
           expr = vdm_BC_GenPlus(expr, vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.toString")),
                                                         SEQ<TYPE_CPP_Expr>().ImpAppend(tag)));
+        }
       }
       else {
         expr = vdm_BC_GenPlus(expr, vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.toString")),
@@ -2883,10 +2944,12 @@ TYPE_AS_Id vdmcg::GenCppTpDecl(const TYPE_REP_TypeRep & tp, const SET<TYPE_AS_Na
     case TAG_TYPE_REP_UnionTypeRep: {
       // TODO: remove inv
       TYPE_REP_TypeRep ctp (CleanFlatType(tp)); // Optimize Clean ???
-      if (ctp.Is(TAG_TYPE_REP_UnionTypeRep))
+      if (ctp.Is(TAG_TYPE_REP_UnionTypeRep)) {
         return GenUnionType(ctp, tp, names);
-      else
+      }
+      else {
         return GenCppTpDecl(ctp, names);
+      }
       break;
     }
     case TAG_TYPE_REP_ProductTypeRep: {
@@ -2918,18 +2981,22 @@ TYPE_AS_Id vdmcg::GenCppTpDecl(const TYPE_REP_TypeRep & tp, const SET<TYPE_AS_Na
     case TAG_TYPE_REP_TypeNameRep: {
       Generic t (LOT(tp));
 #ifdef VDMPP
-      if (t.Is (TAG_TYPE_REP_ObjRefTypeRep))
+      if (t.Is (TAG_TYPE_REP_ObjRefTypeRep)) {
         return GenCppTpDecl (t, names);
+      }
 #endif // VDMPP
       const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
       if (! t.IsNil() ) {
-        if (IsTpRecursive(GenQName(nm), t, names))
+        if (IsTpRecursive(GenQName(nm), t, names)) {
           return ASTAUX::MkId(L"F");
-        else
+        }
+        else {
           return GenCppTpDecl(t, names);
+        }
       }
-      else
+      else {
         ReportError(L"GenCppDecl");
+      }
       return ASTAUX::MkId(L"");
       break;
     }
@@ -2974,8 +3041,9 @@ TYPE_AS_Id vdmcg::GenCppTpDecl(const TYPE_REP_TypeRep & tp, const SET<TYPE_AS_Na
       const SEQ<TYPE_REP_TypeRep> & tpl (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
       size_t len_tpl = tpl.Length();
       TYPE_AS_Id id;
-      for (size_t idx = 1; idx <= len_tpl; idx++)
+      for (size_t idx = 1; idx <= len_tpl; idx++) {
         GenCppTpDecl(tpl[idx], names);
+      }
       GenCppTpDecl(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), names);
 //  -- whats going on ? id is now overwritten?
       return  ASTAUX::MkId(L"function");
@@ -2985,8 +3053,9 @@ TYPE_AS_Id vdmcg::GenCppTpDecl(const TYPE_REP_TypeRep & tp, const SET<TYPE_AS_Na
       const SEQ<TYPE_REP_TypeRep> & tpl (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
       size_t len_tpl = tpl.Length();
       TYPE_AS_Id id;
-      for (size_t idx = 1; idx <= len_tpl; idx++)
+      for (size_t idx = 1; idx <= len_tpl; idx++) {
         GenCppTpDecl(tpl[idx], names);
+      }
       GenCppTpDecl(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), names);
 //  -- whats going on ? id is now overwritten?
       return ASTAUX::MkId(L"function");
@@ -3004,9 +3073,9 @@ TYPE_AS_Id vdmcg::GenCppTpDecl(const TYPE_REP_TypeRep & tp, const SET<TYPE_AS_Na
     case TAG_TYPE_REP_OpTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_OpTypeRep_Dom));
       size_t len_dtpl = dtpl.Length();
-      for (size_t idx = 1; idx <= len_dtpl; idx++)
+      for (size_t idx = 1; idx <= len_dtpl; idx++) {
         GenCppTpDecl(dtpl[idx], names);
-
+      }
       GenCppTpDecl(tp.GetRecord(pos_REP_OpTypeRep_Rng), names);
 //  -- whats going on ? id is now overwritten?
       return ASTAUX::MkId(L"operation");
@@ -3444,9 +3513,9 @@ TYPE_CPP_Files vdmcg::GenAnonymFiles(const TYPE_AS_Class& md)
   }
 
   //-- declaration of defined module types using #define - can`t be forward declared
-  if (vdm_CPP_isCPP())
+  if (vdm_CPP_isCPP()) {
     code.ImpConc(this->anonym_tpdefs);
-
+  }
   //-- anonym type tag if defs for anonym and module/class types
 // 20150508 -->
   //SEQ<TYPE_CPP_Identifier> glttags (this->anonym_decl);
@@ -3469,8 +3538,7 @@ TYPE_CPP_Files vdmcg::GenAnonymFiles(const TYPE_AS_Class& md)
 //// <-- 20121113
 #endif //VDMPP
   Generic nm;
-  for (bool ee = i_set.First(nm); ee; ee = i_set.Next(nm) )
-  {
+  for (bool ee = i_set.First(nm); ee; ee = i_set.Next(nm) ) {
     TYPE_AS_Id inclSeq (GiveLastName(nm).ImpConc(Anonym_Suffix).ImpConc(ASTAUX::MkId(L".h")));
     code.ImpAppend(vdm_BC_GenInclusion(inclSeq));
   }
@@ -3479,17 +3547,16 @@ TYPE_CPP_Files vdmcg::GenAnonymFiles(const TYPE_AS_Class& md)
   //                           vdm_BC_GenIdentifier(ASTAUX::MkId(L" "))));
 
   size_t len_mod_decl = this->mod_decl.Length();
-  for (size_t idx = 1; idx <= len_mod_decl; idx++)
-  {
+  for (size_t idx = 1; idx <= len_mod_decl; idx++) {
     TYPE_CPP_Identifier deftag (GenTypeTagCppId(this->mod_decl[idx]));
     TYPE_CPP_Expr expr (vdm_BC_GenBracketedExpr(vdm_BC_GenPlus(GenModuleTypeTag(), new_tag())));
     code.ImpConc(GenIfNotDef(deftag, expr));
   }
 
   //-- anonym declaration
-  if (vdm_CPP_isCPP())
+  if (vdm_CPP_isCPP()) {
     code.ImpConc(this->anonym_tpdecl);
-
+  }
   TYPE_AS_Id mdSeq (GiveLastName(md.get_nm()));
   mdSeq.ImpConc(Anonym_Suffix);
   mdSeq.ImpConc(ASTAUX::MkId(L".h"));
@@ -3536,8 +3603,7 @@ TYPE_CPP_Files vdmcg::GenAnonymFiles(const TYPE_AS_Class& md)
 //  for (bool ii = this->quotes_l.First(q); ii; ii = this->quotes_l.Next(q)) {
 //    code.ImpConc(GenTypeDefIfDef(q, GenQuoteDef(q)));
 //  }
-  for (size_t idx2 = 1; idx2 <= len_quotes_l; idx2++)
-  {
+  for (size_t idx2 = 1; idx2 <= len_quotes_l; idx2++) {
     code.ImpConc(GenTypeDefIfDef(this->quotes_l[idx2], GenQuoteDef(this->quotes_l[idx2])));
   }
 

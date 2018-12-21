@@ -3430,28 +3430,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_MultBind> & bind (pat.GetSequence(pos_AS_LetBeSTExpr_lhs));
       const Generic & St (pat.GetField(pos_AS_LetBeSTExpr_St));
       const TYPE_AS_Expr & In (pat.GetRecord(pos_AS_LetBeSTExpr_In));
-/*  
-      SET<TYPE_AS_Name> localbind(lb);
-      TYPE_AS_Bind newbind;
-  
-      switch(bind.GetTag()) {
-        case TAG_TYPE_AS_TypeBind: {
-          newbind = bind;
-          break;
-        }
-        case TAG_TYPE_AS_SetBind: {
-          const TYPE_AS_Pattern & sb_pat (bind.GetRecord(pos_AS_SetBind_pat));
-          const TYPE_AS_Expr & Set1 (bind.GetRecord(pos_AS_SetBind_Set));
-          SET<TYPE_AS_Name> pnms (FindPatternId(sb_pat).Dom());
-          
-          TYPE_AS_SetBind new_sb (bind);
-          new_sb.SetField(pos_AS_SetBind_Set, QuotePMExprWithClNm(Set1, clnm, localbind));
-          newbind = new_sb;
-          localbind.ImpUnion(pnms);
-          break;
-        }
-      }
-*/
 
       SET<TYPE_AS_Name> localbind (lb);
       SEQ<TYPE_AS_MultBind> newbind;
@@ -3659,7 +3637,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
         default:
           break;
       }
-
       TYPE_AS_IotaExpr ie (pat);
       ie.SetField(pos_AS_IotaExpr_bind, new_bind);
       ie.SetField(pos_AS_IotaExpr_pred, QuotePMExprWithClNm(pred, clnm, local_bind));
@@ -3671,7 +3648,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       size_t len_els = els.Length();
       for (size_t i = 1; i <= len_els; i++) {
         newels.ImpAppend(QuotePMExprWithClNm(els[i], clnm, lb));
-      };
+      }
       TYPE_AS_SetEnumerationExpr see (pat);
       see.SetField(pos_AS_SetEnumerationExpr_els, newels);
       return see;
@@ -3728,8 +3705,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       size_t len_els = els.Length();
       for (size_t i = 1; i <= len_els; i++) {
         newels.ImpAppend(QuotePMExprWithClNm(els[i], clnm, lb));
-      };
-  
+      }
       TYPE_AS_SeqEnumerationExpr see (pat);
       see.SetField(pos_AS_SeqEnumerationExpr_els, newels);
       return see;
@@ -3800,8 +3776,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> local_bind (lb);
       SEQ<TYPE_AS_MultBind> new_bind_l;
       size_t len_bind = bind.Length(); 
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & mb (bind[idx]);
         switch(mb.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -3867,7 +3842,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i <= len_fields; i++) {
         newfields.ImpAppend(QuotePMExprWithClNm(fields[i], clnm, lb));
       }
-
       TYPE_AS_RecordConstructorExpr rce (pat);
       rce.SetField(pos_AS_RecordConstructorExpr_tag,
                    QuotePMExprWithClNm(pat.GetRecord(pos_AS_RecordConstructorExpr_tag), clnm, Set()));
@@ -3918,7 +3892,6 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
       for (size_t i = 1; i <= len_arg; i++) {
         new_arg.ImpAppend(QuotePMExprWithClNm(arg[i], clnm, lb));
       }
-
       TYPE_AS_ApplyExpr ae (pat);
       ae.SetField(pos_AS_ApplyExpr_fct,
                   QuotePMExprWithClNm(pat.GetRecord(pos_AS_ApplyExpr_fct), clnm, lb));
@@ -4019,8 +3992,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
     case TAG_TYPE_AS_PatternName: {
       TYPE_AS_PatternName pm (pat);
       const Generic & gnm (pm.GetField(pos_AS_PatternName_nm) );  // [Name] | OldName
-      if (gnm.IsNil())
+      if (gnm.IsNil()) {
         return pat;
+      }
       Record nm(gnm); 
       TYPE_AS_Ids ids (nm.GetField(1));
       TYPE_AS_Id id (ids[1]);
@@ -4039,9 +4013,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       SEQ<TYPE_AS_Pattern> newElems;
       size_t len_elems = elems.Length();
-      for (size_t idx = 1; idx <= len_elems; idx++)
+      for (size_t idx = 1; idx <= len_elems; idx++) {
         newElems.ImpAppend(QuotePMExprWithTemp(elems[idx], clnm, lb));
-
+      }
       TYPE_AS_SetEnumPattern sep (pat);
       sep.SetField(pos_AS_SetEnumPattern_Elems, newElems);
       return sep;
@@ -4058,9 +4032,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Pattern> & els (pat.GetSequence(pos_AS_SeqEnumPattern_els));
       SEQ<TYPE_AS_Pattern> new_els;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         new_els.ImpAppend(QuotePMExprWithTemp(els[idx], clnm, lb));
-
+      }
       TYPE_AS_SeqEnumPattern sep(pat);
       sep.SetField(pos_AS_SeqEnumPattern_els, new_els);
       return sep;
@@ -4102,9 +4076,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Pattern> & fields (pat.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_AS_Pattern> newfields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         newfields.ImpAppend(QuotePMExprWithTemp(fields[idx], clnm, lb));
-
+      }
       TYPE_AS_TuplePattern tp (pat);
       tp.SetField(pos_AS_TuplePattern_fields, newfields);
       return tp;
@@ -4114,9 +4088,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Pattern> & fields (pat.GetSequence(pos_AS_RecordPattern_fields));
       SEQ<TYPE_AS_Pattern> newfields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         newfields.ImpAppend(QuotePMExprWithTemp(fields[idx], clnm, lb));
-
+      }
       TYPE_AS_RecordPattern rp (pat);
       rp.SetField(pos_AS_RecordPattern_nm, QuotePMExprWithTemp(nm, clnm, lb));
       rp.SetField(pos_AS_RecordPattern_fields, newfields);
@@ -4151,8 +4125,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> localbind (lb);
       type_dd2PL local_def;
       size_t len_def_l = def_l.Length();
-      for (size_t idx = 1; idx <= len_def_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_def_l; idx++) {
         type_dd2P as_def (def_l[idx]);
         const TYPE_AS_PatternBind & p (as_def.GetField(1));
         const TYPE_AS_Expr & e (as_def.GetField(2));
@@ -4173,8 +4146,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> localbind (lb);
       SEQ<TYPE_AS_LocalDef> local_def;
       size_t len_locdef = locdef.Length();
-      for (size_t idx = 1; idx <= len_locdef; idx++)
-      {
+      for (size_t idx = 1; idx <= len_locdef; idx++) {
         const TYPE_AS_LocalDef & as_localdef (locdef[idx]);
         switch(as_localdef.GetTag()) {
           case TAG_TYPE_AS_ExplFnDef:
@@ -4205,33 +4177,10 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const Generic & St        (pat.GetField(pos_AS_LetBeSTExpr_St));
       const TYPE_AS_Expr & In   (pat.GetRecord(pos_AS_LetBeSTExpr_In));
   
-/*
-      SET<TYPE_AS_Name> localbind (lb);
-      TYPE_AS_Bind newbind;
-      switch(bind.GetTag()) {
-        case TAG_TYPE_AS_TypeBind: {
-          newbind = bind;
-          break;
-        }
-        case TAG_TYPE_AS_SetBind: {
-          const TYPE_AS_Pattern & sbpat (bind.GetRecord(pos_AS_SetBind_pat));
-          const TYPE_AS_Expr & Set1 (bind.GetRecord(pos_AS_SetBind_Set));
-          SET<TYPE_AS_Name> pnms (FindPatternId(sbpat).Dom());
-          TYPE_AS_SetBind sb (bind);
-          sb.SetField(pos_AS_SetBind_Set, QuotePMExprWithTemp(Set1, clnm, localbind));
-          newbind = sb;
-          localbind.ImpUnion(pnms);
-          break;
-        }
-        default:
-          break;
-      }
-*/
       SET<TYPE_AS_Name> localbind (lb);
       SEQ<TYPE_AS_MultBind> newbind;
       size_t len_bind = bind.Length();
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & b (bind[idx]);
         switch(b.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -4240,9 +4189,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
             SET<TYPE_AS_Name> pnms;
             size_t len_pat_l = pat_l.Length();
-            for (size_t i = 1; i <= len_pat_l; i++)
+            for (size_t i = 1; i <= len_pat_l; i++) {
               pnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
-  
+            } 
             localbind.ImpUnion(pnms);
 
             TYPE_AS_MultSetBind msb (b);
@@ -4256,7 +4205,6 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
           }
         }
       }
-  
       TYPE_AS_LetBeSTExpr lbe (pat);
       lbe.SetField(pos_AS_LetBeSTExpr_lhs, newbind);
       lbe.SetField(pos_AS_LetBeSTExpr_St, QuotePMExprWithTemp(St, clnm, localbind));
@@ -4271,8 +4219,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_ElseifExpr> newelsif;
       size_t len_elsif = elsif.Length();
-      for (size_t idx = 1; idx <= len_elsif; idx++)
-      {
+      for (size_t idx = 1; idx <= len_elsif; idx++) {
         TYPE_AS_ElseifExpr eie (elsif[idx]);
         const TYPE_AS_Expr & else_test (eie.GetRecord(pos_AS_ElseifExpr_test));
         const TYPE_AS_Expr & else_cons (eie.GetRecord(pos_AS_ElseifExpr_cons));
@@ -4294,15 +4241,13 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_CaseAltn> newaltns;
       size_t len_altns = altns.Length();
-      for (size_t idx = 1; idx <= len_altns; idx++)
-      {
+      for (size_t idx = 1; idx <= len_altns; idx++) {
         TYPE_AS_CaseAltn ca (altns[idx]);
         const SEQ<TYPE_AS_Pattern> & match (ca.GetSequence(pos_AS_CaseAltn_match));
         const TYPE_AS_Expr & body (ca.GetRecord(pos_AS_CaseAltn_body));
         Set pnms;
         size_t len_match = match.Length();
-        for (size_t i = 1; i <= len_match; i++)
-        {
+        for (size_t i = 1; i <= len_match; i++) {
           SET<TYPE_AS_Name> p_nms (FindPatternId(match[i]).Dom());
           pnms.ImpUnion(p_nms);
         }
@@ -4311,7 +4256,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       }
       TYPE_AS_CasesExpr ce (pat);
       ce.SetField(pos_AS_CasesExpr_sel, QuotePMExprWithTemp(sel, clnm, lb));
-      ce.SetField(pos_AS_CasesExpr_altns, newaltns);  // 20070208
+      ce.SetField(pos_AS_CasesExpr_altns, newaltns);
       ce.SetField(pos_AS_CasesExpr_Others, QuotePMExprWithTemp(Others, clnm, lb));
       return ce;
     }
@@ -4334,8 +4279,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> local_bind (lb);
       SEQ<TYPE_AS_MultBind> new_bind_l;
       size_t len_bind = bind.Length();
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & b (bind[idx]);
         switch(b.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -4344,9 +4288,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
             SET<TYPE_AS_Name> pnms;
             size_t len_pat_l = pat_l.Length();
-            for (size_t i = 1; i <= len_pat_l; i++)
+            for (size_t i = 1; i <= len_pat_l; i++) {
               pnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
-  
+            } 
             local_bind.ImpUnion(pnms);
 
             TYPE_AS_MultSetBind msb (b);
@@ -4387,8 +4331,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
           new_bind = sb;
           break;
         }
-        default:
+        default: {
           break;
+        }
       }
       TYPE_AS_ExistsUniqueExpr eue (pat);
       eue.SetField(pos_AS_ExistsUniqueExpr_bind, new_bind);
@@ -4417,8 +4362,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
           new_bind = sb;
           break;
         }
-        default:
+        default: {
           break;
+        }
       }
       TYPE_AS_IotaExpr ie (pat);
       ie.SetField(pos_AS_IotaExpr_bind, new_bind);
@@ -4430,9 +4376,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_Expr> newels;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         newels.ImpAppend(QuotePMExprWithTemp(els[idx], clnm, lb));
-  
+      } 
       TYPE_AS_SetEnumerationExpr see (pat);
       see.SetField(pos_AS_SetEnumerationExpr_els, newels);
       return see;
@@ -4445,8 +4391,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> local_bind(lb);
       SEQ<TYPE_AS_MultBind> new_bind_l;
       size_t len_bind = bind.Length();
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & b (bind[idx]);
         switch(b.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -4455,9 +4400,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
             SET<TYPE_AS_Name> pnms;
             size_t len_pat_l = pat_l.Length();
-            for (size_t i = 1; i <= len_pat_l; i++)
+            for (size_t i = 1; i <= len_pat_l; i++) {
               pnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
-
+            }
             local_bind.ImpUnion(pnms);
             TYPE_AS_MultSetBind msb (b);
             msb.SetField(pos_AS_MultSetBind_Set, QuotePMExprWithTemp(Set1, clnm, lb));
@@ -4486,9 +4431,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Expr> & els (pat.GetSequence(pos_AS_SeqEnumerationExpr_els));
       SEQ<TYPE_AS_Expr> newels;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
+      for (size_t idx = 1; idx <= len_els; idx++) {
         newels.ImpAppend(QuotePMExprWithTemp(els[idx], clnm, lb));
-  
+      } 
       TYPE_AS_SeqEnumerationExpr see (pat);
       see.SetField(pos_AS_SeqEnumerationExpr_els, newels);
       return see;
@@ -4536,8 +4481,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_Maplet> newels;
       size_t len_els = els.Length();
-      for (size_t idx = 1; idx <= len_els; idx++)
-      {
+      for (size_t idx = 1; idx <= len_els; idx++) {
         TYPE_AS_Maplet ml (els[idx]);
         ml.SetField(pos_AS_Maplet_mapdom, QuotePMExprWithTemp(ml.GetRecord(pos_AS_Maplet_mapdom), clnm, lb));
         ml.SetField(pos_AS_Maplet_maprng, QuotePMExprWithTemp(ml.GetRecord(pos_AS_Maplet_maprng), clnm, lb));
@@ -4558,8 +4502,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       SET<TYPE_AS_Name> local_bind(lb);
       SEQ<TYPE_AS_MultBind> new_bind_l;
       size_t len_bind = bind.Length(); 
-      for (size_t idx = 1; idx <= len_bind; idx++)
-      {
+      for (size_t idx = 1; idx <= len_bind; idx++) {
         const TYPE_AS_MultBind & b (bind[idx]);
         switch(b.GetTag()) {
           case TAG_TYPE_AS_MultSetBind: {
@@ -4568,9 +4511,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
             SET<TYPE_AS_Name> pnms;
             size_t len_pat_l = pat_l.Length();
-            for (size_t i = 1; i <= len_pat_l; i++)
+            for (size_t i = 1; i <= len_pat_l; i++) {
               pnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
-
+            }
             local_bind.ImpUnion(pnms);
             TYPE_AS_MultSetBind msb (b);
             msb.SetField(pos_AS_MultSetBind_Set, QuotePMExprWithTemp(Set1, clnm, lb));
@@ -4598,9 +4541,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_Expr> newfields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         newfields.ImpAppend(QuotePMExprWithTemp(fields[idx], clnm, lb));
-
+      }
       TYPE_AS_TupleConstructorExpr tce (pat);
       tce.SetField(pos_AS_TupleConstructorExpr_fields, newfields);
       return tce;
@@ -4615,9 +4558,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Expr> & fields (pat.GetSequence(pos_AS_RecordConstructorExpr_fields));
       SEQ<TYPE_AS_Expr> newfields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         newfields.ImpAppend(QuotePMExprWithTemp(fields[idx], clnm, lb));
-
+      }
       TYPE_AS_RecordConstructorExpr rce (pat);
       rce.SetField(pos_AS_RecordConstructorExpr_tag,
                    QuotePMExprWithTemp(pat.GetRecord(pos_AS_RecordConstructorExpr_tag), clnm, Set()));
@@ -4631,8 +4574,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
   
       SEQ<TYPE_AS_RecordModification> newmodifiers;
       size_t len_modifiers = modifiers.Length();
-      for (size_t idx = 1; idx <= len_modifiers; idx++)
-      {
+      for (size_t idx = 1; idx <= len_modifiers; idx++) {
         const TYPE_AS_RecordModification & rm (modifiers[idx]);
         const TYPE_AS_Expr & nexpr (rm.GetRecord(pos_AS_RecordModification_newexpr));
         TYPE_AS_RecordModification newrm (rm);
@@ -4666,8 +4608,7 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
       const SEQ<TYPE_AS_Expr> & arg (pat.GetSequence(pos_AS_ApplyExpr_arg));
       SEQ<TYPE_AS_Expr> new_arg;
       size_t len_arg = arg.Length();
-      for (size_t idx = 1; idx <= len_arg; idx++)
-      {
+      for (size_t idx = 1; idx <= len_arg; idx++) {
         new_arg.ImpAppend(QuotePMExprWithTemp(arg[idx], clnm, lb));
       }
       TYPE_AS_ApplyExpr ae (pat);
@@ -4750,8 +4691,9 @@ Generic vdmcg::QuotePMExprWithTemp(const Generic & patg, const TYPE_AS_Name & cl
         return ASTAUX::Combine2Names(clnm, nm);
       }
     }
-    default :
+    default : {
       return pat;
+    }
   }
 }
 
@@ -4896,8 +4838,9 @@ SET<TYPE_AS_Name> vdmcg::FindAllNamesInPatternBind(const TYPE_AS_PatternBind & p
       const TYPE_AS_Pattern & pat (pb.GetRecord(pos_AS_TypeBind_pat));
       return FindPatternId(pat).Dom();
     }
-    default:
+    default: {
       return FindPatternId(pb).Dom();
+    }
   }
 }
 
@@ -4997,8 +4940,7 @@ bool vdmcg::InsertNamesinEnv_CGAUX(const Set & nms)
 {
   Set nms_q(nms);
   Generic elm;
-  for (bool bb = nms_q.First(elm); bb; bb = nms_q.Next(elm))
-  {
+  for (bool bb = nms_q.First(elm); bb; bb = nms_q.Next(elm)) {
     InsertName_CGAUX(elm);
   }
   return true;
@@ -5024,18 +4966,18 @@ TYPE_AS_Name vdmcg::InsertName_CGAUX(const Record & nm)
   Map blk (this->nametab.Hd());
 
   Tuple fn (FindName(nm)); // bool * int * nat
-  const Bool & exist (fn.GetBool(1));
-  const Int & level (fn.GetInt(2));
-  const Int & lastnum (fn.GetInt(3));
+  bool exist (fn.GetBoolValue(1));
+  int level (fn.GetIntValue(2));
+  int lastnum (fn.GetIntValue(3));
 
-  if ((exist.GetValue()) && (level.GetValue() == 0))
-    blk = blk;
-  else
-    if (exist.GetValue())
-      blk.Insert(nm, mk_(nm, Int(lastnum.GetValue()+1)));
-    else
-      blk.Insert(nm, mk_(nm, Int(0)));
-
+  if (exist) {
+    if (level != 0) {
+      blk.Insert(nm, mk_(nm, Int(lastnum + 1)));
+    }
+  }
+  else {
+    blk.Insert(nm, mk_(nm, Int(0)));
+  }
   this->nametab.ImpTl();
   this->nametab.ImpPrepend(blk);
   return nm;
@@ -5055,30 +4997,29 @@ TYPE_AS_Name vdmcg::InsertGlobalName(const TYPE_AS_Name & nm)
 // ==> bool * int * nat
 Tuple vdmcg::FindName(const Record & nm)
 {
-  Int level = 0;
+  int level = 0;
   size_t len_nametab = this->nametab.Length();
-  for (size_t idx = 1; idx <= len_nametab; idx++)
-  {
+  for (size_t idx = 1; idx <= len_nametab; idx++) {
     Map blkenv (this->nametab[idx]);
-    if (blkenv.DomExists(nm))        // map AS`Name to (AS`Name * nat)
-    {
+    if (blkenv.DomExists(nm)) {      // map AS`Name to (AS`Name * nat)
       Tuple blk (blkenv[nm]);        // (AS`Name * nat)
 //      const TYPE_AS_Name & name (blk.GetRecord(1));
       const Int & num (blk.GetInt(2));
-      return mk_(Bool(true), level, num);
+      return mk_(Bool(true), Int(level), num);
     }
-    else
-      level = level + Int(1);
+    else {
+      level = level + 1;
+    }
   }
-  if (this->globalenv.DomExists(nm))       // map AS`Name to (AS`Name * nat)
-  {
+  if (this->globalenv.DomExists(nm)) {     // map AS`Name to (AS`Name * nat)
     Tuple glb (this->globalenv[nm]);       // (AS`Name * nat)
 //    const TYPE_AS_Name & name (glb.GetRecord(1));   
     const Int & num (glb.GetInt(2));
     return mk_(Bool(true), Int(-1), num);
   }
-  else
+  else {
     return mk_(Bool(false), Int(-1), Int(0));
+  }
 }
 
 // FindScope
@@ -5087,8 +5028,7 @@ Tuple vdmcg::FindName(const Record & nm)
 Int vdmcg::FindScope(const Record & nm)
 {
   size_t len_nametab = this->nametab.Length();
-  for (size_t idx = 1; idx <= len_nametab; idx++)
-  {
+  for (size_t idx = 1; idx <= len_nametab; idx++) {
     Map blkenv (this->nametab[idx]);        // map AS`Name to (AS`Name * nat)
     if (blkenv.DomExists(nm)) {
       Tuple blk (blkenv[nm]);   // (AS`Name * nat)
@@ -5099,8 +5039,9 @@ Int vdmcg::FindScope(const Record & nm)
     Tuple glb (this->globalenv[nm]);   // (AS`Name * nat)
     return (glb.GetInt(2));
   }
-  else
+  else {
     return Int(-2);
+  }
 }
 
 #ifdef VDMPP
@@ -5117,9 +5058,9 @@ void vdmcg::IncludeClass(const TYPE_AS_Name& nm)
 SEQ<TYPE_CPP_Preprocessor> vdmcg::GenClassIncls()
 {
   Set nm_s (this->c_s);
-  if (nm_s.InSet (this->cc))
+  if (nm_s.InSet (this->cc)) {
     nm_s.RemElem(this->cc);
-
+  }
   SEQ<TYPE_CPP_Preprocessor> pp;
   Generic nm;
   for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {

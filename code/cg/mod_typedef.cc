@@ -334,8 +334,9 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenVDMLibInit(const TYPE_AS_Name & mnm,
   for (bool bb = dom_type_m.First(nm); bb; bb = dom_type_m.Next(nm) ) {
     TYPE_AS_TypeDef td (type_m[nm]);
     const TYPE_AS_Type & type (td.GetRecord(pos_AS_TypeDef_shape));
-    if (type.Is(TAG_TYPE_AS_CompositeType))
+    if (type.Is(TAG_TYPE_AS_CompositeType)) {
       type_s.Insert(type);
+    }
   }
   if ( !sd.IsNil() ) {
     type_s.Insert( Record(sd).GetRecord(pos_AS_StateDef_tp) );
@@ -343,8 +344,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenVDMLibInit(const TYPE_AS_Name & mnm,
 
   SEQ<TYPE_CPP_Stmt> body;
   Generic tpg;
-  for (bool cc = type_s.First(tpg); cc; cc = type_s.Next(tpg) )
-  {
+  for (bool cc = type_s.First(tpg); cc; cc = type_s.Next(tpg) ) {
     TYPE_AS_CompositeType type(tpg);
     const TYPE_AS_Name & name (type.GetRecord(pos_AS_CompositeType_name));
     const SEQ<TYPE_AS_Field> & field_l (type.GetSequence(pos_AS_CompositeType_fields));
@@ -358,17 +358,20 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenVDMLibInit(const TYPE_AS_Name & mnm,
     //                    field_l(no).dc ]
     size_t len (field_l.Length());
     for (size_t no = 1; no <= len; no++ ) {
-      if ( field_l[no].get_dc().GetValue() )
+      if ( field_l[no].get_dc().GetValue() ) {
         body.ImpAppend(GenSetDontCare(tag, no));
+      }
     }
     body.ImpAppend(GenSetRecordTag(tag, name, mnm));
   }
 
-  if ( body.IsEmpty() )
+  if ( body.IsEmpty() ) {
     return SEQ<TYPE_CPP_FunctionDefinition>();
-  else
+  }
+  else {
     return SEQ<TYPE_CPP_FunctionDefinition>().ImpAppend(vdm_BC_GenFctDef( ds_l, fdecl, Nil(),
                                                                          vdm_BC_GenBlock(body)));
+  }
 }
 #endif //VDMSL
 
