@@ -22,6 +22,36 @@
 // }}}
 
 // {{{ CompileMultBindL
+// CompileBind
+// bind : AS`Bind
+// part : PAT`PARTITION
+// +> STKM`SubProgram
+TYPE_STKM_SubProgram StackCompiler::CompileBind(const TYPE_AS_Bind & bind,
+                                                const TYPE_PAT_PARTITION & part)
+{
+  TYPE_STKM_SubProgram sp;
+  switch(bind.GetTag()) {
+    case TAG_TYPE_AS_TypeBind: {
+      const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_TypeBind_pat));
+      const TYPE_AS_Type & tp     (pat.GetRecord(pos_AS_TypeBind_tp));
+
+      sp.ImpAppend(TYPE_INSTRTP_TPTOSET().Init(tp));
+      sp.ImpConc(P2I(pat));
+      break;
+    }
+    case TAG_TYPE_AS_SetBind: {
+      const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_SetBind_pat));
+      const TYPE_AS_Expr & set_e  (bind.GetRecord(pos_AS_SetBind_Set));
+
+      sp.ImpConc(E2I(set_e));
+      sp.ImpConc(P2I(pat));
+      break;
+    }
+  }
+  sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(1), part));
+  return sp;
+}
+
 // CompileMultBindL
 // bind_l : AS`BindList
 // part : PAT`PARTITION

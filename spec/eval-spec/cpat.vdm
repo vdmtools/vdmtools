@@ -39,6 +39,7 @@ exports
   functions
     P2E: AS`Pattern -> AS`Expr
   operations
+    CompileBind: AS`Bind * PAT`PARTITION ==> STKM`SubProgram;
     CompileMultBindL: AS`BindList * PAT`PARTITION ==> STKM`SubProgram;
     PL2PL: seq of AS`Pattern ==> seq of STKM`Pattern;
     P2P: AS`Pattern ==> STKM`Pattern;
@@ -75,6 +76,16 @@ operations
     in
       return sp_val ^ sp_pat ^ [mk_INSTRTP`MULTBINDL(len p_l, part)];
    );
+
+  CompileBind: AS`Bind * PAT`PARTITION ==> STKM`SubProgram
+  CompileBind(bind,part) ==
+    cases bind:
+      mk_AS`TypeBind(pat,tp,-) -> return [ mk_INSTRTP`TPTOSET(tp) ] ^ P2I(pat)
+                                     ^ [mk_INSTRTP`MULTBINDL(1, part)],
+      mk_AS`SetBind(pat,Set,-) -> return CEXPR`E2I(Set) ^ P2I(pat) 
+                                     ^ [mk_INSTRTP`MULTBINDL(1, part)],
+      others -> error
+    end;
 
   PB2I: AS`PatternBind ==> STKM`SubProgram
   PB2I(pb) ==

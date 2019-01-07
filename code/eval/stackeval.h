@@ -1708,7 +1708,7 @@ public:
   void ExeSETCONS(const Int & length);
   void ExeSEQCONS(const Int & length);
   void ExeMAPCONS(const Int & length);
-  void ExeSEQCOMPBIND(const Bool & isSet);
+  void ExeSEQCOMPBIND(const Bool & isSeq);
   void ExeSEQFOR();
   SET<TYPE_AS_Name> NameInPattern(const TYPE_STKM_Pattern & pat);
   void ExeSEQMAPOVER();

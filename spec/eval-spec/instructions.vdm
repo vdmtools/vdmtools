@@ -1813,11 +1813,17 @@ pre STKM`LenES(1) and
 
 \begin{vdm_al}
   ExeSEQCOMPBIND: bool ==> ()
-  ExeSEQCOMPBIND(isSet) ==
+  ExeSEQCOMPBIND(isSeq) ==
     def [pat,val_v] = STKM`Pop(2)
     in
-      if isSet
+      if isSeq
       then
+        cases false:
+          (is_SEM`SEQ(val_v))        -> RTERR`Error(RTERR`SEQ_EXPECTED, val_v, nil, []),
+          others                     -> (STKM`Push(pat);
+                                         STKM`Push(val_v.v))
+        end
+      else
         cases false:
           (is_STKM`PatternName(pat)) -> RTERR`Error(RTERR`PAT_NAME_IN_SEQCOMP, nil, nil, []),
           (is_SEM`SET(val_v))        -> RTERR`Error(RTERR`SET_EXPECTED, val_v, nil, []),
@@ -1826,12 +1832,6 @@ pre STKM`LenES(1) and
                                               STKM`Push(AUX`SetToSeq(val_v.v)))
                                         else RTERR`Error(RTERR`NUMERIC_SET, val_v, nil, [])
           end
-      else
-        cases false:
-          (is_SEM`SEQ(val_v))        -> RTERR`Error(RTERR`SEQ_EXPECTED, val_v, nil, []),
-          others                     -> (STKM`Push(pat);
-                                         STKM`Push(val_v.v))
-        end
   pre STKM`LenES(2) and
     def [val_v,pat] = STKM`GetES(2)
     in SEM`IsSemVal(val_v) and STKM`IsPat(pat);

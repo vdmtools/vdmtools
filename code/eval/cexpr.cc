@@ -754,11 +754,12 @@ TYPE_STKM_SubProgram StackCompiler::CompileAllOrExistsExpr(const TYPE_AS_AllOrEx
 TYPE_STKM_SubProgram StackCompiler::CompileEUandICommon(const TYPE_AS_Bind & bind, const TYPE_AS_Expr & expr)
 {
   // bind_l
-  SEQ<TYPE_AS_MultBind> bind_l (ASTAUX::BindToBindList(bind));
+//  SEQ<TYPE_AS_MultBind> bind_l (ASTAUX::BindToBindList(bind));
   
   // prep_instr
   TYPE_STKM_SubProgram prep_instr;
-  prep_instr.ImpConc(CompileMultBindL(bind_l, Int(DO_PARTITION)))
+//  prep_instr.ImpConc(CompileMultBindL(bind_l, Int(DO_PARTITION)))
+  prep_instr.ImpConc(CompileBind(bind, Int(DO_PARTITION)))
             .ImpAppend(TYPE_INSTRTP_PUSH().Init(Set()));
 
   // pred_instr
@@ -1412,13 +1413,13 @@ TYPE_STKM_SubProgram StackCompiler::CompileSeqComprehensionExpr(const TYPE_AS_Se
         // Note : same element will be igored.
         prep_instr.ImpConc(P2I(TYPE_AS_PatternName().Init(elem, Nil(), elem.GetInt(pos_AS_Name_cid))))
                   .ImpConc(E2I(sce))
-                  .ImpAppend(TYPE_INSTRTP_SEQCOMPBIND().Init(Bool(true)))
+                  .ImpAppend(TYPE_INSTRTP_SEQCOMPBIND().Init(Bool(false)))
                   .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_SEQ(SEQ<TYPE_SEM_VAL>())));
       }
       else {
         prep_instr.ImpConc(P2I(pat))
                   .ImpConc(E2I(set_e))
-                  .ImpAppend(TYPE_INSTRTP_SEQCOMPBIND().Init(Bool(true)))
+                  .ImpAppend(TYPE_INSTRTP_SEQCOMPBIND().Init(Bool(false)))
                   .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_SEQ(SEQ<TYPE_SEM_VAL>())));
       }
       break;
@@ -1429,7 +1430,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileSeqComprehensionExpr(const TYPE_AS_Se
       const TYPE_AS_Expr & seq_e (bind.GetRecord(pos_AS_SeqBind_Seq));
         prep_instr.ImpConc(P2I(pat))
                   .ImpConc(E2I(seq_e))
-                  .ImpAppend(TYPE_INSTRTP_SEQCOMPBIND().Init(Bool(false)))
+                  .ImpAppend(TYPE_INSTRTP_SEQCOMPBIND().Init(Bool(true)))
                   .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_SEQ(SEQ<TYPE_SEM_VAL>())));
       break;
     }

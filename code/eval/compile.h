@@ -323,6 +323,7 @@ private:
   // }}}
   // {{{ Methods in cpat.cc
 private:
+  TYPE_STKM_SubProgram CompileBind(const TYPE_AS_Bind &, const TYPE_PAT_PARTITION &);
   TYPE_STKM_SubProgram CompileMultBindL(const SEQ<TYPE_AS_MultBind> &, const TYPE_PAT_PARTITION &);
   TYPE_STKM_SubProgram PB2I(const TYPE_AS_PatternBind &);
   TYPE_STKM_SubProgram P2I(const TYPE_AS_Pattern & pat);

@@ -456,12 +456,13 @@ operations
 \begin{vdm_al}
   CompileEUandICommon: AS`Bind * AS`Expr ==> STKM`SubProgram
   CompileEUandICommon(bind,expr) ==
-    def bind_l = cases bind:
-                   mk_AS`TypeBind(pat,tp,ci) -> [mk_AS`MultTypeBind([pat],tp,ci)],
-                   mk_AS`SetBind(pat,Set,ci) -> [mk_AS`MultSetBind([pat],Set,ci)],
-                   others -> undefined
-                 end;
-        prep_instr = CPAT`CompileMultBindL(bind_l,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
+    def --bind_l = cases bind:
+        --           mk_AS`TypeBind(pat,tp,ci) -> [mk_AS`MultTypeBind([pat],tp,ci)],
+        --           mk_AS`SetBind(pat,Set,ci) -> [mk_AS`MultSetBind([pat],Set,ci)],
+        --           others -> undefined
+        --         end;
+        --prep_instr = CPAT`CompileMultBindL(bind_l,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
+        prep_instr = CPAT`CompileBind(bind,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
         succ_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
         fail_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
         pred_instr = E2I(expr);
@@ -706,9 +707,9 @@ label: loop
    (dcl prep_instr : STKM`SubProgram := [];
     cases bind:
       mk_AS`SetBind(pat,set_e,-) ->
-         prep_instr := CPAT`P2I(pat) ^ E2I(set_e) ^ [mk_INSTRTP`SEQCOMPBIND(true), mk_INSTRTP`PUSH(mk_SEM`SEQ([]))],
+         prep_instr := CPAT`P2I(pat) ^ E2I(set_e) ^ [mk_INSTRTP`SEQCOMPBIND(false), mk_INSTRTP`PUSH(mk_SEM`SEQ([]))],
       mk_AS`SeqBind(pat,seq_e,-) ->
-         prep_instr := CPAT`P2I(pat) ^ E2I(seq_e) ^ [mk_INSTRTP`SEQCOMPBIND(false), mk_INSTRTP`PUSH(mk_SEM`SEQ([]))],
+         prep_instr := CPAT`P2I(pat) ^ E2I(seq_e) ^ [mk_INSTRTP`SEQCOMPBIND(true), mk_INSTRTP`PUSH(mk_SEM`SEQ([]))],
       others -> error
     end;
     def condition = [mk_INSTRTP`ISNOTEMPTYSEQ(2)];

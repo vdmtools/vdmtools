@@ -2753,13 +2753,22 @@ void StackEval::ExeMAPCONS(const Int & length)
 // ExeSEQCOMPBIND
 // isSet : bool
 // ==> ()
-void StackEval::ExeSEQCOMPBIND(const Bool & isSet)
+void StackEval::ExeSEQCOMPBIND(const Bool & isSeq)
 {
   TYPE_SEM_VAL val_v (POP());
 //  TYPE_SEM_VAL pat (POP());
   TYPE_SEM_VAL pat (HEAD());
 
-  if (isSet) {
+  if (isSeq) {
+    if (val_v.Is(TAG_TYPE_SEM_SEQ)) {
+      //PUSH(pat);
+      PUSH(val_v.GetSequence(pos_SEM_SEQ_v));
+    }
+    else {
+      RTERR::Error(L"ExeSEQCOMPBIND", RTERR_SEQ_EXPECTED, val_v, Nil(), Sequence());
+    }
+  }
+  else {
     if (val_v.Is(TAG_TYPE_SEM_SET)) {
       if (!pat.Is(TAG_TYPE_STKM_PatternName)) {
         RTERR::Error(L"ExeSEQCOMPBIND", RTERR_PAT_NAME_IN_SEQCOMP, Nil(), Nil(), Sequence());
@@ -2782,15 +2791,6 @@ void StackEval::ExeSEQCOMPBIND(const Bool & isSet)
     }
     else {
       RTERR::Error(L"ExeSEQCOMPBIND", RTERR_SET_EXPECTED, val_v, Nil(), Sequence());
-    }
-  }
-  else {
-    if (val_v.Is(TAG_TYPE_SEM_SEQ)) {
-      //PUSH(pat);
-      PUSH(val_v.GetSequence(pos_SEM_SEQ_v));
-    }
-    else {
-      RTERR::Error(L"ExeSEQCOMPBIND", RTERR_SEQ_EXPECTED, val_v, Nil(), Sequence());
     }
   }
 }
