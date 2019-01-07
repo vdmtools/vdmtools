@@ -59,53 +59,117 @@ TYPE_STKM_SubProgram StackCompiler::CompileBind(const TYPE_AS_Bind & bind,
 TYPE_STKM_SubProgram StackCompiler::CompileMultBindL(const SEQ<TYPE_AS_MultBind> & bind_l,
                                                      const TYPE_PAT_PARTITION & part)
 {
-  // Check if one of the bindings is a type bind
-  size_t length = 0;
-
-  TYPE_STKM_SubProgram sp_val;
-  TYPE_STKM_SubProgram sp_pat;
-
-  size_t len_bind_l = bind_l.Length();
-  for (size_t i = 1; i <= len_bind_l; i++) {
-    const TYPE_AS_MultBind & mb (bind_l[i]);
+  if (1 == bind_l.Length()) {
+    const TYPE_AS_MultBind & mb (bind_l[1]);
     switch(mb.GetTag()) {
       case TAG_TYPE_AS_MultTypeBind: {
         const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultTypeBind_pat));
         const TYPE_AS_Type & tp (mb.GetRecord(pos_AS_MultTypeBind_tp));
 
         size_t len_pat_l = pat_l.Length();
-        length += len_pat_l;
-        sp_val.ImpAppend(TYPE_INSTRTP_TPTOSET().Init(tp));
-        for (size_t j = 1; j <= len_pat_l; j++) {
-          sp_pat.ImpConc(P2I(pat_l[j]));
-          if (j > 1) {
-            sp_val.ImpAppend(TYPE_INSTRTP_COPYVAL());
-          }
+        if (1 == len_pat_l) {
+          TYPE_STKM_SubProgram sp;
+          sp.ImpAppend(TYPE_INSTRTP_TPTOSET().Init(tp));
+          sp.ImpConc(P2I(pat_l[1]));
+          sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(1), part));
+          return sp;
         }
-        break;
+        else {
+          TYPE_STKM_SubProgram sp;
+          TYPE_STKM_SubProgram sp_pat;
+          sp.ImpAppend(TYPE_INSTRTP_TPTOSET().Init(tp));
+          for (size_t j = 1; j <= len_pat_l; j++) {
+            sp_pat.ImpConc(P2I(pat_l[j]));
+            if (j > 1) {
+              sp.ImpAppend(TYPE_INSTRTP_COPYVAL());
+            }
+          }
+          sp.ImpConc(sp_pat);
+          sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(len_pat_l), part));
+          return sp;
+        }
       }
       case TAG_TYPE_AS_MultSetBind: {
         const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSetBind_pat));
         const TYPE_AS_Expr & set_e (mb.GetRecord(pos_AS_MultSetBind_Set));
 
         size_t len_pat_l = pat_l.Length();
-        length += len_pat_l;
-        sp_val.ImpConc(E2I(set_e));
-        for (size_t j = 1; j <= len_pat_l; j++) {
-          sp_pat.ImpConc(P2I(pat_l[j]));
-          if (j > 1) {
-            sp_val.ImpAppend(TYPE_INSTRTP_COPYVAL());
-          }
+        if (1 == len_pat_l) {
+          TYPE_STKM_SubProgram sp;
+          sp.ImpConc(E2I(set_e));
+          sp.ImpConc(P2I(pat_l[1]));
+          sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(1), part));
+          return sp;
         }
-        break;
+        else {
+          TYPE_STKM_SubProgram sp;
+          TYPE_STKM_SubProgram sp_pat;
+          sp.ImpConc(E2I(set_e));
+          for (size_t j = 1; j <= len_pat_l; j++) {
+            sp_pat.ImpConc(P2I(pat_l[j]));
+            if (j > 1) {
+              sp.ImpAppend(TYPE_INSTRTP_COPYVAL());
+            }
+          }
+          sp.ImpConc(sp_pat);
+          sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(len_pat_l), part));
+          return sp;
+        }
+      }
+      default: {
+        return TYPE_STKM_SubProgram(); // dummy
       }
     }
   }
-  TYPE_STKM_SubProgram sp;
-  sp.ImpConc(sp_val);
-  sp.ImpConc(sp_pat);
-  sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(length), part));
-  return sp;
+  else {
+    // Check if one of the bindings is a type bind
+    size_t length = 0;
+
+    TYPE_STKM_SubProgram sp_val;
+    TYPE_STKM_SubProgram sp_pat;
+
+    size_t len_bind_l = bind_l.Length();
+    for (size_t i = 1; i <= len_bind_l; i++) {
+      const TYPE_AS_MultBind & mb (bind_l[i]);
+      switch(mb.GetTag()) {
+        case TAG_TYPE_AS_MultTypeBind: {
+          const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultTypeBind_pat));
+          const TYPE_AS_Type & tp (mb.GetRecord(pos_AS_MultTypeBind_tp));
+
+          size_t len_pat_l = pat_l.Length();
+          length += len_pat_l;
+          sp_val.ImpAppend(TYPE_INSTRTP_TPTOSET().Init(tp));
+          for (size_t j = 1; j <= len_pat_l; j++) {
+            sp_pat.ImpConc(P2I(pat_l[j]));
+            if (j > 1) {
+              sp_val.ImpAppend(TYPE_INSTRTP_COPYVAL());
+            }
+          }
+          break;
+        }
+        case TAG_TYPE_AS_MultSetBind: {
+          const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSetBind_pat));
+          const TYPE_AS_Expr & set_e (mb.GetRecord(pos_AS_MultSetBind_Set));
+
+          size_t len_pat_l = pat_l.Length();
+          length += len_pat_l;
+          sp_val.ImpConc(E2I(set_e));
+          for (size_t j = 1; j <= len_pat_l; j++) {
+            sp_pat.ImpConc(P2I(pat_l[j]));
+            if (j > 1) {
+              sp_val.ImpAppend(TYPE_INSTRTP_COPYVAL());
+            }
+          }
+          break;
+        }
+      }
+    }
+    TYPE_STKM_SubProgram sp;
+    sp.ImpConc(sp_val);
+    sp.ImpConc(sp_pat);
+    sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(length), part));
+    return sp;
+  }
 }
 // }}}
 
