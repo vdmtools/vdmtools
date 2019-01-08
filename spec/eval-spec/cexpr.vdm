@@ -456,13 +456,7 @@ operations
 \begin{vdm_al}
   CompileEUandICommon: AS`Bind * AS`Expr ==> STKM`SubProgram
   CompileEUandICommon(bind,expr) ==
-    def --bind_l = cases bind:
-        --           mk_AS`TypeBind(pat,tp,ci) -> [mk_AS`MultTypeBind([pat],tp,ci)],
-        --           mk_AS`SetBind(pat,Set,ci) -> [mk_AS`MultSetBind([pat],Set,ci)],
-        --           others -> undefined
-        --         end;
-        --prep_instr = CPAT`CompileMultBindL(bind_l,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
-        prep_instr = CPAT`CompileBind(bind,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
+    def prep_instr = CPAT`CompileBind(bind,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
         succ_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
         fail_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
         pred_instr = E2I(expr);
