@@ -71,18 +71,20 @@ TYPE_SEM_VAL EXPR::EvalSubSequenceExpr (const TYPE_SEM_VAL & seq_v,
                                         const TYPE_SEM_VAL & from_v,
                                         const TYPE_SEM_VAL & to_v)
 {
-  if (seq_v.Is(TAG_TYPE_SEM_SEQ) && from_v.Is(TAG_TYPE_SEM_NUM) && to_v.Is(TAG_TYPE_SEM_NUM))
-  {
+  if (seq_v.Is(TAG_TYPE_SEM_SEQ) && from_v.Is(TAG_TYPE_SEM_NUM) && to_v.Is(TAG_TYPE_SEM_NUM)) {
     int64_t from = from_v.GetReal(pos_SEM_NUM_v).Ceil().GetIntValue();
     int64_t to = to_v.GetReal(pos_SEM_NUM_v).Floor().GetIntValue();
     return mk_SEM_SEQ(seq_v.GetSequence(pos_SEM_SEQ_v).SubSequence(from, to));
   }
-  else if (!seq_v.Is(TAG_TYPE_SEM_SEQ))
+  else if (!seq_v.Is(TAG_TYPE_SEM_SEQ)) {
     return RTERR::ErrorVal (L"EvalSubSequenceExpr", RTERR_SEQ_EXPECTED, seq_v, Nil(), Sequence());
-  else if (!from_v.Is(TAG_TYPE_SEM_NUM))
+  }
+  else if (!from_v.Is(TAG_TYPE_SEM_NUM)) {
     return RTERR::ErrorVal (L"EvalSubSequenceExpr", RTERR_INT_EXPECTED, from_v, Nil(), Sequence());
-  else // !to_v.Is(TAG_TYPE_SEM_NUM)
+  }
+  else { // !to_v.Is(TAG_TYPE_SEM_NUM) 
     return RTERR::ErrorVal (L"EvalSubSequenceExpr", RTERR_INT_EXPECTED, to_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqModifyMapOverrideExpr
@@ -145,19 +147,19 @@ TYPE_SEM_VAL EXPR::EvalSeqModifyExpr (const TYPE_SEM_VAL & seq_v, const TYPE_SEM
 
   SET<TYPE_SEM_VAL> dom_modifiers (modifiers.Dom()); 
   Generic d_v;
-  for (bool bb = dom_modifiers.First (d_v); bb; bb = dom_modifiers.Next (d_v))
-  {
-    if (d_v.Is(TAG_TYPE_SEM_NUM) ? Record(d_v).GetReal(pos_SEM_NUM_v).IsNatOne() : false)
-    {
+  for (bool bb = dom_modifiers.First (d_v); bb; bb = dom_modifiers.Next (d_v)) {
+    if (d_v.Is(TAG_TYPE_SEM_NUM) ? Record(d_v).GetReal(pos_SEM_NUM_v).IsNatOne() : false) {
       int64_t d = Record(d_v).GetReal(pos_SEM_NUM_v).GetIntValue();
       if (d <= res_lv.Length ()) {
         res_lv.ImpModify (d, modifiers[d_v]);
       }
-      else
+      else {
         return RTERR::ErrorVal (L"EvalSeqModify", RTERR_ILLEGAL_INDICES, d_v, Nil(), Sequence());
+      }
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalSeqModify", RTERR_INT_EXPECTED, d_v, Nil(), Sequence());
+    }
   }
   return mk_SEM_SEQ(res_lv);
 }
@@ -173,19 +175,19 @@ TYPE_SEM_VAL EXPR::EvalTupleModifyExpr (const TYPE_SEM_VAL & seq_v, const TYPE_S
 
   SET<TYPE_SEM_VAL> dom_modifiers (modifiers.Dom()); 
   Generic d_v;
-  for (bool bb = dom_modifiers.First (d_v); bb; bb = dom_modifiers.Next (d_v))
-  {
-    if (d_v.Is(TAG_TYPE_SEM_NUM) ? Record(d_v).GetReal(pos_SEM_NUM_v).IsNatOne() : false)
-    {
+  for (bool bb = dom_modifiers.First (d_v); bb; bb = dom_modifiers.Next (d_v)) {
+    if (d_v.Is(TAG_TYPE_SEM_NUM) ? Record(d_v).GetReal(pos_SEM_NUM_v).IsNatOne() : false) {
       int64_t d = Record(d_v).GetReal(pos_SEM_NUM_v).GetIntValue();
       if (d <= res_lv.Length ()) {
         res_lv.ImpModify (d, modifiers[d_v]);
       }
-      else
+      else {
         return RTERR::ErrorVal (L"EvalSeqModify", RTERR_ILLEGAL_INDICES, d_v, Nil(), Sequence());
+      }
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalSeqModify", RTERR_INT_EXPECTED, d_v, Nil(), Sequence());
+    }
   }
   return mk_SEM_TUPLE(res_lv);
 }
@@ -216,19 +218,16 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr (const TYPE_AS_Name & tag, const SE
 {
 //  Tuple etn (AUX::ExtractTagName(tag)); // [AS`Name] * bool
   Tuple etn (theState().ExtractTagNameCached(tag)); // [AS`Name] * bool
-  if (etn.GetBoolValue(2))
-  {
+  if (etn.GetBoolValue(2)) {
     const TYPE_AS_Name & the_tag (etn.GetRecord(1));
 //    Tuple lurs (AUX::LookUpRecSel(tag)); // bool * GLOBAL`RecSel
     Tuple lurs (theState().GetCachedRecSel(the_tag)); // bool * GLOBAL`RecSel
     //GLOBAL`RecSel =  nat * (map AS`Name to nat) * seq of AS`Type
     const Tuple & recsel (lurs.GetTuple(2)); // GLOBAL`RecSel
-    if (val_l.Length () == recsel.GetIntValue (1))
-    {
+    if (val_l.Length () == recsel.GetIntValue (1)) {
       TYPE_DYNSEM_SEM_SemRecord res_v (ConstructSEMRecFields(the_tag, val_l));
 
-      if (Settings.DTC())
-      {
+      if (Settings.DTC()) {
 //        Tuple itd (AUX::IsTypeDef(the_tag)); // bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
         Tuple itd (theState().GetCachedTypeDef(the_tag)); // bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
         if (itd.GetBoolValue(1)) {
@@ -249,20 +248,23 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr (const TYPE_AS_Name & tag, const SE
           SEQ<TYPE_SEM_VAL> v (res_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
           size_t len_type_l = type_l.Length();
           for (size_t index = 1; index <= len_type_l; index++) {
-            if(!theState().SubType (v[index], type_l[index]))
+            if(!theState().SubType (v[index], type_l[index])) {
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INCOMP,
                                       v[index], type_l[index], Sequence());
+            }
           }
         }
         res_v.SetField(pos_DYNSEM_SEM_SemRecord_checked, Bool(true));
       } // end of if(Settings.DTC())
       return res_v;
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_RECORD_SIZE_WRONG, Nil(), Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
+  }
 }
 #endif // VDMSL
 
@@ -276,11 +278,12 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr (const TYPE_AS_Name & tag, const SE
 // ==> SEM`VAL
 TYPE_DYNSEM_SEM_SemRecord EXPR::ConstructSEMRecFields(const TYPE_AS_Name & sem_tag, const SEQ<TYPE_SEM_VAL> & val_l)
 {
-//  if (!AUX::LookUpRecSel(sem_tag).GetBoolValue(1)) {
-  if (!theState().GetCachedRecSel(sem_tag).GetBoolValue(1))
+  if (!theState().GetCachedRecSel(sem_tag).GetBoolValue(1)) {
     return RTERR::ErrorVal (L"ConstructSEMRecFields", RTERR_LOCAL_COMPOSE_TYPEDEF, Nil(), Nil(), Sequence());
-  else
+  }
+  else {
     return SemRec::mk_SEM_REC(sem_tag, val_l);
+  }
 }
 
 // EvalRecordConstructorExpr
@@ -310,10 +313,12 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr(const TYPE_AS_Name & tag, const SEQ
           tnm.Init(tag, tag.GetInt(pos_AS_Name_cid));
           // must use TypeName for check invariant
           if (!theState().SubType(res_v, tnm)) {
-            if (theState().RealSubType (res_v, tnm, false))
+            if (theState().RealSubType (res_v, tnm, false)) {
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INV_BROKEN, res_v, tnm, Sequence());
-            else
+            }
+            else {
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INCOMP, res_v, tnm, Sequence());
+            }
           }
         }
         else {
@@ -321,33 +326,33 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr(const TYPE_AS_Name & tag, const SEQ
           // NOTE: SEM`REC implimentation is different from spec.
           SEQ<TYPE_SEM_VAL> v (res_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
           size_t len_type_l = type_l.Length ();
-          for (size_t index = 1; index <= len_type_l; index++)
-          {
+          for (size_t index = 1; index <= len_type_l; index++) {
             TYPE_AS_Type type (type_l[index]);
 //
             // if TypeName is in field 
-            if ((the_tag.GetSequence(pos_AS_Name_ids).Length() == 2) && type.Is(TAG_TYPE_AS_TypeName))
-            {
+            if ((the_tag.GetSequence(pos_AS_Name_ids).Length() == 2) && type.Is(TAG_TYPE_AS_TypeName)) {
               const TYPE_AS_Name & nm (type.GetRecord(pos_AS_TypeName_name));
-              if (!theState().IsAClass(nm) && (nm.GetSequence(pos_AS_Name_ids).Length() == 1))
-              {
+              if (!theState().IsAClass(nm) && (nm.GetSequence(pos_AS_Name_ids).Length() == 1)) {
                 type.SetField(pos_AS_TypeName_name, ASTAUX::Combine2Names(the_tag, nm));
               }
             }
 //
-            if (! theState().SubType (v[index], type))
+            if (! theState().SubType (v[index], type)) {
               return RTERR::ErrorVal(L"EvalRecordConstructorExpr", RTERR_TYPE_INCOMP, v[index], type_l[index], Sequence());
+            }
           }
         }
         res_v.SetField(pos_DYNSEM_SEM_SemRecord_checked, Bool(true));
       }
       return res_v;
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_RECORD_SIZE_WRONG, Nil(), Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
+  }
 }
 #endif // VDMPP
 
@@ -361,18 +366,19 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr (const TYPE_SEM_VAL & rec_v,
                                            const SEQ<TYPE_AS_Name> & fid_l,
                                            const SEQ<TYPE_SEM_VAL> & val_l)
 {
-  if (!rec_v.Is(TAG_TYPE_DYNSEM_SEM_REC))
+  if (!rec_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
     return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_REC_EXPECTED, Nil(), Nil(), Sequence());
+  }
   else {
     const TYPE_AS_Name & tag (rec_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
 
-    if (!AUX::IsTypeStructExported (tag))
+    if (!AUX::IsTypeStructExported (tag)) {
       return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_NOT_EXPORTED, Nil(), Nil(), Sequence());
+    }
     else {
 //      Tuple lurs (AUX::LookUpRecSel(tag)); // bool * GLOBAL`RecSel
       Tuple lurs (theState().GetCachedRecSel(tag)); // bool * GLOBAL`RecSel
-      if (lurs.GetBoolValue(1))
-      {
+      if (lurs.GetBoolValue(1)) {
         Tuple recsel (lurs.GetTuple(2)); // GLOBAL`RecSel
              //GLOBAL`RecSel =  nat * (map AS`Name to nat) * seq of AS`Type
         const MAP<TYPE_AS_Name,Int> & pos (recsel.GetMap (2)); // map AS`Name to nat
@@ -382,8 +388,7 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr (const TYPE_SEM_VAL & rec_v,
         SEQ<TYPE_SEM_VAL> tmp_v (rec_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
 
         size_t len_fid_l = fid_l.Length();
-        for (size_t i = 1; i <= len_fid_l; i++)
-        {
+        for (size_t i = 1; i <= len_fid_l; i++) {
           const TYPE_AS_Name & fid (fid_l[i]);
 
           if (!pos.DomExists (fid)) {
@@ -394,11 +399,11 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr (const TYPE_SEM_VAL & rec_v,
             const TYPE_SEM_VAL & new_v (val_l[i]);
             int index = pos[fid].GetValue ();
             tmp_v.ImpModify (index, new_v);
-            if (Settings.DTC())
-            {
+            if (Settings.DTC()) {
               theStackMachine().PushModule (theState().ExtractModule(tag));
-              if (!theState().SubType (new_v, type_l[index]))
+              if (!theState().SubType (new_v, type_l[index])) {
                 return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INCOMP, new_v, type_l[index], Sequence());
+              }
               theStackMachine().PopModule ();
             }
           }
@@ -407,8 +412,7 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr (const TYPE_SEM_VAL & rec_v,
         TYPE_DYNSEM_SEM_SemRecord res_v (SemRec::mk_SEM_REC(tag, tmp_v));
         res_v.SetField(pos_DYNSEM_SEM_SemRecord_checked, Bool(true));
 
-        if (Settings.DTC())
-        {
+        if (Settings.DTC()) {
           // push mudule if needed before checking the fields
           theStackMachine().PushModule (theState().ExtractModule(tag));
 
@@ -418,10 +422,12 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr (const TYPE_SEM_VAL & rec_v,
             TYPE_AS_TypeName tnm;
             tnm.Init(tag, tag.GetInt(pos_AS_Name_cid));
             if (!theState().SubType(res_v, tnm)) {
-              if (theState().RealSubType (res_v, tnm, false))
+              if (theState().RealSubType (res_v, tnm, false)) {
                 return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INV_BROKEN, res_v, tnm, Sequence());
-              else
+              }
+              else {
                 return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INCOMP, res_v, tnm, Sequence());
+              }
             }
           }
           theStackMachine().PopModule ();
@@ -449,15 +455,15 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr(const TYPE_SEM_VAL & rec_v,
                                           const SEQ<TYPE_AS_Name> & fid_l,
                                           const SEQ<TYPE_SEM_VAL> & val_l)
 {
-  if ( !rec_v.Is(TAG_TYPE_DYNSEM_SEM_REC) )
+  if ( !rec_v.Is(TAG_TYPE_DYNSEM_SEM_REC) ) {
     return RTERR::ErrorVal(L"EvalRecordModifierExpr", RTERR_REC_EXPECTED, rec_v, Nil(), Sequence());
+  }
   else {
     const TYPE_AS_Name & tag (rec_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
 
 //    Tuple etn (AUX::ExtractTagName(tag)); // [AS`Name] * bool
     Tuple etn (theState().ExtractTagNameCached(tag)); // [AS`Name] * bool
-    if (!etn.GetBoolValue(2)) // isinscope_tag
-    {
+    if (!etn.GetBoolValue(2)) { // isinscope_tag
       return RTERR::ErrorVal(L"EvalRecordModifierExpr", RTERR_TAG_UNKNOWN,
                           EvalState::M42Sem(AUX::SingleNameToString(tag), NULL), Nil(), Sequence());
     }
@@ -465,9 +471,10 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr(const TYPE_SEM_VAL & rec_v,
       const TYPE_AS_Name & tagname (etn.GetRecord(1));
 //      Tuple lurs (AUX::LookUpRecSel(tagname)); // bool * GLOBAL`RecSel
       Tuple lurs (theState().GetCachedRecSel(tagname)); // bool * GLOBAL`RecSel
-      if (!lurs.GetBoolValue(1))
+      if (!lurs.GetBoolValue(1)) {
         return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TAG_UNKNOWN,
                              EvalState::M42Sem(AUX::SingleNameToString(tagname), NULL), Nil(), Sequence());
+      }
       const Tuple & recsel (lurs.GetTuple(2)); // GLOBAL`RecSel
        //  GLOBAL`RecSel = nat * (map AS`Name to nat) * seq of AS`Type
       const MAP<TYPE_AS_Name, Int> & pos (recsel.GetMap(2));    // map AS`Name to nat
@@ -477,12 +484,12 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr(const TYPE_SEM_VAL & rec_v,
       SEQ<TYPE_SEM_VAL> tmp_v (rec_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
 
       size_t len_fid_l = fid_l.Length();
-      for (size_t i = 1; i <= len_fid_l; i++)
-      {
+      for (size_t i = 1; i <= len_fid_l; i++) {
         const TYPE_AS_Name & fid (fid_l[i]);
-        if (!pos.DomExists(fid))
+        if (!pos.DomExists(fid)) {
           return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_RECORD_FIELD_ID_UNKNOWN,
                                EvalState::M42Sem(AUX::SingleNameToString(fid), NULL), Nil(), Sequence());
+        }
         else {
           const TYPE_SEM_VAL & new_v (val_l[i]);
           int index = pos[fid].GetValue();
@@ -496,17 +503,16 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr(const TYPE_SEM_VAL & rec_v,
               const TYPE_AS_Name & defcl (itd.GetRecord(6)); // [AS`Name]
               theStackMachine().PushClNmCurObj(defcl, defcl);
 
-              if (!theState().SubType (new_v, type))
+              if (!theState().SubType (new_v, type)) {
                 return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INCOMP, new_v, type_l[index], Sequence());
+              }
               theStackMachine().PopClNmCurObj();
             }
-// 20140121 -->
-            else
-            {
-              if (!theState().SubType (new_v, type))
+            else {
+              if (!theState().SubType (new_v, type)) {
                 return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INCOMP, new_v, type_l[index], Sequence());
+              }
             }
-// <-- 20140121
           }
         }
       }
@@ -553,10 +559,9 @@ TYPE_SEM_VAL EXPR::EvalFieldSelectExpr (const TYPE_SEM_VAL & record_v, const TYP
     case TAG_TYPE_SEM_OBJ_uRef:   { return EvalFieldOBJRefSelect(record_v, field); }
 #endif// VDMPP
     default: {
-// 20150106 -->
-      if (theStackMachine().IsRuntimeErrorException(record_v))
+      if (theStackMachine().IsRuntimeErrorException(record_v)) {
         return record_v;
-// <-- 20150106
+      }
 #ifdef VDMSL
       return RTERR::ErrorVal (L"EvalFieldSelectExpr", RTERR_REC_EXPECTED, record_v, Nil(), Sequence());
 #endif //VDMSL
@@ -587,7 +592,6 @@ TYPE_SEM_VAL EXPR::EvalFieldOBJRefSelect(const TYPE_SEM_OBJ_uRef & objref, const
     }
     case TAG_TYPE_SEM_CompExplFN: {
       res_v.SetField(pos_SEM_CompExplFN_objref, objref);
-// 20140823 -->
       const SEQ<TYPE_SEM_ExplFN> & fn_l (res_v.GetSequence(pos_SEM_CompExplFN_fl));
       SEQ<TYPE_SEM_ExplFN> new_fn_l;
       size_t len_fn_l = fn_l.Length();
@@ -597,7 +601,6 @@ TYPE_SEM_VAL EXPR::EvalFieldOBJRefSelect(const TYPE_SEM_OBJ_uRef & objref, const
         new_fn_l.ImpAppend(fn);
       }
       res_v.SetField(pos_SEM_CompExplFN_fl, new_fn_l);
-// <-- 20140823
       return res_v;
     }
     case TAG_TYPE_SEM_ExplPOLY: {
@@ -624,8 +627,7 @@ TYPE_SEM_VAL EXPR::EvalFieldRecordSelect(const TYPE_DYNSEM_SEM_SemRecord & recor
 
 //  Tuple lurs (AUX::LookUpRecSel(tag)); // bool * GLOBAL`RecSel
   Tuple lurs (theState().GetCachedRecSel(tag)); // bool * GLOBAL`RecSel
-  if (lurs.GetBoolValue(1))
-  {
+  if (lurs.GetBoolValue(1)) {
     const Tuple & recsel (lurs.GetTuple(2)); // GLOBAL`RecSel
     //GLOBAL`RecSel = nat * (map AS`Name to nat) * seq of AS`Type
     const MAP<TYPE_AS_Name, Int> & pos (recsel.GetMap(2)); // map AS`Name to nat
@@ -643,8 +645,7 @@ TYPE_SEM_VAL EXPR::EvalFieldRecordSelect(const TYPE_DYNSEM_SEM_SemRecord & recor
     const MAP<TYPE_AS_Name, Int> & pos (recsel.GetMap(2)); // map AS`Name to nat
 #endif //VDMPP
 
-    if (pos.DomExists (field))
-    {
+    if (pos.DomExists (field)) {
       return record_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetRecord(pos[field].GetValue ());
     }
     else {
@@ -667,8 +668,9 @@ MAP<TYPE_AS_TypeVar,TYPE_AS_Type> EXPR::MakeTypeMap (const SEQ<TYPE_AS_TypeVar> 
 {
   MAP<TYPE_AS_TypeVar,TYPE_AS_Type> typemap;
   size_t len_typevars = typevars.Length ();
-  for (size_t idx = 1; idx <= len_typevars; idx++)
+  for (size_t idx = 1; idx <= len_typevars; idx++) {
     typemap.Insert (typevars[idx], types[idx]);
+  }
   return typemap;
 }
 
@@ -683,9 +685,9 @@ SEQ<TYPE_AS_Type> EXPR::SubstTypeList (const SEQ<TYPE_AS_Type> & tp,
 {
   SEQ<TYPE_AS_Type> res;
   size_t len_tp = tp.Length();
-  for (size_t index = 1; index <= len_tp; index++)
+  for (size_t index = 1; index <= len_tp; index++) {
     res.ImpAppend (SubstType (tp[index], tv_l, tp_l));
-
+  }
   return res;
 }
 
@@ -697,8 +699,7 @@ TYPE_SEM_CompExplFN EXPR::ConvertPolyToFn (const TYPE_SEM_ExplPOLY & poly, const
 {
   const SEQ<TYPE_AS_TypeVar> & tpp (poly.GetSequence(pos_SEM_ExplPOLY_tpparms));
 
-  if (tpp.Length () == type_l.Length ())
-  {
+  if (tpp.Length () == type_l.Length ()) {
     const TYPE_AS_FnType & tp (poly.GetRecord(pos_SEM_ExplPOLY_tp));
     const Sequence & parms (poly.GetSequence(pos_SEM_ExplPOLY_parms));
     const TYPE_AS_Access & access (poly.GetField(pos_SEM_ExplPOLY_access));
@@ -734,8 +735,9 @@ TYPE_SEM_CompExplFN EXPR::ConvertPolyToFn (const TYPE_SEM_ExplPOLY & poly, const
                  
     return SemRec::CompFN(res_fn);
   }
-  else
+  else {
     return RTERR::ErrorVal (L"ConvertPolyToFn", RTERR_WRONG_NO_OF_ARGS, Nil(), Nil(), Sequence());
+  }
 }
 
 // SubstType
@@ -780,16 +782,18 @@ TYPE_AS_Type EXPR::SubstType (const TYPE_AS_Type & tp,
       const SEQ<TYPE_AS_Type> & utp_l (tp.GetSequence(pos_AS_UnionType_tps));
       SEQ<TYPE_AS_Type> nutp_l;
       size_t len_utp_l = utp_l.Length();
-      for (size_t idx = 1; idx <= len_utp_l; idx++)
+      for (size_t idx = 1; idx <= len_utp_l; idx++) {
         nutp_l.ImpAppend (SubstType (utp_l[idx], tv_l, tp_l));
+      }
       return TYPE_AS_UnionType().Init(nutp_l, tp.GetInt(pos_AS_UnionType_cid));
     }
     case TAG_TYPE_AS_ProductType: {
       const SEQ<TYPE_AS_Type> & ptp_l (tp.GetSequence(pos_AS_ProductType_tps));
       SEQ<TYPE_AS_Type> nptp_l;
       size_t len_ptp_l = ptp_l.Length();
-      for (size_t idx = 1; idx <= len_ptp_l; idx++)
+      for (size_t idx = 1; idx <= len_ptp_l; idx++) {
         nptp_l.ImpAppend (SubstType (ptp_l[idx], tv_l, tp_l));
+      }
       return TYPE_AS_ProductType().Init(nptp_l, tp.GetInt(pos_AS_ProductType_cid));
     }
 
@@ -846,8 +850,9 @@ TYPE_AS_Type EXPR::SubstType (const TYPE_AS_Type & tp,
       const SEQ<TYPE_AS_Type> & pfdom (tp.GetSequence(pos_AS_PartialFnType_fndom));
       SEQ<TYPE_AS_Type> npfdom;
       size_t len_pfdom = pfdom.Length();
-      for (size_t idx = 1; idx <= len_pfdom; idx++)
+      for (size_t idx = 1; idx <= len_pfdom; idx++) {
         npfdom.ImpAppend (SubstType (pfdom[idx], tv_l, tp_l));
+      }
       return TYPE_AS_PartialFnType().Init(npfdom,
                                           SubstType (tp.GetRecord(pos_AS_PartialFnType_fnrng), tv_l, tp_l),
                                           tp.GetInt(pos_AS_PartialFnType_cid));
@@ -857,8 +862,9 @@ TYPE_AS_Type EXPR::SubstType (const TYPE_AS_Type & tp,
       const SEQ<TYPE_AS_Type> & tfdom (tp.GetSequence(pos_AS_TotalFnType_fndom));
       SEQ<TYPE_AS_Type> ntfdom;
       size_t len_tfdom = tfdom.Length();
-      for (size_t idx = 1; idx <= len_tfdom; idx++)
+      for (size_t idx = 1; idx <= len_tfdom; idx++) {
         ntfdom.ImpAppend (SubstType (tfdom[idx], tv_l, tp_l));
+      }
       return TYPE_AS_TotalFnType().Init(ntfdom,
                                         SubstType (tp.GetRecord(pos_AS_TotalFnType_fnrng), tv_l, tp_l),
                                         tp.GetInt(pos_AS_TotalFnType_cid));
@@ -868,8 +874,9 @@ TYPE_AS_Type EXPR::SubstType (const TYPE_AS_Type & tp,
       const SEQ<TYPE_AS_Type> & opdom (tp.GetSequence(pos_AS_OpType_opdom));
       SEQ<TYPE_AS_Type> nopdom;
       size_t len_opdom = opdom.Length();
-      for (size_t idx = 1; idx <= len_opdom; idx++)
+      for (size_t idx = 1; idx <= len_opdom; idx++) {
         nopdom.ImpAppend (SubstType (opdom[idx], tv_l, tp_l));
+      }
       return TYPE_AS_OpType().Init(nopdom,
                                    SubstType (tp.GetRecord(pos_AS_OpType_oprng), tv_l, tp_l),
                                    tp.GetInt(pos_AS_OpType_cid));
@@ -956,16 +963,18 @@ TYPE_SEM_VAL EXPR::GetPolyVal (const TYPE_AS_Name & loc_name, const TYPE_AS_Name
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapInverse (const TYPE_SEM_VAL & val_v)
 {
-  if (val_v.Is(TAG_TYPE_SEM_MAP))
-  {
+  if (val_v.Is(TAG_TYPE_SEM_MAP)) {
     const Map & map_v (val_v.GetMap(pos_SEM_MAP_v));
-    if (map_v.Dom ().Card () == map_v.Rng ().Card ())
+    if (map_v.Dom ().Card () == map_v.Rng ().Card ()) {
       return mk_SEM_MAP(map_v.Inverse());
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalMapInverse", RTERR_NO_INJECTIVE_MAP, val_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalMapInverse", RTERR_MAP_EXPECTED, val_v, Nil(), Sequence());
+  }
 }
 
 ////Num Operators
@@ -976,8 +985,7 @@ TYPE_SEM_VAL EXPR::EvalMapInverse (const TYPE_SEM_VAL & val_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalNumUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_NUM))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_NUM)) {
     switch (opr.GetValue()) {
       case NUMPLUS :  { return op_v; }
       case NUMMINUS : { return mk_SEM_NUM(op_v.GetReal(pos_SEM_NUM_v).Minus()); }
@@ -988,8 +996,9 @@ TYPE_SEM_VAL EXPR::EvalNumUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
       }
     }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalNumUnaryExpr", RTERR_NUM_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 ////Logical Operators
@@ -1000,8 +1009,7 @@ TYPE_SEM_VAL EXPR::EvalNumUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalLogUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_BOOL))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_BOOL)) {
     switch (opr) {
       case NOT:
         return (op_v.GetBoolValue(pos_SEM_BOOL_v) ? sem_false : sem_true);
@@ -1010,8 +1018,9 @@ TYPE_SEM_VAL EXPR::EvalLogUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
       }
     }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalLogUnaryExpr", RTERR_BOOL_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalEqualtyExpr
@@ -1135,16 +1144,18 @@ TYPE_SEM_VAL EXPR::EvalSeqUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqHead (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     const SEQ<TYPE_SEM_VAL> & op_lv (op_v.GetSequence(pos_SEM_SEQ_v));
-    if (!op_lv.IsEmpty ())
+    if (!op_lv.IsEmpty ()) {
       return op_lv.Hd ();
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalSeqHead", RTERR_ZERO_LENGTH_DETECTED, op_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSeqHead", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqTail
@@ -1152,16 +1163,18 @@ TYPE_SEM_VAL EXPR::EvalSeqHead (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqTail (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     const SEQ<TYPE_SEM_VAL> & op_lv (op_v.GetSequence(pos_SEM_SEQ_v));
-    if (!op_lv.IsEmpty ())
+    if (!op_lv.IsEmpty ()) {
       return mk_SEM_SEQ(op_lv.Tl());
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalSeqTail", RTERR_ZERO_LENGTH_DETECTED, op_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSeqTail", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqLen
@@ -1169,10 +1182,12 @@ TYPE_SEM_VAL EXPR::EvalSeqTail (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqLen (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     return mk_SEM_NUM(Real(op_v.GetSequence(pos_SEM_SEQ_v).Length ()));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSeqLen", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqElems
@@ -1180,10 +1195,12 @@ TYPE_SEM_VAL EXPR::EvalSeqLen (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqElems (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     return mk_SEM_SET(op_v.GetSequence(pos_SEM_SEQ_v).Elems());
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSeqElems", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqIndices
@@ -1191,8 +1208,7 @@ TYPE_SEM_VAL EXPR::EvalSeqElems (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqIndices (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     size_t max = op_v.GetSequence(pos_SEM_SEQ_v).Length ();
     SET<TYPE_SEM_VAL> inds;
     for (size_t i = 1; i <= max; i++) {
@@ -1200,8 +1216,9 @@ TYPE_SEM_VAL EXPR::EvalSeqIndices (const TYPE_SEM_VAL & op_v)
     }
     return mk_SEM_SET(inds);
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSeqIndices", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqDistrConc
@@ -1209,8 +1226,7 @@ TYPE_SEM_VAL EXPR::EvalSeqIndices (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqDistrConc (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     const SEQ<TYPE_SEM_VAL> & op_lv (op_v.GetSequence(pos_SEM_SEQ_v));
     bool all_is_SEQ = true;
     SEQ<TYPE_SEM_VAL> res_lv;
@@ -1218,16 +1234,20 @@ TYPE_SEM_VAL EXPR::EvalSeqDistrConc (const TYPE_SEM_VAL & op_v)
     for(size_t i = 1; (i <= len) && all_is_SEQ; i++) {
       const TYPE_SEM_VAL & val (op_lv[i]);
       all_is_SEQ = val.Is(TAG_TYPE_SEM_SEQ);
-      if (all_is_SEQ)
+      if (all_is_SEQ) {
         res_lv.ImpConc(val.GetSequence(pos_SEM_SEQ_v));
+      }
     }
-    if (all_is_SEQ)
+    if (all_is_SEQ) {
       return mk_SEM_SEQ(res_lv);
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalSeqDistrConc", RTERR_ALL_SEQS_EXPECTED, op_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSeqDistrConc", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSeqReverse
@@ -1235,10 +1255,12 @@ TYPE_SEM_VAL EXPR::EvalSeqDistrConc (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqReverse (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SEQ))
+  if (op_v.Is(TAG_TYPE_SEM_SEQ)) {
     return mk_SEM_SEQ(op_v.GetSequence(pos_SEM_SEQ_v).Reverse());
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSeqReverse", RTERR_SEQ_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSetCard
@@ -1246,10 +1268,12 @@ TYPE_SEM_VAL EXPR::EvalSeqReverse (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetCard (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SET))
+  if (op_v.Is(TAG_TYPE_SEM_SET)) {
     return mk_SEM_NUM(Real(op_v.GetSet(pos_SEM_SET_v).Card()));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSetCard", RTERR_SET_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSetPower
@@ -1257,23 +1281,24 @@ TYPE_SEM_VAL EXPR::EvalSetCard (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetPower (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SET))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SET)) {
     const SET<TYPE_SEM_VAL> & op_sv (op_v.GetSet(pos_SEM_SET_v));
-    if (op_sv.Card () < 26)
-    {
+    if (op_sv.Card () < 26) {
       Set ps (op_sv.Power()); // set of set of SEM`VAL
       SET<TYPE_SEM_VAL> ps_sv;
       Generic sub;
-      for(bool bb = ps.First(sub); bb; bb = ps.Next(sub))
+      for(bool bb = ps.First(sub); bb; bb = ps.Next(sub)) {
         ps_sv.Insert (mk_SEM_SET(sub));
+      }
       return mk_SEM_SET(ps_sv);
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalSetPower", RTERR_SET_TOO_BIG, op_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSetPower", RTERR_SET_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSetDistrUnion
@@ -1281,27 +1306,29 @@ TYPE_SEM_VAL EXPR::EvalSetPower (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetDistrUnion (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SET))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SET)) {
     SET<TYPE_SEM_VAL> op_sv (op_v.GetSet(pos_SEM_SET_v)); // not Ref
     bool all_is_Set = true;
     Set tmp_ssv; // set of set of SEM`VAL
     Generic elm_v;
-    for (bool bb = op_sv.First (elm_v); bb && all_is_Set; bb = op_sv.Next (elm_v))
-    {
+    for (bool bb = op_sv.First (elm_v); bb && all_is_Set; bb = op_sv.Next (elm_v)) {
       TYPE_SEM_VAL val (elm_v);
       all_is_Set = val.Is(TAG_TYPE_SEM_SET);
-      if(all_is_Set)
+      if(all_is_Set) {
         tmp_ssv.Insert(val.GetSet(pos_SEM_SET_v));
+      }
     }
 
-    if (all_is_Set)
+    if (all_is_Set) {
       return mk_SEM_SET(tmp_ssv.DUnion());
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalSetDistrUnion", RTERR_ALL_SETS_EXPECTED, op_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSetDistrUnion", RTERR_SET_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalSetDistrIntersect
@@ -1309,8 +1336,7 @@ TYPE_SEM_VAL EXPR::EvalSetDistrUnion (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetDistrIntersect (const TYPE_SEM_VAL & op_v)
 {
-  if (op_v.Is(TAG_TYPE_SEM_SET))
-  {
+  if (op_v.Is(TAG_TYPE_SEM_SET)) {
     SET<TYPE_SEM_VAL> op_sv (op_v.GetSet(pos_SEM_SET_v)); // not Ref
     if (!op_sv.IsEmpty()) {
 
@@ -1318,26 +1344,28 @@ TYPE_SEM_VAL EXPR::EvalSetDistrIntersect (const TYPE_SEM_VAL & op_v)
       bool all_is_Set = true;
       Set tmp_ssv; // set of set of SEM`VAL
       Generic elm_v;
-      for (bool bb = op_sv.First (elm_v); bb && all_is_Set; bb = op_sv.Next (elm_v))
-      {
+      for (bool bb = op_sv.First (elm_v); bb && all_is_Set; bb = op_sv.Next (elm_v)) {
         TYPE_SEM_VAL val (elm_v);
         all_is_Set = val.Is(TAG_TYPE_SEM_SET);
-        if(all_is_Set)
+        if(all_is_Set) {
           tmp_ssv.Insert(val.GetSet(pos_SEM_SET_v));
+        }
       }
 
-      if (all_is_Set)
-      {
+      if (all_is_Set) {
         return mk_SEM_SET(tmp_ssv.DInter());
       }
-      else
+      else {
         return RTERR::ErrorVal (L"EvalSetDistrIntersect", RTERR_ALL_SETS_EXPECTED, op_v, Nil(), Sequence());
+      }
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalSetDistrIntersect", RTERR_NONEMPTYSET_EXPECTED, op_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSetDistrIntersect", RTERR_SET_EXPECTED, op_v, Nil(), Sequence());
+  }
 }
 
 // EvalComposeExpr
@@ -1346,16 +1374,15 @@ TYPE_SEM_VAL EXPR::EvalSetDistrIntersect (const TYPE_SEM_VAL & op_v)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalComposeExpr (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & op2_v)
 {
-  if (op1_v.Is(TAG_TYPE_SEM_CompExplFN) && op2_v.Is(TAG_TYPE_SEM_CompExplFN))
-  {
+  if (op1_v.Is(TAG_TYPE_SEM_CompExplFN) && op2_v.Is(TAG_TYPE_SEM_CompExplFN)) {
     return (EvalComposeFctExpr (op1_v, op2_v));
   }
-  else if (op1_v.Is(TAG_TYPE_SEM_MAP) && op2_v.Is(TAG_TYPE_SEM_MAP))
-  {
+  else if (op1_v.Is(TAG_TYPE_SEM_MAP) && op2_v.Is(TAG_TYPE_SEM_MAP)) {
     return (EvalComposeMap (op1_v, op2_v));
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalComposeExpr", RTERR_TWO_FN_OR_MAP_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalComposeExpr
@@ -1371,12 +1398,14 @@ TYPE_SEM_VAL EXPR::EvalComposeMap (const TYPE_SEM_MAP & op1_v, const TYPE_SEM_MA
     Set dom_map2_v (map2_v.Dom());
     MAP<TYPE_SEM_VAL, TYPE_SEM_VAL> res_map;
     Generic i;
-    for (bool bb = dom_map2_v.First (i); bb; bb = dom_map2_v.Next (i))
+    for (bool bb = dom_map2_v.First (i); bb; bb = dom_map2_v.Next (i)) {
       res_map.Insert (i, map1_v[map2_v[i]]);
+    }
     return mk_SEM_MAP(res_map);
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalComposeExpr", RTERR_NOT_RNG_DOM_SUBSET, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalComposeFctExpr
@@ -1399,22 +1428,28 @@ TYPE_SEM_VAL EXPR::EvalIterateExpr (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_V
 {
   switch(op1_v.GetTag()) {
     case TAG_TYPE_SEM_NUM: {
-      if (op2_v.Is(TAG_TYPE_SEM_NUM))
+      if (op2_v.Is(TAG_TYPE_SEM_NUM)) {
         return (EvalNumBinOp (op1_v, NUMEXP, op2_v));
-      else
+      }
+      else {
         return RTERR::ErrorVal (L"EvalIterateExpr", RTERR_NUM_EXPECTED, Nil(), Nil(), Sequence());
+      }
     }
     case TAG_TYPE_SEM_MAP:        {
-      if (AUX::IsNat(op2_v))
+      if (AUX::IsNat(op2_v)) {
         return IterateMap (op1_v, op2_v);
-      else
+      }
+      else {
         return RTERR::ErrorVal (L"EvalIterateExpr", RTERR_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      }
     }
     case TAG_TYPE_SEM_CompExplFN: {
-      if (AUX::IsNat(op2_v))
+      if (AUX::IsNat(op2_v)) {
         return (IterateFct (op1_v, op2_v));
-      else
+      }
+      else {
         return RTERR::ErrorVal (L"EvalIterateExpr", RTERR_NAT_EXPECTED, Nil(), Nil(), Sequence());
+      }
     }
     default: {
       return RTERR::ErrorVal (L"EvalIterateExpr", RTERR_FN_OR_MAP_OR_NUM_EXPECTED, Nil(), Nil(), Sequence());
@@ -1429,8 +1464,7 @@ TYPE_SEM_VAL EXPR::EvalIterateExpr (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_V
 TYPE_SEM_VAL EXPR::IterateFct (const TYPE_SEM_CompExplFN & fn_v, const TYPE_SEM_NUM & num)
 {
   int n = num.GetReal(pos_SEM_NUM_v).GetIntValue();
-  if (n >= 0)
-  {
+  if (n >= 0) {
     switch(n) {
       case 0: {
         const SEQ<TYPE_SEM_ExplFN> & fl (fn_v.GetSequence(pos_SEM_CompExplFN_fl));
@@ -1455,8 +1489,9 @@ TYPE_SEM_VAL EXPR::IterateFct (const TYPE_SEM_CompExplFN & fn_v, const TYPE_SEM_
       }
     }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"IterateFct", RTERR_NAT_EXPECTED, num, Nil(), Sequence());
+  }
 }
 
 // IterateMap
@@ -1616,10 +1651,12 @@ TYPE_SEM_VAL EXPR::EvalNumBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
       default: { return RTERR::ErrorVal (L"EvalNumBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
     }
   }
-  else if (!op1_v.Is(TAG_TYPE_SEM_NUM))
+  else if (!op1_v.Is(TAG_TYPE_SEM_NUM)) {
     return RTERR::ErrorVal (L"EvalNumBinaryExpr", RTERR_NUM_EXPECTED, op1_v, Nil(), Sequence());
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalNumBinaryExpr", RTERR_NUM_EXPECTED, op2_v, Nil(), Sequence());
+  }
 }
 
 // EvalNumBinOp
@@ -1635,27 +1672,35 @@ TYPE_SEM_VAL EXPR::EvalNumBinOp (const TYPE_SEM_VAL & VAL1, int opr, const TYPE_
     case NUMMULT:  { return mk_SEM_NUM(VAL1.GetReal(pos_SEM_NUM_v).Mult(VAL2.GetReal(pos_SEM_NUM_v))); }
     case NUMDIV: {
       const Real & n2 (VAL2.GetReal(pos_SEM_NUM_v));
-      if (n2.IsZero())
+      if (n2.IsZero()) {
         return RTERR::ErrorVal (L"EvalNumBinOp", RTERR_DIVISION_WITH_ZERO, Nil(), Nil(), Sequence());
-      else
+      }
+      else {
         return mk_SEM_NUM(VAL1.GetReal(pos_SEM_NUM_v).Div(n2));
+      }
       break;
     }
-    case NUMEXP:
+    case NUMEXP: {
       // NUMEXP is used also for iterations, but we leave it here
       // so we can use this to calculate numeric exponentiation
       return mk_SEM_NUM(VAL1.GetReal(pos_SEM_NUM_v).Pow(VAL2.GetReal(pos_SEM_NUM_v)));
-
+    }
     // Relational operators
-    case NUMGE:
+    case NUMGE: {
       return (VAL1.GetReal(pos_SEM_NUM_v).GreaterEqual(VAL2.GetReal(pos_SEM_NUM_v)) ? sem_true : sem_false);
-    case NUMGT:
+    }
+    case NUMGT: {
       return (VAL1.GetReal(pos_SEM_NUM_v).GreaterThan(VAL2.GetReal(pos_SEM_NUM_v)) ? sem_true : sem_false);
-    case NUMLE:
+    }
+    case NUMLE: {
       return (VAL1.GetReal(pos_SEM_NUM_v).LessEqual(VAL2.GetReal(pos_SEM_NUM_v)) ? sem_true : sem_false);
-    case NUMLT:
+    }
+    case NUMLT: {
       return (VAL1.GetReal(pos_SEM_NUM_v).LessThan(VAL2.GetReal(pos_SEM_NUM_v)) ? sem_true : sem_false);
-    default: { return RTERR::ErrorVal (L"EvalNumBinOp", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
+    }
+    default: {
+      return RTERR::ErrorVal (L"EvalNumBinOp", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
+    }
   }
 }
 
@@ -1666,14 +1711,15 @@ TYPE_SEM_VAL EXPR::EvalNumBinOp (const TYPE_SEM_VAL & VAL1, int opr, const TYPE_
 TYPE_SEM_VAL EXPR::EvalIntDiv (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
   if ((VAL1.Is(TAG_TYPE_SEM_NUM) ? VAL1.GetReal(pos_SEM_NUM_v).IsInt() : false) &&
-      (VAL2.Is(TAG_TYPE_SEM_NUM) ? VAL2.GetReal(pos_SEM_NUM_v).IsInt() : false))
-  {
+      (VAL2.Is(TAG_TYPE_SEM_NUM) ? VAL2.GetReal(pos_SEM_NUM_v).IsInt() : false)) {
     const Real & n2 (VAL2.GetReal(pos_SEM_NUM_v));
 
-    if (n2.IsZero())
+    if (n2.IsZero()) {
       return RTERR::ErrorVal (L"EvalIntDiv", RTERR_DIVISION_WITH_ZERO, Nil(), Nil(), Sequence());
-    else
+    }
+    else {
       return mk_SEM_NUM(VAL1.GetReal(pos_SEM_NUM_v).IntDiv(n2));
+    }
   }
   else
     return RTERR::ErrorVal (L"EvalIntDiv", RTERR_TWO_INT_EXPECTED, Nil(), Nil(), Sequence());
@@ -1686,15 +1732,16 @@ TYPE_SEM_VAL EXPR::EvalIntDiv (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & V
 TYPE_SEM_VAL EXPR::EvalNumRem (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & op2_v)
 {
   if ((op1_v.Is(TAG_TYPE_SEM_NUM) ? op1_v.GetReal(pos_SEM_NUM_v).IsInt() : false) &&
-      (op2_v.Is(TAG_TYPE_SEM_NUM) ? op2_v.GetReal(pos_SEM_NUM_v).IsInt() : false))
-  {
+      (op2_v.Is(TAG_TYPE_SEM_NUM) ? op2_v.GetReal(pos_SEM_NUM_v).IsInt() : false)) {
     const Real & n2 (op2_v.GetReal(pos_SEM_NUM_v));
 
-    if (n2.IsZero())
+    if (n2.IsZero()) {
       return RTERR::ErrorVal (L"EvalNumRem", RTERR_DIVISION_WITH_ZERO, Nil(), Nil(), Sequence());
-    else
+    }
+    else {
       // n1 rem n2 = n1 - n2 * (n1 div n2)
       return mk_SEM_NUM(op1_v.GetReal(pos_SEM_NUM_v).Rem(n2));
+    }
   }
   else
     return RTERR::ErrorVal (L"EvalNumRem", RTERR_TWO_INT_EXPECTED, Nil(), Nil(), Sequence());
@@ -1707,18 +1754,20 @@ TYPE_SEM_VAL EXPR::EvalNumRem (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & 
 TYPE_SEM_VAL EXPR::EvalNumMod (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & op2_v)
 {
   if ((op1_v.Is(TAG_TYPE_SEM_NUM) ? op1_v.GetReal(pos_SEM_NUM_v).IsInt() : false) &&
-      (op2_v.Is(TAG_TYPE_SEM_NUM) ? op2_v.GetReal(pos_SEM_NUM_v).IsInt() : false))
-  {
+      (op2_v.Is(TAG_TYPE_SEM_NUM) ? op2_v.GetReal(pos_SEM_NUM_v).IsInt() : false)) {
     const Real & n2 (op2_v.GetReal(pos_SEM_NUM_v));
 
-    if (n2.IsZero())
+    if (n2.IsZero()) {
       return RTERR::ErrorVal (L"EvalNumMod", RTERR_DIVISION_WITH_ZERO, Nil(), Nil(), Sequence());
-    else
+    }
+    else {
       // n1 mod n2 = n1 - n2 * floor(n1/n2)
       return mk_SEM_NUM(op1_v.GetReal(pos_SEM_NUM_v).Mod(n2));
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalNumMod", RTERR_TWO_INT_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalSetBinaryExpr
@@ -1736,7 +1785,9 @@ TYPE_SEM_VAL EXPR::EvalSetBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
     case SETMINUS:     { return EvalSetMinus (op1_v, op2_v); }
     case SUBSET:       { return EvalSubSet (op1_v, op2_v); }
     case PROPERSUBSET: { return EvalProperSubSet (op1_v, op2_v); }
-    default: { return RTERR::ErrorVal (L"EvalSetBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
+    default: {
+      return RTERR::ErrorVal (L"EvalSetBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
+    }
   } // end of switch
 }
 
@@ -1746,10 +1797,12 @@ TYPE_SEM_VAL EXPR::EvalSetBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalInSet (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL2.Is(TAG_TYPE_SEM_SET))
+  if (VAL2.Is(TAG_TYPE_SEM_SET)) {
     return ((VAL2.GetSet(pos_SEM_SET_v).InSet (op1_v)) ? sem_true : sem_false);
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalInSet", RTERR_SET_EXPECTED, VAL2, Nil(), Sequence());
+  }
 }
 
 // EvalNotInSet
@@ -1758,10 +1811,12 @@ TYPE_SEM_VAL EXPR::EvalInSet (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & V
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalNotInSet (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL2.Is(TAG_TYPE_SEM_SET))
+  if (VAL2.Is(TAG_TYPE_SEM_SET)) {
     return ((VAL2.GetSet(pos_SEM_SET_v).InSet (op1_v)) ? sem_false : sem_true);
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalNotInSet", RTERR_SET_EXPECTED, VAL2, Nil(), Sequence());
+  }
 }
 
 // EvalSetUnion
@@ -1770,10 +1825,12 @@ TYPE_SEM_VAL EXPR::EvalNotInSet (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL 
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetUnion (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET))
+  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET)) {
     return mk_SEM_SET(VAL1.GetSet(pos_SEM_SET_v).Union(VAL2.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSetUnion", RTERR_TWO_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalSetIntersect
@@ -1782,10 +1839,12 @@ TYPE_SEM_VAL EXPR::EvalSetUnion (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL &
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetIntersect (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET))
+  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET)) {
     return mk_SEM_SET(VAL1.GetSet(pos_SEM_SET_v).Intersect(VAL2.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSetIntersect", RTERR_TWO_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalSetMinus
@@ -1794,10 +1853,12 @@ TYPE_SEM_VAL EXPR::EvalSetIntersect (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_V
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetMinus (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET))
+  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET)) {
     return mk_SEM_SET(VAL1.GetSet(pos_SEM_SET_v).Diff(VAL2.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSetMinus", RTERR_TWO_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalSubSet
@@ -1806,10 +1867,12 @@ TYPE_SEM_VAL EXPR::EvalSetMinus (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL &
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSubSet (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET))
+  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET)) {
     return ((VAL1.GetSet(pos_SEM_SET_v).SubSet(VAL2.GetSet(pos_SEM_SET_v))) ? sem_true : sem_false);
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSubSet", RTERR_TWO_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalProperSubSet
@@ -1818,14 +1881,14 @@ TYPE_SEM_VAL EXPR::EvalSubSet (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & V
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalProperSubSet (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET))
-  {
+  if (VAL1.Is(TAG_TYPE_SEM_SET) && VAL2.Is(TAG_TYPE_SEM_SET)) {
     const SET<TYPE_SEM_VAL> & op1_sv (VAL1.GetSet(pos_SEM_SET_v));
     const SET<TYPE_SEM_VAL> & op2_sv (VAL2.GetSet(pos_SEM_SET_v));
     return ((op1_sv.SubSet (op2_sv) && (op1_sv.Card () != op2_sv.Card ())) ? sem_true : sem_false);
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalProperSubSet", RTERR_TWO_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 //Sequence Operators
@@ -1839,9 +1902,12 @@ TYPE_SEM_VAL EXPR::EvalProperSubSet (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_V
 TYPE_SEM_VAL EXPR::EvalSeqBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v)
 {
   switch (opr.GetValue()) {
-    case SEQCONC:
+    case SEQCONC: {
       return EvalSeqConc(op1_v, op2_v);
-    default: { return RTERR::ErrorVal (L"EvalSeqBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
+    }
+    default: {
+      return RTERR::ErrorVal (L"EvalSeqBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
+    }
   }
 }
 
@@ -1851,30 +1917,30 @@ TYPE_SEM_VAL EXPR::EvalSeqBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqConc (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & op2_v)
 {
-// 20130412 -->
-  if (op1_v.Is(TAG_TYPE_SEM_SEQ) && (op2_v.Is(TAG_TYPE_SEM_NUM) || op2_v.Is(TAG_TYPE_SEM_BOOL)))
-  {
+  if (op1_v.Is(TAG_TYPE_SEM_SEQ) && (op2_v.Is(TAG_TYPE_SEM_NUM) || op2_v.Is(TAG_TYPE_SEM_BOOL))) {
     Sequence l (op1_v.GetSequence(pos_SEM_SEQ_v)); 
     bool forall = true;
     size_t len_l = l.Length();
-    for (size_t i = 1; (i <= len_l) && forall; i++)
+    for (size_t i = 1; (i <= len_l) && forall; i++) {
       forall = l[i].Is(TAG_TYPE_SEM_CHAR);
-
-    if (forall)
-    {
+    }
+    if (forall) {
       Sequence num_l (op2_v.Is(TAG_TYPE_SEM_NUM) ? op2_v.GetReal(pos_SEM_NUM_v).ascii()
                                                  : op2_v.GetReal(pos_SEM_BOOL_v).ascii());
-      size_t len_num_l = num_l.Length();
-      for (size_t i = 1; i <= len_num_l; i++)
-        l.ImpAppend(mk_SEM_CHAR(num_l[i]));
+//      size_t len_num_l = num_l.Length();
+//      for (size_t i = 1; i <= len_num_l; i++) {
+//        l.ImpAppend(mk_SEM_CHAR(num_l[i]));
+//      }
+      l.ImpConc(SemRec::GetSemChars(num_l));
       return mk_SEM_SEQ(l);
     }
   }
-// <-- 20130412
-  if (op1_v.Is(TAG_TYPE_SEM_SEQ) && op2_v.Is(TAG_TYPE_SEM_SEQ))
+  if (op1_v.Is(TAG_TYPE_SEM_SEQ) && op2_v.Is(TAG_TYPE_SEM_SEQ)) {
     return mk_SEM_SEQ(op1_v.GetSequence(pos_SEM_SEQ_v).Conc (op2_v.GetSequence(pos_SEM_SEQ_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalSeqConc", RTERR_TWO_SEQ_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 //Map Operators
@@ -1890,7 +1956,9 @@ TYPE_SEM_VAL EXPR::EvalMapUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
     case MAPRNG:        { return EvalMapRng(op_v); }
     case MAPDISTRMERGE: { return EvalMapDistrMerge(op_v); }
     case MAPINVERSE:    { return EvalMapInverse(op_v); }
-    default: { return RTERR::ErrorVal (L"EvalMapUnaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
+    default: {
+      return RTERR::ErrorVal (L"EvalMapUnaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
+    }
   }
 }
 
@@ -1907,7 +1975,9 @@ TYPE_SEM_VAL EXPR::EvalMapBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
     case MAPDOMRESTBY: { return EvalMapDomRestBy (op1_v, op2_v); }
     case MAPRNGRESTTO: { return EvalMapRngRestTo (op1_v, op2_v); }
     case MAPRNGRESTBY: { return EvalMapRngRestBy (op1_v, op2_v); }
-    default: { return RTERR::ErrorVal (L"EvalMapBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
+    default: {
+      return RTERR::ErrorVal (L"EvalMapBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
+    }
   }
 }
 
@@ -1917,18 +1987,20 @@ TYPE_SEM_VAL EXPR::EvalMapBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapMerge (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & VAL2)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_MAP) && VAL2.Is(TAG_TYPE_SEM_MAP))
-  {
+  if (VAL1.Is(TAG_TYPE_SEM_MAP) && VAL2.Is(TAG_TYPE_SEM_MAP)) {
     Map op1 (VAL1.GetMap(pos_SEM_MAP_v));
     const Map & op2 (VAL2.GetMap(pos_SEM_MAP_v));
 
-    if (op1.IsCompatible(op2))
+    if (op1.IsCompatible(op2)) {
       return mk_SEM_MAP(op1.ImpOverride (op2));
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalMapMerge", RTERR_DUPLICATES_NOT_EQUAL, Nil(), Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalMapMerge", RTERR_TWO_MAP_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalMapDom
@@ -1936,10 +2008,12 @@ TYPE_SEM_VAL EXPR::EvalMapMerge (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL &
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapDom (const TYPE_SEM_VAL & VAL1)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_MAP))
+  if (VAL1.Is(TAG_TYPE_SEM_MAP)) {
     return mk_SEM_SET(VAL1.GetMap(pos_SEM_MAP_v).Dom());
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalMapDom", RTERR_MAP_EXPECTED, VAL1, Nil(), Sequence());
+  }
 }
 
 // EvalMapRng
@@ -1947,10 +2021,12 @@ TYPE_SEM_VAL EXPR::EvalMapDom (const TYPE_SEM_VAL & VAL1)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapRng (const TYPE_SEM_VAL & VAL1)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_MAP))
+  if (VAL1.Is(TAG_TYPE_SEM_MAP)) {
     return mk_SEM_SET(VAL1.GetMap(pos_SEM_MAP_v).Rng());
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalMapRng", RTERR_MAP_EXPECTED, VAL1, Nil(), Sequence());
+  }
 }
 
 // EvalMapDistrMerge
@@ -1958,35 +2034,39 @@ TYPE_SEM_VAL EXPR::EvalMapRng (const TYPE_SEM_VAL & VAL1)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapDistrMerge (const TYPE_SEM_VAL & VAL1)
 {
-  if (VAL1.Is(TAG_TYPE_SEM_SET))
-  {
+  if (VAL1.Is(TAG_TYPE_SEM_SET)) {
     SET<TYPE_SEM_VAL> op_sv (VAL1.GetSet(pos_SEM_SET_v)); // not ref for iteration
 
     // forall elm_v in set op_sv & is_SEM`MAP(elm_v)
     Generic elm_v;
     bool all_is_MAP = true;
     Map res_dv;
-    for (bool bb = op_sv.First (elm_v); bb && all_is_MAP; bb = op_sv.Next (elm_v))
-    { 
+    for (bool bb = op_sv.First (elm_v); bb && all_is_MAP; bb = op_sv.Next (elm_v)) { 
       TYPE_SEM_VAL val (elm_v);
       if (val.Is(TAG_TYPE_SEM_MAP)) {
         const Map & elm_mv (val.GetMap(pos_SEM_MAP_v));
-        if(res_dv.IsCompatible(elm_mv))
+        if(res_dv.IsCompatible(elm_mv)) {
           res_dv.ImpOverride (elm_mv); // OK since duplicates are identical
-        else
+        }
+        else {
           return RTERR::ErrorVal (L"EvalMapDistrMerge", RTERR_MAP_MERGE_DOM_OVERLAP, VAL1, Nil(), Sequence());
+        }
       }
-      else
+      else {
         all_is_MAP = false;
+      }
     }
 
-    if (all_is_MAP)
+    if (all_is_MAP) {
       return mk_SEM_MAP(res_dv);
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalMapDistrMerge", RTERR_ALL_MAPS_EXPECTED, VAL1, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalMapDistrMerge", RTERR_SET_EXPECTED, VAL1, Nil(), Sequence());
+  }
 }
 
 // EvalMapDomRestTo
@@ -1995,10 +2075,12 @@ TYPE_SEM_VAL EXPR::EvalMapDistrMerge (const TYPE_SEM_VAL & VAL1)
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapDomRestTo (const TYPE_SEM_VAL & VAL_S, const TYPE_SEM_VAL & VAL_M)
 {
-  if (VAL_S.Is(TAG_TYPE_SEM_SET) && VAL_M.Is(TAG_TYPE_SEM_MAP))
+  if (VAL_S.Is(TAG_TYPE_SEM_SET) && VAL_M.Is(TAG_TYPE_SEM_MAP)) {
     return mk_SEM_MAP(VAL_M.GetMap(pos_SEM_MAP_v).DomRestrictedTo(VAL_S.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalMapDomRestTo", RTERR_SET_AND_MAP_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalMapDomRestBy
@@ -2007,10 +2089,12 @@ TYPE_SEM_VAL EXPR::EvalMapDomRestTo (const TYPE_SEM_VAL & VAL_S, const TYPE_SEM_
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapDomRestBy (const TYPE_SEM_VAL & VAL_S, const TYPE_SEM_VAL & VAL_M)
 {
-  if (VAL_S.Is(TAG_TYPE_SEM_SET) && VAL_M.Is(TAG_TYPE_SEM_MAP))
+  if (VAL_S.Is(TAG_TYPE_SEM_SET) && VAL_M.Is(TAG_TYPE_SEM_MAP)) {
     return mk_SEM_MAP(VAL_M.GetMap(pos_SEM_MAP_v).DomRestrictedBy(VAL_S.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalMapDomRestBy", RTERR_SET_AND_MAP_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalMapRngRestTo
@@ -2019,10 +2103,12 @@ TYPE_SEM_VAL EXPR::EvalMapDomRestBy (const TYPE_SEM_VAL & VAL_S, const TYPE_SEM_
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapRngRestTo (const TYPE_SEM_VAL & VAL_M, const TYPE_SEM_VAL & VAL_S)
 {
-  if (VAL_M.Is(TAG_TYPE_SEM_MAP) && VAL_S.Is(TAG_TYPE_SEM_SET))
+  if (VAL_M.Is(TAG_TYPE_SEM_MAP) && VAL_S.Is(TAG_TYPE_SEM_SET)) {
     return mk_SEM_MAP(VAL_M.GetMap(pos_SEM_MAP_v).RngRestrictedTo(VAL_S.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalMapRngResrTo", RTERR_MAP_AND_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalMapRngRestBy
@@ -2031,10 +2117,12 @@ TYPE_SEM_VAL EXPR::EvalMapRngRestTo (const TYPE_SEM_VAL & VAL_M, const TYPE_SEM_
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapRngRestBy (const TYPE_SEM_VAL & VAL_M, const TYPE_SEM_VAL & VAL_S)
 {
-  if (VAL_M.Is(TAG_TYPE_SEM_MAP) && VAL_S.Is(TAG_TYPE_SEM_SET))
+  if (VAL_M.Is(TAG_TYPE_SEM_MAP) && VAL_S.Is(TAG_TYPE_SEM_SET)) {
     return mk_SEM_MAP(VAL_M.GetMap(pos_SEM_MAP_v).RngRestrictedBy(VAL_S.GetSet(pos_SEM_SET_v)));
-  else
+  }
+  else {
     return RTERR::ErrorVal (L"EvalMapRngResrBy", RTERR_MAP_AND_SET_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalMapApply
@@ -2043,17 +2131,19 @@ TYPE_SEM_VAL EXPR::EvalMapRngRestBy (const TYPE_SEM_VAL & VAL_M, const TYPE_SEM_
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalMapApply (const TYPE_SEM_MAP & MapV, const SEQ<TYPE_SEM_VAL> & arg_lv)
 {
-  if (1 == arg_lv.Length ())
-  {
+  if (1 == arg_lv.Length ()) {
     const TYPE_SEM_VAL & arg_v (arg_lv.Hd ());
     Generic res;
-    if (MapV.GetMap(pos_SEM_MAP_v).DomExists (arg_v, res))
+    if (MapV.GetMap(pos_SEM_MAP_v).DomExists (arg_v, res)) {
       return (res);
-    else
+    }
+    else {
       return RTERR::ErrorVal (L"EvalMapApply", RTERR_ARG_NOT_IN_DOM, arg_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalMapApply", RTERR_WRONG_NO_OF_ARGS, arg_lv, Nil(), Sequence());
+  }
 }
 
 // EvalSeqApply
@@ -2062,24 +2152,26 @@ TYPE_SEM_VAL EXPR::EvalMapApply (const TYPE_SEM_MAP & MapV, const SEQ<TYPE_SEM_V
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSeqApply (const TYPE_SEM_SEQ & SeqV, const SEQ<TYPE_SEM_VAL> & arg_lv)
 {
-  if (1 == arg_lv.Length ())
-  {
+  if (1 == arg_lv.Length ()) {
     const TYPE_SEM_VAL & arg_v (arg_lv.Hd ());
-    if (arg_v.Is(TAG_TYPE_SEM_NUM) ? arg_v.GetReal(pos_SEM_NUM_v).IsNatOne() : false)
-    {
+    if (arg_v.Is(TAG_TYPE_SEM_NUM) ? arg_v.GetReal(pos_SEM_NUM_v).IsNatOne() : false) {
       int64_t arg = arg_v.GetReal(pos_SEM_NUM_v).GetIntValue ();
       const SEQ<TYPE_SEM_VAL> & bd_lv (SeqV.GetSequence(pos_SEM_SEQ_v));
 //      if ((1 <= arg) && (arg <= bd_lv.Length ()))
-      if (arg <= bd_lv.Length ())
+      if (arg <= bd_lv.Length ()) {
         return (bd_lv[arg]);
-      else
+      }
+      else {
         return RTERR::ErrorVal (L"EvalSeqApply", RTERR_ILLEGAL_INDICES, arg_v, Nil(), Sequence());
+      }
     }
-    else
+    else {
       return RTERR::ErrorVal (L"EvalSeqApply", RTERR_NAT_EXPECTED, arg_v, Nil(), Sequence());
+    }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalSeqApply", RTERR_WRONG_NO_OF_ARGS, arg_lv, Nil(), Sequence());
+  }
 }
 
 // EvalEquals (not in spec)
@@ -2088,20 +2180,19 @@ TYPE_SEM_VAL EXPR::EvalSeqApply (const TYPE_SEM_SEQ & SeqV, const SEQ<TYPE_SEM_V
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & val2)
 {
-  if (val1.GetTag() == val2.GetTag())
-  {
+  if (val1.GetTag() == val2.GetTag()) {
     switch(val1.GetTag()) {
 #ifdef VDMPP
       case TAG_TYPE_SEM_OBJ_uRef: {
-        if (val1 == val2)
+        if (val1 == val2) {
           return sem_true;
-
+        }
         const TYPE_AS_Name & clnm1 (val1.GetRecord(pos_SEM_OBJ_uRef_tp));
         const TYPE_AS_Name & clnm2 (val2.GetRecord(pos_SEM_OBJ_uRef_tp));
 
-        if (theState().IsClient(clnm1, clnm2))
+        if (theState().IsClient(clnm1, clnm2)) {
           return sem_false;
-
+        }
         TYPE_SEM_OBJ sem1 (theState().GetSemObjInTab(val1));
         TYPE_SEM_OBJ sem2 (theState().GetSemObjInTab(val2));
  
@@ -2116,40 +2207,38 @@ TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & v
 //        if (is1.Dom() != is2.Dom())
 //          return sem_false;
 
-        if (!ds1.IsEmpty())
-        {
+        if (!ds1.IsEmpty()) {
           bool forall = true;
           Generic e;
-          for (bool bb = ds1.First(e); bb && forall; bb = ds1.Next(e))
+          for (bool bb = ds1.First(e); bb && forall; bb = ds1.Next(e)) {
             forall = is1[e].IsEmpty();
-          if (!forall)
+          }
+          if (!forall) {
             return sem_false;
+          }
         }
-        if (!ds2.IsEmpty())
-        {
+        if (!ds2.IsEmpty()) {
           bool forall = true;
           Generic e;
-          for (bool bb = ds2.First(e); bb && forall; bb = ds2.Next(e))
+          for (bool bb = ds2.First(e); bb && forall; bb = ds2.Next(e)) {
             forall = is2[e].IsEmpty();
-          if (!forall)
+          }
+          if (!forall) {
             return sem_false;
+          }
         }
           
         bool forall = true;
-        if (!is.IsEmpty())
-        {
+        if (!is.IsEmpty()) {
           Generic e1;
-          for (bool bb = is.First(e1); bb && forall; bb = is.Next(e1))
-          {
+          for (bool bb = is.First(e1); bb && forall; bb = is.Next(e1)) {
             TYPE_GLOBAL_ValueMap vm1 (is1[e1]);
             TYPE_GLOBAL_ValueMap vm2 (is2[e1]);
             forall = (vm1.Dom() == vm2.Dom());
-            if (!vm1.IsEmpty())
-            {
+            if (!vm1.IsEmpty()) {
               Set dom_vm1 (vm1.Dom());
               Generic vme1;
-              for (bool cc = dom_vm1.First(vme1); cc && forall; cc = dom_vm1.Next(vme1))
-              {
+              for (bool cc = dom_vm1.First(vme1); cc && forall; cc = dom_vm1.Next(vme1)) {
                 type_dU2P t1 (vm1[vme1]);
                 type_dU2P t2 (vm2[vme1]);
                 forall = EvalEquals(t1.GetRecord(1), t2.GetRecord(1)).GetBoolValue(pos_SEM_BOOL_v);
@@ -2166,8 +2255,9 @@ TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & v
         const SEQ<TYPE_SEM_VAL> & v2 (val2.GetSequence(pos_SEM_TUPLE_v));
         size_t len_v1 = v1.Length() ;
         bool forall = (len_v1 == (size_t)v2.Length());
-        for (size_t idx = 1; (idx <= len_v1) && forall; idx++)
+        for (size_t idx = 1; (idx <= len_v1) && forall; idx++) {
           forall = EvalEquals(v1[idx], v2[idx]).GetBoolValue(pos_SEM_BOOL_v);
+        }
         return (forall ? sem_true : sem_false);
         break;
       }
@@ -2175,18 +2265,18 @@ TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & v
         SET<TYPE_SEM_VAL> v1 (val1.GetSet(pos_SEM_SET_v));
         SET<TYPE_SEM_VAL> v2 (val2.GetSet(pos_SEM_SET_v));
         bool forall = (v1.Card() == v2.Card());
-        if (!v1.IsEmpty())
-        {
+        if (!v1.IsEmpty()) {
           Generic e1;
-          for (bool bb = v1.First(e1); bb && forall; bb = v1.Next(e1))
-          {
+          for (bool bb = v1.First(e1); bb && forall; bb = v1.Next(e1)) {
             bool exists = false;
             Generic e2;
-            for (bool cc = v2.First(e2); cc && !exists; cc = v2.First(e2))
+            for (bool cc = v2.First(e2); cc && !exists; cc = v2.First(e2)) {
               exists = EvalEquals(e1, e2).GetBoolValue(pos_SEM_BOOL_v);
+            }
             forall = exists;
-            if(exists)
+            if(exists) {
               v2.RemElem(e2);
+            }
           }
         }
         return (forall ? sem_true : sem_false);
@@ -2196,22 +2286,22 @@ TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & v
         const Map & v1 (val1.GetMap(pos_SEM_MAP_v));
         Map v2 (val2.GetMap(pos_SEM_MAP_v));
         bool forall = (v1.Size() == v2.Size());
-        if (!v1.IsEmpty())
-        {
+        if (!v1.IsEmpty()) {
           Set dom_v1 (v1.Dom());
           Generic e1;
-          for (bool bb = dom_v1.First(e1); bb && forall; bb = dom_v1.Next(e1))
-          {
+          for (bool bb = dom_v1.First(e1); bb && forall; bb = dom_v1.Next(e1)) {
             const TYPE_SEM_VAL & r1 (v1[e1]);
             bool exists = false;
             Set dom_v2 (v2.Dom());
             Generic e2;
-            for (bool cc = dom_v2.First(e2); cc && !exists; cc = dom_v2.First(e2))
+            for (bool cc = dom_v2.First(e2); cc && !exists; cc = dom_v2.First(e2)) {
               exists = EvalEquals(e1, e2).GetBoolValue(pos_SEM_BOOL_v) &&
                        EvalEquals(r1, v2[e2]).GetBoolValue(pos_SEM_BOOL_v);
+            }
             forall = exists;
-            if(exists)
+            if(exists) {
               v2.RemElem(e2);
+            }
           }
         }
         return (forall ? sem_true : sem_false);
@@ -2222,8 +2312,9 @@ TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & v
         const SEQ<TYPE_SEM_VAL> & v2 (val2.GetSequence(pos_SEM_TUPLE_v) );
         size_t len_v1 = v1.Length() ;
         bool forall = (len_v1 == (size_t)v2.Length());
-        for (size_t idx = 1; (idx <= len_v1) && forall; idx++)
+        for (size_t idx = 1; (idx <= len_v1) && forall; idx++) {
           forall = EvalEquals(v1[idx], v2[idx]).GetBoolValue(pos_SEM_BOOL_v);
+        }
         return (forall ? sem_true : sem_false);
         break;
       }
@@ -2234,8 +2325,9 @@ TYPE_SEM_VAL EXPR::EvalEquals (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & v
         SEQ<TYPE_SEM_VAL> v2 (val2.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
         size_t len_v1 = v1.Length();
         bool forall = ((tag1 == tag2) && (len_v1 == (size_t)v2.Length()));
-        for (size_t idx = 1; (idx <= len_v1) && forall; idx++)
+        for (size_t idx = 1; (idx <= len_v1) && forall; idx++) {
           forall = EvalEquals(v1[idx], v2[idx]).GetBoolValue(pos_SEM_BOOL_v);
+        }
         return (forall ? sem_true : sem_false);
         break;
       }

@@ -521,6 +521,8 @@ private:
   Sequence nCurTimeExpr;
 #endif // VICE
 #endif // VDMPP
+
+  static TYPE_INSTRTP_ERRINST undefinedError;
 };
 
 // }}}

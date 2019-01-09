@@ -27,6 +27,9 @@ TYPE_SEM_Permission sem_read_only = Int(READ_ONLY);
 TYPE_SEM_Permission sem_read_write = Int(READ_WRITE);
 TYPE_SEM_CONT sem_cont;
 
+MAP<Char, TYPE_SEM_CHAR> SemRec::charMap;
+MAP<SEQ<Char>, TYPE_SEM_QUOTE> SemRec::quoteMap;
+
 
 //----------------------------------------------------------------------
 // Definitions from eval_sem.vdm
@@ -347,8 +350,9 @@ TYPE_DYNSEM_SEM_SemRecord SemRec::REC2SemRecord(const TYPE_SEM_REC & semrec)
   SEQ<TYPE_SEM_VAL> fields;
   int len = fieldmap.Size();
   for (int i = 1; i <= len; i++) {
-    if (fieldmap.DomExists(Int(i)))
+    if (fieldmap.DomExists(Int(i))) {
       fields.ImpAppend(fieldmap[Int(i)]);
+    }
   }
   return mk_SEM_REC(symtag, fields);
 }
@@ -574,18 +578,18 @@ wstring SemRec::Num2String( const Generic & num)
 // -> seq of char
 wstring SemRec::ValSeq2String( const SEQ<TYPE_SEM_VAL> & v_l )
 {
-  if( v_l.IsEmpty() )
+  if( v_l.IsEmpty() ) {
     return L" ";
-  else
-  {
+  }
+  else {
     wstring ret;
     SEQ<TYPE_SEM_VAL> tmp (v_l);
-    while( !tmp.IsEmpty() )
-    {
+    while( !tmp.IsEmpty() ) {
       ret += Val2String(tmp.Hd());
       tmp.ImpTl();
-      if( !tmp.IsEmpty() )
+      if( !tmp.IsEmpty() ) {
         ret += L", ";
+      }
     }
     return ret;
   }
@@ -596,19 +600,19 @@ wstring SemRec::ValSeq2String( const SEQ<TYPE_SEM_VAL> & v_l )
 // -> seq of char
 wstring SemRec::ValSet2String( const SET<TYPE_SEM_VAL> & v_s )
 {
-  if( v_s.IsEmpty() )
+  if( v_s.IsEmpty() ) {
     return L" ";
-  else
-  {
+  }
+  else {
     wstring ret;
     Set tmp (v_s);
-    while( !tmp.IsEmpty() )
-    {
+    while( !tmp.IsEmpty() ) {
       Generic e (tmp.GetElem());
       ret += Val2String(e);
       tmp.RemElem(e);
-      if( !tmp.IsEmpty() )
+      if( !tmp.IsEmpty() ) {
         ret += L", ";
+      }
     }
     return ret;
   }
@@ -620,27 +624,27 @@ wstring SemRec::ValSet2String( const SET<TYPE_SEM_VAL> & v_s )
 // -> seq of char
 wstring SemRec::ValNatMap2String( const Map & v_m1, const Map & v_m2 )
 {
-  if( v_m1.IsEmpty() && v_m2.IsEmpty() )
+  if( v_m1.IsEmpty() && v_m2.IsEmpty() ) {
     return L" ";
-  else
-  {
+  }
+  else {
     wstring ret;
     Map tmp_m (v_m1);
     tmp_m.ImpOverride(v_m2);
     Set tmp_s (tmp_m.Dom());
-    while( !tmp_s.IsEmpty() )
-    {
+    while( !tmp_s.IsEmpty() ) {
       Generic e = (tmp_s.GetElem());
       Generic g;
-      for(bool bb = tmp_s.First(g); bb; bb = tmp_s.Next(g))
-      {
-        if(e.Compare(g) > 0 )
+      for(bool bb = tmp_s.First(g); bb; bb = tmp_s.Next(g)) {
+        if(e.Compare(g) > 0 ) {
           e = g;
+        }
       }
       ret += Val2String(tmp_m[e]); 
       tmp_s.RemElem(e);
-      if( !tmp_s.IsEmpty() )
+      if( !tmp_s.IsEmpty() ) {
         ret += L", ";
+      }
     } 
     return ret;
   }
@@ -651,19 +655,19 @@ wstring SemRec::ValNatMap2String( const Map & v_m1, const Map & v_m2 )
 // -> seq of char
 wstring SemRec::ValMap2String( const MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> & v_m )
 {
-  if( v_m.IsEmpty() )
+  if( v_m.IsEmpty() ) {
     return L" ";
-  else
-  {
+  }
+  else {
     wstring ret;
     Set tmp (v_m.Dom());
-    while( !tmp.IsEmpty() )
-    {
+    while( !tmp.IsEmpty() ) {
       Generic e (tmp.GetElem());
       ret += Val2String(e) + L"|->" + Val2String(v_m[e]);
       tmp.RemElem(e);
-      if( !tmp.IsEmpty() )
+      if( !tmp.IsEmpty() ) {
         ret += L", ";
+      }
     }
     return ret;
   }
@@ -676,12 +680,12 @@ wstring SemRec::Ids2String(const TYPE_AS_Ids & ids_)
 {
   wstring res;
   TYPE_AS_Ids ids (ids_);
-  while (!ids.IsEmpty())
-  {
+  while (!ids.IsEmpty()) {
     res += ids[1].GetString();
     ids.ImpTl();
-    if (!ids.IsEmpty())
+    if (!ids.IsEmpty()) {
       res += L"`";
+    }
   }
   return res;
 }
@@ -771,3 +775,30 @@ wstring SemRec::Val2String( const TYPE_SEM_VAL & val )
   }
 }
 #endif // VICE
+
+SEQ<TYPE_SEM_CHAR> SemRec::GetSemChars(const SEQ<Char> & cs)
+{
+  SEQ<TYPE_SEM_CHAR> chars;
+  size_t len_cs = cs.Length();
+  for (size_t index = 1; index <= len_cs; index++) {
+    chars.ImpAppend(GetSemChar(cs[index]));
+  }
+  return chars;
+}
+
+TYPE_SEM_CHAR SemRec::GetSemChar(const Char & c)
+{
+  if (!charMap.DomExists(c)) {
+    charMap.Insert(c, mk_SEM_CHAR(c));
+  }
+  return charMap[c];
+}
+
+TYPE_SEM_QUOTE SemRec::GetSemQuote(const SEQ<Char> & cs)
+{
+  if (!quoteMap.DomExists(cs)) {
+    quoteMap.Insert(cs, mk_SEM_QUOTE(cs));
+  }
+  return quoteMap[cs];
+}
+

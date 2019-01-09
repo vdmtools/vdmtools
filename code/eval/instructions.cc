@@ -466,8 +466,6 @@ SET<TYPE_SEM_VAL> StackEval::TypeToSet(const TYPE_AS_Type & tp)
         }
       }
 #endif // VDMPP
-// 20150924 -->
-      //return TypeToSet(itd.GetRecord(2));
       if (itd.GetField(3).IsNil()) {
         return TypeToSet(itd.GetRecord(2));
       }
@@ -514,7 +512,6 @@ SET<TYPE_SEM_VAL> StackEval::TypeToSet(const TYPE_AS_Type & tp)
         RTERR::Error(L"TypeToSet", RTERR_TYPE_BIND_EVAL, Nil(), Nil(), Sequence());
         return Set(); // dummy
       }
-// <-- 20150924
     }
     case TAG_TYPE_AS_OptionalType: {
       SET<TYPE_SEM_VAL> res;
@@ -822,7 +819,6 @@ void StackEval::ExeCONTEXT(const TYPE_CI_ContextId & cid, const Bool & isStmt)
   if (cid != NilContextId) {
     GetCI().IncTestCoverageInfo(cid);
 
-// 20071010 -->
 #ifdef VDMSL
     if(GetUserBREAK()) {
 #endif // VDMSL
@@ -833,7 +829,6 @@ void StackEval::ExeCONTEXT(const TYPE_CI_ContextId & cid, const Bool & isStmt)
       SetBREAK();
       return;
     }
-// <<--
     else if (ActiveBreakpoint(cid)) {
       SetBREAK();
       return;
@@ -891,7 +886,6 @@ void StackEval::ExeIEND()
 // ==> ()
 void StackEval::ExeSELBLKENV(const Int & n)
 {
-// 20091120 -->
 /*
   SEQ<Set> val_l (POPN(n));
 
@@ -914,7 +908,6 @@ void StackEval::ExeSELBLKENV(const Int & n)
   PUSHBLKENV(env);
 
   SETNTH(n, val_l_hd);
-// <-- 20091120
 }
 
 // ExeAPPENDBLKENV
@@ -978,12 +971,10 @@ void StackEval::ExeADDTOBLKENV()
 // ==> ()
 void StackEval::ExeEXITVAL()
 {
-// 20151203 -->
   if (HdContext() == Int(PUREOP)) {
     RTERR::Error(L"ExeEXITVAL", RTERR_PURE_OP_EXIT, Nil(), Nil(), Sequence());
     return;
   }
-// <-- 20151203
   GotoTrapHandler(POP());
 }
 
@@ -1392,14 +1383,12 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
 // ==> ()
 void StackEval::EvalExplOpApply(const TYPE_SEM_ExplOP & opsem, const SEQ<TYPE_SEM_VAL> & arg_lv)
 {
-// 20151203 -->
   if (HdContext() == Int(PUREOP)) {
     if (!opsem.GetBoolValue(pos_SEM_ExplOP_oppure)) {
       RTERR::Error(L"EvalExplOpApply", RTERR_PURE_OP_CALL, Nil(), Nil(), Sequence());
       return;
     }
   }
-// <-- 20151203
 
   const TYPE_AS_Name & clmodName (opsem.GetRecord(pos_SEM_ExplOP_modName));
   const TYPE_AS_Name & opName    (opsem.GetRecord(pos_SEM_ExplOP_fnName));
@@ -2201,8 +2190,7 @@ void StackEval::CleanExplOpApply(const TYPE_SEM_ExplOP & eop)
   }
 
   POPENVL();
-//wcout << L"return op:" << eop.GetRecord(pos_SEM_ExplOP_fnName) << endl;
-  PopOS(); // 20070109
+  PopOS();
 
 #ifdef VDMSL
   POPMODULE();
@@ -2919,7 +2907,6 @@ void StackEval::ExeSETENUM(const Int & length)
 {
   SEQ<TYPE_STKM_Pattern> fields (POPN(length));
 
-// 20140303 -->
   SET<TYPE_STKM_Pattern> field_s;
   SEQ<TYPE_STKM_Pattern> fields_q;
   size_t len_fields = fields.Length();
@@ -2930,7 +2917,6 @@ void StackEval::ExeSETENUM(const Int & length)
       field_s.Insert(p);
     }
   }
-// <-- 20140303
 
   PUSH(TYPE_STKM_SetEnumPattern().Init(fields_q));
 }
@@ -2961,7 +2947,6 @@ void StackEval::ExeMAPENUM(const Int & length)
 {
   SEQ<TYPE_STKM_MapletPattern> mls (POPN(length));
 
-// 20140303 -->
   SET<TYPE_STKM_MapletPattern> mp_s;
   SEQ<TYPE_STKM_MapletPattern> mls_q;
   size_t len_mls = mls.Length();
@@ -2972,7 +2957,6 @@ void StackEval::ExeMAPENUM(const Int & length)
       mp_s.Insert(p);
     }
   }
-// <-- 20140303
 
   PUSH(TYPE_STKM_MapEnumPattern().Init(mls_q));
 }
@@ -3073,12 +3057,10 @@ void StackEval::ExeMOSREF()
 void StackEval::InvOK() /*notconst*/
 {
   if (Settings.INV() && !theState().CheckGlobInv()) {
-// 20150107 -->
     if (theStackMachine().RuntimeErrorExceptionOccurred()) {
       theStackMachine().GotoTrapHandler(theStackMachine().RuntimeErrorVal());
     }
     else
-// <-- 20150107
 #ifdef VDMSL
     RTERR::Error(L"InvOK", RTERR_STATE_INVARIANT_ERROR, Nil(), Nil(), Sequence());
 #endif //VDMSL
@@ -3621,12 +3603,10 @@ void StackEval::ExeNEWPOSABSOBJ (const TYPE_AS_Name & name, const Generic & dlob
                  Sequence().ImpAppend(AUX::SingleNameToString(name)));
   }
   else {
-// 20090401 -->
 //    TYPE_SEM_InsStrct insstrct (theState().GetInstInitVal(name));
 //    TYPE_SEM_OBJ tmp_obj (TYPE_SEM_OBJ().Init(name, insstrct, MAP<TYPE_AS_Name,TYPE_SEM_History>()));
 //    TYPE_SEM_OBJ_uRef tmp_ref (MakeNewObj( tmp_obj, CreateNEWDLClass(name, dlobject) ));
     TYPE_SEM_OBJ_uRef tmp_ref (MakeNewObj(theState().GetCachedOBJ(name), CreateNEWDLClass(name, dlobject)));
-// <-- 20090401
 
     PUSH(tmp_ref);
     PushCurObj(tmp_ref, Nil(), Nil());
@@ -3905,7 +3885,7 @@ void StackEval::ExeSTOPLIST(const Bool & isset)
 // ==> ()
 void StackEval::ExeGUARD(const Bool & log)
 {
-  if (!UsesThreads()) return; // 20090129
+  if (!UsesThreads()) return;
 
   const SEQ<TYPE_SEM_VAL> & argv (GETNTH(1));
   const TYPE_SEM_VAL & fct_v (GETNTH(2));
@@ -3936,7 +3916,7 @@ void StackEval::GuardCheck(const TYPE_SEM_ExplOP & op_v,
                            const SEQ<TYPE_SEM_VAL> & arglv,
                            const Bool & log)
 {
-  if (!UsesThreads()) return; // 20090129
+  if (!UsesThreads()) return;
 
   const TYPE_AS_Name & modName (op_v.GetRecord(pos_SEM_ExplOP_modName));
   const TYPE_AS_Name & fnName (op_v.GetRecord(pos_SEM_ExplOP_fnName));

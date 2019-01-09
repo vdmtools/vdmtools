@@ -108,6 +108,8 @@ private:
   static VDMRecInfoMap DefSemRecInfo;
   static int next_tag;
   static TYPE_AS_Name currentmodcls; // Current Module or Class Name.
+  static MAP<Char, TYPE_SEM_CHAR> charMap;
+  static MAP<SEQ<Char>, TYPE_SEM_QUOTE> quoteMap;
 
 public:
   static TYPE_SEM_CompExplFN CompFN(const TYPE_SEM_ExplFN & efn);
@@ -129,8 +131,11 @@ public:
   static TYPE_SEM_REC SemRecord2REC(const TYPE_DYNSEM_SEM_SemRecord & srec);
   static TYPE_DYNSEM_SEM_SemRecord REC2SemRecord(const TYPE_SEM_REC & semrec);
   static TYPE_DYNSEM_SEM_SemRecord CreateSemRecordUndefinedFields(
-                               const TYPE_AS_CompositeType & tp,
-                               const TYPE_AS_Name & tag);
+                                   const TYPE_AS_CompositeType & tp,
+                                   const TYPE_AS_Name & tag);
+  static SEQ<TYPE_SEM_CHAR> GetSemChars(const SEQ<Char> & cs);
+  static TYPE_SEM_CHAR GetSemChar(const Char & c);
+  static TYPE_SEM_QUOTE GetSemQuote(const SEQ<Char> & cs);
 
 #ifdef VICE
   static int Size(const TYPE_SEM_VAL & val);

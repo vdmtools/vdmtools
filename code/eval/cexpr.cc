@@ -23,6 +23,8 @@
 
 //wcout << L"intertp: " << INT2Q::h2gAS(intertp) << endl;
 
+
+TYPE_INSTRTP_ERRINST StackCompiler::undefinedError (TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_UNDEFINED_EXPRESSION)));
 // }}}
 // {{{ E2I
 
@@ -324,9 +326,7 @@ TYPE_STKM_SubProgram StackCompiler::E2I(const TYPE_AS_Expr & e)
       break;
     }
     case TAG_TYPE_AS_OldName: {
-// 20091211 -->
       theStackMachine().SetUsesOldName(true);
-// <-- 20091211
       prog.ImpConc(IStart(nOldName, e.GetInt(pos_AS_OldName_cid)))
           .ImpAppend(TYPE_INSTRTP_LOOKUP().Init(e))
           .ImpConc(IEnd(nOldName));
@@ -357,33 +357,36 @@ TYPE_STKM_SubProgram StackCompiler::E2I(const TYPE_AS_Expr & e)
       break;
     }
     case TAG_TYPE_AS_TextLit: {
-      const type_cL & val (e.GetSequence(pos_AS_TextLit_val));
-
-      size_t len_val = val.Length();
-      SEQ<TYPE_SEM_VAL> chars;
-      for (size_t i = 1; i <= len_val; i++)
-        chars.ImpAppend(mk_SEM_CHAR(val[i]));
-
+//      const type_cL & val (e.GetSequence(pos_AS_TextLit_val));
+//      size_t len_val = val.Length();
+//      SEQ<TYPE_SEM_VAL> chars;
+//      for (size_t i = 1; i <= len_val; i++) {
+//        chars.ImpAppend(mk_SEM_CHAR(val[i]));
+//      }
       prog.ImpConc(IStart(nTextLit, e.GetInt(pos_AS_TextLit_cid)))
-          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_SEQ(chars)))
+//          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_SEQ(chars)))
+          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_SEQ(SemRec::GetSemChars(e.GetSequence(pos_AS_TextLit_val)))))
           .ImpConc(IEnd(nTextLit));
       break;
     }
     case TAG_TYPE_AS_CharLit: {
       prog.ImpConc(IStart(nCharLit, e.GetInt(pos_AS_CharLit_cid)))
-          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_CHAR(e.GetChar(pos_AS_CharLit_val))))
+//          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_CHAR(e.GetChar(pos_AS_CharLit_val))))
+          .ImpAppend(TYPE_INSTRTP_PUSH().Init(SemRec::GetSemChar(e.GetChar(pos_AS_CharLit_val))))
           .ImpConc(IEnd(nCharLit));
       break;
     }
     case TAG_TYPE_AS_QuoteLit: {
       prog.ImpConc(IStart(nQuoteLit, e.GetInt(pos_AS_QuoteLit_cid)))
-          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_QUOTE(e.GetSequence(pos_AS_QuoteLit_val))))
+//          .ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_SEM_QUOTE(e.GetSequence(pos_AS_QuoteLit_val))))
+          .ImpAppend(TYPE_INSTRTP_PUSH().Init(SemRec::GetSemQuote(e.GetSequence(pos_AS_QuoteLit_val))))
           .ImpConc(IEnd(nQuoteLit));
       break;
     }
     case TAG_TYPE_AS_UndefinedExpr: {
       prog.ImpConc(IStart(nUndefinedExpr, e.GetInt(pos_AS_UndefinedExpr_cid)))
-          .ImpAppend(TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_UNDEFINED_EXPRESSION)))
+//          .ImpAppend(TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_UNDEFINED_EXPRESSION)))
+          .ImpAppend(undefinedError)
           .ImpConc(IEnd(nUndefinedExpr));
       break;
     }
@@ -753,12 +756,8 @@ TYPE_STKM_SubProgram StackCompiler::CompileAllOrExistsExpr(const TYPE_AS_AllOrEx
 // ==> STKM`SubProgram
 TYPE_STKM_SubProgram StackCompiler::CompileEUandICommon(const TYPE_AS_Bind & bind, const TYPE_AS_Expr & expr)
 {
-  // bind_l
-//  SEQ<TYPE_AS_MultBind> bind_l (ASTAUX::BindToBindList(bind));
-  
   // prep_instr
   TYPE_STKM_SubProgram prep_instr;
-//  prep_instr.ImpConc(CompileMultBindL(bind_l, Int(DO_PARTITION)))
   prep_instr.ImpConc(CompileBind(bind, Int(DO_PARTITION)))
             .ImpAppend(TYPE_INSTRTP_PUSH().Init(Set()));
 
@@ -892,7 +891,6 @@ TYPE_STKM_SubProgram StackCompiler::CompileFieldSelectExpr(const TYPE_AS_FieldSe
 
   // Body of the function
   TYPE_STKM_SubProgram sp (E2I(rec));
-// 20140821 -->
   //sp.ImpConc(SetContext(ASTAUX::GetCid(field), false))
   //  .ImpAppend(TYPE_INSTRTP_FIELDSEL().Init(field));
   switch (field.GetTag()) {
@@ -982,15 +980,13 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesExpr(const TYPE_AS_CasesExpr & e
 #endif //VICE
   }
 
-// 20140407 -->
-//  TYPE_STKM_SubProgram err_sp;
-//  err_sp.ImpAppend(TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_MULTIPLE_PATTERN)));
-// <-- 20140407
-
-// 20140407 -->
-//  TYPE_STKM_SubProgram tsp;
-//  tsp.ImpAppend(TYPE_INSTRTP_SWAP());
-// <-- 20140407
+//#define MATCHUNIQUE
+#ifdef MATCHUNIQUE
+  TYPE_STKM_SubProgram err_sp;
+  err_sp.ImpAppend(TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_MULTIPLE_PATTERN)));
+  TYPE_STKM_SubProgram tsp;
+  tsp.ImpAppend(TYPE_INSTRTP_SWAP());
+#endif // MATCHUNIQUE
 
   for (size_t i = altns.Length(); i > 0; i--) {
     // Unpack altn
@@ -1032,14 +1028,10 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesExpr(const TYPE_AS_CasesExpr & e
                 .ImpAppend(TYPE_INSTRTP_TRYANYMATCH());
 #ifdef VICE
       test_instr.ImpConc(MkMatchPattern());
-#endif //VICE
-
-#ifdef VICE
       lsp.ImpConc(MkBr());
 #endif //VICE
 
-// 20140407 -->
-/*
+#ifdef MATCHUNIQUE
       TYPE_STKM_SubProgram body_instr2, check_multi_match;
       check_multi_match.ImpAppend(TYPE_INSTRTP_SWAP())
                        .ImpConc(tsp);
@@ -1047,20 +1039,22 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesExpr(const TYPE_AS_CasesExpr & e
 
       body_instr2.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_CASES()),
                                          check_multi_match, TYPE_STKM_SubProgram()))
-                 .ImpConc(SetContext(ASTAUX::GetCid(pat), false)); // 20130610
-      if (onep)
+                 .ImpConc(SetContext(ASTAUX::GetCid(pat), false));
+      if (onep) {
         body_instr2.ImpConc(body_instr);
-      else
+      }
+      else {
         body_instr2.ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true));
+      }
       lsp = ConcIfThenElse(test_instr, body_instr2, lsp);
-*/
+#else
       if (onep) {
         lsp = ConcIfThenElse(test_instr, body_instr, lsp);
       }
       else {
         lsp = ConcIfThenElse(test_instr, mk_sequence(TYPE_INSTRTP_PUSH().Init(sem_true)), lsp);
       }
-// <-- 20140407
+#endif // MATCHUNIQUE
     }
     if (!onep) {
       lsp.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram(), body_instr, sp));
@@ -1841,7 +1835,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileNewExpr(const TYPE_AS_NewExpr & eIn,
   const SEQ<TYPE_AS_Expr> & exprs (eIn.GetSequence(pos_AS_NewExpr_args));
 
   TYPE_STKM_SubProgram sp;
-  sp.ImpConc(SetContext(eIn.GetInt(pos_AS_NewExpr_cid), false)); // 20070109
+  sp.ImpConc(SetContext(eIn.GetInt(pos_AS_NewExpr_cid), false));
 
   size_t len_exprs = exprs.Length();
   for (size_t i = 1; i <= len_exprs; i++) {
@@ -1871,7 +1865,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileIsOfClassExpr(const TYPE_AS_IsOfClass
 
   // Body of function
   TYPE_STKM_SubProgram sp (E2I(arg));
-  sp.ImpConc(SetContext(clnm.GetInt(pos_AS_Name_cid), false)) // 20090126
+  sp.ImpConc(SetContext(clnm.GetInt(pos_AS_Name_cid), false))
     .ImpAppend(TYPE_INSTRTP_ISOFCLASS().Init(clnm));
 
   return sp;
@@ -1888,7 +1882,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileIsOfBaseClassExpr(const TYPE_AS_IsOfB
 
   // Body of function
   TYPE_STKM_SubProgram sp (E2I(arg));
-  sp.ImpConc(SetContext(clnm.GetInt(pos_AS_Name_cid), false)) // 20090126
+  sp.ImpConc(SetContext(clnm.GetInt(pos_AS_Name_cid), false))
     .ImpAppend(TYPE_INSTRTP_ISOFBASECLASS().Init(clnm));
 
   return sp; 

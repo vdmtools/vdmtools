@@ -279,10 +279,12 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
     wstring text (Text(val).GetValue());
     SEQ<Char> c_l (text);
 
-    size_t len_c_l = c_l.Length();
-    SEQ<TYPE_SEM_VAL> chars;
-    for (size_t i = 1; i <= len_c_l; i++)
-      chars.ImpAppend(mk_SEM_CHAR(c_l[i]));
+//    size_t len_c_l = c_l.Length();
+//    SEQ<TYPE_SEM_VAL> chars;
+//    for (size_t i = 1; i <= len_c_l; i++) {
+//      chars.ImpAppend(mk_SEM_CHAR(c_l[i]));
+//    }
+    SEQ<TYPE_SEM_VAL> chars(SemRec::GetSemChars(c_l));
 
     return TYPE_SEM_SEQ().Init(chars);
   }

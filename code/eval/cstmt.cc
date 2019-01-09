@@ -287,10 +287,12 @@ TYPE_STKM_SubProgram StackCompiler::CompileDefStmt(const TYPE_AS_DefStmt& sIn)
     const TYPE_AS_PatternBind & pb (t.GetRecord(1));
     if (pb.Is(TAG_TYPE_AS_PatternName)) {
       const Generic & nm (pb.GetField(pos_AS_PatternName_nm));
-      if (nm.IsNil())
+      if (nm.IsNil()) {
         def_sp.ImpAppend(TYPE_INSTRTP_POP().Init(Int(1))); 
-      else
+      }
+      else {
         def_sp.ImpAppend(TYPE_INSTRTP_APPENDBLKENV().Init(nm, Nil()));
+      }
     }
     else {
       def_sp.ImpConc(PB2I(pb))  // AS`PatternBind
@@ -329,7 +331,6 @@ TYPE_STKM_SubProgram StackCompiler::CompileLetStmt(const TYPE_AS_LetStmt& sIn)
         if (!tp.IsNil()) {
           def_sp.ImpAppend(TYPE_INSTRTP_DTC().Init(tp));
         }
-
         if (pat.Is(TAG_TYPE_AS_PatternName) && tp.IsNil()) {
           const Generic & nm (pat.GetField(pos_AS_PatternName_nm));
           if (nm.IsNil()) {
@@ -576,11 +577,12 @@ TYPE_STKM_SubProgram StackCompiler::CompileIndexForLoopStmt(const TYPE_AS_IndexF
 
   // step_e
   TYPE_STKM_SubProgram step_e;
-  if (by_e.IsNil())
+  if (by_e.IsNil()) {
     step_e.ImpAppend(TYPE_INSTRTP_PUSH().Init(TYPE_SEM_NUM().Init(Real(1))));
-  else
+  }
+  else {
     step_e.ImpConc(E2I(by_e));
-
+  }
   // prep_instr
   TYPE_STKM_SubProgram prep_instr;
   prep_instr.ImpConc(step_e)     // step
@@ -699,8 +701,9 @@ TYPE_STKM_SubProgram StackCompiler::CompileCallStmt(const TYPE_AS_CallStmt& sIn)
 
   // for loop
   size_t len = args.Length();
-  for (size_t i = 1; i <= len; i++)
+  for (size_t i = 1; i <= len; i++) {
     sp.ImpConc(E2I(args[i]));
+  }
   sp.ImpAppend(TYPE_INSTRTP_PUSHLIST().Init(Int(len)));
     
   sp.ImpConc(SetContext(oprt.GetInt(pos_AS_Name_cid), false))
@@ -723,19 +726,19 @@ TYPE_STKM_SubProgram StackCompiler::CompileCallStmt(const TYPE_AS_CallStmt& sIn)
 
   // Body of function
   TYPE_STKM_SubProgram sp;
-  if (!obj.IsNil())
+  if (!obj.IsNil()) {
     sp.ImpConc(E2I(obj));
-
+  }
   // for loop
   size_t len = args.Length();
-  for (size_t i = 1; i <= len; i++)
+  for (size_t i = 1; i <= len; i++) {
     sp.ImpConc(E2I(args[i]));
+  }
   sp.ImpAppend(TYPE_INSTRTP_PUSHLIST().Init(Int(len)));
     
   sp.ImpAppend(TYPE_INSTRTP_CALLGUARD().Init(Bool(!obj.IsNil()), oprt))
     .ImpConc(SetContext(oprt.GetInt(pos_AS_Name_cid), false))
     .ImpAppend(TYPE_INSTRTP_PPCALL());
-
   return sp;
 }
 #endif //VDMPP
@@ -754,11 +757,10 @@ TYPE_STKM_SubProgram StackCompiler::CompileReturnStmt(const TYPE_AS_ReturnStmt& 
     sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(TYPE_SEM_RETURN()));
     return sp;
   }
-  else
-  {
+  else {
     TYPE_STKM_SubProgram sp;
     sp.ImpConc(E2I(expr))
-      .ImpConc(SetContext(sIn.GetInt(pos_AS_ReturnStmt_cid), true)); // 20090119
+      .ImpConc(SetContext(sIn.GetInt(pos_AS_ReturnStmt_cid), true));
     return sp;
   }
 }
@@ -842,14 +844,13 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesStmt(const TYPE_AS_CasesStmt& sI
 #endif //VICE
   }
 
-// 20140407 -->
-/*
+//#define MATCHUNIQUE
+#ifdef MATCHUNIQUE
   TYPE_STKM_SubProgram tsp;
   tsp.ImpAppend(TYPE_INSTRTP_SWAP());
   TYPE_STKM_SubProgram err_sp;
   err_sp.ImpAppend(TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_MULTIPLE_PATTERN)));
-*/
-// <-- 20140407
+#endif // MATCHUNIQUE
 
   // run though altns in revers order
   for (size_t i = altns.Length(); i > 0; i--) {
@@ -888,14 +889,10 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesStmt(const TYPE_AS_CasesStmt& sI
                 .ImpAppend(TYPE_INSTRTP_TRYANYMATCH());
 #ifdef VICE
       test_instr.ImpConc(MkMatchPattern());
-#endif //VICE
-
-#ifdef VICE
       lsp.ImpConc(MkBr());
 #endif //VICE
 
-// 20140407 -->
-/*
+#ifdef MATCHUNIQUE
       TYPE_STKM_SubProgram body_instr2, check_multi_match;
       check_multi_match.ImpAppend(TYPE_INSTRTP_SWAP())
                        .ImpConc(tsp);
@@ -903,21 +900,23 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesStmt(const TYPE_AS_CasesStmt& sI
 
       body_instr2.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_CASES()),
                                          check_multi_match, TYPE_STKM_SubProgram()))
-                 .ImpConc(SetContext(ASTAUX::GetCid(pat), true)); // 20130610
+                 .ImpConc(SetContext(ASTAUX::GetCid(pat), true));
 
-      if (onep)
+      if (onep) {
         body_instr2.ImpConc(body_instr);
-      else
+      }
+      else {
         body_instr2.ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true));
+      }
       lsp = ConcIfThenElse(test_instr, body_instr2, lsp);
-*/
+#else
       if (onep) {
         lsp = ConcIfThenElse(test_instr, body_instr, lsp);
       }
       else {
         lsp = ConcIfThenElse(test_instr, mk_sequence(TYPE_INSTRTP_PUSH().Init(sem_true)), lsp);
       }
-// <-- 20140407
+#endif // MATCHUNIQUE
     }
     if (!onep) {
       lsp.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram(), body_instr, sp));
@@ -987,12 +986,9 @@ TYPE_STKM_SubProgram StackCompiler::CompileAlwaysStmt(const TYPE_AS_AlwaysStmt &
   TYPE_STKM_SubProgram prog;
   prog.ImpConc(AddTrap(b_instr, TYPE_STKM_SubProgram()))
       .ImpConc(p_instr)
-// 20160413 -->
-      //.ImpAppend(TYPE_INSTRTP_POP().Init(Int(1)))
       .ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_ISCONT()),
                               TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_POP().Init(Int(1))),
                               TYPE_STKM_SubProgram()))
-// <-- 20160413
       .ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_ISEXIT()),
                               TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_EXITVAL()),
                               TYPE_STKM_SubProgram()));
@@ -1099,8 +1095,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileRecTrapStmt(const TYPE_AS_RecTrapStmt
 
   // run through traps in reverse order
   size_t len_traps = traps.Length();
-  for (int j = len_traps; j >= 1; j--)
-  {
+  for (int j = len_traps; j >= 1; j--) {
     TYPE_AS_Trap trap (traps[j]);                  // AS`Trap
     const TYPE_AS_PatternBind & pb (trap.GetRecord(pos_AS_Trap_match));
     const TYPE_AS_Stmt & Post      (trap.GetRecord(pos_AS_Trap_trappost));
@@ -1327,19 +1322,17 @@ TYPE_STKM_SubProgram StackCompiler::CompileAtomicAssignStmt(const TYPE_AS_Atomic
   TYPE_STKM_SubProgram sp;
   // TODO: into atomic mode ?? 
   size_t len_assstmtl = assstmtl.Length();
-  for (size_t i = 1; i <= len_assstmtl; i++)
-  {
+  for (size_t i = 1; i <= len_assstmtl; i++) {
     const TYPE_AS_AssignStmt & as (assstmtl[i]);      // AS`AssignStmt
     const TYPE_AS_StateDesignator & lhs (as.GetRecord(pos_AS_AssignStmt_lhs));
     const TYPE_AS_Expr & rhs            (as.GetRecord(pos_AS_AssignStmt_rhs));
-    sp.ImpConc(SetContext(as.GetInt(pos_AS_AssignStmt_cid), true)) // 20060809
+    sp.ImpConc(SetContext(as.GetInt(pos_AS_AssignStmt_cid), true))
       .ImpConc(E2I(rhs))
       .ImpConc(SetContext(ASTAUX::GetCid(lhs), false)) //
       .ImpConc(SD2I(lhs));
   }
 
   sp.ImpAppend(TYPE_INSTRTP_ATOMIC().Init(Int(assstmtl.Length())));
-    //.ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_cont));
   return sp;
 }
 
@@ -1409,22 +1402,19 @@ TYPE_STKM_SubProgram StackCompiler::CompileBlockStmt(const TYPE_AS_BlockStmt& sI
   // Body of function
   TYPE_STKM_SubProgram sp;
 
-  if (stmt_l.IsEmpty())
-  {
+  if (stmt_l.IsEmpty()) {
     sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_cont));
   }
   else {
     sp.ImpConc(S2I(stmt_l[stmt_l.Length()]));
 
     // Run through stmt_l in reverse order
-    for (size_t i = (stmt_l.Length() - 1); i >= 1; i--)
-    {
+    for (size_t i = (stmt_l.Length() - 1); i >= 1; i--) {
       TYPE_STKM_SubProgram s1, s2;
       s1.ImpConc(S2I(stmt_l[i]))
         .ImpAppend(TYPE_INSTRTP_ISCONT());
       s2.ImpAppend(TYPE_INSTRTP_POP().Init(Int(1))) // remove SEM`CONT
         .ImpConc(sp);                               // execute next
-// 20110624 -->
       sp = ConcIfThenElse(s1, s2, TYPE_STKM_SubProgram());
 /*
       wstring mes (L"Block Statement terminated at end of ");
@@ -1439,7 +1429,6 @@ TYPE_STKM_SubProgram StackCompiler::CompileBlockStmt(const TYPE_AS_BlockStmt& sI
       comment.ImpAppend(TYPE_INSTRTP_COMMENT().Init(SEQ<Char>(mes), ASTAUX::GetCid(stmt_l[i])));
       sp = ConcIfThenElse(s1, s2, comment);
 */
-// <-- 20110624
     }
   }
 
@@ -1463,8 +1452,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileNonDetStmt(const TYPE_AS_NonDetStmt& 
   // sp_l
   SEQ<TYPE_STKM_SubProgram> sp_l;
   size_t len_stmts = stmts.Length();
-  for (size_t i = 1; i <= len_stmts; i++)
-  {
+  for (size_t i = 1; i <= len_stmts; i++) {
     sp_l.ImpAppend(S2I(stmts[i]));
   }
 
