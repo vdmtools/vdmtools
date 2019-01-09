@@ -343,6 +343,7 @@ class VDMValCache
 {
 typedef std::map<RealVal::RealValueType, RealVal*> RealValMapType;
 typedef std::map<wstring, SequenceVal*> StringValMapType;
+typedef std::map<wstring, QuoteVal*> QuoteValMapType;
 
 public:
   BoolVal * const falsev ;
@@ -361,6 +362,7 @@ public:
 private:
   RealValMapType rvm;
   StringValMapType svm;
+  QuoteValMapType qvm;
 public:
   VDMValCache() :
     falsev(new BoolVal(false)),
@@ -422,6 +424,10 @@ public:
       miter->second->RemoveRef();
     }
     this->svm.clear();
+    for (QuoteValMapType::const_iterator miter(this->qvm.begin()); miter != this->qvm.end(); miter++) {
+      miter->second->RemoveRef();
+    }
+    this->qvm.clear();
   }
 
   RealVal * GetCachedRealVal(RealVal::RealValueType i) {
@@ -449,6 +455,20 @@ public:
         this->svm.insert(StringValMapType::value_type(str, sv));
       }
       return sv;
+    }
+  }
+
+  QuoteVal * GetCachedQuoteVal(const wstring & str) {
+    QuoteValMapType::const_iterator miter (this->qvm.find(str));
+    if (miter != this->qvm.end()) {
+      return miter->second;
+    } else {
+      QuoteVal * qv = new QuoteVal(str);
+      if (this->qvm.size() < 10000) {
+        qv->AddRef();
+        this->qvm.insert(QuoteValMapType::value_type(str, qv));
+      }
+      return qv;
     }
   }
 };
@@ -4371,7 +4391,8 @@ static inline
 QuoteVal* GetQuoteVal(const wchar_t* c)
 {
   try {
-    return ((c == NULL) ? ValCache->quotev : new QuoteVal(wstring(c)));
+    //return ((c == NULL) ? ValCache->quotev : new QuoteVal(wstring(c)));
+    return ((c == NULL) ? ValCache->quotev : ValCache->GetCachedQuoteVal(wstring(c)));
   }
   catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
@@ -4383,7 +4404,8 @@ Quote::Quote() : Common(ValCache->quotev)
 {
 }
 
-Quote::Quote(const wstring & c) : Common(new QuoteVal(c))
+//Quote::Quote(const wstring & c) : Common(new QuoteVal(c))
+Quote::Quote(const wstring & c) : Common(GetQuoteVal(c.c_str()))
 {
 }
 
