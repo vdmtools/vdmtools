@@ -1825,10 +1825,10 @@ MetaivVal * SequenceVal::mk_sequenceval(int num, ...)
 *
 **************************************************************************/
 static inline
-SequenceVal* GetSequenceVal(const wchar_t* c)
+SequenceVal* GetSequenceVal(const wstring & c)
 {
   try {
-    return ValCache->GetCachedStringVal (c == NULL ? wstring(L"") : wstring(c));
+    return ValCache->GetCachedStringVal (c);
   }
   catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
@@ -1852,11 +1852,11 @@ Sequence::Sequence() : Common(GetSequenceVal()), IteratorP(NULL)
 {
 }
 
-Sequence::Sequence(const wchar_t * st) : Common(GetSequenceVal(st)), IteratorP(NULL)
+Sequence::Sequence(const wchar_t * st) : Common(GetSequenceVal(NULL == st ? wstring(L"") : wstring(st))), IteratorP(NULL)
 {
 }
 
-Sequence::Sequence(const wstring & st) : Common(GetSequenceVal(st.c_str())), IteratorP(NULL)
+Sequence::Sequence(const wstring & st) : Common(GetSequenceVal(st)), IteratorP(NULL)
 {
 }
 
@@ -4388,11 +4388,10 @@ void QuoteVal::WriteVal (ostream & ostr) const
 *
 **************************************************************************/
 static inline
-QuoteVal* GetQuoteVal(const wchar_t* c)
+QuoteVal* GetQuoteVal(const wstring & c)
 {
   try {
-    //return ((c == NULL) ? ValCache->quotev : new QuoteVal(wstring(c)));
-    return ((c == NULL) ? ValCache->quotev : ValCache->GetCachedQuoteVal(wstring(c)));
+    return (c.empty() ? ValCache->quotev : ValCache->GetCachedQuoteVal(c));
   }
   catch (bad_alloc e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
@@ -4404,12 +4403,11 @@ Quote::Quote() : Common(ValCache->quotev)
 {
 }
 
-//Quote::Quote(const wstring & c) : Common(new QuoteVal(c))
-Quote::Quote(const wstring & c) : Common(GetQuoteVal(c.c_str()))
+Quote::Quote(const wstring & c) : Common(GetQuoteVal(c))
 {
 }
 
-Quote::Quote(const wchar_t * c) : Common(GetQuoteVal(c))
+Quote::Quote(const wchar_t * c) : Common(GetQuoteVal(NULL == c ? wstring(L"") : wstring(c)))
 {
 }
 
