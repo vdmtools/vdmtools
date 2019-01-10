@@ -573,6 +573,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppPatternBind(const TYPE_AS_PatternBind & pb)
     case TAG_TYPE_AS_SetBind: {
       return GetStatSem().ExtractPatternName(pb.GetRecord(pos_AS_SetBind_pat)).Dom(); 
     }
+    case TAG_TYPE_AS_SeqBind: {
+      return GetStatSem().ExtractPatternName(pb.GetRecord(pos_AS_SeqBind_pat)).Dom(); 
+    }
     case TAG_TYPE_AS_TypeBind: {
       return GetStatSem().ExtractPatternName(pb.GetRecord(pos_AS_TypeBind_pat)).Dom(); 
     }
@@ -877,6 +880,15 @@ SET<TYPE_AS_Name> SSREC::getFuncAppMultBind(const TYPE_AS_MultBind & bind, const
       for (size_t i = 1; i <= len; i++)
         res.ImpUnion (getFuncAppPattern(pat_l[i], sn));
       res.ImpUnion(getFuncAppExpr(bind.GetRecord(pos_AS_MultSetBind_Set), sn));
+      return res;
+    }
+    case TAG_TYPE_AS_MultSeqBind: {
+      SET<TYPE_AS_Name> res;
+      const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSeqBind_pat));
+      size_t len = pat_l.Length();
+      for (size_t i = 1; i <= len; i++)
+        res.ImpUnion (getFuncAppPattern(pat_l[i], sn));
+      res.ImpUnion(getFuncAppExpr(bind.GetRecord(pos_AS_MultSeqBind_Seq), sn));
       return res;
     }
     case TAG_TYPE_AS_MultTypeBind: {

@@ -989,6 +989,7 @@ TYPE_AS_Pattern PAT::SelPattern (const TYPE_AS_Bind & bind)
 {
   switch(bind.GetTag()) {
     case TAG_TYPE_AS_SetBind:  { return bind.GetRecord(pos_AS_SetBind_pat); }
+    case TAG_TYPE_AS_SeqBind:  { return bind.GetRecord(pos_AS_SeqBind_pat); }
     case TAG_TYPE_AS_TypeBind: { return bind.GetRecord(pos_AS_TypeBind_pat); }
     default:                   { return TYPE_AS_Pattern(); } // dummy
   }
@@ -1232,6 +1233,11 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
     case TAG_TYPE_AS_SetBind: {
       TYPE_AS_SetBind res_v (pat_p);
       res_v.set_pat(DoCarePattern (pat_p.GetRecord(pos_AS_SetBind_pat), NewBase (id_base, 1)));
+      return res_v;
+    }
+    case TAG_TYPE_AS_SeqBind: {
+      TYPE_AS_SeqBind res_v (pat_p);
+      res_v.set_pat(DoCarePattern (pat_p.GetRecord(pos_AS_SeqBind_pat), NewBase (id_base, 1)));
       return res_v;
     }
     case TAG_TYPE_AS_TypeBind: {

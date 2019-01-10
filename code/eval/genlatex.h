@@ -344,6 +344,7 @@ private:
   void GenSeqBind(const Generic & modnm, const TYPE_AS_SeqBind &);
   void GenMultBind(const Generic & modnm, const TYPE_AS_MultBind &);
   void GenMultSetBind (const Generic & modnm, const TYPE_AS_MultSetBind &);
+  void GenMultSeqBind (const Generic & modnm, const TYPE_AS_MultSeqBind &);
   void GenMultTypeBind (const Generic & modnm, const TYPE_AS_MultTypeBind &);
 
 /** Auxilary part ***********************************************************/

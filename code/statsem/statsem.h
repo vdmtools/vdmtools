@@ -1251,6 +1251,7 @@ private:
   Tuple wf_TypeBindList (const Int & i, const SEQ<TYPE_AS_TypeBind> & parms);
   Tuple wf_MultiBindList (const Int & i, const SEQ<TYPE_AS_MultBind> & mbs, bool mustmatch);
   Tuple wf_MultiSetBind (const Int & i, const TYPE_AS_MultSetBind & msb, bool mustmatch);
+  Tuple wf_MultiSeqBind (const Int & i, const TYPE_AS_MultSeqBind & msb, bool mustmatch);
   Tuple wf_MultiTypeBind (const Int & i, const TYPE_AS_MultTypeBind & msb);
   Tuple MergeBindings (const Int &, const Sequence & s);
 public:

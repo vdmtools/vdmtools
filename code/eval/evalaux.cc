@@ -1472,6 +1472,12 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBind(const TYPE_AS_PatternBind & patb)
       return nms;
       break;
     }
+    case TAG_TYPE_AS_SeqBind: {
+      SET<TYPE_AS_Name> nms (ClModNmInPatternBind(patb.GetRecord(pos_AS_SeqBind_pat)));
+      nms.ImpUnion(ClModNmInExpr(patb.GetRecord(pos_AS_SeqBind_Seq)));
+      return nms;
+      break;
+    }
     case TAG_TYPE_AS_TypeBind: {
       return ClModNmInPatternBind(patb.GetRecord(pos_AS_TypeBind_pat));
       break;
@@ -1490,9 +1496,21 @@ SET<TYPE_AS_Name> AUX::ClModNmInMultBind(const TYPE_AS_MultBind & bind)
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSetBind_pat));
       SET<TYPE_AS_Name> nms;
       size_t len_pat_l = pat_l.Length();
-      for (size_t i = 1; i <= len_pat_l; i++ )
+      for (size_t i = 1; i <= len_pat_l; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(pat_l[i]));
+      }
       nms.ImpUnion(ClModNmInExpr(bind.GetRecord(pos_AS_MultSetBind_Set)));
+      return nms;
+      break;
+    }
+    case TAG_TYPE_AS_MultSeqBind: {
+      const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSeqBind_pat));
+      SET<TYPE_AS_Name> nms;
+      size_t len_pat_l = pat_l.Length();
+      for (size_t i = 1; i <= len_pat_l; i++ ) {
+        nms.ImpUnion(ClModNmInPatternBind(pat_l[i]));
+      }
+      nms.ImpUnion(ClModNmInExpr(bind.GetRecord(pos_AS_MultSeqBind_Seq)));
       return nms;
       break;
     }

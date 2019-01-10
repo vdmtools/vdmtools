@@ -226,6 +226,7 @@ getFuncAppPatternBind : AS`PatternBind -> set of AS`Name
 getFuncAppPatternBind(pb) ==
   cases pb:
     mk_AS`SetBind(p,-,-)  -> dom PAT`ExtractPatternName(p),
+    mk_AS`SeqBind(p,-,-)  -> dom PAT`ExtractPatternName(p),
     mk_AS`TypeBind(p,-,-) -> dom PAT`ExtractPatternName(p),
     others                -> dom PAT`ExtractPatternName(pb)
   end;
@@ -350,6 +351,7 @@ getFuncAppMultBind : AS`MultBind * set of AS`Name ==> set of AS`Name
 getFuncAppMultBind(bind,sn) == 
   cases bind:
     mk_AS`MultSetBind(pats,Set,-) -> return dunion {getFuncAppPattern(p,sn) | p in set elems pats} union getFuncAppExpr(Set,sn),
+    mk_AS`MultSeqBind(pats,Seq,-) -> return dunion {getFuncAppPattern(p,sn) | p in set elems pats} union getFuncAppExpr(Seq,sn),
     mk_AS`MultTypeBind(pats,-,-)  -> return dunion {getFuncAppPattern(p,sn) | p in set elems pats}
   end;
  

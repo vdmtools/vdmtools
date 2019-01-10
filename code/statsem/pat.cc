@@ -90,6 +90,73 @@ Tuple StatSem::wf_PatternBind (const Int & i, const TYPE_AS_PatternBind & patbin
         return mk_(Nil(), ExtractBindings (p));
       }
     }
+    case TAG_TYPE_AS_SeqBind: {
+      const TYPE_AS_Pattern & p (patbind.GetRecord(pos_AS_SeqBind_pat));
+      const TYPE_AS_Expr & s (patbind.GetRecord(pos_AS_SeqBind_Seq));
+  
+      Tuple infer (wf_Expr (i, s, mk_REP_SeqTypeRep(rep_alltp)));
+      const Bool & wf_s (infer.GetBool (1));
+      const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
+  
+      if (IsCompatible (i, stp, mk_REP_SeqTypeRep(rep_alltp))) {
+        Generic elemtp (UnmaskSeqType (i, ExtractSeqType (stp)));
+  
+        if (elemtp.IsNil()) {
+          //-----------------------------------
+          // Error message #462
+          // An empty seq is used in a seq bind
+          //-----------------------------------
+          GenErr (s, WRN1, 462, Sequence());
+          Tuple infer2 (wf_Pattern (i, p, tp)); // [bool] * map AS`Name to (REP`TypeRep * nat1)
+          const Generic & wf_p (infer2.GetField (1)); // [bool]
+          const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
+  
+          if (wf_p.IsNil()) {
+            return mk_(Nil(), bd);
+          }
+          else {
+            return mk_(wf_s && Bool (wf_p), bd);
+          }
+        }
+        else if (IsCompatible (i, tp, elemtp)) {
+          Tuple infer3 (wf_Pattern (i, p, tp)); // [bool] * map AS`Name to (REP`TypeRep * nat1)
+          const Generic & wf_p (infer3.GetField (1)); // [bool]
+          const MAP<TYPE_AS_Name,Tuple> & bd (infer3.GetMap (2));
+  
+          if (wf_p.IsNil()) {
+            return mk_(Nil(), bd);
+          }
+          else {
+            return mk_(Bool (wf_p) && wf_s, bd);
+          }
+        }
+        else {
+          //-----------------------------------------------------------
+          // Error message #294
+          // Type of defining expression is not compatible with binding
+          //-----------------------------------------------------------
+          GenErrTp (s, WRN1, 294, tp, elemtp, Sequence());
+          Tuple infer4 (wf_Pattern (i, p, elemtp)); // [bool] * map AS`Name to REP`TypeRep
+          const Generic & wf_p (infer4.GetField (1)); // [bool]
+          const MAP<TYPE_AS_Name,Tuple> & bd (infer4.GetMap (2));
+  
+          if (wf_p.IsNil()) {
+            return mk_(Nil(), bd);
+          }
+          else {
+            return mk_(Bool(false), bd);
+          }
+        }
+      }
+      else {
+        //-------------------------------------
+        // Error message #237
+        // Expression is not a sequence type
+        //-------------------------------------
+        GenErrTp (s, ERR, 237, stp, mk_REP_SeqTypeRep(rep_alltp), Sequence());
+        return mk_(Nil(), ExtractBindings (p));
+      }
+    }
     case TAG_TYPE_AS_TypeBind: {
       const TYPE_AS_Pattern & p (patbind.GetRecord(pos_AS_TypeBind_pat));
       const TYPE_AS_Type & t (patbind.GetRecord(pos_AS_TypeBind_tp));
@@ -1013,6 +1080,7 @@ Tuple StatSem::wf_Bind (const Int & i, const TYPE_AS_Bind & bind)
 {
   switch(bind.GetTag()) {
     case TAG_TYPE_AS_SetBind:  { return wf_SetBind(i, bind); }
+    case TAG_TYPE_AS_SeqBind:  { return wf_SeqBind(i, bind); }
     case TAG_TYPE_AS_TypeBind: { return wf_TypeBind(i, bind); }
     default: { return Tuple(); } //This is only to avoid warnings from the compiler
   }
@@ -1174,6 +1242,48 @@ Tuple StatSem::wf_BindAndType (const Int & i, const TYPE_AS_Bind & bind)
         return mk_(Nil(), ExtractBindings (p), rep_alltp);
       }
     }
+    case TAG_TYPE_AS_SeqBind: {
+      const TYPE_AS_Pattern & p (bind.GetRecord(pos_AS_SeqBind_pat));
+      const TYPE_AS_Expr & s (bind.GetRecord(pos_AS_SeqBind_Seq));
+  
+      //Tuple infer (wf_Expr (i, s, rep_alltp));
+      Tuple infer (wf_Expr (i, s, seq_alltp));
+      const Bool & wf_s (infer.GetBool (1));
+      const TYPE_REP_TypeRep & stp (infer.GetRecord (2));
+  
+      if (IsCompatible (i, stp, seq_alltp)) {
+        Generic elemtp (UnmaskSeqType (i, ExtractSeqType (stp)));
+  
+        if (elemtp.IsNil()) {
+          //-----------------------------------
+          // Error message #462
+          // An empty seq is used in a seq bind
+          //-----------------------------------
+          GenErr (s, WRN1, 462, Sequence());
+          return mk_(Bool(false), ExtractBindings (p), rep_alltp);
+        }
+        else {
+          Tuple  infer2 (wf_Pattern (i, p, elemtp)); // [bool] * map AS`Name to REP`TypeRep
+          const Generic & wf_p (infer2.GetField (1)); // [bool]
+          const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
+  
+          if (wf_p.IsNil()) {
+            return mk_(Nil(), bd, elemtp);
+          }
+          else {
+            return mk_(wf_s && Bool (wf_p), bd, elemtp);
+          }
+        }
+      }
+      else {
+        //-------------------------------------
+        // Error message #237
+        // Expression is not a sequence type
+        //-------------------------------------
+        GenErrTp (s, ERR, 237, stp, seq_alltp, Sequence());
+        return mk_(Nil(), ExtractBindings (p), rep_alltp);
+      }
+    }
     case TAG_TYPE_AS_TypeBind: {
       const TYPE_AS_Pattern & p (bind.GetRecord(pos_AS_TypeBind_pat));
       const TYPE_AS_Type & t (bind.GetRecord(pos_AS_TypeBind_tp));
@@ -1265,7 +1375,8 @@ Tuple StatSem::wf_MultiBindList (const Int & i, const SEQ<TYPE_AS_MultBind> & mb
   size_t len_mbs = mbs.Length();
   for (size_t idx = 1; idx <= len_mbs; idx++) {
     const TYPE_AS_MultBind & mb (mbs[idx]);
-    Tuple infer (mb.Is(TAG_TYPE_AS_MultSetBind) ? wf_MultiSetBind (i, mb, mustmatch) : wf_MultiTypeBind (i, mb));
+    Tuple infer (mb.Is(TAG_TYPE_AS_MultSetBind) ? wf_MultiSetBind (i, mb, mustmatch)
+                 : (mb.Is(TAG_TYPE_AS_MultSeqBind) ? wf_MultiSeqBind (i, mb, mustmatch) : wf_MultiTypeBind (i, mb)));
     const Generic & wf (infer.GetField (1)); // [bool]
     const MAP<TYPE_AS_Name,Tuple> & bd (infer.GetMap (2));
 
@@ -1380,6 +1491,89 @@ Tuple StatSem::wf_MultiSetBind (const Int & i, const TYPE_AS_MultSetBind & msb, 
     }
     else {
       GenErrTp (e, ERR, 295, etp, set_alltp, Sequence());
+    }
+    return mk_(Nil(), altbinds);
+  }
+}
+
+// wf_MultiSeqBind
+// i : TYPE`Ind
+// msb : AS`MultSeqBind
+// mustmatch : bool
+// ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+Tuple StatSem::wf_MultiSeqBind (const Int & i, const TYPE_AS_MultSeqBind & msb, bool mustmatch)
+{
+  const SEQ<TYPE_AS_Pattern> & pats (msb.GetSequence(pos_AS_MultSeqBind_pat));
+  const TYPE_AS_Expr & e (msb.GetRecord(pos_AS_MultSeqBind_Seq));
+
+  MAP<TYPE_AS_Name,Tuple> altbinds;
+
+  size_t len_pats = pats.Length();
+  for (size_t idx = 1; idx <= len_pats; idx++) {
+    altbinds.ImpOverride (ExtractBindings (pats[idx]));
+  }
+  //Tuple infer (wf_Expr (i, e, rep_alltp));
+  Tuple infer (mustmatch ? wf_Expr (i, e, mk_REP_SeqTypeRep(rep_alltp)) : wf_Expr (i, e, seq_alltp));
+  const Bool & wf_e (infer.GetBool(1));
+  const TYPE_REP_TypeRep & etp (infer.GetRecord (2));
+
+  if (IsCompatible (i, etp, seq_alltp)) {
+    Generic reswf = Bool(true);
+    Generic sttp (UnmaskSeqType (POS, ExtractSeqType (etp)));
+
+    //if (sttp.IsNil()) //|| etp.Is(EmptySeqTypeRep)) {
+    if (sttp.IsNil() || (mustmatch && (i == DEF) && IsCompatible (POS, etp, mk_REP_EmptySeqTypeRep(rep_alltp)))) {
+      //-----------------------------------
+      // Error message #462
+      // An empty seq is used in a seq bind
+      //-----------------------------------
+      GenErr (e, WRN1, 462, Sequence());
+
+      if (mustmatch) {
+        reswf = Nil();
+      }
+    }
+
+    Generic sttp_q (sttp);
+    if (sttp.IsNil()) {
+      sttp_q = rep_alltp;
+    }
+    Sequence resbd;
+    for (size_t idx = 1; idx <= len_pats; idx++) {
+      Tuple infer2 (wf_Pattern (i, pats[idx], sttp_q)); // [bool] * map AS`Name to REP`TypeRep
+      const Generic & match (infer2.GetField (1)); // [bool]
+      const MAP<TYPE_AS_Name,Tuple> & bd (infer2.GetMap (2));
+
+      if (reswf.IsNil() || match.IsNil()) {
+        reswf = Nil();
+      }
+      else {
+        reswf = Bool (reswf) && Bool (match);
+      }
+      resbd.ImpAppend (bd);
+    }
+
+    Tuple infer3 ((reswf == Bool(true)) ? MergeBindings (i, resbd) : mk_(Bool(false), altbinds)); 
+    const Bool & ok (infer3.GetBool(1));
+    const MAP<TYPE_AS_Name,Tuple> & binds (infer3.GetMap(2));
+
+    if (reswf.IsNil() || !wf_e) {
+      return mk_(Nil(), binds);
+    }
+    else {
+      return mk_(ok && Bool (reswf), binds);
+    }
+  }
+  else {
+    //-------------------------------------
+    // Error message #237
+    // Expression is not a sequence type
+    //-------------------------------------
+    if (mustmatch) {
+      GenErrTp (e, ERR, 237, etp, mk_REP_SeqTypeRep(rep_alltp), Sequence());
+    }
+    else {
+      GenErrTp (e, ERR, 237, etp, seq_alltp, Sequence());
     }
     return mk_(Nil(), altbinds);
   }

@@ -150,6 +150,12 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       res_pat.SetField(pos_AS_SetBind_Set, OldNameInExpr (pat.GetRecord(pos_AS_SetBind_Set)));
       return (res_pat);
     }
+    case TAG_TYPE_AS_SeqBind: {
+      TYPE_AS_SetBind res_pat (pat);
+      res_pat.SetField(pos_AS_SeqBind_pat, OldNameInPattern (pat.GetRecord(pos_AS_SeqBind_pat)));
+      res_pat.SetField(pos_AS_SeqBind_Seq, OldNameInExpr (pat.GetRecord(pos_AS_SeqBind_Seq)));
+      return (res_pat);
+    }
     case TAG_TYPE_AS_TypeBind: {
       TYPE_AS_TypeBind res_pat (pat);
       res_pat.SetField(pos_AS_TypeBind_pat, OldNameInPattern (pat.GetRecord(pos_AS_TypeBind_pat)));
@@ -190,6 +196,18 @@ SEQ<TYPE_AS_MultBind> OLD::OldNameInMultBindSeq (const SEQ<TYPE_AS_MultBind> & b
   
         TYPE_AS_MultSetBind new_bind (mb);
         new_bind.SetField(pos_AS_MultSetBind_pat, tmp_l);
+        new_l.ImpAppend (new_bind);
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
+        SEQ<TYPE_AS_Pattern> tmp_l;
+        size_t len_pat_l = pat_l.Length();
+        for (size_t idx = 1; idx <= len_pat_l; idx++)
+          tmp_l.ImpAppend (OldNameInPattern (pat_l[idx]));
+  
+        TYPE_AS_MultSeqBind new_bind (mb);
+        new_bind.SetField(pos_AS_MultSeqBind_pat, tmp_l);
         new_l.ImpAppend (new_bind);
         break;
       }

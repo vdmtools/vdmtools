@@ -6802,11 +6802,17 @@ void GenLatexOutput::GenObjectPattern (const Generic & modnm, const TYPE_AS_Obje
 int GenLatexOutput::BindLine (const TYPE_AS_Bind & bind)
 {
   switch (bind.GetTag ()) {
-    case TAG_TYPE_AS_TypeBind:
+    case TAG_TYPE_AS_TypeBind: {
       return PatLine (bind.GetRecord(pos_AS_TypeBind_pat));
-    case TAG_TYPE_AS_SetBind:
+    }
+    case TAG_TYPE_AS_SetBind: {
       return PatLine (bind.GetRecord(pos_AS_SetBind_pat));
+    }
+    case TAG_TYPE_AS_SeqBind: {
+      return PatLine (bind.GetRecord(pos_AS_SeqBind_pat));
+    }
     case TAG_TYPE_AS_MultSetBind:
+    case TAG_TYPE_AS_MultSeqBind:
     case TAG_TYPE_AS_MultTypeBind: {
       return GetLine(bind);
     }
@@ -6882,6 +6888,10 @@ void GenLatexOutput::GenMultBind (const Generic & modnm, const TYPE_AS_MultBind 
       GenMultSetBind (modnm, MBind);
       break;
     }
+    case TAG_TYPE_AS_MultSeqBind: {
+      GenMultSeqBind (modnm, MBind);
+      break;
+    }
     case TAG_TYPE_AS_MultTypeBind: {
       GenMultTypeBind (modnm, MBind);
       break;
@@ -6902,13 +6912,13 @@ void GenLatexOutput::GenMultSetBind (const Generic & modnm, const TYPE_AS_MultSe
   for (size_t bb = 1; bb <= len; bb++) {
     int l2 = PatLine (pat_l[bb]);
 
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
-
+    }
     GenPattern (modnm, pat_l[bb]);
-    if (bb < (size_t)(pat_l.Length()))
+    if (bb < (size_t)(pat_l.Length())) {
       this->LatexOutput << ",";
-
+    }
     l1 = l2;
   }
 
@@ -6916,12 +6926,42 @@ void GenLatexOutput::GenMultSetBind (const Generic & modnm, const TYPE_AS_MultSe
 
   int l3 = GetLine (expr);
 
-  if (l3 > l1)
+  if (l3 > l1) {
     this->LatexOutput << LF;
-
+  }
   GenExpr (modnm, expr);
 }
 
+void GenLatexOutput::GenMultSeqBind (const Generic & modnm, const TYPE_AS_MultSeqBind & MSBind)
+{
+  const SEQ<TYPE_AS_Pattern> & pat_l (MSBind.GetSequence(pos_AS_MultSeqBind_pat));
+  const TYPE_AS_Expr & expr (MSBind.GetRecord(pos_AS_MultSeqBind_Seq));
+
+  int l1 = BindLine (MSBind);
+
+  size_t len = pat_l.Length ();
+  for (size_t bb = 1; bb <= len; bb++) {
+    int l2 = PatLine (pat_l[bb]);
+
+    if (l2 > l1) {
+      this->LatexOutput << LF;
+    }
+    GenPattern (modnm, pat_l[bb]);
+    if (bb < (size_t)(pat_l.Length())) {
+      this->LatexOutput << ",";
+    }
+    l1 = l2;
+  }
+
+  this->LatexOutput << " \\In ";
+
+  int l3 = GetLine (expr);
+
+  if (l3 > l1) {
+    this->LatexOutput << LF;
+  }
+  GenExpr (modnm, expr);
+}
 void GenLatexOutput::GenMultTypeBind (const Generic & modnm, const TYPE_AS_MultTypeBind & MTBind)
 {
   const SEQ<TYPE_AS_Pattern> & pat_l (MTBind.GetSequence(pos_AS_MultTypeBind_pat));

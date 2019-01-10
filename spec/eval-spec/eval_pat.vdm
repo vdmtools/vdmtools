@@ -716,6 +716,7 @@ functions
   SelPattern (bind) ==
     cases bind:
       mk_AS`SetBind(pat,-,-)  -> pat,
+      mk_AS`SeqBind(pat,-,-)  -> pat,
       mk_AS`TypeBind(pat,-,-) -> pat,
       others                  -> undefined
     end;
@@ -824,6 +825,8 @@ functions
 #endif VDMPP
     mk_AS`SetBind(pat,Set,cid)       -> let new_pat = DoCarePattern(pat, NewBase(id_base, 1))
                                         in mk_AS`SetBind(new_pat, Set, cid),
+    mk_AS`SeqBind(pat,Seq,cid)       -> let new_pat = DoCarePattern(pat, NewBase(id_base, 1))
+                                        in mk_AS`SeqBind(new_pat, Seq, cid),
     mk_AS`TypeBind(pat,tp,cid)       -> let new_pat = DoCarePattern(pat, NewBase(id_base, 1))
                                         in mk_AS`TypeBind(new_pat, tp, cid),
     others                           -> undefined

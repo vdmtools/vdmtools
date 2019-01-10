@@ -674,6 +674,7 @@ static void yyerror(const char *);
 %type <record>   MultipleBind
 %type <record>   MultipleTypeBind
 %type <record>   MultipleSetBind
+%type <record>   MultipleSeqBind
 
 //************** Stuff related to LocalDef  ***********************/
 %type <record>   LocalDefinition
@@ -7709,6 +7710,7 @@ PatternBind
 
 Bind
         : SetBind
+        | SeqBind
         | TypeBind
         ;
 
@@ -7750,6 +7752,7 @@ SeqBind
 
 MultipleBind
         : MultipleSetBind
+        | MultipleSeqBind
         | MultipleTypeBind
         ;
 
@@ -7760,6 +7763,18 @@ MultipleSetBind
           MYPARSER::SetPos3(*$$, @1, @2, @3);
           $$->SetField (pos_AS_MultSetBind_pat, *$1);
           $$->SetField (pos_AS_MultSetBind_Set, *$3);
+          delete $1;
+          delete $3;
+        }
+        ;
+
+MultipleSeqBind
+        : PatternList LEX_IN_SEQ Expression
+        {
+          $$ = new TYPE_AS_MultSeqBind();
+          MYPARSER::SetPos3(*$$, @1, @2, @3);
+          $$->SetField (pos_AS_MultSeqBind_pat, *$1);
+          $$->SetField (pos_AS_MultSeqBind_Seq, *$3);
           delete $1;
           delete $3;
         }

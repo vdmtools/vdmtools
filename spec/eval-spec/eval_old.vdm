@@ -58,6 +58,7 @@ OldNameInPattern(pat) ==
     mk_AS`FieldPattern(nm,p,cid)        -> mk_AS`FieldPattern(nm, OldNameInPattern(p), cid),
 #endif VDMPP
     mk_AS`SetBind(pat,set_e,cid)        -> mk_AS`SetBind(OldNameInPattern(pat), OldNameInExpr(set_e),cid),
+    mk_AS`SeqBind(pat,seq_e,cid)        -> mk_AS`SetBind(OldNameInPattern(pat), OldNameInExpr(seq_e),cid),
     mk_AS`TypeBind(pat,tp,cid)          -> mk_AS`TypeBind(OldNameInPattern(pat), tp, cid),
     others                              -> undefined
   end;
@@ -79,6 +80,8 @@ OldNameInMultBind (bind) ==
   cases bind:
     mk_AS`MultSetBind(pat,Set,cid) -> def p_l = [ OldNameInPattern (pat(i)) | i in set inds pat ]
                                       in mk_AS`MultSetBind(p_l, OldNameInExpr(Set), cid),
+    mk_AS`MultSeqBind(pat,Seq,cid) -> def p_l = [ OldNameInPattern (pat(i)) | i in set inds pat ]
+                                      in mk_AS`MultSetBind(p_l, OldNameInExpr(Seq), cid),
     mk_AS`MultTypeBind(pat,tp,cid) -> def p_l = [ OldNameInPattern (pat(i)) | i in set inds pat ]
                                       in mk_AS`MultTypeBind(p_l, tp, cid),
     others                         -> undefined

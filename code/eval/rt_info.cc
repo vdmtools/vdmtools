@@ -658,6 +658,11 @@ void RTINFO::Calc_Coverage_Aux(const Generic & ast, ContextInfo & ci)
       Calc_Coverage_Aux(expr.GetRecord(pos_AS_MultSetBind_Set), ci);
       break;
     }
+    case TAG_TYPE_AS_MultSeqBind: {
+      Calc_Coverage_Aux(expr.GetSequence(pos_AS_MultSeqBind_pat), ci);
+      Calc_Coverage_Aux(expr.GetRecord(pos_AS_MultSeqBind_Seq), ci);
+      break;
+    }
     case TAG_TYPE_AS_MultTypeBind: {
       Calc_Coverage_Aux(expr.GetRecord(pos_AS_MultTypeBind_pat), ci);
       break;

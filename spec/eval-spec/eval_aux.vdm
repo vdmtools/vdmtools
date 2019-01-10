@@ -1119,6 +1119,7 @@ ClModNmInPatternBind(patb) ==
     mk_AS`ObjectPattern(-,fields,-) -> dunion { ClModNmInPatternBind(fields(i).pat) | i in set inds fields },
 #endif VDMPP
     mk_AS`SetBind(pat,Set,-)        -> ClModNmInPatternBind(pat) union ClModNmInExpr(Set),
+    mk_AS`SeqBind(pat,Seq,-)        -> ClModNmInPatternBind(pat) union ClModNmInExpr(Seq),
     mk_AS`TypeBind(pat,-,-)         -> ClModNmInPatternBind(pat),
     others                          -> undefined
   end;
@@ -1128,6 +1129,8 @@ ClModNmInMultBind (bind) ==
   cases bind:
     mk_AS`MultSetBind(pat,Set,-)  -> dunion { ClModNmInPatternBind(pat(i)) | i in set inds pat } 
                                      union ClModNmInExpr(Set),
+    mk_AS`MultSeqBind(pat,Seq,-)  -> dunion { ClModNmInPatternBind(pat(i)) | i in set inds pat } 
+                                     union ClModNmInExpr(Seq),
     mk_AS`MultTypeBind(pat,-,-)   -> dunion { ClModNmInPatternBind(pat(i)) | i in set inds pat },
     others                        -> undefined
   end;

@@ -153,19 +153,23 @@ wstring MPP::BindList2Ascii(const Sequence & l)
   wstring str; 
   int first=1;
   size_t len_l = l.Length();
-  for(size_t idx = 1; idx <= len_l; idx++)
-  {
+  for(size_t idx = 1; idx <= len_l; idx++) {
     const TYPE_AS_MultBind & r (l[idx]);
     str += first-- > 0 ? L"" : L", ";
     switch(r.GetTag()){
       case TAG_TYPE_AS_MultSetBind: {
-        str += PatternList2Ascii(r.GetField(1));
-        str += L" in set " + Type2Ascii(r.GetField(2)); // Expr
+        str += PatternList2Ascii(r.GetSequence(pos_AS_MultSetBind_pat));
+        str += L" in set " + Type2Ascii(r.GetRecord(pos_AS_MultSetBind_Set)); // Expr
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        str += PatternList2Ascii(r.GetSequence(pos_AS_MultSeqBind_pat));
+        str += L" in seq " + Type2Ascii(r.GetRecord(pos_AS_MultSeqBind_Seq)); // Expr
         break;
       }
       case TAG_TYPE_AS_MultTypeBind: {
-        str += PatternList2Ascii(r.GetField(1));
-        str += L" : " + Type2Ascii(r.GetField(2)); // Type
+        str += PatternList2Ascii(r.GetSequence(pos_AS_MultTypeBind_pat));
+        str += L" : " + Type2Ascii(r.GetRecord(pos_AS_MultTypeBind_tp)); // Type
         break;
       }
     }
@@ -552,6 +556,12 @@ wstring MPP::Type2Ascii (const Record & tp)
     str += Type2Ascii(tp.GetRecord(pos_AS_SetBind_pat));
     str += L" in set ";
     str += Type2Ascii(tp.GetRecord(pos_AS_SetBind_Set));
+    break;
+  }
+  case TAG_TYPE_AS_SeqBind: {
+    str += Type2Ascii(tp.GetRecord(pos_AS_SeqBind_pat));
+    str += L" in seq ";
+    str += Type2Ascii(tp.GetRecord(pos_AS_SeqBind_Seq));
     break;
   }
   case TAG_TYPE_AS_TypeBind: {

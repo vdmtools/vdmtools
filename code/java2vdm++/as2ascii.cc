@@ -1901,8 +1901,7 @@ void AS2ASCII::SeqComprehensionExpr2ASCII(const TYPE_AS_SeqComprehensionExpr & e
       break;
     }
   }
-  if (!expr.GetField(pos_AS_SeqComprehensionExpr_pred).IsNil())
-  {
+  if (!expr.GetField(pos_AS_SeqComprehensionExpr_pred).IsNil()) {
     MakeSpace(result);
     //result << L" &amp ";
     result << L"&";
@@ -3003,6 +3002,7 @@ void AS2ASCII::PatternBind2ASCII(const TYPE_AS_PatternBind & pat, wostream & res
       break;
     }
     case TAG_TYPE_AS_SetBind:
+    case TAG_TYPE_AS_SeqBind:
     case TAG_TYPE_AS_TypeBind: {
       Bind2ASCII(pat, result);
       break;
@@ -3018,6 +3018,10 @@ void AS2ASCII::Bind2ASCII(const TYPE_AS_Bind & bind, wostream & result)
   switch(bind.GetTag()) {
     case TAG_TYPE_AS_SetBind: {
       SetBind2ASCII(bind, result);
+      break;
+    }
+    case TAG_TYPE_AS_SeqBind: {
+      SeqBind2ASCII(bind, result);
       break;
     }
     case TAG_TYPE_AS_TypeBind: {
@@ -3036,6 +3040,15 @@ void AS2ASCII::SetBind2ASCII(const TYPE_AS_SetBind & bind, wostream & result)
   Expr2ASCII(bind.GetRecord(pos_AS_SetBind_Set), result);
 }
 
+void AS2ASCII::SeqBind2ASCII(const TYPE_AS_SeqBind & bind, wostream & result)
+{
+  Pattern2ASCII(bind.GetRecord(pos_AS_SeqBind_pat), result);
+  MakeSpace(result);
+  MakeKeyword(L"in seq", result);
+  MakeSpace(result);
+  Expr2ASCII(bind.GetRecord(pos_AS_SeqBind_Seq), result);
+}
+
 void AS2ASCII::TypeBind2ASCII(const TYPE_AS_TypeBind & bind, wostream & result)
 {
   Pattern2ASCII(bind.GetRecord(pos_AS_TypeBind_pat), result);
@@ -3045,22 +3058,13 @@ void AS2ASCII::TypeBind2ASCII(const TYPE_AS_TypeBind & bind, wostream & result)
   Type2ASCII(bind.GetRecord(pos_AS_TypeBind_tp), result);
 }
 
-void AS2ASCII::SeqBind2ASCII(const TYPE_AS_SeqBind & bind, wostream & result)
-{
-  Pattern2ASCII(bind.GetRecord(pos_AS_SeqBind_pat), result);
-  MakeSpace(result);
-  MakeKeyword(L"in set", result);
-  MakeSpace(result);
-  Expr2ASCII(bind.GetRecord(pos_AS_SeqBind_Seq), result);
-}
-
 void AS2ASCII::BindList2ASCII(const TYPE_AS_BindList & bindlist, wostream & result)
 {
   size_t len_bindlist = bindlist.Length();
-  for (size_t idx = 1; idx <= len_bindlist; idx++)
-  {
-    if (idx > 1)
+  for (size_t idx = 1; idx <= len_bindlist; idx++) {
+    if (idx > 1) {
       result << L", ";
+    }
     MultBind2ASCII(bindlist[idx], result);
   }
 }
@@ -3074,6 +3078,14 @@ void AS2ASCII::MultBind2ASCII(const TYPE_AS_MultBind & mb, wostream & result)
       MakeKeyword(L"in set", result);
       MakeSpace(result);
       Expr2ASCII(mb.GetRecord(pos_AS_MultSetBind_Set), result);
+      break;
+    }
+    case TAG_TYPE_AS_MultSeqBind: {
+      PatternSequence2ASCII(mb.GetSequence(pos_AS_MultSeqBind_pat), result);
+      MakeSpace(result);
+      MakeKeyword(L"in seq", result);
+      MakeSpace(result);
+      Expr2ASCII(mb.GetRecord(pos_AS_MultSeqBind_Seq), result);
       break;
     }
     case TAG_TYPE_AS_MultTypeBind: {

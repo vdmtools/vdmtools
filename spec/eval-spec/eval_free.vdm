@@ -66,6 +66,7 @@ IdentInPattern(pat) ==
                in IdentInPattern(p) | i in set inds fields},
 #endif VDMPP
     mk_AS`SetBind(-,-,-)            -> IdentInBind(pat),
+    mk_AS`SeqBind(-,-,-)            -> IdentInBind(pat),
     mk_AS`TypeBind(-,-,-)           -> IdentInBind(pat),
     others                          -> undefined
   end
@@ -82,6 +83,7 @@ IdentInBind : AS`Bind -> set of AS`Name
 IdentInBind (bind) ==
   cases bind:
     mk_AS`SetBind(pat,-,-)  -> IdentInPattern(pat),
+    mk_AS`SeqBind(pat,-,-)  -> IdentInPattern(pat),
     mk_AS`TypeBind(pat,-,-) -> IdentInPattern(pat),
     others                  -> undefined
   end;
@@ -90,6 +92,7 @@ IdentInMultBind : AS`MultBind -> set of AS`Name
 IdentInMultBind (bind) ==
   cases bind:
     mk_AS`MultSetBind(pat,-,-)  -> dunion { IdentInPattern(pat(i)) | i in set inds pat },
+    mk_AS`MultSeqBind(pat,-,-)  -> dunion { IdentInPattern(pat(i)) | i in set inds pat },
     mk_AS`MultTypeBind(pat,-,-) -> dunion { IdentInPattern(pat(i)) | i in set inds pat },
     others                      -> undefined
   end;
@@ -104,6 +107,7 @@ FreeInBind : AS`Bind * set of AS`Name ==> map AS`Name to SEM`VAL
 FreeInBind (bind, id_s) ==
   cases bind: 
     mk_AS`SetBind(-,Set,-) -> return FreeInExpr(Set, id_s),
+    mk_AS`SeqBind(-,Seq,-) -> return FreeInExpr(Seq, id_s),
     mk_AS`TypeBind(-,-,-)  -> return { |-> },
     others                 -> error
   end;
@@ -122,6 +126,11 @@ FreeInMultBindSeq (bind_l, id_s) ==
   for bind in bind_l do
    (cases bind:
       mk_AS`MultSetBind(-,Set,-)  -> def tmp_m = FreeInExpr(Set, newid_s)
+                                     in
+                                      (res_m := res_m munion tmp_m;
+                                       newid_s := newid_s union dom tmp_m
+                                       ),
+      mk_AS`MultSeqBind(-,Seq,-)  -> def tmp_m = FreeInExpr(Seq, newid_s)
                                      in
                                       (res_m := res_m munion tmp_m;
                                        newid_s := newid_s union dom tmp_m

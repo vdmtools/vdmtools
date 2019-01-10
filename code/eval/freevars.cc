@@ -102,8 +102,9 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
       const SEQ<TYPE_AS_Pattern> & fields (patbind.GetSequence(pos_AS_TuplePattern_fields));
       SET<TYPE_AS_Name> res_set (eset);
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++ )
+      for (size_t i = 1; i <= len_fields; i++ ) {
         res_set.ImpUnion (IdentInPattern (fields[i]));
+      }
       return (res_set);
     }
 #ifdef VDMPP
@@ -119,6 +120,9 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
 #endif // VDMPP
     case TAG_TYPE_AS_SetBind: {
       return IdentInPattern(patbind.GetRecord(pos_AS_SetBind_pat));
+    }
+    case TAG_TYPE_AS_SeqBind: {
+      return IdentInPattern(patbind.GetRecord(pos_AS_SeqBind_pat));
     }
     case TAG_TYPE_AS_TypeBind: {
       return IdentInPattern(patbind.GetRecord(pos_AS_TypeBind_pat));
@@ -136,6 +140,7 @@ SET<TYPE_AS_Name> Free::IdentInBind (const TYPE_AS_Bind & bind)
 {
   switch (bind.GetTag()) {
     case TAG_TYPE_AS_SetBind:  { return IdentInPattern(bind.GetRecord(pos_AS_SetBind_pat)); }
+    case TAG_TYPE_AS_SeqBind:  { return IdentInPattern(bind.GetRecord(pos_AS_SeqBind_pat)); }
     case TAG_TYPE_AS_TypeBind: { return IdentInPattern(bind.GetRecord(pos_AS_TypeBind_pat)); }
     default: {
       RTERR::Error (L"IdentInBind", RTERR_PATTERN_UNKNOWN, Nil(), Nil(),Sequence());
@@ -154,8 +159,18 @@ SET<TYPE_AS_Name> Free::IdentInMultBind (const TYPE_AS_MultBind & bind)
       SET<TYPE_AS_Name> id_s (eset);
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSetBind_pat));
       size_t len = pat_l.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         id_s.ImpUnion (IdentInPattern (pat_l[i]));
+      }
+      return id_s;
+    }
+    case TAG_TYPE_AS_MultSeqBind: {
+      SET<TYPE_AS_Name> id_s (eset);
+      const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSeqBind_pat));
+      size_t len = pat_l.Length();
+      for (size_t i = 1; i <= len; i++) {
+        id_s.ImpUnion (IdentInPattern (pat_l[i]));
+      }
       return id_s;
     }
     case TAG_TYPE_AS_MultTypeBind: {
@@ -192,11 +207,16 @@ SET<TYPE_AS_Name> Free::IdentInMultBindSeq (const SEQ<TYPE_AS_MultBind> & bind_l
 MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInBind (const TYPE_AS_Bind & bind, const SET<TYPE_AS_Name> & id_s)
 {
   switch(bind.GetTag()){
-    case TAG_TYPE_AS_SetBind:
+    case TAG_TYPE_AS_SetBind: {
       return FreeInExpr (bind.GetRecord(pos_AS_SetBind_Set), id_s);
+    }
+    case TAG_TYPE_AS_SeqBind: {
+      return FreeInExpr (bind.GetRecord(pos_AS_SeqBind_Seq), id_s);
+    }
     case TAG_TYPE_AS_TypeBind:
-    default:
+    default: {
       return emap;
+    }
   }
 }
 
@@ -210,14 +230,20 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInMultBindSeq (const SEQ<TYPE_AS_MultB
   SET<TYPE_AS_Name> newid_s (id_s);
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   size_t len_bind_l = bind_l.Length();
-  for (size_t index = 1; index <= len_bind_l; index++)
-  {
+  for (size_t index = 1; index <= len_bind_l; index++) {
     const TYPE_AS_MultBind & bind (bind_l[index]);
     //newid_s.ImpUnion (IdentInMultBind (bind));
     switch(bind.GetTag()) {
       case TAG_TYPE_AS_MultSetBind: {
         const TYPE_AS_Expr & set_e (bind.GetRecord(pos_AS_MultSetBind_Set));
         MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (set_e, newid_s));
+        res_m.ImpOverride (tmp_m);
+        newid_s.ImpUnion (tmp_m.Dom ());
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const TYPE_AS_Expr & seq_e (bind.GetRecord(pos_AS_MultSeqBind_Seq));
+        MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (seq_e, newid_s));
         res_m.ImpOverride (tmp_m);
         newid_s.ImpUnion (tmp_m.Dom ());
         break;
@@ -744,9 +770,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInSeqEnumerationExpr (const TYPE_AS_Se
 MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInSeqComprehensionExpr (const TYPE_AS_SeqComprehensionExpr & CompE,
                                                                   const SET<TYPE_AS_Name> & id_s)
 {
-  const TYPE_AS_Expr & elem_e  (CompE.GetRecord(pos_AS_SeqComprehensionExpr_elem));
-  const TYPE_AS_SetBind & bind (CompE.GetRecord(pos_AS_SeqComprehensionExpr_bind));
-  const Generic & pred_e       (CompE.GetField(pos_AS_SeqComprehensionExpr_pred));
+  const TYPE_AS_Expr & elem_e (CompE.GetRecord(pos_AS_SeqComprehensionExpr_elem));
+  const TYPE_AS_Bind & bind   (CompE.GetRecord(pos_AS_SeqComprehensionExpr_bind));
+  const Generic & pred_e      (CompE.GetField(pos_AS_SeqComprehensionExpr_pred));
 
   //MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (FreeInBind (bind, id_s));
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m;

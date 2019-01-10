@@ -229,8 +229,8 @@ private:
   void PatternBind2ASCII(const TYPE_AS_PatternBind&, wostream&);
   void Bind2ASCII(const TYPE_AS_Bind& bind, wostream& result);
   void SetBind2ASCII(const TYPE_AS_SetBind& bind, wostream& result);
-  void TypeBind2ASCII(const TYPE_AS_TypeBind& bind, wostream& result);
   void SeqBind2ASCII(const TYPE_AS_SeqBind& bind, wostream& result);
+  void TypeBind2ASCII(const TYPE_AS_TypeBind& bind, wostream& result);
   void BindList2ASCII(const TYPE_AS_BindList&, wostream&);
   void MultBind2ASCII(const TYPE_AS_MultBind& mb, wostream& result);
   void ParameterTypes2ASCII(const TYPE_AS_ParameterTypes&, wostream&);

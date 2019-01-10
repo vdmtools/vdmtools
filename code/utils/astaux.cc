@@ -296,9 +296,10 @@ bool ASTAUX::IsASTRec(const Record & rec)
 #endif // VDMPP
 
     case TAG_TYPE_AS_SetBind:
-    case TAG_TYPE_AS_TypeBind:
     case TAG_TYPE_AS_SeqBind:
+    case TAG_TYPE_AS_TypeBind:
     case TAG_TYPE_AS_MultSetBind:
+    case TAG_TYPE_AS_MultSeqBind:
     case TAG_TYPE_AS_MultTypeBind:
 
     case TAG_TYPE_AS_BoolLit:
@@ -697,6 +698,12 @@ TYPE_AS_MultBind ASTAUX::BindToMultBind(const TYPE_AS_Bind & bind)
                                         bind.GetInt(pos_AS_SetBind_cid));
       break;
     }
+    case TAG_TYPE_AS_SeqBind: {
+      return TYPE_AS_MultSeqBind().Init(SEQ<TYPE_AS_Pattern>().ImpAppend(bind.GetRecord(pos_AS_SeqBind_pat)),
+                                        bind.GetRecord(pos_AS_SeqBind_Seq),
+                                        bind.GetInt(pos_AS_SeqBind_cid));
+      break;
+    }
     case TAG_TYPE_AS_TypeBind: {
       return TYPE_AS_MultTypeBind().Init(SEQ<TYPE_AS_Pattern>().ImpAppend(bind.GetRecord(pos_AS_TypeBind_pat)),
                                          bind.GetRecord(pos_AS_TypeBind_tp),
@@ -730,9 +737,18 @@ SEQ<TYPE_AS_Bind> ASTAUX::MultBindToBindSeq(const TYPE_AS_MultBind & bind)
       const TYPE_AS_Expr & e (bind.GetRecord(pos_AS_MultSetBind_Set));
       const TYPE_CI_ContextId & cid (bind.GetInt(pos_AS_MultSetBind_cid));
       int len_pat_l = pat_l.Length();
-      for (int idx = 1; idx <= len_pat_l; idx++)
-      {
+      for (int idx = 1; idx <= len_pat_l; idx++) {
         bind_l.ImpAppend(TYPE_AS_SetBind().Init(pat_l[idx], e, cid));
+      }
+      break;
+    }
+    case TAG_TYPE_AS_MultSeqBind: {
+      const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSeqBind_pat));
+      const TYPE_AS_Expr & e (bind.GetRecord(pos_AS_MultSeqBind_Seq));
+      const TYPE_CI_ContextId & cid (bind.GetInt(pos_AS_MultSeqBind_cid));
+      int len_pat_l = pat_l.Length();
+      for (int idx = 1; idx <= len_pat_l; idx++) {
+        bind_l.ImpAppend(TYPE_AS_SeqBind().Init(pat_l[idx], e, cid));
       }
       break;
     }
@@ -741,8 +757,7 @@ SEQ<TYPE_AS_Bind> ASTAUX::MultBindToBindSeq(const TYPE_AS_MultBind & bind)
       const TYPE_AS_Type & tp (bind.GetRecord(pos_AS_MultTypeBind_tp));
       const TYPE_CI_ContextId & cid (bind.GetInt(pos_AS_MultTypeBind_cid));
       int len_pat_l = pat_l.Length();
-      for (int idx = 1; idx <= len_pat_l; idx++)
-      {
+      for (int idx = 1; idx <= len_pat_l; idx++) {
         bind_l.ImpAppend(TYPE_AS_TypeBind().Init(pat_l[idx], tp, cid));
       }
       break;
@@ -758,8 +773,7 @@ SEQ<TYPE_AS_Bind> ASTAUX::BindListToBindSeq(const SEQ<TYPE_AS_MultBind> & binds)
 {
   SEQ<TYPE_AS_Bind> bind_l;
   size_t len_binds = binds.Length();
-  for (size_t idx = 1; idx <= len_binds; idx++)
-  {
+  for (size_t idx = 1; idx <= len_binds; idx++) {
     bind_l.ImpConc(MultBindToBindSeq(binds[idx]));
   }
   return bind_l;
@@ -775,41 +789,52 @@ SEQ<TYPE_AS_MultBind> ASTAUX::MargeBindList(const SEQ<TYPE_AS_MultBind> & bind_l
   Sequence expr_l; // seq of (AS`Expr | AS`Type)
   Map m; // map AS`Expr to AS`MultBind
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; idx <= len_bind_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_bind_l; idx++) {
     const TYPE_AS_MultBind & bind (bind_l[idx]);
     switch(bind.GetTag()) {
       case TAG_TYPE_AS_MultSetBind: {
         const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSetBind_pat));
         const TYPE_AS_Expr & e_set (bind.GetRecord(pos_AS_MultSetBind_Set));
-        if (expr_l.Elems().InSet(e_set))
-        {
+        if (expr_l.Elems().InSet(e_set)) {
           TYPE_AS_MultSetBind b (m[e_set]);
           SEQ<TYPE_AS_Pattern> p_l (b.GetSequence(pos_AS_MultSetBind_pat));
           p_l.ImpConc(pat_l);
           b.SetField(pos_AS_MultSetBind_pat, p_l);
           m.ImpModify(e_set, b);
         }
-        else
-        {
+        else {
           expr_l.ImpAppend(e_set);
           m.ImpModify(e_set, bind);
+        }
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSeqBind_pat));
+        const TYPE_AS_Expr & e_seq (bind.GetRecord(pos_AS_MultSeqBind_Seq));
+        if (expr_l.Elems().InSet(e_seq)) {
+          TYPE_AS_MultSeqBind b (m[e_seq]);
+          SEQ<TYPE_AS_Pattern> p_l (b.GetSequence(pos_AS_MultSeqBind_pat));
+          p_l.ImpConc(pat_l);
+          b.SetField(pos_AS_MultSeqBind_pat, p_l);
+          m.ImpModify(e_seq, b);
+        }
+        else {
+          expr_l.ImpAppend(e_seq);
+          m.ImpModify(e_seq, bind);
         }
         break;
       }
       case TAG_TYPE_AS_MultTypeBind: {
         const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultTypeBind_pat));
         const TYPE_AS_Type & e_tp (bind.GetRecord(pos_AS_MultTypeBind_tp));
-        if (expr_l.Elems().InSet(e_tp))
-        {
+        if (expr_l.Elems().InSet(e_tp)) {
           TYPE_AS_MultTypeBind b (m[e_tp]);
           SEQ<TYPE_AS_Pattern> p_l (b.GetSequence(pos_AS_MultTypeBind_pat));
           p_l.ImpConc(pat_l);
           b.SetField(pos_AS_MultTypeBind_pat, p_l);
           m.ImpModify(e_tp, b);
         }
-        else
-        {
+        else {
           expr_l.ImpAppend(e_tp);
           m.ImpModify(e_tp, bind);
         }
@@ -819,8 +844,7 @@ SEQ<TYPE_AS_MultBind> ASTAUX::MargeBindList(const SEQ<TYPE_AS_MultBind> & bind_l
   }
   SEQ<TYPE_AS_MultBind> new_bind;
   int len_expr_l = expr_l.Length();
-  for (int i = 1; i <= len_expr_l; i++)
-  {
+  for (int i = 1; i <= len_expr_l; i++) {
     new_bind.ImpAppend(m[expr_l[i]]);
   }
   return new_bind;
@@ -834,14 +858,11 @@ TYPE_AS_Document ASTAUX::ChangeDocumentToStatic(const TYPE_AS_Document & cs)
 {
   TYPE_AS_Document new_cs;
   size_t len_cs = cs.Length();
-  for (size_t n = 1; n <= len_cs; n++)
-  {
-    if(cs[n].Is(TAG_TYPE_AS_Class))
-    {
+  for (size_t n = 1; n <= len_cs; n++) {
+    if(cs[n].Is(TAG_TYPE_AS_Class)) {
       new_cs.ImpAppend(ChangeClassToStatic(cs[n]));
     }
-    else
-    {
+    else {
       new_cs.ImpAppend(cs[n]);
     }
   }
@@ -856,15 +877,13 @@ TYPE_AS_Class ASTAUX::ChangeClassToStatic(const TYPE_AS_Class & cl)
   TYPE_AS_Class new_cl (cl);
   Generic defs_g (cl.GetField(pos_AS_Class_defs));
 
-  if( !defs_g.IsNil() )
-  {
+  if( !defs_g.IsNil() ) {
     TYPE_AS_Definitions defs (defs_g);
     SEQ<TYPE_AS_ValueDef> valuem (defs.GetSequence(pos_AS_Definitions_valuem));
     Map fnm (defs.GetMap(pos_AS_Definitions_fnm));
     size_t len_valuem = valuem.Length();
     SEQ<TYPE_AS_ValueDef> new_valuem;
-    for (size_t idx = 1; idx <= len_valuem; idx++)
-    {
+    for (size_t idx = 1; idx <= len_valuem; idx++) {
       TYPE_AS_ValueDef vd (valuem[idx]);
       vd.SetField(pos_AS_ValueDef_stat, Bool(true));
       new_valuem.ImpAppend(vd);
@@ -873,8 +892,7 @@ TYPE_AS_Class ASTAUX::ChangeClassToStatic(const TYPE_AS_Class & cl)
     Set dom_fnm (fnm.Dom());
     Map new_fnm;
     Generic nm;
-    for (bool bb = dom_fnm.First(nm); bb; bb = dom_fnm.Next(nm))
-    {
+    for (bool bb = dom_fnm.First(nm); bb; bb = dom_fnm.Next(nm)) {
       Record fn (fnm[nm]);
       switch(fn.GetTag()) {
         case TAG_TYPE_AS_ImplFnDef: {

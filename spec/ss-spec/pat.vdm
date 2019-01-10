@@ -188,6 +188,46 @@ operations
                ---------------------------------------
          else (ERR`GenErr(s,<ERROR>,295,[]);
                return mk_(nil,ExtractBindings(p))),
+      mk_AS`SeqBind(p,s,-)  ->
+        def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`SeqTypeRep(mk_REP`AllTypeRep()))
+        in
+          if TYPE`IsCompatible(i,stp,mk_REP`SeqTypeRep(mk_REP`AllTypeRep()))
+          then
+          def elemtp = AUX`UnmaskSeqType(i, AUX`ExtractSeqType(stp))
+          in
+            if elemtp = nil
+             -------------------------------------
+             -- Error message #462
+             -- An empty seq is used in a seq bind
+             -------------------------------------
+            then (ERR`GenErr(s, <WARNING>,462,[]);
+                  def mk_(wf_p,bd) = wf_Pattern(i,p,tp)
+                  in
+                    return mk_(if wf_p = nil
+                               then nil
+                               else false,bd))
+            elseif TYPE`IsCompatible(i,tp,elemtp)
+            then def mk_(wf_p,bd) = wf_Pattern(i,p,tp)
+                 in
+                   return mk_(if wf_p =nil
+                              then nil
+                              else wf_p and wf_s,bd)
+                  -------------------------------------------------------------
+                  -- Error message #294
+                  -- Type of defining expression is not compatible with binding
+                  -------------------------------------------------------------
+            else (ERR`GenErr(s,<WARNING>,294,[]);
+                 def mk_(wf_p,bd) = wf_Pattern(i,p,elemtp)
+                 in
+                   return mk_(if wf_p =nil
+                              then nil
+                              else false,bd))
+               ---------------------------------------
+               -- Error message #237
+               -- Expression is not a sequence type
+               ---------------------------------------
+         else (ERR`GenErr(s,<ERROR>,237,[]);
+               return mk_(nil,ExtractBindings(p))),
       mk_AS`TypeBind(p,t,-) ->
       (
 #ifdef VDMPP
@@ -658,6 +698,7 @@ full standard VDM-SL functions can also be locally defined.
   wf_Bind(i, bind) ==
     cases true:
      (is_AS`SetBind(bind))  -> wf_SetBind(i, bind),
+     (is_AS`SeqBind(bind))  -> wf_SeqBind(i, bind),
      (is_AS`TypeBind(bind)) -> wf_TypeBind(i, bind),
      others                 -> error
     end;
@@ -690,10 +731,6 @@ full standard VDM-SL functions can also be locally defined.
       else (ERR`GenErr(s,<ERROR>,295,[]);
             return mk_(nil,ExtractBindings(p)));
 
-  wf_TypeBind : TYPE`Ind * AS`TypeBind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
-  wf_TypeBind(i, mk_AS`TypeBind(p,t,-)) ==
-     return wf_Pattern(i,p,ENV`TransType(nil,t));
-
   wf_SeqBind : TYPE`Ind * AS`SeqBind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
   wf_SeqBind(i, mk_AS`SeqBind(p,s,-)) ==
     def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`SeqTypeRep(mk_REP`AllTypeRep()))
@@ -720,6 +757,10 @@ full standard VDM-SL functions can also be locally defined.
             ---------------------------------------
       else (ERR`GenErr(s,<ERROR>,237,[]);
             return mk_(nil,ExtractBindings(p)));
+
+  wf_TypeBind : TYPE`Ind * AS`TypeBind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_TypeBind(i, mk_AS`TypeBind(p,t,-)) ==
+     return wf_Pattern(i,p,ENV`TransType(nil,t));
 
   wf_BindAndType : TYPE`Ind * AS`Bind ==> [bool] * (map AS`Name to (REP`TypeRep * nat1)) * REP`TypeRep
   wf_BindAndType(i, bind) ==
@@ -751,6 +792,32 @@ full standard VDM-SL functions can also be locally defined.
                ---------------------------------------
          else (ERR`GenErr(s,<ERROR>,295,[]);
              return mk_(nil,ExtractBindings(p),mk_REP`AllTypeRep())),
+     mk_AS`SeqBind(p,s,-) ->
+       def seq_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                            mk_REP`SeqTypeRep(mk_REP`AllTypeRep())});
+           mk_(wf_s,stp) = EXPR`wf_Expr(i,s,seq_alltp)
+       in
+         if TYPE`IsCompatible(i,stp,seq_alltp)
+         then def elemtp = AUX`UnmaskSeqType(i,AUX`ExtractSeqType(stp))
+              in
+                if elemtp = nil
+                -------------------------------------
+                -- Error message #462
+                -- An empty seq is used in a seq bind
+                -------------------------------------
+                then (ERR`GenErr(s,<WARNING>,462,[]);
+                return mk_(false,ExtractBindings(p),mk_REP`AllTypeRep()))
+          else def mk_(wf_p,bd) = wf_Pattern(i,p,elemtp)
+               in
+                 return mk_(if wf_p = nil
+                            then nil
+                            else wf_p and wf_s, bd,elemtp)
+               ---------------------------------------
+               -- Error message #237
+               -- Expression is not a sequence type
+               ---------------------------------------
+         else (ERR`GenErr(s,<ERROR>,237,[]);
+             return mk_(nil,ExtractBindings(p),mk_REP`AllTypeRep())),
      mk_AS`TypeBind(p,t,-) ->
        def mk_(wf,bd) = wf_Pattern(i,p,ENV`TransType(nil,t))
        in
@@ -760,11 +827,9 @@ full standard VDM-SL functions can also be locally defined.
   wf_TypeBindList : TYPE`Ind * seq of AS`TypeBind ==> [bool] * (map AS`Name to (REP`TypeRep * nat1)) * seq of REP`TypeRep
   wf_TypeBindList(i,parms) ==
    (dcl reswf : [bool] := true;
-    --dcl resbd : seq of (map AS`Name to REP`TypeRep) := [];
     dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
     dcl altbd : set of AS`Name := {};
     dcl restp : seq of REP`TypeRep := [];
-    --dcl okbinds : bool * (map AS`Name to REP`TypeRep);
     dcl okbinds : bool * (map AS`Name to (REP`TypeRep * nat1));
     for tb in parms do
       def mk_(wf,bd,tp) = wf_BindAndType(i,tb)
@@ -794,16 +859,15 @@ full standard VDM-SL functions can also be locally defined.
     wf_MultiBindList: TYPE`Ind * seq of AS`MultBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
     wf_MultiBindList(i, mbs, mustmatch) ==
       ( dcl reswf : [bool] := true;
-        --dcl resbd : seq of (map AS`Name to REP`TypeRep) := [];
         dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
         dcl altbd : set of AS`Name := {};
-        --dcl okbinds : bool * (map AS`Name to REP`TypeRep);
         dcl okbinds : bool * (map AS`Name to (REP`TypeRep * nat1));
         for all mb in set elems mbs do
-         --(dcl wfbd : [bool] * (map AS`Name to REP`TypeRep);
          (dcl wfbd : [bool] * (map AS`Name to (REP`TypeRep * nat1));
           if is_AS`MultSetBind(mb)
           then wfbd := wf_MultiSetBind (i,mb,mustmatch)
+          elseif is_AS`MultSeqBind(mb)
+          then wfbd := wf_MultiSeqBind (i,mb,mustmatch)
           else wfbd := wf_MultiTypeBind (i,mb);
           def mk_(wf,bd) = wfbd
           in
@@ -824,10 +888,8 @@ full standard VDM-SL functions can also be locally defined.
     wf_MultiSetBind: TYPE`Ind * AS`MultSetBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
     wf_MultiSetBind (i, mk_AS`MultSetBind(pats,e,-), mustmatch) ==
     ( dcl reswf : [bool] := true;
-      --dcl resbd : seq of (map AS`Name to REP`TypeRep) := [];
       dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
       def altbinds = merge {ExtractBindings(pat) | pat in set elems pats} in
-      --def mk_(wf_e, etp) = EXPR`wf_Expr (i,e,mk_REP`AllTypeRep()) in
       def set_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
                                            mk_REP`SetTypeRep(mk_REP`AllTypeRep())});
           mk_(wf_e, etp) = EXPR`wf_Expr (i,e,if mustmatch then mk_REP`SetTypeRep(mk_REP`AllTypeRep()) else set_alltp)
@@ -874,14 +936,59 @@ full standard VDM-SL functions can also be locally defined.
           return mk_(nil, altbinds))
     );
 
+    wf_MultiSeqBind: TYPE`Ind * AS`MultSeqBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MultiSeqBind (i, mk_AS`MultSeqBind(pats,e,-), mustmatch) ==
+    ( dcl reswf : [bool] := true;
+      dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
+      def altbinds = merge {ExtractBindings(pat) | pat in set elems pats} in
+      def seq_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                           mk_REP`SeqTypeRep(mk_REP`AllTypeRep())});
+          mk_(wf_e, etp) = EXPR`wf_Expr (i,e,if mustmatch then mk_REP`SeqTypeRep(mk_REP`AllTypeRep()) else seq_alltp)
+      in
+        if TYPE`IsCompatible(i, etp, seq_alltp)
+        then
+          def sttp = AUX`UnmaskSeqType (<POS>,AUX`ExtractSeqType (etp)) in
+           (if sttp = nil or mustmatch and i = <DEF> and TYPE`IsCompatible(<POS>, etp, mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()))
+              -------------------------------------
+              -- Error message #462
+              -- An empty seq is used in a seq bind
+              -------------------------------------
+              then (ERR`GenErr(e,<WARNING>,462,[]);
+                    if mustmatch
+                    then reswf := nil
+                                 );
+              let sttp' = if sttp = nil then mk_REP`AllTypeRep () else sttp
+              in
+               (dcl okbinds : bool * map AS`Name to (REP`TypeRep * nat1);
+                for pat in pats do
+                  def mk_(match, bd) = wf_Pattern (i, pat, sttp') in
+                    ( reswf := if (nil = reswf) or (nil = match)
+                               then nil
+                               else reswf and match;
+                      resbd := resbd ^ [bd]);
+                if reswf = true
+                then okbinds := MergeBindings (i,resbd)
+                else okbinds := mk_(false, altbinds);
+                def mk_(ok, binds) = okbinds
+                in
+                  return mk_(if reswf = nil or not wf_e
+                             then nil
+                             else reswf and ok, binds)))
+        else
+          ---------------------------------------
+          -- Error message #237
+          -- Expression is not a sequence type
+          ---------------------------------------
+         (ERR`GenErr (e,<ERROR>,237,[]);
+          return mk_(nil, altbinds))
+    );
+
   wf_MultiTypeBind: TYPE`Ind * AS`MultTypeBind ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
   wf_MultiTypeBind (i, mk_AS`MultTypeBind(pats,tp,-)) ==
     let altbinds = merge {ExtractBindings(pat) | pat in set elems pats}
     in
      (dcl reswf : [bool] := true,
-          --resbd : seq of (map AS`Name to REP`TypeRep) := [],
           resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [],
-          --okbinds : bool * map AS`Name to REP`TypeRep;
           okbinds : bool * map AS`Name to (REP`TypeRep * nat1);
       for pat in pats do
         def mk_(match, bd) = wf_Pattern (i, pat, ENV`TransType(nil,tp))

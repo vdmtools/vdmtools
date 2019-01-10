@@ -594,6 +594,11 @@ repository uses it we recommend to get rid of it entirely in VDM-SL.
                                                  [mk_INSTRTP`SWAP(), mk_INSTRTP`TYPEJUDGE(tp)],
         mk_AS`SetBind(pat,Set,-) -> pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
                                                  [mk_INSTRTP`SWAP()] ^ CEXPR`E2I(Set) ^ [mk_INSTRTP`BINOP(<INSET>)],
+        mk_AS`SeqBind(pat,Seq,cid) -> pat_instr := let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
+                                                   in
+
+                                                 pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
+                                                 [mk_INSTRTP`SWAP()] ^ CEXPR`E2I(set_e) ^ [mk_INSTRTP`BINOP(<INSET>)],
         others                   -> pat_instr := pat_instr ^ CPAT`P2I(pb) ^ [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]
       end;
       let test_instr = CEXPR`ConcIfThenElse(pat_instr, bind_succ, bind_fail),
@@ -620,6 +625,10 @@ repository uses it we recommend to get rid of it entirely in VDM-SL.
                                                      [mk_INSTRTP`SWAP(), mk_INSTRTP`TYPEJUDGE(tp)],
             mk_AS`SetBind(pat,Set,-) -> pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
                                                      [mk_INSTRTP`SWAP()] ^ CEXPR`E2I(Set) ^ [mk_INSTRTP`BINOP(<INSET>)],
+            mk_AS`SeqBind(pat,Seq,cid) -> let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
+                                          in
+                                        pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
+                                                     [mk_INSTRTP`SWAP()] ^ CEXPR`E2I(set_e) ^ [mk_INSTRTP`BINOP(<INSET>)],
            others                    -> pat_instr := pat_instr ^ CPAT`P2I(pb) ^ [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]
           end;
           let test_instr = CEXPR`ConcIfThenElse(pat_instr, bind_succ, bind_fail)

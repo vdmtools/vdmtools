@@ -76,6 +76,16 @@ operations
                    ^ conc [ P2I(pat(i)) | i in set inds pat ]
                    ^ [mk_INSTRTP`MULTBINDL(len pat, part)]
         end,
+      [mk_AS`MultSeqBind(pat,Seq,cid)] ->
+        let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
+        in
+        cases pat:
+          [p] -> return CEXPR`E2I(set_e) ^ P2I(p) ^ [mk_INSTRTP`MULTBINDL(1, part)],
+          others ->
+            return CEXPR`E2I(set_e) ^ [ mk_INSTRTP`COPYVAL() | - in set {2,...,len pat} ]
+                   ^ conc [ P2I(pat(i)) | i in set inds pat ]
+                   ^ [mk_INSTRTP`MULTBINDL(len pat, part)]
+        end,
       others -> 
        (dcl sp_val : STKM`SubProgram := [],
             p_l : seq of AS`Pattern := [];
@@ -87,6 +97,11 @@ operations
             mk_AS`MultSetBind(pat,Set,-) -> (sp_val := sp_val ^ CEXPR`E2I(Set) ^
                                               [ mk_INSTRTP`COPYVAL() | - in set {2,...,len pat} ];
                                              p_l := p_l ^ pat),
+            mk_AS`MultSeqBind(pat,Seq,cid) -> let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
+                                              in
+                                               (sp_val := sp_val ^ CEXPR`E2I(set_e) ^
+                                                [ mk_INSTRTP`COPYVAL() | - in set {2,...,len pat} ];
+                                                p_l := p_l ^ pat),
             others -> error
           end;
 
@@ -100,9 +115,13 @@ operations
   CompileBind(bind,part) ==
     cases bind:
       mk_AS`TypeBind(pat,tp,-) -> return [ mk_INSTRTP`TPTOSET(tp) ] ^ P2I(pat)
-                                     ^ [mk_INSTRTP`MULTBINDL(1, part)],
+                                         ^ [mk_INSTRTP`MULTBINDL(1, part)],
       mk_AS`SetBind(pat,Set,-) -> return CEXPR`E2I(Set) ^ P2I(pat) 
-                                     ^ [mk_INSTRTP`MULTBINDL(1, part)],
+                                         ^ [mk_INSTRTP`MULTBINDL(1, part)],
+      mk_AS`SeqBind(pat,Seq,cid) -> let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
+                                    in
+                                      return CEXPR`E2I(set_e) ^ P2I(pat) 
+                                             ^ [mk_INSTRTP`MULTBINDL(1, part)],
       others -> error
     end;
 
@@ -111,6 +130,8 @@ operations
     cases pb:
       mk_AS`TypeBind(pat,tp,-) -> return [mk_INSTRTP`DTC(tp)] ^ P2I(pat),
       mk_AS`SetBind(pat,Set,-) -> return CEXPR`E2I(Set) ^ [mk_INSTRTP`DTCSET()] ^ P2I(pat),
+      mk_AS`SeqBind(pat,Seq,cid) -> let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
+                                    in return CEXPR`E2I(set_e) ^ [mk_INSTRTP`DTCSET()] ^ P2I(pat),
       others                   -> return P2I(pb)
     end;
 \end{vdm_al}

@@ -1040,6 +1040,18 @@ TYPE_STKM_SubProgram StackCompiler::CompileTrapStmt(const TYPE_AS_TrapStmt & sIn
                .ImpAppend(TYPE_INSTRTP_BINOP().Init(Int(INSET)));
       break;
     }
+    case TAG_TYPE_AS_SeqBind: {
+      TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
+                                                     pb.GetRecord(pos_AS_MultSeqBind_Seq),
+                                                     pb.GetInt(pos_AS_MultSeqBind_cid)));
+
+      pat_instr.ImpAppend(TYPE_INSTRTP_COPYVAL())
+               .ImpConc(P2I(pb.GetRecord(pos_AS_SeqBind_pat)))
+               .ImpAppend(TYPE_INSTRTP_SWAP())
+               .ImpConc(E2I(set_e))
+               .ImpAppend(TYPE_INSTRTP_BINOP().Init(Int(INSET)));
+      break;
+    }
     default: {
       pat_instr.ImpConc(P2I(pb))
                .ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true));
@@ -1125,7 +1137,18 @@ TYPE_STKM_SubProgram StackCompiler::CompileRecTrapStmt(const TYPE_AS_RecTrapStmt
                  .ImpConc(E2I(pb.GetRecord(pos_AS_SetBind_Set)))
                  .ImpAppend(TYPE_INSTRTP_BINOP().Init(Int(INSET)));
         break;
-      }      
+      }
+      case TAG_TYPE_AS_SeqBind: {
+        TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
+                                                       pb.GetRecord(pos_AS_MultSeqBind_Seq),
+                                                       pb.GetInt(pos_AS_MultSeqBind_cid)));
+        pat_instr.ImpAppend(TYPE_INSTRTP_COPYVAL())
+                 .ImpConc(P2I(pb.GetRecord(pos_AS_SeqBind_pat)))
+                 .ImpAppend(TYPE_INSTRTP_SWAP())
+                 .ImpConc(E2I(set_e))
+                 .ImpAppend(TYPE_INSTRTP_BINOP().Init(Int(INSET)));
+        break;
+      }
       default: {
         pat_instr.ImpConc(P2I(pb))
                  .ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true));

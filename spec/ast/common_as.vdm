@@ -1420,7 +1420,7 @@ types
 
 PatternBind = Pattern | Bind;
 
-Bind = SetBind | TypeBind;
+Bind = SetBind | TypeBind | SeqBind;
 
 SetBind :: pat : Pattern
            Set : Expr
@@ -1439,10 +1439,15 @@ TypeBind :: pat : Pattern
 
 BindList = seq of MultBind;
 
-MultBind = MultSetBind | MultTypeBind;
+MultBind = MultSetBind | MultSeqBind | MultTypeBind;
 
 MultSetBind :: pat : seq1 of Pattern
                Set : Expr
+               CNTXT
+               ;
+
+MultSeqBind :: pat : seq1 of Pattern
+               Seq : Expr
                CNTXT
                ;
 

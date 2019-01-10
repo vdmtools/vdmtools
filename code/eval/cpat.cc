@@ -47,6 +47,19 @@ TYPE_STKM_SubProgram StackCompiler::CompileBind(const TYPE_AS_Bind & bind,
       sp.ImpConc(P2I(pat));
       break;
     }
+    case TAG_TYPE_AS_SeqBind: {
+      // TODO: duplicate item is not yet supported
+      const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_SeqBind_pat));
+      const TYPE_AS_Expr & seq_e  (bind.GetRecord(pos_AS_SeqBind_Seq));
+
+      TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
+                                                     bind.GetRecord(pos_AS_SeqBind_Seq),
+                                                     bind.GetInt(pos_AS_SeqBind_cid)));
+
+      sp.ImpConc(E2I(set_e));
+      sp.ImpConc(P2I(pat));
+      break;
+    }
   }
   sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(1), part));
   return sp;
@@ -116,6 +129,36 @@ TYPE_STKM_SubProgram StackCompiler::CompileMultBindL(const SEQ<TYPE_AS_MultBind>
           return sp;
         }
       }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
+
+        TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
+                                                       mb.GetRecord(pos_AS_MultSeqBind_Seq),
+                                                       mb.GetInt(pos_AS_MultSeqBind_cid)));
+  
+        size_t len_pat_l = pat_l.Length();
+        if (1 == len_pat_l) {
+          TYPE_STKM_SubProgram sp;
+          sp.ImpConc(E2I(set_e));
+          sp.ImpConc(P2I(pat_l[1]));
+          sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(1), part));
+          return sp;
+        }
+        else {
+          TYPE_STKM_SubProgram sp;
+          TYPE_STKM_SubProgram sp_pat;
+          sp.ImpConc(E2I(set_e));
+          for (size_t j = 1; j <= len_pat_l; j++) {
+            sp_pat.ImpConc(P2I(pat_l[j]));
+            if (j > 1) {
+              sp.ImpAppend(TYPE_INSTRTP_COPYVAL());
+            }
+          }
+          sp.ImpConc(sp_pat);
+          sp.ImpAppend(TYPE_INSTRTP_MULTBINDL().Init(Int(len_pat_l), part));
+          return sp;
+        }
+      }
       default: {
         return TYPE_STKM_SubProgram(); // dummy
       }
@@ -162,6 +205,23 @@ TYPE_STKM_SubProgram StackCompiler::CompileMultBindL(const SEQ<TYPE_AS_MultBind>
           }
           break;
         }
+        case TAG_TYPE_AS_MultSeqBind: {
+          const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
+          TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
+                                                         mb.GetRecord(pos_AS_MultSeqBind_Seq),
+                                                         mb.GetInt(pos_AS_MultSeqBind_cid)));
+
+          size_t len_pat_l = pat_l.Length();
+          length += len_pat_l;
+          sp_val.ImpConc(E2I(set_e));
+          for (size_t j = 1; j <= len_pat_l; j++) {
+            sp_pat.ImpConc(P2I(pat_l[j]));
+            if (j > 1) {
+              sp_val.ImpAppend(TYPE_INSTRTP_COPYVAL());
+            }
+          }
+          break;
+        }
       }
     }
     TYPE_STKM_SubProgram sp;
@@ -191,6 +251,16 @@ TYPE_STKM_SubProgram StackCompiler::PB2I(const TYPE_AS_PatternBind & pb)
       sp.ImpConc(E2I(pb.GetRecord(pos_AS_SetBind_Set)))
         .ImpAppend(TYPE_INSTRTP_DTCSET())
         .ImpConc(P2I(pb.GetRecord(pos_AS_SetBind_pat)));
+      return sp;
+    }
+    case TAG_TYPE_AS_SeqBind: {
+      TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
+                                                     pb.GetRecord(pos_AS_SeqBind_Seq),
+                                                     pb.GetInt(pos_AS_SeqBind_cid)));
+      TYPE_STKM_SubProgram sp;
+      sp.ImpConc(E2I(set_e))
+        .ImpAppend(TYPE_INSTRTP_DTCSET())
+        .ImpConc(P2I(pb.GetRecord(pos_AS_SeqBind_pat)));
       return sp;
     }
     default: {

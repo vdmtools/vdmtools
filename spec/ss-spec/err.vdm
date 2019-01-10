@@ -97,8 +97,8 @@ definitions
                AS`MatchVal | AS`SetEnumPattern | AS`SetUnionPattern |
                AS`SeqEnumPattern | AS`SeqConcPattern | AS`TuplePattern |
                AS`MapEnumPattern | AS`MapMergePattern | AS`MapletPattern |
-               AS`RecordPattern | AS`SetBind | AS`TypeBind |
-               AS`MultSetBind | AS`MultTypeBind | AS`BoolLit | AS`NilLit |
+               AS`RecordPattern | AS`SetBind | AS`SeqBind | AS`TypeBind |
+               AS`MultSetBind | AS`MultSeqBind | AS`MultTypeBind | AS`BoolLit | AS`NilLit |
                AS`RealLit | AS`NumLit | AS`CharLit | AS`TextLit | AS`QuoteLit |
                AS`AstCI | AS`LastRes  |
                AS`TraceDefAltn | AS`TraceApplyExpr | AS`TraceBracketedExpr |
