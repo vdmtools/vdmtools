@@ -131,7 +131,7 @@ environments improved with the closure environment.
   
   ADDTOBLKENV :: ;
 
-  AuxInstr = CBR | CNBR | BR | EOCL | ERRINST | COPYVAL | DTC | DTCSET |
+  AuxInstr = CBR | CNBR | BR | EOCL | ERRINST | COPYVAL | DTC | DTCSET | DTCSEQ |
              SIZE | COMMENT | ISTART | IEND | NOBODY | TPTOSET | MACRO |
              GETPRE | CONTEXT | PUSHOS | POPOS | DTCMEASURE;
 
@@ -143,6 +143,7 @@ environments improved with the closure environment.
   DTC :: tp : AS`Type;
 
   DTCSET :: ;
+  DTCSEQ :: ;
 
   DTCMEASURE :: ;
 

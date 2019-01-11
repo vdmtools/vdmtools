@@ -380,6 +380,7 @@ wstring RTERR::GetErrorMessage(int num)
     case RTERR_OBJ_REF_EXP:          return wstring(L"An object reference was expected in the expression");
     case RTERR_CLNM_NOT_DEFINED:     return wstring(L"Class name is not defined: %1");
     case RTERR_TAG_UNKNOWN:          return wstring(L"Tag is unknown within the current scope");
+    case RTERR_VALUE_NOT_IN_SEQBIND: return wstring(L"Value is not in Seq Bind");
     case RTERR_MULT_DEF_METHS:       return wstring(L"The method name is multiple defined within the current scope");
     case RTERR_MULT_DEF_FCTS:        return wstring(L"The function name is multiple defined within the current scope");
     case RTERR_MULT_INST_VARS:       return wstring(L"The instance variable name is multiple defined within the current scope");

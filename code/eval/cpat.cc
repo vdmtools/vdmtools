@@ -255,12 +255,9 @@ TYPE_STKM_SubProgram StackCompiler::PB2I(const TYPE_AS_PatternBind & pb)
       return sp;
     }
     case TAG_TYPE_AS_SeqBind: {
-      TYPE_AS_Expr set_e (TYPE_AS_PrefixExpr().Init (Int(SEQELEMS),
-                                                     pb.GetRecord(pos_AS_SeqBind_Seq),
-                                                     pb.GetInt(pos_AS_SeqBind_cid)));
       TYPE_STKM_SubProgram sp;
-      sp.ImpConc(E2I(set_e))
-        .ImpAppend(TYPE_INSTRTP_DTCSET())
+      sp.ImpConc(E2I(pb.GetRecord(pos_AS_SeqBind_Seq)))
+        .ImpAppend(TYPE_INSTRTP_DTCSEQ())
         .ImpConc(P2I(pb.GetRecord(pos_AS_SeqBind_pat)));
       return sp;
     }

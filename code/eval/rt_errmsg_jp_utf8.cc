@@ -266,6 +266,8 @@ string RTERR::GetErrorMessageJP(int num)
     case RTERR_CLNM_NOT_DEFINED:     return "クラス名が定義されていません: %1";
 //    case RTERR_TAG_UNKNOWN:          return "Tag is unknown within the current scope";
     case RTERR_TAG_UNKNOWN:          return "現在のスコープ中で、タグが未定義です";
+//    case RTERR_VALUE_NOT_IN_SEQBIND: return "Value is not in Seq Bind";
+    case RTERR_VALUE_NOT_IN_SEQBIND: return "値が列束縛の中にありません";
 //    case RTERR_MULT_DEF_METHS:       return "The method name is multiple defined within the current scope";
     case RTERR_MULT_DEF_METHS:       return "現在のスコープ中で、メソッド名が多重定義されています";
 //    case RTERR_MULT_DEF_FCTS:        return "The function name is multiple defined within the current scope";

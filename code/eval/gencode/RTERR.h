@@ -139,6 +139,7 @@ typedef Int TYPE_RTERR_ERR;
 #define RTERR_OBJ_REF_EXP                207
 #define RTERR_CLNM_NOT_DEFINED           208
 #define RTERR_TAG_UNKNOWN                209
+#define RTERR_VALUE_NOT_IN_SEQBIND       210
 #define RTERR_MULT_DEF_METHS             211
 #define RTERR_MULT_DEF_FCTS              212
 #define RTERR_MULT_INST_VARS             213

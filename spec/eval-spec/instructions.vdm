@@ -515,13 +515,12 @@ ExeMULTBINDL(n,part) ==
 ExeSEQBIND: () ==> ()
 ExeSEQBIND() ==
   def [pat] = STKM`Pop(1);
-      [sv] = STKM`Pop(1);
-      val_l = sv.v;
+      [mk_SEM`SEQ(seqval)] = STKM`Pop(1);
       nm = mk_AS`Name(["_index_"],CI`NilContextId);
   in
    (dcl env_s : set of SEM`BlkEnv := {};
-    for i = 1 to len val_l do 
-     def s = PAT`PatternMatch(pat, val_l(i));
+    for i = 1 to len seqval do 
+     def s = PAT`PatternMatch(pat, seqval(i));
      in
        cases s:
          {blkenv} union - -> let idxenv = AUX`MkBlkEnv(nm, mk_SEM`NUM(i), nil, <READ_ONLY>)
@@ -530,8 +529,8 @@ ExeSEQBIND() ==
     STKM`Push(env_s);
    )
 pre STKM`LenES(2) and
-  def [val_v,pat] = STKM`GetES(2)
-  in is_SEM`SEQ(val_v) and STKM`IsPat(pat);
+  def [val,pat] = STKM`GetES(2)
+  in is_SEM`SEQ(val) and STKM`IsPat(pat);
 
 ExePOPBLKENV: () ==> ()
 ExePOPBLKENV() ==
@@ -2197,6 +2196,20 @@ operations
   pre STKM`LenES(2) and
       def [setval,val] = STKM`GetES(2)
       in SEM`IsSemVal(val) and is_SEM`SET(setval);
+
+  ExeDTCSEQ: () ==> ()
+  ExeDTCSEQ() ==
+    def [mk_SEM`SEQ(seqval)] = STKM`Pop(1)
+    in
+      if SETTINGS`DTC()
+      then
+        def [val] = STKM`GetES(1)
+        in
+          if val not in set elems seqval
+          then RTERR`Error(RTERR`VALUE_NOT_IN_SEQBIND, val, nil, [])
+  pre STKM`LenES(2) and
+      def [seqval,val] = STKM`GetES(2)
+      in SEM`IsSemVal(val) and is_SEM`SEQ(seqval);
 
   ExeSIZE: nat ==> ()
   ExeSIZE(n) ==

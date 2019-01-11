@@ -271,6 +271,7 @@ GetErrorMessage(err) ==
     (OBJ_REF_EXP) -> "An object reference was expected in the expression",
     (CLNM_NOT_DEFINED) -> "Class name is not defined: %1",
     (TAG_UNKNOWN) -> "Tag is unknown within the current scope",
+    (VALUE_NOT_IN_SEQBIND) -> "Value is not in Seq Bind",
   
     (MULT_DEF_METHS) -> "The method name is multiple defined within the current scope",
     (MULT_DEF_FCTS) -> "The function name is multiple defined within the current scope",
@@ -530,6 +531,7 @@ MTHD_EXIT_CONT : ERR = 206;
 OBJ_REF_EXP : ERR = 207;
 CLNM_NOT_DEFINED : ERR = 208;
 TAG_UNKNOWN : ERR = 209;
+VALUE_NOT_IN_SEQBIND : ERR = 210;
 
 MULT_DEF_METHS : ERR = 211;
 MULT_DEF_FCTS : ERR = 212;

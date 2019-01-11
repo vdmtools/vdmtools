@@ -954,14 +954,14 @@ void StackEval::ExeMULTBINDL(const Int & n, const Int & part)
 void StackEval::ExeSEQBIND()
 {
   TYPE_STKM_Pattern pat (POP());
-  TYPE_SEM_VAL sv (POP());
+  TYPE_SEM_VAL val (POP());
   SET<TYPE_SEM_BlkEnv> env_s;
-  if (sv.Is(TAG_TYPE_SEM_SEQ)) {
-    SEQ<TYPE_SEM_VAL> val_l (sv.GetSequence(pos_SEM_SEQ_v));
+  if (val.Is(TAG_TYPE_SEM_SEQ)) {
+    const SEQ<TYPE_SEM_VAL> & seqval (val.GetSequence(pos_SEM_SEQ_v));
     TYPE_AS_Name nm (ASTAUX::MkName(L"_index_"));
-    size_t len_val_l = val_l.Length();
-    for (size_t i = 1; i <= len_val_l; i++) {
-      SET<TYPE_SEM_BlkEnv> s (PAT::PatternMatch(pat, val_l[i]));
+    size_t len_seqval = seqval.Length();
+    for (size_t i = 1; i <= len_seqval; i++) {
+      SET<TYPE_SEM_BlkEnv> s (PAT::PatternMatch(pat, seqval[i]));
       if (!s.IsEmpty()) {
         TYPE_SEM_BlkEnv blkenv (s.GetElem());
         TYPE_SEM_BlkEnv idxenv (AUX::MkBlkEnv(nm, mk_SEM_NUM(Real(i)), Nil(), sem_read_only));
@@ -3334,14 +3334,38 @@ void StackEval::ExeDTC(const TYPE_AS_Type & tp)
 // ==> ()
 void StackEval::ExeDTCSET()
 {
-  TYPE_SEM_SET sv (POP());
-
-  const SET<TYPE_SEM_VAL> & setval (sv.GetSet(pos_SEM_SET_v));
+  TYPE_SEM_VAL sv (POP());
 
   if (Settings.DTC()) {
-    const TYPE_STKM_EvalStackItem & val (HEAD());
-    if (!setval.InSet(val)) {
-      RTERR::Error(L"ExeDTCSET", RTERR_VALUE_NOT_IN_SETBIND, setval, Nil(), Sequence());
+    if (sv.Is(TAG_TYPE_SEM_SET)) {
+      const SET<TYPE_SEM_VAL> & setval (sv.GetSet(pos_SEM_SET_v));
+      const TYPE_STKM_EvalStackItem & val (HEAD());
+      if (!setval.InSet(val)) {
+        RTERR::Error(L"ExeDTCSET", RTERR_VALUE_NOT_IN_SETBIND, setval, Nil(), Sequence());
+      }
+    }
+    else {
+      RTERR::Error(L"ExeDTCSET", RTERR_SET_EXPECTED, sv, Nil(), Sequence());
+    }
+  }
+}
+
+// ExeDTCSEQ
+// ==> ()
+void StackEval::ExeDTCSEQ()
+{
+  TYPE_SEM_VAL sv (POP());
+
+  if (Settings.DTC()) {
+    if (sv.Is(TAG_TYPE_SEM_SEQ)) {
+      const SEQ<TYPE_SEM_VAL> & seqval (sv.GetSequence(pos_SEM_SEQ_v));
+      const TYPE_STKM_EvalStackItem & val (HEAD());
+      if (!seqval.Elems().InSet(val)) {
+        RTERR::Error(L"ExeDTCSEQ", RTERR_VALUE_NOT_IN_SEQBIND, seqval, Nil(), Sequence());
+      }
+    }
+    else {
+      RTERR::Error(L"ExeDTCSEQ", RTERR_SEQ_EXPECTED, sv, Nil(), Sequence());
     }
   }
 }

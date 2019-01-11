@@ -1739,6 +1739,7 @@ public:
   void ExeCOPYVAL();
   void ExeDTC(const TYPE_AS_Type & tp);
   void ExeDTCSET();
+  void ExeDTCSEQ();
   void ExeSIZE(const Int & n);
   void ExeTRYANYMATCH();
   void ExeMATCHVAL();

@@ -1960,6 +1960,11 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
       break;
     }
 
+    case TAG_TYPE_INSTRTP_DTCSEQ: {
+      ExeDTCSEQ();
+      break;
+    }
+
     case TAG_TYPE_INSTRTP_SIZE: {
       ExeSIZE(i.GetInt(pos_INSTRTP_SIZE_n));
       break;

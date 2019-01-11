@@ -4335,6 +4335,7 @@ operations
     mk_INSTRTP`POSTENV(resnmtps,ci)         -> INSTR`ExePOSTENV(resnmtps,ci),
     mk_INSTRTP`DTC(tp)                      -> INSTR`ExeDTC(tp),
     mk_INSTRTP`DTCSET()                     -> INSTR`ExeDTCSET(),
+    mk_INSTRTP`DTCSEQ()                     -> INSTR`ExeDTCSEQ(),
     mk_INSTRTP`SIZE(n)                      -> INSTR`ExeSIZE(n),
     mk_INSTRTP`COMMENT(-,-)                 -> skip,
     mk_INSTRTP`PUSHCONTEXT(context)         -> PushContext(context),

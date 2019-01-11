@@ -128,8 +128,7 @@ operations
     cases pb:
       mk_AS`TypeBind(pat,tp,-) -> return [mk_INSTRTP`DTC(tp)] ^ P2I(pat),
       mk_AS`SetBind(pat,Set,-) -> return CEXPR`E2I(Set) ^ [mk_INSTRTP`DTCSET()] ^ P2I(pat),
-      mk_AS`SeqBind(pat,Seq,cid) -> let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
-                                    in return CEXPR`E2I(set_e) ^ [mk_INSTRTP`DTCSET()] ^ P2I(pat),
+      mk_AS`SeqBind(pat,Seq,-) -> return CEXPR`E2I(Seq) ^ [mk_INSTRTP`DTCSEQ()] ^ P2I(pat),
       others                   -> return P2I(pb)
     end;
 \end{vdm_al}
