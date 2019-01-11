@@ -955,21 +955,26 @@ void StackEval::ExeSEQBIND()
 {
   TYPE_STKM_Pattern pat (POP());
   TYPE_SEM_VAL val (POP());
-  SET<TYPE_SEM_BlkEnv> env_s;
   if (val.Is(TAG_TYPE_SEM_SEQ)) {
-    const SEQ<TYPE_SEM_VAL> & seqval (val.GetSequence(pos_SEM_SEQ_v));
-    TYPE_AS_Name nm (ASTAUX::MkName(L"_index_"));
-    size_t len_seqval = seqval.Length();
-    for (size_t i = 1; i <= len_seqval; i++) {
-      SET<TYPE_SEM_BlkEnv> s (PAT::PatternMatch(pat, seqval[i]));
-      if (!s.IsEmpty()) {
-        TYPE_SEM_BlkEnv blkenv (s.GetElem());
-        TYPE_SEM_BlkEnv idxenv (AUX::MkBlkEnv(nm, mk_SEM_NUM(Real(i)), Nil(), sem_read_only));
-        env_s.Insert(AUX::CombineBlkEnv(blkenv,idxenv));
+    SET<TYPE_SEM_BlkEnv> env_s;
+    if (val.Is(TAG_TYPE_SEM_SEQ)) {
+      const SEQ<TYPE_SEM_VAL> & seqval (val.GetSequence(pos_SEM_SEQ_v));
+      TYPE_AS_Name nm (ASTAUX::MkName(L"_index_"));
+      size_t len_seqval = seqval.Length();
+      for (size_t i = 1; i <= len_seqval; i++) {
+        SET<TYPE_SEM_BlkEnv> s (PAT::PatternMatch(pat, seqval[i]));
+        if (!s.IsEmpty()) {
+          TYPE_SEM_BlkEnv blkenv (s.GetElem());
+          TYPE_SEM_BlkEnv idxenv (AUX::MkBlkEnv(nm, mk_SEM_NUM(Real(i)), Nil(), sem_read_only));
+          env_s.Insert(AUX::CombineBlkEnv(blkenv,idxenv));
+        } 
       } 
-    } 
+    }
+    PUSH(env_s);
   }
-  PUSH(env_s);
+  else {
+    RTERR::Error(L"ExeDTCSEQ", RTERR_SEQ_EXPECTED, val, Nil(), Sequence());
+  }
 }
 
 // ExePOPBLKENV
