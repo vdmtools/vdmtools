@@ -78,6 +78,7 @@ environments improved with the closure environment.
              CLOSENV |
              UPDATECLOSENV |
              MULTBINDL |
+             SEQBIND |
              SELBLKENV |
              POPBLKENV | 
              APPENDBLKENV |
@@ -110,6 +111,7 @@ environments improved with the closure environment.
     
   MULTBINDL :: length : nat
                part : PAT`PARTITION;
+  SEQBIND:: ;
 
   SELBLKENV :: n : nat;
 

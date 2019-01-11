@@ -949,6 +949,29 @@ void StackEval::ExeMULTBINDL(const Int & n, const Int & part)
   PUSH(PAT::EvalMultBindSeq(pat_lp, seq_lv, part)); // set of SEM`BlkEnv
 }
 
+// ExeSEQBIND
+// ==> ()
+void StackEval::ExeSEQBIND()
+{
+  TYPE_STKM_Pattern pat (POP());
+  TYPE_SEM_VAL sv (POP());
+  SET<TYPE_SEM_BlkEnv> env_s;
+  if (sv.Is(TAG_TYPE_SEM_SEQ)) {
+    SEQ<TYPE_SEM_VAL> val_l (sv.GetSequence(pos_SEM_SEQ_v));
+    TYPE_AS_Name nm (ASTAUX::MkName(L"_index_"));
+    size_t len_val_l = val_l.Length();
+    for (size_t i = 1; i <= len_val_l; i++) {
+      SET<TYPE_SEM_BlkEnv> s (PAT::PatternMatch(pat, val_l[i]));
+      if (!s.IsEmpty()) {
+        TYPE_SEM_BlkEnv blkenv (s.GetElem());
+        TYPE_SEM_BlkEnv idxenv (AUX::MkBlkEnv(nm, mk_SEM_NUM(Real(i)), Nil(), sem_read_only));
+        env_s.Insert(AUX::CombineBlkEnv(blkenv,idxenv));
+      } 
+    } 
+  }
+  PUSH(env_s);
+}
+
 // ExePOPBLKENV
 // ==> ()
 void StackEval::ExePOPBLKENV()

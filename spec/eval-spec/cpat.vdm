@@ -118,10 +118,8 @@ operations
                                          ^ [mk_INSTRTP`MULTBINDL(1, part)],
       mk_AS`SetBind(pat,Set,-) -> return CEXPR`E2I(Set) ^ P2I(pat) 
                                          ^ [mk_INSTRTP`MULTBINDL(1, part)],
-      mk_AS`SeqBind(pat,Seq,cid) -> let set_e = mk_AS`PrefixExpr(<SEQELEMS>,Seq,cid)
-                                    in
-                                      return CEXPR`E2I(set_e) ^ P2I(pat) 
-                                             ^ [mk_INSTRTP`MULTBINDL(1, part)],
+      mk_AS`SeqBind(pat,Seq,-) -> return CEXPR`E2I(Seq) ^ P2I(pat) 
+                                         ^ [mk_INSTRTP`SEQBIND()],
       others -> error
     end;
 

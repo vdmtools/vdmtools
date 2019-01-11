@@ -2102,6 +2102,11 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
       break;
     }
 
+    case TAG_TYPE_INSTRTP_SEQBIND: {
+      ExeSEQBIND();
+      break;
+    }
+
     case TAG_TYPE_INSTRTP_SELBLKENV: {
       ExeSELBLKENV(i.GetInt(pos_INSTRTP_SELBLKENV_n));
       break;

@@ -346,6 +346,7 @@ Generic INT2Q::TransformIntegers (const Generic & g)
       case TAG_TYPE_INSTRTP_TUPPATCONS:
       case TAG_TYPE_INSTRTP_RECPATCONS:
       case TAG_TYPE_INSTRTP_MAPLET:
+      case TAG_TYPE_INSTRTP_SEQBIND:
         return g;
 
       case TAG_TYPE_INSTRTP_POSTENV: {

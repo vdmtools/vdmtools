@@ -4372,6 +4372,7 @@ operations
     mk_INSTRTP`POPBLKENV()                  -> INSTR`ExePOPBLKENV(),
     mk_INSTRTP`EOCL()                       -> INSTR`ExeEOCL(),
     mk_INSTRTP`MULTBINDL(n,part)            -> INSTR`ExeMULTBINDL(n,part),
+    mk_INSTRTP`SEQBIND()                    -> INSTR`ExeSEQBIND(),
     mk_INSTRTP`SELBLKENV(n)                 -> INSTR`ExeSELBLKENV(n),
     mk_INSTRTP`APPENDBLKENV(id,tp)          -> INSTR`ExeAPPENDBLKENV(id,tp),
     mk_INSTRTP`REMSTACKELEM(n)              -> INSTR`ExeREMSTACKELEM(n),

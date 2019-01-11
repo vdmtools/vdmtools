@@ -1639,6 +1639,7 @@ public:
   void ExeREMSTACKELEM(const Int & n);
   void ExeSWAP();
   void ExeMULTBINDL(const Int & n, const Int & part);
+  void ExeSEQBIND();
   void ExePOPBLKENV();
   void ExeADDTOBLKENV();
   void ExeMKEXIT(const Bool & isnil, const TYPE_CI_ContextId & cid);
