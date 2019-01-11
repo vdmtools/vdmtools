@@ -848,6 +848,7 @@ functions
     def mk_(pat,tp,expr) = cases pb:
                              mk_AS`TypeBind(p,t,-) -> mk_(p,t,nil),
                              mk_AS`SetBind(p,e,-)  -> mk_(p,nil,e),
+                             mk_AS`SeqBind(p,e,-)  -> mk_(p,nil,e),
                              others                -> mk_(pb,nil,nil)
                            end;
         ----------recursive PO generation ----------------------------

@@ -437,8 +437,10 @@ For these we can often use the following function.
           ----------subtype PO generation ----------------------------
       in
        (dcl pog_subtp_real : seq of POGTP`ProofObligation := [];
-        if is_AS`SetBind(bind)
-        then pog_subtp_real := CHECK`SubtypeOfSetOfReal(bind.Set,fv,bd_contxt);
+        cases true:
+          (is_AS`SetBind(bind)) -> pog_subtp_real := CHECK`SubtypeOfSetOfReal(bind.Set,fv,bd_contxt),
+          (is_AS`SeqBind(bind)) -> pog_subtp_real := CHECK`SubtypeOfSeqOfReal(bind.Seq,fv,bd_contxt)
+        end;
         def pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,fv,bd_contxt);
             -------------------------------------------------------------
             po             = conc [pog_subtp_real, pog_subtp_pred, pog_bind.po, pog_elem.po, pog_pred.po]

@@ -47,6 +47,7 @@ operations
   pog_PatternBind (patbind,contxt) ==
     cases patbind:
       mk_AS`SetBind(-,-,-)  -> pog_SetBind(patbind,contxt),
+      mk_AS`SeqBind(-,-,-)  -> pog_SeqBind(patbind,contxt),
       mk_AS`TypeBind(-,-,-) -> pog_TypeBind(patbind,contxt),
       others                -> pog_Pattern(patbind,contxt)
     end;
@@ -97,11 +98,28 @@ operations
   pog_Bind(bind,contxt) ==
     cases bind:
      mk_AS`SetBind(-,-,-)  -> pog_SetBind(bind,contxt),
+     mk_AS`SeqBind(-,-,-)  -> pog_SeqBind(bind,contxt),
      mk_AS`TypeBind(-,-,-) -> pog_TypeBind(bind,contxt)
     end;
 
   pog_SetBind : AS`SetBind  * POGTP`Context ==> POG
   pog_SetBind(mk_AS`SetBind(pat,expr,-),contxt) ==
+    def  ------------------------------------------
+        pog_pat  = pog_Pattern(pat,contxt);
+        pog_expr = POG_EXPR`pog_Expr(expr,contxt);
+        ------------------------------------------
+        fv       = pog_pat.fv union pog_expr.fv;
+        pid      = pog_pat.pid;
+        names    = fv union pid;
+        ------------------------------------------
+        pog_set_tp = CHECK`SubtypeOfSet(expr,contxt);
+        pog_subtp  = CHECK`PatternSubtypeOfSetOfType(pat, expr, names, contxt);
+        ------------------------------------------
+        po       =  pog_subtp ^ pog_set_tp ^ pog_pat.po ^ pog_expr.po
+    in return mk_POG(po,fv,pid);
+
+  pog_SeqBind : AS`SeqBind  * POGTP`Context ==> POG
+  pog_SeqBind(mk_AS`SeqBind(pat,expr,-),contxt) ==
     def  ------------------------------------------
         pog_pat  = pog_Pattern(pat,contxt);
         pog_expr = POG_EXPR`pog_Expr(expr,contxt);
@@ -128,22 +146,6 @@ operations
         po'      = pog_subtp ^ po
     in return mk_POG(po',fv,pid);
 
-  pog_SeqBind : AS`SeqBind  * POGTP`Context ==> POG
-  pog_SeqBind(mk_AS`SeqBind(pat,expr,-),contxt) ==
-    def  ------------------------------------------
-        pog_pat  = pog_Pattern(pat,contxt);
-        pog_expr = POG_EXPR`pog_Expr(expr,contxt);
-        ------------------------------------------
-        fv       = pog_pat.fv union pog_expr.fv;
-        pid      = pog_pat.pid;
-        names    = fv union pid;
-        ------------------------------------------
-        pog_set_tp = CHECK`SubtypeOfSet(expr,contxt);
-        pog_subtp  = CHECK`PatternSubtypeOfSetOfType(pat, expr, names, contxt);
-        ------------------------------------------
-        po       =  pog_subtp ^ pog_set_tp ^ pog_pat.po ^ pog_expr.po
-    in return mk_POG(po,fv,pid);
-
   pog_BindList : AS`BindList * POGTP`Context ==> POG
   pog_BindList(binds,contxt) ==
     def pog_seq = [pog_MultBind(binds(i),contxt) | i in set inds binds];
@@ -157,6 +159,7 @@ operations
   pog_MultBind (mbinds,contxt) ==
     cases mbinds:
      mk_AS`MultSetBind(-,-,-)  -> pog_MultSetBind(mbinds,contxt),
+     mk_AS`MultSeqBind(-,-,-)  -> pog_MultSeqBind(mbinds,contxt),
      mk_AS`MultTypeBind(-,-,-) -> pog_MultTypeBind(mbinds,contxt)
     end;
 
@@ -173,6 +176,22 @@ operations
         pog_set_tp = CHECK`SubtypeOfSet(expr,contxt);
         pog_subtps = [CHECK`PatternSubtypeOfSetOfType(pats(i), expr, names, contxt) | i in set inds pats];
         po       =  (conc pog_subtps) ^ pog_set_tp ^ pog_pats.po ^ pog_expr.po
+        --------------------------------------------
+    in return mk_POG(po,fv,pid);
+
+  pog_MultSeqBind: AS`MultSeqBind * POGTP`Context ==> POG
+  pog_MultSeqBind (mk_AS`MultSeqBind(pats,expr,-),contxt) ==
+    def --------------------------------------------
+        pog_pats = pog_PatternSequence(pats,contxt);
+        pog_expr = POG_EXPR`pog_Expr(expr,contxt);
+        --------------------------------------------
+        fv       = pog_pats.fv union pog_expr.fv;
+        pid      = pog_pats.pid;
+        names    = fv union pid;
+        --------------------------------------------
+        pog_seq_tp = CHECK`SubtypeOfSeq(expr,contxt);
+        pog_subtps = [CHECK`PatternSubtypeOfSeqOfType(pats(i), expr, names, contxt) | i in set inds pats];
+        po       =  (conc pog_subtps) ^ pog_seq_tp ^ pog_pats.po ^ pog_expr.po
         --------------------------------------------
     in return mk_POG(po,fv,pid);
 

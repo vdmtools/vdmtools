@@ -51,17 +51,18 @@ types
 
   PatternBind = Pattern | Bind;
 
-  Bind = SetBind | TypeBind;
+  Bind = SetBind | SeqBind | TypeBind;
 
   SetBind         = BIND;
-  TypeBind        = BIND;
   SeqBind         = BIND;
+  TypeBind        = BIND;
   
   BindList = seq of MultBind;
 
-  MultBind = MultSetBind | MultTypeBind;
+  MultBind = MultSetBind | MultSeqBind | MultTypeBind;
 
   MultSetBind     =  String;
+  MultSeqBind     =  String;
   MultTypeBind    =  String;
  
   PATTERN = String;
@@ -136,13 +137,13 @@ functions
   tar_SetBind(pat,expr,-) ==
     pat ^ " in set " ^ expr;
 
-  tar_TypeBind : Pattern * AS`Type * PP_TAR_TYPE`Type * CI`ContextId -> TypeBind
-  tar_TypeBind(pat,-,type,-) ==
-    pat ^ " : " ^ type;
-
   tar_SeqBind : Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> SeqBind
   tar_SeqBind(pat,expr,-) ==
     pat ^ " in seq " ^ expr;
+
+  tar_TypeBind : Pattern * AS`Type * PP_TAR_TYPE`Type * CI`ContextId -> TypeBind
+  tar_TypeBind(pat,-,type,-) ==
+    pat ^ " : " ^ type;
 
   tar_BindList : seq of MultBind -> BindList
   tar_BindList(binds) == binds;    
@@ -150,6 +151,10 @@ functions
   tar_MultSetBind : seq of Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> MultSetBind
   tar_MultSetBind (pats,expr,-) ==
     List2SeparatorList(",",pats) ^ " in set " ^ expr;
+
+  tar_MultSeqBind : seq of Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> MultSetBind
+  tar_MultSeqBind (pats,expr,-) ==
+    List2SeparatorList(",",pats) ^ " in seq " ^ expr;
 
   tar_MultTypeBind : seq of Pattern * AS`Type * PP_TAR_TYPE`Type * CI`ContextId -> MultTypeBind
   tar_MultTypeBind (pats,-,tp,-) ==

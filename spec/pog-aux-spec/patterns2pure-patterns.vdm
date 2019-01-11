@@ -149,11 +149,18 @@ functions
   Bind2PureBind(bind,ids) ==
     cases bind:
       mk_AS`SetBind(-,-,-)  -> SetBind2PureSetBind(bind,ids),
+      mk_AS`SeqBind(-,-,-)  -> SeqBind2PureSeqBind(bind,ids),
       mk_AS`TypeBind(-,-,-) -> TypeBind2PureTypeBind(bind,ids)
     end;
 
   SetBind2PureSetBind : AS`SetBind * Identifiers -> AS`SetBind * Identifiers * Identifiers
   SetBind2PureSetBind(bind,ids) ==
+    let mk_(new_pat,new_ids,pid) = Pattern2PurePattern(bind.pat,ids),
+        new_bind             = mu(bind, pat |-> new_pat) 
+    in mk_(new_bind,new_ids,pid);
+
+  SeqBind2PureSeqBind : AS`SeqBind * Identifiers -> AS`SeqBind * Identifiers * Identifiers
+  SeqBind2PureSeqBind(bind,ids) ==
     let mk_(new_pat,new_ids,pid) = Pattern2PurePattern(bind.pat,ids),
         new_bind             = mu(bind, pat |-> new_pat) 
     in mk_(new_bind,new_ids,pid);
@@ -177,11 +184,18 @@ functions
   MultBind2PureMultBind (mbinds,ids) ==
     cases mbinds:
       mk_AS`MultSetBind(-,-,-)  -> MultSetBind2PureMultSetBind(mbinds,ids),
+      mk_AS`MultSeqBind(-,-,-)  -> MultSeqBind2PureMultSeqBind(mbinds,ids),
       mk_AS`MultTypeBind(-,-,-) -> MultTypeBind2PureMultTypeBind(mbinds,ids)
     end;
  
   MultSetBind2PureMultSetBind : AS`MultSetBind * Identifiers -> AS`MultSetBind * Identifiers * Identifiers
   MultSetBind2PureMultSetBind (bind,ids) ==
+    let mk_(new_pat,new_ids,pid) = Pattern2PurePatternSeq(bind.pat,ids),
+        new_bind             = mu(bind, pat |-> new_pat) 
+    in mk_(new_bind,new_ids,pid);
+
+  MultSeqBind2PureMultSeqBind : AS`MultSeqBind * Identifiers -> AS`MultSeqBind * Identifiers * Identifiers
+  MultSeqBind2PureMultSeqBind (bind,ids) ==
     let mk_(new_pat,new_ids,pid) = Pattern2PurePatternSeq(bind.pat,ids),
         new_bind             = mu(bind, pat |-> new_pat) 
     in mk_(new_bind,new_ids,pid);

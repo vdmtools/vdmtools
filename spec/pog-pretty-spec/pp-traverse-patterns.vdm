@@ -22,8 +22,8 @@ exports
     trv_Pattern : AS`Pattern -> PP_TAR_PAT`Pattern; 
     trv_Bind : AS`Bind  -> PP_TAR_PAT`Bind;
     trv_SetBind : AS`SetBind  -> PP_TAR_PAT`SetBind;
-    trv_TypeBind : AS`TypeBind  -> PP_TAR_PAT`TypeBind;
     trv_SeqBind : AS`SeqBind  -> PP_TAR_PAT`SeqBind;
+    trv_TypeBind : AS`TypeBind  -> PP_TAR_PAT`TypeBind;
     trv_BindList : AS`BindList -> PP_TAR_PAT`BindList;
 
 definitions
@@ -41,6 +41,7 @@ functions
   trv_PatternBind (patbind) ==
     cases patbind:
       mk_AS`SetBind(-,-,-)  -> trv_SetBind(patbind),
+      mk_AS`SeqBind(-,-,-)  -> trv_SeqBind(patbind),
       mk_AS`TypeBind(-,-,-) -> trv_TypeBind(patbind),
       others                -> trv_Pattern(patbind)
     end;
@@ -136,6 +137,7 @@ as the empty sequence is represented using $AS`MatchVal$.
   trv_Bind(bind) ==
     cases bind:
      mk_AS`SetBind(-,-,-) -> trv_SetBind(bind),
+     mk_AS`SeqBind(-,-,-) -> trv_SeqBind(bind),
      mk_AS`TypeBind(-,-,-) -> trv_TypeBind(bind)
     end;
 
@@ -159,12 +161,17 @@ as the empty sequence is represented using $AS`MatchVal$.
   trv_MultBind (mbinds) ==
     cases mbinds:
      mk_AS`MultSetBind(-,-,-)  -> trv_MultSetBind(mbinds),
+     mk_AS`MultSeqBind(-,-,-)  -> trv_MultSeqBind(mbinds),
      mk_AS`MultTypeBind(-,-,-) -> trv_MultTypeBind(mbinds)
     end;
  
   trv_MultSetBind: AS`MultSetBind  -> PP_TAR_PAT`MultSetBind
   trv_MultSetBind (mk_AS`MultSetBind(pats,expr,cid)) ==
     PP_TAR_PAT`tar_MultSetBind([trv_Pattern(pats(i)) | i in set inds pats], PP_TRA_EXPR`trv_Expr(expr), cid);
+
+  trv_MultSeqBind: AS`MultSeqBind  -> PP_TAR_PAT`MultSeqBind
+  trv_MultSeqBind (mk_AS`MultSeqBind(pats,expr,cid)) ==
+    PP_TAR_PAT`tar_MultSeqBind([trv_Pattern(pats(i)) | i in set inds pats], PP_TRA_EXPR`trv_Expr(expr), cid);
 
   trv_MultTypeBind: AS`MultTypeBind -> PP_TAR_PAT`MultTypeBind
   trv_MultTypeBind (mk_AS`MultTypeBind(pats,tp,cid)) ==

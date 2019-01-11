@@ -223,6 +223,7 @@ FindFuncInContext (name,tp,contxt) ==
        (dcl search_head : AS`FnDef | <NO> | <MAYBE> | <NOT_FOUND>;
         cases head:
           mk_AS`TypeBind(-,-,-),
+          mk_AS`SeqBind(-,-,-),
           mk_AS`SetBind(-,-,-) -> if PID`NameInBind(name,head)
                                   then search_head := <MAYBE>
                                   else search_head := <NOT_FOUND>,
@@ -249,6 +250,7 @@ FindFuncInContext (name,tp,contxt) ==
           mk_(pat,expr) -> -- AS`PatternBind * AS`Expr
                                   cases pat:
                                     mk_AS`TypeBind(-,-,-),
+                                    mk_AS`SeqBind(-,-,-),
                                     mk_AS`SetBind(-,-,-) -> if PID`NameInBind(name,pat)
                                                             then search_head := <MAYBE>
                                                             else search_head := <NOT_FOUND>,

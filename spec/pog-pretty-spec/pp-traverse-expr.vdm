@@ -287,6 +287,7 @@ functions
        cases true:
          (is_AS`SetBind(bind)) -> PP_TRA_PAT`trv_SetBind(bind), 
          (is_AS`SeqBind(bind)) -> PP_TRA_PAT`trv_SeqBind(bind), 
+         (is_AS`SeqBind(bind)) -> PP_TRA_PAT`trv_SeqBind(bind), 
          others -> undefined
        end,
        if pred = nil then nil else trv_Expr(pred),

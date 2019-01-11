@@ -244,6 +244,13 @@ functions
     in
         SubtypeOf(Set,set_of_elem_tp,fv,contxt);
 
+  SubtypeOfSeqOfReal : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfSeqOfReal (Seq,fv,contxt) ==
+    let elem_tp        = mk_AS`NumericType(<REAL>,CI`NilContextId),
+        set_of_elem_tp = mk_AS`Seq0Type(elem_tp,CI`NilContextId)
+    in
+        SubtypeOf(Seq,set_of_elem_tp,fv,contxt);
+
 operations
   PatternSubtypeOfSetOfType : AS`Pattern * AS`Expr * set of AS`Name * POGTP`Context
                               ==> seq of POGTP`ProofObligation
@@ -254,6 +261,16 @@ operations
       if set_elem_tp = <NO_OVERLAP>
       then return []
       else PatternSubtypeOf(pat,set_elem_tp,fv,contxt);
+
+  PatternSubtypeOfSeqOfType : AS`Pattern * AS`Expr * set of AS`Name * POGTP`Context
+                              ==> seq of POGTP`ProofObligation
+  PatternSubtypeOfSeqOfType (pat,Seq,fv,contxt) ==
+    def seq_tp       = CI_AUX`GetTypeInfo(Seq);
+        seq_elem_tp  = GetSetOverlap(seq_tp)
+    in
+      if seq_elem_tp = <NO_OVERLAP>
+      then return []
+      else PatternSubtypeOf(pat,seq_elem_tp,fv,contxt);
 
 functions
   SubtypeForEquality : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
