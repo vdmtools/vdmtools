@@ -25,8 +25,8 @@ exports
     pog_PatternSequence: seq of AS`Pattern * POGTP`Context ==> POG;
     pog_Bind : AS`Bind * POGTP`Context ==> POG;
     pog_SetBind : AS`SetBind * POGTP`Context ==> POG;
-    pog_TypeBind : AS`TypeBind * POGTP`Context ==> POG;
     pog_SeqBind : AS`SeqBind * POGTP`Context ==> POG;
+    pog_TypeBind : AS`TypeBind * POGTP`Context ==> POG;
     pog_BindList : AS`BindList * POGTP`Context ==> POG;
 
 definitions

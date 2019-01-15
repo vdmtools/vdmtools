@@ -147,7 +147,8 @@ functions
 IsBindList: ExprContext +> bool
 IsBindList(ec) ==
   cases ec:
-    [-] ^ - -> forall i in set inds ec & is_AS`MultSetBind(ec(i)) or is_AS`MultTypeBind(ec(i)),
+    [-] ^ - -> forall i in set inds ec & is_AS`MultSetBind(ec(i)) or is_AS`MultTypeBind(ec(i))
+                                         or is_AS`MultSeqBind(ec(i)),
     others -> false
   end;
   

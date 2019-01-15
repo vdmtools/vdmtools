@@ -1656,6 +1656,8 @@ BuildPO (context,concl) ==
                    mk_AS`AllOrExistsExpr(<ALL>, [mk_AS`MultTypeBind([pat],tp,cid)], concl, CI`NilContextId),
                  mk_AS`SetBind(pat,Set,cid) ->
                    mk_AS`AllOrExistsExpr(<ALL>, [mk_AS`MultSetBind([pat],Set,cid)], concl, CI`NilContextId),
+                 mk_AS`SeqBind(pat,Seq,cid) ->
+                   mk_AS`AllOrExistsExpr(<ALL>, [mk_AS`MultSeqBind([pat],Seq,cid)], concl, CI`NilContextId),
 --                 [mk_AS`MultSetBind([nm],exp,-)] ^ - ->
 --                   let locdef = mk_AS`ValueDef(nm,
 --                                               nil,
@@ -1931,6 +1933,7 @@ FindNameInContext(name,context) ==
            found = cases head:
              mk_AS`ValueDef(pat,-,-,-,-,-),
              mk_AS`SetBind(pat,-,-),
+             mk_AS`SeqBind(pat,-,-),
              mk_AS`TypeBind(pat,-,-) -> is_AS`PatternName(pat) and
                                         pat.nm = name,
              - ^ - -> --head is a AS`BindList
@@ -1950,6 +1953,7 @@ FindConditionInContext(cond_expr,cond_bind,context) ==
         found = cases head:
                   --mk_AS`TypeBind(pat,-,-)               -> nil,
                   mk_AS`TypeBind(-,-,-) -> nil,
+                  mk_AS`SeqBind(-,-,-),
                   mk_AS`SetBind(-,-,-)  -> if cond_bind = nil
                                            then nil
                                            elseif head = cond_bind
@@ -1962,6 +1966,10 @@ FindConditionInContext(cond_expr,cond_bind,context) ==
                            let pat_bds = conc [[if is_AS`MultSetBind(head(i))
                                                 then mk_AS`SetBind(head(i).pat(j),
                                                                    head(i).Set,
+                                                                   head(i).cid)
+                                                elseif is_AS`MultSeqBind(head(i))
+                                                then mk_AS`SeqBind(head(i).pat(j),
+                                                                   head(i).Seq,
                                                                    head(i).cid)
                                                 else nil
                                                  | j in set inds head(i).pat ]
@@ -1982,6 +1990,7 @@ FindConditionInContext(cond_expr,cond_bind,context) ==
                       else
                         cases patBind:
                           mk_AS`TypeBind(-,-,-) -> nil,
+                          mk_AS`SeqBind(-,-,-),
                           mk_AS`SetBind(-,-,-) -> if patBind = cond_bind
                                                   then true
                                                   else nil,
