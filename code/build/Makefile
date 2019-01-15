@@ -154,7 +154,7 @@ ifdef JAVA_HOME
 endif
 endif
 
-dummy := $(foreach V, OSTYPE REALOS USE_CORBA_API, \
+dummy := $(foreach V, OSTYPE REALOS USE_CORBA_API QTVERSION, \
   $(shell echo make is using $V=$($V) >/dev/tty) \
 )
 ifeq ($(strip $(OSTYPE)),Darwin)
