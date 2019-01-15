@@ -234,7 +234,11 @@ std::wstring TB_Version::GetCompilerVersion () const
     case 1700: { s << L"11.0 (Visual Studio 2012)"; break; }
     case 1800: { s << L"12.0 (Visual Studio 2013)"; break; }
     case 1900: { s << L"14.0 (Visual Studio 2015)"; break; }
-    case 1910: { s << L"14.1 (Visual Studio 2017)"; break; }
+    case 1910: { s << L"14.10 (Visual Studio 2017)"; break; }
+    case 1911: { s << L"14.11 (Visual Studio 2017)"; break; }
+    case 1912: { s << L"14.12 (Visual Studio 2017)"; break; }
+    case 1913: { s << L"14.13 (Visual Studio 2017)"; break; }
+    case 1914: { s << L"14.14 (Visual Studio 2017)"; break; }
     default: { s << L"unknown version"; break; }
   }
 #else
