@@ -145,7 +145,8 @@ export WHOME="`cygpath -w ${HOME}`"
 #export MSCVER=VC9 # Visual Studio 2008
 export MSCVER=VC10 # Visual Studio 2010
 #export MSCVER=VC11 # Visual Studio 2012
-#export MSCVER=VC12 # Visual Studio 2012
+#export MSCVER=VC12 # Visual Studio 2013
+#export MSCVER=VC14 # Visual Studio 2015
 
 export TBDIR=${HOME}/vdmtools
 export POWERTEST=${TBDIR}/test/powertest/powertest
