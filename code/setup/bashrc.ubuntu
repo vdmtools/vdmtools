@@ -120,6 +120,8 @@ if [ -d ${QTDIR}/include/qt${QTVERSION} ]; then
   export QTINCDIR=${QTDIR}/include/qt${QTVERSION}
 elif [ -d ${QTDIR}/include/x86_64-linux-gnu/qt${QTVERSION} ]; then
   export QTINCDIR=${QTDIR}/include/x86_64-linux-gnu/qt${QTVERSION}
+elif [ -d ${QTDIR}/include/i386-linux-gnu/qt${QTVERSION} ]; then
+  export QTINCDIR=${QTDIR}/include/i386-linux-gnu/qt${QTVERSION}
 else
   export QTINCDIR=${QTDIR}/include/qt${QTVERSION}
 fi
