@@ -10,7 +10,7 @@ Add following entry
 
 in to bin/scripts/config.guess
 
-2. build failed on Cygwin/Cygwin64 (omniORB)
+2. build failed on Cygwin/Cygwin64 (omniORB 4.2.2)
 
 workaround:
 
