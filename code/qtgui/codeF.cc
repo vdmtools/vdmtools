@@ -30,7 +30,9 @@
 #include <unistd.h>
 #endif //_MSC_VER
 
+#define HEADER_FORMAT "%5d: "
 #define HEADER_SIZE 7
+#define BUFFER_SIZE 20
 
 /*
  *  Constructs a codeW which is a child of 'parent', with the
@@ -222,10 +224,10 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
   }
 
   int count = 1;
-  char buf[ HEADER_SIZE + 1 ];
+  char buf[ BUFFER_SIZE ];
   while ( !t.atEnd() ) {
     QString s (t.readLine());
-    sprintf( buf, "%5d: ", count );
+    sprintf( buf, HEADER_FORMAT, count );
     QString line_number( buf ); 
     if( !coloring ) {
       edit->append( line_number + s );
