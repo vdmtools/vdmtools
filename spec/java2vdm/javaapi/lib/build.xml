@@ -14,12 +14,12 @@
 
   <target name="compile" depends="init">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" debug="on" deprecation="yes" source="6"/>
+    <javac includeantruntime="true" srcdir="${src}" destdir="${build}" debug="on" deprecation="yes" source="7"/>
   </target>
 
   <target name="compile5" depends="init">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" debug="on" deprecation="yes" source="5"/>
+    <javac includeantruntime="true" srcdir="${src}" destdir="${build}" debug="on" deprecation="yes" source="5"/>
   </target>
 
   <target name="dist" depends="compile">
