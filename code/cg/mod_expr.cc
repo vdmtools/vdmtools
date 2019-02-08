@@ -8775,7 +8775,7 @@ Tuple vdmcg::GenClassOrBase(const TYPE_AS_Expr & e1, const TYPE_AS_Expr & e2, bo
 // pid_m : map AS`Name to REP`TypeRep
 // nonstop : bool
 // ==> seq of CPP`Stmt
-SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind_,
+SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
                                           const Generic & pred,
                                           const SEQ<TYPE_CPP_Stmt> & stmt,
                                           const Generic & contexpr,
@@ -8783,17 +8783,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind_,
                                           const Map & pid_m,
                                           bool nonstop)
 {
-  SEQ<TYPE_AS_MultBind> bind (ConvertBindList(bind_));
-  size_t len_bind = bind.Length();
-  for (size_t i = 1; i <= len_bind; i++) {
-    if (bind[i].Is(TAG_TYPE_AS_MultTypeBind)) {
-      return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"type bind", bind[i]));
-    }
-  }
-
   // merge bind pat
   // a in set s, b in set s -> a, b in set s
-  SEQ<TYPE_AS_MultBind> bind_l (MergeMultSetBind(bind));
+  SEQ<TYPE_AS_MultBind> bind_l (ConvertBindList(MergeMultBind(bind)));
+  size_t len_bind_l = bind_l.Length();
+  for (size_t i = 1; i <= len_bind_l; i++) {
+    if (bind_l[i].Is(TAG_TYPE_AS_MultTypeBind)) {
+      return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"type bind", bind_l[i]));
+    }
+  }
 
   Tuple fmsb (FindMultSetBind2(bind_l)); // must be before DeclPatVars
   const SEQ<TYPE_CPP_Stmt> & stmts (fmsb.GetSequence(1)); // decl for set
@@ -9115,31 +9113,72 @@ Sequence vdmcg::FindPatternIdInBindList(const SEQ<TYPE_AS_MultBind> & bind)
   return pn_l;
 }
 
-SEQ<TYPE_AS_MultBind> vdmcg::MergeMultSetBind(const SEQ<TYPE_AS_MultBind> & bind)
+// MergeMultBind
+// bind : AS`BindList
+// ==> AS`BindList
+SEQ<TYPE_AS_MultBind> vdmcg::MergeMultBind(const SEQ<TYPE_AS_MultBind> & bind)
 {
-  // a in set s, b in set s -> a, b in set s
-  Map m; // map AS`Expr to AS`MultSetBind
+  SEQ<TYPE_AS_MultBind> bind_l;
+  MAP<TYPE_AS_Expr, Int> m_set;
+  MAP<TYPE_AS_Expr, Int> m_seq;
+  MAP<TYPE_AS_Expr, Int> m_tp;
+  int pos = 1;
   size_t len_bind = bind.Length();
   for (size_t idx = 1; idx <= len_bind; idx++) {
-    const TYPE_AS_MultSetBind & e (bind[idx]);
-    const SEQ<TYPE_AS_Pattern> & pat_l (e.GetSequence(pos_AS_MultSetBind_pat));
-    const TYPE_AS_Expr & e_set (e.GetRecord(pos_AS_MultSetBind_Set));
-    if (m.Dom().InSet(e_set)) {
-      TYPE_AS_MultSetBind b (m[e_set]);
-      SEQ<TYPE_AS_Pattern> p_l (b.GetSequence(pos_AS_MultSetBind_pat));
-      p_l.ImpConc(pat_l);
-      b.SetField(pos_AS_MultSetBind_pat, p_l);
-      m.ImpModify(e_set, b);
+    const TYPE_AS_MultBind & mb (bind[idx]);
+    switch (mb.GetTag()) {
+      case TAG_TYPE_AS_MultSetBind: {
+        const TYPE_AS_Expr & e_set(mb.GetRecord(pos_AS_MultSetBind_Set));
+        if (m_set.DomExists(e_set)) {
+          int index = m_set[e_set].GetValue();
+          TYPE_AS_MultSetBind msb(bind_l[index]);
+          SEQ<TYPE_AS_Pattern> pat(msb.GetSequence(pos_AS_MultSetBind_pat));
+          pat.ImpConc(mb.GetSequence(pos_AS_MultSetBind_pat));
+          msb.SetField(pos_AS_MultSetBind_pat, pat);
+          bind_l.ImpModify(index, msb);
+        }
+        else {
+          bind_l.ImpAppend(mb);
+          m_set.Insert(e_set, Int(pos));
+          pos++;
+        }
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const TYPE_AS_Expr & e_seq(mb.GetRecord(pos_AS_MultSeqBind_Seq));
+        if (m_seq.DomExists(e_seq)) {
+          int index = m_seq[e_seq].GetValue();
+          TYPE_AS_MultSeqBind msb(bind_l[index]);
+          SEQ<TYPE_AS_Pattern> pat(msb.GetSequence(pos_AS_MultSeqBind_pat));
+          pat.ImpConc(mb.GetSequence(pos_AS_MultSeqBind_pat));
+          msb.SetField(pos_AS_MultSeqBind_pat, pat);
+          bind_l.ImpModify(index, msb);
+        }
+        else {
+          bind_l.ImpAppend(mb);
+          m_seq.Insert(e_seq, Int(pos));
+          pos++;
+        }
+        break;
+      }
+      case TAG_TYPE_AS_MultTypeBind: {
+        const TYPE_AS_Type & tp(mb.GetRecord(pos_AS_MultTypeBind_tp));
+        if (m_tp.DomExists(tp)) {
+          int index = m_tp[tp].GetValue();
+          TYPE_AS_MultTypeBind mtb(bind_l[index]);
+          SEQ<TYPE_AS_Pattern> pat(mtb.GetSequence(pos_AS_MultTypeBind_pat));
+          pat.ImpConc(mb.GetSequence(pos_AS_MultTypeBind_pat));
+          mtb.SetField(pos_AS_MultTypeBind_pat, pat);
+          bind_l.ImpModify(index, mtb);
+        }
+        else {
+          bind_l.ImpAppend(mb);
+          m_tp.Insert(tp, Int(pos));
+          pos++;
+        }
+        break;
+      }
     }
-    else {
-      m.ImpModify(e_set, e);
-    }
-  }
-  SEQ<TYPE_AS_MultBind> bind_l;
-  Set dom_m (m.Dom());
-  Generic g;
-  for (bool bb = dom_m.First(g); bb; bb = dom_m.Next(g)) {
-    bind_l.ImpAppend(m[g]);
   }
   return bind_l;
 }

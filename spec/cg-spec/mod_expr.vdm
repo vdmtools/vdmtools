@@ -8260,14 +8260,13 @@ for (int cc = e_set_3.First(e_g); cc; cc = e_set_3.Next(e_g)) {
 \begin{vdm_al}
 CGComprehension: AS`BindList * [ AS`Expr ] * seq1 of CPP`Stmt * [ CPP`Expr ] *
                  bool * map AS`Name to REP`TypeRep * bool ==> seq of CPP`Stmt
-CGComprehension(bind_, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
-  def bind = ConvertBindList(bind_)
+CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
+  def bind_l = ConvertBindList(MergeMultBind(bind))
   in
-  if exists b in set elems bind & is_AS`MultTypeBind(b)
+  if exists b in set elems bind_l & is_AS`MultTypeBind(b)
   then return [CGAUX`NotSupported("type bind")]
   else
-    def bind_l = MergeMultSetBind(bind);
-        mk_(stmts, msb) = FindMultSetBind2(bind_l); -- must be before DeclPatVars
+    def mk_(stmts, msb) = FindMultSetBind2(bind_l); -- must be before DeclPatVars
     in
       if len msb = 1 and forall p in set elems msb(1).#1 & is_AS`PatternName(p)
       then
@@ -8466,18 +8465,46 @@ FindPatternIdInBindList(bind) ==
                                                | i in set inds p_l];
   in return pn_l;
 
-MergeMultSetBind: AS`BindList ==> AS`BindList
-MergeMultSetBind(bind) ==
- (dcl bind_l : seq of AS`MultSetBind := [],
-      m : map AS`Expr to AS`MultSetBind := {|->};
-  for mk_AS`MultSetBind(pat_l, e_set, cid) in bind do
-    if e_set in set dom m
-    then
-      let mk_AS`MultSetBind(p_l, s, cid2) = m(e_set)
-      in m := m ++ {e_set |-> mk_AS`MultSetBind(p_l ^ pat_l,s,cid2)}
-    else m := m ++ {e_set |-> mk_AS`MultSetBind(pat_l, e_set, cid)};
-  for all e in set dom m do
-    bind_l := bind_l ^ [m(e)];
+MergeMultBind: AS`BindList ==> AS`BindList
+MergeMultBind(bind) ==
+ (dcl bind_l : seq of AS`MultBind := [],
+      m_set : map AS`Expr to nat1:= {|->},
+      m_seq : map AS`Expr to nat1:= {|->},
+      m_tp : map AS`Type to nat1:= {|->},
+      pos : nat1 := 1;
+  for mb in bind do
+    cases mb:
+      mk_AS`MultSetBind(p_l, s_exp, -) ->
+            if s_exp in set dom m_set
+            then
+              let index = m_set(s_exp),
+                  mk_AS`MultSetBind(p,-,-) = bind_l(index)
+              in bind_l := bind_l ++ { index |-> mu(bind_l(index), pat |-> p ^ p_l) }
+            else
+             (bind_l := bind_l ^ [mb];
+              m_set := m_set ++ { s_exp |-> pos };
+              pos := pos + 1;),
+      mk_AS`MultSeqBind(p_l, s_exp, -) ->
+            if s_exp in set dom m_seq
+            then
+              let index = m_seq(s_exp),
+                  mk_AS`MultSeqBind(p,-,-) = bind_l(index)
+              in bind_l := bind_l ++ { index |-> mu(bind_l(index), pat |-> p ^ p_l) }
+            else
+             (bind_l := bind_l ^ [mb];
+              m_seq := m_seq ++ { s_exp |-> pos };
+              pos := pos + 1;),
+      mk_AS`MultTypeBind(p_l, tp, -) ->
+            if tp in set dom m_tp
+            then
+              let index = m_tp(tp),
+                  mk_AS`MultTypeBind(p,-,-) = bind_l(index)
+              in bind_l := bind_l ++ { index |-> mu(bind_l(index), pat |-> p ^ p_l) }
+            else
+             (bind_l := bind_l ^ [mb];
+              m_tp := m_tp ++ { tp |-> pos };
+              pos := pos + 1;)
+    end;
   return bind_l;
  );
 
@@ -8487,11 +8514,12 @@ ConvertBindList(bind) ==
   for mb in bind do
     cases mb:
       mk_AS`MultSetBind(-,-,-)       -> bind_l := bind_l ^ [mb],
-      mk_AS`MultTypeBind(-,-,-)      -> bind_l := bind_l ^ [mb], -- TODO:
+--      mk_AS`MultSeqBind(-,-,-)       -> bind_l := bind_l ^ [mb],
       mk_AS`MultSeqBind(p_l,e_seq,-) -> def seqtp = CGAUX`FindSeqElemType(CGAUX`FindType(e_seq));
                                             scid = CI`PushCGType(mk_REP`SetTypeRep(seqtp));
                                             expr = mk_AS`PrefixExpr(<SEQELEMS>, e_seq, scid);
-                                        in bind_l := bind_l ^ [mk_AS`MultSetBind(p_l,expr,scid)]
+                                        in bind_l := bind_l ^ [mk_AS`MultSetBind(p_l,expr,scid)],
+      mk_AS`MultTypeBind(-,-,-)      -> bind_l := bind_l ^ [mb] -- TODO:
     end;
   return bind_l;
  );

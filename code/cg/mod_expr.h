@@ -197,7 +197,7 @@ SEQ<TYPE_AS_Stmt> DeclarePatVars(const TYPE_AS_Pattern &);
 SEQ<TYPE_AS_Stmt> DeclPatVars(const MAP<TYPE_AS_Name, TYPE_REP_TypeRep> &);
 Tuple FindMultSetBind2(const SEQ<TYPE_AS_MultBind> &);
 Sequence FindPatternIdInBindList(const SEQ<TYPE_AS_MultBind> &);
-SEQ<TYPE_AS_MultBind> MergeMultSetBind(const SEQ<TYPE_AS_MultBind> &);
+SEQ<TYPE_AS_MultBind> MergeMultBind(const SEQ<TYPE_AS_MultBind> &);
 SEQ<TYPE_AS_MultBind> ConvertBindList(const SEQ<TYPE_AS_MultBind> &);
 
 #endif // __mod_expr_h__
