@@ -8775,7 +8775,7 @@ Tuple vdmcg::GenClassOrBase(const TYPE_AS_Expr & e1, const TYPE_AS_Expr & e2, bo
 // pid_m : map AS`Name to REP`TypeRep
 // nonstop : bool
 // ==> seq of CPP`Stmt
-SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
+SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind_,
                                           const Generic & pred,
                                           const SEQ<TYPE_CPP_Stmt> & stmt,
                                           const Generic & contexpr,
@@ -8783,6 +8783,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
                                           const Map & pid_m,
                                           bool nonstop)
 {
+  SEQ<TYPE_AS_MultBind> bind (ConvertBindList(bind_));
   size_t len_bind = bind.Length();
   for (size_t i = 1; i <= len_bind; i++) {
     if (bind[i].Is(TAG_TYPE_AS_MultTypeBind)) {
@@ -9139,6 +9140,39 @@ SEQ<TYPE_AS_MultBind> vdmcg::MergeMultSetBind(const SEQ<TYPE_AS_MultBind> & bind
   Generic g;
   for (bool bb = dom_m.First(g); bb; bb = dom_m.Next(g)) {
     bind_l.ImpAppend(m[g]);
+  }
+  return bind_l;
+}
+
+// ConvertBindList
+// bind : AS`BindList
+// ==> AS`BindList
+SEQ<TYPE_AS_MultBind> vdmcg::ConvertBindList(const SEQ<TYPE_AS_MultBind> & bind)
+{
+  SEQ<TYPE_AS_MultBind> bind_l;
+  size_t len_bind = bind.Length();
+  for (size_t i = 1; i <= len_bind; i++) {
+    const TYPE_AS_MultBind & mb (bind[i]);
+    switch (mb.GetTag()) {
+      case TAG_TYPE_AS_MultSetBind: {
+        bind_l.ImpAppend(mb);
+        break;
+      }
+      case TAG_TYPE_AS_MultTypeBind: {
+        // TODO:
+        bind_l.ImpAppend(mb);
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const SEQ<TYPE_AS_Pattern> & p_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
+        const TYPE_AS_Expr & e_seq (mb.GetRecord(pos_AS_MultSeqBind_Seq));
+        TYPE_REP_TypeRep seqtp(FindSeqElemType(FindType(e_seq)));
+        TYPE_CI_ContextId scid (GetCI().PushCGType(mk_REP_SetTypeRep(seqtp)));
+        TYPE_AS_Expr expr (TYPE_AS_PrefixExpr().Init(Int(SEQELEMS), e_seq, scid));
+        bind_l.ImpAppend(TYPE_AS_MultSetBind().Init(p_l,expr,scid));
+        break;
+      }
+    }
   }
   return bind_l;
 }

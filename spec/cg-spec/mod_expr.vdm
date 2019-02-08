@@ -8260,7 +8260,9 @@ for (int cc = e_set_3.First(e_g); cc; cc = e_set_3.Next(e_g)) {
 \begin{vdm_al}
 CGComprehension: AS`BindList * [ AS`Expr ] * seq1 of CPP`Stmt * [ CPP`Expr ] *
                  bool * map AS`Name to REP`TypeRep * bool ==> seq of CPP`Stmt
-CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
+CGComprehension(bind_, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
+  def bind = ConvertBindList(bind_)
+  in
   if exists b in set elems bind & is_AS`MultTypeBind(b)
   then return [CGAUX`NotSupported("type bind")]
   else
@@ -8476,6 +8478,21 @@ MergeMultSetBind(bind) ==
     else m := m ++ {e_set |-> mk_AS`MultSetBind(pat_l, e_set, cid)};
   for all e in set dom m do
     bind_l := bind_l ^ [m(e)];
+  return bind_l;
+ );
+
+ConvertBindList: AS`BindList ==> AS`BindList
+ConvertBindList(bind) ==
+ (dcl bind_l : AS`BindList := [];
+  for mb in bind do
+    cases mb:
+      mk_AS`MultSetBind(-,-,-)       -> bind_l := bind_l ^ [mb],
+      mk_AS`MultTypeBind(-,-,-)      -> bind_l := bind_l ^ [mb], -- TODO:
+      mk_AS`MultSeqBind(p_l,e_seq,-) -> def seqtp = CGAUX`FindSeqElemType(CGAUX`FindType(e_seq));
+                                            scid = CI`PushCGType(mk_REP`SetTypeRep(seqtp));
+                                            expr = mk_AS`PrefixExpr(<SEQELEMS>, e_seq, scid);
+                                        in bind_l := bind_l ^ [mk_AS`MultSetBind(p_l,expr,scid)]
+    end;
   return bind_l;
  );
 
