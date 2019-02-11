@@ -8266,7 +8266,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
   if exists b in set elems bind_l & is_AS`MultTypeBind(b)
   then return [CGAUX`NotSupported("type bind")]
   else
-    def mk_(stmts, msb) = FindMultSetBind2(bind_l); -- must be before DeclPatVars
+    def mk_(stmts, msb) = FindMultBind(bind_l); -- must be before DeclPatVars
     in
       if len msb = 1 and forall p in set elems msb(1).#1 & is_AS`PatternName(p)
       then
@@ -8301,7 +8301,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
       else
         def succ_v = BC`GiveName("succ");
             asgn_succ_true = BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true));
-            rb_p = DeclPatVars(pid_m); -- must be after FindMultSetBind2 and must be before GenPredicateStmt
+            rb_p = DeclPatVars(pid_m); -- must be after FindMultBind and must be before GenPredicateStmt
         in
          (dcl rb : seq of CPP`Stmt := stmts ^ (if nonstop then [] else rb_p),
               pn_l : seq of set of AS`Name := FindPatternIdInBindList(bind_l),
@@ -8417,46 +8417,85 @@ DeclPatVars( pid_m ) ==
 \end{vdm_al}
 
 \begin{vdm_al}
-FindMultSetBind2: AS`BindList
+FindMultBind: AS`BindList
          ==> seq of CPP`Stmt * seq of (seq of AS`Pattern * CPP`Expr * REP`TypeRep)
-FindMultSetBind2(bind) ==
-  def allpnms = dunion { dunion { dom FindPatternId(pat) | pat in set elems pat_l }
-                                        | mk_AS`MultSetBind(pat_l,-,-) in set elems bind }
-  in
-   (dcl msb : seq of (seq of AS`Pattern * CPP`Expr * REP`TypeRep) := [],
-        rb : seq of CPP`Stmt := [];
-    for mk_AS`MultSetBind(pat_l, e_set,-) in bind do
-      def lastEnv = CGAUX`CurrentEnv();
-          - = CGAUX`PopLastEnv();
-          mk_(e_v, e_stmt) = CGExprExcl(e_set, "e_set", nil);
-          - = CGAUX`PushThisEnv(lastEnv);
-          e_type = CGAUX`FindType(e_set);
-          allnames = CGAUX`FindAllNamesInExpr(e_set)
-      in
-        if not CGAUX`IsSetType(e_type)
-        then def e1_v = BC`GiveName("e1_set");
-                 cond = DS`GenIsSet(e_v);
-                 decl_e1_v = DS`GenDeclSet(e1_v, nil);
-                 alt2 = BC`GenBlock([CGAUX`RunTime("A set was expected")])
-             in (dcl alt1 : CPP`Stmt;
+FindMultBind(bind) ==
+ (dcl allpnms : set of AS`Name := {},
+      msb : seq of (seq of AS`Pattern * CPP`Expr * REP`TypeRep) := [],
+      rb : seq of CPP`Stmt := [];
+  for mb in bind do
+    cases mb: 
+      mk_AS`MultSetBind(pat_l,-,-),
+      mk_AS`MultSeqBind(pat_l,-,-) ->
+        allpnms := allpnms union dunion { dom FindPatternId(pat) | pat in set elems pat_l },
+      others -> skip
+    end;
+
+  for mb in bind do
+    cases mb:
+      mk_AS`MultSetBind(pat_l, e_set, -) ->
+        def lastEnv = CGAUX`CurrentEnv();
+            - = CGAUX`PopLastEnv();
+            mk_(e_v, e_stmt) = CGExprExcl(e_set, "e_set", nil);
+            - = CGAUX`PushThisEnv(lastEnv);
+            e_type = CGAUX`FindType(e_set);
+            allnames = CGAUX`FindAllNamesInExpr(e_set)
+        in
+          if not CGAUX`IsSetType(e_type)
+          then def e1_v = BC`GiveName("e1_set");
+                   cond = DS`GenIsSet(e_v);
+                   decl_e1_v = DS`GenDeclSet(e1_v, nil);
+                   alt2 = BC`GenBlock([CGAUX`RunTime("A set was expected")])
+               in (dcl alt1 : CPP`Stmt;
 #ifdef VDMPP
-                 if CPP`isJAVA()
-                 then
-                   alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, DS`GenCastSetType(e_v))])
-                 else
+                   if CPP`isJAVA()
+                   then
+                     alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, DS`GenCastSetType(e_v))])
+                   else
 #endif VDMPP
-                   alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, e_v)]);
-                 rb := rb ^ e_stmt ^ decl_e1_v ^ [ BC`GenIfStmt( cond, alt1, alt2) ];
-                 msb := msb ^ [ mk_(pat_l, e1_v, e_type)]; )
-        elseif e_stmt = [] and ( (allpnms inter allnames <> {}) or (not is_AS`Name(e_set)))
-        then def e1_v   = BC`GiveName("e1_set");
-                 s_init = DS`GenConstDeclInit(e_type, e1_v, e_v)
-             in (rb  := rb ^ e_stmt ^ s_init;
-                 msb := msb ^ [ mk_(pat_l, e1_v, e_type)] )
-        else ( rb := rb ^ e_stmt;
-               msb := msb ^ [ mk_(pat_l, e_v, e_type)] );
-    return mk_(rb, msb)
-   );
+                     alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, e_v)]);
+                   rb := rb ^ e_stmt ^ decl_e1_v ^ [ BC`GenIfStmt( cond, alt1, alt2) ];
+                   msb := msb ^ [ mk_(pat_l, e1_v, e_type)]; )
+          elseif e_stmt = [] and ( (allpnms inter allnames <> {}) or (not is_AS`Name(e_set)))
+          then def e1_v   = BC`GiveName("e1_set");
+                   s_init = DS`GenConstDeclInit(e_type, e1_v, e_v)
+               in (rb  := rb ^ e_stmt ^ s_init;
+                   msb := msb ^ [ mk_(pat_l, e1_v, e_type)] )
+          else ( rb := rb ^ e_stmt;
+                 msb := msb ^ [ mk_(pat_l, e_v, e_type)] ),
+      mk_AS`MultSeqBind(pat_l, e_seq, -) ->
+        def lastEnv = CGAUX`CurrentEnv();
+            - = CGAUX`PopLastEnv();
+            mk_(e_v, e_stmt) = CGExprExcl(e_seq, "e_seq", nil);
+            - = CGAUX`PushThisEnv(lastEnv);
+            e_type = CGAUX`FindType(e_seq);
+            allnames = CGAUX`FindAllNamesInExpr(e_seq)
+        in
+          if not CGAUX`IsSeqType(e_type)
+          then def e1_v = BC`GiveName("e1_seq");
+                   cond = DS`GenIsSeq(e_v);
+                   decl_e1_v = DS`GenDeclSeq(e1_v, nil);
+                   alt2 = BC`GenBlock([CGAUX`RunTime("A seq was expected")])
+               in (dcl alt1 : CPP`Stmt;
+#ifdef VDMPP
+                   if CPP`isJAVA()
+                   then
+                     alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, DS`GenCastSeq(e_v, nil))])
+                   else
+#endif VDMPP
+                     alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, e_v)]);
+                   rb := rb ^ e_stmt ^ decl_e1_v ^ [ BC`GenIfStmt( cond, alt1, alt2) ];
+                   msb := msb ^ [ mk_(pat_l, e1_v, e_type)]; )
+          elseif e_stmt = [] and ( (allpnms inter allnames <> {}) or (not is_AS`Name(e_seq)))
+          then def e1_v   = BC`GiveName("e1_seq");
+                   s_init = DS`GenConstDeclInit(e_type, e1_v, e_v)
+               in (rb  := rb ^ e_stmt ^ s_init;
+                   msb := msb ^ [ mk_(pat_l, e1_v, e_type)] )
+          else ( rb := rb ^ e_stmt;
+                 msb := msb ^ [ mk_(pat_l, e_v, e_type)] )
+    end;
+    return mk_(rb, msb);
+ );
 
 FindPatternIdInBindList: AS`BindList ==> seq of set of AS`Name
 FindPatternIdInBindList(bind) ==

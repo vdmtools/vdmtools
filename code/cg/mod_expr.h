@@ -195,7 +195,7 @@ SEQ<TYPE_CPP_Stmt> CGComprehension(const SEQ<TYPE_AS_MultBind> &,
 SEQ<TYPE_CPP_Stmt> GenPredicateStmt(const Generic &, const SEQ<TYPE_CPP_Stmt> &, bool);
 SEQ<TYPE_AS_Stmt> DeclarePatVars(const TYPE_AS_Pattern &);
 SEQ<TYPE_AS_Stmt> DeclPatVars(const MAP<TYPE_AS_Name, TYPE_REP_TypeRep> &);
-Tuple FindMultSetBind2(const SEQ<TYPE_AS_MultBind> &);
+Tuple FindMultBind(const SEQ<TYPE_AS_MultBind> &);
 Sequence FindPatternIdInBindList(const SEQ<TYPE_AS_MultBind> &);
 SEQ<TYPE_AS_MultBind> MergeMultBind(const SEQ<TYPE_AS_MultBind> &);
 SEQ<TYPE_AS_MultBind> ConvertBindList(const SEQ<TYPE_AS_MultBind> &);

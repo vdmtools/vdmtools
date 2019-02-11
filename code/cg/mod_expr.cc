@@ -8793,7 +8793,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
     }
   }
 
-  Tuple fmsb (FindMultSetBind2(bind_l)); // must be before DeclPatVars
+  Tuple fmsb (FindMultBind(bind_l)); // must be before DeclPatVars
   const SEQ<TYPE_CPP_Stmt> & stmts (fmsb.GetSequence(1)); // decl for set
   const Sequence & msb (fmsb.GetSequence(2)); // seq of (seq of AS`Pattern * CPP`Expr * REP`TypeRep)
 
@@ -8840,7 +8840,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
       return rb_l;
     }
   }
-  // NOTE: DeclPatVars must be after FindMultSetBind2
+  // NOTE: DeclPatVars must be after FindMultBind
   // NOTE: DeclPatVars must be before GenPredicateStmt
 
   SEQ<TYPE_CPP_Stmt> rb_p;
@@ -9014,19 +9014,32 @@ SEQ<TYPE_AS_Stmt> vdmcg::DeclPatVars(const MAP<TYPE_AS_Name, TYPE_REP_TypeRep> &
   return rb;
 }
 
-// FindMultSetBind2
+// FindMultBind
 // bind : AS`BindList
 // ==> seq of CPP`Stmt * seq of (seq of AS`Pattern * CPP`Expr * REP`TypeRep)
-Tuple vdmcg::FindMultSetBind2(const SEQ<TYPE_AS_MultBind> & bind_l)
+Tuple vdmcg::FindMultBind(const SEQ<TYPE_AS_MultBind> & bind_l)
 {
   SET<TYPE_AS_Name> allpnms;
   size_t len_bind_l = bind_l.Length();
   for (size_t idx = 1; idx <= len_bind_l; idx++) {
-    const TYPE_AS_MultSetBind & msb (bind_l[idx]);
-    const SEQ<TYPE_AS_Pattern> & pat_l (msb.GetSequence(pos_AS_MultSetBind_pat));
-    size_t len_pat_l = pat_l.Length();
-    for (size_t i = 1; i <= len_pat_l; i++) {
-      allpnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
+    const TYPE_AS_MultBind & mb (bind_l[idx]);
+    switch (mb.GetTag()) {
+      case TAG_TYPE_AS_MultSetBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSetBind_pat));
+        size_t len_pat_l = pat_l.Length();
+        for (size_t i = 1; i <= len_pat_l; i++) {
+          allpnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
+        }
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
+        size_t len_pat_l = pat_l.Length();
+        for (size_t i = 1; i <= len_pat_l; i++) {
+          allpnms.ImpUnion(FindPatternId(pat_l[i]).Dom());
+        }
+        break;
+      }
     }
   }
 
@@ -9034,54 +9047,110 @@ Tuple vdmcg::FindMultSetBind2(const SEQ<TYPE_AS_MultBind> & bind_l)
   Sequence msb; // seq of (seq of AS`Pattern * CPP`Expr * REP`TypeRep)
 
   for (size_t ii = 1; ii <= len_bind_l; ii++) {
-    const TYPE_AS_MultSetBind & e (bind_l[ii]);
-    const SEQ<TYPE_AS_Pattern> & pat_l (e.GetSequence(pos_AS_MultSetBind_pat));
-    const TYPE_AS_Expr & e_set (e.GetRecord(pos_AS_MultSetBind_Set));
+    const TYPE_AS_MultBind & mb (bind_l[ii]);
+    switch (mb.GetTag()) {
+      case TAG_TYPE_AS_MultSetBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSetBind_pat));
+        const TYPE_AS_Expr & e_set (mb.GetRecord(pos_AS_MultSetBind_Set));
 
-    Map lastEnv (CurrentEnv_CGAUX());
-    PopLastEnv_CGAUX();
+        Map lastEnv (CurrentEnv_CGAUX());
+        PopLastEnv_CGAUX();
 
-    Tuple cgee (CGExprExcl(e_set, ASTAUX::MkId(L"e_set"), nil));
-    const TYPE_CPP_Expr & e_v (cgee.GetRecord(1));
-    const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
+        Tuple cgee (CGExprExcl(e_set, ASTAUX::MkId(L"e_set"), nil));
+        const TYPE_CPP_Expr & e_v (cgee.GetRecord(1));
+        const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
-    PushThisEnv_CGAUX(lastEnv);
+        PushThisEnv_CGAUX(lastEnv);
 
-    TYPE_REP_TypeRep e_type (FindType(e_set));
-    SET<TYPE_AS_Name> allnames (FindAllNamesInExpr(e_set));
+        TYPE_REP_TypeRep e_type (FindType(e_set));
+        SET<TYPE_AS_Name> allnames (FindAllNamesInExpr(e_set));
 
-    if (! IsSetType(e_type)) {
-      TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
-      TYPE_CPP_Expr cond (GenIsSet(e_v));
-      TYPE_CPP_Stmt alt1;
+        if (! IsSetType(e_type)) {
+          TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
+          TYPE_CPP_Expr cond (GenIsSet(e_v));
+          TYPE_CPP_Stmt alt1;
 #ifdef VDMPP
-      if (vdm_CPP_isJAVA()) {
-        alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, GenCastSetType(e_v))));
-      }
-      else
+          if (vdm_CPP_isJAVA()) {
+            alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, GenCastSetType(e_v))));
+          }
+          else
 #endif // VDMPP
-        alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, e_v)));
+            alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, e_v)));
 
-      TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
+          TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
+    
+          rb.ImpConc(e_stmt);
+          rb.ImpConc(GenDeclSet(e1_v, nil));
+          rb.ImpAppend(vdm_BC_GenIfStmt(cond, alt1, alt2));
 
-      rb.ImpConc(e_stmt);
-      rb.ImpConc(GenDeclSet(e1_v, nil));
-      rb.ImpAppend(vdm_BC_GenIfStmt(cond, alt1, alt2));
+          msb.ImpAppend(mk_(pat_l, e1_v, e_type));
+        }
+        else if (e_stmt.IsEmpty() &&
+                 (!(allnames.ImpIntersect(allpnms)).IsEmpty() || !e_set.Is(TAG_TYPE_AS_Name))) {
+          TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
+          SEQ<TYPE_CPP_Stmt> s_init (GenConstDeclInit(e_type, e1_v, e_v));
 
-      msb.ImpAppend(mk_(pat_l, e1_v, e_type));
-    }
-    else if (e_stmt.IsEmpty() &&
-             (!(allnames.ImpIntersect(allpnms)).IsEmpty() || !e_set.Is(TAG_TYPE_AS_Name))) {
-      TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
-      SEQ<TYPE_CPP_Stmt> s_init (GenConstDeclInit(e_type, e1_v, e_v));
+          rb.ImpConc(e_stmt);
+          rb.ImpConc(s_init);
+          msb.ImpAppend(mk_(pat_l, e1_v, e_type));
+        }
+        else {
+          rb.ImpConc(e_stmt);
+          msb.ImpAppend(mk_(pat_l, e_v, e_type));
+        }
+        break;
+      }
+      case TAG_TYPE_AS_MultSeqBind: {
+        const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
+        const TYPE_AS_Expr & e_seq (mb.GetRecord(pos_AS_MultSeqBind_Seq));
 
-      rb.ImpConc(e_stmt);
-      rb.ImpConc(s_init);
-      msb.ImpAppend(mk_(pat_l, e1_v, e_type));
-    }
-    else {
-      rb.ImpConc(e_stmt);
-      msb.ImpAppend(mk_(pat_l, e_v, e_type));
+        Map lastEnv (CurrentEnv_CGAUX());
+        PopLastEnv_CGAUX();
+
+        Tuple cgee (CGExprExcl(e_seq, ASTAUX::MkId(L"e_seq"), nil));
+        const TYPE_CPP_Expr & e_v (cgee.GetRecord(1));
+        const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
+
+        PushThisEnv_CGAUX(lastEnv);
+
+        TYPE_REP_TypeRep e_type (FindType(e_seq));
+        SET<TYPE_AS_Name> allnames (FindAllNamesInExpr(e_seq));
+
+        if (! IsSeqType(e_type)) {
+          TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_seq")));
+          TYPE_CPP_Expr cond (GenIsSeq(e_v));
+          TYPE_CPP_Stmt alt1;
+#ifdef VDMPP
+          if (vdm_CPP_isJAVA()) {
+            alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, GenCastSeq(e_v, nil))));
+          }
+          else
+#endif // VDMPP
+            alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, e_v)));
+
+          TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime(L"A seq was expected"))));
+    
+          rb.ImpConc(e_stmt);
+          rb.ImpConc(GenDeclSeq(e1_v, nil));
+          rb.ImpAppend(vdm_BC_GenIfStmt(cond, alt1, alt2));
+
+          msb.ImpAppend(mk_(pat_l, e1_v, e_type));
+        }
+        else if (e_stmt.IsEmpty() &&
+                 (!(allnames.ImpIntersect(allpnms)).IsEmpty() || !e_seq.Is(TAG_TYPE_AS_Name))) {
+          TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_seq")));
+          SEQ<TYPE_CPP_Stmt> s_init (GenConstDeclInit(e_type, e1_v, e_v));
+
+          rb.ImpConc(e_stmt);
+          rb.ImpConc(s_init);
+          msb.ImpAppend(mk_(pat_l, e1_v, e_type));
+        }
+        else {
+          rb.ImpConc(e_stmt);
+          msb.ImpAppend(mk_(pat_l, e_v, e_type));
+        }
+        break;
+      }
     }
   }
   return mk_(rb, msb);
