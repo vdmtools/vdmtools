@@ -8805,39 +8805,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
     for (size_t idx = 1; (idx <= len_p_l) && allpnm; idx++) {
       allpnm = p_l[idx].Is(TAG_TYPE_AS_PatternName);
     }
-
     if (allpnm) {
-      const TYPE_CPP_Expr & e_v (t.GetRecord(2));
-      const TYPE_REP_TypeRep & e_type (t.GetRecord(3));
-      TYPE_REP_TypeRep e_t (FindSetElemType(e_type));
-
-      const TYPE_AS_Expr & setexpr (bind_l[1].GetRecord(pos_AS_MultSetBind_Set));
-      bool seqindices = IsSeqIndicesSet(setexpr);
-      Set seqapply_s;
-      SEQ<TYPE_CPP_Identifier> id_l;
-      for (size_t i = 1; i <= len_p_l; i++ ) {
-        const TYPE_AS_Pattern & p (p_l[i]);
-        const Generic & name (p.GetField(pos_AS_PatternName_nm));
-        if (!name.IsNil()) {
-          InsertName_CGAUX(name);
-          id_l.ImpAppend(vdm_BC_Rename(name));
-          if (seqindices) {
-            seqapply_s.Insert(mk_(vdm_BC_Rename(setexpr.GetRecord(pos_AS_PrefixExpr_arg)), vdm_BC_Rename(name)));
-          }
-        }
-        else {
-          id_l.ImpAppend(vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
-        }
-      }
-      AddNoCheckSeqApply(seqapply_s);
-      SEQ<TYPE_CPP_Stmt> stmt_l (GenPredicateStmt(pred, stmt, notpred));
-      RemNoCheckSeqApply(seqapply_s);
-      for (size_t j = 1; j <= len_p_l; j++) {
-        stmt_l = GenIterSet(mk_CG_VT(e_v, e_type), contexpr, mk_CG_VT(id_l[j], e_t), stmt_l);
-      }
-      SEQ<TYPE_CPP_Stmt> rb_l (stmts);
-      rb_l.ImpConc(stmt_l);
-      return rb_l;
+      return CGComprehensionSimple(bind_l[1], pred, stmt, contexpr, notpred, nonstop, stmts, msb[1]);
     }
   }
   // NOTE: DeclPatVars must be after FindMultBind
@@ -8914,6 +8883,74 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
 
   //return vdm_BC_GenBlock(rb);
   return rb;
+}
+
+// CGComprehensionSimple
+// bind : AS`BindList
+// pred : [ AS`Expr ]
+// stmt : seq of CPP`Stmt
+// contexpr : [ CPP`Expr ]
+// notpred : bool
+// pid_m : map AS`Name to REP`TypeRep
+// nonstop : bool
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehensionSimple(const TYPE_AS_MultBind & bind,
+                                                const Generic & pred,
+                                                const SEQ<TYPE_CPP_Stmt> & stmt,
+                                                const Generic & contexpr,
+                                                bool notpred,
+                                                bool nonstop,
+                                                const SEQ<TYPE_CPP_Stmt> & stmts,
+                                                const Tuple & msb)
+{
+  const SEQ<TYPE_AS_Pattern> & p_l (msb.GetSequence(1));
+  const TYPE_CPP_Expr & e_v (msb.GetRecord(2));
+  const TYPE_REP_TypeRep & e_type (msb.GetRecord(3));
+
+  switch (bind.GetTag()) {
+    case TAG_TYPE_AS_MultSetBind: {
+      const TYPE_AS_Expr & setexpr (bind.GetRecord(pos_AS_MultSetBind_Set));
+      TYPE_REP_TypeRep e_t (FindSetElemType(e_type));
+
+      bool seqindices = IsSeqIndicesSet(setexpr);
+      Set seqapply_s;
+      SEQ<TYPE_CPP_Identifier> id_l;
+      size_t len_p_l = p_l.Length();
+      for (size_t i = 1; i <= len_p_l; i++ ) {
+        const TYPE_AS_Pattern & p (p_l[i]);
+        const Generic & name (p.GetField(pos_AS_PatternName_nm));
+        if (!name.IsNil()) {
+          InsertName_CGAUX(name);
+          id_l.ImpAppend(vdm_BC_Rename(name));
+          if (seqindices) {
+            seqapply_s.Insert(mk_(vdm_BC_Rename(setexpr.GetRecord(pos_AS_PrefixExpr_arg)), vdm_BC_Rename(name)));
+          }
+        }
+        else {
+          id_l.ImpAppend(vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
+        }
+      }
+      AddNoCheckSeqApply(seqapply_s);
+      SEQ<TYPE_CPP_Stmt> stmt_l (GenPredicateStmt(pred, stmt, notpred));
+      RemNoCheckSeqApply(seqapply_s);
+      for (size_t j = 1; j <= len_p_l; j++) {
+        stmt_l = GenIterSet(mk_CG_VT(e_v, e_type), contexpr, mk_CG_VT(id_l[j], e_t), stmt_l);
+      }
+      SEQ<TYPE_CPP_Stmt> rb_l (stmts);
+      rb_l.ImpConc(stmt_l);
+      return rb_l;
+    }
+    case TAG_TYPE_AS_MultSeqBind: {
+      // TODO:
+      SEQ<TYPE_CPP_Stmt> rb_l (stmts);
+      return rb_l;
+    }
+    default: { // 
+      SEQ<TYPE_CPP_Stmt> rb_l (stmts);
+      rb_l.ImpAppend(NotSupported(L"type bind", bind));
+      return rb_l;
+    }
+  }
 }
 
 // GenPredicateStmt

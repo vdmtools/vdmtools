@@ -8270,34 +8270,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
     in
       if len msb = 1 and forall p in set elems msb(1).#1 & is_AS`PatternName(p)
       then
-        let mk_(p_l,e_v,e_type) = msb(1),
-            setexpr = (hd bind_l).Set
-        in
-          def e_t = CGAUX`FindSetElemType(e_type);
-              seqindices = CGAUX`IsSeqIndicesSet(setexpr);
-          in
-           (dcl id_l : seq of CPP`Identifier := [],
-                stmt_l : seq of CPP`Stmt,
-                seqapply_s : set of (CPP`Expr * CPP`Expr) := {};
-            for p in p_l do
-              let mk_AS`PatternName(name,-,-) = p
-              in
-                if name = nil
-                then id_l := id_l ^ [BC`GiveName("elem")]
-                else
-                  def - = CGAUX`InsertName(name); -- must be before GenPredicateStmt
-                  in
-                   (id_l := id_l ^ [BC`Rename(name)];
-                    if seqindices
-                    then seqapply_s := seqapply_s union {mk_(BC`Rename(setexpr.arg), BC`Rename(name))};
-                   );
-            CGAUX`AddNoCheckSeqApply(seqapply_s);
-            stmt_l := GenPredicateStmt(pred, stmt, notpred);
-            CGAUX`RemNoCheckSeqApply(seqapply_s);
-            for id in id_l do
-              stmt_l := DS`GenIterSet(mk_CGMAIN`VT(e_v, e_type), contexpr, mk_CGMAIN`VT(id, e_t), stmt_l);
-            return stmts ^ stmt_l
-          )
+        CGComprehensionSimple(bind_l(1), pred, stmt, contexpr, notpred, nonstop, stmts, msb(1))
       else
         def succ_v = BC`GiveName("succ");
             asgn_succ_true = BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true));
@@ -8342,6 +8315,43 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
                                  BC`GenAsgnInit( BC`GenBoolLit(false)))] ^ rb;
           return rb;
          );
+
+CGComprehensionSimple: AS`MultBind * [ AS`Expr ] * seq1 of CPP`Stmt * [ CPP`Expr ] *
+                 bool * bool *
+                 seq of CPP`Stmt * (seq of AS`Pattern * CPP`Expr * REP`TypeRep)
+                 ==> seq of CPP`Stmt
+CGComprehensionSimple(bind, pred, stmt, contexpr, notpred, -, stmts, mk_(p_l,e_v,e_type)) ==
+  cases bind:
+    mk_AS`MultSetBind(-,setexpr,-) ->
+          def e_t = CGAUX`FindSetElemType(e_type);
+              seqindices = CGAUX`IsSeqIndicesSet(setexpr);
+          in
+           (dcl id_l : seq of CPP`Identifier := [],
+                stmt_l : seq of CPP`Stmt,
+                seqapply_s : set of (CPP`Expr * CPP`Expr) := {};
+            for p in p_l do
+              let mk_AS`PatternName(name,-,-) = p
+              in
+                if name = nil
+                then id_l := id_l ^ [BC`GiveName("elem")]
+                else
+                  def - = CGAUX`InsertName(name); -- must be before GenPredicateStmt
+                  in
+                   (id_l := id_l ^ [BC`Rename(name)];
+                    if seqindices
+                    then seqapply_s := seqapply_s union {mk_(BC`Rename(setexpr.arg), BC`Rename(name))};
+                   );
+            CGAUX`AddNoCheckSeqApply(seqapply_s);
+            stmt_l := GenPredicateStmt(pred, stmt, notpred);
+            CGAUX`RemNoCheckSeqApply(seqapply_s);
+            for id in id_l do
+              stmt_l := DS`GenIterSet(mk_CGMAIN`VT(e_v, e_type), contexpr, mk_CGMAIN`VT(id, e_t), stmt_l);
+            return stmts ^ stmt_l
+          ),
+    mk_AS`MultSeqBind(-,-,-) ->
+          return stmts, -- TODO
+    mk_AS`MultTypeBind(-,-,-) -> error
+  end;
 \end{vdm_al}
 
 One line will never be covered. Indeed, the parser replaces every time
