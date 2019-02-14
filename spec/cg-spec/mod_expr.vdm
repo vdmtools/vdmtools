@@ -5579,9 +5579,12 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
            (rb := [ BC`GenDecl(DS`GenSmallBoolType(), tmpQuant_v, qinit) ] ^
                     CGComprehension(bind_l, pred, [stmt], contexpr, false, pid_m, true);
             res := tmpQuant_v),
-      mk_AS`ExistsUniqueExpr(mk_AS`SetBind(pat, expr, cid), pred, -) ->
+      mk_AS`ExistsUniqueExpr(bind, pred, -) ->
          let qinit = BC`GenAsgnInit(BC`GenIntegerLit(0)),
-             bind_l = [mk_AS`MultSetBind([pat], expr,cid)],
+             bind_l = cases bind:
+                        mk_AS`SetBind(pat,expr,cid) -> [mk_AS`MultSetBind([pat],expr,cid)],
+                        mk_AS`SeqBind(pat,expr,cid) -> [mk_AS`MultSeqBind([pat],expr,cid)]
+                      end,
              stmt = BC`GenExpressionStmt(BC`GenPostPlusPlus(tmpQuant_v)),
              contexpr = BC`GenBracketedExpr(BC`GenLt(tmpQuant_v, BC`GenIntegerLit(2)))
          in

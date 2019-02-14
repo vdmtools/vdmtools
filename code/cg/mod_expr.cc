@@ -6112,18 +6112,30 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
       const TYPE_AS_Bind & bind (quant.GetRecord(pos_AS_ExistsUniqueExpr_bind));
   
       switch(bind.GetTag()) {
-        case TAG_TYPE_AS_SetBind: {
+        case TAG_TYPE_AS_SetBind:
+        case TAG_TYPE_AS_SeqBind: {
           const TYPE_AS_Expr & pred (quant.GetRecord(pos_AS_ExistsUniqueExpr_pred));
           TYPE_CPP_AsgnInit qinit (vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(0)));
 
-          SEQ<TYPE_AS_Pattern> pat_l;
-          pat_l.ImpAppend(bind.GetRecord(pos_AS_SetBind_pat));
-
-          TYPE_AS_MultSetBind msb;
-          msb.Init(pat_l, bind.GetRecord(pos_AS_SetBind_Set), bind.GetInt(pos_AS_SetBind_cid));
-
           SEQ<TYPE_AS_MultBind> bind_l;
-          bind_l.ImpAppend(msb);
+          if (bind.Is(TAG_TYPE_AS_SetBind)) {
+            SEQ<TYPE_AS_Pattern> pat_l;
+            pat_l.ImpAppend(bind.GetRecord(pos_AS_SetBind_pat));
+
+            TYPE_AS_MultSetBind msb;
+            msb.Init(pat_l, bind.GetRecord(pos_AS_SetBind_Set), bind.GetInt(pos_AS_SetBind_cid));
+
+            bind_l.ImpAppend(msb);
+          }
+          else {
+            SEQ<TYPE_AS_Pattern> pat_l;
+            pat_l.ImpAppend(bind.GetRecord(pos_AS_SeqBind_pat));
+
+            TYPE_AS_MultSeqBind msb;
+            msb.Init(pat_l, bind.GetRecord(pos_AS_SeqBind_Seq), bind.GetInt(pos_AS_SeqBind_cid));
+
+            bind_l.ImpAppend(msb);
+          }
 
           TYPE_CPP_Stmt stmt (vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(tmpQuant_v)));
           TYPE_CPP_Expr contexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(tmpQuant_v, vdm_BC_GenIntegerLit(2))));
