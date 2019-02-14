@@ -8941,8 +8941,27 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehensionSimple(const TYPE_AS_MultBind & bind,
       return rb_l;
     }
     case TAG_TYPE_AS_MultSeqBind: {
-      // TODO:
+      TYPE_REP_TypeRep e_t (FindSeqElemType(e_type));
+
+      SEQ<TYPE_CPP_Identifier> id_l;
+      size_t len_p_l = p_l.Length();
+      for (size_t i = 1; i <= len_p_l; i++ ) {
+        const TYPE_AS_Pattern & p (p_l[i]);
+        const Generic & name (p.GetField(pos_AS_PatternName_nm));
+        if (!name.IsNil()) {
+          InsertName_CGAUX(name);
+          id_l.ImpAppend(vdm_BC_Rename(name));
+        }
+        else {
+          id_l.ImpAppend(vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
+        }
+      }
+      SEQ<TYPE_CPP_Stmt> stmt_l (GenPredicateStmt(pred, stmt, notpred));
+      for (size_t j = 1; j <= len_p_l; j++) {
+        stmt_l = GenIterSeq(mk_CG_VT(e_v, e_type), contexpr, mk_CG_VT(id_l[j], e_t), stmt_l);
+      }
       SEQ<TYPE_CPP_Stmt> rb_l (stmts);
+      rb_l.ImpConc(stmt_l);
       return rb_l;
     }
     default: { // 
@@ -9294,6 +9313,21 @@ SEQ<TYPE_AS_MultBind> vdmcg::MergeMultBind(const SEQ<TYPE_AS_MultBind> & bind)
 // ==> AS`BindList
 SEQ<TYPE_AS_MultBind> vdmcg::ConvertBindList(const SEQ<TYPE_AS_MultBind> & bind)
 {
+//
+  if ( bind.Length() == 1 ) {
+    if ( bind[1].Is(TAG_TYPE_AS_MultSeqBind) ) {
+      const SEQ<TYPE_AS_Pattern> & p_l (bind[1].GetSequence(pos_AS_MultSeqBind_pat));
+      bool forall = true;
+      size_t len_p_l = p_l.Length();
+      for ( size_t i = 1; (i <= len_p_l) && forall; i++ ) {
+        forall = p_l[i].Is(TAG_TYPE_AS_PatternName);
+      }
+      if ( forall ) {
+        return bind;
+      }
+    }
+  }
+//
   SEQ<TYPE_AS_MultBind> bind_l;
   size_t len_bind = bind.Length();
   for (size_t i = 1; i <= len_bind; i++) {
