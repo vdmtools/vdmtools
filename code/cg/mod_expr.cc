@@ -8846,6 +8846,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
     const SEQ<TYPE_AS_Pattern> & pat_l (tmp.GetSequence(1));
     const TYPE_CPP_Expr & e_v (tmp.GetRecord(2));
     const TYPE_REP_TypeRep & e_type (tmp.GetRecord(3));
+    bool isSet = bind_l[idx].Is(TAG_TYPE_AS_MultSetBind);
 
     TYPE_CPP_Expr e1_v (e_v);
     size_t len_pat_l = pat_l.Length();
@@ -8853,21 +8854,21 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
       SET<TYPE_AS_Name> pn_s (pn_l.Hd());
       pn_l.ImpTl();
       if (i > 1) {
-        TYPE_CPP_Identifier e2_v (vdm_BC_GiveName(ASTAUX::MkId(L"e_set")));
+        TYPE_CPP_Identifier e2_v (vdm_BC_GiveName(ASTAUX::MkId(L"e_temp")));
         rb.ImpConc(GenDeclInit_DS(e_type, e2_v, e_v));
         e1_v = e2_v;
       }
       const TYPE_AS_Pattern & pat (pat_l[i]);
-      //TYPE_CGMAIN_VT e_set_cg_vt (mk_CG_VT(e1_v, e_type));
+      //TYPE_CGMAIN_VT e_cg_vt (mk_CG_VT(e1_v, e_type));
       TYPE_CPP_Identifier e_g_v (vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
-      TYPE_REP_TypeRep e_t (FindSetElemType(e_type));
 
       Generic p = Nil();
       if (!inner.IsEmpty()) {
         p = inner;
       }
 
-      //Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop, false));
+      TYPE_REP_TypeRep e_t (isSet ? FindSetElemType(e_type) : FindSeqElemType(e_type));
+
       Tuple cgpme (CGPatternMatchExcl(pat, mk_CG_VT(e_g_v, e_t), pn_s, succ_v, pid_m, p, nonstop, nonstop));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       const Bool & Is_Excl (cgpme.GetBool(2));
@@ -8877,8 +8878,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
         this_bl.ImpAppend(asgn_succ_true);
       }
       this_bl.ImpConc(pm);
-
-      inner = GenIterSet(mk_CG_VT(e1_v, e_type), contexpr, mk_CG_VT(e_g_v, e_t), this_bl);
+      if (isSet) {
+        inner = GenIterSet(mk_CG_VT(e1_v, e_type), contexpr, mk_CG_VT(e_g_v, e_t), this_bl);
+      }
+      else {
+        inner = GenIterSeq(mk_CG_VT(e1_v, e_type), contexpr, mk_CG_VT(e_g_v, e_t), this_bl);
+      }
       need_succ = need_succ || !Is_Excl;
     }
   }
@@ -9325,42 +9330,19 @@ SEQ<TYPE_AS_MultBind> vdmcg::MergeMultBind(const SEQ<TYPE_AS_MultBind> & bind)
 // ==> AS`BindList
 SEQ<TYPE_AS_MultBind> vdmcg::ConvertBindList(const SEQ<TYPE_AS_MultBind> & bind)
 {
-//
-  if ( bind.Length() == 1 ) {
-    if ( bind[1].Is(TAG_TYPE_AS_MultSeqBind) ) {
-      const SEQ<TYPE_AS_Pattern> & p_l (bind[1].GetSequence(pos_AS_MultSeqBind_pat));
-      bool forall = true;
-      size_t len_p_l = p_l.Length();
-      for ( size_t i = 1; (i <= len_p_l) && forall; i++ ) {
-        forall = p_l[i].Is(TAG_TYPE_AS_PatternName);
-      }
-      if ( forall ) {
-        return bind;
-      }
-    }
-  }
-//
   SEQ<TYPE_AS_MultBind> bind_l;
   size_t len_bind = bind.Length();
   for (size_t i = 1; i <= len_bind; i++) {
     const TYPE_AS_MultBind & mb (bind[i]);
     switch (mb.GetTag()) {
-      case TAG_TYPE_AS_MultSetBind: {
+      case TAG_TYPE_AS_MultSetBind:
+      case TAG_TYPE_AS_MultSeqBind: {
         bind_l.ImpAppend(mb);
         break;
       }
       case TAG_TYPE_AS_MultTypeBind: {
         // TODO:
         bind_l.ImpAppend(mb);
-        break;
-      }
-      case TAG_TYPE_AS_MultSeqBind: {
-        const SEQ<TYPE_AS_Pattern> & p_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
-        const TYPE_AS_Expr & e_seq (mb.GetRecord(pos_AS_MultSeqBind_Seq));
-        TYPE_REP_TypeRep seqtp(FindSeqElemType(FindType(e_seq)));
-        TYPE_CI_ContextId scid (GetCI().PushCGType(mk_REP_SetTypeRep(seqtp)));
-        TYPE_AS_Expr expr (TYPE_AS_PrefixExpr().Init(Int(SEQELEMS), e_seq, scid));
-        bind_l.ImpAppend(TYPE_AS_MultSetBind().Init(p_l,expr,scid));
         break;
       }
     }

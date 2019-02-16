@@ -8284,7 +8284,8 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
               need_succ : bool := false,
               inner : seq of CPP`Stmt := GenPredicateStmt(pred, stmt, notpred); -- must be after DeclPatVars
           for idx = 1 to len msb do
-          let mk_(pat_l, e_v, e_type) = msb(idx)
+          let mk_(pat_l, e_v, e_type) = msb(idx),
+              isSet = is_AS`MultSetBind(bind_l(idx))
           in
            (dcl e1_v : CPP`Expr := e_v;
             for i = 1 to len pat_l do
@@ -8293,23 +8294,30 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop) ==
                (pn_l := tl pn_l;
                 if (i > 1)
                 then
-                  def e2_v = BC`GiveName("e_set")
+                  def e2_v = BC`GiveName("e_temp")
                   in
                    (rb := rb ^ DS`GenDeclInit(e_type, e2_v, e_v);
                     e1_v := e2_v);
                 def pat             = pat_l(i);
-                    e_set_cg_vt     = mk_CGMAIN`VT(e1_v, e_type);
+                    e_cg_vt         = mk_CGMAIN`VT(e1_v, e_type);
                     e_g_v           = BC`GiveName("elem");
-                    e_t             = CGAUX`FindSetElemType(e_type);
                     p               = if inner = [] then nil else inner;
-                    mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat,mk_CGMAIN`VT(e_g_v, e_t), pn_s,
-                                                             succ_v, pid_m, p, nonstop, nonstop);
-                    this_bl         = (if Is_Excl and p = nil
-                                       then [asgn_succ_true]
-                                       else []) ^ pm;
                 in
-                 (inner := DS`GenIterSet(e_set_cg_vt, contexpr, mk_CGMAIN`VT(e_g_v, e_t), this_bl);
-                  need_succ := not Is_Excl or need_succ)
+                 (dcl e_t : REP`TypeRep;
+                  if isSet 
+                  then e_t := CGAUX`FindSetElemType(e_type)
+                  else e_t := CGAUX`FindSeqElemType(e_type);
+                  def mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat,mk_CGMAIN`VT(e_g_v, e_t), pn_s,
+                                                              succ_v, pid_m, p, nonstop, nonstop);
+                      this_bl         = (if Is_Excl and p = nil
+                                         then [asgn_succ_true]
+                                         else []) ^ pm;
+                  in
+                   (if isSet 
+                    then inner := DS`GenIterSet(e_cg_vt, contexpr, mk_CGMAIN`VT(e_g_v, e_t), this_bl)
+                    else inner := DS`GenIterSeq(e_cg_vt, contexpr, mk_CGMAIN`VT(e_g_v, e_t), this_bl);
+                    need_succ := not Is_Excl or need_succ)
+                 )
                ) -- end of inner loop
            ); -- end of for outer loop
           rb := rb ^ inner;
@@ -8578,26 +8586,15 @@ MergeMultBind(bind) ==
 
 ConvertBindList: AS`BindList ==> AS`BindList
 ConvertBindList(bind) ==
--- tempo
-  if len bind = 1 and is_AS`MultSeqBind(bind(1)) and 
-       forall i in set inds bind(1).pat & is_AS`PatternName(bind(1).pat(i))
-  then return bind
-  else
---
  (dcl bind_l : AS`BindList := [];
   for mb in bind do
     cases mb:
-      mk_AS`MultSetBind(-,-,-)       -> bind_l := bind_l ^ [mb],
---      mk_AS`MultSeqBind(-,-,-)       -> bind_l := bind_l ^ [mb],
-      mk_AS`MultSeqBind(p_l,e_seq,-) -> def seqtp = CGAUX`FindSeqElemType(CGAUX`FindType(e_seq));
-                                            scid = CI`PushCGType(mk_REP`SetTypeRep(seqtp));
-                                            expr = mk_AS`PrefixExpr(<SEQELEMS>, e_seq, scid);
-                                        in bind_l := bind_l ^ [mk_AS`MultSetBind(p_l,expr,scid)],
+      mk_AS`MultSetBind(-,-,-),
+      mk_AS`MultSeqBind(-,-,-)       -> bind_l := bind_l ^ [mb],
       mk_AS`MultTypeBind(-,-,-)      -> bind_l := bind_l ^ [mb] -- TODO:
     end;
   return bind_l;
  );
-
 end CGEXPR
 \end{vdm_al}
 
