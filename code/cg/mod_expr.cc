@@ -6174,11 +6174,28 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
     case TAG_TYPE_AS_TypeBind: {
       return (Sequence().ImpAppend(NotSupported(L"type bind", rc1)));
     }
+    case TAG_TYPE_AS_SeqBind:
     case TAG_TYPE_AS_SetBind: {
+
+// TODO: tempolal
+      TYPE_AS_Bind bind_q;
+      if (bind.Is(TAG_TYPE_AS_SetBind)) {
+        bind_q = bind;
+      }
+      else {
+        const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_SeqBind_pat));
+        const TYPE_AS_Expr & s_expr (bind.GetRecord(pos_AS_SeqBind_Seq));
+        const TYPE_CI_ContextId & cid (bind.GetInt(pos_AS_SeqBind_cid));
+        TYPE_REP_TypeRep seqtp(FindSeqElemType(FindType(s_expr)));
+        TYPE_CI_ContextId scid (GetCI().PushCGType(mk_REP_SetTypeRep(seqtp)));
+        TYPE_AS_Expr expr (TYPE_AS_PrefixExpr().Init(Int(SEQELEMS), s_expr, scid));
+        bind_q = TYPE_AS_SetBind().Init(pat, expr, cid);
+      }
+//
       const TYPE_AS_Expr & pred (rc1.GetRecord(pos_AS_IotaExpr_pred));
       const TYPE_CPP_Expr & resVar (vt.GetRecord(pos_CGMAIN_VT_name));
-      const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_SetBind_pat));
-      const TYPE_AS_Expr & expr (bind.GetRecord(pos_AS_SetBind_Set));
+      const TYPE_AS_Pattern & pat (bind_q.GetRecord(pos_AS_SetBind_pat));
+      const TYPE_AS_Expr & expr (bind_q.GetRecord(pos_AS_SetBind_Set));
 
       TYPE_CPP_Identifier tmpSet (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
 

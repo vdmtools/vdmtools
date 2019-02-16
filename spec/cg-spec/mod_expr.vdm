@@ -5649,7 +5649,19 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
 if is_AS`TypeBind(bind)
 then return [CGAUX`NotSupported("type bind")]
 else
-  def mk_AS`SetBind(pat, expr,-) = bind;
+ (
+--- TODO:
+  dcl bind' : AS`Bind;
+  if is_AS`SetBind(bind)
+  then bind' := bind
+  else 
+    def mk_AS`SeqBind(pat, s_expr, cid) = bind;
+        seqtp = CGAUX`FindSeqElemType(CGAUX`FindType(s_expr));
+        scid = CI`PushCGType(mk_REP`SetTypeRep(seqtp));
+        expr = mk_AS`PrefixExpr(<SEQELEMS>, s_expr, scid);
+    in bind' := mk_AS`SetBind(pat,expr,cid);
+
+  def mk_AS`SetBind(pat, expr,-) = bind';
       setType = CGAUX`FindType(expr);
       pid_pat_s = dom CGEXPR`FindPatternId(pat);
       pid_expr_s = CGAUX`FindAllNamesInExpr(expr);
@@ -5730,6 +5742,7 @@ else
        );
       return rb_l;
      );
+   );
   );
 \end{vdm_al}
 
