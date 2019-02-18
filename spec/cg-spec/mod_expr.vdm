@@ -5725,10 +5725,9 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
          (pred_v := BC`GiveName("pred");
           stmts := stmts ^ DS`GenDecl (pred_type, pred_v, BC`GenAsgnInit(tmpB))
          );
-        stmts := stmts ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsBool(pred_v)),
-                                       BC`GenBlock([CGAUX`RunTime("A boolean was expected")]), nil),
-                          BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
-                                       BC`GenBlock(if_then), nil)]
+        stmts := stmts ^ CGAUX`BooleanTypeCheck(pred_v, nil, nil) ^
+                         [ BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
+                                        BC`GenBlock(if_then), nil)]
        );
 
       def succ = BC`GiveName("succ");

@@ -6285,8 +6285,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
           pred_v = vdm_BC_GiveName(ASTAUX::MkId(L"pred"));
           stmts.ImpConc (GenDecl_DS (pred_type, pred_v, vdm_BC_GenAsgnInit(tmpB)));
         }
-        stmts.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(pred_v)),
-                   vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected"))), nil));
+        stmts.ImpConc(BooleanTypeCheck(pred_v, nil, L""));
         stmts.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v), bt),
                                          vdm_BC_GenBlock(if_then), nil));
       }
