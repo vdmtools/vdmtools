@@ -6169,77 +6169,94 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
 SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CGMAIN_VT & vt)
 {
   const TYPE_AS_Bind & bind (rc1.GetRecord(pos_AS_IotaExpr_bind));
+  TYPE_AS_Bind bind_q(ConvertBind(bind));
 
-  switch(bind.GetTag()) {
+  switch(bind_q.GetTag()) {
     case TAG_TYPE_AS_TypeBind: {
       return (Sequence().ImpAppend(NotSupported(L"type bind", rc1)));
     }
-    case TAG_TYPE_AS_SeqBind:
-    case TAG_TYPE_AS_SetBind: {
-
-// TODO: tempolal
-      TYPE_AS_Bind bind_q;
-      if (bind.Is(TAG_TYPE_AS_SetBind)) {
-        bind_q = bind;
-      }
-      else {
-        const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_SeqBind_pat));
-        const TYPE_AS_Expr & s_expr (bind.GetRecord(pos_AS_SeqBind_Seq));
-        const TYPE_CI_ContextId & cid (bind.GetInt(pos_AS_SeqBind_cid));
-        TYPE_REP_TypeRep seqtp(FindSeqElemType(FindType(s_expr)));
-        TYPE_CI_ContextId scid (GetCI().PushCGType(mk_REP_SetTypeRep(seqtp)));
-        TYPE_AS_Expr expr (TYPE_AS_PrefixExpr().Init(Int(SEQELEMS), s_expr, scid));
-        bind_q = TYPE_AS_SetBind().Init(pat, expr, cid);
-      }
-//
+    case TAG_TYPE_AS_SetBind:
+    case TAG_TYPE_AS_SeqBind: {
       const TYPE_AS_Expr & pred (rc1.GetRecord(pos_AS_IotaExpr_pred));
       const TYPE_CPP_Expr & resVar (vt.GetRecord(pos_CGMAIN_VT_name));
-      const TYPE_AS_Pattern & pat (bind_q.GetRecord(pos_AS_SetBind_pat));
-      const TYPE_AS_Expr & expr (bind_q.GetRecord(pos_AS_SetBind_Set));
+   
+      TYPE_AS_Pattern pat;
+      TYPE_AS_Expr expr;
+      switch (bind_q.GetTag()) {
+        case TAG_TYPE_AS_SetBind: {
+          pat = bind_q.GetRecord(pos_AS_SetBind_pat);
+          expr = bind_q.GetRecord(pos_AS_SetBind_Set);
+          break;
+        }
+        case TAG_TYPE_AS_SeqBind: {
+          pat = bind_q.GetRecord(pos_AS_SeqBind_pat);
+          expr = bind_q.GetRecord(pos_AS_SeqBind_Seq);
+          break;
+        }
+      }
 
-      TYPE_CPP_Identifier tmpSet (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
+      TYPE_CPP_Identifier tmpVal (vdm_BC_GiveName(ASTAUX::MkId(L"tmpVal")));
 
-      Generic setType (FindType(expr));
+      Generic exprType (FindType(expr));
 
       SET<TYPE_AS_Name> pid_pat_s (FindPatternId(pat).Dom());
       SET<TYPE_AS_Name> pid_expr_s (FindAllNamesInExpr(expr));
 
-      Tuple set_cgee (CGExprExcl(expr, ASTAUX::MkId(L"tmpSet"), nil));
-      const TYPE_CPP_Expr & tmpSet1 (set_cgee.GetRecord(1));
-      const SEQ<TYPE_CPP_Stmt> & set_stmt (set_cgee.GetSequence(2));
+      Tuple expr_cgee (CGExprExcl(expr, ASTAUX::MkId(L"tmpVal"), nil));
+      const TYPE_CPP_Expr & tmpVal1 (expr_cgee.GetRecord(1));
+      const SEQ<TYPE_CPP_Stmt> & expr_stmt (expr_cgee.GetSequence(2));
 
       SEQ<TYPE_CPP_Stmt> decl(DeclarePatVars(pat)); // must be after CGExpr and before CGExprExcl and CGPatternMatchExcl
 
-      SEQ<TYPE_CPP_Stmt> rb_l (set_stmt);
+      bool isSetBind = bind_q.Is(TAG_TYPE_AS_SetBind);
+
+      SEQ<TYPE_CPP_Stmt> rb_l (expr_stmt);
       if ((!(pid_pat_s.ImpIntersect(pid_expr_s)).IsEmpty()) || !expr.Is(TAG_TYPE_AS_Name)) {
-        rb_l.ImpConc(GenConstDeclInit(setType, tmpSet, tmpSet1));
+        rb_l.ImpConc(GenConstDeclInit(exprType, tmpVal, tmpVal1));
       }
       else {
-        tmpSet = tmpSet1;
+        tmpVal = tmpVal1;
       }
 
-      if (!IsSetType(setType)) {
+      if (!IsSetType(exprType) && isSetBind) {
         TYPE_CPP_Identifier tmpSet_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
-        TYPE_CPP_Expr cond (GenIsSet(tmpSet));
+        TYPE_CPP_Expr cond (GenIsSet(tmpVal));
 
         TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
         rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
-          rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(GenCastSetType(tmpSet))));
+          rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(GenCastSetType(tmpVal))));
         }
         else
 #endif // VDMPP
         {
-          rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(tmpSet)));
+          rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(tmpVal)));
         }
 
-        tmpSet = tmpSet_q;
+        tmpVal = tmpSet_q;
+      }
+      else if (!IsSeqType(exprType) && !isSetBind) {
+        TYPE_CPP_Identifier tmpSeq_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq")));
+        TYPE_CPP_Expr cond (GenIsSeq(tmpVal));
+
+        TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A seq was expected"))));
+        rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpSeq_q, vdm_BC_GenAsgnInit(GenCastSeq(tmpVal, nil))));
+        }
+        else
+#endif // VDMPP
+        {
+          rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpSeq_q, vdm_BC_GenAsgnInit(tmpVal)));
+        }
+
+        tmpVal = tmpSeq_q;
       }
 
       TYPE_CPP_Identifier tmpElem (vdm_BC_GiveName(ASTAUX::MkId(L"tmpElem")));
       TYPE_CPP_Identifier count (vdm_BC_GiveName(ASTAUX::MkId(L"count")));
-      TYPE_REP_TypeRep settp (FindSetElemType(setType));
       TYPE_REP_BooleanTypeRep bt;
 
       // pred
@@ -6247,12 +6264,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       const TYPE_CPP_Expr & tmpB (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & pr_stmt (cgee.GetSequence(2));
 
+      TYPE_REP_TypeRep elemType (isSetBind ? FindSetElemType(exprType)
+                                           : FindSeqElemType(exprType));
+
       SEQ<TYPE_CPP_Stmt> if_then;
       if_then.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(count)));
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
         const TYPE_REP_TypeRep & resTp (vt.GetRecord(pos_CGMAIN_VT_type));
-        TYPE_CPP_Expr cast (IsSubType(settp, resTp ) ? tmpElem : GenCastType(resTp, tmpElem));
+        TYPE_CPP_Expr cast (IsSubType(elemType, resTp ) ? tmpElem : GenCastType(resTp, tmpElem));
         if_then.ImpAppend(vdm_BC_GenAsgnStmt(resVar, cast));
       }
       else
@@ -6280,7 +6300,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       }
 
       TYPE_CPP_Identifier succ (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
-      TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, settp));
+      TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, elemType));
       Tuple cgpme (CGPatternMatchExcl(pat, elemVT, eset, succ, Map(), stmts, false, true));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
@@ -6292,17 +6312,24 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       body_l.ImpConc(pm);
      
       TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(count, vdm_BC_GenIntegerLit(2))));
-      TYPE_CGMAIN_VT setVT (mk_CG_VT(tmpSet, mk_REP_SetTypeRep(settp)));
 
       rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), count, vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(0))));
-      rb_l.ImpConc(GenIterSet(setVT, cexpr, elemVT, body_l));
+      if (isSetBind) {
+        TYPE_CGMAIN_VT setVT (mk_CG_VT(tmpVal, mk_REP_SetTypeRep(elemType)));
+        rb_l.ImpConc(GenIterSet(setVT, cexpr, elemVT, body_l));
+      }
+      else {
+        TYPE_CGMAIN_VT seqVT (mk_CG_VT(tmpVal, mk_REP_SeqTypeRep(elemType)));
+        rb_l.ImpConc(GenIterSeq(seqVT, cexpr, elemVT, body_l));
+      }
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNeq(count, vdm_BC_GenIntegerLit(1)),
                   vdm_BC_GenBlock(mk_sequence(RunTime(L"No unique element in 'iota'"))), nil));
 
       return rb_l;
     }
-    default:
+    default: {
       return SEQ<TYPE_CPP_Stmt>(); // dummy
+    }
   }
 }
 
@@ -9365,4 +9392,24 @@ SEQ<TYPE_AS_MultBind> vdmcg::ConvertBindList(const SEQ<TYPE_AS_MultBind> & bind)
     }
   }
   return bind_l;
+}
+
+// ConvertBind
+// bind : AS`Bind
+// ==> AS`Bind
+TYPE_AS_Bind vdmcg::ConvertBind(const TYPE_AS_Bind & bind)
+{
+  switch (bind.GetTag()) {
+    case TAG_TYPE_AS_SetBind:
+    case TAG_TYPE_AS_SeqBind: {
+      return bind;
+    }
+    case TAG_TYPE_AS_TypeBind: {
+      // TODO:
+      return bind;
+    }
+    default: {
+      return bind; // dummy
+    }
+  }
 }

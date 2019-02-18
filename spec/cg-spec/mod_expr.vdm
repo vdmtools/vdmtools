@@ -5646,63 +5646,73 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, -)) ==
 #ifdef VDMPP
 CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
 #endif VDMPP
-if is_AS`TypeBind(bind)
-then return [CGAUX`NotSupported("type bind")]
-else
- (
---- TODO:
-  dcl bind' : AS`Bind;
-  if is_AS`SetBind(bind)
-  then bind' := bind
-  else 
-    def mk_AS`SeqBind(pat, s_expr, cid) = bind;
-        seqtp = CGAUX`FindSeqElemType(CGAUX`FindType(s_expr));
-        scid = CI`PushCGType(mk_REP`SetTypeRep(seqtp));
-        expr = mk_AS`PrefixExpr(<SEQELEMS>, s_expr, scid);
-    in bind' := mk_AS`SetBind(pat,expr,cid);
-
-  def mk_AS`SetBind(pat, expr,-) = bind';
-      setType = CGAUX`FindType(expr);
+  def bind' = ConvertBind(bind);
+  in
+    cases bind':
+      mk_AS`TypeBind(-,-,-) -> return [CGAUX`NotSupported("type bind")],
+      mk_AS`SetBind(pat, expr,-),
+      mk_AS`SeqBind(pat, expr,-) ->
+  def exprType = CGAUX`FindType(expr);
       pid_pat_s = dom CGEXPR`FindPatternId(pat);
       pid_expr_s = CGAUX`FindAllNamesInExpr(expr);
-      mk_(tmpSet1, set_stmt) = CGEXPR`CGExprExcl(expr, "tmpSet", nil); -- first
+      mk_(tmpVal1, expr_stmt) = CGEXPR`CGExprExcl(expr, "tmpVal", nil); -- first
       - = DeclarePatVars(pat); -- second -- must be after CGExprExcl and before CGExprExcl and CGPatternMatchExcl
+      isSetBind = is_AS`SetBind(bind');
   in
-   (dcl rb_l : seq of CPP`Stmt := set_stmt,
-        tmpSet : CPP`Expr := BC`GiveName("tmpSet");
+   (dcl rb_l : seq of CPP`Stmt := expr_stmt,
+        tmpVal : CPP`Expr := BC`GiveName("tmpVal");
     if (pid_pat_s inter pid_expr_s) <> {} or not is_AS`Name(expr)
-    then rb_l := rb_l ^ DS`GenConstDeclInit(setType, tmpSet, tmpSet1)
-    else tmpSet := tmpSet1;
+    then rb_l := rb_l ^ DS`GenConstDeclInit(exprType, tmpVal, tmpVal1)
+    else tmpVal := tmpVal1;
 
-    if not CGAUX`IsSetType(setType)
+    if not CGAUX`IsSetType(exprType) and isSetBind
     then
       def tmpSet' = BC`GiveName("tmpSet");
-          cond = DS`GenIsSet(tmpSet);
+          cond = DS`GenIsSet(tmpVal);
           rti =BC`GenBlock([CGAUX`RunTime("A set was expected")])
       in
        (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
 #ifdef VDMPP
         if CPP`isJAVA()
         then
-          rb_l := rb_l ^ [BC`GenDecl(DS`GenSetType(), tmpSet', BC`GenAsgnInit(DS`GenCastSetType(tmpSet)))]
+          rb_l := rb_l ^ [BC`GenDecl(DS`GenSetType(), tmpSet', BC`GenAsgnInit(DS`GenCastSetType(tmpVal)))]
         else
 #endif VDMPP
-          rb_l := rb_l ^ [BC`GenDecl(DS`GenSetType(), tmpSet', BC`GenAsgnInit(tmpSet))];
-        tmpSet := tmpSet');
+          rb_l := rb_l ^ [BC`GenDecl(DS`GenSetType(), tmpSet', BC`GenAsgnInit(tmpVal))];
+        tmpVal := tmpSet')
+    elseif not CGAUX`IsSeqType(exprType) and not isSetBind
+    then
+      def tmpSeq' = BC`GiveName("tmpSeq");
+          cond = DS`GenIsSeq(tmpVal);
+          rti =BC`GenBlock([CGAUX`RunTime("A seq was expected")])
+      in
+       (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
+#ifdef VDMPP
+        if CPP`isJAVA()
+        then
+          rb_l := rb_l ^ [BC`GenDecl(DS`GenSeq0Type(), tmpSeq', BC`GenAsgnInit(DS`GenCastSeq(tmpVal, nil)))]
+        else
+#endif VDMPP
+          rb_l := rb_l ^ [BC`GenDecl(DS`GenSeq0Type(), tmpSeq', BC`GenAsgnInit(tmpVal))];
+        tmpVal := tmpSeq');
 
     def tmpElem = BC`GiveName("tmpElem");
         count = BC`GiveName("count");
-        settp = CGAUX`FindSetElemType(setType);
         bt = mk_REP`BooleanTypeRep();
         mk_(tmpB, pr_stmt) = CGExprExcl(pred, "tmpB", nil); -- third
     in
      (dcl if_then : seq of CPP`Stmt := [BC`GenExpressionStmt(BC`GenPostPlusPlus(count))],
           stmts : seq of CPP`Stmt := pr_stmt,
-          pred_v : CPP`Expr := tmpB;
+          pred_v : CPP`Expr := tmpB,
+          elemType : REP`TypeRep;
+      if isSetBind
+      then elemType := CGAUX`FindSetElemType(exprType)
+      else elemType := CGAUX`FindSeqElemType(exprType);
+     
 #ifdef VDMPP
       if CPP`isJAVA()
       then
-         if CGAUX`IsSubType(settp, resTp)
+         if CGAUX`IsSubType(elemType, resTp)
          then if_then := if_then ^ [BC`GenAsgnStmt(resVar, tmpElem)]
          else if_then := if_then ^ [BC`GenAsgnStmt(resVar, DS`GenCastType(resTp, tmpElem))]
       else
@@ -5726,24 +5736,29 @@ else
        );
 
       def succ = BC`GiveName("succ");
-          elemVT = mk_CGMAIN`VT(tmpElem, settp);
+          elemVT = mk_CGMAIN`VT(tmpElem, elemType);
           mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false, true); -- fourth
           body_l = if Is_excl
                    then pm
                    else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))] ^ pm;
           cexpr = BC`GenBracketedExpr(BC`GenLt(count, BC`GenIntegerLit(2)));
-          setVT = mk_CGMAIN`VT(tmpSet, mk_REP`SetTypeRep(settp));
           cond = BC`GenNeq(count, BC`GenIntegerLit(1));
           rti = BC`GenBlock([CGAUX`RunTime("No unique element in 'iota'")]);
       in
        (rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallIntType(), count, BC`GenAsgnInit(BC`GenIntegerLit(0)))];
-        rb_l := rb_l ^ DS`GenIterSet(setVT, cexpr, elemVT, body_l);
+        if isSetBind
+        then
+          def setVT = mk_CGMAIN`VT(tmpVal, mk_REP`SetTypeRep(elemType));
+          in rb_l := rb_l ^ DS`GenIterSet(setVT, cexpr, elemVT, body_l)
+        else
+          def seqVT = mk_CGMAIN`VT(tmpVal, mk_REP`SeqTypeRep(elemType));
+          in rb_l := rb_l ^ DS`GenIterSeq(seqVT, cexpr, elemVT, body_l);
         rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
        );
       return rb_l;
      );
-   );
-  );
+   )
+    end;
 \end{vdm_al}
 
 
@@ -8608,6 +8623,14 @@ ConvertBindList(bind) ==
     end;
   return bind_l;
  );
+
+ConvertBind: AS`Bind ==> AS`Bind
+ConvertBind(bind) ==
+  cases bind:
+    mk_AS`SetBind(-,-,-),
+    mk_AS`SeqBind(-,-,-)      -> return bind,
+    mk_AS`TypeBind(-,-,-)     -> return bind -- TODO:
+  end;
 end CGEXPR
 \end{vdm_al}
 

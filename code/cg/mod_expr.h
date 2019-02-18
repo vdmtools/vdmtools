@@ -206,6 +206,7 @@ Tuple FindMultBind(const SEQ<TYPE_AS_MultBind> &);
 Sequence FindPatternIdInBindList(const SEQ<TYPE_AS_MultBind> &);
 SEQ<TYPE_AS_MultBind> MergeMultBind(const SEQ<TYPE_AS_MultBind> &);
 SEQ<TYPE_AS_MultBind> ConvertBindList(const SEQ<TYPE_AS_MultBind> &);
+TYPE_AS_Bind ConvertBind(const TYPE_AS_Bind &);
 
 #endif // __mod_expr_h__
 
