@@ -1800,6 +1800,92 @@ TYPE_CPP_Stmt vdmcg::NotSupported(const wstring & cst, const Record & r)
   return vdm_BC_GenExpressionStmt(vdm_BC_GenFctCall(id, mk_sequence(vdm_BC_GenStringLit(ASTAUX::MkId(cst)))));
 }
 
+// NumberTypeCheck
+// cond : CPP`Expr
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::NumberTypeCheck(const TYPE_CPP_Expr & expr,
+                                          const Generic & cond,
+                                          const wstring & cst) {
+  TYPE_CPP_Expr c (cond.IsNil() ? vdm_BC_GenNot(GenIsReal(expr)) : (TYPE_CPP_Expr)cond);
+  wstring msg (cst.empty() ? L"A number was expected" : cst);
+  return TypeCheck(c, msg);
+}
+
+// IntegerTypeCheck
+// expr : CPP`Expr
+// cond : [CPP`Expr]
+// cst : [seq of char]
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::IntegerTypeCheck(const TYPE_CPP_Expr & expr,
+                                           const Generic & cond,
+                                           const wstring & cst) {
+  TYPE_CPP_Expr c (cond.IsNil() ? vdm_BC_GenNot(GenIsInt(expr)) : (TYPE_CPP_Expr)cond);
+  wstring msg (cst.empty() ? L"A integer was expected" : cst);
+  return TypeCheck(c, msg);
+}
+
+// BooleanTypeCheck
+// expr : CPP`Expr
+// cond : [CPP`Expr]
+// cst : [seq of char]
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::BooleanTypeCheck(const TYPE_CPP_Expr & expr,
+                                           const Generic & cond,
+                                           const wstring & cst) {
+  TYPE_CPP_Expr c (cond.IsNil() ? vdm_BC_GenNot(GenIsBool(expr)) : (TYPE_CPP_Expr)cond);
+  wstring msg (cst.empty() ? L"A boolean was expected" : cst);
+  return TypeCheck(c, msg);
+}
+
+// SetTypeCheck
+// expr : CPP`Expr
+// cond : [CPP`Expr]
+// cst : [seq of char]
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::SetTypeCheck(const TYPE_CPP_Expr & expr,
+                                       const Generic & cond,
+                                       const wstring & cst) {
+  TYPE_CPP_Expr c (cond.IsNil() ? vdm_BC_GenNot(GenIsSet(expr)) : (TYPE_CPP_Expr)cond);
+  wstring msg (cst.empty() ? L"A set was expected" : cst);
+  return TypeCheck(c, msg);
+}
+
+// SeqTypeCheck
+// expr : CPP`Expr
+// cond : [CPP`Expr]
+// cst : [seq of char]
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::SeqTypeCheck(const TYPE_CPP_Expr & expr,
+                                       const Generic & cond,
+                                       const wstring & cst) {
+  TYPE_CPP_Expr c (cond.IsNil() ? vdm_BC_GenNot(GenIsSeq(expr)) : (TYPE_CPP_Expr)cond);
+  wstring msg (cst.empty() ? L"A sequence was expected" : cst);
+  return TypeCheck(c, msg);
+}
+
+// MapTypeCheck
+// expr ; CPP`Expr
+// cond : [CPP`Expr]
+// cst : [seq of char]
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::MapTypeCheck(const TYPE_CPP_Expr & expr,
+                                       const Generic & cond,
+                                       const wstring & cst) {
+  TYPE_CPP_Expr c (cond.IsNil() ? vdm_BC_GenNot(GenIsMap(expr)) : (TYPE_CPP_Expr)cond);
+  wstring msg (cst.empty() ? L"A map was expected" : cst);
+  return TypeCheck(c, msg);
+}
+
+// TypeCheck
+// cond : CPP`Expr
+// cst : wstring
+// ==> seq of CPP`Stmt
+SEQ<TYPE_CPP_Stmt> vdmcg::TypeCheck(const TYPE_CPP_Expr & cond, const wstring & cst) {
+  SEQ<TYPE_CPP_Stmt> rb_l;
+  rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(mk_sequence(RunTime(cst))), nil));
+  return rb_l;
+}
+
 // CannotCG
 void vdmcg::CannotCG(const wstring & cst, const TYPE_AS_Name & r)
 {

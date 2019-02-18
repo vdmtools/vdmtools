@@ -6220,10 +6220,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
       if (!IsSetType(exprType) && isSetBind) {
         TYPE_CPP_Identifier tmpSet_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
-        TYPE_CPP_Expr cond (GenIsSet(tmpVal));
-
-        TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
-        rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
+        rb_l.ImpConc(SetTypeCheck(tmpVal, nil, L""));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(GenCastSetType(tmpVal))));
@@ -6233,15 +6230,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
         {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(tmpVal)));
         }
-
         tmpVal = tmpSet_q;
       }
       else if (!IsSeqType(exprType) && !isSetBind) {
         TYPE_CPP_Identifier tmpSeq_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq")));
-        TYPE_CPP_Expr cond (GenIsSeq(tmpVal));
-
-        TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A seq was expected"))));
-        rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
+        rb_l.ImpConc(SeqTypeCheck(tmpVal, nil, L""));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpSeq_q, vdm_BC_GenAsgnInit(GenCastSeq(tmpVal, nil))));
@@ -6251,7 +6244,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
         {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpSeq_q, vdm_BC_GenAsgnInit(tmpVal)));
         }
-
         tmpVal = tmpSeq_q;
       }
 
@@ -9245,7 +9237,7 @@ Tuple vdmcg::FindMultBind(const SEQ<TYPE_AS_MultBind> & bind_l)
 #endif // VDMPP
             alt1 = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, e_v)));
 
-          TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime(L"A seq was expected"))));
+          TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime(L"A sequence was expected"))));
     
           rb.ImpConc(e_stmt);
           rb.ImpConc(GenDeclSeq(e1_v, nil));

@@ -852,6 +852,76 @@ operations
     return BC`GenExpressionStmt(BC`GenFctCall(id, [BC`GenStringLit(cst)]));
    );
 
+  NumberTypeCheck: CPP`Expr * [CPP`Expr] * [seq of char] ==> seq of CPP`Stmt
+  NumberTypeCheck(expr, cond, cst) ==
+   (dcl c : CPP`Expr;
+    if nil <> cond
+    then c := cond
+    else c := BC`GenNot(DS`GenIsReal(expr));
+    def msg = if nil <> cst
+              then cst
+              else "A number was expected";
+    in return TypeCheck(c, msg));
+
+  IntegerTypeCheck: CPP`Expr * [CPP`Expr] * [seq of char] ==> seq of CPP`Stmt
+  IntegerTypeCheck(expr, cond, cst) ==
+   (dcl c : CPP`Expr;
+    if nil <> cond
+    then c := cond
+    else c := BC`GenNot(DS`GenIsInt(expr));
+    def msg = if nil <> cst
+              then cst
+              else "A integer was expected";
+    in return TypeCheck(c, msg));
+
+  BooleanTypeCheck: CPP`Expr * [CPP`Expr] * [seq of char] ==> seq of CPP`Stmt
+  BooleanTypeCheck(expr, cond, cst) ==
+   (dcl c : CPP`Expr;
+    if nil <> cond
+    then c := cond
+    else c := BC`GenNot(DS`GenIsBool(expr));
+    def msg = if nil <> cst
+              then cst
+              else "A boolean was expected";
+    in return TypeCheck(c, msg));
+
+  SetTypeCheck: CPP`Expr * [CPP`Expr] * [seq of char] ==> seq of CPP`Stmt
+  SetTypeCheck(expr, cond, cst) ==
+   (dcl c : CPP`Expr;
+    if nil <> cond
+    then c := cond
+    else c := BC`GenNot(DS`GenIsSet(expr));
+    def msg = if nil <> cst
+              then cst
+              else "A set was expected";
+    in return TypeCheck(c, msg));
+
+  SeqTypeCheck: CPP`Expr * [CPP`Expr] * [seq of char] ==> seq of CPP`Stmt
+  SeqTypeCheck(expr, cond, cst) ==
+   (dcl c : CPP`Expr;
+    if nil <> cond
+    then c := cond
+    else c := BC`GenNot(DS`GenIsSeq(expr));
+    def msg = if nil <> cst
+              then cst
+              else "A sequence was expected";
+    in return TypeCheck(c, msg));
+
+  MapTypeCheck: CPP`Expr * [CPP`Expr] * [seq of char] ==> seq of CPP`Stmt
+  MapTypeCheck(expr, cond, cst) ==
+   (dcl c : CPP`Expr;
+    if nil <> cond
+    then c := cond
+    else c := BC`GenNot(DS`GenIsMap(expr));
+    def msg = if nil <> cst
+              then cst
+              else "A map was expected";
+    in return TypeCheck(c, msg));
+
+  TypeCheck: CPP`Expr * seq of char ==> seq of CPP`Stmt
+  TypeCheck(cond, cst) ==
+    return [ BC`GenIfStmt (cond, BC`GenBlock([CGAUX`RunTime(cst)]), nil) ];
+
   GiveLastName: ( AS`Name | AS`OldName ) ==> AS`Id
   GiveLastName( name ) ==
     cases name:

@@ -5668,10 +5668,8 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
     if not CGAUX`IsSetType(exprType) and isSetBind
     then
       def tmpSet' = BC`GiveName("tmpSet");
-          cond = DS`GenIsSet(tmpVal);
-          rti =BC`GenBlock([CGAUX`RunTime("A set was expected")])
       in
-       (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
+       (rb_l := rb_l ^ CGAUX`SetTypeCheck(tmpVal, nil, nil);
 #ifdef VDMPP
         if CPP`isJAVA()
         then
@@ -5683,10 +5681,8 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
     elseif not CGAUX`IsSeqType(exprType) and not isSetBind
     then
       def tmpSeq' = BC`GiveName("tmpSeq");
-          cond = DS`GenIsSeq(tmpVal);
-          rti =BC`GenBlock([CGAUX`RunTime("A seq was expected")])
       in
-       (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
+       (rb_l := rb_l ^ CGAUX`SeqTypeCheck(tmpVal, nil, nil);
 #ifdef VDMPP
         if CPP`isJAVA()
         then
@@ -8540,7 +8536,7 @@ FindMultBind(bind) ==
           then def e1_v = BC`GiveName("e1_seq");
                    cond = DS`GenIsSeq(e_v);
                    decl_e1_v = DS`GenDeclSeq(e1_v, nil);
-                   alt2 = BC`GenBlock([CGAUX`RunTime("A seq was expected")])
+                   alt2 = BC`GenBlock([CGAUX`RunTime("A sequence was expected")])
                in (dcl alt1 : CPP`Stmt;
 #ifdef VDMPP
                    if CPP`isJAVA()
