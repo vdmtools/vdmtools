@@ -4156,8 +4156,8 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
        then
          (tmpSet := BC`GiveName("tmpS");
           rb_l := rb_l ^ [ BC`GenDecl(DS`GenType(setType), tmpS, BC`GenAsgnInit(s_res)) ]);
-       rb_l := rb_l ^ [ BC`GenIfStmt (BC`GenNot (DS`GenIsSet(tmpS)),
-                         BC`GenBlock([CGAUX`RunTime("A set was expected")]), nil) ];
+       rb_l := rb_l ^ CGAUX`GenSetTypeCheck(tmpS, nil, nil);
+ 
        tmpSet := DS`GenCastSetType(tmpS));
 
     rb_l := rb_l ^ s_st_stmt;
@@ -5669,7 +5669,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
     then
       def tmpSet' = BC`GiveName("tmpSet");
       in
-       (rb_l := rb_l ^ CGAUX`SetTypeCheck(tmpVal, nil, nil);
+       (rb_l := rb_l ^ CGAUX`GenSetTypeCheck(tmpVal, nil, nil);
 #ifdef VDMPP
         if CPP`isJAVA()
         then
@@ -5682,7 +5682,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
     then
       def tmpSeq' = BC`GiveName("tmpSeq");
       in
-       (rb_l := rb_l ^ CGAUX`SeqTypeCheck(tmpVal, nil, nil);
+       (rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpVal, nil, nil);
 #ifdef VDMPP
         if CPP`isJAVA()
         then
@@ -5725,7 +5725,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
          (pred_v := BC`GiveName("pred");
           stmts := stmts ^ DS`GenDecl (pred_type, pred_v, BC`GenAsgnInit(tmpB))
          );
-        stmts := stmts ^ CGAUX`BooleanTypeCheck(pred_v, nil, nil) ^
+        stmts := stmts ^ CGAUX`GenBooleanTypeCheck(pred_v, nil, nil) ^
                          [ BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
                                         BC`GenBlock(if_then), nil)]
        );
@@ -6043,8 +6043,7 @@ CGUnarySet( opr, arg, vt ) ==
         alt2 : seq of CPP`Stmt | CPP`Expr;
 
     if not CGAUX`IsSetType(argTmpType)
-    then rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( DS`GenIsSet( argTmp )),
-                                BC`GenBlock([CGAUX`RunTime("A set was expected" )]), nil ) ];
+    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(argTmp, nil, nil);
     cases opr:
       <SETCARD>           -> alt2 := CGSetCard(argTmp, argTmpType, vt ),
       <SETDISTRUNION>     -> alt2 := CGSetDistrUnion(argTmp, argTmpType, vt ),

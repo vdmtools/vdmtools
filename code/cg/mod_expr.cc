@@ -4704,8 +4704,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindVariables(const TYPE_AS_MultSetBind & MSB, cons
       tmpSet = vdm_BC_GiveName(ASTAUX::MkId(L"tmpS"));
       rb_l.ImpAppend(vdm_BC_GenDecl(GenType(setType), tmpS, vdm_BC_GenAsgnInit(s_res)));
     }
-    rb_l.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (GenIsSet(tmpS)),
-                               vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))), nil));
+    rb_l.ImpConc(GenSetTypeCheck(tmpS, nil, L""));
     tmpSet = GenCastSetType(tmpS);
   }
   rb_l.ImpConc(s_st_stmt);
@@ -6220,7 +6219,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
       if (!IsSetType(exprType) && isSetBind) {
         TYPE_CPP_Identifier tmpSet_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
-        rb_l.ImpConc(SetTypeCheck(tmpVal, nil, L""));
+        rb_l.ImpConc(GenSetTypeCheck(tmpVal, nil, L""));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(GenCastSetType(tmpVal))));
@@ -6234,7 +6233,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       }
       else if (!IsSeqType(exprType) && !isSetBind) {
         TYPE_CPP_Identifier tmpSeq_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq")));
-        rb_l.ImpConc(SeqTypeCheck(tmpVal, nil, L""));
+        rb_l.ImpConc(GenSeqTypeCheck(tmpVal, nil, L""));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpSeq_q, vdm_BC_GenAsgnInit(GenCastSeq(tmpVal, nil))));
@@ -6285,7 +6284,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
           pred_v = vdm_BC_GiveName(ASTAUX::MkId(L"pred"));
           stmts.ImpConc (GenDecl_DS (pred_type, pred_v, vdm_BC_GenAsgnInit(tmpB)));
         }
-        stmts.ImpConc(BooleanTypeCheck(pred_v, nil, L""));
+        stmts.ImpConc(GenBooleanTypeCheck(pred_v, nil, L""));
         stmts.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v), bt),
                                          vdm_BC_GenBlock(if_then), nil));
       }
@@ -6558,9 +6557,7 @@ Generic vdmcg::CGUnarySet (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
 
   SEQ<TYPE_CPP_Stmt> rb_l (arg_stmt);
   if (!IsSetType(argTmpType)) {
-    rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot (GenIsSet (argTmp)),
-                                    vdm_BC_GenBlock(mk_sequence(RunTime (L"A set was expected"))),
-                                    nil));
+    rb_l.ImpConc(GenSetTypeCheck(argTmp, nil, L""));
   }
 
   Generic alt2;
