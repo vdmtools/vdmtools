@@ -1933,9 +1933,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
   }
   else {
     whCrtlval = GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), whCrtl_v), btype);
-    isbool.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(whCrtl_v)),
-                       vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected in while loop"))),
-                                      nil));
+    isbool.ImpConc(GenBooleanTypeCheck(whCrtl_v, nil, L"A boolean was expected in while loop"));
   }
 
   TYPE_CPP_Expr cond (vdm_BC_GenBoolLit(true));
@@ -2259,11 +2257,7 @@ Tuple vdmcg::GenBoundAndValue(const SEQ<Char> & var, const TYPE_AS_Expr & expr)
       rb_l.ImpConc(GenDecl_DS(tp, v1, vdm_BC_GenAsgnInit(var_v)));
       tmp = v1;
     }
-
-    TYPE_CPP_Expr cond (vdm_BC_GenNot(GenIsInt(tmp)));
-    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"An integer was expected in indexed for loop"))));
-
-    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
+    rb_l.ImpConc(GenIntegerTypeCheck(tmp, nil, L"An integer was expected in indexed for loop"));
 
     TYPE_CPP_Expr val;
 #ifdef VDMPP
@@ -2597,8 +2591,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   SEQ<TYPE_CPP_Stmt> rb (cond_stmt);
 
   if (!IsBoolType(condType)) {
-    rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(cond1_v)),
-                     vdm_BC_GenBlock(mk_sequence(RunTime (L"A boolean was expected"))), nil));
+    rb.ImpConc(GenBooleanTypeCheck(cond1_v, nil, L""));
   }
 
   Generic tmpb; // [seq of CPP`Stmt]
@@ -2634,8 +2627,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
     SEQ<TYPE_CPP_Stmt> body (elif_cond_stmt);
 
     if (!IsBoolType(elif_condType)) {
-      body.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(elif_cond1_v)),
-                                      RunTime (L"A boolean was expected"), nil));
+      body.ImpConc(GenBooleanTypeCheck(cond1_v, nil, L""));
     }
 
     TYPE_CPP_Expr elif_cond (GenGetValue(elif_cond_v, btype));
