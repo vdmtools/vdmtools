@@ -2342,7 +2342,7 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
         if not CGAUX`IsBoolType(elif_condType)
         then
          (elif_cond_v := DS`GenCastType(btype, elif_cond1_v);
-          body := body ^ CGAUX`GenBooleanTypeCheck(cond1_v, nil, nil);
+          body := body ^ CGAUX`GenBooleanTypeCheck(elif_cond1_v, nil, nil);
          );
         def elif_cons_stmt = def stmt = GenStmt(elif_cons, isLast)
                              in BC`GenBlock(stmt);

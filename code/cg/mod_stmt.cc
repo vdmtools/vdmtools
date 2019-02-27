@@ -2627,7 +2627,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
     SEQ<TYPE_CPP_Stmt> body (elif_cond_stmt);
 
     if (!IsBoolType(elif_condType)) {
-      body.ImpConc(GenBooleanTypeCheck(cond1_v, nil, L""));
+      body.ImpConc(GenBooleanTypeCheck(elif_cond1_v, nil, L""));
     }
 
     TYPE_CPP_Expr elif_cond (GenGetValue(elif_cond_v, btype));
