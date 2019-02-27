@@ -1980,8 +1980,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def From = BC`GiveName("from")
           in
            (rb_l := rb_l ^ DS`GenDecl(n1tp, From, BC`GenAsgnInit(n1_v));
-            rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(From)),
-                            BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(From, nil, nil);
             n1_v := From;
             n1value := DS`GenGetValue(DS`GenExplicitCast(rrep, n1_v, n1tp), rrep)
            );
@@ -1995,8 +1994,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def To = BC`GiveName("to")
           in
            (rb_l := rb_l ^ DS`GenDecl(n2tp, To, BC`GenAsgnInit(n2_v));
-            rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(To)),
-                            BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(To, nil, nil);
             n2_v := To;
             n2value := DS`GenGetValue(DS`GenExplicitCast(rrep, n2_v, n2tp), rrep)
            );
@@ -2063,8 +2061,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def From = BC`GiveName("from")
           in
            (rb_l := rb_l ^ DS`GenDecl(n1tp, From, BC`GenAsgnInit(n1_v));
-            rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(From)),
-                            BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(From, nil, nil);
             n1_v := From;
             n1value := DS`GenGetValue(BC`GenCastExpr(DS`GenRealType(), n1_v), rrep)
            );
@@ -2078,8 +2075,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def To = BC`GiveName("to")
           in
            (rb_l := rb_l ^ DS`GenDecl(n2tp, To, BC`GenAsgnInit(n2_v));
-            rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(To)),
-                            BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(To, nil, nil);
             n2_v := To;
             n2value := DS`GenGetValue(BC`GenCastExpr(DS`GenRealType(),n2_v),rrep);
            );
@@ -4169,10 +4165,10 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
         (inner_stmts := inner_stmts ^ st_stmt;
          if CGAUX`IsBoolType(CGAUX`FindType(St))
          then inner_stmts := inner_stmts ^ [BC`GenAsgnStmt(succ, DS`GenGetValue(res, bt))]
-         else def getval = DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), res), bt)
-              in inner_stmts := inner_stmts ^ [BC`GenIfStmt(DS`GenIsBool(res),
-                              BC`GenBlock([BC`GenAsgnStmt(succ, getval)]),
-                             BC`GenBlock([CGAUX`RunTime("A boolean was expected")]))];);
+         else
+           def getval = DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), res), bt)
+           in inner_stmts := inner_stmts ^ CGAUX`GenBooleanTypeCheck(res, nil, nil)
+                                         ^ [BC`GenAsgnStmt(succ, getval)]);
 
     for i = len pat_l to 1 by -1 do
      (def p_s = dunion { dom FindPatternId(pat_l(j)) | j in set {1,...,i - 1} };
@@ -4592,8 +4588,7 @@ CGSeqModifyMapOverrideExpr( mk_AS`SeqModifyMapOverrideExpr( seqmap, mapexp, -),
             mk_(m_v, m_stmt) = CGExprExcl(mapexp, "tmpmap", modmapType)
         in
          (rb := rb ^ m_stmt ^ DS`GenDeclInit(modmapType, tmpmap_v, m_v);
-          rb := rb ^ [BC`GenIfStmt(BC`GenNot (DS`GenIsMap (tmpmap_v)),
-                            BC`GenBlock([CGAUX`RunTime ("A map was expected")]), nil)];
+          rb := rb ^ CGAUX`GenMapTypeCheck(tmpmap_v, nil, nil);
           rb := rb ^ DS`GenDeclInit(tmpmapType, modmap_v, DS`GenCastMap(tmpmap_v)));
 
     let rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")])
@@ -5725,7 +5720,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
          );
         stmts := stmts ^ CGAUX`GenBooleanTypeCheck(pred_v, nil, nil) ^
                          [ BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
-                                        BC`GenBlock(if_then), nil)]
+                                        BC`GenBlock(if_then), nil)];
        );
 
       def succ = BC`GiveName("succ");
@@ -5901,10 +5896,7 @@ CGUnaryNum( opr, arg, vt ) ==
     in
      (dcl alt2 : CPP`Expr | seq of CPP`Stmt;
       if is_REP`UnionTypeRep( argTmpType ) and not CGAUX`IsNumType(argTmpType)
-      then
-        def cond = DS`GenIsReal( argTmp );
-        in rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( cond ),
-                               BC`GenBlock([CGAUX`RunTime("A number was expected")]), nil ) ];
+      then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(argTmp, nil, nil);
 
       cases opr:
         <NUMPLUS>  -> alt2 := DS`UnaryPlus( vt, rc1 ),
@@ -5942,10 +5934,9 @@ The corresponding pseudo code of the negation expression is listed below:
 \begin{verbatim}
 Generic arg;
 ...CGExpr( "a", mk_CGMAIN`VT( arg, "Generic" ) );
-if ( arg.IsBool() )
-  resVar_v = Bool ( ! Bool (arg).GetValue() );
-else
+if ( !arg.IsBool() )
   RunTime("A boolean was expected" );
+resVar_v = Bool ( ! Bool (arg).GetValue() );
 \end{verbatim}
 
 If the type of the argument in the negation expression is not a union
@@ -5972,9 +5963,7 @@ CGUnaryNot( arg, mk_CGMAIN`VT( resVar_v, - ) ) ==
   in
    (dcl rb_l : seq of CPP`Stmt := arg_stmt;
     if not CGAUX`IsBoolType( argTmpType )
-    then rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot(DS`GenIsBool( argTmp )),
-                                  BC`GenBlock([CGAUX`RunTime("A boolean was expected")]),
-                                                 nil ) ];
+    then rb_l := rb_l ^ CGAUX`GenBooleanTypeCheck(argTmp, nil, nil);
     let bt = mk_REP`BooleanTypeRep()
     in
      (dcl cast : CPP`Expr := argTmp,
@@ -6624,16 +6613,8 @@ CGUnaryMap( opr, arg, vt ) ==
       <MAPDOM>,
       <MAPRNG>,
       <MAPINVERSE>    -> if not CGAUX`IsMapType( argTmpType )
-                         --then rb_l := rb_l ^
-                         --           [BC`GenIfStmt( BC`GenNot( DS`GenIsMap( argTmp ) ),
-                         --                          BC`GenBlock([CGAUX`RunTime("A map was expected")]),
-                         --                          nil ) ],
                          then rb_l := rb_l ^ CGAUX`GenMapTypeCheck(argTmp, nil, nil),
       <MAPDISTRMERGE> -> if not CGAUX`IsSetType( argTmpType )
-                         --then rb_l := rb_l ^
-                         --           [BC`GenIfStmt( BC`GenNot( DS`GenIsSet( argTmp ) ),
-                         --                          BC`GenBlock([CGAUX`RunTime("A set was expected")]),
-                         --                          nil ) ],
                          then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(argTmp, nil, nil),
       others -> error
     end;
@@ -6861,9 +6842,7 @@ GenDynCheckOnSetsValues( tmp_v, e_v, type, maptype ) ==
     else
 #endif VDMPP
       decl := DS`GenDecl( maptype, tmp_v, BC`GenAsgnInit( e_v ) );
-    return mk_( [ BC`GenIfStmt( BC`GenNot( DS`GenIsMap( e_v ) ),
-                                BC`GenBlock([CGAUX`RunTime("A map was expected")]), nil) ] ^
-                                decl, tmp_v );
+    return mk_( CGAUX`GenMapTypeCheck(e_v, nil, nil) ^ decl, tmp_v );
    );
 \end{vdm_al}
 
@@ -7191,7 +7170,6 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
       type2  = CGAUX`FindType( re );
       mk_(var1, stmt1) = CGExprExcl(le, "var1", type1);
       mk_(var2, stmt2) = CGExprExcl(re, "var2", type2);
-      errmess = BC`GenBlock([CGAUX`RunTime("A boolean was expected" )]);
   in
    (dcl expr1 : CPP`Expr := var1,
         expr2 : CPP`Expr := var2,
@@ -7206,8 +7184,7 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
         in
          (rb1new := rb1new ^ DS`GenDecl(type1, v1, BC`GenAsgnInit(var1));
           expr1 := v1;);
-      rb1new := rb1new ^ [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( expr1 ) ),
-                                         errmess, nil ) ];
+      rb1new := rb1new ^ CGAUX`GenBooleanTypeCheck(expr1, nil, nil);
       expr1 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr1 );
      );
 
@@ -7219,8 +7196,7 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
         in
          (rb2new := rb2new ^ DS`GenDecl(type2, v2, BC`GenAsgnInit(var2));
           expr2 := v2;);
-      rb2new := rb2new ^ [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( expr2 ) ),
-                                         errmess, nil ) ];
+      rb2new := rb2new ^ CGAUX`GenBooleanTypeCheck(expr2, nil, nil);
       expr2 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr2 );
      );
 
@@ -7304,7 +7280,6 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
 
       if not (CGAUX`IsNumType(type1) and CGAUX`IsNumType(type2))
       then
-       (dcl cond : CPP`Expr;
         cases opr:
           <NUMPLUS>,
           <NUMMINUS>,
@@ -7327,13 +7302,10 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
                        in
                         (v2_v := e2_v;
                          rb_l := rb_l ^ DS`GenConstDeclInit(type2, e2_v, var2_v) );
-                     if not CGAUX`IsNumType(type1) and not CGAUX`IsNumType(type2)
-                     then cond := BC`GenLogOr(BC`GenNot(DS`GenIsReal(v1_v)), BC`GenNot(DS`GenIsReal(v2_v)))
-                     elseif not CGAUX`IsNumType(type1)
-                     then cond := BC`GenNot(DS`GenIsReal(v1_v))
-                     else cond := BC`GenNot(DS`GenIsReal(v2_v));
-                     rb_l := rb_l ^ [BC`GenIfStmt(cond,
-                                   BC`GenBlock([CGAUX`RunTime("A number was expected")]), nil)];
+                     if not CGAUX`IsNumType(type1)
+                     then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(v1_v, nil, nil);
+                     if not CGAUX`IsNumType(type2)
+                     then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(v2_v, nil, nil);
                     ),
           <NUMREM>,
           <NUMMOD>,
@@ -7351,17 +7323,13 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
                         in
                          (v2_v := e2_v;
                           rb_l := rb_l ^ DS`GenConstDeclInit(type2, e2_v, var2_v) );
-                      if not CGAUX`IsNumType(type1) and not CGAUX`IsNumType(type2)
-                      then cond := BC`GenLogOr(BC`GenNot(DS`GenIsInt(v1_v)), BC`GenNot(DS`GenIsInt(v2_v)))
-                      elseif not CGAUX`IsNumType(type1)
-                      then cond := BC`GenNot(DS`GenIsInt(v1_v))
-                      else cond := BC`GenNot(DS`GenIsInt(v2_v));
-                      rb_l := rb_l ^ [BC`GenIfStmt(cond,
-                                  BC`GenBlock([CGAUX`RunTime("A integer was expected")]), nil)];
-                      ),
+                      if not CGAUX`IsNumType(type1)
+                      then rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(v1_v, nil, nil);
+                      if not CGAUX`IsNumType(type2)
+                      then rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(v2_v, nil, nil);
+                     ),
           others     -> error
         end;
-       );
       cases opr:
         <NUMPLUS>  -> expr := DS`GenPlus(vt1, vt2, vtres),
         <NUMMINUS> -> expr := DS`GenMinus(vt1, vt2, vtres) ,
@@ -8399,7 +8367,6 @@ GenPredicateStmt( pred, stmts, notpred ) ==
     def mk_(res, res_stmt) = CGExprExcl(pred, "pred", nil);
         predType = CGAUX`FindType(pred)
     in
-     --(dcl rb : seq of CPP`Stmt := res_stmt;
      (dcl rb : seq of CPP`Stmt := CGAUX`ExpandCompoundStmt(res_stmt);
       if predType = mk_REP`BooleanTypeRep()
       then
@@ -8414,8 +8381,7 @@ GenPredicateStmt( pred, stmts, notpred ) ==
         else rb := rb ^ [BC`GenIfStmt(DS`GenGetValue(res, predType), BC`GenBlock(stmts), nil)]
       else
        (dcl pred_v : CPP`Expr := res,
-            cond : CPP`Expr,
-            ifpred : CPP`Stmt;
+            cond : CPP`Expr;
         if not is_CPP`Identifier(res)
         then
           (pred_v := BC`GiveName("pred");
@@ -8428,12 +8394,12 @@ GenPredicateStmt( pred, stmts, notpred ) ==
 #endif VDMPP
           cond := DS`GenGetValue( BC`GenCastExpr(DS`GenBoolType(), pred_v), predType );
 
-        if notpred
-        then ifpred := BC`GenIfStmt(BC`GenNot(BC`GenBracketedExpr(cond)), BC`GenBlock(stmts), nil)
-        else ifpred := BC`GenIfStmt(cond, BC`GenBlock(stmts), nil);
+        rb := rb ^ CGAUX`GenBooleanTypeCheck(pred_v, nil, nil);
 
-        rb := rb ^ [BC`GenIfStmt( DS`GenIsBool( pred_v ), BC`GenBlock([ifpred]),
-                      BC`GenBlock([CGAUX`RunTime( "A boolean was expected" )]))];
+        if notpred
+        then rb := rb ^ [BC`GenIfStmt(BC`GenNot(BC`GenBracketedExpr(cond)), BC`GenBlock(stmts), nil)]
+        else rb := rb ^ [BC`GenIfStmt(cond, BC`GenBlock(stmts), nil)];
+
        );
       return rb;
      );
