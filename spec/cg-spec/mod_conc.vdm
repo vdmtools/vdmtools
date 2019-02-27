@@ -1074,7 +1074,7 @@ GenStartlistStmt( sstmt, - ) ==
   in
    (dcl rb : seq of CPP`Stmt := res_stmt;
     if (type = nil) or not CGAUX`IsSetType(type)
-    then rb := rb ^ [BC`GenIfStmt (BC`GenNot(DS`GenIsSet(res_v)), CGAUX`RunTime ("A set was expected"), nil)];
+    then rb := rb ^ CGAUX`GenSetTypeCheck(res_v, nil, nil);
     rb := rb ^ DS`GenIterSet(setVT, nil, elemVT, body_l);
     return rb;
    );
@@ -1098,7 +1098,7 @@ GenStoplistStmt( sstmt, - ) ==
   in
    (dcl rb : seq of CPP`Stmt := res_stmt;
     if (type = nil) or not CGAUX`IsSetType(type)
-    then rb := rb ^ [BC`GenIfStmt (BC`GenNot(DS`GenIsSet(res_v)), CGAUX`RunTime ("A set was expected"), nil)];
+    then rb := rb ^ CGAUX`GenSetTypeCheck(res_v, nil, nil);
     rb := rb ^ DS`GenIterSet(setVT, nil, elemVT, body_l);
     return rb;
    );

@@ -1138,11 +1138,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStartlistStmt(const TYPE_AS_StartListStmt & sstmt, 
   SEQ<TYPE_CPP_Stmt> rb_l;
   rb_l.ImpConc(res_stmt);
 
-  if (type.IsNil() || !IsSetType(type))
-  {
-    rb_l.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (GenIsSet (res_v)), RunTime (L"A set was expected"), nil));
+  if (type.IsNil() || !IsSetType(type)) {
+    rb_l.ImpConc(GenSetTypeCheck(res_v, nil , L""));
   }
-
   rb_l.ImpConc(GenIterSet(setVT, nil, elemVT, body_l));
 
 //  return vdm_BC_GenBlock(rb_l);
@@ -1193,11 +1191,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStoplistStmt(const TYPE_AS_StopListStmt & sstmt, bo
   SEQ<TYPE_CPP_Stmt> rb_l;
   rb_l.ImpConc(res_stmt);
 
-  if (type.IsNil() || !IsSetType(type))
-  {
-    rb_l.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (GenIsSet (res_v)), RunTime (L"A set was expected"), nil));
+  if (type.IsNil() || !IsSetType(type)) {
+    rb_l.ImpConc(GenSetTypeCheck(res_v, nil , L""));
   }
-
   rb_l.ImpConc(GenIterSet(setVT, nil, elemVT, body_l));
 
 //  return vdm_BC_GenBlock(rb_l);
