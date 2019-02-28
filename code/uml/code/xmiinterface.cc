@@ -56,20 +56,16 @@ const wstring XmiInterface::GetModel()
 // Selects the model file used by the CASE Tool.
 void XmiInterface::SelectModel(const wstring & name)
 {
-  if (!name.empty())
-  {
-    if (TBUTILS::file_exists(name))
-    { // The file exists, ok to open it.
+  if (!name.empty()) {
+    if (TBUTILS::file_exists(name)) { // The file exists, ok to open it.
       if(name != this->currentModelName) {
         XmiReader reader (this->mode); 
         Tuple t (reader.ReadXMIDocument(name));
-        if (t.GetBool(1))
-        {
+        if (t.GetBool(1)) {
           TYPE_XMI_Document doc (t.GetRecord(2));
           this->currentModel = XMI2AUML(doc, t.GetMap(3));
         }
-        else
-        {
+        else {
           vdm_log << t.GetSequence(5).GetString() << endl;
           this->currentModel = TYPE_AUML_Model().Init(TYPE_AUML_Classes(),
                                                       TYPE_AUML_Inheritance(),
@@ -77,8 +73,7 @@ void XmiInterface::SelectModel(const wstring & name)
         }
       }
     }
-    else
-    {
+    else {
       this->currentModel = TYPE_AUML_Model().Init(TYPE_AUML_Classes(),
                                                   TYPE_AUML_Inheritance(),
                                                   TYPE_AUML_Associations());
@@ -95,36 +90,33 @@ const wstring XmiInterface::DoBackup(const wstring & where)
   wstring revert_to (this->currentModelName);
   wstring back_name;
   wstring model_name;
-  if(revert_to.empty())
-  {
+  if(revert_to.empty()) {
     revert_to = where + L"/untitled.xml";
     back_name = where + L"/untitled_old.xml";
     model_name = L"untitled";
 
-    if (!writer.SaveAs(revert_to, AUML2XMI(Sequence(model_name), this->currentModel)))
-    {
+    if (!writer.SaveAs(revert_to, AUML2XMI(Sequence(model_name), this->currentModel))) {
       vdm_err << L"Unable to save XMI file " << revert_to << endl << flush;
     }
   }
   else {
     std::string::size_type pos = revert_to.rfind(L".xml");
-    if(pos != wstring::npos)
+    if(pos != wstring::npos) {
       model_name = revert_to.substr(0, pos);
-    else
+    }
+    else {
       model_name = revert_to;
+    }
     back_name = model_name + L"_old.xml";
   }
 
-  if (this->modified)
-  {
-    if (!writer.SaveAs(revert_to, AUML2XMI(TBUTILS::tb_getbasename(model_name), this->currentModel)))
-    {
+  if (this->modified) {
+    if (!writer.SaveAs(revert_to, AUML2XMI(TBUTILS::tb_getbasename(model_name), this->currentModel))) {
       vdm_err << L"Unable to save XMI file " << revert_to << endl << flush;
     }
   }
 
-  if (!TBUTILS::file_copy_overwrite(back_name, revert_to))
-  {
+  if (!TBUTILS::file_copy_overwrite(back_name, revert_to)) {
     vdm_err << L"Unable to backup XMI file \'" << revert_to
             << L"\' to \'" << back_name << L"\'" << endl << flush;
   }
@@ -147,14 +139,14 @@ void XmiInterface::SetCurModel(const TYPE_AUML_Model & newmdl, const TYPE_AUML_M
   wstring model_name;
   wstring fname (TBUTILS::tb_getbasename(this->currentModelName).GetString());
   std::string::size_type pos = fname.rfind(L".xml");
-  if(pos != wstring::npos)
+  if(pos != wstring::npos) {
     model_name = fname.substr(0, pos);
-  else
+  }
+  else {
     model_name = fname;
-
+  }
   XmiWriter writer (this->mode);
-  if (!writer.SaveAs(this->currentModelName, AUML2XMI(Sequence(model_name), this->currentModel)))
-  {
+  if (!writer.SaveAs(this->currentModelName, AUML2XMI(Sequence(model_name), this->currentModel))) {
     vdm_err << L"Unable to save Rose model " << this->currentModelName << endl << flush;
   }
 }
@@ -182,39 +174,33 @@ TYPE_XMI_Document XmiInterface::AUML2XMI(const Sequence & model_name, const TYPE
   Sequence el_l;
   // update id
   Generic clnm;
-  for (bool bb = clsnm_s.First(clnm); bb; bb = clsnm_s.Next(clnm))
-  {
+  for (bool bb = clsnm_s.First(clnm); bb; bb = clsnm_s.Next(clnm)) {
     TYPE_AUML_Class cls (classes[clnm]);
-    if (cls.get_id().IsNil() || cls.get_id() == Sequence())
+    if (cls.get_id().IsNil() || cls.get_id() == Sequence()) {
       cls.set_id(XmiAux::UniqueID());
+    }
     classes.ImpModify(clnm, cls);
   }
 
   // create class
   this->cls_m = classes;
 
-  for (bool cc = clsnm_s.First(clnm); cc; cc = clsnm_s.Next(clnm))
-  {
+  for (bool cc = clsnm_s.First(clnm); cc; cc = clsnm_s.Next(clnm)) {
     TYPE_XMI_UMLClass c (AUMLClass2XMIClass(clnm, classes[clnm], modelid));
   
-    if (inheritance.DomExists(clnm))
-    {
+    if (inheritance.DomExists(clnm)) {
       Set sc_s (inheritance[clnm]);
-      if (!sc_s.IsEmpty())
-      {
+      if (!sc_s.IsEmpty()) {
         Sequence ge_l;
         Generic g;
-        for (bool gg = sc_s.First(g); gg; gg = sc_s.Next(g))
-        {
-// 20120517 --> 
+        for (bool gg = sc_s.First(g); gg; gg = sc_s.Next(g)) {
           //ge_l.ImpAppend(GetGeneralizationRef(clnm, g, modelid));
-          if (this->cls_m.DomExists(g))
+          if (this->cls_m.DomExists(g)) {
             ge_l.ImpAppend(GetGeneralizationRef(clnm, g, modelid));
-          else
-          {
+          }
+          else {
             vdm_log << L"Class: " << g.ascii() << " is't defined." << endl << flush;
           }
-// <-- 20120517
         }
         c.set_generalizableElement (TYPE_XMI_UMLGeneralizableElement().Init(Map(), ge_l));
       }
@@ -223,44 +209,41 @@ TYPE_XMI_Document XmiInterface::AUML2XMI(const Sequence & model_name, const TYPE
 
     // Append Association
     TYPE_AUML_UniAssoc ua (associations[clnm]);
-    if (!ua.IsEmpty())
-    {
+    if (!ua.IsEmpty()) {
       Sequence a_l (AUMLAssoc2XMIAssoc(clnm, ua, modelid));
       size_t len_a_l = a_l.Length();
-      for (size_t idx = 1; idx <= len_a_l; idx++)
+      for (size_t idx = 1; idx <= len_a_l; idx++) {
         el_l.ImpAppend(a_l[idx]);
+      }
     }
   }
 
   // Append Generalization
   size_t len_gene_l = this->gene_l.Length();
-  for (size_t idx = 1; idx <= len_gene_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_gene_l; idx++) {
     el_l.ImpAppend(this->gene_l[idx]);
   }
 
   // Append generated Class
   Set dom_type_m (this->type_m.Dom());
   Generic g;
-  for (bool dd = dom_type_m.First(g); dd; dd = dom_type_m.Next(g))
-  {
+  for (bool dd = dom_type_m.First(g); dd; dd = dom_type_m.Next(g)) {
     if (this->type_m[g].Is(TAG_TYPE_XMI_UMLClass))
       el_l.ImpAppend(this->type_m[g]);
   }
 
   // Append Stereotype
-  size_t len_stype_l = this->stype_l.Length();
-  for (size_t idx2 = 1; idx2 <= len_stype_l; idx2++)
+  size_t len_stype_l = this->stype_l.Length(); for (size_t idx2 = 1; idx2 <= len_stype_l; idx2++)
   {
     el_l.ImpAppend(this->stype_l[idx2]);
   }
 
   Sequence pr_l;
   // Append Primitive
-  for (bool ff = dom_type_m.First(g); ff; ff = dom_type_m.Next(g))
-  {
-    if (this->type_m[g].Is(TAG_TYPE_XMI_UMLPrimitive))
+  for (bool ff = dom_type_m.First(g); ff; ff = dom_type_m.Next(g)) {
+    if (this->type_m[g].Is(TAG_TYPE_XMI_UMLPrimitive)) {
       pr_l.ImpAppend(this->type_m[g]);
+    }
   }
 // 
   this->type_m = Map();
@@ -281,41 +264,41 @@ TYPE_XMI_UMLClass XmiInterface::AUMLClass2XMIClass(const Sequence & clnm,
                                                    const Sequence & pid)
 {
   Generic id = cls.get_id();
-  if (id.IsNil() || id == Sequence())
+  if (id.IsNil() || id == Sequence()) {
     id = XmiAux::UniqueID();
-    
+  } 
   IXmiClass res (clnm, id, pid);
   res.SetAbstract(cls.get_abstract());
 
   Sequence feature;
   TYPE_AUML_InstanceVars iv (cls.get_inst());
   Generic g, h;
-  for (bool bb = iv.First(g, h); bb; bb = iv.Next(g, h))
-  {
+  for (bool bb = iv.First(g, h); bb; bb = iv.Next(g, h)) {
     feature.ImpAppend(AUMLInstValue2XMIAttribute(g, h, id));
   }
 
   TYPE_AUML_ValuesDef vd (cls.get_val());
-  for (bool cc = vd.First(g, h); cc; cc = vd.Next(g, h))
-  {
+  for (bool cc = vd.First(g, h); cc; cc = vd.Next(g, h)) {
     feature.ImpAppend(AUMLValue2XMIAttribute(g, h, id));
   }
 
   TYPE_AUML_CommonSign meth (cls.get_meth());
-  for (bool dd = meth.First(g, h); dd; dd = meth.Next(g, h))
-  {
+  for (bool dd = meth.First(g, h); dd; dd = meth.Next(g, h)) {
     feature.ImpAppend(AUMLFnOp2XMIOperation(g, h, id, true));
   }
 
   TYPE_AUML_CommonSign func (cls.get_func());
-  for (bool ee = func.First(g, h); ee; ee = func.Next(g, h))
-  {
+  for (bool ee = func.First(g, h); ee; ee = func.Next(g, h)) {
     feature.ImpAppend(AUMLFnOp2XMIOperation(g, h, id, false));
   }
   res.set_classifier(TYPE_XMI_UMLClassifier().Init(Map(), feature));
 
   res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_isClass, TAG_XMI_TRUE, id));
+#if __cplusplus >= 201103L
+  return std::move(res);
+#else
   return res;
+#endif
 }
 
 TYPE_XMI_UMLAttribute XmiInterface::AUMLValue2XMIAttribute(const TYPE_AS_Pattern & pat,
@@ -324,22 +307,20 @@ TYPE_XMI_UMLAttribute XmiInterface::AUMLValue2XMIAttribute(const TYPE_AS_Pattern
 {
   // id
   Generic id = vd.get_id();
-  if (id.IsNil() || id == Sequence())
+  if (id.IsNil() || id == Sequence()) {
     id = XmiAux::UniqueID();
-
+  }
   // create attribute with name
   Sequence patSeq (MPP::MiniPP(pat));
   IXmiAttribute res (patSeq, id, pid);
 
   // type
-  if (!vd.get_tp().IsNil())
-  {
+  if (!vd.get_tp().IsNil()) {
     res.SetTypeRef(GetTypeRef(MPP::MiniPP(vd.get_tp()))); 
   }
 
   // initial value expression
-  if (!vd.get_expr().IsNil())
-  {
+  if (!vd.get_expr().IsNil()) {
     res.set_initialValue(XmiAux::mk_UMLExpression(Sequence(MPP::MiniPP(vd.get_expr()))));
   }
 
@@ -352,7 +333,11 @@ TYPE_XMI_UMLAttribute XmiInterface::AUMLValue2XMIAttribute(const TYPE_AS_Pattern
   // visibility (public, protected, private)
   res.SetVisibility(MapAUMLAccessToXMI(vd.get_acc()));
 
+#if __cplusplus >= 201103L
+  return std::move(res);
+#else
   return res;
+#endif
 }
 
 TYPE_XMI_UMLAttribute XmiInterface::AUMLInstValue2XMIAttribute(const Sequence & name,
@@ -361,21 +346,19 @@ TYPE_XMI_UMLAttribute XmiInterface::AUMLInstValue2XMIAttribute(const Sequence & 
 {
   // id
   Generic id = vd.get_id();
-  if (id.IsNil() || id == Sequence())
+  if (id.IsNil() || id == Sequence()) {
     id = XmiAux::UniqueID();
-
+  }
   // create attribute with name
   IXmiAttribute res (name, id, pid);
 
   // type
-  if (!vd.get_tp().IsNil())
-  {
+  if (!vd.get_tp().IsNil()) {
     res.SetTypeRef(GetTypeRef(MPP::MiniPP(vd.get_tp()))); 
   }
 
   // initial value
-  if (!vd.get_expr().IsNil())
-  {
+  if (!vd.get_expr().IsNil()) {
     res.set_initialValue(XmiAux::mk_UMLExpression(Sequence(MPP::MiniPP(vd.get_expr()))));
   }
 
@@ -388,7 +371,11 @@ TYPE_XMI_UMLAttribute XmiInterface::AUMLInstValue2XMIAttribute(const Sequence & 
   // visibility (public, protected, private)
   res.SetVisibility(MapAUMLAccessToXMI(vd.get_acc()));
 
+#if __cplusplus >= 201103L
+  return std::move(res);
+#else
   return res;
+#endif
 }
 
 TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
@@ -398,9 +385,9 @@ TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
 {
   // id
   Generic fnopid = fnop.get_id();
-  if (fnopid.IsNil() || fnopid == Sequence())
+  if (fnopid.IsNil() || fnopid == Sequence()) {
     fnopid = XmiAux::UniqueID();
-
+  }
   // name
   // unmangle
   IXmiOperation res (MANGLE::unmangleSeqStem(name), fnopid, clid);
@@ -417,8 +404,7 @@ TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
   // parameter
   SEQ<TYPE_AUML_PatType> pt_l (fnop.get_param());
   Generic g;
-  for (bool bb = pt_l.First(g); bb; bb = pt_l.Next(g))
-  {
+  for (bool bb = pt_l.First(g); bb; bb = pt_l.Next(g)) {
     TYPE_AUML_PatType pt (g);
     IXmiParameter rp (MPP::MiniPP(pt.get_pat()), XmiAux::UniqueID(), fnopid, clid);
     rp.SetTypeRef(GetTypeRef(MPP::MiniPP(pt.get_tp()))); 
@@ -432,14 +418,14 @@ TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
   res.SetStatic(fnop.get_stat());
 
   // streotype (function, operation)
-  if (op)
+  if (op) {
     res.AppendStereotype(GetStereotypeOpRef(fnopid));
-  else
+  }
+  else {
     res.AppendStereotype(GetStereotypeFnRef(fnopid));
-
+  }
   // additional info total/partial
-  if (!op)
-  {
+  if (!op) {
     if (fnop.get_fntype() == QUOTE_PARTIAL)
       res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_fntype,
                                                    TAG_XMI_partial,
@@ -451,30 +437,29 @@ TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
   }
 
   // additional info impl/expl/extexpl
-  if (fnop.get_kind() == QUOTE_IMPL)
+  if (fnop.get_kind() == QUOTE_IMPL) {
     res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_deftype,
                                                  TAG_XMI_impl,
                                                  fnopid));
-  else if (fnop.get_kind() == QUOTE_EXT)
+  }
+  else if (fnop.get_kind() == QUOTE_EXT) {
     res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_deftype,
                                                  TAG_XMI_extexpl,
                                                  fnopid));
-  else if (fnop.get_kind() == QUOTE_EXPL)
+  }
+  else if (fnop.get_kind() == QUOTE_EXPL) {
     res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_deftype,
                                                  TAG_XMI_expl,
                                                  fnopid));
-
+  }
   // pre condition
-  if (!fnop.get_precond().IsNil())
-  {
-    if (IsEA())
-    {
+  if (!fnop.get_precond().IsNil()) {
+    if (IsEA()) {
       res.AddConstraint(XmiAux::mk_UMLConstraint(MPP::MiniPP(fnop.get_precond()),
                                                  TAG_XMI_precondition,
                                                  fnopid));  
     }
-    else
-    {
+    else {
       res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_precondition,
                                                    MPP::MiniPP(fnop.get_precond()),
                                                    fnopid));
@@ -482,16 +467,13 @@ TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
   }
 
   // post condition
-  if (!fnop.get_postcond().IsNil())
-  {
-    if (IsEA())
-    {
+  if (!fnop.get_postcond().IsNil()) {
+    if (IsEA()) {
       res.AddConstraint(XmiAux::mk_UMLConstraint(MPP::MiniPP(fnop.get_postcond()),
                                                  TAG_XMI_postcondition,
                                                  fnopid));  
     }
-    else
-    {
+    else {
       res.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_postcondition,
                                                    MPP::MiniPP(fnop.get_postcond()),
                                                    fnopid));
@@ -501,7 +483,11 @@ TYPE_XMI_UMLOperation XmiInterface::AUMLFnOp2XMIOperation(const Sequence & name,
   // visibility (public, protected, private)
   res.SetVisibility(MapAUMLAccessToXMI(fnop.get_acc()));
 
+#if __cplusplus >= 201103L
+  return std::move(res);
+#else
   return res;
+#endif
 }
 
 TYPE_AUML_Model XmiInterface::XMI2AUML(const TYPE_XMI_Document & doc,
@@ -509,8 +495,7 @@ TYPE_AUML_Model XmiInterface::XMI2AUML(const TYPE_XMI_Document & doc,
 {
   
   Generic mod_g (doc.get_content().get_model());
-  if (!mod_g.IsNil())
-  {
+  if (!mod_g.IsNil()) {
     TYPE_XMI_UMLModel model (mod_g);
     TYPE_AUML_Model m;
     m.Init(CreateClasses(model, idm),
@@ -518,8 +503,7 @@ TYPE_AUML_Model XmiInterface::XMI2AUML(const TYPE_XMI_Document & doc,
            CreateAssociations(model, idm));
     return m;
   }
-  else
-  {
+  else {
     TYPE_AUML_Model dummy;
     dummy.Init(TYPE_AUML_Classes(),
                TYPE_AUML_Inheritance(),
@@ -533,8 +517,7 @@ TYPE_AUML_Classes XmiInterface::CreateClasses (const TYPE_XMI_UMLModel & m, cons
   TYPE_AUML_Classes clss;
   Sequence c_l (XmiAux::GetClasses(m));
   Generic g;
-  for ( bool bb = c_l.First(g); bb; bb = c_l.Next(g))
-  {
+  for ( bool bb = c_l.First(g); bb; bb = c_l.Next(g)) {
     TYPE_XMI_UMLClass c (g);
     Sequence nm (XmiAux::GetName(c));
 
@@ -582,8 +565,7 @@ TYPE_AUML_InstanceVars XmiInterface::CreateInstanceVars(const TYPE_XMI_UMLClass 
   TYPE_AUML_InstanceVars ivs;
   Sequence a_l (XmiAux::GetAllAttributes(c));
   Generic g;
-  for (bool bb = a_l.First(g); bb; bb = a_l.Next(g))
-  {
+  for (bool bb = a_l.First(g); bb; bb = a_l.Next(g)) {
     IXmiAttribute a (g);
     if (!XmiAux::IsChangeable(a)) continue;
 
@@ -596,19 +578,16 @@ TYPE_AUML_InstanceVars XmiInterface::CreateInstanceVars(const TYPE_XMI_UMLClass 
                           XmiAux::IsStatic(a),     // scope (instance, class)
                           XmiAux::GetID(a),        // id
                           false));                 // values or instance variables
-    if (!type.IsEmpty() && t.GetBool(1) && UMLPARSE::ParseIdentifierSeq(nm))
-    {
-      if (ivs.DomExists(nm))
-      {
+    if (!type.IsEmpty() && t.GetBool(1) && UMLPARSE::ParseIdentifierSeq(nm)) {
+      if (ivs.DomExists(nm)) {
         vdm_log << L"Instance variable " + nm.GetString() +
         L" was previously defined in this class. Ignoring instance variable." << endl;
       }
-      else
-      {
+      else {
         ivs.ImpModify(nm, t.GetRecord(2));
       }
     }
-    else  {// if (ReportErr) {
+    else  {// if (ReportErr)
       vdm_log << L"Syntax error in instance variable definition:" << endl;
       vdm_log << XmiAux::PrintAttribute(a, idm).GetString() << endl;
       vdm_log << L"Instance variable ignored." << endl;
@@ -623,8 +602,7 @@ TYPE_AUML_ValuesDef XmiInterface::CreateValuesDef(const TYPE_XMI_UMLClass & c,
   TYPE_AUML_ValuesDef vds;
   Sequence a_l (XmiAux::GetAllAttributes(c));
   Generic g;
-  for (bool bb = a_l.First(g); bb; bb = a_l.Next(g))
-  {
+  for (bool bb = a_l.First(g); bb; bb = a_l.Next(g)) {
     IXmiAttribute a (g);
     if (XmiAux::IsChangeable(a)) continue;
 
@@ -639,22 +617,18 @@ TYPE_AUML_ValuesDef XmiInterface::CreateValuesDef(const TYPE_XMI_UMLClass & c,
                             XmiAux::GetID(a),        // id
                             true));                  // values or instance variables
  
-    if (t1.GetBool(1) && t2.GetBool(1))
-    {
+    if (t1.GetBool(1) && t2.GetBool(1)) {
       TYPE_AS_Pattern pat (t1.GetRecord(2));
       TYPE_AUML_ValDef vd (t2.GetRecord(2));
       
-      if (pat.Is(TAG_TYPE_AS_PatternName))
-      {
+      if (pat.Is(TAG_TYPE_AS_PatternName)) {
         pat.SetField(pos_AS_PatternName_tp, vd.get_tp());   
       }
-      if (vds.DomExists(pat))
-      {
+      if (vds.DomExists(pat)) {
         vdm_log << L"Value " + nm.GetString() +
         L" was previously defined in this class. Ignoring value definition." << endl;
       }
-      else
-      {
+      else {
         vds.ImpModify(pat, t2.GetRecord(2));
       }
     }
@@ -676,44 +650,43 @@ Tuple XmiInterface::CreateValDef(const Sequence & type,
                                  bool isValue)
 {
   Generic tp = Nil();
-  if (!type.IsEmpty())
-  {
+  if (!type.IsEmpty()) {
     Tuple t (UMLPARSE::Seq2Type(type));
-    if (!t.GetBool(1))
+    if (!t.GetBool(1)) {
       return mk_(Bool(false), Nil());
+    }
     tp = t.GetField(2);
   }
 
   Generic body = Nil();
-  if (!initVal.IsNil())
-  {
+  if (!initVal.IsNil()) {
     TYPE_XMI_UMLExpression exp (initVal);
     Map attrs (exp.get_attrs());
-    if (attrs.DomExists(TAG_XMI_body))
+    if (attrs.DomExists(TAG_XMI_body)) {
       body = attrs[TAG_XMI_body];     // EA
-    else 
+    }
+    else  {
       body = (exp.get_body());        // ASTAH
+    }
   }
 
   Generic expr = Nil();
-  if (!body.IsNil())
-  {
-    if (body.IsSequence())
-    {
+  if (!body.IsNil()) {
+    if (body.IsSequence()) {
       Tuple t (UMLPARSE::Seq2Expr(body));
-      if (!t.GetBool(1))
+      if (!t.GetBool(1)) {
         return mk_(Bool(false), Nil());
+      }
       expr = t.GetField(2);
     }
-    else
-    {
+    else {
       return mk_(Bool(false), Nil());
     }
   }
-  else
-  {
-    if (isValue)
+  else {
+    if (isValue) {
       expr = TYPE_AS_UndefinedExpr();
+    }
   }
     
   TYPE_AUML_ValDef vd;
@@ -753,16 +726,16 @@ TYPE_AUML_CommonSign XmiInterface::CreateOperations(const TYPE_XMI_UMLClass & c,
     Tuple tpost (post.IsEmpty() ? mk_(Bool(true), Nil()) : UMLPARSE::Seq2Expr(post));
 
     if (tr.GetBool(1) && tp.GetBool(1) && 
-        tpre.GetBool(1) && tpost.GetBool(1))
-    {
+        tpre.GetBool(1) && tpost.GetBool(1)) {
       Sequence mname (MANGLE::MangleString(nm.GetString(), tp.GetField(3)));
 
       Quote kind = QUOTE_EXPL;
-      if (XmiAux::IsImpl(o, idm))
+      if (XmiAux::IsImpl(o, idm)) {
         kind = QUOTE_IMPL;
-      else if (XmiAux::IsExtExpl(o, idm))
+      }
+      else if (XmiAux::IsExtExpl(o, idm)) {
         kind = QUOTE_EXT;
-
+      }
       TYPE_AUML_Signature op; 
       op.Init(tp.GetField(2),                               // param
               tr.GetField(2),                               // returntype
@@ -776,8 +749,7 @@ TYPE_AUML_CommonSign XmiInterface::CreateOperations(const TYPE_XMI_UMLClass & c,
 
       ops.ImpModify(mname, op);
     }
-    else
-    {
+    else {
       vdm_log << L"Ignoring operation due to errors in its arguments or return type:" << endl;
       vdm_log << XmiAux::PrintOperation(o, idm) << endl;
     }
@@ -790,8 +762,7 @@ TYPE_AUML_CommonSign XmiInterface::CreateFunctions(const TYPE_XMI_UMLClass & c, 
   TYPE_AUML_CommonSign fns;
   Sequence o_l (XmiAux::GetAllOperations(c));
   Generic g;
-  for (bool bb = o_l.First(g); bb; bb = o_l.Next(g))
-  {
+  for (bool bb = o_l.First(g); bb; bb = o_l.Next(g)) {
     TYPE_XMI_UMLOperation o (g);
     if (!XmiAux::IsFunction(o, idm)) continue;
 
@@ -800,13 +771,11 @@ TYPE_AUML_CommonSign XmiInterface::CreateFunctions(const TYPE_XMI_UMLClass & c, 
     IXmiParameter rtp (XmiAux::GetReturnType(o));
     Sequence rt (XmiAux::GetElementName(rtp.GetTypeRef(), idm));
 
-    if ((rt.IsEmpty() || (rt == Sequence(L"void"))))
-    {
+    if ((rt.IsEmpty() || (rt == Sequence(L"void")))) {
       vdm_log << L"Function " <<  nm.GetString() << L" must have a returntype. Function ignored:" << endl;
       vdm_log << XmiAux::PrintOperation(o, idm) << endl;
     }
-    else
-    {
+    else {
       Tuple tr (UMLPARSE::Seq2Type(rt));
       Tuple tp (XMIParameters2AUMLParams(XmiAux::GetParam(o), idm));
  
@@ -816,20 +785,20 @@ TYPE_AUML_CommonSign XmiInterface::CreateFunctions(const TYPE_XMI_UMLClass & c, 
       Tuple tpost (post.IsEmpty() ? mk_(Bool(true), Nil()) : UMLPARSE::Seq2Expr(post));
 
       if (tr.GetBool(1) && tp.GetBool(1) &&
-          tpre.GetBool(1) && tpost.GetBool(1))
-      {
+          tpre.GetBool(1) && tpost.GetBool(1)) {
         Sequence mname (MANGLE::MangleString(nm.GetString(), tp.GetField(3)));
 
         Quote kind = QUOTE_EXPL;
-        if (XmiAux::IsImpl(o, idm))
+        if (XmiAux::IsImpl(o, idm)) {
           kind = QUOTE_IMPL;
-        else if (XmiAux::IsExtExpl(o, idm))
+        }
+        else if (XmiAux::IsExtExpl(o, idm)) {
           kind = QUOTE_EXT;
-
+        }
         Quote fntype = QUOTE_TOTAL;
-        if (XmiAux::IsPartial(o, idm))
+        if (XmiAux::IsPartial(o, idm)) {
           fntype = QUOTE_PARTIAL;
-
+        }
         TYPE_AUML_Signature fn; 
         fn.Init(tp.GetField(2),                               // param
                 tr.GetField(2),                               // returntype
@@ -843,8 +812,7 @@ TYPE_AUML_CommonSign XmiInterface::CreateFunctions(const TYPE_XMI_UMLClass & c, 
 
         fns.ImpModify(mname, fn);
       }
-      else
-      {
+      else {
         vdm_log <<  L"Ignoring function due to errors in its arguments or return type:" << endl;
         vdm_log << XmiAux::PrintOperation(o, idm) << endl;
       }
@@ -858,18 +826,17 @@ Tuple XmiInterface::XMIParameters2AUMLParams(const Sequence & p_l, const Map & i
   SEQ<TYPE_AUML_PatType> pt_l;
   SEQ<TYPE_AS_Type> tp_l;
   size_t len_p_l = p_l.Length();
-  for (size_t idx = 1; idx <= len_p_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_p_l; idx++) {
     const TYPE_XMI_UMLParameter & p (p_l[idx]);
     Tuple tn (UMLPARSE::Seq2Pat(XmiAux::GetName(p)));
     Tuple tt (UMLPARSE::Seq2Type(XmiAux::GetElementName(XmiAux::GetTypeRef(p), idm)));
-    if (tn.GetBool(1) && tt.GetBool(1))
-    {
+    if (tn.GetBool(1) && tt.GetBool(1)) {
       pt_l.ImpAppend(TYPE_AUML_PatType().Init(tn.GetField(2), tt.GetField(2)));
       tp_l.ImpAppend(tt.GetField(2));
     }
-    else
+    else {
       return mk_(Bool(false), Nil(), Nil());
+    }
   }
   return mk_(Bool(true), pt_l, tp_l);
 }
@@ -881,8 +848,7 @@ TYPE_AUML_Inheritance XmiInterface::CreateInheritance(const TYPE_XMI_UMLModel & 
   SEQ<TYPE_XMI_UMLGeneralization> g_l (XmiAux::GetAllGeneralizations(m));
 
   Generic g;
-  for (bool bb = g_l.First(g); bb; bb = g_l.Next(g))
-  {
+  for (bool bb = g_l.First(g); bb; bb = g_l.Next(g)) {
     TYPE_XMI_UMLGeneralization ge (g);
     // child
     Sequence cid (XmiAux::GetChildId(ge));
@@ -900,23 +866,24 @@ TYPE_AUML_Inheritance XmiInterface::CreateInheritance(const TYPE_XMI_UMLModel & 
 
     // map
     Set s;
-    if (tm.DomExists(cname))
+    if (tm.DomExists(cname)) {
       s = tm[cname];
-
+    }
     s.Insert(pname);
     tm.ImpModify(cname, s);
   } 
 
   TYPE_AUML_Inheritance inh;
   Sequence c_l (XmiAux::GetClasses(m));
-  for (bool cc = c_l.First(g); cc; cc = c_l.Next(g))
-  {
+  for (bool cc = c_l.First(g); cc; cc = c_l.Next(g)) {
     TYPE_XMI_UMLClass c (g);
     Sequence nm (XmiAux::GetName(c));
-    if (tm.DomExists(nm))
+    if (tm.DomExists(nm)) {
       inh.ImpModify(nm, tm[nm]);
-    else
+    }
+    else {
       inh.ImpModify(nm, Set());
+    }
   }
 
   // 
@@ -953,34 +920,32 @@ TYPE_AUML_Associations XmiInterface::CreateAssociations(const TYPE_XMI_UMLModel 
 
   SEQ<TYPE_XMI_UMLAssociation> as_l (XmiAux::GetAllAssociation(m));
   Generic ag;
-  for (bool cc = as_l.First(ag); cc; cc = as_l.Next(ag))
-  {
+  for (bool cc = as_l.First(ag); cc; cc = as_l.Next(ag)) {
 //
     TYPE_XMI_UMLAssociation as (ag);
     int mode = XmiAux::GetModeOfAssociation(as);
 
     Sequence ae_l (as.get_connection());
-    if (ae_l.Length() == 2)
-    {
+    if (ae_l.Length() == 2) {
       Tuple t1 (CreateAssociation(ae_l[1], ae_l[2], idm, mode));
-      if (t1.GetBool(1))
-      {
+      if (t1.GetBool(1)) {
         Sequence nm (t1.GetSequence(2));
         Sequence client (t1.GetSequence(3));
         Map rm;
-         if (tm.DomExists(client))
-        rm = tm[client];
+        if (tm.DomExists(client)) {
+          rm = tm[client];
+        }
         rm.ImpModify(nm, t1.GetRecord(4));
         tm.ImpModify(client, rm);
       }
       Tuple t2 (CreateAssociation(ae_l[2], ae_l[1], idm, mode));
-      if (t2.GetBool(1))
-      {
+      if (t2.GetBool(1)) {
         Sequence nm (t2.GetSequence(2));
         Sequence client (t2.GetSequence(3));
         Map rm;
-        if (tm.DomExists(client))
+        if (tm.DomExists(client)) {
           rm = tm[client];
+        }
         rm.ImpModify(nm, t2.GetRecord(4));
         tm.ImpModify(client, rm);
       }
@@ -991,14 +956,15 @@ TYPE_AUML_Associations XmiInterface::CreateAssociations(const TYPE_XMI_UMLModel 
   TYPE_AUML_Associations ass;
   Sequence c_l (XmiAux::GetClasses(m));
   Generic g;
-  for (bool cc = c_l.First(g); cc; cc = c_l.Next(g))
-  {
+  for (bool cc = c_l.First(g); cc; cc = c_l.Next(g)) {
     TYPE_XMI_UMLClass c (g);
     Sequence nm (XmiAux::GetName(c));
-    if (tm.DomExists(nm))
+    if (tm.DomExists(nm)) {
       ass.ImpModify(nm, tm[nm]);
-    else
+    }
+    else {
       ass.ImpModify(nm, Map());
+    }
   }
 
   // 
@@ -1063,9 +1029,9 @@ Tuple XmiInterface::CreateAssociation(const TYPE_XMI_UMLAssociationEnd & se,
     }
   }
 
-  if (server.IsEmpty() || client.IsEmpty())
+  if (server.IsEmpty() || client.IsEmpty()) {
     return mk_(Bool(false), Nil(), Nil(), Nil());
-  
+  } 
   Quote role_t (XmiAux::IsOrdered(se, idm) ? QUOTE_ORDERED : QUOTE_NORMAL);
 
   Quote cd (XMIMult2AUMLCard(XmiAux::GetMultiplicity(se, idm)));
@@ -1091,42 +1057,46 @@ Tuple XmiInterface::CreateAssociation(const TYPE_XMI_UMLAssociationEnd & se,
 
 Quote XmiInterface::MapXMIAccessToAUML(const Sequence & acc)
 {
-  if (acc == TAG_XMI_public)
+  if (acc == TAG_XMI_public) {
     return QUOTE_PUBLIC;
-  if ((acc == TAG_XMI_private) || (acc == TAG_XMI_implementation))
+  }
+  if ((acc == TAG_XMI_private) || (acc == TAG_XMI_implementation)) {
     return QUOTE_PRIVATE;
-  if (acc == TAG_XMI_protected)
+  }
+  if (acc == TAG_XMI_protected) {
     return QUOTE_PROTECTED;
+  }
   return QUOTE_PUBLIC; // dummy
 }
 
 Sequence XmiInterface::MapAUMLAccessToXMI(const Quote & acc)
 {
-  if (acc == QUOTE_PUBLIC)
+  if (acc == QUOTE_PUBLIC) {
     return TAG_XMI_public;
-  if (acc == QUOTE_PRIVATE)
+  }
+  if (acc == QUOTE_PRIVATE) {
     return TAG_XMI_private;
-  if (acc == QUOTE_PROTECTED)
+  }
+  if (acc == QUOTE_PROTECTED) {
     return TAG_XMI_protected;
+  }
   return L""; // dummy
 }
 
 TYPE_XMI_UMLClassifier XmiInterface::GetTypeRef(const Sequence & tp)
 {
-  if (this->cls_m.DomExists(tp))
-  {
+  if (this->cls_m.DomExists(tp)) {
     TYPE_AUML_Class cls (this->cls_m[tp]);
     Map m;
     m.ImpModify(TAG_XMI_idref, cls.get_id());
     return TYPE_XMI_UMLClassifier().Init(m, Sequence());
   }
 
-  if (!this->type_m.DomExists(tp))
-  {
-    if (XmiAux::IsPrimitive(tp) && false)
+  if (!this->type_m.DomExists(tp)) {
+    if (XmiAux::IsPrimitive(tp) && false) {
       this->type_m.ImpModify(tp, XmiAux::mk_UMLPrimitive(tp));
-    else
-    {
+    }
+    else {
       Sequence clid (XmiAux::UniqueID());
       IXmiClass gc (tp, clid, this->mid);
       gc.AddTaggedValue(XmiAux::mk_UMLTaggedValue(TAG_XMI_isClass, TAG_XMI_FALSE, clid));
@@ -1219,8 +1189,7 @@ Sequence XmiInterface::AUMLAssoc2XMIAssoc(const Sequence & clnm,
   Sequence res;
   Set nm_s (ua.Dom());
   Generic nm;
-  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
-  {
+  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
     TYPE_AUML_Role rl (ua[nm]);
 
     Sequence asid (XmiAux::UniqueID());
@@ -1245,13 +1214,11 @@ Sequence XmiInterface::AUMLAssoc2XMIAssoc(const Sequence & clnm,
     te.SetMultiplicityEA(AUMLCard2XMIMult(Quote(L"ONE")));
     te.SetVisibility(Sequence(L"public"));
 
-    if (IsEA())
-    {
+    if (IsEA()) {
       TYPE_XMI_UMLModelElement me (te.get_modelElement());
       Sequence taggedValue (me.get_taggedValue());
       taggedValue.ImpAppend(XmiAux::mk_UMLTaggedValue(TAG_XMI_containment, Sequence(L"Unspecified")));
-      if (!rl.get_quali().IsNil())
-      {
+      if (!rl.get_quali().IsNil()) {
         taggedValue.ImpAppend(XmiAux::mk_UMLTaggedValue(TAG_XMI_qualifier, Sequence(MPP::MiniPP(rl.get_quali()))));
       }
       taggedValue.ImpAppend(XmiAux::mk_UMLTaggedValue(TAG_XMI_sourcestyle, Sequence(L"Navigable=Unspecified;Union=0;Derived=0;AllowDuplicates=0;Owned=0;")));
@@ -1279,11 +1246,12 @@ Sequence XmiInterface::AUMLAssoc2XMIAssoc(const Sequence & clnm,
     se.SetMultiplicityEA(AUMLCard2XMIMult(rl.get_cd()));
 
     // ordered
-    if (Quote(rl.get_role_ut()) == QUOTE_ORDERED)
+    if (Quote(rl.get_role_ut()) == QUOTE_ORDERED) {
       se.SetOrdered(Bool(true));
-    else
+    }
+    else {
       se.SetOrdered(Bool(false));
-
+    }
     // access
     se.SetVisibility(MapAUMLAccessToXMI(rl.get_acc()));
 
@@ -1293,12 +1261,9 @@ Sequence XmiInterface::AUMLAssoc2XMIAssoc(const Sequence & clnm,
     // navigable
     se.SetNavigable(Bool(false));
 
-// 20090507 -->
-    if (!rl.get_quali().IsNil())
-    {
+    if (!rl.get_quali().IsNil()) {
 //    for ASTAH
-      if (IsASTAH())
-      {
+      if (IsASTAH()) {
         Generic c (GetTypeRef(MPP::MiniPP(rl.get_quali()))); 
         Sequence id (XmiAux::UniqueID());
 
@@ -1325,16 +1290,12 @@ Sequence XmiInterface::AUMLAssoc2XMIAssoc(const Sequence & clnm,
       }
     }
 
-    if (!rl.get_initval().IsNil())
-    {
-      if (IsASTAH())
-      {
+    if (!rl.get_initval().IsNil()) {
+      if (IsASTAH()) {
         se.set_initialValue(XmiAux::mk_UMLExpression(Sequence(MPP::MiniPP(rl.get_initval()))));
       }
     }
-// <-- 20090507
-    if (IsEA())
-    {
+    if (IsEA()) {
       TYPE_XMI_UMLModelElement me (se.get_modelElement());
       Sequence taggedValue (me.get_taggedValue());
       taggedValue.ImpAppend(XmiAux::mk_UMLTaggedValue(TAG_XMI_containment, Sequence(L"Unspecified")));
@@ -1352,8 +1313,7 @@ Sequence XmiInterface::AUMLAssoc2XMIAssoc(const Sequence & clnm,
     connection.ImpAppend(se);
     ass.set_connection(connection);
 
-    if (IsEA())
-    {
+    if (IsEA()) {
       TYPE_XMI_UMLModelElement me (ass.get_modelElement());
       Sequence taggedValue (me.get_taggedValue());
       taggedValue.ImpAppend(XmiAux::mk_UMLTaggedValue(TAG_XMI_ea_type, Sequence(L"Association")));
@@ -1382,28 +1342,23 @@ TYPE_XMI_UMLMultiplicity XmiInterface::AUMLCard2XMIMultASTAH(const Quote & q)
   Sequence rid (XmiAux::UniqueID());
   IXmiMultiplicityRange range (rid);
 
-  if ( q == QUOTE_ONE )
-  {
+  if ( q == QUOTE_ONE ) {
     range.SetLowerValue(Sequence(L"")); 
     range.SetUpperValue(Sequence(L"")); 
   }
-  else if ( q == QUOTE_MANY )
-  {
+  else if ( q == QUOTE_MANY ) {
     range.SetLowerValue(Sequence(L"0")); 
     range.SetUpperValue(Sequence(L"*")); 
   }
-  else if ( q == QUOTE_ONE_TO_MANY )
-  {
+  else if ( q == QUOTE_ONE_TO_MANY ) {
     range.SetLowerValue(Sequence(L"1")); 
     range.SetUpperValue(Sequence(L"*")); 
   }
-  else if ( q == QUOTE_ZERO_ONE )
-  {
+  else if ( q == QUOTE_ZERO_ONE ) {
     range.SetLowerValue(Sequence(L"0")); 
     range.SetUpperValue(Sequence(L"1")); 
   }
-  else
-  {
+  else {
     range.SetLowerValue(Sequence(L"")); 
     range.SetUpperValue(Sequence(L"")); 
   }
@@ -1441,37 +1396,34 @@ Quote XmiInterface::XMIMult2AUMLCardASTAH(const TYPE_XMI_UMLMultiplicity & mu)
 
 Sequence XmiInterface::AUMLCard2XMIMult(const Quote & q)
 {
-  if ( q == QUOTE_ONE )
-  {
+  if ( q == QUOTE_ONE ) {
     return Sequence(L"1");
   }
-  else if ( q == QUOTE_MANY )
-  {
+  else if ( q == QUOTE_MANY ) {
     return Sequence(L"0..*");
   }
-  else if ( q == QUOTE_ONE_TO_MANY )
-  {
+  else if ( q == QUOTE_ONE_TO_MANY ) {
     return Sequence(L"1..*");
   }
-  else if ( q == QUOTE_ZERO_ONE )
-  {
+  else if ( q == QUOTE_ZERO_ONE ) {
     return Sequence(L"0..1");
   }
-  else
-  {
+  else {
     return Sequence(L"1");
   }
 }
 
 Quote XmiInterface::XMIMult2AUMLCard(const Sequence & mu)
 {
-  if (mu == Sequence(L"0..*"))
+  if (mu == Sequence(L"0..*")) {
     return QUOTE_MANY;
-  if (mu == Sequence(L"1..*"))
+  }
+  if (mu == Sequence(L"1..*")) {
     return QUOTE_ONE_TO_MANY;
-  if (mu == Sequence(L"0..1"))
+  }
+  if (mu == Sequence(L"0..1")) {
     return QUOTE_ZERO_ONE;
-
+  }
   return QUOTE_ONE;
 }
 
