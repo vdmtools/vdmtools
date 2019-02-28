@@ -1,9 +1,6 @@
 #include <fstream>
 using namespace std;
 
-#ifdef VDMPP
-#include "CGBase.h"
-#endif
 #include "cg.h"
 #include "metaiv.h"
 
