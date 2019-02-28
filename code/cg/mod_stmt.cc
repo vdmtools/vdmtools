@@ -1933,7 +1933,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
   }
   else {
     whCrtlval = GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), whCrtl_v), btype);
-    isbool.ImpConc(GenBooleanTypeCheck(whCrtl_v, nil, L"A boolean was expected in while loop"));
+    isbool.ImpConc(GenBooleanTypeCheck(whCrtl_v, L"A boolean was expected in while loop"));
   }
 
   TYPE_CPP_Expr cond (vdm_BC_GenBoolLit(true));
@@ -2257,7 +2257,7 @@ Tuple vdmcg::GenBoundAndValue(const SEQ<Char> & var, const TYPE_AS_Expr & expr)
       rb_l.ImpConc(GenDecl_DS(tp, v1, vdm_BC_GenAsgnInit(var_v)));
       tmp = v1;
     }
-    rb_l.ImpConc(GenIntegerTypeCheck(tmp, nil, L"An integer was expected in indexed for loop"));
+    rb_l.ImpConc(GenIntegerTypeCheck(tmp, L"An integer was expected in indexed for loop"));
 
     TYPE_CPP_Expr val;
 #ifdef VDMPP
@@ -2591,7 +2591,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   SEQ<TYPE_CPP_Stmt> rb (cond_stmt);
 
   if (!IsBoolType(condType)) {
-    rb.ImpConc(GenBooleanTypeCheck(cond1_v, nil, L""));
+    rb.ImpConc(GenBooleanTypeCheck(cond1_v, L""));
   }
 
   Generic tmpb; // [seq of CPP`Stmt]
@@ -2627,7 +2627,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
     SEQ<TYPE_CPP_Stmt> body (elif_cond_stmt);
 
     if (!IsBoolType(elif_condType)) {
-      body.ImpConc(GenBooleanTypeCheck(elif_cond1_v, nil, L""));
+      body.ImpConc(GenBooleanTypeCheck(elif_cond1_v, L""));
     }
 
     TYPE_CPP_Expr elif_cond (GenGetValue(elif_cond_v, btype));

@@ -170,8 +170,7 @@ Int vdm_MATH_srand2(const Int &r)
 #endif
 {
   rnd_seed = r.GetValue();
-  if( rnd_seed >= 0 )
-  {
+  if( rnd_seed >= 0 ) {
     rnd.set_seed(r.GetValue());
   }
   return r;
@@ -196,12 +195,10 @@ Int vdm_MATH::vdm_rand(const Int &r)
 Int vdm_MATH_rand(const Int &r)
 #endif
 {
-  if( rnd_seed >= 0 )
-  {
+  if( rnd_seed >= 0 ) {
     return Int(rnd.get_random(r.GetValue()));
   }
-  else
-  {
+  else {
     return r;
   }
 }

@@ -1139,7 +1139,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStartlistStmt(const TYPE_AS_StartListStmt & sstmt, 
   rb_l.ImpConc(res_stmt);
 
   if (type.IsNil() || !IsSetType(type)) {
-    rb_l.ImpConc(GenSetTypeCheck(res_v, nil , L""));
+    rb_l.ImpConc(GenSetTypeCheck(res_v, L""));
   }
   rb_l.ImpConc(GenIterSet(setVT, nil, elemVT, body_l));
 
@@ -1192,7 +1192,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStoplistStmt(const TYPE_AS_StopListStmt & sstmt, bo
   rb_l.ImpConc(res_stmt);
 
   if (type.IsNil() || !IsSetType(type)) {
-    rb_l.ImpConc(GenSetTypeCheck(res_v, nil , L""));
+    rb_l.ImpConc(GenSetTypeCheck(res_v, L""));
   }
   rb_l.ImpConc(GenIterSet(setVT, nil, elemVT, body_l));
 

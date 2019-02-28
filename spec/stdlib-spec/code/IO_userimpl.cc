@@ -34,13 +34,15 @@ Bool vdm_IO_fwriteval(const type_cL &v1, const Generic& v2, const TYPE_IO_filedi
   wstring filename;
   v1.GetString(filename);
   wofstream outs;
-  if (v3 == Quote(L"start"))
+  if (v3 == Quote(L"start")) {
     outs.open(wstring2fsstr(filename).c_str(), ios::out);
-  else
+  }
+  else {
     outs.open(wstring2fsstr(filename).c_str(), ios::app);
-
-  if (!outs)
+  }
+  if (!outs) {
     return Bool(false);
+  }
   else {
     outs << v2;
     outs.flush();
@@ -68,19 +70,22 @@ Bool vdm_IO_fecho(const type_cL &v1, const type_cL& v2,const Generic& v3)
 {
   wstring text;
   v2.GetString(text);
-  if (v1 == Sequence(L""))
+  if (v1 == Sequence(L"")) {
     wcout << text;
+  }
   else { 
     wofstream outs;
     wstring filename;
     v1.GetString(filename);
-    if (v3 == Quote(L"start"))
+    if (v3 == Quote(L"start")) {
       outs.open(wstring2fsstr(filename).c_str(), ios::out);
-    else
+    }
+    else {
       outs.open(wstring2fsstr(filename).c_str(), ios::app);
-
-    if (!outs)
+    }
+    if (!outs) {
       return Bool(false);
+    }
     else {
       outs << text;
       outs.flush();

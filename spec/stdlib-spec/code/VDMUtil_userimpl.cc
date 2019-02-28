@@ -39,10 +39,12 @@ type_bU2P vdm_VDMUtil_seq_uof_uchar2val (const type_cL & s)
   wstring istr (s.GetString());
   bool ok = CGUTIL::ParseVDMValueString(istr, res);
   
-  if (ok)
+  if (ok) {
     return mk_(Bool(true), res);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 #ifdef VDMPP

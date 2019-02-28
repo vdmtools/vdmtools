@@ -1949,7 +1949,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
      (def tmpGSeq = BC`GiveName("tmpGSeq")
       in
        (rb_l := rb_l ^ DS`GenDecl(sqt, tmpGSeq, BC`GenAsgnInit(tmpSeq1));
-        rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpSeq, nil, "A sequence was expected in subsequence expression");
+        rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpSeq, "A sequence was expected in subsequence expression");
         tmpSeq := DS`GenCastSeq(tmpGSeq, sqt))
      );
     def mk_(n1_expr_v, n1_stmt) = CGExprExcl(n1, "n1", nil);
@@ -1980,7 +1980,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def From = BC`GiveName("from")
           in
            (rb_l := rb_l ^ DS`GenDecl(n1tp, From, BC`GenAsgnInit(n1_v));
-            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(From, nil, nil);
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(From, nil);
             n1_v := From;
             n1value := DS`GenGetValue(DS`GenExplicitCast(rrep, n1_v, n1tp), rrep)
            );
@@ -1994,7 +1994,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def To = BC`GiveName("to")
           in
            (rb_l := rb_l ^ DS`GenDecl(n2tp, To, BC`GenAsgnInit(n2_v));
-            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(To, nil, nil);
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(To, nil);
             n2_v := To;
             n2value := DS`GenGetValue(DS`GenExplicitCast(rrep, n2_v, n2tp), rrep)
            );
@@ -2061,7 +2061,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def From = BC`GiveName("from")
           in
            (rb_l := rb_l ^ DS`GenDecl(n1tp, From, BC`GenAsgnInit(n1_v));
-            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(From, nil, nil);
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(From, nil);
             n1_v := From;
             n1value := DS`GenGetValue(BC`GenCastExpr(DS`GenRealType(), n1_v), rrep)
            );
@@ -2075,7 +2075,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
           def To = BC`GiveName("to")
           in
            (rb_l := rb_l ^ DS`GenDecl(n2tp, To, BC`GenAsgnInit(n2_v));
-            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(To, nil, nil);
+            rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(To, nil);
             n2_v := To;
             n2value := DS`GenGetValue(BC`GenCastExpr(DS`GenRealType(),n2_v),rrep);
            );
@@ -4150,7 +4150,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
        then
          (tmpSet := BC`GiveName("tmpS");
           rb_l := rb_l ^ [ BC`GenDecl(DS`GenType(setType), tmpS, BC`GenAsgnInit(s_res)) ]);
-       rb_l := rb_l ^ CGAUX`GenSetTypeCheck(tmpS, nil, nil);
+       rb_l := rb_l ^ CGAUX`GenSetTypeCheck(tmpS, nil);
  
        tmpSet := DS`GenCastSetType(tmpS));
 
@@ -4167,7 +4167,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
          then inner_stmts := inner_stmts ^ [BC`GenAsgnStmt(succ, DS`GenGetValue(res, bt))]
          else
            def getval = DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), res), bt)
-           in inner_stmts := inner_stmts ^ CGAUX`GenBooleanTypeCheck(res, nil, nil)
+           in inner_stmts := inner_stmts ^ CGAUX`GenBooleanTypeCheck(res, nil)
                                          ^ [BC`GenAsgnStmt(succ, getval)]);
 
     for i = len pat_l to 1 by -1 do
@@ -4588,7 +4588,7 @@ CGSeqModifyMapOverrideExpr( mk_AS`SeqModifyMapOverrideExpr( seqmap, mapexp, -),
             mk_(m_v, m_stmt) = CGExprExcl(mapexp, "tmpmap", modmapType)
         in
          (rb := rb ^ m_stmt ^ DS`GenDeclInit(modmapType, tmpmap_v, m_v);
-          rb := rb ^ CGAUX`GenMapTypeCheck(tmpmap_v, nil, nil);
+          rb := rb ^ CGAUX`GenMapTypeCheck(tmpmap_v, nil);
           rb := rb ^ DS`GenDeclInit(tmpmapType, modmap_v, DS`GenCastMap(tmpmap_v)));
 
     let rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")])
@@ -5662,7 +5662,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
     then
       def tmpSet' = BC`GiveName("tmpSet");
       in
-       (rb_l := rb_l ^ CGAUX`GenSetTypeCheck(tmpVal, nil, nil);
+       (rb_l := rb_l ^ CGAUX`GenSetTypeCheck(tmpVal, nil);
 #ifdef VDMPP
         if CPP`isJAVA()
         then
@@ -5675,7 +5675,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
     then
       def tmpSeq' = BC`GiveName("tmpSeq");
       in
-       (rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpVal, nil, nil);
+       (rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpVal, nil);
 #ifdef VDMPP
         if CPP`isJAVA()
         then
@@ -5718,7 +5718,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
          (pred_v := BC`GiveName("pred");
           stmts := stmts ^ DS`GenDecl (pred_type, pred_v, BC`GenAsgnInit(tmpB))
          );
-        stmts := stmts ^ CGAUX`GenBooleanTypeCheck(pred_v, nil, nil) ^
+        stmts := stmts ^ CGAUX`GenBooleanTypeCheck(pred_v, nil) ^
                          [ BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
                                         BC`GenBlock(if_then), nil)];
        );
@@ -5896,7 +5896,7 @@ CGUnaryNum( opr, arg, vt ) ==
     in
      (dcl alt2 : CPP`Expr | seq of CPP`Stmt;
       if is_REP`UnionTypeRep( argTmpType ) and not CGAUX`IsNumType(argTmpType)
-      then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(argTmp, nil, nil);
+      then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(argTmp, nil);
 
       cases opr:
         <NUMPLUS>  -> alt2 := DS`UnaryPlus( vt, rc1 ),
@@ -5963,7 +5963,7 @@ CGUnaryNot( arg, mk_CGMAIN`VT( resVar_v, - ) ) ==
   in
    (dcl rb_l : seq of CPP`Stmt := arg_stmt;
     if not CGAUX`IsBoolType( argTmpType )
-    then rb_l := rb_l ^ CGAUX`GenBooleanTypeCheck(argTmp, nil, nil);
+    then rb_l := rb_l ^ CGAUX`GenBooleanTypeCheck(argTmp, nil);
     let bt = mk_REP`BooleanTypeRep()
     in
      (dcl cast : CPP`Expr := argTmp,
@@ -6030,7 +6030,7 @@ CGUnarySet( opr, arg, vt ) ==
         alt2 : seq of CPP`Stmt | CPP`Expr;
 
     if not CGAUX`IsSetType(argTmpType)
-    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(argTmp, nil, nil);
+    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(argTmp, nil);
     cases opr:
       <SETCARD>           -> alt2 := CGSetCard(argTmp, argTmpType, vt ),
       <SETDISTRUNION>     -> alt2 := CGSetDistrUnion(argTmp, argTmpType, vt ),
@@ -6613,9 +6613,9 @@ CGUnaryMap( opr, arg, vt ) ==
       <MAPDOM>,
       <MAPRNG>,
       <MAPINVERSE>    -> if not CGAUX`IsMapType( argTmpType )
-                         then rb_l := rb_l ^ CGAUX`GenMapTypeCheck(argTmp, nil, nil),
+                         then rb_l := rb_l ^ CGAUX`GenMapTypeCheck(argTmp, nil),
       <MAPDISTRMERGE> -> if not CGAUX`IsSetType( argTmpType )
-                         then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(argTmp, nil, nil),
+                         then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(argTmp, nil),
       others -> error
     end;
 
@@ -6842,7 +6842,7 @@ GenDynCheckOnSetsValues( tmp_v, e_v, type, maptype ) ==
     else
 #endif VDMPP
       decl := DS`GenDecl( maptype, tmp_v, BC`GenAsgnInit( e_v ) );
-    return mk_( CGAUX`GenMapTypeCheck(e_v, nil, nil) ^ decl, tmp_v );
+    return mk_( CGAUX`GenMapTypeCheck(e_v, nil) ^ decl, tmp_v );
    );
 \end{vdm_al}
 
@@ -7184,7 +7184,7 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
         in
          (rb1new := rb1new ^ DS`GenDecl(type1, v1, BC`GenAsgnInit(var1));
           expr1 := v1;);
-      rb1new := rb1new ^ CGAUX`GenBooleanTypeCheck(expr1, nil, nil);
+      rb1new := rb1new ^ CGAUX`GenBooleanTypeCheck(expr1, nil);
       expr1 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr1 );
      );
 
@@ -7196,7 +7196,7 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
         in
          (rb2new := rb2new ^ DS`GenDecl(type2, v2, BC`GenAsgnInit(var2));
           expr2 := v2;);
-      rb2new := rb2new ^ CGAUX`GenBooleanTypeCheck(expr2, nil, nil);
+      rb2new := rb2new ^ CGAUX`GenBooleanTypeCheck(expr2, nil);
       expr2 := DS`GenCastType( mk_REP`BooleanTypeRep(), expr2 );
      );
 
@@ -7303,9 +7303,9 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
                         (v2_v := e2_v;
                          rb_l := rb_l ^ DS`GenConstDeclInit(type2, e2_v, var2_v) );
                      if not CGAUX`IsNumType(type1)
-                     then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(v1_v, nil, nil);
+                     then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(v1_v, nil);
                      if not CGAUX`IsNumType(type2)
-                     then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(v2_v, nil, nil);
+                     then rb_l := rb_l ^ CGAUX`GenNumberTypeCheck(v2_v, nil);
                     ),
           <NUMREM>,
           <NUMMOD>,
@@ -7324,9 +7324,9 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
                          (v2_v := e2_v;
                           rb_l := rb_l ^ DS`GenConstDeclInit(type2, e2_v, var2_v) );
                       if not CGAUX`IsNumType(type1)
-                      then rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(v1_v, nil, nil);
+                      then rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(v1_v, nil);
                       if not CGAUX`IsNumType(type2)
-                      then rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(v2_v, nil, nil);
+                      then rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(v2_v, nil);
                      ),
           others     -> error
         end;
@@ -7376,7 +7376,7 @@ CGInSet( le, re,  mk_CGMAIN`VT(resVar_v, -) ) ==
     if not CGAUX`IsSetType(type2)
     then var2_v' := DS`GenCastSetType(var2_v);
     if not CGAUX`IsSetType(type2)
-    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil, nil);
+    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil);
     def expr = DS`GenInSet(mk_CGMAIN`VT(var1_v, type1), mk_CGMAIN`VT(var2_v', type2))
     in
       if rb_l = []
@@ -7396,7 +7396,7 @@ CGNotInSet( le, re,  mk_CGMAIN`VT(resVar_v, -) ) ==
     if not CGAUX`IsSetType(type2)
     then var2_v' := DS`GenCastSetType(var2_v);
     if not CGAUX`IsSetType(type2)
-    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil, nil);
+    then rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil);
     def expr = DS`GenNotInSet(mk_CGMAIN`VT(var1_v, type1), mk_CGMAIN`VT(var2_v', type2))
     in
       if rb_l = []
@@ -7417,11 +7417,11 @@ CGProperSubset( le, re,  mk_CGMAIN`VT( resVar_v, -) ) ==
     if not CGAUX`IsSetType(type1)
     then
      (var1' := DS`GenCastSetType(var1_v);
-      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var1_v, nil, nil));
+      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var1_v, nil));
     if not CGAUX`IsSetType(type2)
     then
      (var2' := DS`GenCastSetType(var2_v);
-      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil, nil));
+      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil));
     def subs = DS`GenSubSet(var1', var2');
     in
 #ifdef VDMPP
@@ -7456,11 +7456,11 @@ CGSubset( le, re, mk_CGMAIN`VT( resVar_v, -) ) ==
     if not CGAUX`IsSetType(type1)
     then
      (var1' := DS`GenCastSetType(var1_v);
-      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var1_v, nil, nil));
+      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var1_v, nil));
     if not CGAUX`IsSetType(type2)
     then
      (var2' := DS`GenCastSetType(var2_v);
-      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil, nil));
+      rb_l := rb_l ^ CGAUX`GenSetTypeCheck(var2_v, nil));
     def expr = DS`GenSubSet_Bool(var1', var2')
     in
       if rb_l = []
@@ -8394,7 +8394,7 @@ GenPredicateStmt( pred, stmts, notpred ) ==
 #endif VDMPP
           cond := DS`GenGetValue( BC`GenCastExpr(DS`GenBoolType(), pred_v), predType );
 
-        rb := rb ^ CGAUX`GenBooleanTypeCheck(pred_v, nil, nil);
+        rb := rb ^ CGAUX`GenBooleanTypeCheck(pred_v, nil);
 
         if notpred
         then rb := rb ^ [BC`GenIfStmt(BC`GenNot(BC`GenBracketedExpr(cond)), BC`GenBlock(stmts), nil)]
@@ -8451,7 +8451,7 @@ FindMultBind(bind) ==
           then
             def e1_v = BC`GiveName("e1_set");
             in
-             (rb := rb ^ e_stmt ^ CGAUX`GenSetTypeCheck(e_v, nil, nil);
+             (rb := rb ^ e_stmt ^ CGAUX`GenSetTypeCheck(e_v, nil);
 #ifdef VDMPP
               if CPP`isJAVA()
               then rb := rb ^ DS`GenDeclSet(e1_v, DS`GenCastSetType(e_v))
@@ -8478,7 +8478,7 @@ FindMultBind(bind) ==
           then
             def e1_v = BC`GiveName("e1_seq");
             in
-             (rb := rb ^ e_stmt ^ CGAUX`GenSeqTypeCheck(e_v, nil, nil);
+             (rb := rb ^ e_stmt ^ CGAUX`GenSeqTypeCheck(e_v, nil);
 #ifdef VDMPP
               if CPP`isJAVA()
               then rb := rb ^ DS`GenDeclSeq(e1_v, DS`GenCastSeq(e_v, nil))

@@ -2028,7 +2028,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
   if (! IsSeqType(sqt)) {
     TYPE_CPP_Identifier tmpGSeq (vdm_BC_GiveName(ASTAUX::MkId(L"tmpGSeq")));
     rb_l.ImpConc(GenDecl_DS(sqt, tmpGSeq, vdm_BC_GenAsgnInit(tmpSeq1)));
-    rb_l.ImpConc(GenSeqTypeCheck(tmpSeq, nil, L"A sequence was expected in subsequence expression"));
+    rb_l.ImpConc(GenSeqTypeCheck(tmpSeq, L"A sequence was expected in subsequence expression"));
     tmpSeq = GenCastSeq(tmpGSeq, sqt);
   }
 
@@ -2065,7 +2065,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
     else {
       TYPE_CPP_Identifier From (vdm_BC_GiveName(ASTAUX::MkId(L"from")));
       rb_l.ImpConc(GenDecl_DS(n1tp, From, vdm_BC_GenAsgnInit(n1_v)));
-      rb_l.ImpConc(GenNumberTypeCheck(From, nil, L""));
+      rb_l.ImpConc(GenNumberTypeCheck(From, L""));
       n1_v = From;
       n1value = GenGetValue(GenExplicitCast(rrep, n1_v, n1tp), rrep);
     }
@@ -2090,7 +2090,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
     else {
       TYPE_CPP_Identifier To (vdm_BC_GiveName(ASTAUX::MkId(L"to")));
       rb_l.ImpConc(GenDecl_DS(n2tp, To, vdm_BC_GenAsgnInit(n2_v)));
-      rb_l.ImpConc(GenNumberTypeCheck(To, nil, L""));
+      rb_l.ImpConc(GenNumberTypeCheck(To, L""));
       n2_v = To;
       n2value = GenGetValue(GenExplicitCast(rrep, n2_v, n2tp), rrep);
     }
@@ -2186,7 +2186,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
     {
       TYPE_CPP_Identifier From (vdm_BC_GiveName(ASTAUX::MkId(L"from")));
       rb_l.ImpConc(GenDecl_DS(n1tp, From, vdm_BC_GenAsgnInit(n1_v)));
-      rb_l.ImpConc(GenNumberTypeCheck(From, nil, L""));
+      rb_l.ImpConc(GenNumberTypeCheck(From, L""));
       n1_v = From;
       n1value = GenGetValue(vdm_BC_GenCastExpr(GenRealType(), n1_v), rrep );
     }
@@ -2224,7 +2224,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
     {
       TYPE_CPP_Identifier To (vdm_BC_GiveName(ASTAUX::MkId(L"to")));
       rb_l.ImpConc(GenDecl_DS(n2tp, To, vdm_BC_GenAsgnInit(n2_v)));
-      rb_l.ImpConc(GenNumberTypeCheck(To, nil, L""));
+      rb_l.ImpConc(GenNumberTypeCheck(To, L""));
       n2_v = To;
       n2value = GenGetValue(vdm_BC_GenCastExpr(GenRealType(), n2_v), rrep);
     }
@@ -4697,7 +4697,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindVariables(const TYPE_AS_MultSetBind & MSB, cons
       tmpSet = vdm_BC_GiveName(ASTAUX::MkId(L"tmpS"));
       rb_l.ImpAppend(vdm_BC_GenDecl(GenType(setType), tmpS, vdm_BC_GenAsgnInit(s_res)));
     }
-    rb_l.ImpConc(GenSetTypeCheck(tmpS, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(tmpS, L""));
     tmpSet = GenCastSetType(tmpS);
   }
   rb_l.ImpConc(s_st_stmt);
@@ -4725,7 +4725,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindVariables(const TYPE_AS_MultSetBind & MSB, cons
     else {
       TYPE_CPP_Expr getval (GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), res), bt));
 
-      inner_stmts.ImpConc(GenBooleanTypeCheck(res, nil, L""));
+      inner_stmts.ImpConc(GenBooleanTypeCheck(res, L""));
       inner_stmts.ImpAppend(vdm_BC_GenAsgnStmt(succ, getval));
     }
   }
@@ -5051,7 +5051,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqModifyMapOverrideExpr (const TYPE_AS_SeqModifyMap
       Tuple smcgee (CGExprExcl(mapexp, ASTAUX::MkId(L"tmpmap"), modmapType));
       rb.ImpConc(smcgee.GetSequence(2));
       rb.ImpConc (GenDeclInit_DS (modmapType, tmpmap_v, smcgee.GetRecord(1)));
-      rb.ImpConc (GenMapTypeCheck(tmpmap_v, nil, L""));
+      rb.ImpConc (GenMapTypeCheck(tmpmap_v, L""));
       rb.ImpConc (GenDeclInit_DS (tmpmapType, modmap_v, GenCastMap(tmpmap_v)));
     }
   }
@@ -6210,7 +6210,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
       if (!IsSetType(exprType) && isSetBind) {
         TYPE_CPP_Identifier tmpSet_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
-        rb_l.ImpConc(GenSetTypeCheck(tmpVal, nil, L""));
+        rb_l.ImpConc(GenSetTypeCheck(tmpVal, L""));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(GenCastSetType(tmpVal))));
@@ -6224,7 +6224,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       }
       else if (!IsSeqType(exprType) && !isSetBind) {
         TYPE_CPP_Identifier tmpSeq_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq")));
-        rb_l.ImpConc(GenSeqTypeCheck(tmpVal, nil, L""));
+        rb_l.ImpConc(GenSeqTypeCheck(tmpVal, L""));
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpSeq_q, vdm_BC_GenAsgnInit(GenCastSeq(tmpVal, nil))));
@@ -6275,7 +6275,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
           pred_v = vdm_BC_GiveName(ASTAUX::MkId(L"pred"));
           stmts.ImpConc (GenDecl_DS (pred_type, pred_v, vdm_BC_GenAsgnInit(tmpB)));
         }
-        stmts.ImpConc(GenBooleanTypeCheck(pred_v, nil, L""));
+        stmts.ImpConc(GenBooleanTypeCheck(pred_v, L""));
         stmts.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v), bt),
                                          vdm_BC_GenBlock(if_then), nil));
       }
@@ -6460,7 +6460,7 @@ Generic vdmcg::CGUnaryNum (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
 
   SEQ<TYPE_CPP_Stmt> rb_l (arg_stmt);
   if (argTmpType.Is(TAG_TYPE_REP_UnionTypeRep) && !IsNumType(argTmpType)) {
-    rb_l.ImpConc(GenNumberTypeCheck(argTmp, nil, L""));
+    rb_l.ImpConc(GenNumberTypeCheck(argTmp, L""));
   }
 
   Generic alt2;
@@ -6501,7 +6501,7 @@ Generic vdmcg::CGUnaryNot (const TYPE_AS_Expr & arg, const TYPE_CGMAIN_VT & vt)
 
   SEQ<TYPE_CPP_Stmt> rb_l (arg_stmt);
   if (!IsBoolType( argTmpType ) ) {
-    rb_l.ImpConc(GenBooleanTypeCheck(argTmp, nil, L""));
+    rb_l.ImpConc(GenBooleanTypeCheck(argTmp, L""));
   }
 
   TYPE_REP_BooleanTypeRep bt;
@@ -6545,7 +6545,7 @@ Generic vdmcg::CGUnarySet (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
 
   SEQ<TYPE_CPP_Stmt> rb_l (arg_stmt);
   if (!IsSetType(argTmpType)) {
-    rb_l.ImpConc(GenSetTypeCheck(argTmp, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(argTmp, L""));
   }
 
   Generic alt2;
@@ -7038,13 +7038,13 @@ Generic vdmcg::CGUnaryMap (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
     case MAPRNG:
     case MAPINVERSE: {
       if (!IsMapType(argTmpType)) {
-        rb_l.ImpConc(GenMapTypeCheck(argTmp, nil, L""));
+        rb_l.ImpConc(GenMapTypeCheck(argTmp, L""));
       }
       break;
     }
     case MAPDISTRMERGE: {
       if (!IsSetType(argTmpType)) {
-        rb_l.ImpConc(GenSetTypeCheck(argTmp, nil, L""));
+        rb_l.ImpConc(GenSetTypeCheck(argTmp, L""));
       }
       break;
     }
@@ -7231,7 +7231,7 @@ Tuple vdmcg::GenDynCheckOnSetsValues(const TYPE_CPP_Expr & tmp_v,
       decl.ImpConc(GenDecl_DS(maptype, tmp_v, vdm_BC_GenAsgnInit(e_v)));
 
     SEQ<TYPE_CPP_Stmt> s;
-    s.ImpConc(GenMapTypeCheck(e_v, nil, L""));
+    s.ImpConc(GenMapTypeCheck(e_v, L""));
     s.ImpConc(decl);
     return mk_(s, tmp_v);
   }
@@ -7545,7 +7545,7 @@ Generic vdmcg::CGLogBinaryExpr(const TYPE_AS_Expr & le,
       rb1new.ImpConc(GenDecl_DS(type1, v1, vdm_BC_GenAsgnInit(var1)));
       expr1 = v1; 
     }
-    rb1new.ImpConc(GenBooleanTypeCheck(expr1, nil, L""));
+    rb1new.ImpConc(GenBooleanTypeCheck(expr1, L""));
     expr1 = GenCastType(mk_REP_BooleanTypeRep(), expr1);
   }
 
@@ -7555,7 +7555,7 @@ Generic vdmcg::CGLogBinaryExpr(const TYPE_AS_Expr & le,
       rb1new.ImpConc(GenDecl_DS(type1, v2, vdm_BC_GenAsgnInit(var2)));
       expr2 = v2; 
     }
-    rb2new.ImpConc(GenBooleanTypeCheck(expr2, nil, L""));
+    rb2new.ImpConc(GenBooleanTypeCheck(expr2, L""));
     expr2 = GenCastType(mk_REP_BooleanTypeRep(), expr2);
   }
 
@@ -7741,10 +7741,10 @@ Generic vdmcg::CGNumBinaryExpr(const TYPE_AS_Expr & le, int opr, const TYPE_AS_E
           rb_l.ImpConc(GenConstDeclInit(type2, e2_v, var2_v));
         }
         if (!IsNumType(type1)) {
-          rb_l.ImpConc(GenNumberTypeCheck(v1_v, nil, L""));
+          rb_l.ImpConc(GenNumberTypeCheck(v1_v, L""));
         }
         if (!IsNumType(type2)) {
-          rb_l.ImpConc(GenNumberTypeCheck(v2_v, nil, L""));
+          rb_l.ImpConc(GenNumberTypeCheck(v2_v, L""));
         }
       }
       break;
@@ -7766,10 +7766,10 @@ Generic vdmcg::CGNumBinaryExpr(const TYPE_AS_Expr & le, int opr, const TYPE_AS_E
           rb_l.ImpConc(GenConstDeclInit(type2, e2_v, var2_v));
         }
         if (!IsNumType(type1)) {
-          rb_l.ImpConc(GenIntegerTypeCheck(v1_v, nil, L""));
+          rb_l.ImpConc(GenIntegerTypeCheck(v1_v, L""));
         }
         if (!IsNumType(type2)) {
-          rb_l.ImpConc(GenIntegerTypeCheck(v2_v, nil, L""));
+          rb_l.ImpConc(GenIntegerTypeCheck(v2_v, L""));
         }
       }
       break;
@@ -7850,7 +7850,7 @@ Generic vdmcg::CGInSet(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
   TYPE_CPP_Expr var2_q (IsSetType(type2) ? var2_v : GenCastSetType(var2_v));
 
   if (!IsSetType(type2)) {
-    rb_l.ImpConc(GenSetTypeCheck(var2_v, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(var2_v, L""));
   }
 
   TYPE_CPP_Expr expr (GenInSet(vt1, mk_CG_VT(var2_q, type2)));
@@ -7891,7 +7891,7 @@ Generic vdmcg::CGNotInSet(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
   TYPE_CPP_Expr var2_q (IsSetType(type2) ? var2_v : GenCastSetType(var2_v));
 
   if (!IsSetType(type2)) {
-    rb_l.ImpConc(GenSetTypeCheck(var2_v, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(var2_v, L""));
   }
 
   TYPE_CPP_Expr expr (GenNotInSet(vt1, mk_CG_VT(var2_q, type2)));
@@ -7931,10 +7931,10 @@ Generic vdmcg::CGProperSubset(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
   TYPE_CPP_Expr var1q (IsSetType(type1) ? var1_v : GenCastSetType(var1_v));
   TYPE_CPP_Expr var2q (IsSetType(type2) ? var2_v : GenCastSetType(var2_v));
   if (!IsSetType(type1)) {
-    rb_l.ImpConc(GenSetTypeCheck(var1_v, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(var1_v, L""));
   }
   if (!IsSetType(type2)) {
-    rb_l.ImpConc(GenSetTypeCheck(var2_v, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(var2_v, L""));
   }
 
   TYPE_CPP_Expr subs (GenSubSet(var1q, var2q));
@@ -7991,10 +7991,10 @@ Generic vdmcg::CGSubset(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
   TYPE_CPP_Expr var2q (IsSetType(type2) ? var2_v : GenCastSetType(var2_v));
 
   if (!IsSetType(type1)) {
-    rb_l.ImpConc(GenSetTypeCheck(var1_v, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(var1_v, L""));
   }
   if (!IsSetType(type2)) {
-    rb_l.ImpConc(GenSetTypeCheck(var2_v, nil, L""));
+    rb_l.ImpConc(GenSetTypeCheck(var2_v, L""));
   }
 
   TYPE_CPP_Expr expr (GenSubSet_Bool(var1q, var2q));
@@ -9027,7 +9027,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenPredicateStmt(const Generic & pred,
         cond = GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v), predType);
       }
 
-      rb.ImpConc(GenBooleanTypeCheck(pred_v, nil, L""));
+      rb.ImpConc(GenBooleanTypeCheck(pred_v, L""));
       if (notpred) {
         rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenBracketedExpr(cond)),
                                       vdm_BC_GenBlock(stmts), nil));
@@ -9121,7 +9121,7 @@ Tuple vdmcg::FindMultBind(const SEQ<TYPE_AS_MultBind> & bind_l)
           TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
     
           rb.ImpConc(e_stmt);
-          rb.ImpConc(GenSetTypeCheck(e_v, nil, L""));
+          rb.ImpConc(GenSetTypeCheck(e_v, L""));
 #ifdef VDMPP
           if (vdm_CPP_isJAVA()) {
             rb.ImpConc(GenDeclSet(e1_v, GenCastSetType(e_v)));
@@ -9167,7 +9167,7 @@ Tuple vdmcg::FindMultBind(const SEQ<TYPE_AS_MultBind> & bind_l)
           TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_seq")));
     
           rb.ImpConc(e_stmt);
-          rb.ImpConc(GenSeqTypeCheck(e_v, nil, L""));
+          rb.ImpConc(GenSeqTypeCheck(e_v, L""));
 #ifdef VDMPP
           if (vdm_CPP_isJAVA()) {
             rb.ImpConc(GenDeclSeq(e1_v, GenCastSeq(e_v, nil)));

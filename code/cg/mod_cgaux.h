@@ -94,12 +94,12 @@ private:
   static TYPE_CPP_Stmt RunTime(const wstring &);
   static TYPE_CPP_Expr RunTimeExpr(const TYPE_AS_Id &);
   TYPE_CPP_Stmt NotSupported(const wstring &, const Record&);
-  SEQ<TYPE_CPP_Stmt> GenNumberTypeCheck(const TYPE_CPP_Expr &, const Generic &, const wstring &);
-  SEQ<TYPE_CPP_Stmt> GenIntegerTypeCheck(const TYPE_CPP_Expr &, const Generic &, const wstring &);
-  SEQ<TYPE_CPP_Stmt> GenBooleanTypeCheck(const TYPE_CPP_Expr &, const Generic &, const wstring &);
-  SEQ<TYPE_CPP_Stmt> GenSetTypeCheck(const TYPE_CPP_Expr &, const Generic &, const wstring &);
-  SEQ<TYPE_CPP_Stmt> GenSeqTypeCheck(const TYPE_CPP_Expr &, const Generic &, const wstring &);
-  SEQ<TYPE_CPP_Stmt> GenMapTypeCheck(const TYPE_CPP_Expr &, const Generic &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenNumberTypeCheck(const TYPE_CPP_Expr &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenIntegerTypeCheck(const TYPE_CPP_Expr &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenBooleanTypeCheck(const TYPE_CPP_Expr &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenSetTypeCheck(const TYPE_CPP_Expr &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenSeqTypeCheck(const TYPE_CPP_Expr &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenMapTypeCheck(const TYPE_CPP_Expr &, const wstring &);
   SEQ<TYPE_CPP_Stmt> GenTypeCheck(const TYPE_CPP_Expr &, const wstring &);
   void CannotCG(const wstring &, const TYPE_AS_Name &);
 
