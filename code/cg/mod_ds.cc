@@ -5008,6 +5008,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIteration(const TYPE_CGMAIN_VT & vt1,
 #endif //VDMPP
     rb_l.ImpConc(GenMapDecl_DS(tmpMap, vdm_BC_GenObjectInit(mk_sequence(v1))));
 
+  TYPE_CPP_Expr cond(vdm_BC_GenNot(GenSubSet(GenRng(tmpMap), GenDom(tmpMap))));
+  rb_l.ImpAppend(vdm_BC_GenIfStmt(cond,
+        vdm_BC_GenBlock(mk_sequence(RunTime(L"The range is not a subset of the domain"))), nil));
+
   rb_l.ImpConc(GenNatTypeCheck(v2, L"in map iteration expression"));
   if (IsIntType(t2)) {
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), n, vdm_BC_GenAsgnInit(GenGetValue(v2, t2))));
@@ -5051,7 +5055,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   type_dL inc;
   inc.ImpAppend(vdm_BC_GenPostPlusPlus(count));
 
-  TYPE_CPP_AsgnInit ai_p;
+  TYPE_CPP_Initializer ai_p;
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     ai_p = vdm_BC_GenAsgnInit(GenMapExpr(tmpMap));

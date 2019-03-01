@@ -3480,6 +3480,9 @@ resVar = tmpMap;
 #endif VDMPP
         rb_l := GenMapDecl(tmpMap, BC`GenObjectInit([v1]));
 
+      def cond = BC`GenNot(GenSubSet(GenRng(tmpMap), GenDom(tmpMap)));
+      in rb_l := rb_l ^ [ BC`GenIfStmt(cond,
+                     BC`GenBlock([CGAUX`RunTime("The range is not a subset of the domain")]), nil)];
       rb_l := rb_l ^ CGAUX`GenNatTypeCheck(v2, "in map iteration expression");
       if CGAUX`IsIntType(t2)
       then rb_l := rb_l ^ [BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(GenGetValue(v2, t2)))]
