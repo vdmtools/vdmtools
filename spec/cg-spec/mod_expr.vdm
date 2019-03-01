@@ -1949,7 +1949,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
      (def tmpGSeq = BC`GiveName("tmpGSeq")
       in
        (rb_l := rb_l ^ DS`GenDecl(sqt, tmpGSeq, BC`GenAsgnInit(tmpSeq1));
-        rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpSeq, "A sequence was expected in subsequence expression");
+        rb_l := rb_l ^ CGAUX`GenSeqTypeCheck(tmpSeq, "in subsequence expression");
         tmpSeq := DS`GenCastSeq(tmpGSeq, sqt))
      );
     def mk_(n1_expr_v, n1_stmt) = CGExprExcl(n1, "n1", nil);
@@ -4486,7 +4486,7 @@ Generic edom;
 for ( int bb = modMap.First( edom ); bb; bb = modMap.Next( edom ) )
  {
     if (! edom.IsInt())
-        CGAUX`RunTime("An Integer was expected in map in sequence modify");
+        CGAUX`RunTime("An integer was expected in map in sequence modify");
     Int e = edom;
     if ( e.GetValue() > tmpSeq.Lenght() ||
          e.GetValue() <= 1)
@@ -4692,10 +4692,10 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
     if CGAUX`IsIntType(domtype)
     then isint_part := []
     else
-      def rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")]);
-          int_cond = BC`GenNot( DS`GenIsInt(edom) );
-          ifisint = BC`GenIfStmt(int_cond, rre, nil);
-      in
+--      def rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")]);
+--          int_cond = BC`GenNot( DS`GenIsInt(edom) );
+--          ifisint = BC`GenIfStmt(int_cond, rre, nil);
+--      in
        (dcl e_decl : seq of CPP`Stmt;
 #ifdef VDMPP
         if CPP`isJAVA()
@@ -4704,7 +4704,8 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
         else
 #endif VDMPP
           e_decl := DS`GenDeclInit(nattp, e_v, edom);
-        isint_part := [ifisint] ^ e_decl;
+        --isint_part := [ifisint] ^ e_decl;
+        isint_part := CGAUX`GenIntegerTypeCheck(edom, "in domain of map in sequence modifier") ^ e_decl;
        );
     def e_int = DS`GenGetValue(e_v, nattp);
        alt2 = DS`GenSeqModify(s_v, e_int, erng);
@@ -7756,7 +7757,13 @@ CGIterateExpr(le, re, resVT) ==
    (cases true:
       (CGAUX`IsNumType(type1) and CGAUX`IsNumType(type2)) ->
           return stmt1 ^ stmt2 ^ [ DS`GenExp(vt1, vt2, resVT) ],
-      (CGAUX`IsMapType(type1) or CGAUX`IsMapType(rtype)) -> -- or CGAUX`IsMapType(rtype) tilføjet 27.7.98 (jojo)
+      --(CGAUX`IsMapType(type1) or CGAUX`IsMapType(rtype)) -> -- or CGAUX`IsMapType(rtype) tilføjet 27.7.98 (jojo)
+#ifdef VDMPP
+      (CGAUX`IsMapType(type1) or CPP`isJAVA() and CGAUX`IsMapType(rtype)) ->
+#endif VDMPP
+#ifdef VDMSL
+      (CGAUX`IsMapType(type1) ->
+#endif VDMSL
           return stmt1 ^ stmt2 ^ DS`GenMapIteration(vt1, vt2, resVT),
       (CGAUX`IsFctType(type1)) ->
           return [CGAUX`NotSupported("function iteration expression")],

@@ -96,6 +96,7 @@ private:
   TYPE_CPP_Stmt NotSupported(const wstring &, const Record&);
   SEQ<TYPE_CPP_Stmt> GenNumberTypeCheck(const TYPE_CPP_Expr &, const wstring &);
   SEQ<TYPE_CPP_Stmt> GenIntegerTypeCheck(const TYPE_CPP_Expr &, const wstring &);
+  SEQ<TYPE_CPP_Stmt> GenNatTypeCheck(const TYPE_CPP_Expr &, const wstring &);
   SEQ<TYPE_CPP_Stmt> GenBooleanTypeCheck(const TYPE_CPP_Expr &, const wstring &);
   SEQ<TYPE_CPP_Stmt> GenSetTypeCheck(const TYPE_CPP_Expr &, const wstring &);
   SEQ<TYPE_CPP_Stmt> GenSeqTypeCheck(const TYPE_CPP_Expr &, const wstring &);

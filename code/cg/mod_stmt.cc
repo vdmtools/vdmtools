@@ -1933,7 +1933,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
   }
   else {
     whCrtlval = GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), whCrtl_v), btype);
-    isbool.ImpConc(GenBooleanTypeCheck(whCrtl_v, L"A boolean was expected in while loop"));
+    isbool.ImpConc(GenBooleanTypeCheck(whCrtl_v, L"in while loop"));
   }
 
   TYPE_CPP_Expr cond (vdm_BC_GenBoolLit(true));
@@ -2257,7 +2257,7 @@ Tuple vdmcg::GenBoundAndValue(const SEQ<Char> & var, const TYPE_AS_Expr & expr)
       rb_l.ImpConc(GenDecl_DS(tp, v1, vdm_BC_GenAsgnInit(var_v)));
       tmp = v1;
     }
-    rb_l.ImpConc(GenIntegerTypeCheck(tmp, L"An integer was expected in indexed for loop"));
+    rb_l.ImpConc(GenIntegerTypeCheck(tmp, L"in indexed for loop"));
 
     TYPE_CPP_Expr val;
 #ifdef VDMPP

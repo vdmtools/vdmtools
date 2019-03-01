@@ -4092,6 +4092,7 @@ TYPE_CPP_Expr vdmcg::GenIsSeq(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsSequence"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenIsString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -4099,6 +4100,7 @@ TYPE_CPP_Expr vdmcg::GenIsString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenBracketedExpr(vdm_BC_GenTypeComp(GenStringType(), e));
 }
+#endif // VDMPP
 
 // GenSeqIsEmpty
 // e : CPP`Expr
@@ -4256,12 +4258,14 @@ TYPE_CPP_Expr vdmcg::GenSeqExpr(const Generic & ie)
     return vdm_BC_GenFctCall(GenImplSeq0Type().get_tp(), args);
 }
 
+#ifdef VDMPP
 // GenEmptyStringExpr
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenEmptyStringExpr()
 {
   return GenStringExpr(nil);
 }
+#endif // VDMPP
 
 // GenStringExpr
 // ie : [CPP`Expr]
@@ -4503,8 +4507,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapDecl_DS(const TYPE_CPP_Name & name, const Generi
 // ==> seq of CPP`Stmt
 SEQ<TYPE_CPP_Stmt> vdmcg::GenDeclMap(const TYPE_CPP_Name & name, const Generic & ie)
 {
-  if (ie.IsNil ())
+  if (ie.IsNil ()) {
     return GenDeclEmptyMap(nil, name);
+  }
   else {
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
@@ -4562,8 +4567,7 @@ TYPE_CPP_Expr vdmcg::GenMapApply(const TYPE_CGMAIN_VT & vt1, const TYPE_CPP_Expr
   const TYPE_CPP_Expr & e1 (vt1.GetRecord(pos_CGMAIN_VT_name));
   const Generic & e1t (vt1.GetField(pos_CGMAIN_VT_type));
 
-  if ( e1t.IsNil() )
-  {
+  if ( e1t.IsNil() ) {
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
       return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"get"), mk_sequence(e2));
@@ -4572,11 +4576,9 @@ TYPE_CPP_Expr vdmcg::GenMapApply(const TYPE_CGMAIN_VT & vt1, const TYPE_CPP_Expr
 #endif // VDMPP
       return  vdm_BC_GenArrayApply(e1, e2);
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep e1type (e1t);
-    if (e1type.Is(TAG_TYPE_REP_GeneralMapTypeRep) || e1type.Is(TAG_TYPE_REP_InjectiveMapTypeRep) )
-    {
+    if (e1type.Is(TAG_TYPE_REP_GeneralMapTypeRep) || e1type.Is(TAG_TYPE_REP_InjectiveMapTypeRep) ) {
       const TYPE_REP_TypeRep & maprng (e1type.GetRecord(2));
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
@@ -4589,8 +4591,9 @@ TYPE_CPP_Expr vdmcg::GenMapApply(const TYPE_CGMAIN_VT & vt1, const TYPE_CPP_Expr
         return GenCastType(tp, vdm_BC_GenArrayApply( e1, e2 ));
       }
     }
-    else
+    else {
       ReportError(L"GenMapApply");
+    }
     return Record(0,0); // To avoid warnings
   }
 }
@@ -4738,8 +4741,9 @@ TYPE_CPP_Expr vdmcg::GenEmptyMapExpr()
 TYPE_CPP_Expr vdmcg::GenMapExpr(const Generic & ie)
 {
   SEQ<TYPE_CPP_Expr> args;
-  if (!ie.IsNil())
+  if (!ie.IsNil()) {
     args.ImpAppend(ie);
+  }
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenClassInstanceCreationExpr(GenImplMapType().get_tp(), args);
@@ -4926,8 +4930,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenComposeExpr(const TYPE_CGMAIN_VT & vt1,
   rb_l.ImpConc(GenDeclEmptyMap(nil, tmpMap));
 
   TYPE_CPP_Expr tmpMap1 (v1);
-  if (! IsMapType(t1))
-  {
+  if (! IsMapType(t1)) {
     tmpMap1 = vdm_BC_GiveName(ASTAUX::MkId(L"tmpMap1"));
     TYPE_CPP_Expr cond (GenIsMap(v1));
 
@@ -4946,8 +4949,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenComposeExpr(const TYPE_CGMAIN_VT & vt1,
   }
 
   TYPE_CPP_Expr tmpMap2 (v2);
-  if (! IsMapType(t2))
-  {
+  if (! IsMapType(t2)) {
     tmpMap2 = vdm_BC_GiveName(ASTAUX::MkId(L"tmpMap2"));
 
     TYPE_CPP_Stmt asgn;
@@ -5004,21 +5006,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIteration(const TYPE_CGMAIN_VT & vt1,
   }
   else
 #endif //VDMPP
-    rb_l.ImpConc(GenMapDecl_DS(tmpMap, vdm_BC_GenAsgnInit(v1)));
+    rb_l.ImpConc(GenMapDecl_DS(tmpMap, vdm_BC_GenObjectInit(mk_sequence(v1))));
 
-  if (IsIntType(t2))
-  {
+  rb_l.ImpConc(GenNatTypeCheck(v2, L"in map iteration expression"));
+  if (IsIntType(t2)) {
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), n, vdm_BC_GenAsgnInit(GenGetValue(v2, t2))));
   }
-  else
-  {
-    TYPE_CPP_Expr cond (GenIsInt(v2));
-    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A 'nat' was expected in map iteration expression"))));
-    TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
+  else {
+    TYPE_CPP_Expr val (GenGetValue(vdm_BC_GenCastExpr(GenIntType(), v2),
+                                   mk_REP_NumericTypeRep(Int(INTEGER)))) ;
 
-    TYPE_CPP_Expr val (GenGetValue(vdm_BC_GenCastExpr(GenIntType(), v2), mk_REP_NumericTypeRep(Int(INTEGER)))) ;
-
-    rb_l.ImpAppend(ifstmt);
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), n, vdm_BC_GenAsgnInit(val)));
   }
 
@@ -5038,8 +5035,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   TYPE_CPP_Identifier mm (vdm_BC_GiveName (ASTAUX::MkId(L"mm")));
   TYPE_CPP_Identifier mm2 (vdm_BC_GiveName (ASTAUX::MkId(L"mm2")));
 
-  TYPE_CPP_Expr c1 (vdm_BC_GenLt(n, il));
-  TYPE_CPP_Expr c2 (vdm_BC_GenEq(n, il));
+  TYPE_CPP_Expr cond (vdm_BC_GenEq(n, il));
   TYPE_CPP_Identifier key (vdm_BC_GiveName(ASTAUX::MkId(L"key")));
   TYPE_CPP_Identifier elem (vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
   TYPE_CPP_Identifier count (vdm_BC_GiveName(ASTAUX::MkId(L"count")));
@@ -5062,7 +5058,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   }
   else
 #endif //VDMPP
-    ai_p = vdm_BC_GenAsgnInit(tmpMap);
+    ai_p = vdm_BC_GenObjectInit(mk_sequence(tmpMap));
 
   TYPE_CPP_Stmt st1_p (vdm_BC_GenBlock(GenIterMap(vt2, nil, key, nil, st1)));
   SEQ<TYPE_CPP_Stmt> dm (GenMapDecl_DS (mm, ai_p));
@@ -5072,17 +5068,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   st2_l.ImpConc(dm2);
   st2_l.ImpConc(GenIterMap(vt2, nil, key, elem, st2));
 
-  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A 'nat' was expected in map iteration expression"))));
-  TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(c1, rti, nil));
-
   TYPE_CPP_Stmt forstmt (vdm_BC_GenForStmt (idcl, stop, inc, vdm_BC_GenBlock (st2_l)));
 
   TYPE_CPP_Stmt estmt (vdm_BC_GenBlock(type_dL().ImpAppend(forstmt)));
 
-  TYPE_CPP_Stmt ifstmt2 (vdm_BC_GenIfStmt(c2, st1_p, estmt));
+  TYPE_CPP_Stmt ifstmt2 (vdm_BC_GenIfStmt(cond, st1_p, estmt));
 
   SEQ<TYPE_CPP_Stmt> s_l;
-  s_l.ImpConc(dm).ImpAppend(ifstmt).ImpAppend(ifstmt2);
+  s_l.ImpConc(dm).ImpAppend(ifstmt2);
   return s_l;
 }
 
@@ -5158,13 +5151,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenIterMap(const TYPE_CGMAIN_VT & vt,
     TYPE_CPP_Expr e2(vdm_BC_GenAsgnExpr(bb_v, fcall2));
 
     SEQ<TYPE_CPP_Stmt> stmt_l;
-    if (! key.IsNil())
-      //stmt_l.ImpConc(GenDecl_DS(dtp, key, vdm_BC_GenAsgnInit(tmpe_v)));
+    if (! key.IsNil()) {
       stmt_l.ImpConc(GenDecl_DS(dtp, key, vdm_BC_GenObjectInit(mk_sequence(tmpe_v))));
-
+    }
     if (! elem.IsNil()) {
       TYPE_CPP_Expr el (GenMapApply(mk_CG_VT(tmpMap_v, nil), key));
-      //stmt_l.ImpConc(GenDecl_DS(rtp, elem, vdm_BC_GenAsgnInit(el)));
       stmt_l.ImpConc(GenDecl_DS(rtp, elem, vdm_BC_GenObjectInit(mk_sequence(el))));
     }
     stmt_l.ImpAppend(stmt);

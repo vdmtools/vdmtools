@@ -2028,7 +2028,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
   if (! IsSeqType(sqt)) {
     TYPE_CPP_Identifier tmpGSeq (vdm_BC_GiveName(ASTAUX::MkId(L"tmpGSeq")));
     rb_l.ImpConc(GenDecl_DS(sqt, tmpGSeq, vdm_BC_GenAsgnInit(tmpSeq1)));
-    rb_l.ImpConc(GenSeqTypeCheck(tmpSeq, L"A sequence was expected in subsequence expression"));
+    rb_l.ImpConc(GenSeqTypeCheck(tmpSeq, L"in subsequence expression"));
     tmpSeq = GenCastSeq(tmpGSeq, sqt);
   }
 
@@ -5187,9 +5187,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
   SEQ<TYPE_CPP_Stmt> isint_part;
   if (!IsIntType(domtype)) {
     e_v = vdm_BC_GiveName(ASTAUX::MkId(L"e_v"));
-    TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"An integer was expected in domain of map in sequence modifier"))));
-    TYPE_CPP_Expr int_cond (vdm_BC_GenNot(GenIsInt(edom)));
-    TYPE_CPP_Stmt ifisint (vdm_BC_GenIfStmt(int_cond, rre, nil));
+//    TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"An integer was expected in domain of map in sequence modifier"))));
+//    TYPE_CPP_Expr int_cond (vdm_BC_GenNot(GenIsInt(edom)));
+//    TYPE_CPP_Stmt ifisint (vdm_BC_GenIfStmt(int_cond, rre, nil));
     SEQ<TYPE_CPP_Stmt> e_decl;
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
@@ -5200,7 +5200,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
     {
       e_decl.ImpConc(GenDeclInit_DS(nattp, e_v, edom));
     }
-    isint_part.ImpAppend(ifisint).ImpConc(e_decl);
+    //isint_part.ImpAppend(ifisint).ImpConc(e_decl);
+    isint_part.ImpConc(GenIntegerTypeCheck(edom, L"in domain of map in sequence modifier"));
+    isint_part.ImpConc(e_decl);
   }
 
   TYPE_CPP_Expr e_int (GenGetValue(e_v, nattp));
@@ -8434,7 +8436,11 @@ Generic vdmcg::CGIterateExpr(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
     rb_l.ImpAppend(GenExp(vt1, vt2, resVT));
     return rb_l;
   }
+#ifdef VDMPP
   else if (IsMapType(type1) || (vdm_CPP_isJAVA() && IsMapType(rtype))) {
+#else
+  else if (IsMapType(type1)) {
+#endif // VDMPP
     rb_l.ImpConc(GenMapIteration(vt1, vt2, resVT));
     return rb_l;
   }

@@ -855,49 +855,43 @@ operations
   GenNumberTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
   GenNumberTypeCheck(expr, cst) ==
     def cond = BC`GenNot(DS`GenIsReal(expr));
-        msg = if nil <> cst
-              then cst
-              else "A number was expected";
+        msg = "A number was expected" ^ (if nil <> cst then " " ^ cst else "");
     in return GenTypeCheck(cond, msg);
 
   GenIntegerTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
   GenIntegerTypeCheck(expr, cst) ==
     def cond = BC`GenNot(DS`GenIsInt(expr));
-        msg = if nil <> cst
-              then cst
-              else "A integer was expected";
+        msg = "An integer was expected" ^ (if nil <> cst then " " ^ cst else "");
+    in return GenTypeCheck(cond, msg);
+
+  GenNatTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
+  GenNatTypeCheck(expr, cst) ==
+    def cond = BC`GenNot(DS`GenIsNat(expr));
+        msg = "A 'nat' was expected" ^ (if nil <> cst then " " ^ cst else "");
     in return GenTypeCheck(cond, msg);
 
   GenBooleanTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
   GenBooleanTypeCheck(expr, cst) ==
     def cond = BC`GenNot(DS`GenIsBool(expr));
-        msg = if nil <> cst
-              then cst
-              else "A boolean was expected";
+        msg = "A boolean was expected" ^ (if nil <> cst then " " ^ cst else "");
     in return GenTypeCheck(cond, msg);
 
   GenSetTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
   GenSetTypeCheck(expr, cst) ==
     def cond = BC`GenNot(DS`GenIsSet(expr));
-        msg = if nil <> cst
-              then cst
-              else "A set was expected";
+        msg = "A set was expected" ^ (if nil <> cst then " " ^ cst else "");
     in return GenTypeCheck(cond, msg);
 
   GenSeqTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
   GenSeqTypeCheck(expr, cst) ==
     def cond = BC`GenNot(DS`GenIsSeq(expr));
-        msg = if nil <> cst
-              then cst
-              else "A sequence was expected";
+        msg = "A sequence was expected" ^ (if nil <> cst then " " ^ cst else "");
     in return GenTypeCheck(cond, msg);
 
   GenMapTypeCheck: CPP`Expr * [seq of char] ==> seq of CPP`Stmt
   GenMapTypeCheck(expr, cst) ==
     def cond = BC`GenNot(DS`GenIsMap(expr));
-        msg = if nil <> cst
-              then cst
-              else "A map was expected";
+        msg = "A map was expected" ^ (if nil <> cst then " " ^ cst else "");
     in return GenTypeCheck(cond, msg);
 
   GenTypeCheck: CPP`Expr * seq of char ==> seq of CPP`Stmt

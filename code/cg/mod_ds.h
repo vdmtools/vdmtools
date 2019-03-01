@@ -219,7 +219,9 @@ private:
   TYPE_CPP_Expr GenSeqModifyExpr(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenModify(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenIsSeq(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenIsString(const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenSeqIsEmpty(const TYPE_CPP_Expr &);
   SEQ<TYPE_CPP_Stmt> GenDeclEmptySeq(const TYPE_CPP_Name &);
   SEQ<TYPE_CPP_Stmt> GenDeclSeq(const TYPE_CPP_Name &, const Generic &);
@@ -232,7 +234,9 @@ private:
   TYPE_CPP_Expr GenSeqElems(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenEmptySeqExpr();
   TYPE_CPP_Expr GenSeqExpr(const Generic & ie);
+#ifdef VDMPP
   TYPE_CPP_Expr GenEmptyStringExpr();
+#endif // VDMPP
   TYPE_CPP_Expr GenStringExpr(const Generic & ie);
   SEQ<TYPE_CPP_Stmt> GenIterSeq(const TYPE_CGMAIN_VT &,
                                 const Generic &,

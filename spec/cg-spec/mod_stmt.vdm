@@ -1565,7 +1565,7 @@ CGWhileLoopStmt(mk_AS`WhileLoopStmt(test, body, -), isLast) ==
     then cond := whCrtlval
     else cond := BC`GenBoolLit(true);
     if not CGAUX`IsBoolType(whCrtlType)
-    then isbool := CGAUX`GenBooleanTypeCheck(whCrtl_v, "A boolean was expected in while loop");
+    then isbool := CGAUX`GenBooleanTypeCheck(whCrtl_v, "in while loop");
     def ifstmt = BC`GenIfStmt(whCrtlval, bodystmt, BC`GenBlock([BC`GenBreakStmt(nil)]));
     in
      (dcl block : CPP`Stmt,
@@ -1892,7 +1892,7 @@ GenBoundAndValue(var, expr) ==
       else
 #endif VDMPP
         val := DS`GenGetValue(BC`GenCastExpr(DS`GenIntType(), tmp), nil);
-      rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(tmp, "An integer was expected in indexed for loop");
+      rb_l := rb_l ^ CGAUX`GenIntegerTypeCheck(tmp, "in indexed for loop");
       return mk_(rb_l, val)
      )
     elseif is_AS`RealLit(expr) or is_AS`NumLit(expr)

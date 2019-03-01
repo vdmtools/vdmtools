@@ -2716,10 +2716,12 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc( e, "IsSequence", [] );
 
+#ifdef VDMPP
   GenIsString: CPP`Expr ==> CPP`Expr
   GenIsString(e) ==
     let tp = BC`GenTypeSpecifier(BC`GenIdentifier("String"))
     in return BC`GenBracketedExpr(BC`GenTypeComp(tp, e));
+#endif VDMPP
 
   GenSeqIsEmpty: CPP`Expr ==> CPP`Expr
   GenSeqIsEmpty( e ) ==
@@ -2813,9 +2815,11 @@ constructions of sequence type.
 #endif VDMPP
         return BC`GenFctCall(GenImplSeq0Type().tp, initexpr);
 
+#ifdef VDMPP
   GenEmptyStringExpr: () ==> CPP`Expr
   GenEmptyStringExpr() ==
     return GenStringExpr(nil);
+#endif VDMPP
 
   GenStringExpr: [CPP`Expr] ==> CPP`Expr
   GenStringExpr(ie) ==
@@ -3474,16 +3478,14 @@ resVar = tmpMap;
        )
       else
 #endif VDMPP
-        rb_l := GenMapDecl(tmpMap, BC`GenAsgnInit(v1));
+        rb_l := GenMapDecl(tmpMap, BC`GenObjectInit([v1]));
 
+      rb_l := rb_l ^ CGAUX`GenNatTypeCheck(v2, "in map iteration expression");
       if CGAUX`IsIntType(t2)
       then rb_l := rb_l ^ [BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(GenGetValue(v2, t2)))]
       else
-        def cond = GenIsInt(v2);
-            rti = BC`GenBlock([CGAUX`RunTime("A 'nat' was expected in map iteration expression")]);
-            ifstmt = BC`GenIfStmt(BC`GenNot(cond), rti, nil);
-            val = GenGetValue(BC`GenCastExpr(GenIntType(), v2), mk_REP`NumericTypeRep(<INTEGER>))
-        in rb_l := rb_l ^ [ifstmt, BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(val))];
+        def val = GenGetValue(BC`GenCastExpr(GenIntType(), v2), mk_REP`NumericTypeRep(<INTEGER>))
+        in rb_l := rb_l ^ [BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(val))];
       rb_l := rb_l ^ GenMapIterIfPart(n, tmpMap, t1);
       rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, tmpMap)];
       return rb_l
@@ -3494,8 +3496,7 @@ resVar = tmpMap;
     def il = BC`GenIntegerLit(0);
         mm = BC`GiveName("mm");
         mm2 = BC`GiveName("mm2");
-        c1 = BC`GenLt(n, il);
-        c2 = BC`GenEq(n, il);
+        cond = BC`GenEq(n, il);
         key = BC`GiveName("key");
         elem = BC`GiveName("elem");
         count = BC`GiveName("count");
@@ -3508,24 +3509,22 @@ resVar = tmpMap;
         inc = BC`GenPostPlusPlus(count);
         vt2 = mk_CGMAIN`VT(mm, t1);
     in
-     (dcl ai' : CPP`AsgnInit;
+     (dcl ai' : CPP`Initializer;
 #ifdef VDMPP
       if CPP`isJAVA()
       then
         ai' := BC`GenAsgnInit(GenMapExpr(tmpMap))
       else
 #endif VDMPP
-        ai' := BC`GenAsgnInit(tmpMap);
+        ai' := BC`GenObjectInit([tmpMap]);
       def st1' = BC`GenBlock(GenIterMap(vt2, nil, key, nil, st1));
           dm = GenMapDecl (mm, ai');
           dm2 = GenMapDecl (mm2, ai');
           st2_l = GenIterMap(vt2, nil, key, elem, st2);
-          rti = BC`GenBlock([CGAUX`RunTime("A 'nat' was expected in map iteration expression")]);
-          ifstmt = BC`GenIfStmt( c1, rti, nil);
           forstmt = BC`GenForStmt(idcl, stop, [inc], BC`GenBlock (dm2 ^ st2_l));
           estmt = BC`GenBlock ([forstmt]);
-          ifstmt2 = BC`GenIfStmt(c2, st1', estmt);
-      in return dm ^ [ifstmt, ifstmt2];
+          ifstmt2 = BC`GenIfStmt(cond, st1', estmt);
+      in return dm ^ [ifstmt2];
      );
 
 \end{vdm_al}
