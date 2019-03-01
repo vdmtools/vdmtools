@@ -5008,10 +5008,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIteration(const TYPE_CGMAIN_VT & vt1,
 #endif //VDMPP
     rb_l.ImpConc(GenMapDecl_DS(tmpMap, vdm_BC_GenObjectInit(mk_sequence(v1))));
 
-  TYPE_CPP_Expr cond(vdm_BC_GenNot(GenSubSet(GenRng(tmpMap), GenDom(tmpMap))));
-  rb_l.ImpAppend(vdm_BC_GenIfStmt(cond,
-        vdm_BC_GenBlock(mk_sequence(RunTime(L"The range is not a subset of the domain"))), nil));
-
   rb_l.ImpConc(GenNatTypeCheck(v2, L"in map iteration expression"));
   if (IsIntType(t2)) {
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), n, vdm_BC_GenAsgnInit(GenGetValue(v2, t2))));
@@ -5072,9 +5068,13 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   st2_l.ImpConc(dm2);
   st2_l.ImpConc(GenIterMap(vt2, nil, key, elem, st2));
 
+  TYPE_CPP_Stmt ifstmt(vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(vdm_BC_GenGt(n, vdm_BC_GenIntegerLit(1))),
+                                                       GenSubSet(GenRng(tmpMap), GenDom(tmpMap)))),
+                     vdm_BC_GenBlock(mk_sequence(RunTime(L"The range is not a subset of the domain"))), nil));
+
   TYPE_CPP_Stmt forstmt (vdm_BC_GenForStmt (idcl, stop, inc, vdm_BC_GenBlock (st2_l)));
 
-  TYPE_CPP_Stmt estmt (vdm_BC_GenBlock(type_dL().ImpAppend(forstmt)));
+  TYPE_CPP_Stmt estmt (vdm_BC_GenBlock(type_dL().ImpAppend(ifstmt).ImpAppend(forstmt)));
 
   TYPE_CPP_Stmt ifstmt2 (vdm_BC_GenIfStmt(cond, st1_p, estmt));
 
