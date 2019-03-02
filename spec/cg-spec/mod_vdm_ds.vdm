@@ -3508,14 +3508,15 @@ resVar = tmpMap;
         st1 = GenMapImpModify(tmpMap, key, key);
         estmt0 = BC`GenBlock(GenIterMap(mk_CGMAIN`VT(mm, t1), nil, key, nil, st1));
 
-        ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenLogAnd(BC`GenBracketedExpr(BC`GenGt(n, BC`GenIntegerLit(1))),
+        ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenLogOr(BC`GenBracketedExpr(BC`GenEq(n, BC`GenIntegerLit(1))),
                                                      GenSubSet(GenRng(tmpMap), GenDom(tmpMap)))),
                    BC`GenBlock([CGAUX`RunTime("The range is not a subset of the domain")]), nil);
 
+        mm2 = BC`GiveName("mm");
         elem = BC`GiveName("elem");
-        mapp = GenMapApply(mk_CGMAIN`VT(mm, nil), elem);
+        mapp = GenMapApply(mk_CGMAIN`VT(mm2, nil), elem);
         st2 = GenMapImpModify(tmpMap, key, mapp);
-        inner = BC`GenBlock (GenIterMap(mk_CGMAIN`VT(mm, t1), nil, key, elem, st2));
+        inner = BC`GenBlock (GenMapDecl (mm2, ai) ^ GenIterMap(mk_CGMAIN`VT(mm, t1), nil, key, elem, st2));
         count = BC`GiveName("count");
         idcl = BC`GenDecl(GenSmallNumType(), count, BC`GenAsgnInit(BC`GenIntegerLit(1)));
         e_stop = BC`GenLt(count, n);

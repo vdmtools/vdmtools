@@ -5046,15 +5046,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   TYPE_CPP_Stmt st1 (GenMapImpModify(tmpMap, key, key));
   TYPE_CPP_Stmt estmt0 (vdm_BC_GenBlock(GenIterMap(mk_CG_VT(mm, t1), nil, key, nil, st1)));
 
-  TYPE_CPP_Stmt ifstmt(vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenLogAnd(
-                                   vdm_BC_GenBracketedExpr(vdm_BC_GenGt(n, vdm_BC_GenIntegerLit(1))),
+  TYPE_CPP_Stmt ifstmt(vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenLogOr(
+                                   vdm_BC_GenBracketedExpr(vdm_BC_GenEq(n, vdm_BC_GenIntegerLit(1))),
                                    GenSubSet(GenRng(tmpMap), GenDom(tmpMap)))),
                      vdm_BC_GenBlock(mk_sequence(RunTime(L"The range is not a subset of the domain"))), nil));
 
+  TYPE_CPP_Identifier mm2 (vdm_BC_GiveName (ASTAUX::MkId(L"mm2")));
   TYPE_CPP_Identifier elem (vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
-  TYPE_CPP_Expr mapp (GenMapApply (mk_CG_VT (mm, nil), elem));
+  TYPE_CPP_Expr mapp (GenMapApply (mk_CG_VT (mm2, nil), elem));
   TYPE_CPP_Stmt st2 (GenMapImpModify(tmpMap, key, mapp));
-  TYPE_CPP_Stmt inner (vdm_BC_GenBlock(GenIterMap(mk_CG_VT(mm, t1), nil, key, elem, st2)));
+  SEQ<TYPE_CPP_Stmt> st_l;
+  st_l.ImpConc(GenMapDecl_DS (mm2, ai));
+  st_l.ImpConc(GenIterMap(mk_CG_VT(mm, t1), nil, key, elem, st2));
+  TYPE_CPP_Stmt inner (vdm_BC_GenBlock(st_l));
   TYPE_CPP_Identifier count (vdm_BC_GiveName(ASTAUX::MkId(L"count")));
   TYPE_CPP_DeclarationStmt idcl (vdm_BC_GenDecl(GenSmallNumType(), count,
                                                 vdm_BC_GenAsgnInit (vdm_BC_GenIntegerLit (1))));
