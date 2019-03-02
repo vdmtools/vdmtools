@@ -3486,6 +3486,7 @@ resVar = tmpMap;
       else
         def val = GenGetValue(BC`GenCastExpr(GenIntType(), v2), mk_REP`NumericTypeRep(<INTEGER>))
         in rb_l := rb_l ^ [BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(val))];
+
       rb_l := rb_l ^ GenMapIterIfPart(n, tmpMap, t1);
       rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, tmpMap)];
       return rb_l
@@ -3493,42 +3494,38 @@ resVar = tmpMap;
 
   GenMapIterIfPart: CPP`Name * CPP`Name * [REP`TypeRep] ==> seq1 of CPP`Stmt
   GenMapIterIfPart(n, tmpMap, t1) ==
-    def il = BC`GenIntegerLit(0);
-        mm = BC`GiveName("mm");
-        mm2 = BC`GiveName("mm2");
-        cond = BC`GenEq(n, il);
-        key = BC`GiveName("key");
-        elem = BC`GiveName("elem");
-        count = BC`GiveName("count");
-        ai = BC`GenAsgnInit(BC`GenIntegerLit(1));
-        mapp = GenMapApply(mk_CGMAIN`VT(mm2, nil), elem);
-        st1 = GenMapImpModify(tmpMap, key, key);
-        st2 = GenMapImpModify(tmpMap, key, mapp);
-        idcl = BC`GenDecl(GenSmallNumType(), count, ai);
-        stop = BC`GenLt(count, n);
-        inc = BC`GenPostPlusPlus(count);
-        vt2 = mk_CGMAIN`VT(mm, t1);
-    in
-     (dcl ai' : CPP`Initializer;
+   (dcl ai : CPP`Initializer;
 #ifdef VDMPP
-      if CPP`isJAVA()
-      then
-        ai' := BC`GenAsgnInit(GenMapExpr(tmpMap))
-      else
+    if CPP`isJAVA()
+    then ai := BC`GenAsgnInit(GenMapExpr(tmpMap))
+    else
 #endif VDMPP
-        ai' := BC`GenObjectInit([tmpMap]);
-      def st1' = BC`GenBlock(GenIterMap(vt2, nil, key, nil, st1));
-          dm = GenMapDecl (mm, ai');
-          dm2 = GenMapDecl (mm2, ai');
-          st2_l = GenIterMap(vt2, nil, key, elem, st2);
-          ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenLogAnd(BC`GenBracketedExpr(BC`GenGt(n, BC`GenIntegerLit(1))),
-                                                       GenSubSet(GenRng(tmpMap), GenDom(tmpMap)))),
-                     BC`GenBlock([CGAUX`RunTime("The range is not a subset of the domain")]), nil);
-          forstmt = BC`GenForStmt(idcl, stop, [inc], BC`GenBlock (dm2 ^ st2_l));
-          estmt = BC`GenBlock ([ifstmt, forstmt]);
-          ifstmt2 = BC`GenIfStmt(cond, st1', estmt);
-      in return dm ^ [ifstmt2];
-     );
+      ai := BC`GenObjectInit([tmpMap]);
+
+    def mm = BC`GiveName("mm");
+        key = BC`GiveName("key");
+
+        st1 = GenMapImpModify(tmpMap, key, key);
+        estmt0 = BC`GenBlock(GenIterMap(mk_CGMAIN`VT(mm, t1), nil, key, nil, st1));
+
+        ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenLogAnd(BC`GenBracketedExpr(BC`GenGt(n, BC`GenIntegerLit(1))),
+                                                     GenSubSet(GenRng(tmpMap), GenDom(tmpMap)))),
+                   BC`GenBlock([CGAUX`RunTime("The range is not a subset of the domain")]), nil);
+
+        elem = BC`GiveName("elem");
+        mapp = GenMapApply(mk_CGMAIN`VT(mm, nil), elem);
+        st2 = GenMapImpModify(tmpMap, key, mapp);
+        inner = BC`GenBlock (GenIterMap(mk_CGMAIN`VT(mm, t1), nil, key, elem, st2));
+        count = BC`GiveName("count");
+        idcl = BC`GenDecl(GenSmallNumType(), count, BC`GenAsgnInit(BC`GenIntegerLit(1)));
+        e_stop = BC`GenLt(count, n);
+        inc = [BC`GenPostPlusPlus(count)];
+        forstmt = BC`GenForStmt(idcl, e_stop, inc, inner);
+
+        estmt = BC`GenBlock ([ifstmt, forstmt]);
+        ifstmt2 = BC`GenIfStmt(BC`GenEq(n, BC`GenIntegerLit(0)), estmt0, estmt);
+    in return GenMapDecl (mm, ai) ^ [ ifstmt2 ];
+   );
 
 \end{vdm_al}
 
