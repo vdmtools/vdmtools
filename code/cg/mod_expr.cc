@@ -5828,34 +5828,35 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecordModifierExpr(const TYPE_AS_RecordModifierExpr 
   const SEQ<TYPE_CPP_Stmt> & rec_stmt (cgee.GetSequence(2));
 
   TYPE_CPP_Expr REVar;
-  if (rec_stmt.IsEmpty())
-  {
+  if (rec_stmt.IsEmpty()) {
     REVar = vdm_BC_GiveName(ASTAUX::MkId(L"tmpRE"));
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
-      if (IsCompositeType(tmpTp) && !tmpRE.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr))
+      if (IsCompositeType(tmpTp) && !tmpRE.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr)) {
         rb_l.ImpConc(GenDeclInit_DS(tmpTp,
                                       REVar,
                                       GenExplicitCast(tmpTp,
                                                       vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.clone")),
                                                                         SEQ<TYPE_CPP_Expr>().ImpAppend(tmpRE)),
                                                       nil)));
-      else
+      }
+      else {
         rb_l.ImpConc(GenDeclInit_DS(tmpTp, REVar, tmpRE));
+      }
     }
     else
 #endif // VDMPP
       rb_l.ImpConc(GenDeclInit_DS(tmpTp, REVar, tmpRE));
   }
-  else
-  {
+  else {
     REVar = tmpRE;
     rb_l = rec_stmt;
   }
 
   if (IsCompositeType(tmpTp)) {
     rb_l.ImpConc(GenModifyFields(REVar, tmpTp, mu_l, vt));
-  } else {
+  }
+  else {
     TYPE_CPP_Expr cond (GenIsRecord(tmpRE));
     type_dL stmt_l(GenModifyFields(REVar, tmpTp, mu_l, vt));
     TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A record was expected in record modifier expression"))));
@@ -5878,19 +5879,27 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenModifyFields(const TYPE_CPP_Name & rec,
 {
   const TYPE_CPP_Expr & resVar (vt.GetRecord(pos_CGMAIN_VT_name));
 
+  SET<TYPE_REP_TypeRep> tps (FindAllRecTypes(recTp));
+
   TYPE_CPP_Name tmpRec (rec);
+
   SEQ<TYPE_CPP_Stmt> rb_l;
-  if (!IsCompositeType(recTp))
-  {
+  if (!IsCompositeType(recTp)) {
     tmpRec = vdm_BC_GiveName(ASTAUX::MkId(L"tmpRec"));
+    Generic name = nil;
+    if (1 == tps.Card() ) {
+      TYPE_REP_CompositeTypeRep ctr (tps.GetElem()); 
+      name = ctr.GetRecord(pos_REP_CompositeTypeRep_nm);
+    }
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
       TYPE_CPP_Expr clonefct (vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.clone")), mk_sequence(rec)));
-      rb_l.ImpAppend(vdm_BC_GenDecl(GenRecordType(nil), tmpRec, vdm_BC_GenAsgnInit(GenCastRecord(clonefct, nil))));
+      rb_l.ImpAppend(vdm_BC_GenDecl(GenRecordType(name),
+                                    tmpRec, vdm_BC_GenAsgnInit(GenCastRecord(clonefct, name))));
     }
     else
 #endif // VDMPP
-      rb_l.ImpAppend(vdm_BC_GenDecl(GenRecordType(nil), tmpRec, vdm_BC_GenAsgnInit(rec)));
+      rb_l.ImpAppend(vdm_BC_GenDecl(GenRecordType(name), tmpRec, vdm_BC_GenObjectInit(mk_sequence(rec))));
   }
 
   rb_l.ImpConc(GenFieldInds(tmpRec, recTp, mu_l));
@@ -5898,7 +5907,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenModifyFields(const TYPE_CPP_Name & rec,
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     const TYPE_REP_TypeRep & resTp (vt.GetRecord(pos_CGMAIN_VT_type));
-    rb_l.ImpAppend(vdm_BC_GenAsgnStmt(resVar, GenExplicitCast(resTp, tmpRec, recTp)));
+    TYPE_REP_TypeRep tp (recTp);
+    if (1 == tps.Card() ) {
+      tp = tps.GetElem(); 
+    }
+    rb_l.ImpAppend(vdm_BC_GenAsgnStmt(resVar, GenExplicitCast(resTp, tmpRec, tp)));
   }
   else
 #endif // VDMPP
@@ -5913,8 +5926,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenModifyFields(const TYPE_CPP_Name & rec,
 // mu_l : seq1 of AS`RecordModification
 // ==> seq of CPP`Stmt
 SEQ<TYPE_CPP_Stmt> vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
-                                  const TYPE_REP_TypeRep & recTp,
-                                  const SEQ<TYPE_AS_RecordModification> & mu_l)
+                                       const TYPE_REP_TypeRep & recTp,
+                                       const SEQ<TYPE_AS_RecordModification> & mu_l)
 {
   const SET<TYPE_REP_CompositeTypeRep> rectp_s (FindAllRecTypes(recTp));
   SET<TYPE_REP_CompositeTypeRep> postp_s (rectp_s);
@@ -5935,7 +5948,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
       TYPE_REP_CompositeTypeRep t (postp_s.GetElem());
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
-        const TYPE_AS_Name & tagnm (t.GetRecord(pos_REP_CompositeTypeRep_nm));
         SEQ<TYPE_CPP_Stmt> stmt_l;
         const SEQ<TYPE_REP_FieldRep> & fields (t.GetSequence(pos_REP_CompositeTypeRep_fields));
         for (size_t idx = 1; idx <= len_mu_l; idx++) {
@@ -5950,9 +5962,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
           const TYPE_CPP_Expr & val (tpl.GetRecord(1));
           const SEQ<TYPE_CPP_Stmt> & val_stmt(tpl.GetSequence(2));
 
-          const TYPE_CPP_Expr cast (IsCompositeType(recTp) ? rec : vdm_BC_GenBracketedExpr(GenCastRecord(rec, tagnm)));
           stmt_l.ImpConc(val_stmt);
-          stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(cast, vdm_BC_Rename2(nm)),
+          stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(rec, vdm_BC_Rename2(nm)),
                                               GenExplicitCast(type, val, FindType(newval))));
         }
         return stmt_l;

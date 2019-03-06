@@ -5343,6 +5343,7 @@ CGRecordModifierExpr(mk_AS`RecordModifierExpr(rec, mu_l, -),vt) ==
     else
      (REVar := tmpRE;
       rb_l := rec_stmt);
+
     if CGAUX`IsCompositeType(tmpTp)
     then rb_l := rb_l ^ GenModifyFields(REVar, tmpTp, mu_l, vt)
     else
@@ -5368,19 +5369,26 @@ GenModifyFields(rec, recTp, mu_l, mk_CGMAIN`VT(resVar,-)) ==
 #ifdef VDMPP
 GenModifyFields(rec, recTp, mu_l, mk_CGMAIN`VT(resVar,resTp)) ==
 #endif VDMPP
+  def tps = FindAllRecTypes(recTp);
+  in
  (dcl rb_l : seq of CPP`Stmt := [],
       tmpRec : CPP`Name := rec;
   if not CGAUX`IsCompositeType(recTp)
   then
-   (tmpRec := BC`GiveName("tmpRec");
+   (dcl name : [AS`Name] := nil;
+    tmpRec := BC`GiveName("tmpRec");
+    if 1 = card tps
+    then
+      let {mk_REP`CompositeTypeRep(nm,-)} = tps
+      in name := nm;
 #ifdef VDMPP
     if CPP`isJAVA()
     then
-      def cast = DS`GenCastRecord(BC`GenFctCall(BC`GenIdentifier("UTIL.clone"),[rec]), nil)
-      in rb_l := rb_l ^ [BC`GenDecl(DS`GenRecordType(nil), tmpRec, BC`GenAsgnInit(cast))]
+      def cast = DS`GenCastRecord(BC`GenFctCall(BC`GenIdentifier("UTIL.clone"),[rec]), name)
+      in rb_l := rb_l ^ [BC`GenDecl(DS`GenRecordType(name), tmpRec, BC`GenAsgnInit(cast))]
     else
 #endif VDMPP
-      rb_l := rb_l ^ [BC`GenDecl(DS`GenRecordType(nil), tmpRec, BC`GenAsgnInit(rec))];
+      rb_l := rb_l ^ [BC`GenDecl(DS`GenRecordType(name), tmpRec, BC`GenObjectInit([rec]))];
    );
 
   rb_l := rb_l ^ GenFieldInds(tmpRec, recTp, mu_l);
@@ -5388,7 +5396,11 @@ GenModifyFields(rec, recTp, mu_l, mk_CGMAIN`VT(resVar,resTp)) ==
 #ifdef VDMPP
   if CPP`isJAVA()
   then
-    rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, DS`GenExplicitCast(resTp,tmpRec,recTp))]
+    let tp = if 1 = card tps
+             then
+               let {t} = tps in t
+             else recTp
+    in rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, DS`GenExplicitCast(resTp,tmpRec,tp))]
   else
 #endif VDMPP
     rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, tmpRec)];
@@ -5416,22 +5428,19 @@ GenFieldInds(rec, recTp, mu_l) ==
 #ifdef VDMPP
                 if CPP`isJAVA()
                 then
-                 (dcl stmt_l : seq of CPP`Stmt := [];
-                  let mk_REP`CompositeTypeRep(tagnm, fields) = t
+                  let mk_REP`CompositeTypeRep(-, fields) = t
                   in
+                   (dcl stmt_l : seq of CPP`Stmt := [];
                     for mk_AS`RecordModification(nm, newval,-) in mu_l do
                       def j = FindField(fields,nm);
                           mk_REP`FieldRep(-,type,-) = fields(j);
                           mk_(val, val_stmt) = CGExprExcl(newval, "val", nil);
                       in
-                       (dcl cast : CPP`Expr := rec;
-                        if not CGAUX`IsCompositeType(recTp)
-                        then cast := BC`GenBracketedExpr(DS`GenCastRecord(rec,tagnm));
-                        stmt_l := stmt_l ^ val_stmt;
-                        stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenObjectMemberAccess(cast,BC`Rename2(nm)),
-                                                DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];);
-                  return stmt_l;
-                 )
+                       stmt_l := stmt_l ^ val_stmt
+                                        ^ [BC`GenAsgnStmt(BC`GenObjectMemberAccess(rec,BC`Rename2(nm)),
+                                                DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];
+                    return stmt_l;
+                   )
                 else
 #endif VDMPP
                  -- C++
