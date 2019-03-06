@@ -7752,17 +7752,18 @@ CGIterateExpr(le, re, resVT) ==
       mk_(var2, stmt2) = CGExprExcl(re, "var2", type2);
       vt1 = mk_CGMAIN`VT(var1, type1);
       vt2 = mk_CGMAIN`VT(var2, type2);
+#ifdef VDMPP
       mk_CGMAIN`VT(-, rtype) = resVT;
+#endif VDMPP
   in
    (cases true:
       (CGAUX`IsNumType(type1) and CGAUX`IsNumType(type2)) ->
           return stmt1 ^ stmt2 ^ [ DS`GenExp(vt1, vt2, resVT) ],
-      --(CGAUX`IsMapType(type1) or CGAUX`IsMapType(rtype)) -> -- or CGAUX`IsMapType(rtype) tilføjet 27.7.98 (jojo)
 #ifdef VDMPP
       (CGAUX`IsMapType(type1) or CPP`isJAVA() and CGAUX`IsMapType(rtype)) ->
 #endif VDMPP
 #ifdef VDMSL
-      (CGAUX`IsMapType(type1) ->
+      (CGAUX`IsMapType(type1)) ->
 #endif VDMSL
           return stmt1 ^ stmt2 ^ DS`GenMapIteration(vt1, vt2, resVT),
       (CGAUX`IsFctType(type1)) ->
