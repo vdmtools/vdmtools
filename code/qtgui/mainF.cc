@@ -1253,9 +1253,9 @@ void mainW::loadProject_qt3()
   this->checkProjectIsSaved();
   
   QString filter ("Project files (*.prj);; all (*.*)");
-  QString files (QtPort::QtGetOpenFileName(this, tr("Open Project File..."), this->lastDir, filter));
-  if (! files.isEmpty()) { //at least one item 
-    this->loadProject( files );
+  QString filename (QtPort::QtGetOpenFileName(this, tr("Open Project File..."), this->lastDir, filter));
+  if (!filename.isEmpty()) { //at least one item 
+    this->loadProject( filename );
   }
 }
 
@@ -1264,20 +1264,24 @@ void mainW::loadProject(const QString & filename)
   this->clearWindows( false );
 
   this->browserw->newProject();
+  
+  this->clearWindows(true);
 
-  this->loadWindowsGeometry(filename);
-  this->openProject(filename);
-  this->addProjectHistory( filename );
+  if (Qt2TB::CallLog()) {
+    Qt2TB::ToggleCallLog();
+    this->setCallLogMenu();
+  }
 
   if (this->browserw->isVisible()) {
     this->browserw->parentWidget()->raise();
     this->browserw->setFocus();
   }
 
-  if (Qt2TB::CallLog()) {
-    Qt2TB::ToggleCallLog();
-    this->setCallLogMenu();
-  }
+  this->openProject(filename);
+  this->lastProject = filename;
+
+//  this->loadWindowsGeometry(filename);
+//  this->addProjectHistory( filename );
 }
 
 void mainW::openProject(const QString & file)
@@ -1710,9 +1714,7 @@ void mainW::projectHistory_qt4( QAction * a )
     QString errmsg ( tr("Unnable to find the project:\n") );
     errmsg += filename;
     QMessageBox::warning( this, "Project", errmsg );
-    {
-      removeProjectHistory(filename);
-    }
+    this->removeProjectHistory(filename);
     return;
   }
   this->loadProject( filename );
@@ -1733,9 +1735,7 @@ void mainW::projectHistory_qt3( int id )
     QString errmsg ( tr("Unnable to find the project:\n") );
     errmsg += filename;
     QMessageBox::warning( this, "Project", errmsg );
-    {
-      removeProjectHistory(filename);
-    }
+    this->removeProjectHistory(filename);
     return;
   }
   this->loadProject( filename );
@@ -2900,8 +2900,19 @@ void mainW::userEvent(QEvent *e)
     }
     case GUIEvent::EV_LOAD_PROJECT: {
       this->browserw->refreshProjectName();
-      this->ow->loadOptions();
-      this->loading = false;
+//
+      if (!Qt2TB::getProjectNameI().isNull()) {
+//
+        this->ow->loadOptions();
+        this->loadWindowsGeometry(this->lastProject);
+        this->addProjectHistory(this->lastProject);
+        this->loading = false;
+//
+      }
+      else {
+        this->lastProject = "";
+      }
+//
       break;
     }
     case GUIEvent::EV_NEW_UNNAMEDPROJECT: {
@@ -3471,8 +3482,7 @@ void mainW::removeModules(const QStringList & removedModules)
 void mainW::changeModulesStatus(const QStringList & modules)
 {
   QStringList::const_iterator itr;
-  for (itr = modules.begin(); itr != modules.end(); ++itr)
-  {
+  for (itr = modules.begin(); itr != modules.end(); ++itr) {
     StatusType st (Qt2TB::getStatusI(*itr));
     this->browserw->updateModuleStatus(*itr, st);
   }
@@ -3504,8 +3514,7 @@ void mainW::changeFileState(const QString & filename)
   QStringList moduleList (Qt2TB::getModulesI(filename));
 
   QStringList::const_iterator iter;
-  for (iter = moduleList.begin(); iter != moduleList.end(); ++iter)
-  { 
+  for (iter = moduleList.begin(); iter != moduleList.end(); ++iter) { 
     StatusType st (Qt2TB::getStatusI(*iter));
     this->browserw->updateModuleStatus(*iter, st);
   }
@@ -3537,13 +3546,16 @@ void mainW::refreshSourceWindow(const QString& title, const QString& src)
 void mainW::addBreakName(const QString& name, int num)
 {
 #if QT_VERSION >= 0x040000
-  if (!this->interpreterw->parentWidget()->isVisible())
+  if (!this->interpreterw->parentWidget()->isVisible()) {
     this->interpreterw->parentWidget()->show();
-  if (!this->interpreterw->isVisible())
+  }
+  if (!this->interpreterw->isVisible()) {
     this->interpreterw->show();
+  }
 #else
-  if (!this->interpreterw->isShown())
+  if (!this->interpreterw->isShown()) {
     this->interpreterw->show();
+  }
 #endif // QT_VERSION >= 0x040000
   this->interpreterw->addBreakName(name, num);
 }
@@ -3554,13 +3566,16 @@ void mainW::addBreakName(const QString& name, int num)
 void mainW::addBreakPos(const QString& filename, int line, int col, int num)
 {
 #if QT_VERSION >= 0x040000
-  if (!this->interpreterw->parentWidget()->isVisible())
+  if (!this->interpreterw->parentWidget()->isVisible()) {
     this->interpreterw->parentWidget()->show();
-  if (!this->interpreterw->isVisible())
+  }
+  if (!this->interpreterw->isVisible()) {
     this->interpreterw->show();
+  }
 #else
-  if (!this->interpreterw->isShown())
+  if (!this->interpreterw->isShown()) {
     this->interpreterw->show();
+  }
 #endif // QT_VERSION >= 0x040000
   this->interpreterw->addBreakPos(filename, line, col, num);
 }
@@ -3829,17 +3844,16 @@ bool mainW::checkEnvVars(QApplication &app)
 
   QString dirPath;
   string dir;
-  if( !r )
-  {
+  if( !r ) {
 #ifdef __linux__
 #if QT_VERSION >= 0x040000
     dirPath = app.applicationDirPath();
 #else
     QString name( app.argv()[0] );
-    if( name.length() > 0 )
-    {
-      if( name.left(1) == "/" )
+    if( name.length() > 0 ) {
+      if( name.left(1) == "/" ) {
         return QFileInfo( name ).dirPath();
+      }
     }
     char* cwd = getcwd( NULL, 0 );
     if( cwd == NULL ) return QString( "./" );
@@ -3893,14 +3907,16 @@ bool mainW::checkEnvVars(QApplication &app)
              QString(tr(" environment variable.\nexiting...\n"))); 
     return false;
 #endif //_MSC_VER
-  } else {
+  }
+  else {
     this->rootDir = Qt2TB::wstring2qstring(TBWSTR::fsstr2wstring(r)); 
   }
 
 #ifdef USE_IMAGE_FILE
   imgDir = this->rootDir + DIRSEP + "img";
-  if(!this->checkForDir(imgDir))
+  if(!this->checkForDir(imgDir)) {
     return false;
+  }
 #endif // USE_IMAGE_FILE
 
 #ifdef VDMPP
@@ -3959,7 +3975,8 @@ bool FindRegEntry(wstring& value, wstring& errtxt)
     e += WinFormatMessage(err);
     errtxt = e;
     return false;
-  } else {
+  }
+  else {
     unsigned char buffer[200];
     unsigned long size = sizeof(buffer); 
     err = RegQueryValueExA(hcpl, "ROOTDIR", 0, (unsigned long*)0, buffer, &size);
@@ -3967,7 +3984,8 @@ bool FindRegEntry(wstring& value, wstring& errtxt)
       value = TBWSTR::string2wstring((char*)buffer);
       errtxt = wstring(L"");
       return true; 
-    } else {
+    }
+    else {
       wstring e (L"RegQueryValueEx error:\n");
       e += L"(ROOTDIR)\n\t" + WinFormatMessage(err);
       errtxt = wstring(e);
@@ -3993,37 +4011,38 @@ void mainW::clearWindows(bool isNew)
   QStringList emptyList;
   this->pogw->cleanUp(emptyList);
 
-  if (isNew)
-  {
+  if (isNew) {
     this->logWrite( tr( "New Project selected" ) );
     this->clearAllMessages();
 
     this->searchw->clearAllOccurences();
 
 #if QT_VERSION >= 0x040000
-//  if (!this->browserw->parentWidget()->isVisible())
-  if (!this->browserw->isVisible())
-  {
-    this->browserw->parentWidget()->show();
-    this->browserw->show();
-  }
-  if (this->interpreterw->parentWidget()->isVisible())
-    this->interpreterw->parentWidget()->hide();
-  if (this->errorw->parentWidget()->isVisible())
-    this->errorw->parentWidget()->hide();
-  if (this->searchw->parentWidget()->isVisible())
-    this->searchw->parentWidget()->hide();
-  if (this->pogw->parentWidget()->isVisible())
-    this->pogw->parentWidget()->hide();
+    if (!this->browserw->isVisible()) {
+      this->browserw->parentWidget()->show();
+      this->browserw->show();
+    }
+    if (this->interpreterw->parentWidget()->isVisible()) {
+      this->interpreterw->parentWidget()->hide();
+    }
+    if (this->errorw->parentWidget()->isVisible()) {
+      this->errorw->parentWidget()->hide();
+    }
+    if (this->searchw->parentWidget()->isVisible()) {
+      this->searchw->parentWidget()->hide();
+    }
+    if (this->pogw->parentWidget()->isVisible()) {
+      this->pogw->parentWidget()->hide();
+    }
 #else
-  if (!this->browserw->isVisible())
-  {
-    this->browserw->show();
-  }
+    if (!this->browserw->isVisible()) {
+      this->browserw->show();
+    }
 #endif // QT_VERSION >= 0x040000
   }
-  else
+  else {
     this->browserw->clear();
+  }
 }
 
 //
@@ -4036,7 +4055,8 @@ bool mainW::checkForDir(const QString& s)
   int e = stat(dir.c_str(), &statv);
   if ((e==0) && (statv.st_mode & S_IFMT) == S_IFDIR) {
     return true; 
-  } else {
+  }
+  else {
     QMessageBox::critical( this, QString("Error"),
              QString("The path ") + s + " should point to a directory\n"); 
     return false; 
@@ -4074,14 +4094,12 @@ void mainW::cleanUp()
 
   this->saveProjectHistory(this->prjHistory);
 
-  if ( NULL != this->tbThread )
-  {
+  if ( NULL != this->tbThread ) {
 #if QT_VERSION >= 0x040000
-    if( !this->tbThread->isFinished() )
+    if( !this->tbThread->isFinished() ) {
 #else
-    if( !this->tbThread->finished() )
+    if( !this->tbThread->finished() ) {
 #endif // QT_VERSION >= 0x040000
-    {
       this->tbThread->terminate();
 #if QT_VERSION >= 0x040000
       while( this->tbThread->isRunning() );
@@ -4163,24 +4181,22 @@ bool mainW::checkComplete()
 
 void mainW::waitComplete()
 {
-//  if (this->cleaningUp) return;
-  if ( !Qt2TB::isBlock() ) return;
-  while( !this->checkComplete() )
-  {
+  if ( Qt2TB::isBlock() ) {
+    while( !this->checkComplete() ) {
 #ifdef _MSC_VER
-//    Sleep( 5 );
-    Sleep( 10 );
+      Sleep( 10 );
 #else
 #if __cplusplus >= 201103L
 #if !defined( __APPLE_CC__ ) || (__APPLE_CC__ > 5658)
-    std::this_thread::sleep_for(std::chrono::microseconds(3));
+      std::this_thread::sleep_for(std::chrono::microseconds(3));
 #else
-    usleep( 10 );
+      usleep( 10 );
 #endif
 #else
-    usleep( 10 );
+      usleep( 10 );
 #endif
 #endif // _MSC_VER
+    }
   }
 }
 
@@ -4194,53 +4210,49 @@ void mainW::wakeUp()
 
 void mainW::addProjectHistory(const QString& name)
 {
-  if( name.isEmpty() ) return;
+  if( !name.isEmpty() ) {
 #if QT_VERSION >= 0x040000
-  int index = this->prjHistory.indexOf( name );
-  if (index != -1 )
-  {
-    this->prjHistory.removeAt( index );
-  }
+    int index = this->prjHistory.indexOf( name );
+    if (index != -1 ) {
+      this->prjHistory.removeAt( index );
+    }
 #else
-  QStringList::iterator it = this->prjHistory.find( name );
-  if( it != this->prjHistory.end() )
-  {
-    this->prjHistory.erase( it );
-  }
+    QStringList::iterator it = this->prjHistory.find( name );
+    if( it != this->prjHistory.end() ) {
+      this->prjHistory.erase( it );
+    }
 #endif // QT_VERSION >= 0x040000
-  else if( this->prjHistory.size() == 10 )
-  {
-    this->prjHistory.pop_back();
-  }
-  this->prjHistory.push_front( name );
+    else if( this->prjHistory.size() == 10 ) {
+      this->prjHistory.pop_back();
+    }
+    this->prjHistory.push_front( name );
 
-  this->history->clear();
-  this->createProjectHistory( this->history, this->prjHistory );
+    this->history->clear();
+    this->createProjectHistory( this->history, this->prjHistory );
+  }
 }
 
 void mainW::removeProjectHistory(const QString & name)
 {
-  if( name.isEmpty() ) return;
-
-  QStringList curList (this->prjHistory);
-  this->prjHistory.clear();
-  QStringList::const_iterator itr;
-  for (itr = curList.begin(); itr != curList.end(); ++itr)
-  {
-    if (*itr != name)
-      this->prjHistory.append(*itr);
+  if( !name.isEmpty() ) {
+    QStringList curList (this->prjHistory);
+    this->prjHistory.clear();
+    QStringList::const_iterator itr;
+    for (itr = curList.begin(); itr != curList.end(); ++itr) {
+      if (*itr != name) {
+        this->prjHistory.append(*itr);
+      }
+    }
+    this->history->clear();
+    this->createProjectHistory( this->history, this->prjHistory );
   }
-  this->history->clear();
-  this->createProjectHistory( this->history, this->prjHistory );
 }
 
 void mainW::createProjectHistory(QMENU* menu, QStringList& list)
 {
   this->histAList.clear();
-  if (!list.empty())
-  {
-    for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it )
-    {
+  if (!list.empty()) {
+    for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it ) {
       QString name (*it);
       QString pname (QFileInfo(name).fileName());
     
@@ -4258,30 +4270,29 @@ void mainW::createProjectHistory(QMENU* menu, QStringList& list)
     }
     menu->setEnabled(true);
   }
-  else
+  else {
     menu->setEnabled(false);
+  }
 }
 
 void mainW::saveProjectHistory(QStringList& list)
 {
-  if( 0 == list.size() ) return;
-
-  QString name (this->getHome() + "/" + PROJECT_HISTORY_FILE);
-  QFile prjFile( name );
+  if( !list.isEmpty() ) {
+    QString name (this->getHome() + "/" + PROJECT_HISTORY_FILE);
+    QFile prjFile( name );
 #if QT_VERSION >= 0x040000
-  if( prjFile.open( QIODevice::WriteOnly ) )
+    if( prjFile.open( QIODevice::WriteOnly ) ) {
 #else
-  if( prjFile.open( IO_WriteOnly ) )
+    if( prjFile.open( IO_WriteOnly ) ) {
 #endif // QT_VERSION >= 0x040000
-  {
-    QTextStream prjStream( &prjFile );
-    QTextCodec * codec = QTextCodec::codecForName("UTF-8");
-    prjStream.setCodec(codec);
-    for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it )
-    {
-      prjStream << *it << "\n";
+      QTextStream prjStream( &prjFile );
+      QTextCodec * codec = QTextCodec::codecForName("UTF-8");
+      prjStream.setCodec(codec);
+      for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it ) {
+        prjStream << *it << "\n";
+      }
+      prjFile.close();
     }
-    prjFile.close();
   }
 }
 
@@ -4292,19 +4303,18 @@ void mainW::loadProjectHistory()
   QString name (this->getHome() + "/" + PROJECT_HISTORY_FILE);
   QFile prjFile( name );
 #if QT_VERSION >= 0x040000
-  if( prjFile.open( QIODevice::ReadOnly ) )
+  if( prjFile.open( QIODevice::ReadOnly ) ) {
 #else
-  if( prjFile.open( IO_ReadOnly ) )
+  if( prjFile.open( IO_ReadOnly ) ) {
 #endif // QT_VERSION >= 0x040000
-  {
     QTextStream prjStream( &prjFile );
     QTextCodec * codec = QTextCodec::codecForName("UTF-8");
     prjStream.setCodec(codec);
-    while( !prjStream.atEnd() )
-    {
+    while( !prjStream.atEnd() ) {
       QString filename (prjStream.readLine());
-      if( filename.length() > 0 )
+      if( filename.length() > 0 ) {
         list.push_back( filename );
+      }
     }
     prjFile.close();
   }
@@ -4315,13 +4325,14 @@ void mainW::loadProjectHistory()
 
 QString mainW::getHome()
 {
-  if(this->homeDir.isEmpty())
-  {
+  if(this->homeDir.isEmpty()) {
     const char* home = getenv( HOME_ENV_NAME );
-    if( NULL != home )
+    if( NULL != home ) {
       this->homeDir = Qt2TB::wstring2qstring(TBWSTR::fsstr2wstring(home));
-    else
+    }
+    else {
       this->homeDir = ".";
+    }
   }
   return this->homeDir;
 }
@@ -4336,143 +4347,146 @@ void mainW::setWindowTitle(QString title)
 void mainW::saveWindowsGeometry(const QString & prjname)
 {
   QString name (this->getWindowsGeometryFileName(prjname));
-  if( name.isEmpty() ) return;
-  QFile wgmFile( name );
+  if( !name.isEmpty() ) {
+    QFile wgmFile( name );
 #if QT_VERSION >= 0x040000
-  if( wgmFile.open( QIODevice::WriteOnly ) )
+    if( wgmFile.open( QIODevice::WriteOnly ) ) {
 #else
-  if( wgmFile.open( IO_WriteOnly ) )
+    if( wgmFile.open( IO_WriteOnly ) ) {
 #endif // QT_VERSION >= 0x040000
-  {
-    QTextStream wgmStream( &wgmFile );
-    QTextCodec * codec = QTextCodec::codecForName("UTF-8");
-    wgmStream.setCodec(codec);
-    wgmStream << "FormatVersion:2" << endl;
-    this->saveGeometry(wgmStream, "mainW", this);
-    this->saveGeometry(wgmStream, this->browserw->getWindowName(), this->browserw->parentWidget());
-    this->saveGeometry(wgmStream, this->codew->getWindowName(), this->codew->parentWidget());
-    this->saveGeometry(wgmStream, this->errorw->getWindowName(), this->errorw->parentWidget());
-    this->saveGeometry(wgmStream, this->interpreterw->getWindowName(), this->interpreterw->parentWidget());
-    this->saveGeometry(wgmStream, this->logw->getWindowName(), this->logw->parentWidget());
-    this->saveGeometry(wgmStream, this->pogw->getWindowName(), this->pogw->parentWidget());
-    this->saveGeometry(wgmStream, this->ow->getWindowName(), this->ow);
-    this->saveGeometry(wgmStream, this->tw->getWindowName(), this->tw);
-    wgmFile.close();
+      QTextStream wgmStream( &wgmFile );
+      QTextCodec * codec = QTextCodec::codecForName("UTF-8");
+      wgmStream.setCodec(codec);
+      wgmStream << "FormatVersion:2" << endl;
+      this->saveGeometry(wgmStream, "mainW", this);
+      this->saveGeometry(wgmStream, this->browserw->getWindowName(), this->browserw->parentWidget());
+      this->saveGeometry(wgmStream, this->codew->getWindowName(), this->codew->parentWidget());
+      this->saveGeometry(wgmStream, this->errorw->getWindowName(), this->errorw->parentWidget());
+      this->saveGeometry(wgmStream, this->interpreterw->getWindowName(), this->interpreterw->parentWidget());
+      this->saveGeometry(wgmStream, this->logw->getWindowName(), this->logw->parentWidget());
+      this->saveGeometry(wgmStream, this->pogw->getWindowName(), this->pogw->parentWidget());
+      this->saveGeometry(wgmStream, this->ow->getWindowName(), this->ow);
+      this->saveGeometry(wgmStream, this->tw->getWindowName(), this->tw);
+      wgmFile.close();
+    }
   }
 }
 
 void mainW::loadWindowsGeometry(const QString& prjname)
 {
   QString name (this->getWindowsGeometryFileName(prjname));
-  if( name.isEmpty() ) return;
-  QFile wgmFile( name );
+  if( !name.isEmpty() ) {
+    QFile wgmFile( name );
 #if QT_VERSION >= 0x040000
-  if( !wgmFile.open( QIODevice::ReadOnly ) ) return;
+    if( !wgmFile.open( QIODevice::ReadOnly ) ) return;
 #else
-  if( !wgmFile.open( IO_ReadOnly ) ) return;
+    if( !wgmFile.open( IO_ReadOnly ) ) return;
 #endif // QT_VERSION >= 0x040000
 
-  QTextStream wgmStream ( &wgmFile );
-  QString version (wgmStream.readLine());
-  wgmFile.close();
+    QTextStream wgmStream ( &wgmFile );
+    QString version (wgmStream.readLine());
+    wgmFile.close();
 
-  if( version == "FormatVersion:2" ) {
-    this->loadWindowsGeometryV2(prjname);
-  }
-  else {
-    this->loadWindowsGeometryV1(prjname);
+    if( version == "FormatVersion:2" ) {
+      this->loadWindowsGeometryV2(prjname);
+    }
+    else {
+      this->loadWindowsGeometryV1(prjname);
+    }
   }
 }
 
 void mainW::loadWindowsGeometryV1(const QString& prjname)
 {
   QString name (this->getWindowsGeometryFileName(prjname));
-  if( name.isEmpty() ) return;
-  QFile wgmFile ( name );
+  if( !name.isEmpty() ) {
+    QFile wgmFile ( name );
 #if QT_VERSION >= 0x040000
-  if( !wgmFile.open( QIODevice::ReadOnly ) ) return;
+    if( wgmFile.open( QIODevice::ReadOnly ) ) {
 #else
-  if( !wgmFile.open( IO_ReadOnly ) ) return;
+    if( wgmFile.open( IO_ReadOnly ) ) {
 #endif // QT_VERSION >= 0x040000
 
-  QTextStream wgmStream( &wgmFile );
-  QTextCodec * codec = QTextCodec::codecForName("UTF-8");
-  wgmStream.setCodec(codec);
-  if( this->loadMainGeometry(wgmStream, this) ) {
-    this->loadQWSGeometry(wgmStream, this->browserw);
-    this->loadQWSGeometry(wgmStream, this->codew);
-    this->loadQWSGeometry(wgmStream, this->errorw);
-    this->loadQWSGeometry(wgmStream, this->interpreterw);
-    this->loadQWSGeometry(wgmStream, this->logw);
-    this->loadQWSGeometry(wgmStream, this->pogw);
-    this->loadGeometry(wgmStream, this->ow);
-    this->loadGeometry(wgmStream, this->tw);
-    this->codew->parentWidget()->lower();
+      QTextStream wgmStream( &wgmFile );
+      QTextCodec * codec = QTextCodec::codecForName("UTF-8");
+      wgmStream.setCodec(codec);
+      if( this->loadMainGeometry(wgmStream, this) ) {
+        this->loadQWSGeometry(wgmStream, this->browserw);
+        this->loadQWSGeometry(wgmStream, this->codew);
+        this->loadQWSGeometry(wgmStream, this->errorw);
+        this->loadQWSGeometry(wgmStream, this->interpreterw);
+        this->loadQWSGeometry(wgmStream, this->logw);
+        this->loadQWSGeometry(wgmStream, this->pogw);
+        this->loadGeometry(wgmStream, this->ow);
+        this->loadGeometry(wgmStream, this->tw);
+        this->codew->parentWidget()->lower();
+      }
+      wgmFile.close();
+      this->update();
+    }
   }
-  wgmFile.close();
-//  this->repaint();
-  this->update();
 }
 
 void mainW::loadWindowsGeometryV2(const QString& prjname)
 {
   QString name (this->getWindowsGeometryFileName(prjname));
-  if( name.isEmpty() ) return;
-  QFile wgmFile( name );
+  if( !name.isEmpty() ) {
+    QFile wgmFile( name );
 #if QT_VERSION >= 0x040000
-  if( !wgmFile.open( QIODevice::ReadOnly ) ) return;
+    if( wgmFile.open( QIODevice::ReadOnly ) ) {
 #else
-  if( !wgmFile.open( IO_ReadOnly ) ) return;
+    if( wgmFile.open( IO_ReadOnly ) ) {
 #endif // QT_VERSION >= 0x040000
 
-  QTextStream wgmStream ( &wgmFile );
-  QTextCodec * codec = QTextCodec::codecForName("UTF-8");
-  wgmStream.setCodec(codec);
+      QTextStream wgmStream ( &wgmFile );
+      QTextCodec * codec = QTextCodec::codecForName("UTF-8");
+      wgmStream.setCodec(codec);
 
-  QMap<QString, QString> wgmMap;
-  while( !wgmStream.atEnd() ) {
-    QString tmp (wgmStream.readLine());
-    if( tmp.isEmpty() ) continue;
+      QMap<QString, QString> wgmMap;
+      while( !wgmStream.atEnd() ) {
+        QString tmp (wgmStream.readLine());
+        if( tmp.isEmpty() ) continue;
 #if QT_VERSION >= 0x040000
-    int index = tmp.indexOf( ':' );
+        int index = tmp.indexOf( ':' );
 #else
-    int index = tmp.find( ':' );
+        int index = tmp.find( ':' );
 #endif // QT_VERSION >= 0x040000
-    if( index == -1 ) continue;
+        if( index == -1 ) continue;
 #if QT_VERSION >= 0x040000
-    QString key (tmp.left( index ).simplified());
-    QString value (tmp.right( tmp.length() - index - 1 ).simplified());
+        QString key (tmp.left( index ).simplified());
+        QString value (tmp.right( tmp.length() - index - 1 ).simplified());
 #else
-    QString key (tmp.left( index ).stripWhiteSpace());
-    QString value (tmp.right( tmp.length() - index - 1 ).stripWhiteSpace());
+        QString key (tmp.left( index ).stripWhiteSpace());
+        QString value (tmp.right( tmp.length() - index - 1 ).stripWhiteSpace());
 #endif // QT_VERSION >= 0x040000
-    wgmMap[ key ] = value;
-  }
-  wgmFile.close();
+        wgmMap[ key ] = value;
+      }
+      wgmFile.close();
 
-  if( this->loadMainGeometry(wgmMap, this) ) {
-    this->loadQWSGeometry(wgmMap, this->browserw->getWindowName(), this->browserw);
-    this->loadQWSGeometry(wgmMap, this->codew->getWindowName(), this->codew);
-    this->loadQWSGeometry(wgmMap, this->errorw->getWindowName(), this->errorw);
-    this->loadQWSGeometry(wgmMap, this->interpreterw->getWindowName(), this->interpreterw);
-    this->loadQWSGeometry(wgmMap, this->logw->getWindowName(), this->logw);
-    this->loadQWSGeometry(wgmMap, this->pogw->getWindowName(), this->pogw);
-//    this->loadGeometry(wgmMap, this->ow->getWindowName(), this->ow);
-//    this->loadGeometry(wgmMap, this->tw->getWindowName(), this->tw);
-    this->codew->parentWidget()->lower();
+      if( this->loadMainGeometry(wgmMap, this) ) {
+        this->loadQWSGeometry(wgmMap, this->browserw->getWindowName(), this->browserw);
+        this->loadQWSGeometry(wgmMap, this->codew->getWindowName(), this->codew);
+        this->loadQWSGeometry(wgmMap, this->errorw->getWindowName(), this->errorw);
+        this->loadQWSGeometry(wgmMap, this->interpreterw->getWindowName(), this->interpreterw);
+        this->loadQWSGeometry(wgmMap, this->logw->getWindowName(), this->logw);
+        this->loadQWSGeometry(wgmMap, this->pogw->getWindowName(), this->pogw);
+//        this->loadGeometry(wgmMap, this->ow->getWindowName(), this->ow);
+//        this->loadGeometry(wgmMap, this->tw->getWindowName(), this->tw);
+        this->codew->parentWidget()->lower();
 #if QT_VERSION >= 0x040000
-    if (!this->interpreterw->isHidden()) {
+        if (!this->interpreterw->isHidden()) {
 #else
-    if (this->interpreterw->isShown()) {
+        if (this->interpreterw->isShown()) {
 #endif // QT_VERSION >= 0x040000
-      this->interpreterTools->show();
+          this->interpreterTools->show();
+        }
+        else {
+          this->interpreterTools->hide();
+        }
+      }
+      this->update();
     }
-    else {
-      this->interpreterTools->hide();
-    }
   }
-//  this->repaint();
-  this->update();
 }
 
 void mainW::saveGeometry(QTextStream& out, const QString& name, QWidget * gw)
@@ -4509,7 +4523,6 @@ void mainW::loadQWSGeometry(QTextStream& in, QWidget * w)
 
 void mainW::loadQWSGeometry( const QMap<QString, QString>& wgmMap, const QString & key, QWidget * w)
 {
-//  if( this->loadGeometry( wgmMap, w->getWindowName(), w->parentWidget() ) )
   if( this->loadGeometry( wgmMap, key,  w->parentWidget() ) )
 #if QT_VERSION >= 0x040000
   {
@@ -4576,10 +4589,12 @@ bool mainW::loadMainGeometry(const QMap<QString, QString>& wgmMap, QWidget * w)
   SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
   int left = r.left();
   int top = r.top();
-  if ( left < rect.left + 4 )
+  if ( left < rect.left + 4 ) {
     left = rect.left + 4;
-  if ( top < rect.top + 30 )
+  }
+  if ( top < rect.top + 30 ) {
     top = rect.top + 30;
+  }
   r = QRect(left, top, r.width(), r.height());
 #endif // _MSC_VER
 
@@ -4627,7 +4642,7 @@ QString mainW::getWindowsGeometryFileName(const QString& prjname)
 
 void mainW::enableEditor(bool enable)
 {
-  if( enable )
+  if ( enable )
     this->editA->setEnabled( true );
   else
     this->editA->setEnabled( false );
@@ -4635,7 +4650,7 @@ void mainW::enableEditor(bool enable)
 
 void mainW::modified(QStringList modifiedFiles)
 {
-  if( this->tw->doAutoSyntaxChecking() ) {
+  if ( this->tw->doAutoSyntaxChecking() ) {
     this->sendSyntaxCommand(modifiedFiles); 
     this->isModified = true;
     this->mayBeModified = false;

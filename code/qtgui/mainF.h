@@ -340,6 +340,7 @@ private:
   QString rootDir;
   QString imgDir;
   QString homeDir;
+  QString lastProject;
 
   bool envVarsOk;
   bool cleaningUp;
