@@ -1821,11 +1821,11 @@ bool ToolMediator::SyntaxCheckOk (const TYPE_ProjectTypes_FileName & filename)
 void ToolMediator::SetOldReverseEnable(bool b) {
   if (b && !Settings.OldReverse()) {
     Settings.OldReverseOn();
-    TBDEBUG::InitCurrentDefinition (true, vdm_iplog);
+    TOOLS::set_spec_init(false);
   }
   else if (!b && Settings.OldReverse()) {
     Settings.OldReverseOff();
-    TBDEBUG::InitCurrentDefinition (true, vdm_iplog);
+    TOOLS::set_spec_init(false);
   }
 }
 

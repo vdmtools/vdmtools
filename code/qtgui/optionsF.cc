@@ -1211,10 +1211,10 @@ void optionsW::setOptions()
   this->ip_stepSize->setValue(optionMap[ "STEPSIZE" ].toInt());
   this->ip_cpuCapacity->setValue(optionMap[ "DEFAULTCPUCAPACITY" ].toInt());
 
-  if(optionMap[ "DEFAULTVCPUCAPACITY" ] == "<INFINITE>")
+  if(optionMap[ "DEFAULTVCPUCAPACITY" ] == "<INFINITE>") {
     this->ip_vcpuCapacitycb->setChecked(false);
-  else
-  {
+  }
+  else {
     this->ip_vcpuCapacitycb->setChecked(true);
     this->ip_vcpuCapacity->setValue(optionMap[ "DEFAULTVCPUCAPACITY" ].toInt());  
   }
@@ -1234,18 +1234,17 @@ void optionsW::setOptions()
   }
   this->ip_selectedOpsList->clear();
   QString logargs (optionMap[ "LOGARGS" ]);
-  if (logargs == "<ALL>")
+  if (logargs == "<ALL>") {
     this->ip_logArgsAllCheck->setChecked(true);
-  else
-  {
+  }
+  else {
     this->ip_logArgsAllCheck->setChecked(false);
 #if QT_VERSION >= 0x040000
     QStringList list (logargs.split( ',' ));
 #else
     QStringList list (QStringList::split( ',', logargs ));
 #endif // QT_VERSION >= 0x040000
-    for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it )
-    {
+    for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it ) {
 #if QT_VERSION >= 0x040000
       this->ip_selectedOpsList->addItem(*it);
 #else
@@ -1380,13 +1379,15 @@ void optionsW::putOptions()
   optionMap[ "VDM10" ] = (this->tc_vdm10->isChecked() ? "1" : "0");
   
   // Pretty printer options
-  if (this->pp_useIndex->isChecked()) 
+  if (this->pp_useIndex->isChecked())  {
     optionMap[ "INDEX" ] = "2";
-  else if (this->pp_defIndex->isChecked())
+  }
+  else if (this->pp_defIndex->isChecked()) {
     optionMap[ "INDEX" ] = "1";
-  else
+  }
+  else {
     optionMap[ "INDEX" ] = "0";
-
+  }
   optionMap[ "PrettyPrint_RTI" ] = (this->pp_tcovCol->isChecked() ? "1" : "0");
   
   // C++ Code generator options
@@ -1446,7 +1447,6 @@ void optionsW::clearJ2VOptions()
 
 QString optionsW::getOptionFileName(const QString & prj)
 {
-  //QString nm = Qt2TB::getProjectNameI();
   QString nm = prj;
   if (nm.right(4) != ".prj") return QString();
   nm.replace( ".prj", ".opt" );
@@ -1460,157 +1460,162 @@ void optionsW::loadOptions()
 #endif // VDMPP
   QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
 
-  this->mainw->logWrite(QString("loadOptions for ") + filenm);
+  if( !filenm.isEmpty() ) {
+    this->mainw->logWrite(QString("loadOptions for ") + filenm);
 
-  if( filenm == "" ) {
-    Qt2TB::InitOptions();
-    return;
-  }
-
-  QFile optionFile( filenm );
+    QFile optionFile( filenm );
 #if QT_VERSION >= 0x040000
-  if( !optionFile.open(QIODevice::ReadOnly) )
+    if( optionFile.open(QIODevice::ReadOnly) ) {
 #else
-  if( !optionFile.open(IO_ReadOnly) )
+    if( optionFile.open(IO_ReadOnly) ) {
 #endif // QT_VERSION >= 0x040000
-  {
-    Qt2TB::InitOptions();
-    return;
-  }
 
-  QTextStream optionStream(&optionFile);
-  QString version = optionStream.readLine();
-  optionFile.close();
+      QTextStream optionStream(&optionFile);
+      QString version = optionStream.readLine();
+      optionFile.close();
 
-  if( version == "FormatVersion:2" )
-    this->loadOptionsV2();
-  else
-    this->loadOptionsV1();
-
+      if( version == "FormatVersion:2" ) {
+        this->loadOptionsV2();
+      }
+      else {
+        this->loadOptionsV1();
+      }
 #if QT_VERSION >= 0x040000
-  this->maintab->setCurrentIndex(0);
+      this->maintab->setCurrentIndex(0);
 #else
-  this->maintab->setCurrentPage(0);
+      this->maintab->setCurrentPage(0);
 #endif // QT_VERSION >= 0x040000
+    }
+  }
+  Qt2TB::InitOptions();
 }
 
 bool optionsW::String2Bool(const QString & str)
 {
-  if( str == "0" || str == "false" || str == "off" )
+  if( str == "0" || str == "false" || str == "off" ) {
     return false;
-  else if( str == "1" || str == "true" || str == "on" )
+  }
+  else if( str == "1" || str == "true" || str == "on" ) {
     return true;
+  }
   return false;
 }
 
 bool optionsW::optionFileExists()
 {
   QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
-  if( filenm.isEmpty() ) return true;
-
-  QFile optionFile( filenm );
+  if( !filenm.isEmpty() ) {
+    QFile optionFile( filenm );
 #if QT_VERSION >= 0x040000
-  if( !optionFile.open(QIODevice::ReadOnly) ) return false;
+    if( optionFile.open(QIODevice::ReadOnly) ) {
 #else
-  if( !optionFile.open(IO_ReadOnly) ) return false;
+    if( optionFile.open(IO_ReadOnly) ) {
 #endif // QT_VERSION >= 0x040000
-  optionFile.close();
-  return true;
+      optionFile.close();
+      return true;
+    }
+  }
+  return false;
 }
 
 void optionsW::loadOptionsV1()
 {
   QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
-  if( filenm == "" ) return;
+  if( !filenm.isEmpty() ) {
 
-  QFile optionFile( filenm );
+    QFile optionFile( filenm );
 #if QT_VERSION >= 0x040000
-  if( !optionFile.open(QIODevice::ReadOnly) ) return;
+    if( optionFile.open(QIODevice::ReadOnly) ) {
 #else
-  if( !optionFile.open(IO_ReadOnly) ) return;
+    if( optionFile.open(IO_ReadOnly) ) {
 #endif // QT_VERSION >= 0x040000
-  QTextStream optionStream(&optionFile);
+      QTextStream optionStream(&optionFile);
 
-  QMap<QString, QString> optionMap;
-  optionMap[ "DTC" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "PRE" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "POST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "INV" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "SEP" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "CONTEXT" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      QMap<QString, QString> optionMap;
+      optionMap[ "DTC" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "PRE" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "POST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "INV" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "SEP" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "CONTEXT" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
 
 #ifdef VDMPP
-  optionMap[ "MAXINSTR" ] = (optionStream.readLine());
-  optionMap[ "PRIORITY" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "MAXINSTR" ] = (optionStream.readLine());
+      optionMap[ "PRIORITY" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
 #ifdef VICE
-  optionMap[ "PRIMARYALGORITHM" ] = (optionStream.readLine());
-  optionMap[ "TASKSWITCH" ] = (optionStream.readLine());
-  optionMap[ "MAXTIME" ] = (optionStream.readLine());
-  optionMap[ "TIMEFACTOR" ] = (optionStream.readLine());
+      optionMap[ "PRIMARYALGORITHM" ] = (optionStream.readLine());
+      optionMap[ "TASKSWITCH" ] = (optionStream.readLine());
+      optionMap[ "MAXTIME" ] = (optionStream.readLine());
+      optionMap[ "TIMEFACTOR" ] = (optionStream.readLine());
 #endif //VICE
 #endif //VDMPP
 
-  optionMap[ "VDMSLMODE" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "errlevel" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "PRINT_FORMAT" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "RTERR_EXCEPTION" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "CG_RTI" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "CG_CHECKPREPOST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "VDMSLMODE" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "errlevel" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "PRINT_FORMAT" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "RTERR_EXCEPTION" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "CG_RTI" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "CG_CHECKPREPOST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
 
-  QString tmp;
-  tmp = optionStream.readLine();
-  optionMap[ "DEF" ] = ((tmp == "1" || tmp == "def") ? "def" : "pos");
+      QString tmp;
+      tmp = optionStream.readLine();
+      optionMap[ "DEF" ] = ((tmp == "1" || tmp == "def") ? "def" : "pos");
 
-  optionMap[ "INDEX" ] = (optionStream.readLine());
-  optionMap[ "PrettyPrint_RTI" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "C_flag" ] = (optionStream.readLine());
-  optionMap[ "JCG_SKEL" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_GENPREPOST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_TYPES" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_SMALLTYPES" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_LONGS" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_PACKAGE" ] = (optionStream.readLine());
-  optionMap[ "JCG_CONCUR" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_CHECKPREPOST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
-  optionMap[ "JCG_INTERFACES" ] = (optionStream.readLine());
-  optionMap[ "Seed_nondetstmt" ] = (optionStream.readLine());
+      optionMap[ "INDEX" ] = (optionStream.readLine());
+      optionMap[ "PrettyPrint_RTI" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "C_flag" ] = (optionStream.readLine());
+      optionMap[ "JCG_SKEL" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_GENPREPOST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_TYPES" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_SMALLTYPES" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_LONGS" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_PACKAGE" ] = (optionStream.readLine());
+      optionMap[ "JCG_CONCUR" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_CHECKPREPOST" ] = (String2Bool(optionStream.readLine()) ? "1" : "0");
+      optionMap[ "JCG_INTERFACES" ] = (optionStream.readLine());
+      optionMap[ "Seed_nondetstmt" ] = (optionStream.readLine());
 
-  Qt2TB::SetOptions(optionMap);
+      Qt2TB::SetOptions(optionMap);
 
 #ifdef VDMPP
-  j2v_stubsOnly->setChecked(String2Bool(optionStream.readLine()));
-  j2v_transforms->setChecked(String2Bool(optionStream.readLine()));
+      j2v_stubsOnly->setChecked(String2Bool(optionStream.readLine()));
+      j2v_transforms->setChecked(String2Bool(optionStream.readLine()));
 #endif // VDMPP
   
-  optionFile.close();
+      optionFile.close();
+    }
+  }
 }
 
 void optionsW::loadOptionsV2()
 {
   QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
-  if( filenm == "" ) return;
-
-  QMap<QString, QString> optionMap (readOption2(filenm));;
+  if( !filenm.isEmpty() ) {
+    QMap<QString, QString> optionMap (readOption2(filenm));;
 #if QT_VERSION >= 0x040000
-  if (optionMap.empty()) return;
+    if (!optionMap.empty()) {
 #else
-  if (optionMap.isEmpty()) return;
+    if (!optionMap.isEmpty()) {
 #endif // QT_VERSION >= 0x040000
 
 #ifdef VDMPP
-  if( optionMap.contains( "FVStatic" ) && !optionMap.contains( "VDM10" ) ) {
-    optionMap["VDM10"] == optionMap["FVStatic"];
-  }
+      if( optionMap.contains( "FVStatic" ) && !optionMap.contains( "VDM10" ) ) {
+        optionMap["VDM10"] == optionMap["FVStatic"];
+      }
 #endif // VDMPP
 
-  Qt2TB::SetOptions(optionMap);
+      Qt2TB::SetOptions(optionMap);
 
 #ifdef VDMPP
-  if( optionMap.contains( "j2v_stubsOnly" ) )
-    j2v_stubsOnly->setChecked(optionMap["j2v_stubsOnly"] == "1");
-  if( optionMap.contains( "j2v_transforms" ) )
-    j2v_transforms->setChecked(optionMap["j2v_transforms"] == "1");
+      if( optionMap.contains( "j2v_stubsOnly" ) ) {
+        j2v_stubsOnly->setChecked(optionMap["j2v_stubsOnly"] == "1");
+      }
+      if( optionMap.contains( "j2v_transforms" ) ) {
+        j2v_transforms->setChecked(optionMap["j2v_transforms"] == "1");
+      }
 #endif // VDMPP
+    }
+  }
 }
 
 QMap<QString, QString> optionsW::readOption2(const QString & filename)
@@ -1619,78 +1624,82 @@ QMap<QString, QString> optionsW::readOption2(const QString & filename)
 
   QFile optionFile( filename );
 #if QT_VERSION >= 0x040000
-  if( !optionFile.open(QIODevice::ReadOnly) ) return optionMap;
+  if( optionFile.open(QIODevice::ReadOnly) ) {
 #else
-  if( !optionFile.open(IO_ReadOnly) ) return optionMap;
+  if( optionFile.open(IO_ReadOnly) ) {
 #endif // QT_VERSION >= 0x040000
-  QTextStream optionStream(&optionFile);
+    QTextStream optionStream(&optionFile);
 
-  while( !optionStream.atEnd() )
-  {
-    QString tmp = optionStream.readLine();
-    if( tmp.isEmpty() ) continue;
+    while( !optionStream.atEnd() ) {
+      QString tmp = optionStream.readLine();
+      if( !tmp.isEmpty() ) {
 #if QT_VERSION >= 0x040000
-    int index = tmp.indexOf( ':' ); 
-    if( index == -1 ) continue;
-    QString key = tmp.left( index ).simplified();
-    QString value = tmp.right( tmp.length() - index - 1 ).simplified();
+        int index = tmp.indexOf( ':' ); 
+        if( index != -1 ) {
+          QString key = tmp.left( index ).simplified();
+          QString value = tmp.right( tmp.length() - index - 1 ).simplified();
+          optionMap[ key ] = value;
+        }
 #else
-    int index = tmp.find( ':' ); 
-    if( index == -1 ) continue;
-    QString key = tmp.left( index ).stripWhiteSpace();
-    QString value = tmp.right( tmp.length() - index - 1 ).stripWhiteSpace();
+        int index = tmp.find( ':' ); 
+        if( index != -1 ) {
+          QString key = tmp.left( index ).stripWhiteSpace();
+          QString value = tmp.right( tmp.length() - index - 1 ).stripWhiteSpace();
+          optionMap[ key ] = value;
+        }
 #endif // QT_VERSION >= 0x040000
-    optionMap[ key ] = value;
+      }
+    }
+    optionFile.close();
   }
-  optionFile.close();
   return optionMap;
 }
 
 void optionsW::saveOptions()
 {
-  if( !this->saveOptionsFlag->isChecked() ) return;
+  if( this->saveOptionsFlag->isChecked() ) {
 
-  QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
-  if( filenm == "" ) return;
-
-  QFile optionFile( filenm );
+    QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
+    if( !filenm.isEmpty() ) {
+      QFile optionFile( filenm );
 #if QT_VERSION >= 0x040000
-  if( !optionFile.open(QIODevice::WriteOnly) ) return;
+      if( optionFile.open(QIODevice::WriteOnly) ) {
 #else
-  if( !optionFile.open(IO_WriteOnly) ) return;
+      if( optionFile.open(IO_WriteOnly) ) {
 #endif // QT_VERSION >= 0x040000
-  QTextStream optionStream(&optionFile);
+        QTextStream optionStream(&optionFile);
 
-  optionStream << "FormatVersion:2" << endl;
+        optionStream << "FormatVersion:2" << endl;
 
-  QMap<QString, QString> optionMap (Qt2TB::GetOptions());
+        QMap<QString, QString> optionMap (Qt2TB::GetOptions());
 #if QT_VERSION >= 0x040000
-  QList<QString> keys (optionMap.keys());
-  for (QList<QString>::const_iterator it = keys.begin();it != keys.end();++it)
+        QList<QString> keys (optionMap.keys());
+        for (QList<QString>::const_iterator it = keys.begin();it != keys.end();++it) {
 #else
-  QValueList<QString> keys (optionMap.keys());
-  for (QValueList<QString>::const_iterator it = keys.begin();it != keys.end();++it)
+        QValueList<QString> keys (optionMap.keys());
+        for (QValueList<QString>::const_iterator it = keys.begin();it != keys.end();++it) {
 #endif // QT_VERSION >= 0x040000
-  {
-    optionStream << *it << ":" << optionMap[*it] << endl;
-  }
+          optionStream << *it << ":" << optionMap[*it] << endl;
+        }
 
 #ifdef VDMPP
-  optionStream << "j2v_stubsOnly:" << ( j2v_stubsOnly->isChecked() ? "1" : "0" ) << endl;
-  optionStream << "j2v_transforms:" << ( j2v_transforms->isChecked() ? "1" : "0" ) << endl;
+        optionStream << "j2v_stubsOnly:" << ( j2v_stubsOnly->isChecked() ? "1" : "0" ) << endl;
+        optionStream << "j2v_transforms:" << ( j2v_transforms->isChecked() ? "1" : "0" ) << endl;
 #endif // VDMPP
   
-  optionStream << "TextCodecName:"  << this->currentCodecName << endl;
+        optionStream << "TextCodecName:"  << this->currentCodecName << endl;
 
-  optionFile.close();
+        optionFile.close();
+      }
+    }
+  }
 }
 
 void optionsW::algorithmChanged(int)
 {
 #ifdef VDMPP
   QString alg (this->ip_primaryAlg->currentText());
-  if( alg == "instruction_number_slice" )
-  {
+  if( alg == "instruction_number_slice" ) {
     this->ip_maxInstr->setEnabled(true);
     this->ip_maxInstrLabel->setEnabled(true);
 #ifdef VICE
@@ -1699,16 +1708,14 @@ void optionsW::algorithmChanged(int)
 #endif // VICE
   }
 #ifdef VICE
-  else if( alg == "timeslice" )
-  {
+  else if( alg == "timeslice" ) {
     this->ip_maxInstr->setEnabled(false);
     this->ip_maxInstrLabel->setEnabled(false);
     this->ip_maxTime->setEnabled(true);
     this->ip_maxTimeLabel->setEnabled(true);
   }
 #endif // VICE
-  else
-  {
+  else {
     this->ip_maxInstr->setEnabled(false);
     this->ip_maxInstrLabel->setEnabled(false);
 #ifdef VICE
@@ -1722,13 +1729,11 @@ void optionsW::algorithmChanged(int)
 void optionsW::vcpuCapacityEnabled()
 {
 #ifdef VICE
-  if(this->ip_vcpuCapacitycb->isChecked())
-  {
+  if (this->ip_vcpuCapacitycb->isChecked()) {
     this->ip_vcpuCapacityLabel->setEnabled(true);
     this->ip_vcpuCapacity->setEnabled(true);
   }
-  else
-  {
+  else {
     this->ip_vcpuCapacityLabel->setEnabled(false);
     this->ip_vcpuCapacity->setEnabled(false);
   }
@@ -1741,8 +1746,7 @@ void optionsW::loadClassName()
   QStringList clist (Qt2TB::getModulesI());
 
   this->ip_className->clear();
-  for (QStringList::const_iterator it= clist.begin();it != clist.end();++it)
-  {
+  for (QStringList::const_iterator it= clist.begin();it != clist.end();++it) {
 #if QT_VERSION >= 0x040000
     this->ip_className->addItem(*it);
 #else
@@ -1761,8 +1765,7 @@ void optionsW::loadClassName()
 void optionsW::logArgsAllEnabled()
 {
 #ifdef VICE
-  if(this->ip_logArgsAllCheck->isChecked())
-  {
+  if(this->ip_logArgsAllCheck->isChecked()) {
 //    this->ip_opsSelectButton->setEnabled(false);
     this->ip_selectedOpsList->setEnabled(false);
     this->ip_classNameLabel->setEnabled(false);
@@ -1772,8 +1775,7 @@ void optionsW::logArgsAllEnabled()
     this->ip_opAddButton->setEnabled(false);
     this->ip_opDelButton->setEnabled(false);
   }
-  else
-  {
+  else {
 //    this->ip_opsSelectButton->setEnabled(true);
     this->ip_selectedOpsList->setEnabled(true);
     this->ip_classNameLabel->setEnabled(true);
@@ -1792,34 +1794,30 @@ void optionsW::classChanged(int i)
   this->ip_opName->clear();
 
   QString clsnm (this->ip_className->currentText()); 
-  if( clsnm == "" ) return;
+  if( !clsnm.isEmpty() ) {
+    QStringList oplist;
+    Qt2TB::setBlock(false);
+    int res = Qt2TB::getOperationsI(clsnm, oplist);
+    Qt2TB::setBlock(true);
 
-  QStringList oplist;
-  Qt2TB::setBlock(false);
-  int res = Qt2TB::getOperationsI(clsnm, oplist);
-  Qt2TB::setBlock(true);
-
-  if( res == INT_OK )
-  {
-    for (QStringList::const_iterator it= oplist.begin();it != oplist.end();++it)
-    {
+    if( res == INT_OK ) {
+      for (QStringList::const_iterator it= oplist.begin();it != oplist.end();++it) {
 #if QT_VERSION >= 0x040000
-      this->ip_opName->addItem(*it);
+        this->ip_opName->addItem(*it);
 #else
-      this->ip_opName->insertItem(*it);
+        this->ip_opName->insertItem(*it);
 #endif // QT_VERSION >= 0x040000
-    }
+      }
 #if QT_VERSION >= 0x040000
-    this->ip_opName->setCurrentIndex(0);
+      this->ip_opName->setCurrentIndex(0);
 #else
-    this->ip_opName->setCurrentItem(0);
+      this->ip_opName->setCurrentItem(0);
 #endif// QT_VERSION >= 0x040000
+    }
+    else {
+      this->mainw->logWrite("Specification is not initialized.");
+    }
   }
-  else
-  {
-    this->mainw->logWrite("Specification is not initialized.");
-  }
-
 #endif // VICE
 }
 
@@ -1828,20 +1826,19 @@ void optionsW::addOperation()
 #ifdef VICE
   QString clsnm (this->ip_className->currentText());
   QString opnm (this->ip_opName->currentText());
-  if( clsnm == "" || opnm == "" ) return;
+  if( !clsnm.isEmpty() && !opnm.isEmpty() ) {
 
   QString fullnm (clsnm + "`" + opnm);
 #if QT_VERSION >= 0x040000
-  if( (this->ip_selectedOpsList->findItems(fullnm, 0)).empty() )
-  {
-    this->ip_selectedOpsList->addItem(fullnm);
-  }
+    if( (this->ip_selectedOpsList->findItems(fullnm, 0)).empty() ) {
+      this->ip_selectedOpsList->addItem(fullnm);
+    }
 #else
-  if( this->ip_selectedOpsList->findItem(fullnm) == 0 )
-  {
-    this->ip_selectedOpsList->insertItem(fullnm);
-  }
+    if( this->ip_selectedOpsList->findItem(fullnm) == 0 ) {
+      this->ip_selectedOpsList->insertItem(fullnm);
+    }
 #endif // QT_VERSION >= 0x040000
+  }
 #endif // VICE
 }
 
@@ -1851,14 +1848,12 @@ void optionsW::delOperation()
 #if QT_VERSION >= 0x040000
   int ci = this->ip_selectedOpsList->currentRow();
   QListWidgetItem * item = this->ip_selectedOpsList->item(ci);
-  if( item->isSelected() )
-  {
+  if( item->isSelected() ) {
     this->ip_selectedOpsList->removeItemWidget(item);
   } 
 #else
   int ci = this->ip_selectedOpsList->currentItem();
-  if( this->ip_selectedOpsList->isSelected( ci ) )
-  {
+  if( this->ip_selectedOpsList->isSelected( ci ) ) {
     this->ip_selectedOpsList->removeItem(ci);
   } 
 #endif // QT_VERSION >= 0x040000
@@ -1867,13 +1862,11 @@ void optionsW::delOperation()
 
 void optionsW::invClicked()
 {
-  if(this->ip_dynInvCheck->isChecked())
-  {
+  if(this->ip_dynInvCheck->isChecked()) {
     this->ip_dynTypeCheck->setChecked(true);
     this->ip_dynTypeCheck->setEnabled(false);
   }
-  else
-  {
+  else {
     this->ip_dynTypeCheck->setEnabled(true);
   }
 }
@@ -1882,8 +1875,7 @@ void optionsW::selectJCGDir()
 {
 #ifdef VDMPP
   QString res (QtPort::QtGetExistingDirectory( this, tr("Choose a java code directory"), QString()));
-  if( !res.isNull() )
-  {
+  if( !res.isNull() ) {
     this->jcg_outputDirName->setText(res);
   }
 #endif // VDMPP
@@ -1902,21 +1894,23 @@ QString optionsW::getCodecName(const QString & prj)
 {
   QString ofn (getOptionFileName(prj));
   QMap<QString, QString> optionMap (readOption2(ofn));
-  if( optionMap.contains( "TextCodecName" ) )
+  if( optionMap.contains( "TextCodecName" ) ) {
     return optionMap["TextCodecName"];
-  else
+  }
+  else {
     return QString("");
+  }
 }
 
 QString optionsW::getExpression()
 {
   QString filenm( getOptionFileName(Qt2TB::getProjectNameI()) );
-  if( filenm == "" ) return QString();
-
-  QMap<QString, QString> optionMap (readOption2(filenm));;
-  if( optionMap.contains( "EXPRESSION" ) )
-    return optionMap["EXPRESSION"];
-  else
-    return QString("");
+  if( !filenm.isEmpty() ) {
+    QMap<QString, QString> optionMap (readOption2(filenm));;
+    if( optionMap.contains( "EXPRESSION" ) ) {
+      return optionMap["EXPRESSION"];
+    }
+  }
+  return QString("");
 }
 
