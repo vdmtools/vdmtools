@@ -287,20 +287,22 @@ void ToolboxThread::syntaxCheck(const SyntaxCheckCMD & command)
 {
   QStringList files (command.files());
   QStringList vdmFiles, javaFiles;
-  for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it)
-  {
-    if (Qt2TB::isJavaFile(*it))
+  for (QStringList::const_iterator it = files.begin(); it != files.end(); ++it) {
+    if (Qt2TB::isJavaFile(*it)) {
       javaFiles.append(*it);
-    else
+    }
+    else {
       vdmFiles.append(*it);
+    }
   }
 
-  if (!vdmFiles.isEmpty())
+  if (!vdmFiles.isEmpty()) {
     Qt2TB::SyntaxCheck(vdmFiles);
-
+  }
 #ifdef VDMPP
-  if (!javaFiles.isEmpty())
+  if (!javaFiles.isEmpty()) {
     Qt2TB::JavaSyntaxCheck(javaFiles);
+  }
 #endif // VDMPP
 }
 
@@ -320,22 +322,22 @@ void ToolboxThread::typeCheck(const TypeCheckCMD& command)
 {
   const QStringList & modules (command.modules());
   QStringList vdmModules, javaModules;
-  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it)
-  {
-    if ((*it) != "")
-    {
-      if (Qt2TB::isJavaModule(*it))
+  for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    if (!(*it).isEmpty()) {
+      if (Qt2TB::isJavaModule(*it)) {
         javaModules.append(*it);
-      else
+      }
+      else {
         vdmModules.append(*it);
+      }
     }
   }
-  if (!vdmModules.isEmpty())
+  if (!vdmModules.isEmpty()) {
     Qt2TB::TypeCheck(vdmModules);
-
-  if (!javaModules.isEmpty())
+  }
+  if (!javaModules.isEmpty()) {
     Qt2TB::JavaTypeCheck(javaModules);
-
+  }
   postGUIEvent(new CheckActionsEvent());
 }
 

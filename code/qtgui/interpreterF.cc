@@ -1099,13 +1099,13 @@ void interpreterW::traceClicked_qt3(QListViewItem * item, const QPoint & pnt, in
       item->setText(1, "[...]");
 #else
       QListViewItem *firstItem = item;
-      while ((firstItem != 0) && firstItem->text(0) == "") {
+      while ((firstItem != 0) && firstItem->text(0).isEmpty()) {
              firstItem = firstItem->itemAbove();
       }
       if (firstItem != 0) {
         firstItem->setText(1, "[...]");
         QListViewItem* nextItem = firstItem->nextSibling();
-        while (nextItem && nextItem->text(0) == "") {
+        while (nextItem && nextItem->text(0).isEmpty()) {
           QListViewItem* thisItem = nextItem;
           nextItem = nextItem->nextSibling();
           delete thisItem;

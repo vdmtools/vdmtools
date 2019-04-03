@@ -813,10 +813,9 @@ QLayout* toolOptionsDialog::createUMLInterfaceLayout( QWidget* parent )
 #endif // QT_VERSION >= 0x040000
 
   int index = 0;
-  while (true)
-  {
+  while (true) {
     QString item (umlInterfaces[index]);
-    if (item == "") break;
+    if (item.isEmpty()) break;
 #if QT_VERSION >= 0x040000
     cbox->addItem(item);
 #else
@@ -858,10 +857,9 @@ QLayout* toolOptionsDialog::createUMLFileTypeLayout( QWidget* parent )
 #endif // QT_VERSION >= 0x040000
 
   int index = 0;
-  while (true)
-  {
+  while (true) {
     QString item (umlNewFileTypes[index]);
-    if (item == "") break;
+    if (item.isEmpty()) break;
 #if QT_VERSION >= 0x040000
     cbox->addItem(item);
 #else
@@ -1052,7 +1050,9 @@ bool toolOptionsDialog::loadOptionsV1()
   useExternalEditor = useExternalEditorStr.toInt();
 
   QString tempEditorName = initStream.readLine();
-  if (tempEditorName != "") this->editorName = tempEditorName;
+  if (!tempEditorName.isEmpty()) {
+    this->editorName = tempEditorName;
+  }
   this->singleLoadFormat = initStream.readLine();
 
   QString multiFilesSupportedStr = initStream.readLine();
@@ -1231,7 +1231,7 @@ bool toolOptionsDialog::loadOptionsV2()
     int index = 0;
     while(true) {
       QString item (umlInterfaces[index]);
-      if (item == "") break;
+      if (item.isEmpty()) break;
       if (item == umlinterfaceStr) {
         this->umlinterface = index;
         break;
@@ -1245,7 +1245,7 @@ bool toolOptionsDialog::loadOptionsV2()
     int index = 0;
     while(true) {
       QString item (umlNewFileTypes[index]);
-      if (item == "") break;
+      if (item.isEmpty()) break;
       if (item == umlnewfiletypeStr) {
         this->umlnewfiletype = index;
         break;

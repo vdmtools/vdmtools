@@ -1836,10 +1836,10 @@ void mainW::setLastFilter(const QStringList& files)
     }
 #endif // VDMPP
 
-    if ( ftype == "" && tmptype != "" ) {
+    if ( ftype.isEmpty() && !tmptype.isEmpty() ) {
       ftype = tmptype;
     }
-    else if ( ftype != "" && ftype != tmptype ) {
+    else if ( !ftype.isEmpty() && ftype != tmptype ) {
       ftype = "all";
       break;
     }
@@ -4551,12 +4551,14 @@ bool mainW::loadGeometry(QTextStream& in, QWidget * w)
 bool mainW::loadGeometry(const QMap<QString, QString>& wgmMap, 
                          const QString & name, QWidget * w)
 {
-  if( name == "" ) return false;
-  if( !wgmMap.contains( name ) ) return false;
-  QRect r (this->getRect( wgmMap[name] ));
-
-  w->setGeometry( r );
-  return this->getShown( wgmMap[name] );
+  if( !name.isEmpty() ) {
+    if( wgmMap.contains( name ) ) {
+      QRect r (this->getRect( wgmMap[name] ));
+      w->setGeometry( r );
+      return this->getShown( wgmMap[name] );
+    }
+  }
+  return false;
 }
 
 bool mainW::loadMainGeometry(QTextStream& in, QWidget * w)

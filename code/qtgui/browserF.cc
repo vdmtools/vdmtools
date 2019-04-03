@@ -1813,13 +1813,11 @@ void browserW::viewModuleFile_qt3(QListViewItem* lvi)
 //
 void browserW::viewFile(const QString & modnm, const QString & apparentFile)
 {
-  if (apparentFile != "")
-  {
+  if (!apparentFile.isEmpty()) {
     int line = 1;
     int col = 1;
     int len = 1;
-    if (!modnm.isEmpty())
-    {
+    if (!modnm.isEmpty()) {
       Qt2TB::GetModulePosInfoI(modnm, &line, &col, &len);
     }
     QString filename;

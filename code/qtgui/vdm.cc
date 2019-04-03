@@ -150,22 +150,22 @@ void setTranslation( QApplication& app )
   QString path (getApplicationPath( app ));
 
   QString lang (QTLOCALE::getLanguage());
-  if( lang == "" ) return;
-  QString langfile (path + DIRSEP + "vdm_" + lang + ".qm");
-  QFileInfo fi( langfile );
+  if(!lang.isEmpty()) {
+    QString langfile (path + DIRSEP + "vdm_" + lang + ".qm");
+    QFileInfo fi( langfile );
 
-  if( !fi.exists() ) {
-    lang = QTLOCALE::getAltLang( lang );
-    if( lang == "" ) return;
-    langfile = path + DIRSEP + "vdm_" + lang + ".qm";
-    QFileInfo fi2( langfile );
-    if( !fi2.exists() ) return;
+    if( !fi.exists() ) {
+      lang = QTLOCALE::getAltLang( lang );
+      if( lang.isEmpty() ) return;
+      langfile = path + DIRSEP + "vdm_" + lang + ".qm";
+      QFileInfo fi2( langfile );
+      if( !fi2.exists() ) return;
+    }
+    // initialize translation
+    translator = new QTranslator( 0 );
+    translator->load( langfile, "." );
+    app.installTranslator( translator );
   }
-
-  // initialize translation
-  translator = new QTranslator( 0 );
-  translator->load( langfile, "." );
-  app.installTranslator( translator );
 }
 
 void drawVersion( QPixmap * pmap )

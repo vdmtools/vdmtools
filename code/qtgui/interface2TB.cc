@@ -411,7 +411,7 @@ bool Qt2TB::CPPGenerate(const QStringList & modules)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_s;
   for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-    if ((*it) != "") {
+    if (!(*it).isEmpty()) {
       module_s.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
     }
   }
@@ -431,7 +431,7 @@ bool Qt2TB::JavaGenerate(const QStringList & modules)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_s;
   for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-    if ((*it) != "") {
+    if (!(*it).isEmpty()) {
       module_s.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
     }
   }
@@ -487,7 +487,7 @@ void Qt2TB::TypeCheck(const QStringList & modules)
   if (!modules.isEmpty()) {
     SEQ<TYPE_ProjectTypes_ModuleName> module_l;
     for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-      if ((*it) != "") {
+      if (!(*it).isEmpty()) {
         module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
       }
     }
@@ -502,7 +502,7 @@ void Qt2TB::JavaTypeCheck(const QStringList & modules)
   if (!modules.isEmpty()) {
     SEQ<TYPE_ProjectTypes_ModuleName> module_l;
     for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-      if ((*it) != "") {
+      if (!(*it).isEmpty()) {
         module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
       }
     }
@@ -526,7 +526,7 @@ void Qt2TB::JavaGenerateVDM(const QStringList & modules, bool stubOnly, bool aut
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_l;
   for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-    if ((*it) != "") {
+    if (!(*it).isEmpty()) {
       module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
     }
   }
@@ -571,7 +571,7 @@ void Qt2TB::PogGenerate(const QStringList & modules)
 {
   SEQ<TYPE_ProjectTypes_ModuleName> module_l;
   for (QStringList::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-    if ((*it) != "") {
+    if (!(*it).isEmpty()) {
       module_l.ImpAppend(PTAUX::mk_ModuleName(Qt2TB::qstring2wstring(*it)));
     }
   }

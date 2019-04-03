@@ -88,7 +88,7 @@ QStringList QTLOCALE::getMenuList()
   while(true)
   {
     QString menustr (menuItems[index]);
-    if( menustr == "" ) break;
+    if( menustr.isEmpty() ) break;
     menulist.append(menustr);
     index++;
   }
