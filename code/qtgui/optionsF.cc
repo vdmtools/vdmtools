@@ -1485,6 +1485,7 @@ void optionsW::loadOptions()
 #else
       this->maintab->setCurrentPage(0);
 #endif // QT_VERSION >= 0x040000
+      return;
     }
   }
   Qt2TB::InitOptions();
