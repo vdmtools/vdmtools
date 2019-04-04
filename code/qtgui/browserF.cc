@@ -75,15 +75,14 @@ bool browserW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
 #ifdef __APPLE_CC__
-  if (e->type() == QEvent::Paint)
-  {
-    if (this->pcount < 2)
-    {
+  if (e->type() == QEvent::Paint) {
+    if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
     }
-    else
+    else {
       this->pcount = 0;
+    }
   }
 #endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
@@ -477,18 +476,15 @@ QTREEWIDGET* browserW::createModuleListView( QWidget * parent )
 //SelectionType browserW::getSelectedFiles(QStringList& selected, bool abs)
 QStringList browserW::getSelectedFiles(bool abs)
 { 
-  if (this->isProjectManagerSelected())
-  {
+  if (this->isProjectManagerSelected()) {
     return this->getSelectedFilesOfProject(abs);
   }
 #ifdef VDMPP
-  else if (this->isJavaClassBrowserSelected())
-  {
+  else if (this->isJavaClassBrowserSelected()) {
     return this->getSelectedFilesOfJava(abs);
   }
 #endif //VDMPP
-  else
-  {
+  else {
     return this->getSelectedFilesOfVDM(abs);
   }
 } 
@@ -500,22 +496,17 @@ QStringList browserW::getSelectedFilesOfProject(bool abs)
 #if QT_VERSION >= 0x040000
   QTreeWidgetItem * root = this->projectLV->topLevelItem(0);
   int tcount = root->childCount();
-  for (int tindex = 0; tindex < tcount; tindex++)
-  {
+  for (int tindex = 0; tindex < tcount; tindex++) {
     QTreeWidgetItem * vdmjava = root->child(tindex);
     int pcount = vdmjava->childCount();
-    if (pcount > 0)
-    {
-      for (int pindex = 0; pindex < pcount; pindex++)
-      {
+    if (pcount > 0) {
+      for (int pindex = 0; pindex < pcount; pindex++) {
         QTreeWidgetItem * package = vdmjava->child(pindex);
         bool package_selected = (package->isSelected());
         int fcount = package->childCount();
-        for (int findex = 0; findex < fcount; findex++)
-        {
+        for (int findex = 0; findex < fcount; findex++) {
           QTreeWidgetItem * file = package->child(findex);
-          if (package_selected || file->isSelected())
-          {
+          if (package_selected || file->isSelected()) {
             list.append(file->text(1));
           }
         }
@@ -524,10 +515,8 @@ QStringList browserW::getSelectedFilesOfProject(bool abs)
   }
 #else
   QListViewItemIterator itL (this->projectLV);
-  for (;itL.current();++itL)
-  {
-    if (itL.current()->isSelected())
-    { 
+  for (;itL.current();++itL) {
+    if (itL.current()->isSelected()) { 
       // 1 is the hidden column where full path name resides for file items 
       const QString selname = itL.current()->text(1);
       if (!selname.isEmpty()) {
@@ -538,10 +527,11 @@ QStringList browserW::getSelectedFilesOfProject(bool abs)
         // A module has been selected
         QListViewItem *parent = itL.current()->parent();
         // ASSERT: parent->text(1) is the filename
-        if (abs)
-          list += parent->text(8);
-        else
-          list += parent->text(1);
+//        if (abs)
+//          list += parent->text(8);
+//        else
+//          list += parent->text(1);
+        list += parent->text(abs ? 8 : 1);
       }
       else {
         QStringList filesInPackage = getFilesInPackage(itL.current());
@@ -558,19 +548,15 @@ QStringList browserW::getSelectedFilesOfVDM(bool abs)
   QStringList list;
 #if QT_VERSION >= 0x040000
   QList<QTreeWidgetItem *> items (this->classLV->selectedItems());
-  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++)
-  {
+  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++) {
     if (list.indexOf((*itr)->text(8)) == -1)
       list.append((*itr)->text(8));
   } 
 #else
   QListViewItemIterator itL(this->classLV);
-  for (;itL.current();++itL)
-  {
-    if (itL.current()->isSelected())
-    { 
-      if (list.find(itL.current()->text(8)) == list.end())
-      {
+  for (;itL.current();++itL) {
+    if (itL.current()->isSelected()) { 
+      if (list.find(itL.current()->text(8)) == list.end()) {
         list += itL.current()->text(8); 
         // 8 is the hidden column where full path name resides
       }
@@ -592,20 +578,19 @@ QStringList browserW::getFilesInPackage(QTREEWIDGETITEM* node)
 {
   QStringList result;
   const QString fileName (node->text(1));
-  if (!fileName.isEmpty())
+  if (!fileName.isEmpty()) {
     result += fileName;
+  }
   else {
 #if QT_VERSION >= 0x040000
     int count = node->childCount();
-    for (int index = 0; index < count; index++)
-    {
-// 20120522 -->
-      //result += getFilesInPackage(node->child(index));
+    for (int index = 0; index < count; index++) {
       QStringList list (getFilesInPackage(node->child(index)));
-      for (QStringList::const_iterator itr = list.begin(); itr != list.end(); ++itr)
-        if (!result.contains(*itr))
+      for (QStringList::const_iterator itr = list.begin(); itr != list.end(); ++itr) {
+        if (!result.contains(*itr)) {
           result.append(*itr);
-// <-- 20120522
+        }
+      }
     }
 #else
     QListViewItem *child = node->firstChild();
@@ -625,60 +610,60 @@ QStringList browserW::getAllFilesOfProject(bool vdm)
 #if QT_VERSION >= 0x040000
   QTreeWidgetItem * root = this->projectLV->topLevelItem(0);
   int tcount = root->childCount();
-  for (int tindex = 0; tindex < tcount; tindex++)
-  {
+  for (int tindex = 0; tindex < tcount; tindex++) {
     QTreeWidgetItem * vdmjava = root->child(tindex);
     int pcount = vdmjava->childCount();
-    if (pcount > 0)
-    {
-      for (int pindex = 0; pindex < pcount; pindex++)
-      {
+    if (pcount > 0) {
+      for (int pindex = 0; pindex < pcount; pindex++) {
         QTreeWidgetItem * package = vdmjava->child(pindex);
         int fcount = package->childCount();
-        for (int findex = 0; findex < fcount; findex++)
-        {
+        for (int findex = 0; findex < fcount; findex++) {
           QTreeWidgetItem * file = package->child(findex);
           QString fnm (file->text(1));
-          if ((vdm && !Qt2TB::isJavaFile(fnm)) || (!vdm && Qt2TB::isJavaFile(fnm)))
-            if (!list.contains(fnm))
+          if ((vdm && !Qt2TB::isJavaFile(fnm)) || (!vdm && Qt2TB::isJavaFile(fnm))) {
+            if (!list.contains(fnm)) {
               list.append(fnm);
+            }
+          }
         }
       }
     }
   }
 #else
   QListViewItemIterator itL (this->projectLV);
-  for (;itL.current();++itL)
-  {
+  for (;itL.current();++itL) {
     // 1 is the hidden column where full path name resides for file items 
     const QString name = itL.current()->text(1);
     if (!name.isEmpty()) {
       // This is a proper file name
-      if ((vdm && !Qt2TB::isJavaFile(name)) || (!vdm && Qt2TB::isJavaFile(name)))
-        if (!list.contains(name))
+      if ((vdm && !Qt2TB::isJavaFile(name)) || (!vdm && Qt2TB::isJavaFile(name))) {
+        if (!list.contains(name)) {
           list.append(name);
+        }
+      }
     }
     else if (itL.current()->childCount() == 0) {
       // A module has been selected
       QListViewItem *parent = itL.current()->parent();
       const QString name = parent->text(1);
       // ASSERT: parent->text(1) is the filename
-//      if (abs)
-//        list += parent->text(8);
-//      else
-      if (!name.isEmpty())
-        if ((vdm && !Qt2TB::isJavaFile(name)) || (!vdm && Qt2TB::isJavaFile(name)))
-          if (!list.contains(name))
+      if (!name.isEmpty()) {
+        if ((vdm && !Qt2TB::isJavaFile(name)) || (!vdm && Qt2TB::isJavaFile(name))) {
+          if (!list.contains(name)) {
             list.append(name);
+          }
+        }
+      }
     }
     else {
       QStringList filesInPackage = getFilesInPackage(itL.current());
-      for (QStringList::const_iterator itr = filesInPackage.begin(); itr != filesInPackage.end(); ++itr)
-      {
+      for (QStringList::const_iterator itr = filesInPackage.begin(); itr != filesInPackage.end(); ++itr) {
         QString fnm (*itr);
-        if ((vdm && !Qt2TB::isJavaFile(fnm)) || (!vdm && Qt2TB::isJavaFile(fnm)))
-          if (!list.contains(fnm))
+        if ((vdm && !Qt2TB::isJavaFile(fnm)) || (!vdm && Qt2TB::isJavaFile(fnm))) {
+          if (!list.contains(fnm)) {
             list.append(fnm);
+          }
+        }
       }
     }  
   }
@@ -688,8 +673,7 @@ QStringList browserW::getAllFilesOfProject(bool vdm)
 void browserW::updateSelectedModules()
 {
 #ifdef VDMPP
-  if (this->isJavaClassBrowserSelected())
-  {
+  if (this->isJavaClassBrowserSelected()) {
     this->updateSelectedModulesOfJava();
   }
   else
@@ -701,22 +685,20 @@ void browserW::updateSelectedModulesOfVDM()
 {
 #if QT_VERSION >= 0x040000
   QList<QTreeWidgetItem *> items (this->classLV->selectedItems());
-  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++)
-  {
+  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++) {
     const QString moduleName ((*itr)->text(0));
     StatusType st (Qt2TB::getStatusI(moduleName));
     this->setModuleStatus(*itr, st, true);
   } 
 #else
   QListViewItemIterator itL (this->classLV);
-  for (;itL.current();++itL)
-  {
-    if (itL.current()->isSelected())
-    {
+  for (;itL.current();++itL) {
+    if (itL.current()->isSelected()) {
       QListViewItem * lvi = itL.current();
       const QString moduleName (lvi->text(0));
       StatusType st (Qt2TB::getStatusI(moduleName));
-      this->setModuleStatus(lvi, st, true); }
+      this->setModuleStatus(lvi, st, true);
+    }
   }
 #endif // QT_VERSION >= 0x040000
 }
@@ -726,18 +708,15 @@ void browserW::updateSelectedModulesOfJava()
 {
 #if QT_VERSION >= 0x040000
   QList<QTreeWidgetItem *> items (this->javaLV->selectedItems());
-  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++)
-  {
+  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++) {
     const QString moduleName (Qt2TB::addJavaPrefix((*itr)->text(0)));
     StatusType st (Qt2TB::getStatusI(moduleName));
     this->setModuleStatus(*itr, st, true);
   } 
 #else
   QListViewItemIterator itL(this->javaLV);
-  for (;itL.current();++itL)
-  {
-    if (itL.current()->isSelected())
-    {
+  for (;itL.current();++itL) {
+    if (itL.current()->isSelected()) {
       QListViewItem * lvi = itL.current();
       const QString moduleName (Qt2TB::addJavaPrefix(lvi->text(0)));
       StatusType st (Qt2TB::getStatusI(moduleName));
@@ -750,23 +729,19 @@ void browserW::updateSelectedModulesOfJava()
 
 QTREEWIDGETITEMLIST browserW::getSelectedNodes(const QTREEWIDGETITEM * root)
 {
-  if (root == NULL)
+  if (root == NULL) {
     return QTREEWIDGETITEMLIST();
-
+  }
 #if QT_VERSION >= 0x040000
   QList<QTreeWidgetItem *> nodes;
   int count = root->childCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = root->child(index);
-    if (item->isSelected())
-    {
+    if (item->isSelected()) {
       nodes.append(item);
     } 
-    else
-    {
-      if (item->childCount() > 0)
-      {
+    else {
+      if (item->childCount() > 0) {
         nodes += getSelectedNodes(item);
       }
     }
@@ -775,19 +750,16 @@ QTREEWIDGETITEMLIST browserW::getSelectedNodes(const QTREEWIDGETITEM * root)
 #else
   QPtrList<QListViewItem> nodes;
   QListViewItem* currentNode = (QListViewItem*)root;
-  while (currentNode != NULL)
-  {
-    if (currentNode->isSelected()) 
-    {
+  while (currentNode != NULL) {
+    if (currentNode->isSelected()) {
       nodes.append(currentNode);
     }
-    else if (currentNode->childCount() != 0)
-    {
+    else if (currentNode->childCount() != 0) {
       QPtrList<QListViewItem> subnodes (getSelectedNodes(currentNode->firstChild()));
-      if (!subnodes.isEmpty())
-      {
-        for (int idx = 0; idx < (int)subnodes.count(); idx++)
+      if (!subnodes.isEmpty()) {
+        for (int idx = 0; idx < (int)subnodes.count(); idx++) {
           nodes.append(subnodes.at(idx));
+        }
       }
     }
     currentNode = currentNode->nextSibling();
@@ -798,32 +770,32 @@ QTREEWIDGETITEMLIST browserW::getSelectedNodes(const QTREEWIDGETITEM * root)
 
 QStringList browserW::getSelectedModules()
 { 
-  if (this->isProjectManagerSelected())
-  {
+  if (this->isProjectManagerSelected()) {
     return Qt2TB::getModulesInFilesI(this->getSelectedModulesOfProject());
   }
 #ifdef VDMPP
-  else if (this->isJavaClassBrowserSelected())
-  {
+  else if (this->isJavaClassBrowserSelected()) {
     return  this->getSelectedModulesOfJava();
   }
 #endif // VDMPP
-  else
-  {
+  else {
     return this->getSelectedModulesOfVDM();
   }
 }
 
 bool browserW::isJavaClassSelected()
 {
-  if (this->isProjectManagerSelected())
+  if (this->isProjectManagerSelected()) {
     return false;
+  }
 #ifdef VDMPP
-  else if (this->isJavaClassBrowserSelected())
+  else if (this->isJavaClassBrowserSelected()) {
     return true;
+  }
 #endif // VDMPP
-  else
+  else {
     return false;
+  }
 }
 
 bool browserW::anyFilesOrModulesAreSelected()
@@ -837,14 +809,11 @@ QStringList browserW::getSelectedModulesOfProject()
   QStringList list;
   QTreeWidgetItem * root = this->projectLV->topLevelItem(0);
   int count = root->childCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QList<QTreeWidgetItem *> selectedNodes (getSelectedNodes(root->child(index)));
-    if (!selectedNodes.isEmpty())
-    {
+    if (!selectedNodes.isEmpty()) {
       for (QList<QTreeWidgetItem *>::const_iterator itr = selectedNodes.begin();
-           itr != selectedNodes.end(); ++itr)
-      {
+           itr != selectedNodes.end(); ++itr) {
         QStringList thisNodesModules (getFilesInPackage(*itr));
         list += thisNodesModules;
       }
@@ -856,11 +825,9 @@ QStringList browserW::getSelectedModulesOfProject()
   QListViewItemIterator itL (this->projectLV);
 
   QPtrList<QListViewItem> selectedNodes (getSelectedNodes(itL.current()));
-  if (!selectedNodes.isEmpty());
-  {
+  if (!selectedNodes.isEmpty()) {
     QListViewItem* thisNode;
-    for (thisNode = selectedNodes.first(); thisNode != 0; thisNode = selectedNodes.next())
-    {
+    for (thisNode = selectedNodes.first(); thisNode != 0; thisNode = selectedNodes.next()) {
       QStringList thisNodesModules (getFilesInPackage(thisNode));
       list += thisNodesModules;
     }
@@ -874,18 +841,17 @@ QStringList browserW::getSelectedModulesOfVDM()
 #if QT_VERSION >= 0x040000
   QStringList list;
   QList<QTreeWidgetItem *> items (this->classLV->selectedItems());
-  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++)
-  {
+  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++) {
     list.append((*itr)->text(0));
   } 
   return list;
 #else
   QStringList list;
   QListViewItemIterator itL (this->classLV);
-  for (;itL.current();++itL)
-  {
-    if (itL.current()->isSelected())
+  for (;itL.current();++itL) {
+    if (itL.current()->isSelected()) {
       list += itL.current()->text(0);
+    }
   }
   return list;
 #endif // QT_VERSION >= 0x040000
@@ -897,16 +863,14 @@ QStringList browserW::getSelectedModulesOfJava()
 #if QT_VERSION >= 0x040000
   QStringList list;
   QList<QTreeWidgetItem *> items (this->javaLV->selectedItems());
-  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++)
-  {
+  for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++) {
     list.append(Qt2TB::addJavaPrefix((*itr)->text(0)));
   } 
   return list;
 #else
   QStringList list;
   QListViewItemIterator itL(this->javaLV);
-  for (;itL.current();++itL)
-  {
+  for (;itL.current();++itL) {
     if (itL.current()->isSelected())
       list += Qt2TB::addJavaPrefix(itL.current()->text(0));
   }
@@ -964,27 +928,21 @@ void browserW::addModuleToFile(const QString & module, const QString & file)
   QTreeWidgetItem * root = this->projectLV->topLevelItem(0);
   bool exists = false;
   int count = root->childCount();
-  for (int index = 0; (index < count) && !exists; index++)
-  {
+  for (int index = 0; (index < count) && !exists; index++) {
     QTreeWidgetItem * vdmjava = root->child(index);
     int pcount = vdmjava->childCount();
-    for (int pindex = 0; (pindex < pcount) && !exists; pindex++)
-    {
+    for (int pindex = 0; (pindex < pcount) && !exists; pindex++) {
       QTreeWidgetItem * package = vdmjava->child(pindex);
       int fcount = package->childCount();
-      for (int findex = 0; (findex < fcount) && !exists; findex++)
-      {
+      for (int findex = 0; (findex < fcount) && !exists; findex++) {
         QTreeWidgetItem * filename = package->child(findex);
-        if (filename->text(1) == file)
-        {
+        if (filename->text(1) == file) {
           int mcount = filename->childCount();
-          for (int mindex = 0; (mindex < mcount) && !exists; mindex++)
-          {
+          for (int mindex = 0; (mindex < mcount) && !exists; mindex++) {
             QTreeWidgetItem * modnm = filename->child(mindex);
             exists = (modnm->text(0) == module); 
           }
-          if (!exists)
-          {
+          if (!exists) {
             QTreeWidgetItem * modnm = new QTreeWidgetItem();
             modnm->setFlags(Qt::ItemIsEnabled);
             modnm->setText(0, module);
@@ -1000,19 +958,19 @@ void browserW::addModuleToFile(const QString & module, const QString & file)
 #else
   QListViewItemIterator itL (this->projectLV);
   bool found = false;
-  for (;itL.current() && !found;++itL)
-  {
-    if (itL.current()->text(1) == file)
-    { 
+  for (;itL.current() && !found;++itL) {
+    if (itL.current()->text(1) == file) { 
       found = true;
       QListViewItem* lvi = itL.current()->firstChild();
       while((lvi != NULL) && (lvi->text(0) != module)) {
         lvi = lvi->nextSibling();
       }
-      if (lvi != NULL)
+      if (lvi != NULL) {
         lvi->setText(1, file);
-      else
+      }
+      else {
         lvi = new QListViewItem(itL.current(), module, file);
+      }
     }
   }
 #endif // QT_VERSION >= 0x040000
@@ -1034,24 +992,18 @@ void browserW::removeModuleFromFile(const QString & module, const QString & file
   QTreeWidgetItem * root = this->projectLV->topLevelItem(0);
   bool exists = false;
   int count = root->childCount();
-  for (int index = 0; (index < count) && !exists; index++)
-  {
+  for (int index = 0; (index < count) && !exists; index++) {
     QTreeWidgetItem * vdmjava = root->child(index);
     int pcount = vdmjava->childCount();
-    for (int pindex = 0; (pindex < pcount) && !exists; pindex++)
-    {
+    for (int pindex = 0; (pindex < pcount) && !exists; pindex++) {
       QTreeWidgetItem * package = vdmjava->child(pindex);
       int fcount = package->childCount();
-      for (int findex = 0; (findex < fcount) && !exists; findex++)
-      {
+      for (int findex = 0; (findex < fcount) && !exists; findex++) {
         QTreeWidgetItem * filename = package->child(findex);
-        if (filename->text(1) == file)
-        {
+        if (filename->text(1) == file) {
           int mcount = filename->childCount();
-          for (int mindex = 0; (mindex < mcount) && !exists; mindex++)
-          {
-            if (filename->child(mindex)->text(0) == module)
-            {
+          for (int mindex = 0; (mindex < mcount) && !exists; mindex++) {
+            if (filename->child(mindex)->text(0) == module) {
               QTreeWidgetItem * modnm = filename->takeChild(mindex);
               delete modnm;
               exists = true;
@@ -1065,20 +1017,20 @@ void browserW::removeModuleFromFile(const QString & module, const QString & file
   QListViewItemIterator itL(this->projectLV);
 
   bool found = false;
-  for (;itL.current() && !found;++itL)
-  {
-    if (itL.current()->text(1) == file)
-    { 
+  for (;itL.current() && !found;++itL) {
+    if (itL.current()->text(1) == file) { 
       QListViewItem* lvi = itL.current()->firstChild();
-      while (lvi && !found)
-      {
-        if (module == lvi->text(0))
+      while (lvi && !found) {
+        if (module == lvi->text(0)) {
           found = true;
-        else
+        }
+        else {
           lvi = lvi->nextSibling();
+        }
       }
-      if (lvi)
+      if (lvi) {
         delete lvi;
+      }
     }
   }
 #endif // QT_VERSION >= 0x040000
@@ -1100,13 +1052,13 @@ void browserW::removeModule(const QString & module)
 {
   QTREEWIDGETITEM* moduleLvi = this->findModule(module);
 
-  if (NULL != moduleLvi)
-  {
+  if (NULL != moduleLvi) {
     QString filename (moduleLvi->text(8));
     QString moduleName (module);
 #ifdef VDMPP
-    if (Qt2TB::isJavaModule(moduleName))
+    if (Qt2TB::isJavaModule(moduleName)) {
       moduleName = Qt2TB::removeJavaPrefix(moduleName);
+    }
 #endif // VDMPP
     this->removeModuleFromFile(moduleName, filename);
     delete moduleLvi;
@@ -1116,8 +1068,9 @@ void browserW::removeModule(const QString & module)
 void browserW::removeModules(const QStringList & modules)
 {
   QStringList::const_iterator itr;
-  for (itr = modules.begin(); itr != modules.end(); ++itr)
+  for (itr = modules.begin(); itr != modules.end(); ++itr) {
     this->removeModule(*itr);
+  }
 }
 //
 // browserW::findModule
@@ -1136,31 +1089,29 @@ QTREEWIDGETITEM* browserW::findModule(const QString & module)
 
 #if QT_VERSION >= 0x040000
 #ifdef VDMPP
-  if (Qt2TB::isJavaModule(module))
-  {
+  if (Qt2TB::isJavaModule(module)) {
     int count = this->javaLV->topLevelItemCount();
-    for (int index = 0; index < count; index++)
-    {
+    for (int index = 0; index < count; index++) {
       QTreeWidgetItem * item = this->javaLV->topLevelItem(index);
-      if (item->text(0) == moduleName)
+      if (item->text(0) == moduleName) {
         return item;
+      }
     }
     return NULL;
   }
 #endif // VDMPP
   int count = this->classLV->topLevelItemCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = this->classLV->topLevelItem(index);
-    if (item->text(0) == moduleName)
+    if (item->text(0) == moduleName) {
       return item;
+    }
   }
   return NULL;
 #else
   QListViewItem* moduleLvi = NULL;
 #ifdef VDMPP
-  if (Qt2TB::isJavaModule(module))
-  {
+  if (Qt2TB::isJavaModule(module)) {
     moduleLvi = this->javaLV->firstChild();
     moduleName = Qt2TB::removeJavaPrefix(moduleName);
   }
@@ -1168,9 +1119,9 @@ QTREEWIDGETITEM* browserW::findModule(const QString & module)
 #endif // VDMPP
     moduleLvi = this->classLV->firstChild();;
 
-  while( moduleLvi && ( moduleLvi->text(0) != moduleName ) )
+  while( moduleLvi && ( moduleLvi->text(0) != moduleName ) ) {
     moduleLvi = moduleLvi->nextSibling();
-
+  }
   return moduleLvi;
 #endif // QT_VERSION >= 0x040000
 }
@@ -1219,22 +1170,25 @@ void  browserW::setModuleStatusPixmap(QTREEWIDGETITEM* moduleLvi, int pos, Statu
 //
 void  browserW::setModuleStatus(QTREEWIDGETITEM* moduleLvi, const StatusType & st, bool isVDM)
 {
-  if (moduleLvi == (QTREEWIDGETITEM*)NULL) return;
+  if (moduleLvi != (QTREEWIDGETITEM*)NULL) {
 
-  this->setModuleStatusPixmap(moduleLvi, 1, st.syntax, syntaxOkPixmap, syntaxErrPixmap);
-  this->setModuleStatusPixmap(moduleLvi, 2, st.type, typeOkPixmap, typeErrPixmap);
+    this->setModuleStatusPixmap(moduleLvi, 1, st.syntax, syntaxOkPixmap, syntaxErrPixmap);
+    this->setModuleStatusPixmap(moduleLvi, 2, st.type, typeOkPixmap, typeErrPixmap);
 #ifdef VDMSL
-  this->setModuleStatusPixmap(moduleLvi, 3, st.cg, cppcgOkPixmap, cppcgErrPixmap);
-  this->setModuleStatusPixmap(moduleLvi, 4, st.pp, ppOkPixmap, ppErrPixmap);
+    this->setModuleStatusPixmap(moduleLvi, 3, st.cg, cppcgOkPixmap, cppcgErrPixmap);
+    this->setModuleStatusPixmap(moduleLvi, 4, st.pp, ppOkPixmap, ppErrPixmap);
 #endif // VDMSL
 #ifdef VDMPP
-  if( isVDM )
-    this->setModuleStatusPixmap(moduleLvi, 3, st.cg, cppcgOkPixmap, cppcgErrPixmap);
-  else 
-    this->setModuleStatusPixmap(moduleLvi, 3, st.cg, vdmcgOkPixmap, vdmcgErrPixmap);
-  this->setModuleStatusPixmap(moduleLvi, 4, st.jcg, javacgOkPixmap, javacgErrPixmap);
-  this->setModuleStatusPixmap(moduleLvi, 5, st.pp, ppOkPixmap, ppErrPixmap);
+    if( isVDM ) {
+      this->setModuleStatusPixmap(moduleLvi, 3, st.cg, cppcgOkPixmap, cppcgErrPixmap);
+    }
+    else {
+      this->setModuleStatusPixmap(moduleLvi, 3, st.cg, vdmcgOkPixmap, vdmcgErrPixmap);
+    }
+    this->setModuleStatusPixmap(moduleLvi, 4, st.jcg, javacgOkPixmap, javacgErrPixmap);
+    this->setModuleStatusPixmap(moduleLvi, 5, st.pp, ppOkPixmap, ppErrPixmap);
 #endif // VDMPP
+  }
 }
 
 //
@@ -1245,13 +1199,15 @@ QPixmap browserW::loadPixmap(const QString & fname)
 {
 #ifdef USE_IMAGE_FILE
   QPixmap pixmap((this->imageDir) + DIRSEP + fname);
-  if (pixmap.isNull())
+  if (pixmap.isNull()) {
     qDebug("Unable to read " + (this->imageDir) + DIRSEP + fname);
+  }
   return pixmap;
 #else
   QPixmap img = getImageData( fname );
-  if ( img.isNull() )
+  if ( img.isNull() ) {
     emit logWrite(QString("Warning: unable to read image data: ") + fname);
+  }
   return img;
 #endif // USE_IMAGE_FILE
 }
@@ -1378,14 +1334,15 @@ void  browserW::updateProjectBrowser()
   // Set up packages in file browser
   QTREEWIDGETITEM * vdmf = this->findVDMParent();
   QStringList packageNames (Qt2TB::getVDMPackages());
-  if (!packageNames.isEmpty())
+  if (!packageNames.isEmpty()) {
     this->addPackages(vdmf, packageNames, false);
-
+  }
 #ifdef VDMPP
   QTREEWIDGETITEM * javaf = this->findJavaParent();
   QStringList javaPackageNames (Qt2TB::getJavaPackages());
-  if (!javaPackageNames.isEmpty())
+  if (!javaPackageNames.isEmpty()) {
     this->addPackages(javaf, javaPackageNames, true);
+  }
 #endif //VDMPP
 
 #if QT_VERSION >= 0x040000
@@ -1403,11 +1360,11 @@ void  browserW::addPackages(QTREEWIDGETITEM* parent, const QStringList & package
 {
   bool defaultUsed = false;
   QStringList::const_iterator iter;
-  for (iter = packageNames.begin(); iter != packageNames.end(); ++iter)
-  {
+  for (iter = packageNames.begin(); iter != packageNames.end(); ++iter) {
     QString packageName;
-    if ((*iter).isEmpty() && defaultUsed)
+    if ((*iter).isEmpty() && defaultUsed) {
       packageName = "/";
+    }
     else if ((*iter).isEmpty() && !defaultUsed) {
       packageName = "Default";
       defaultUsed = true;
@@ -1444,14 +1401,14 @@ void browserW::addFileNodes( QTREEWIDGETITEM* parent, const QString & packageNam
   QStringList fileNames;
   QStringList absFileNames;
 #ifdef VDMPP
-  if (isJava)
+  if (isJava) {
     Qt2TB::getModulesOfJavaPackage(packageName, fileNames, absFileNames);
+  }
   else
 #endif //VDMPP
     Qt2TB::getModulesOfVDMPackage(packageName, fileNames, absFileNames);
 
-  for (int i = 0; i < (int)fileNames.count(); i++)
-  {
+  for (int i = 0; i < (int)fileNames.count(); i++) {
     const QString fileNm (fileNames[i]);
     const QString absFileNm (absFileNames[i]);
 
@@ -1478,12 +1435,12 @@ void browserW::addModuleNodes( QTREEWIDGETITEM* parent, const QString & fileName
   QStringList moduleNames (Qt2TB::getModulesI(fileName));
       
   QStringList::const_iterator itr;
-  for (itr = moduleNames.begin(); itr != moduleNames.end(); ++itr)
-  {
+  for (itr = moduleNames.begin(); itr != moduleNames.end(); ++itr) {
     QString moduleName;
 #ifdef VDMPP
-    if (isJava)
+    if (isJava) {
       moduleName = Qt2TB::removeJavaPrefix(*itr);
+    }
     else
 #endif //VDMPP
       moduleName = *itr;
@@ -1505,8 +1462,9 @@ void browserW::addModuleNodes( QTREEWIDGETITEM* parent, const QString & fileName
 void browserW::addModule(const QString & moduleName, const QStringList & files, const StatusType & st)
 {
 #ifdef VDMPP
-  if (Qt2TB::isJavaModule((moduleName)))
+  if (Qt2TB::isJavaModule((moduleName))) {
     this->addJavaModule(moduleName, files, st);
+  }
   else
 #endif //VDMPP
     this->addVDMModule(moduleName, files, st);
@@ -1532,8 +1490,7 @@ void  browserW::addJavaModule(const QString & moduleName, const QStringList & fi
   QListViewItem* moduleLvi = new QListViewItem(this->javaLV, name);
 #endif // QT_VERSION >= 0x040000
 
-  for (QStringList::const_iterator itr = files.begin(); itr != files.end(); ++itr)
-  {
+  for (QStringList::const_iterator itr = files.begin(); itr != files.end(); ++itr) {
     moduleLvi->setText(8, *itr);
     this->addModuleToFile(name, *itr);
   }
@@ -1547,8 +1504,7 @@ void  browserW::addJavaModule(const QString & moduleName, const QStringList & fi
 void browserW::addVDMModule(const QString & name, const QStringList & files, const StatusType & st)
 {
   QTREEWIDGETITEM* moduleLvi = this->findModule(name);
-  if( moduleLvi == NULL )
-  {
+  if( moduleLvi == NULL ) {
     // Note that for VDM there can only be one file per module
 #if QT_VERSION >= 0x040000
     QTreeWidgetItem* newItem = new QTreeWidgetItem();
@@ -1593,53 +1549,52 @@ void  browserW::checkModifiedModuleItems(QTREEWIDGET* parent)
 
 #if QT_VERSION >= 0x040000
   int count = parent->topLevelItemCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = parent->topLevelItem(index);
     QString fileName (item->text(8));
-    if (((isVDM && !Qt2TB::isJavaFile(fileName)) || (!isVDM && Qt2TB::isJavaFile(fileName))))
-    {
-      if (glist.contains(fileName))
+    if (((isVDM && !Qt2TB::isJavaFile(fileName)) || (!isVDM && Qt2TB::isJavaFile(fileName)))) {
+      if (glist.contains(fileName)) {
         glist.removeAll(fileName);
-      if (Qt2TB::isFileModifiedI(fileName))
-      {
+      }
+      if (Qt2TB::isFileModifiedI(fileName)) {
         item->setIcon(1, QIcon(syntaxChangedPixmap));
-        if (!list.contains(fileName))
+        if (!list.contains(fileName)) {
           list.append(fileName);
+        }
       }
     }
   }
 #else
   QListViewItem *lvi = parent->firstChild();
-  while (lvi)
-  {
+  while (lvi) {
     QString fileName (lvi->text(8));
-    if((isVDM && !Qt2TB::isJavaFile(fileName)) || (!isVDM && Qt2TB::isJavaFile(fileName)))
-    {
-      if (glist.contains(fileName))
+    if((isVDM && !Qt2TB::isJavaFile(fileName)) || (!isVDM && Qt2TB::isJavaFile(fileName))) {
+      if (glist.contains(fileName)) {
         glist.remove(fileName);
-      if (Qt2TB::isFileModifiedI(fileName))
-      {
+      }
+      if (Qt2TB::isFileModifiedI(fileName)) {
         lvi->setPixmap(1, syntaxChangedPixmap);
-        if(!list.contains(fileName))
+        if(!list.contains(fileName)) {
           list.append(fileName);
+        }
       }
     }
     lvi = lvi->nextSibling();
   }
 #endif // QT_VERSION >= 0x040000
-  if(!list.isEmpty())
+  if(!list.isEmpty()) {
     emit modified(list);
-
-  QStringList mlist;
-  for (QStringList::const_iterator itr = glist.begin(); itr != glist.end(); ++itr)
-  {
-    QString fileName (*itr);
-    if (Qt2TB::isFileModifiedI(fileName) && !mlist.contains(fileName))
-      mlist.append(fileName);
   }
-  if(!mlist.isEmpty())
+  QStringList mlist;
+  for (QStringList::const_iterator itr = glist.begin(); itr != glist.end(); ++itr) {
+    QString fileName (*itr);
+    if (Qt2TB::isFileModifiedI(fileName) && !mlist.contains(fileName)) {
+      mlist.append(fileName);
+    }
+  }
+  if(!mlist.isEmpty()) {
     emit modified(mlist);
+  }
 }
 
 //
@@ -1652,10 +1607,12 @@ void  browserW::refreshProjectName()
   QString projectName (qfi.fileName());
 
   QString projectLabel ("[" + tr("Project") + " - ");
-  if (projectName.length() > 0)
+  if (projectName.length() > 0) {
     projectLabel += projectName;
-  else
+  }
+  else {
     projectLabel += "(No Name)";
+  }
   projectLabel += "]";
 
 #if QT_VERSION >= 0x040000
@@ -1667,8 +1624,9 @@ void  browserW::refreshProjectName()
 #endif // QT_VERSION >= 0x040000
 
   QString menuTitle (Qt2TB::GiveToolTitleI());
-  if (projectName.length() > 0) 
+  if (projectName.length() > 0) {
     menuTitle += QString(" (") + projectName + ")";
+  }
   emit setMainWindowTitle(menuTitle);
 }
 
@@ -1691,18 +1649,20 @@ QString browserW::getFilePath(const QString & filename)
 #if QT_VERSION >= 0x040000
   QTreeWidgetItem * root = this->projectLV->topLevelItem(0);
   int count = root->childCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = root->child(index);
     QString file (this->getFile( item, filename ));
-    if( !file.isEmpty() ) return file;
+    if( !file.isEmpty() ) {
+      return file;
+    }
   }
 #else
   QListViewItemIterator itL(this->projectLV);
-  for (;itL.current();++itL)
-  {
+  for (;itL.current();++itL) {
     QString file (this->getFile( itL.current(), filename ));
-    if( !file.isEmpty() ) return file;
+    if( !file.isEmpty() ) {
+      return file;
+    }
   }
 #endif // QT_VERSION >= 0x040000
   return QString();
@@ -1712,26 +1672,29 @@ QString browserW::getFile(QTREEWIDGETITEM* node, const QString & filename)
 {
   QStringList result;
   const QString fileName (node->text(1));
-  if (!fileName.isEmpty())
-  {
+  if (!fileName.isEmpty()) {
     QFileInfo fi( fileName );
-    if( fi.fileName() == filename ) return fileName;
+    if( fi.fileName() == filename ) {
+      return fileName;
+    }
   }
   else {
 #if QT_VERSION >= 0x040000
     int count = node->childCount();
-    for (int index = 0; index < count; index++)
-    {
+    for (int index = 0; index < count; index++) {
       QTreeWidgetItem * item = node->child(index);
       QString file (this->getFile( item, filename ));
-      if( !file.isEmpty() ) return file;
+      if( !file.isEmpty() ) {
+        return file;
+      }
     }
 #else
     QListViewItem *child = node->firstChild();
     while (child) {
-//      result += getFilesInPackage(child);
       QString file (this->getFile( child, filename ));
-      if( !file.isEmpty() ) return file;
+      if( !file.isEmpty() ) {
+        return file;
+      }
       child = child->nextSibling();
     }
 #endif // QT_VERSION >= 0x040000
@@ -1775,8 +1738,7 @@ void browserW::viewModuleFile_qt4(QTreeWidgetItem* lvi, int column)
   }
 #endif // VDMSL
 #ifdef VDMPP
-  if (isVDMClassBrowserSelected())
-  {
+  if (isVDMClassBrowserSelected()) {
     switch(column) {
       case 0: { this->viewFile(lvi->text(0), lvi->text(8)); break; } // Class or Module
       case 1: { emit br_syntax(false);    break; } // Syntax
@@ -1787,8 +1749,7 @@ void browserW::viewModuleFile_qt4(QTreeWidgetItem* lvi, int column)
       default: { break; }
     }
   }
-  else
-  {
+  else {
     switch(column) {
       case 0: { this->viewFile(lvi->text(0), lvi->text(8)); break; } // Class or Module
       case 1: { emit br_syntax(false);    break; } // Syntax
@@ -1838,11 +1799,13 @@ void browserW::setImageDir( const QString & dir )
 void browserW::selectAll()
 {
   QTREEWIDGET * lv = NULL;
-  if( this->isProjectManagerSelected() )
+  if( this->isProjectManagerSelected() ) {
     lv = this->projectLV;
+  }
 #ifdef VDMPP
-  else if( this->isJavaClassBrowserSelected() )
+  else if( this->isJavaClassBrowserSelected() ) {
     lv = this->javaLV;
+  }
 #endif // VDMPP
   else
     lv = this->classLV;
@@ -1853,21 +1816,17 @@ void browserW::selectAll()
 void browserW::selectAllNodes(QTREEWIDGET * lv, bool select)
 {
 #if QT_VERSION >= 0x040000
-  if (lv != NULL)
-  {
+  if (lv != NULL) {
     QTreeWidgetItemIterator it (lv);
-    while (*it) 
-    {
+    while (*it) {
       (*it)->setSelected(select);
       ++it;
     }
   }
 #else
-  if (lv != NULL)
-  {
+  if (lv != NULL) {
     QListViewItemIterator itr(lv);
-    for (;itr.current();++itr)
-    {
+    for (;itr.current();++itr) {
       itr.current()->setSelected( select );
       itr.current()->repaint();
     }
@@ -1881,13 +1840,15 @@ void browserW::selectAllNodes(QTREEWIDGET * lv, bool select)
 //
 QTREEWIDGETITEM* browserW::findJavaParent()
 {
-  if (this->projectLV == NULL) return NULL;
+  if (this->projectLV != NULL) {
 
 #if QT_VERSION >= 0x040000
-  return this->findLVIByLabel1( this->projectLV->topLevelItem(0), tr(HEADER_JAVA) );
+    return this->findLVIByLabel1( this->projectLV->topLevelItem(0), tr(HEADER_JAVA) );
 #else
-  return this->findLVIByLabel1( this->projectLV->firstChild(), tr(HEADER_JAVA) );
+    return this->findLVIByLabel1( this->projectLV->firstChild(), tr(HEADER_JAVA) );
 #endif // QT_VERSION >= 0x040000
+  }
+  return NULL;
 }
 #endif //VDMPP
 
@@ -1896,13 +1857,15 @@ QTREEWIDGETITEM* browserW::findJavaParent()
 //
 QTREEWIDGETITEM* browserW::findVDMParent()
 {
-  if (this->projectLV == NULL) return NULL;
+  if (this->projectLV != NULL) {
 
 #if QT_VERSION >= 0x040000
-  return this->findLVIByLabel1( this->projectLV->topLevelItem(0), tr(HEADER_VDM) );
+    return this->findLVIByLabel1( this->projectLV->topLevelItem(0), tr(HEADER_VDM) );
 #else
-  return this->findLVIByLabel1( this->projectLV->firstChild(), tr(HEADER_VDM) );
+    return this->findLVIByLabel1( this->projectLV->firstChild(), tr(HEADER_VDM) );
 #endif // QT_VERSION >= 0x040000
+  }
+  return NULL;
 }
 
 //
@@ -1916,24 +1879,21 @@ void browserW::addFiles(const QStringList & newFiles)
   QStringList jpl (Qt2TB::getJavaPackages());
 #endif //VDMPP
 
-  if (Qt2TB::packageStructureChanged())
-  {
+  if (Qt2TB::packageStructureChanged()) {
     QStringList::const_iterator itr;
-    for (itr = newFiles.begin(); itr != newFiles.end(); ++itr)
+    for (itr = newFiles.begin(); itr != newFiles.end(); ++itr) {
       emit logWrite("Adding " + *itr + " to project");
-
+    }
     this->updateProjectBrowser();
   }
-  else
-  {
+  else {
     QTREEWIDGETITEM *vdmParent = this->findVDMParent();
 #ifdef VDMPP
     QTREEWIDGETITEM *javaParent = this->findJavaParent();
 #endif //VDMPP
 
     QStringList::const_iterator itr;
-    for (itr = newFiles.begin(); itr != newFiles.end(); ++itr)
-    {
+    for (itr = newFiles.begin(); itr != newFiles.end(); ++itr) {
       emit logWrite("Adding " + *itr + " to project");
 
 #ifdef VDMSL
@@ -1941,10 +1901,12 @@ void browserW::addFiles(const QStringList & newFiles)
 #endif // VDMSL
 
 #ifdef VDMPP
-      if (Qt2TB::isJavaFile(*itr))
+      if (Qt2TB::isJavaFile(*itr)) {
         this->addFile( javaParent, *itr );
-      else
+      }
+      else {
         this->addFile( vdmParent, *itr );
+      }
 #endif //VDMPP
     }
   }
@@ -1952,53 +1914,50 @@ void browserW::addFiles(const QStringList & newFiles)
 
 void browserW::addFile(QTREEWIDGETITEM* parent, const QString & fileName)
 {
-  if ( parent == NULL ) return;
-
-  // search package node
-  QString packageName ( this->getPackageName(fileName) );
-  QTREEWIDGETITEM* packageItem = this->findLVIByLabel1(parent, packageName);
+  if ( parent != NULL ) {
+    // search package node
+    QString packageName ( this->getPackageName(fileName) );
+    QTREEWIDGETITEM* packageItem = this->findLVIByLabel1(parent, packageName);
  
-  // create package node
+    // create package node
 #if QT_VERSION >= 0x040000
-  if ( packageItem == NULL ) // New package
-  {
-    packageItem = new QTreeWidgetItem();
-    packageItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-    packageItem->setText(0, packageName);
-    parent->addChild(packageItem);
-    parent->sortChildren(0, Qt::AscendingOrder);
-  }
+    if ( packageItem == NULL ) { // New package
+      packageItem = new QTreeWidgetItem();
+      packageItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+      packageItem->setText(0, packageName);
+      parent->addChild(packageItem);
+      parent->sortChildren(0, Qt::AscendingOrder);
+    }
 #else
-  if ( packageItem == NULL ) // New package
-    packageItem = new QListViewItem(parent, packageName);
-  packageItem->setOpen(true);
+    if ( packageItem == NULL ) { // New package
+      packageItem = new QListViewItem(parent, packageName);
+    }
+    packageItem->setOpen(true);
 #endif // QT_VERSION >= 0x040000
 
-  // search file node
-  QString thisItemName (QFileInfo(fileName).fileName());
-  QTREEWIDGETITEM* packageMember = this->findLVIByLabel1(packageItem, thisItemName);
-  // create file node
-  if( packageMember == NULL )
-  {
+    // search file node
+    QString thisItemName (QFileInfo(fileName).fileName());
+    QTREEWIDGETITEM* packageMember = this->findLVIByLabel1(packageItem, thisItemName);
+    // create file node
+    if( packageMember == NULL ) {
 #if QT_VERSION >= 0x040000
-    QTreeWidgetItem* newItem = new QTreeWidgetItem();
-    newItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-    newItem->setText(0, thisItemName);
-    newItem->setText(1, fileName);
-    packageItem->addChild(newItem);
-    packageItem->sortChildren(0, Qt::AscendingOrder);
+      QTreeWidgetItem* newItem = new QTreeWidgetItem();
+      newItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+      newItem->setText(0, thisItemName);
+      newItem->setText(1, fileName);
+      packageItem->addChild(newItem);
+      packageItem->sortChildren(0, Qt::AscendingOrder);
 #else
-    QListViewItem * newItem = new QListViewItem(packageItem, thisItemName, fileName);
-    newItem->setSelectable(true);
+      QListViewItem * newItem = new QListViewItem(packageItem, thisItemName, fileName);
+      newItem->setSelectable(true);
 #endif // QT_VERSION >= 0x040000
-// 20120629 -->
-    newItem->setSelected(true);
-// <-- 20120629
-  }
+      newItem->setSelected(true);
+    }
 #if QT_VERSION >= 0x040000
-  parent->setExpanded(true);
-  packageItem->setExpanded(true);
+    parent->setExpanded(true);
+    packageItem->setExpanded(true);
 #endif // QT_VERSION >= 0x040000
+  }
 }
 
 //
@@ -2012,34 +1971,33 @@ void browserW::removeFiles(const QStringList & removedFiles)
   QStringList jpl (Qt2TB::getJavaPackages());
 #endif //VDMPP
 
-  if (Qt2TB::packageStructureChanged())
-  {
+  if (Qt2TB::packageStructureChanged()) {
     QStringList::const_iterator itr;
-    for (itr = removedFiles.begin(); itr != removedFiles.end(); ++itr)
+    for (itr = removedFiles.begin(); itr != removedFiles.end(); ++itr) {
       emit logWrite("Removing " + *itr + " from project");
-
+    }
     this->updateProjectBrowser();
   }
-  else
-  {
+  else {
 #ifdef VDMPP
     QTREEWIDGETITEM *javaParent = this->findJavaParent();
 #endif //VDMPP
     QTREEWIDGETITEM *vdmParent = this->findVDMParent();
 
     QStringList::const_iterator itr;
-    for (itr = removedFiles.begin(); itr != removedFiles.end(); ++itr)
-    {
+    for (itr = removedFiles.begin(); itr != removedFiles.end(); ++itr) {
       emit logWrite("Removing " + *itr + " from project");
 
 #ifdef VDMSL
       this->removeFile( vdmParent, *itr );
 #endif // VDMSL
 #ifdef VDMPP
-      if (Qt2TB::isJavaFile(*itr))
+      if (Qt2TB::isJavaFile(*itr)) {
         this->removeFile( javaParent, *itr );
-      else
+      }
+      else {
         this->removeFile( vdmParent, *itr );
+      }
 #endif //VDMPP
     }
   }
@@ -2047,41 +2005,40 @@ void browserW::removeFiles(const QStringList & removedFiles)
 
 void browserW::removeFile(QTREEWIDGETITEM* parent, const QString& fileName)
 {
-  if ( parent == NULL ) return;
+  if ( parent != NULL ) {
 
-  // search package node
-  QString packageName (this->getPackageName(fileName));
-  QTREEWIDGETITEM* packageItem = this->findLVIByLabel1(parent, packageName);
+    // search package node
+    QString packageName (this->getPackageName(fileName));
+    QTREEWIDGETITEM* packageItem = this->findLVIByLabel1(parent, packageName);
 
-  // Package will not be found if we have selected new project
-  // and are therefore removing all files
-  if ( packageItem != NULL )
-  {
-    QTREEWIDGETITEM* packageMember = this->findLVIByLabel2(packageItem, fileName);
-    if ( packageMember != NULL )
-    {
+    // Package will not be found if we have selected new project
+    // and are therefore removing all files
+    if ( packageItem != NULL ) {
+      QTREEWIDGETITEM* packageMember = this->findLVIByLabel2(packageItem, fileName);
+      if ( packageMember != NULL ) {
 #if QT_VERSION >= 0x040000
-      int index = packageItem->indexOfChild(packageMember);
-      packageItem->takeChild(index);
+        int index = packageItem->indexOfChild(packageMember);
+        packageItem->takeChild(index);
 #else
-      packageItem->takeItem( packageMember );
+        packageItem->takeItem( packageMember );
 #endif // QT_VERSION >= 0x040000
-      delete packageMember;
+        delete packageMember;
 
-      // if no file in package delete package
-      if( this->countChilds( packageItem ) == 0 )
-      {
+        // if no file in package delete package
+        if( this->countChilds( packageItem ) == 0 ) {
 #if QT_VERSION >= 0x040000
-        int index = parent->indexOfChild(packageItem);
-        parent->takeChild(index);
+          int index = parent->indexOfChild(packageItem);
+          parent->takeChild(index);
 #else
-        parent->takeItem( packageItem );
+          parent->takeItem( packageItem );
 #endif // QT_VERSION >= 0x040000
-        delete packageItem;
+          delete packageItem;
+        }
+      }
+      else {
+        emit logWrite("Internal Error: Unable to find file " + fileName);
       }
     }
-    else
-      emit logWrite("Internal Error: Unable to find file " + fileName);
   }
 }
 
@@ -2157,68 +2114,72 @@ void browserW::createProjectListViewItem()
 QString browserW::getPackageName( const QString & fileName )
 {
   QString packageName ( Qt2TB::getPackageOfFileI( fileName ) );
-  if (packageName.isEmpty())
+  if (packageName.isEmpty()) {
     packageName = "Default";
+  }
   return packageName;
 }
 
 QTREEWIDGETITEM * browserW::findLVIByLabel1(QTREEWIDGETITEM * lvi, const QString & label1)
 {
-  if( lvi == NULL ) return NULL;
-
+  if( lvi != NULL ) {
 #if QT_VERSION >= 0x040000
-  int count = lvi->childCount();
-  for (int index = 0; index < count; index++)
-  {
-    QTreeWidgetItem * item = lvi->child(index);
-    if (item->text(0) == label1)
-      return item;
+    int count = lvi->childCount();
+    for (int index = 0; index < count; index++) {
+      QTreeWidgetItem * item = lvi->child(index);
+      if (item->text(0) == label1) {
+        return item;
+      }
+    }
+#else
+    QListViewItem * reslvi = lvi->firstChild();
+    while( reslvi && ( reslvi->text(0) != label1 ) ) {
+      reslvi = reslvi->nextSibling();
+    }
+    return reslvi; 
+#endif // QT_VERSION >= 0x040000
   }
   return NULL;
-#else
-  QListViewItem * reslvi = lvi->firstChild();
-  while( reslvi && ( reslvi->text(0) != label1 ) )
-    reslvi = reslvi->nextSibling();
-  return reslvi; 
-#endif // QT_VERSION >= 0x040000
 }
 
 QTREEWIDGETITEM * browserW::findLVIByLabel2(QTREEWIDGETITEM * lvi, const QString & label2)
 {
-  if( lvi == NULL ) return NULL;
-
+  if( lvi != NULL ) {
 #if QT_VERSION >= 0x040000
-  int count = lvi->childCount();
-  for (int index = 0; index < count; index++)
-  {
-    QTreeWidgetItem * item = lvi->child(index);
-    if (item->text(1) == label2)
-      return item;
+    int count = lvi->childCount();
+    for (int index = 0; index < count; index++) {
+      QTreeWidgetItem * item = lvi->child(index);
+      if (item->text(1) == label2) {
+        return item;
+      }
+    }
+#else
+    QListViewItem * reslvi = lvi->firstChild();
+    while( reslvi && ( reslvi->text(1) != label2 ) ) {
+      reslvi = reslvi->nextSibling();
+    }
+    return reslvi; 
+#endif // QT_VERSION >= 0x040000
   }
   return NULL;
-#else
-  QListViewItem * reslvi = lvi->firstChild();
-  while( reslvi && ( reslvi->text(1) != label2 ) )
-    reslvi = reslvi->nextSibling();
-  return reslvi; 
-#endif // QT_VERSION >= 0x040000
 }
 
 int browserW::countChilds( QTREEWIDGETITEM * lvi )
 {
-  if( lvi == NULL ) return 0;
+  if( lvi != NULL ) {
 #if QT_VERSION >= 0x040000
-  return lvi->childCount();
+    return lvi->childCount();
 #else
-  int count = 0;
-  QListViewItem * reslvi = lvi->firstChild();
-  while( reslvi )
-  {
-    reslvi = reslvi->nextSibling();
-    count++;
-  }
-  return count;
+    int count = 0;
+    QListViewItem * reslvi = lvi->firstChild();
+    while( reslvi ) {
+      reslvi = reslvi->nextSibling();
+      count++;
+    }
+    return count;
 #endif // QT_VERSION >= 0x040000
+  }
+  return 0;
 }
 
 bool browserW::isProjectManagerSelected()

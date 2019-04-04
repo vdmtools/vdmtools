@@ -2900,24 +2900,22 @@ void mainW::userEvent(QEvent *e)
     }
     case GUIEvent::EV_LOAD_PROJECT: {
       this->browserw->refreshProjectName();
-//
       if (!Qt2TB::getProjectNameI().isNull()) {
-//
         this->ow->loadOptions();
         this->loadWindowsGeometry(this->lastProject);
         this->addProjectHistory(this->lastProject);
         this->loading = false;
-//
       }
       else {
-        this->lastProject = "";
+        if (!this->lastProject.isEmpty()) {
+          this->removeProjectHistory(this->lastProject);
+          this->lastProject = "";
+        }
       }
-//
       break;
     }
     case GUIEvent::EV_NEW_UNNAMEDPROJECT: {
       this->browserw->refreshFiles();
-      //this->ow->loadOptions();
       Qt2TB::InitOptions();
       this->ow->initTab();
       this->clearWindows(true);
@@ -3333,7 +3331,6 @@ void mainW::setTextCodec(QString menuName)
   if( NULL != this->codew ) {
     this->codew->closeAll();
   }
-
   QStringList files(Qt2TB::getProjectFilesI());
   if (!files.isEmpty()) {
     this->sendSyntaxCommand(files);
