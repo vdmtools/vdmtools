@@ -201,8 +201,7 @@ bool StackEval::RunTimeError() const
 // ThrowRuntimeErrorException
 void StackEval::ThrowRuntimeErrorException()
 {
-  if (Settings.RTErrException())
-  {
+  if (Settings.RTErrException()) {
     // throw VDM level exception
     TYPE_SEM_VAL qe (TYPE_SEM_QUOTE().Init(SEQ<Char>(L"RuntimeError")));
 
@@ -210,8 +209,7 @@ void StackEval::ThrowRuntimeErrorException()
 
     ToolMediator::Errs()->vdm_AddMsg(RTERR::GetErrMsg());
   }
-  else
-  {
+  else {
     // throw C++ level exception
     SetRunTimeError();
     VDMErrorHandle(ERR_IP, 1);
@@ -222,12 +220,10 @@ void StackEval::ThrowRuntimeErrorException()
 // v : 
 bool StackEval::IsRuntimeErrorException(const Generic & v) const
 {
-  if (v.Is(TAG_TYPE_SEM_EXIT))
-  {
+  if (v.Is(TAG_TYPE_SEM_EXIT)) {
     Generic e (TYPE_SEM_EXIT(v).GetField(pos_SEM_EXIT_v));
 //
-    if (e.Is(TAG_TYPE_SEM_QUOTE))
-    {
+    if (e.Is(TAG_TYPE_SEM_QUOTE)) {
       SEQ<Char> str (TYPE_SEM_QUOTE(e).GetSequence(pos_SEM_QUOTE_v));
       return (str == SEQ<Char>(L"RuntimeError"));
     }
@@ -333,7 +329,7 @@ void StackEval::SetProgram(const TYPE_STKM_SubProgram & pr)
 void StackEval::LoadCurrntEvaluatorStateFromCPUSigma()
 {
 #ifndef VICE
-  if (UsesThreads()) // 20110328
+  if (UsesThreads())
 #endif // VICE
     SetCurrentState(theSystem().GetCurrentState());
 }
@@ -342,7 +338,7 @@ void StackEval::LoadCurrntEvaluatorStateFromCPUSigma()
 void StackEval::SaveCurrntEvaluatorStateToCPUSigma()
 {
 #ifndef VICE
-  if (UsesThreads()) // 20110328
+  if (UsesThreads())
 #endif // VICE
     theSystem().SaveCurrentState(this->curr_state);
 }
@@ -351,7 +347,7 @@ void StackEval::SaveCurrntEvaluatorStateToCPUSigma()
 void StackEval::LoadCurrntProgramFromCPUSigma()
 {
 #ifndef VICE
-  if (UsesThreads()) // 20110328
+  if (UsesThreads())
 #endif // VICE
     SetCurrentProgram(theSystem().GetCurrentProgram());
 }
@@ -360,7 +356,7 @@ void StackEval::LoadCurrntProgramFromCPUSigma()
 void StackEval::SaveCurrntProgramToCPUSigma()
 {
 #ifndef VICE
-  if (UsesThreads()) // 20110328
+  if (UsesThreads())
 #endif // VICE
     theSystem().SaveCurrentProgram(this->curr_program);
 }
@@ -375,30 +371,25 @@ EvaluatorStatusCt StackEval::InitEvaluatorStatus(const TYPE_STKM_SubProgram & in
   EvaluatorStatusCt eCt;
   EvaluatorStatus & e (eCt.get_shared_ref());
 
-  if (! objref.IsNil())
-  {
+  if (! objref.IsNil()) {
     TYPE_AS_Name nm (Record(objref).GetRecord(pos_SEM_OBJ_uRef_tp));
     TYPE_GLOBAL_OBJscope objscope;
     objscope.Init(objref, SEQ<TYPE_AS_Name>().ImpAppend(nm), SEQ<TYPE_GLOBAL_OrigCl>().ImpAppend(nm));
     e.obj_l = SEQ<TYPE_GLOBAL_OBJscope>().ImpAppend(objscope);
   }
-  else
-  {
+  else {
     // TODO
     // to create top environment object here ... ???
   }
 
-  if( !instr.IsEmpty() )
-  {
-// 20130530 -->
-    if (Settings.CallLog())
-    {
+  if( !instr.IsEmpty() ) {
+    if (Settings.CallLog()) {
       wstring id (L"Thread Start");
-      if (! objref.IsNil())
+      if (! objref.IsNil()) {
         id += L" (" + ASTAUX::ASName2String(Record(objref).GetRecord(pos_SEM_OBJ_uRef_tp)) + L")";
+      }
       TOOLS::WriteCallLog(id, Sequence(), this->cs_call_stack_p->Length());
     }
-// <-- 20130530
 
     TYPE_STKM_SubProgram code (instr);
     code.ImpAppend(TYPE_INSTRTP_EOCL());
@@ -483,8 +474,7 @@ void StackEval::stackeval_Init(bool ast_is_new)
   SetCurrentState(EvaluatorStatusCt());
   SetCurrentProgram(TYPE_STKM_SubProgram());
 
-//  if( ast_is_new )
-    this->lastres = sem_undef;
+  this->lastres = sem_undef;
 
   this->lastexit = NilContextId;
 
@@ -505,7 +495,6 @@ void StackEval::stackeval_Init(bool ast_is_new)
 // ==> ()
 void StackEval::User_Init(const TYPE_AS_Document & ast, bool ast_is_new)
 {
-// 20071011
   ResetUserBREAK();
 
   this->stackeval_Init(ast_is_new);
@@ -513,8 +502,9 @@ void StackEval::User_Init(const TYPE_AS_Document & ast, bool ast_is_new)
 #ifdef VDMPP
 #ifdef VICE
   VC::InitState();
-  if( !ast_is_new && !ast.IsEmpty() )
+  if( !ast_is_new && !ast.IsEmpty() ) {
     TIMETRACE::NewTimeTraceInit();
+  }
 #endif // VICE
   theCompiler().SetEmptyCompEnv();
 
@@ -586,8 +576,7 @@ bool StackEval::IsInitialized()
 
 void StackEval::ResetEnvlInError()
 {
-  if (this->cs_env_l_p->IsEmpty())
-  {
+  if (this->cs_env_l_p->IsEmpty()) {
     // The environment list must not be empty after init
     this->cs_env_l_p->ImpAppend(SEQ<TYPE_SEM_BlkEnv>());
   }
@@ -677,26 +666,20 @@ int StackEval::EvalStackLevel() const
 void StackEval::PushCS(const TYPE_STKM_Code & item, const Generic & nm,
                        const Generic & val_l, CallStackItemType::CSItemType type)
 {
-// 20130530 -->
-  if (Settings.CallLog())
-  {
+  if (Settings.CallLog()) {
     wstring id;
-    if (nm.IsSequence())
-    {
+    if (nm.IsSequence()) {
       SEQ<Char> nm_q (nm);
-      if (nm_q.StartsWith(SEQ<Char>(L"Check of Instance Invariant: ")))
-      {
+      if (nm_q.StartsWith(SEQ<Char>(L"Check of Instance Invariant: "))) {
         wstring clnm (nm_q.SubSequence(30, nm_q.Length()).GetString()); 
         id = clnm + L"`inv_" + clnm;
       }
-      else if (nm_q.StartsWith(SEQ<Char>(L"Running constructor for ")))
-      {
+      else if (nm_q.StartsWith(SEQ<Char>(L"Running constructor for "))) {
         wstring clnm (nm_q.SubSequence(25, nm_q.Length()).GetString()); 
         id = clnm + L"`" + clnm;
       }
 #ifdef VDMPP
-      else if (nm_q.StartsWith(SEQ<Char>(L"Guard Evaluation")))
-      {
+      else if (nm_q.StartsWith(SEQ<Char>(L"Guard Evaluation"))) {
         Map threadmap (theStackMachine().EvalThreads());
         const TYPE_SCHDTP_ThreadInfo & threadinfo (threadmap[theScheduler().CurThreadId()]);
         const TYPE_SCHDTP_ThreadStatus & status (threadinfo.GetRecord(pos_SCHDTP_ThreadInfo_status));
@@ -718,15 +701,16 @@ void StackEval::PushCS(const TYPE_STKM_Code & item, const Generic & nm,
         }
       }
 #endif // VDMPP
-      else
+      else {
         id = nm_q.GetString();
+      }
     }
-    else
+    else {
       id = ASTAUX::ASName2String(nm);
+    }
     // TODO : convert val_l
     TOOLS::WriteCallLog(id, Sequence(), this->cs_call_stack_p->Length());
   }
-// <-- 20130530
 
   TYPE_STKM_CallStackItem csi;
   csi.Init(Int(type),                         // CSItemType
@@ -757,10 +741,12 @@ void StackEval::PushCS(const TYPE_STKM_Code & item, const Generic & nm,
       break;
     }
     case TAG_TYPE_SEM_ExplOP: {
-      if (item.GetBoolValue(pos_SEM_ExplOP_oppure))
+      if (item.GetBoolValue(pos_SEM_ExplOP_oppure)) {
         PushContext(Int(PUREOP));
-      else
+      }
+      else {
         PushContext(Int(ALL));
+      }
       break;
     }
     default: {
@@ -786,8 +772,7 @@ void StackEval::PopCS(void)
   this->cs_shared_p->pc = elm.GetInt(pos_STKM_CallStackItem_pc);
   this->cs_shared_p->rterror = elm.GetBoolValue(pos_STKM_CallStackItem_rterror);
 
-  if (elm.GetInt(pos_STKM_CallStackItem_type) == CallStackItemType::CS_DEBUGCMD)
-  {
+  if (elm.GetInt(pos_STKM_CallStackItem_type) == CallStackItemType::CS_DEBUGCMD) {
     EvaluatorStatusCt evalStateCt ((const EvaluatorStatusCt &)elm.GetField(pos_STKM_CallStackItem_evalstate));
     const EvaluatorStatus & evalState (evalStateCt.get_const_ref());
 
@@ -859,12 +844,9 @@ int StackEval::CallStackLevel() const
 void StackEval::PushDS(const EvaluatorStatusCt & evalst, const SEQ<Char> & debugString,
                        const TYPE_STKM_Code & code)
 {
-// 20130530 -->
-  if (Settings.CallLog())
-  {
+  if (Settings.CallLog()) {
     TOOLS::WriteCallLog(debugString.GetString(), Sequence(), this->cs_call_stack_p->Length());
   }
-// <-- 20130530
 
   const EvaluatorStatus & ostate (evalst.get_const_ref());
 
@@ -889,7 +871,6 @@ void StackEval::PushDS(const EvaluatorStatusCt & evalst, const SEQ<Char> & debug
 
   state.call_stack.Push(csi);
 
-// 20100906 -->
   state.env_l.Clone();
   state.typeinst.Clone();
   state.os.Clone();
@@ -899,7 +880,6 @@ void StackEval::PushDS(const EvaluatorStatusCt & evalst, const SEQ<Char> & debug
 #ifdef VDMPP
   state.obj_l.Clone();
 #endif // VDMPP
-// <-- 20100906
 
   state.env_l_bak.Clear();
   state.typeinst_bak.Clear();
@@ -976,16 +956,13 @@ void StackEval::UserPopDS()
   ResetInActivity();
   // Now run through the stack to do the update.
 
-  for (size_t i = 1; i < index; i++)
-  {
+  for (size_t i = 1; i < index; i++) {
 #ifdef VDMPP
     TYPE_STKM_CallStackItem elm (HeadCS());
-    if (elm.get_type() == CallStackItemType::CS_FNOP)
-    {
+    if (elm.get_type() == CallStackItemType::CS_FNOP) {
       // Only operations have history counters.
       const Generic & code (elm.GetField(pos_STKM_CallStackItem_code)); 
-      if (code.Is(TAG_TYPE_SEM_ExplOP))
-      {
+      if (code.Is(TAG_TYPE_SEM_ExplOP)) {
 #ifdef VICE
         TYPE_SEM_ExplOP eop (code);
         theState().UpdateHistCount(elm.GetField(pos_STKM_CallStackItem_nmOrDesc),
@@ -1082,22 +1059,18 @@ bool StackEval::EmptyTS() const
 // ==> ()
 void StackEval::GotoTrapHandler(const TYPE_SEM_EXIT & item)
 {
-  if (EmptyTS())
-  {
-    if (IsRuntimeErrorException(item))
-    {
+  if (EmptyTS()) {
+    if (IsRuntimeErrorException(item)) {
       // throw C++ level exception
       SetRunTimeError();
       VDMErrorHandle(ERR_IP, 1);
     }
-    else
-    {
+    else {
       Push(item);
       ExeRETURN();
     }
   }
-  else
-  {
+  else {
     EvaluatorStatus & state (*this->cs_shared_p);
 
     const TYPE_STKM_Trap & trap (state.trap_stack.Head());
@@ -1201,8 +1174,7 @@ TYPE_STKM_ProgramCounter StackEval::FindTrapHandler(const Int & handid, int leng
 
   TYPE_STKM_SubProgram program (this->curr_program);
 
-  if (state.call_stack.Length() != lengthcallstack)
-  {
+  if (state.call_stack.Length() != lengthcallstack) {
     size_t index = state.call_stack.Length() + 1 - lengthcallstack;
     TYPE_STKM_CallStackItem csi (state.call_stack.GetNth(index));
     program = ExtractInstr(csi.GetField(pos_STKM_CallStackItem_code));
@@ -1211,8 +1183,7 @@ TYPE_STKM_ProgramCounter StackEval::FindTrapHandler(const Int & handid, int leng
     SetProgram(program);
   }
   size_t len_program = program.Length();
-  for (size_t i = 1; i <= len_program; i++)
-  {
+  for (size_t i = 1; i <= len_program; i++) {
     const TYPE_INSTRTP_Instruction & instr (program[i]);
     if (instr.Is(TAG_TYPE_INSTRTP_HANDID) && (handid == instr.GetInt(pos_INSTRTP_HANDID_handid))) {
       return i;
@@ -1335,8 +1306,7 @@ Sequence StackEval::PrintCf()
   TYPE_STKM_CFStack cf (GetCF());
   Sequence res;
   size_t len_cf = cf.Length();
-  for (size_t i = 1; i <= len_cf; i++)
-  {
+  for (size_t i = 1; i <= len_cf; i++) {
     Tuple elm (cf.GetNth(i));
 
     Sequence name (elm.GetSequence(1));
@@ -1366,8 +1336,9 @@ void StackEval::IncrPC(const Int & n)
 void StackEval::TerminateProgram()
 {
   this->cs_shared_p->pc = this->curr_program_length;
-  if( !this->cs_call_stack_p->IsEmpty() )
+  if( !this->cs_call_stack_p->IsEmpty() ) {
     this->cs_call_stack_p->Pop();
+  }
 }
 
 // SetStep
@@ -1501,8 +1472,7 @@ void StackEval::SetGuard(const Generic & fullopnm, const Generic & obj)
 void StackEval::ClearProfile()
 {
 #ifdef PROFILING
-  for (int i = 0; i < NUMINSTR; i++)
-  {
+  for (int i = 0; i < NUMINSTR; i++) {
     instrcnt[i] = 0ULL;
     instrclk[i] = 0ULL;
   }
@@ -1514,24 +1484,21 @@ void StackEval::PrintProfile()
 #ifdef PROFILING
   int tbl[NUMINSTR];
   int count = 0;
-  for (int i = 0; i < NUMINSTR; i++)
-  {
-    if (instrcnt[i] == 0ULL) continue;
-    tbl[count] = i;
-    count++;
+  for (int i = 0; i < NUMINSTR; i++) {
+    if (instrcnt[i] != 0ULL) {
+      tbl[count] = i;
+      count++;
+    }
   }
 
   if (count == 0) return;
 
   int sortedidx[NUMINSTR];
-  for (int j = 0; j < count; j++)
-  {
+  for (int j = 0; j < count; j++) {
     int ii = j;
     unsigned long uclk = instrclk[tbl[ii]];
-    for (int k = j + 1; k < count; k++)
-    {
-      if (uclk < instrclk[tbl[k]])
-      {
+    for (int k = j + 1; k < count; k++) {
+      if (uclk < instrclk[tbl[k]]) {
         ii = k;
         uclk = instrclk[tbl[k]];
       }
@@ -1544,8 +1511,7 @@ void StackEval::PrintProfile()
   wstring tmptag;
   unsigned long long totalcnt = 0ULL;
   unsigned long long totalclk = 0ULL;
-  for (int ii = 0; ii < count; ii++)
-  {
+  for (int ii = 0; ii < count; ii++) {
     int index = sortedidx[ii];
     VDMGetDefaultRecInfoMap().GetSymTag(index + TAG_INSTRTP, tmptag);
 #ifdef __APPLE_CC__
@@ -1583,12 +1549,11 @@ Tuple StackEval::EvalMainLoop()
   ResetBREAK();
 
 #ifdef VDMSL
-  if (this->cs_shared_p->rterror)
+  if (this->cs_shared_p->rterror) {
     RTERR::Error(L"EvalMainLoop", RTERR_CANNOT_PROCEED_AFTER_RUNTIME_ERROR, Nil(), Nil(), Sequence());
-
+  }
   // curr_state and curr_program may be changed in the loop
-  while((this->cs_shared_p->pc < this->curr_program_length) && !GetBREAK())
-  {
+  while((this->cs_shared_p->pc < this->curr_program_length) && !GetBREAK()) {
     // get the reference of current EvaluatorStatus
     EvaluatorStatus & state (*this->cs_shared_p); 
 
@@ -1611,14 +1576,13 @@ Tuple StackEval::EvalMainLoop()
 
 //wcout << L"EvalMainLoop: " << theSystem().GetCurCPU() << endl;
   // Consistency check, should never happen.
-  if (!this->cs_shared_p->guard.IsNil())
+  if (!this->cs_shared_p->guard.IsNil()) {
     RTERR::Error(L"EvalMainLoop", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-
-  if (this->cs_shared_p->rterror)
+  }
+  if (this->cs_shared_p->rterror) {
     RTERR::Error(L"EvalMainLoop", RTERR_CANNOT_PROCEED_AFTER_RUNTIME_ERROR, Nil(), Nil(), Sequence());
-
-  if (UsesThreads())
-  {
+  }
+  if (UsesThreads()) {
     // curr_state and curr_program may be changed in the loop
     while((this->cs_shared_p->pc < this->curr_program_length)
           && !GetBREAK()
@@ -1628,8 +1592,7 @@ Tuple StackEval::EvalMainLoop()
           && !theSystem().CPUSwapNeeded()
           && !theScheduler().IsSyncOpThread()
 #endif // VICE
-          )
-    {
+          ) {
       // get the reference of current EvaluatorStatus
       EvaluatorStatus & state (*this->cs_shared_p); 
 
@@ -1646,11 +1609,9 @@ Tuple StackEval::EvalMainLoop()
       EvalInstr(instr);
     }
   }
-  else
-  {
+  else {
     // curr_state and curr_program may be changed in the loop
-    while((this->cs_shared_p->pc < this->curr_program_length) && !GetBREAK())
-    {
+    while((this->cs_shared_p->pc < this->curr_program_length) && !GetBREAK()) {
       // get the reference of current EvaluatorStatus
       EvaluatorStatus & state (*this->cs_shared_p); 
 
@@ -1671,10 +1632,12 @@ Tuple StackEval::EvalMainLoop()
 
   TYPE_STKM_EvaluationState eval_state (MainLoopState());
 #ifdef VICE
-  if (eval_state.Is(TAG_TYPE_STKM_Success) && (EvalStackLevel() > 0))
+  if (eval_state.Is(TAG_TYPE_STKM_Success) && (EvalStackLevel() > 0)) {
     return mk_(eval_state, Pop());
-  else
+  }
+  else {
     return mk_(eval_state, Nil());
+  }
 #else
   return (eval_state.Is(TAG_TYPE_STKM_Success) ? mk_(eval_state, Pop()) : mk_(eval_state, Nil()));
 #endif // VICE
@@ -1690,12 +1653,12 @@ Tuple StackEval::EvalUninterruptedLoop()
   LoadCurrntProgramFromCPUSigma();
 #endif // VDMPP
 
-  if (this->cs_shared_p->rterror)
+  if (this->cs_shared_p->rterror) {
     RTERR::Error(L"EvalUninterruptedLoop", RTERR_CANNOT_PROCEED_AFTER_RUNTIME_ERROR, Nil(), Nil(), Sequence());
+  }
 
   // curr_state and curr_program may be changed in the loop
-  while (this->cs_shared_p->pc < this->curr_program_length)
-  {
+  while (this->cs_shared_p->pc < this->curr_program_length) {
     // get the reference of current EvaluatorStatus
     EvaluatorStatus & state (*this->cs_shared_p); 
 
@@ -1791,16 +1754,16 @@ TYPE_STKM_EvaluationState StackEval::MainLoopState()
   // DANGER ! We cannot interrupt the evaluation of a Guard here.
 //  if(!state.guard.IsNil())
 //    return state.guard;
-  if(!this->cs_shared_p->guard.IsNil())
+  if(!this->cs_shared_p->guard.IsNil()) {
     return this->cs_shared_p->guard;
+  }
 #endif // VDMPP
 
-  if(GetBREAK())
+  if(GetBREAK()) {
     return TYPE_STKM_Breakpoint();
-
+  }
 //  if(state.pc >= program.Length())
-  if(this->cs_shared_p->pc >= this->curr_program_length)
-  {
+  if(this->cs_shared_p->pc >= this->curr_program_length) {
 //    if ( !program.IsEmpty() && !RunTimeError() )
     if ( !this->curr_program.IsEmpty() && !RunTimeError() ) {
       this->lastres = Generic(Head());
@@ -2605,8 +2568,7 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
 #endif //VDMPP
     case TAG_TYPE_INSTRTP_COMMENT: {
       TYPE_CI_ContextId cid (i.GetSequence(pos_INSTRTP_COMMENT_cid));
-      if (cid != NilContextId)
-      {
+      if (cid != NilContextId) {
         Tuple gflcp (GetCI().GetFileLineColPos(cid));
         vdm_iplog << gflcp.GetSequence(1) << L", l. " << gflcp.GetInt(2) << L", c. " << gflcp.GetInt(3) << endl;
       }
@@ -2638,10 +2600,12 @@ void StackEval::EvalInstr(const TYPE_INSTRTP_Instruction & i)
 // ==> nat * nat
 Tuple StackEval::GetEnvLLengths() const
 {
-  if( this->cs_env_l_p->IsEmpty() )
+  if( this->cs_env_l_p->IsEmpty() ) {
     return mk_(Int(0), Int(0));
-  else
+  }
+  else {
     return mk_(Int(this->cs_env_l_p->Length()), Int(this->cs_env_l_p->Hd().Length()));
+  }
 }
 
 // UpgradeENVL
@@ -2650,8 +2614,7 @@ Tuple StackEval::GetEnvLLengths() const
 // ==> ()
 void StackEval::UpgradeENVL(const Int & lenvl, const Int & ltopenvl)
 {
-  if (!this->cs_env_l_p->IsEmpty())
-  {
+  if (!this->cs_env_l_p->IsEmpty()) {
     size_t len_env_l = this->cs_env_l_p->Length();
     TYPE_SEM_ENVL new_env_l (this->cs_env_l_p->SubSequence(len_env_l - lenvl + 1, len_env_l));
     SEQ<TYPE_SEM_BlkEnv> blkenv_l (new_env_l[1]);
@@ -2963,8 +2926,7 @@ Generic StackEval::GetNextStackLevelsDown()
   while (index > 1) {
     index--;
     TYPE_STKM_CallStackItem csi (state.call_stack.GetNth(index));
-    if (csi.get_type() == CallStackItemType::CS_FNOP)
-    {
+    if (csi.get_type() == CallStackItemType::CS_FNOP) {
       state.upDnIndex = Int(index);
 
       return mk_(csi.GetInt(pos_STKM_CallStackItem_env_ul_uh),
@@ -2994,13 +2956,11 @@ TYPE_CI_ContextId StackEval::GetCidForCurBacktraceLevel() const
   if (level == 0) {
     return GetCurCid();
   }
-  else
-  {
+  else {
     size_t len = state.call_stack.Length();
 
     size_t curLevel = 1;
-    for (size_t i = 1; i <= len; i++)
-    {
+    for (size_t i = 1; i <= len; i++) {
       const TYPE_STKM_CallStackItem & elm (state.call_stack.GetNth(i));
       CallStackItemType::CSItemType type =
                      (CallStackItemType::CSItemType)(elm.GetIntValue(pos_STKM_CallStackItem_type));
@@ -3034,8 +2994,9 @@ void StackEval::PushModule (const TYPE_AS_Name & mod_name)
 // ==> ()
 void StackEval::PopModule ()
 {
-  if (!this->cs_cur_mod_p->IsEmpty())
+  if (!this->cs_cur_mod_p->IsEmpty()) {
     this->cs_cur_mod_p->ImpTl ();
+  }
 }
 
 // ResetCurMod
@@ -3049,15 +3010,17 @@ void StackEval::ResetCurMod()
 // ==> AS`Name
 const TYPE_AS_Name & StackEval::CurrentModule (void) const
 {
-  if (!this->cs_cur_mod_p->IsEmpty())
+  if (!this->cs_cur_mod_p->IsEmpty()) {
     //return this->cs_cur_mod_p->Hd ();
     return this->cs_cur_mod_p->Index(1);
-  else
+  }
+  else {
     // this situation can occur if someone use print
     // before init is called, which is allowed
     // Tue Nov  7 11:45:32 1995 -- Jesper
     //return MkNameFromVoid();
-    return this->void_name; // 20100906
+    return this->void_name;
+  }
 }
 
 // PrePushModule
@@ -3065,12 +3028,12 @@ const TYPE_AS_Name & StackEval::CurrentModule (void) const
 // ==> bool
 bool StackEval::PrePushModule(const TYPE_AS_Name & mod_name)
 {
-  if (this->cs_cur_mod_p->IsEmpty())
+  if (this->cs_cur_mod_p->IsEmpty()) {
     return false;
- 
-  if (AUX::EqualNames(mod_name, HeadModule()))
+  } 
+  if (AUX::EqualNames(mod_name, HeadModule())) {
     return false;
-
+  }
   this->PushModule(mod_name);
   return true;
 }
@@ -3089,25 +3052,23 @@ Tuple StackEval::IsLocalState(const TYPE_AS_Name & id) const
 {
   const SEQ<TYPE_SEM_BlkEnv> & blkenv_l (this->cs_env_l_p->GetIndexRef(1));
   size_t len = blkenv_l.Length();
-  for (size_t i = 1; i <= len; i++)
-  {
+  for (size_t i = 1; i <= len; i++) {
     const TYPE_SEM_BlkEnv & blkenv (blkenv_l[i]);
     const Map & id_m (blkenv.GetMap(pos_SEM_BlkEnv_id_um));
-    if (id_m.DomExists(id))
-    {
-      if (blkenv.GetField(pos_SEM_BlkEnv_perm) == sem_read_write)
+    if (id_m.DomExists(id)) {
+      if (blkenv.GetField(pos_SEM_BlkEnv_perm) == sem_read_write) {
         return mk_(Bool(true), id_m[id]);
-      else
-      {
+      }
+      else {
 #ifdef VDMPP
         const TYPE_SEM_ValTp & val (id_m[id]);
-        if (val.GetRecord(pos_SEM_ValTp_val).Is(TAG_TYPE_SEM_OBJ_uRef))
+        if (val.GetRecord(pos_SEM_ValTp_val).Is(TAG_TYPE_SEM_OBJ_uRef)) {
           return mk_(Bool(false), Nil());
+        }
 #endif // VDMPP
         return mk_(Bool(true), Nil());
       }
     }
-// <-- 20091102
   }
   return mk_(Bool(false), Nil());
 }
@@ -3120,12 +3081,10 @@ void StackEval::SetLocalState(const TYPE_AS_Name & id, const TYPE_SEM_ValTp & va
 {
   SEQ<TYPE_SEM_BlkEnv> & blkenv_l (this->cs_env_l_p->GetIndexRef(1)); 
   size_t len_blkenv_l = blkenv_l.Length();
-  for (size_t i = 1; i <= len_blkenv_l; i++)
-  {
+  for (size_t i = 1; i <= len_blkenv_l; i++) {
     TYPE_SEM_BlkEnv & blkenv (blkenv_l.GetIndexRef(i));
     if((blkenv.GetField(pos_SEM_BlkEnv_perm) == sem_read_write) &&
-       (blkenv.GetMap(pos_SEM_BlkEnv_id_um).DomExists(id)))
-    {
+       (blkenv.GetMap(pos_SEM_BlkEnv_id_um).DomExists(id))) {
       Map & id_m ((Map &)blkenv.GetFieldRef(pos_SEM_BlkEnv_id_um));
       id_m.ImpModify(id, valtp);
       break;
@@ -3145,7 +3104,7 @@ Tuple StackEval::IsLocalVal (const TYPE_AS_Name & name)
     for (size_t i = 1; i <= len_blkenv_l; i++) {
       const TYPE_SEM_BlkEnv & blkenv (blkenv_l[i]);
       const MAP<TYPE_AS_Name,TYPE_SEM_ValTp> & id_m (blkenv.GetMap(pos_SEM_BlkEnv_id_um));
-      if(id_m.DomExists(name)) {
+      if (id_m.DomExists(name)) {
         return mk_(Bool(true), id_m[name]);
       }
     }
@@ -3200,17 +3159,14 @@ TYPE_SEM_VAL StackEval::EvalOldName(const TYPE_AS_OldName & oldname)
 
   const TYPE_SEM_OBJ_uRef & ref (GetCurObjRef());
   const ObjTabCt & old_obj_tab ((const ObjTabCt &)(Tuple(this->cs_os_p->Hd()).GetMap(1)));
-  if (old_obj_tab.DomExists(ref))
-  {
+  if (old_obj_tab.DomExists(ref)) {
     const TYPE_GLOBAL_OBJ_uDesc & desc (old_obj_tab[ref]);
     TYPE_SEM_OBJ old_obj_sem (desc.GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
     MAP<TYPE_AS_Name,TYPE_GLOBAL_SigmaClass> classes_m (Tuple(this->cs_os_p->Hd()).GetMap(2));
     const TYPE_AS_Name & clsnm (old_obj_sem.GetRecord(pos_SEM_OBJ_tp));
-    if (classes_m.DomExists(clsnm))
-    {
+    if (classes_m.DomExists(clsnm)) {
       const TYPE_GLOBAL_ValueMap & statics (classes_m[clsnm].GetMap(pos_GLOBAL_SigmaClass_statics));
-      if (!statics.IsEmpty())
-      {
+      if (!statics.IsEmpty()) {
         Map ins (old_obj_sem.GetMap(pos_SEM_OBJ_ins));
         TYPE_GLOBAL_ValueMap vm (ins[clsnm]);
         vm.ImpOverride(statics);
@@ -3221,15 +3177,14 @@ TYPE_SEM_VAL StackEval::EvalOldName(const TYPE_AS_OldName & oldname)
 
     // ==> bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]
     Tuple iios (theState().IsInObjScope(orig_name, old_obj_sem));
-    if (iios.GetBoolValue(1))
+    if (iios.GetBoolValue(1)) {
       return iios.GetRecord(3);  // [SEM`VAL]
-    else
-    {
+    }
+    else {
       return RTERR::ErrorVal(L"EvalOldName", RTERR_OLDID_NOT_IN_OS, Nil(), Nil(), Sequence());
     }
   }
-  else
-  {
+  else {
     return RTERR::ErrorVal (L"EvalOldName", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
   }
 }
@@ -3284,8 +3239,9 @@ TYPE_STKM_Context StackEval::HdContext() const
 void StackEval::CheckContext(const SET<TYPE_STKM_Context> & contexts, const TYPE_RTERR_ERR & err)
 {
   TYPE_STKM_Context context (HdContext());
-  if (!contexts.InSet(context))
+  if (!contexts.InSet(context)) {
     RTERR::Error(L"StackEval::CheckContext", err, Nil(), Nil(), Sequence());
+  }
 }
 
 #ifdef VDMSL
@@ -3293,8 +3249,9 @@ void StackEval::CheckContext(const SET<TYPE_STKM_Context> & contexts, const TYPE
 // ==> ()
 void StackEval::PushOS()
 {
-  if (UsesOldName())
+  if (UsesOldName()) {
     this->cs_os_p->ImpPrepend(theState().GetModuleState(CurrentModule()));
+  }
 }
 #endif //VDMSL
 #ifdef VDMPP
@@ -3303,8 +3260,9 @@ void StackEval::PushOS()
 void StackEval::PushOS()
 {
 //wcout << L"PushOS: " << this->cs_os_p->Length() << L" -> " <<  this->cs_os_p->Length() + 1 << endl;
-  if (UsesOldName())
+  if (UsesOldName()) {
     this->cs_os_p->ImpPrepend(theState().Get_obj_tab());
+  }
 }
 #endif //VDMPP
 
@@ -3312,8 +3270,9 @@ void StackEval::PushOS()
 // ==> ()
 void StackEval::PopOS()
 {
-  if (UsesOldName())
+  if (UsesOldName()) {
     this->cs_os_p->ImpTl ();
+  }
 //wcout << L"PopOS:  " << this->cs_os_p->Length() + 1 <<  L" -> " << this->cs_os_p->Length() << endl;
 }
 
@@ -3340,11 +3299,11 @@ const TYPE_SEM_OBJ_uRef & StackEval::GetCurObjRef() const
 // ==> GLOBAL`OrigCl = AS`Name | GLOBAL`Start
 const TYPE_GLOBAL_OrigCl & StackEval::GetOrigCl() const
 {
-  if(this->cs_obj_l_p->IsEmpty())
+  if(this->cs_obj_l_p->IsEmpty()) {
     //return TYPE_GLOBAL_Start();
     return StackEval::global_start;
-  else
-  {
+  }
+  else {
     //return this->cs_obj_l_p->Hd().GetSequence(pos_GLOBAL_OBJscope_origcl).Hd();
     const TYPE_GLOBAL_OBJscope & os (this->cs_obj_l_p->Index(1));
     return ((const SEQ<TYPE_GLOBAL_OrigCl> &)(os.GetSequence(pos_GLOBAL_OBJscope_origcl))).Index(1);
@@ -3359,12 +3318,14 @@ const TYPE_GLOBAL_OrigCl & StackEval::GetOrigOldCl() const
   //SEQ<TYPE_GLOBAL_OrigCl> orig_cll (this->cs_obj_l_p->Hd().GetSequence(pos_GLOBAL_OBJscope_origcl));
   const TYPE_GLOBAL_OBJscope & os (this->cs_obj_l_p->Index(1));
   const SEQ<TYPE_GLOBAL_OrigCl> & orig_cll (os.GetSequence(pos_GLOBAL_OBJscope_origcl));
-  if (orig_cll.Length() > 1)
+  if (orig_cll.Length() > 1) {
     //return orig_cll.Tl().Hd();
     return orig_cll.Index(2);
-  else
+  }
+  else {
     //return orig_cll.Hd();
     return orig_cll.Index(1);
+  }
 }
 
 // IsClientModifOk
@@ -3411,11 +3372,11 @@ TYPE_AS_Name StackEval::GetCurObjName() const
 // ==> GLOBAL`OrigCl = AS`Name | GLOBAL`Start
 const TYPE_GLOBAL_OrigCl & StackEval::GetCurCl() const
 {
-  if (this->cs_obj_l_p->IsEmpty())
+  if (this->cs_obj_l_p->IsEmpty()) {
     //return TYPE_GLOBAL_Start();
     return StackEval::global_start;
-  else
-  {
+  }
+  else {
     //return this->cs_obj_l_p->Hd().GetSequence(pos_GLOBAL_OBJscope_class).Hd();
     const TYPE_GLOBAL_OBJscope & os (this->cs_obj_l_p->Index(1));
     return ((const SEQ<TYPE_GLOBAL_OrigCl> &)(os.GetSequence(pos_GLOBAL_OBJscope_class))).Index(1);
@@ -3434,22 +3395,26 @@ TYPE_GLOBAL_OrigCl StackEval::GetPrevCl() const
     case 1: {
       const TYPE_GLOBAL_OBJscope & osc  (this->cs_obj_l_p->Index(1));
       const SEQ<TYPE_AS_Name> & cls_l (osc.GetSequence(pos_GLOBAL_OBJscope_class));
-      if (cls_l.Length() > 1)
+      if (cls_l.Length() > 1) {
 //        return osc.GetRecord(pos_GLOBAL_OBJscope_obj).GetRecord(pos_SEM_OBJ_uRef_tp);
         return cls_l[2];
-      else
+      }
+      else {
         //return TYPE_GLOBAL_Start();
         return StackEval::global_start;
+      }
     }
     default: {
       const TYPE_GLOBAL_OBJscope & osc (this->cs_obj_l_p->Index(1));
       const SEQ<TYPE_AS_Name> & cls_l (osc.GetSequence(pos_GLOBAL_OBJscope_class));
-      if (cls_l.Length() > 1)
+      if (cls_l.Length() > 1) {
 //        return osc.GetRecord(pos_GLOBAL_OBJscope_obj).GetRecord(pos_SEM_OBJ_uRef_tp);
         return cls_l[2];
-      else
+      }
+      else {
 //        return this->cs_obj_l_p->Index(2).GetRecord(pos_GLOBAL_OBJscope_obj).GetRecord(pos_SEM_OBJ_uRef_tp);
         return this->cs_obj_l_p->Index(2).GetSequence(pos_GLOBAL_OBJscope_class).Hd();
+      }
     }
   }
 }
@@ -3508,11 +3473,9 @@ void StackEval::PopCurObj()
 {
 //wcout << L"PopCurObj:" << this->cs_obj_l_p->Hd().GetRecord(pos_GLOBAL_OBJscope_obj) << endl;
 //wcout << *(this->cs_obj_l_p) << endl;
-// 20090128 -->
   //TYPE_SEM_OBJ_uRef ref (GetCurObjRef());
 //  TYPE_SEM_OBJ_uRef ref (this->cs_obj_l_p->Hd().GetRecord(pos_GLOBAL_OBJscope_obj));
   Int oid (this->cs_obj_l_p->Hd().GetRecord(pos_GLOBAL_OBJscope_obj).GetInt(pos_SEM_OBJ_uRef_ref));
-// <-- 20090128
   
   this->cs_obj_l_p->ImpTl();
 
@@ -3525,23 +3488,17 @@ void StackEval::PopCurObj()
 void StackEval::PushClNmCurObj(const TYPE_AS_Name & clnm, const TYPE_GLOBAL_OrigCl & origcl)
 {
 //wcout << L"PushClNmCurObj: " << clnm << " " << origcl << endl;
-// 20150226 -->
   // for no class (command line) environment
   if (clnm == this->void_name) return;
-// <-- 20150226
 //wcout << *(this->cs_obj_l_p) << endl;
-  if( this->cs_obj_l_p->IsEmpty() )
-  {
+  if( this->cs_obj_l_p->IsEmpty() ) {
     Generic ref = theState().GetObjRefOfClass(clnm);
-    if (ref.IsNil())
-    {
+    if (ref.IsNil()) {
       // create object for clnm
-// 20090401 -->
 //      TYPE_SEM_InsStrct insstrct (theState().GetInstInitVal(clnm));
 //      TYPE_SEM_OBJ tmp_obj (TYPE_SEM_OBJ().Init(clnm, insstrct, MAP<TYPE_AS_Name,TYPE_SEM_History>()));
 //      ref = MakeNewObj(tmp_obj, Nil());
       ref = MakeNewObj(theState().GetCachedOBJ(clnm), Nil());
-// <-- 20090401
     }
 
     TYPE_GLOBAL_OBJscope objscope; // GLOBAL`OBJscope
@@ -3551,8 +3508,7 @@ void StackEval::PushClNmCurObj(const TYPE_AS_Name & clnm, const TYPE_GLOBAL_Orig
 
     this->cs_obj_l_p->ImpPrepend(objscope);
   }
-  else
-  {
+  else {
     TYPE_GLOBAL_OBJscope objscope (this->cs_obj_l_p->Hd());
     SEQ<TYPE_AS_Name> cl_l (objscope.GetSequence(pos_GLOBAL_OBJscope_class));
     SEQ<TYPE_GLOBAL_OrigCl> orig_cll (objscope.GetSequence(pos_GLOBAL_OBJscope_origcl));
@@ -3571,8 +3527,7 @@ void StackEval::PushClNmCurObj(const TYPE_AS_Name & clnm, const TYPE_GLOBAL_Orig
 // ==>
 void StackEval::PopClNmCurObj()
 {
-  if( this->cs_obj_l_p->IsEmpty() ) 
-  {
+  if( this->cs_obj_l_p->IsEmpty() ) {
 //wcout << L"PopClNmCurObj: no stack" << endl;
     return;
   }
@@ -3586,13 +3541,10 @@ void StackEval::PopClNmCurObj()
 
   cl_l.ImpTl();
 
-// 20080120
-  if (cl_l.IsEmpty())
-  {
+  if (cl_l.IsEmpty()) {
     this->cs_obj_l_p->ImpTl();
   }
-  else
-  {
+  else {
     orig_cll.ImpTl();
 
     objscope.SetField(pos_GLOBAL_OBJscope_class, cl_l);
@@ -3606,10 +3558,12 @@ void StackEval::PopClNmCurObj()
 // ==> [SEM`OBJ_Ref]
 Generic StackEval::TopClNmCurObj()
 {
-  if( this->cs_obj_l_p->IsEmpty() )
+  if( this->cs_obj_l_p->IsEmpty() ) {
     return Nil();
-  else
+  }
+  else {
     return this->cs_obj_l_p->Hd().GetField(pos_GLOBAL_OBJscope_obj);
+  }
 }
 #endif // VICE
 #endif // VDMPP

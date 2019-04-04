@@ -46,7 +46,6 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
 
   // If this sequence index is not a name, something has gone wrong
   if (index.Is(TAG_TYPE_AS_Name)) {
-// 20091124
     TYPE_GLOBAL_OBJ_uDesc obj_v (Lookup_obj_tab(obj_ref));
     TYPE_SEM_OBJ obj (obj_v.GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
     TYPE_SEM_InsStrct ins (obj.GetMap(pos_SEM_OBJ_ins));
@@ -54,21 +53,21 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
     TYPE_AS_Name clsnm (clsnm_);
 
 // not in spec
-// 20090822 -->
     if (!ins[clsnm].DomExists(index)) {
       Set dom_ins (ins.Dom());
       dom_ins.RemElem(clsnm_);
       Set nm_s;
       Generic nm;
       for (bool bb = dom_ins.First(nm); bb ; bb = dom_ins.Next(nm)) {
-        if (ins[nm].DomExists(index))
+        if (ins[nm].DomExists(index)) {
           nm_s.Insert(nm);
+        }
       }
       Tuple eoc (ExistsOneChild (nm_s, nm_s));
-      if (eoc.GetBoolValue(1))
+      if (eoc.GetBoolValue(1)) {
         clsnm = eoc.GetRecord(2);
+      }
     }
-// <-- 20090822
 
     TYPE_GLOBAL_ValueMap insmap (ins[clsnm]); // map AS`Name to (SEM`VAL * AS`Access)
     if (insmap.DomExists(index)) {
@@ -80,10 +79,8 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
         ins.ImpModify(clsnm, insmap);
         obj.SetField(pos_SEM_OBJ_ins, ins);
         obj_v.SetField(pos_GLOBAL_OBJ_uDesc_sem, obj);
-// 20091124
         Update_obj_tab(obj_ref, obj_v);
 
-// 20100818 -->
         if (Settings.INV()) {
           theStackMachine().PushEmptyEnv();
           theStackMachine().PushCurObj(obj_ref, obj_ref.GetRecord(pos_SEM_OBJ_uRef_tp), theStackMachine().GetCurCl());
@@ -93,27 +90,22 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
           theStackMachine().PopCurObj();
           theStackMachine().PopEnvL();
 
-          if (!invOk)
-          {
+          if (!invOk) {
             theStackMachine().SetCid(index.GetInt(pos_AS_Name_cid)); 
             RTERR::Error(L"ModifyInstanceVar", RTERR_INST_INV_BROKEN, Nil(), Nil(), Sequence());
           }
         }
-// <-- 20100818
       }
-      else
-      {
+      else {
         RTERR::Error(L"ModifyInstanceVar", RTERR_NOT_IN_SCOPE,
                      M42Sem(AUX::SingleNameToString(ASTAUX::Combine2Names(clsnm, index)), NULL), Nil(), Sequence());
       }
     }
-    else
-    {
+    else {
       RTERR::Error (L"ModifyInstanceVar", RTERR_REF_UNKNOWN, obj_ref, Nil(), Sequence());
     }
   }
-  else // if (!index.Is(TAG_TYPE_AS_Name))
-  {
+  else { // if (!index.Is(TAG_TYPE_AS_Name))
     RTERR::Error(L"ModifyInstanceVar", RTERR_REF_UNKNOWN, obj_ref, Nil(), Sequence());
   }
   return obj_ref;
@@ -134,8 +126,9 @@ bool EvalState::IsMapType(const TYPE_AS_Type & tp) const
       const SEQ<TYPE_AS_Type> tps (tp.GetSequence(pos_AS_UnionType_tps));
       bool exists = false;
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; (idx <= len_tps) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_tps) && !exists; idx++) {
         exists = IsMapType(tps[idx]);
+      }
       return exists;
     }
     case TAG_TYPE_AS_OptionalType: { return IsMapType(tp.GetRecord(pos_AS_OptionalType_tp)); }
@@ -158,8 +151,7 @@ TYPE_AS_Type EvalState::GetRngType(const TYPE_AS_Type & tp) const
       const SEQ<TYPE_AS_Type> tps (tp.GetSequence(pos_AS_UnionType_tps));
       SEQ<TYPE_AS_Type> tp_l;
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; idx <= len_tps; idx++)
-      {
+      for (size_t idx = 1; idx <= len_tps; idx++) {
         const TYPE_AS_Type & t (tps[idx]);
         switch(t.GetTag()) {
           case TAG_TYPE_AS_GeneralMap0Type: {
@@ -209,18 +201,19 @@ TYPE_AS_Type EvalState::GetRngType(const TYPE_AS_Type & tp) const
 // ==> SEM`VAL
 TYPE_SEM_VAL EvalState::UpdateVal (const TYPE_SEM_VAL & val, const TYPE_AS_Type & tp, const Sequence & index_l) const
 {
-  if (IsMapType(tp) && !index_l.IsEmpty())
-  {
+  if (IsMapType(tp) && !index_l.IsEmpty()) {
     TYPE_AS_Type maprng (GetRngType(tp));
    
     TYPE_SEM_VAL key (index_l.Hd());
     switch(val.GetTag()) {
       case TAG_TYPE_SEM_MAP: {
         Map m (val.GetMap(pos_SEM_MAP_v));
-        if (m.DomExists(key))
+        if (m.DomExists(key)) {
           m.ImpModify(key, UpdateVal(m[key], maprng, index_l.Tl()));
-        else
+        }
+        else {
           m.ImpModify(key, UpdateVal(sem_undef, maprng, index_l.Tl()));
+        }
         return mk_SEM_MAP(m);
       }
       case TAG_TYPE_SEM_UNDEF: {
@@ -246,8 +239,7 @@ Tuple EvalState::CheckMap (const Tuple & lusd) const
   const Generic & glres (lusd.GetSequence(3)); // global lookup result
   const Generic & llres (lusd.GetSequence(4)); // local lookup result
 
-  if (!llres.IsNil() && Tuple(llres).GetBoolValue(1))
-  {
+  if (!llres.IsNil() && Tuple(llres).GetBoolValue(1)) {
     TYPE_SEM_ValTp gs (Tuple(llres).GetRecord(2));
     const TYPE_SEM_VAL & val (gs.GetRecord(pos_SEM_ValTp_val));
     const TYPE_AS_Type & tp (gs.GetRecord(pos_SEM_ValTp_tp)); 
@@ -255,8 +247,7 @@ Tuple EvalState::CheckMap (const Tuple & lusd) const
     return mk_(UpdateVal(val, tp, index_l.Tl()), index_l, glres, llres);
   }
 #ifdef VDMSL
-  if (!glres.IsNil() && Tuple(glres).GetBoolValue(1))
-  {
+  if (!glres.IsNil() && Tuple(glres).GetBoolValue(1)) {
     TYPE_GLOBAL_State gs (Tuple(glres).GetRecord(2));
     const TYPE_SEM_VAL & val (gs.GetRecord(pos_GLOBAL_State_val));
     const TYPE_AS_Type & tp (gs.GetRecord(pos_GLOBAL_State_tp)); 
@@ -265,8 +256,7 @@ Tuple EvalState::CheckMap (const Tuple & lusd) const
   }
 #endif // VDMSL
 #ifdef VDMPP
-  if (!glres.IsNil() && Tuple(glres).GetBoolValue(1) && Tuple(glres).GetBoolValue(2))
-  {
+  if (!glres.IsNil() && Tuple(glres).GetBoolValue(1) && Tuple(glres).GetBoolValue(2)) {
     const TYPE_SEM_VAL & val (Tuple(glres).GetRecord(3));
     const TYPE_AS_Type & tp (Tuple(glres).GetRecord(4)); 
 
@@ -311,7 +301,7 @@ Tuple EvalState::ExpandTypeDef(const TYPE_AS_Type & tp)
       tmp_type = itd.GetRecord(2); // AS`Type, GLOBAL`Type
       tag = tn;
     }
-    else  {
+    else {
       RTERR::Error (L"ExpandTypeDef", RTERR_TYPE_NOT_IN_SCOPE,
                     M42Sem(AUX::SingleNameToString(tn), NULL), Nil(), Sequence());
     }
@@ -423,20 +413,17 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
         return mk_(val, mk_sequence(sd), Nil(), Nil());
       }
 #endif // VDMPP
-
       RTERR::Error (L"LookUpSD", RTERR_STATE_DESIG_UNKNOWN,
                     M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
     }
     case TAG_TYPE_STKM_FieldRef: {
       const TYPE_STKM_StateDesignator & fsd (sd.GetRecord (pos_STKM_FieldRef_var));
       const TYPE_AS_Name & sel (sd.GetRecord (pos_STKM_FieldRef_sel));
-// 20141210 -->
 #ifdef VDMPP
       if (fsd.Is(TAG_TYPE_AS_SelfExpr)) {
         return LookUpSD(sel);
       }
 #endif // VDMPP
-// <-- 20141210
       Tuple lusd (LookUpSD (fsd));
       const TYPE_SEM_VAL & scomp_v (lusd.GetRecord(1)); // SEM`VAL
       SEQ<Record> index_l (lusd.GetSequence(2)); // seq of (AS`Name | SEM`VAL)
@@ -513,10 +500,12 @@ void EvalState::ModifyValueId(const TYPE_AS_Name & id, const TYPE_SEM_VAL & val_
       Tuple igs (glres_);
       const TYPE_GLOBAL_State & gs_var (igs.GetRecord(2)); // GLOBAL`State
       const TYPE_AS_Type & tp (gs_var.GetRecord(pos_GLOBAL_State_tp));  // AS`Type
-      if (Settings.DTC() && !SubType (val_v, tp))
+      if (Settings.DTC() && !SubType (val_v, tp)) {
         RTERR::Error (L"ModifyValueId", RTERR_TYPE_INCOMP, val_v, tp, Sequence());
-      else
+      }
+      else {
         SetGlobalState(id, theStackMachine().CurrentModule(), TYPE_GLOBAL_State().Init(val_v, tp)); 
+      }
     }
 #endif // VDMSL
 #ifdef VDMPP
@@ -558,10 +547,8 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
 #endif //VDMPP
       case TAG_TYPE_DYNSEM_SEM_REC: {
         const TYPE_AS_Name & tag (scomp_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
-// 20101102 -->
         //Tuple lurs (AUX::LookUpRecSel(tag)); // bool * GLOBAL`RecSel
         Tuple lurs (GetCachedRecSel(tag));
-// <-- 20101102
         if (lurs.GetBoolValue(1)) {
           const MAP<TYPE_AS_Name, Int> & pos (lurs.GetTuple(2).GetMap (2));  // map AS`Name to nat
           const TYPE_AS_Name & sel (index_l.Hd());
@@ -570,7 +557,6 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
             SEQ<TYPE_SEM_VAL> tmp_v (value.GetFields());
             int index = pos[sel].GetValue();
             const TYPE_SEM_VAL & val (tmp_v[index]);
-// 20131227 -->
             //tmp_v.ImpModify(index, ModifyValue(val, index_l.Tl(), val_v));
             //return SemRec::mk_SEM_REC(tag, tmp_v);
             TYPE_SEM_VAL newval (ModifyValue(val, index_l.Tl(), val_v));
@@ -589,8 +575,9 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
               }
 #endif //VDMSL
               const SEQ<TYPE_AS_Type> & tp_l (lurs.GetTuple(2).GetSequence (3));  // seq of AS`Type
-              if (!SubType (newval, tp_l[index]))
+              if (!SubType (newval, tp_l[index])) {
                 RTERR::Error (L"ModifyValueId", RTERR_TYPE_INCOMP, newval, tp_l[index], Sequence());
+              }
 #ifdef VDMSL
               if (modulepushed) {
                 theStackMachine().PopModule();
@@ -603,7 +590,6 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
             TYPE_SEM_VAL newrec (SemRec::mk_SEM_REC(tag, tmp_v)); 
             newrec.SetField(pos_DYNSEM_SEM_SemRecord_checked, Bool(checked));
             return newrec;
-// <-- 20131227
           }
           else {
             RTERR::Error (L"ModifyValue", RTERR_RECORD_FIELD_ID_UNKNOWN,

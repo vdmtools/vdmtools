@@ -83,12 +83,10 @@
 #include "cmd_queue.h"
 #include "object_map.h"
 #include "metaiv_impl.h"
-// 20150319 -->
 /*
 #include "servicemanager.h"
 #include "parserservice.h"
 */
-// <-- 20150319
 #endif // CORBA_API
 
 #include "RTERR.h"
@@ -96,9 +94,7 @@
 #include "binops.h"
 #include <sstream>
 
-// 20130617 -->
 #include "tb_readline.h"
-// <-- 20130617
 
 ofstream TOOLS::calllogstream;
 
@@ -456,10 +452,10 @@ void TOOLS::InitDebugCommands ()
   AddCommand (L"encode");
   AddCommand (L"fscode");
 
-  AddCommand (L"ast"); // for Debug 20051215
-  AddCommand (L"contextinfo ci"); // for Debug 20051215
-  AddCommand (L"tokeninfo ti"); // for Debug 20060607
-  AddCommand (L"nodeinfo ni"); // for Debug 20060607
+  AddCommand (L"ast");
+  AddCommand (L"contextinfo ci");
+  AddCommand (L"tokeninfo ti");
+  AddCommand (L"nodeinfo ni");
  
 #ifdef VDMPP
   AddCommand (L"save");
@@ -583,7 +579,7 @@ void TOOLS::InitToolbox (bool batch_mode)
 
   TOOLS::InitDebugCommands ();
 
-  LibraryManager::Init(); // 20071227
+  LibraryManager::Init();
 
   theStackMachine().User_Init(TYPE_AS_Document(), true);
 
@@ -654,7 +650,7 @@ void TOOLS::ExitToolbox(int i)
   CleanUp();
   PrintConsistencyStatus();
   TBUTILS::restoreLCNumeric();
-  CloseCallLog(); // 20130530
+  CloseCallLog();
   exit(i);
 }
 
@@ -692,11 +688,6 @@ bool TOOLS::ReadScriptFile (const wstring & short_name)
 {
   bool tmpmode = TOOLS::isBatchMode();
   TOOLS::setBatchMode(true);
-
-// 20091102-->
-//  if (!TOOLS::IsInScript())
-//    ToolMediator::ExprErrs()->vdm_ClearAll();
-// <-- 20091102
 
   bool tmpisinscript = TOOLS::IsInScript();
   TOOLS::SetIsInScript(true);
@@ -1403,7 +1394,7 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
     TOOLS::set_spec_init (false);
 
 #ifdef VDMPP
-    TOOLS::CheckSSParseEnv(); // 20060614 for change of class name(s)
+    TOOLS::CheckSSParseEnv();
     TOOLS::set_dobjs_init(false);
 #endif //VDMPP
   }
@@ -1881,18 +1872,17 @@ Tuple TOOLS::ParseExprs (const Record & expr, wostream & wos)
   if (TOOLS::get_ast_is_new() && (!ToolMediator::Repos()->vdm_IsSession (none_session))) {
     vdm_iplog << L"Note: specification has changed since last 'init'" << endl;
     //spec_init = true; // warning is now printed
-    not_initialized = true; // 20060310
+    not_initialized = true;
   }
 #ifdef VDMPP
 //  else if (!TOOLS::get_dobjs_init()) {
   else if (!TOOLS::get_dobjs_init() && !ToolMediator::Repos()->vdm_Files().IsEmpty()) {
     vdm_iplog << L"Warning: specification has changed since last 'init' of user defined objects" << endl << flush;
     TOOLS::set_dobjs_init(true);  // warning is now printed
-    not_initialized = true; // 20060310
+    not_initialized = true;
   }
 #endif //VDMPP
 
-  // 20060310
   if( not_initialized ) {
     SET<TYPE_ProjectTypes_FileName> files(ToolMediator::Repos()->vdm_Files());
     if( !files.IsEmpty() ) {
@@ -3213,12 +3203,10 @@ void TOOLS::EvalInfo (wostream & wos)
 
 int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
 {
-// 20160104 -->
   wstring cmd(cmd_);
   if (TOOLS::abbrev.DomExists (Text (cmd_))) {
     cmd = Text(TOOLS::abbrev[Text (cmd_)]).GetValue ();
   }
-// <-- 20160104
   const wchar_t * NEED_INIT = L"This command can only be called after the specification has been initialised.";
 #ifdef VDMSL
   wstring VDM (L"VDM-SL");
@@ -5733,7 +5721,6 @@ void TOOLS::TerminateCorbaApi()
 
 void TOOLS::ExternalParseService(const CLIOptions & thisCliOpt)
 {
-// 20150319 -->
 // not used
 /*
 #ifdef CORBA_API
@@ -5746,7 +5733,6 @@ void TOOLS::ExternalParseService(const CLIOptions & thisCliOpt)
   }
 #endif // CORBA_API
 */
-// <-- 20150319
 }
 
 // SearchId

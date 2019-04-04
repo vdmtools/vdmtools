@@ -781,11 +781,9 @@ TYPE_STKM_SubProgram StackCompiler::SD2I(const TYPE_AS_StateDesignator & sd)
 TYPE_STKM_SubProgram StackCompiler::SDStack2I(const TYPE_AS_StateDesignator & sd)
 {
   switch (sd.GetTag()) {
-// 20141210 -->
 #ifdef VDMPP
     case TAG_TYPE_AS_SelfExpr:
 #endif // VDMPP
-// <-- 20141210
     case TAG_TYPE_AS_Name: {
       return TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sd));
     }

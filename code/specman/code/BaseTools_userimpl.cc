@@ -29,7 +29,6 @@
 #include "BaseTools.h"
 #include "tools.h"
 #include "codegen_tools.h"
-//#include "javagen_tools.h"
 #include "projectval.h"
 #include "StateStore.h"
 #include "NoneSes.h"
@@ -68,25 +67,21 @@ Bool vdm_BaseTools::vdm_SyntaxCheck (const type_21ProjectTypes_FileNameCL & file
   // The session type will be restored  according to the type
   // of the first successfully parsed file in filename_l
   // (in UpdateRepository in tools.cc)
-  if (!filename_l.IsEmpty())
-  {
+  if (!filename_l.IsEmpty()) {
     SET<TYPE_ProjectTypes_FileName> parsedfiles_s (ToolMediator::ParsedFiles ());
     if (!parsedfiles_s.IsEmpty() && parsedfiles_s.SubSet (filename_l.Elems ())) {
       ToolMediator::DisableSession ();
     }
 
-// 20120525 -->
     SET<TYPE_ProjectTypes_FileName> files (ToolMediator::Files());
     files.ImpIntersect(filename_l.Elems());
     files.ImpIntersect(ToolMediator::ParsedFiles ());
-    if (!files.IsEmpty())
-    {
+    if (!files.IsEmpty()) {
       ToolMediator::RemoveFiles ( files );
 #ifdef VDMPP
       TOOLS::CheckSSParseEnv();
 #endif // VDMPP
     }
-// <--20120525
 
     ToolMediator::Errs()->vdm_ClearAll();
 
@@ -95,16 +90,13 @@ Bool vdm_BaseTools::vdm_SyntaxCheck (const type_21ProjectTypes_FileNameCL & file
 
     bool errlimit = false;
     int len_filename_l = filename_l.Length();
-    for (int idx = 1; (idx <= len_filename_l) && !errlimit; idx++)
-    {
+    for (int idx = 1; (idx <= len_filename_l) && !errlimit; idx++) {
       const TYPE_ProjectTypes_FileName & filenm (filename_l[idx]);
       // Update meter
       SEQ<Char> label (L"Syntax checking ");
       label.ImpConc(SEQ<Char>(PTAUX::ExtractFileName(filenm)));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      //
       succ = TOOLS::EvalRead (filenm) && succ;
-
       errlimit = (ToolMediator::Errs()->vdm_GetErrors().Length() > 100);
     }
 #ifdef VDMPP
@@ -116,8 +108,7 @@ Bool vdm_BaseTools::vdm_SyntaxCheck (const type_21ProjectTypes_FileNameCL & file
     ToolMediator::Interf()->vdm_DestroyMeter();
     ToolMediator::Errs()->vdm_AllDone();
 
-    if (errlimit)
-    {
+    if (errlimit) {
       vdm_log << L"Syntax error limit exceeded." << endl;
       vdm_log << L"Syntax checking aborted." << endl;
     }
@@ -132,8 +123,7 @@ Bool vdm_BaseTools::vdm_TypeCheck (const type_23ProjectTypes_ModuleNameCL & mnm_
 {
   bool succ = true;
 
-  if (!mnm_l.IsEmpty())
-  {
+  if (!mnm_l.IsEmpty()) {
     ToolMediator::Errs()->vdm_ClearAll();
 
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Type Checking"), type_cL());
@@ -143,15 +133,12 @@ Bool vdm_BaseTools::vdm_TypeCheck (const type_23ProjectTypes_ModuleNameCL & mnm_
 
     bool errlimit = false;
     int len_mnm_l = mnm_l.Length();
-    for (int idx = 1; (idx <= len_mnm_l) && !errlimit; idx++)
-    {
+    for (int idx = 1; (idx <= len_mnm_l) && !errlimit; idx++) {
       const TYPE_ProjectTypes_ModuleName & mnm (mnm_l[idx]);
       SEQ<Char> label(L"Type checking ");
       label.ImpConc(SEQ<Char>(PTAUX::ExtractModuleName(mnm)));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      // 
       succ = TOOLS::EvalTypeCheck (mnm, 0, vdm_log) && succ;
-
       errlimit = (ToolMediator::Errs()->vdm_GetErrors().Length() > 100);
     }
 #ifdef VDMPP
@@ -165,8 +152,7 @@ Bool vdm_BaseTools::vdm_TypeCheck (const type_23ProjectTypes_ModuleNameCL & mnm_
 
     ToolMediator::Errs()->vdm_AllDone();
 
-    if (errlimit)
-    {
+    if (errlimit) {
       vdm_log << L"Type error limit exceeded." << endl;
       vdm_log << L"Type checking aborted." << endl;
     }
@@ -197,34 +183,31 @@ Bool vdm_BaseTools::vdm_CodeGenerate (const type_23ProjectTypes_ModuleNameCL & m
 {
   bool succ = true;
 
-  if (!mnm_l.IsEmpty())
-  {
+  if (!mnm_l.IsEmpty()) {
     ToolMediator::Errs()->vdm_ClearAll();
 
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Generating C++"), type_cL());
     ToolMediator::Interf()->vdm_SetMeterTotal(mnm_l.Length());
 
-//  ResetCG(); // 20070921
     TOOLS::ResetSSNames();
 
     size_t len_mnm_l = mnm_l.Length();
-    for (size_t idx = 1; idx <= len_mnm_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_mnm_l; idx++) {
       SEQ<Char> label;
-      if (m == Quote(L"CPP"))
+      if (m == Quote(L"CPP")) {
         label = SEQ<Char>(L"Generating C++ for ");
-      else
+      }
+      else {
         label = SEQ<Char>(L"Generating Java for ");
-
+      }
       label.ImpConc(SEQ<Char>(PTAUX::ExtractModuleName(mnm_l[idx])));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      //
-      if (GetCGTools().ResetCG(m)) // 20070921
-      {
+      if (GetCGTools().ResetCG(m)) {
         succ = GetCGTools().EvalCodeGen (mnm_l[idx],m,s,p,t,st, package_name,cop, testcond) && succ;
       }
-      else
+      else {
         succ = false;
+      }
     }
 #ifdef VDMPP
     ToolMediator::EvalInhTree();
@@ -243,20 +226,17 @@ Bool vdm_BaseTools::vdm_PrettyPrint (const type_21ProjectTypes_FileNameCL & fnm_
 {
   bool succ = true;
 
-  if (!fnm_l.IsEmpty())
-  {
+  if (!fnm_l.IsEmpty()) {
     ToolMediator::Errs()->vdm_ClearAll();
 
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Pretty printing"), type_cL());
     ToolMediator::Interf()->vdm_SetMeterTotal(fnm_l.Length());
 
     size_t len_fnm_l = fnm_l.Length();
-    for (size_t idx = 1; idx <= len_fnm_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_fnm_l; idx++) {
       SEQ<Char> label(L"Pretty printing ");
       label.ImpConc(SEQ<Char>(PTAUX::ExtractFileName(fnm_l[idx])));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      //
       succ = TOOLS::EvalLatex (fnm_l[idx]) && succ;
     }
 
@@ -363,9 +343,9 @@ Int vdm_BaseTools::vdm_SetBreakOnPos(const TYPE_ProjectTypes_FileName & file, co
 
   std::wstring fileName;
   TYPE_ProjectTypes_String seq (file.get_nm());
-  if (!seq.GetString (fileName))
+  if (!seq.GetString (fileName)) {
     return -1;
-
+  }
   return Int (TBDEBUG::EvalBreakOnPos(fileName, lineStr, colStr, vdm_iplog));
 }
 
@@ -411,8 +391,6 @@ type_UU2P vdm_BaseTools::vdm_DebugContinue ()
 // ==> ()
 void vdm_BaseTools::vdm_InitToolbox()
 {
-// 20081027
-//  InitToolbox(true);
   TOOLS::InitToolbox(TOOLS::isBatchMode());
 }
 
@@ -443,8 +421,9 @@ Bool vdm_BaseTools::vdm_LoadTypeCheckEnv (const type_ref_StateStore & stor)
     Tuple env (PTAUX::ExtractTCEnv (tcenv));
     return TOOLS::LoadTypeCheckEnv (env);
   }
-  else
+  else {
     return Bool (false);
+  }
 #endif // VDMPP
 #ifdef VDMSL
   return Bool (true);
@@ -529,12 +508,10 @@ Bool vdm_BaseTools::vdm_PushModule (const TYPE_ProjectTypes_ModuleName & name)
 type_23ProjectTypes_ModuleNameCS vdm_BaseTools::vdm_GetPossibleInterfaces()
 {
 #ifdef VDMPP
-// 20110603 -->
   SET<TYPE_ProjectTypes_ModuleName> nms (PTAUX::ASNameSet2ModuleNameSet(ToolMediator::GetAllVDMModuleNames()));
   SEQ<TYPE_ProjectTypes_ModuleName> vdmModules;
   Generic mn;
-  for (bool bb = nms.First(mn); bb; bb = nms.Next(mn))
-  {
+  for (bool bb = nms.First(mn); bb; bb = nms.Next(mn)) {
     status_type st = PTAUX::ExtractStatus(ToolMediator::Status(mn));
     switch (st.type) {
       case status_type::status_ok:
@@ -556,18 +533,19 @@ type_23ProjectTypes_ModuleNameCS vdm_BaseTools::vdm_GetPossibleInterfaces()
   Settings.DefOff();
 
   bool succ = true;
-  if (!vdmModules.IsEmpty())
+  if (!vdmModules.IsEmpty()) {
     succ = ToolMediator::BTools()->vdm_TypeCheck(vdmModules);
-  else if (!nms.IsEmpty()) // 20071025
+  }
+  else if (!nms.IsEmpty()) {
     succ = true;
-
+  }
   // restore POS/DEF setting
-  if(the_Setting_DEF)
+  if(the_Setting_DEF) {
     Settings.DefOn();
-  else
+  }
+  else {
     Settings.DefOff();
-
-// <-- 20110603
+  }
   GetCGTools().ResetCG(Quote(L"JAVA"));
   TOOLS::ResetSSNames();
   SET<TYPE_AS_Name> possInterfaces (GetCGTools().EvalPossibleInterfaces());
@@ -595,8 +573,7 @@ Bool vdm_BaseTools::vdm_JavaSyntaxCheck(const type_21ProjectTypes_FileNameCL & f
 {
   bool succ = true;
 #ifdef VDMPP
-  if (!filename_l.IsEmpty())
-  {
+  if (!filename_l.IsEmpty()) {
     ToolMediator::Errs()->vdm_ClearAll();
 
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Syntax Checking"), type_cL());
@@ -608,20 +585,16 @@ Bool vdm_BaseTools::vdm_JavaSyntaxCheck(const type_21ProjectTypes_FileNameCL & f
     }
 
     size_t len_filename_l = filename_l.Length();
-    for (size_t idx = 1; idx <= len_filename_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_filename_l; idx++) {
       const TYPE_ProjectTypes_FileName & filenm (filename_l[idx]);
       // Update meter
       SEQ<Char> label(L"Syntax checking ");
       label.ImpConc(SEQ<Char>(PTAUX::ExtractFileName(filenm)));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      //
       try {
-        //succ = JavaGenTools::EvalJavaParse (filenm) && succ;
         succ = TOOLS::EvalJavaParse (filenm) && succ;
       }
-      catch(TB_Exception & e)
-      {
+      catch(TB_Exception & e) {
         vdm_log << L"Runtime Error: " << filenm.get_nm ().GetString() << endl << flush;
       }
     }
@@ -642,26 +615,21 @@ Bool vdm_BaseTools::vdm_JavaTypeCheck(const type_23ProjectTypes_ModuleNameCL& mn
 {
   bool succ = true;
 #ifdef VDMPP
-  if (!mnm_l.IsEmpty())
-  {
+  if (!mnm_l.IsEmpty()) {
     ToolMediator::Errs()->vdm_ClearAll();
 
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Java type Checking"), type_cL());
     ToolMediator::Interf()->vdm_SetMeterTotal(mnm_l.Length());
 
     size_t len_mnm_l = mnm_l.Length();
-    for (size_t idx =1; idx <= len_mnm_l; idx++)
-    {
+    for (size_t idx =1; idx <= len_mnm_l; idx++) {
       const TYPE_ProjectTypes_ModuleName & mnm (mnm_l[idx]);
       SEQ<Char> label(L"Java type checking ");
       label.ImpConc(SEQ<Char>(PTAUX::ExtractModuleName(mnm)));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      //
-      //succ = JavaGenTools::EvalJavaTypeCheck (mnm) && succ;
       succ = TOOLS::EvalJavaTypeCheck (mnm) && succ;
     }
     ToolMediator::UpdateSelections();
-    //JavaGenTools::AfterJavaTypeCheck();
     TOOLS::AfterJavaTypeCheck();
 
     ToolMediator::Interf()->vdm_DestroyMeter();
@@ -686,22 +654,18 @@ Bool vdm_BaseTools::vdm_JavaGenerateVDM(const type_23ProjectTypes_ModuleNameCL& 
 {
   bool succ = true;
 #ifdef VDMPP
-  if (!mnm_l.IsEmpty())
-  {
+  if (!mnm_l.IsEmpty()) {
     ToolMediator::Errs()->vdm_ClearAll();
 
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Generating VDM++"), type_cL());
     ToolMediator::Interf()->vdm_SetMeterTotal(mnm_l.Length());
 
     size_t len_mnm_l = mnm_l.Length();
-    for (size_t idx = 1; idx <= len_mnm_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_mnm_l; idx++) {
       const TYPE_ProjectTypes_ModuleName & mnm (mnm_l[idx]);
       SEQ<Char> label(L"Generating VDM++ for ");
       label.ImpConc(SEQ<Char>(PTAUX::ExtractModuleName(mnm)));
       ToolMediator::Interf()->vdm_IncrementMeter(label);
-      //
-      //succ = JavaGenTools::EvalJavaGenerateVDM (mnm, p_stubs, p_rename, p_trans) && succ;
       succ = TOOLS::EvalJavaGenerateVDM (mnm, p_stubs, p_rename, p_trans) && succ;
     }
     ToolMediator::UpdateSelections();
@@ -720,9 +684,9 @@ void vdm_BaseTools::vdm_NewUnnamedProject ()
 #ifdef VDMPP
   TOOLS::EvalDestroyAllObjects();
 #endif // VDMPP
-  TOOLS::InitToolbox( false ); // 20051110
-  ToolMediator::ClearAll(); // 20051110
-  GetCI().clear(); // 20060123
+  TOOLS::InitToolbox( false );
+  ToolMediator::ClearAll();
+  GetCI().clear();
 
   ToolMediator::NewUnnamedProject();
 
@@ -739,28 +703,27 @@ void vdm_BaseTools::vdm_LoadProject (const TYPE_ProjectTypes_FileName & pnm)
 #ifdef VDMPP
   TOOLS::EvalDestroyAllObjects();
 #endif // VDMPP
-  TOOLS::InitToolbox( false ); // 20051110
-  ToolMediator::ClearAll(); // 20051110
-  GetCI().clear(); // 20060123
+  TOOLS::InitToolbox( false );
+  ToolMediator::ClearAll();
+  GetCI().clear();
 
   try {
     ToolMediator::Open(pnm);
   }
-  catch(TB_Exception & e)
-  {
+  catch(TB_Exception & e) {
     vdm_log << L"Runtime Error: " << pnm.get_nm ().GetString() << endl << flush;
   }
 
   init_POG_uMEDIATOR();
 
-  TOOLS::set_spec_init( false ); // 20051222
+  TOOLS::set_spec_init( false );
 
   wstring projectFile(PTAUX::ExtractFileName (pnm)); 
   wstring basedir (TBUTILS::tb_getbasedir(projectFile));
   TBUTILS::SetDefaultPath(basedir);
-  if ((basedir != L".") && (TBUTILS::tb_getcwd() != basedir))
+  if ((basedir != L".") && (TBUTILS::tb_getcwd() != basedir)) {
     TBUTILS::tb_chdir(basedir, vdm_log);
-
+  }
 #ifdef VDMPP
   ToolMediator::UMLT()->vdm_ResetMapper();
 #endif // VDMPP
@@ -771,18 +734,16 @@ void vdm_BaseTools::vdm_AddFiles (const type_21ProjectTypes_FileNameCS & fnm_s)
 {
   ToolMediator::AddFiles ( fnm_s );
 
-  TOOLS::set_spec_init( false ); // 20051222
+  TOOLS::set_spec_init( false );
 
-// 20121121 -->
-  if (!fnm_s.IsEmpty() && ToolMediator::BTools()->vdm_GetProjectName().IsNil())
-  {
+  if (!fnm_s.IsEmpty() && ToolMediator::BTools()->vdm_GetProjectName().IsNil()) {
     wstring file (PTAUX::ExtractFileName (fnm_s.GetElem())); 
     wstring basedir (TBUTILS::tb_getbasedir(file));
     TBUTILS::SetDefaultPath(basedir);
-    if ((basedir != L".") && (TBUTILS::tb_getcwd() != basedir))
+    if ((basedir != L".") && (TBUTILS::tb_getcwd() != basedir)) {
       TBUTILS::tb_chdir(basedir, vdm_log);
+    }
   }
-// <-- 20121121
 }
 
 // vdm_RemoveFiles
@@ -790,29 +751,24 @@ void vdm_BaseTools::vdm_RemoveFiles (const type_21ProjectTypes_FileNameCS & fnm_
 {
   ToolMediator::RemoveFiles ( fnm_s );
 
-// 20120521 -->
 #ifdef VDMPP
   TOOLS::CheckSSParseEnv();
 #endif // VDMPP
   SET<TYPE_ProjectTypes_ModuleName> nms (PTAUX::ASNameSet2ModuleNameSet(ToolMediator::GetAllVDMModuleNames()));
   Generic mnm;
-  for (bool cc = nms.First(mnm); cc; cc = nms.Next(mnm))
-  {
+  for (bool cc = nms.First(mnm); cc; cc = nms.Next(mnm)) {
     ToolMediator::UpdateTC (mnm, Quote (L"NONE"));
   }
-// <-- 20120521
-
   // breakpoint
   // source
-  TOOLS::set_spec_init( false ); // 20051222
+  TOOLS::set_spec_init( false );
 }
 
 // vdm_SaveProjectAs
 Bool vdm_BaseTools::vdm_SaveProjectAs (const TYPE_ProjectTypes_FileName & pnm)
 {
   Bool result(ToolMediator::SaveAs(pnm));
-  if (result.GetValue())
-  {
+  if (result.GetValue()) {
     wstring projectFile(PTAUX::ExtractFileName (pnm)); 
     wstring basedir (TBUTILS::tb_getbasedir(projectFile));
     TBUTILS::SetDefaultPath(basedir);
@@ -825,11 +781,9 @@ Bool vdm_BaseTools::vdm_SaveProjectAs (const TYPE_ProjectTypes_FileName & pnm)
 Bool vdm_BaseTools::vdm_SaveProject (const TYPE_ProjectTypes_FileName & pnm)
 {
   Bool result(ToolMediator::SaveAs(pnm));
-  if (result.GetValue())
-  {
+  if (result.GetValue()) {
     wstring projectFile(PTAUX::ExtractFileName (pnm)); 
     wstring basedir (TBUTILS::tb_getbasedir(projectFile));
-    //TBUTILS::SetDefaultPath(basedir);
     TBUTILS::tb_chdir(basedir, vdm_log);
   }
   return result;
@@ -847,13 +801,11 @@ Bool vdm_BaseTools::vdm_PogGenerate (const type_23ProjectTypes_ModuleNameCL & mo
 {
   bool succ = true;
 
-  if (!module_l.IsEmpty())
-  {
+  if (!module_l.IsEmpty()) {
     SEQ<TYPE_ProjectTypes_ModuleName> vdmModules;
 
     size_t len_module_l = module_l.Length();
-    for (size_t index = 1; index<= len_module_l; index++)
-    {
+    for (size_t index = 1; index<= len_module_l; index++) {
       const TYPE_ProjectTypes_ModuleName & mn (module_l[index]);
       status_type st = PTAUX::ExtractStatus(ToolMediator::Status(mn));
       switch (st.type) {
@@ -875,27 +827,27 @@ Bool vdm_BaseTools::vdm_PogGenerate (const type_23ProjectTypes_ModuleNameCL & mo
     bool the_Setting_DEF = Settings.IsDEF();
     Settings.DefOff();
  
-    if (!vdmModules.IsEmpty())
+    if (!vdmModules.IsEmpty()) {
       succ = ToolMediator::BTools()->vdm_TypeCheck(vdmModules);
-    else if (!module_l.IsEmpty()) // 20071025
+    }
+    else if (!module_l.IsEmpty()) {
       succ = true;
-
+    }
     // restore POS/DEF setting
-    if(the_Setting_DEF)
+    if(the_Setting_DEF) {
       Settings.DefOn();
-    else
+    }
+    else {
       Settings.DefOff();
-
-    if (succ)
-    {
+    }
+    if (succ) {
       ToolMediator::Interf()->vdm_CallBack(TYPE_ProjectTypes_PogCleanUp().Init(module_l));
       ToolMediator::Interf()->vdm_InitMeter((SEQ<Char>) Sequence(wstring(L"Generating integrity properties")), type_cL());
       ToolMediator::Interf()->vdm_SetMeterTotal(len_module_l);
 
       size_t total = 0;
       PogInterface & pog = GetPogInterface();
-      for (size_t index = 1; index<= len_module_l; index++)
-      {
+      for (size_t index = 1; index<= len_module_l; index++) {
         TYPE_ProjectTypes_String moduleName (module_l[index].get_nm());
         Sequence label(L"Generating integrity property for ");
         label.ImpConc(moduleName);
@@ -903,28 +855,25 @@ Bool vdm_BaseTools::vdm_PogGenerate (const type_23ProjectTypes_ModuleNameCL & mo
 
         vdm_log << L"Generating integrity property for " << moduleName.GetString() << L" ..." << endl;
 
-        try
-        {
+        try {
           pog.setup();
           pog.genPO(mk_sequence(ASTAUX::MkNameFromId(moduleName, NilContextId)));
         }
-        catch(TB_Exception & e)
-        {
+        catch(TB_Exception & e) {
           vdm_log << L"Runtime Error: " << moduleName.GetString() << endl << flush;
           continue;
         }
         Sequence pogseq (pog.getTextPOs ());
-        if (!pogseq.IsEmpty())
-        {
+        if (!pogseq.IsEmpty()) {
           size_t len_pogseq = pogseq.Length();
           total += len_pogseq;
-          if (len_pogseq == 1)
+          if (len_pogseq == 1) {
             vdm_log << L"1 property" << endl;
-          else
+          }
+          else {
             vdm_log << len_pogseq << L" properties" << endl;
-
-          for (size_t idx = 1; idx <= len_pogseq; idx++)
-          {
+          }
+          for (size_t idx = 1; idx <= len_pogseq; idx++) {
             Tuple t (pogseq[idx]);
             ToolMediator::Interf()->vdm_CallBack(TYPE_ProjectTypes_PogAdd().Init(t.GetSequence(1),
                                                                                  t.GetSequence(2),

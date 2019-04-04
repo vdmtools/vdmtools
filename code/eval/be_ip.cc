@@ -61,8 +61,7 @@ Generic ConvASTRec2Generic(const Record & ast)
         const Sequence & firstname_l (val[1]);
         const Sequence & secondname_l (val[2]);
         wstring firstname, secondname;
-        if (!firstname_l.GetString(firstname) ||
-            !secondname_l.GetString(secondname)) {
+        if (!firstname_l.GetString(firstname) || !secondname_l.GetString(secondname)) {
           vdm_err << L"InternalError \n";
           return Generic();
         }
@@ -140,13 +139,11 @@ Generic ConvASTRec2Generic(const Record & ast)
                 tag_str == L"SEM`OBJ" ||
                 tag_str == L"SEM`UNDEF" ||
                 //tag_str == L"SEM`DLVAL"  ||
-                tag_str == L"SEM`LOC" )
-      {
+                tag_str == L"SEM`LOC" ) {
         vdm_err << L"Internal Error in ConvASTRec2Generic. Cannot handle semantic value :" << tag_str << endl;
         return Generic();
       }
-      else if ( tag_str == L"SEM`EXIT" )
-      {
+      else if ( tag_str == L"SEM`EXIT" ) {
         return ConvASTofSem2Generic(fields[1]);
       }
       else if ( tag_str == L"SEM`ExplFN" ||
@@ -164,16 +161,21 @@ Generic ConvASTRec2Generic(const Record & ast)
         return Token(L"(no return value)");
       }
     }
-    case TAG_TYPE_AS_BoolLit :
+    case TAG_TYPE_AS_BoolLit : {
       return ast.GetBool(pos_AS_BoolLit_val);
-    case TAG_TYPE_AS_RealLit :
+    }
+    case TAG_TYPE_AS_RealLit : {
       return ast.GetReal(pos_AS_RealLit_val);
-    case TAG_TYPE_AS_NumLit :
+    }
+    case TAG_TYPE_AS_NumLit : {
       return ast.GetReal(pos_AS_NumLit_val);
-    case TAG_TYPE_AS_CharLit :
+    }
+    case TAG_TYPE_AS_CharLit : {
       return ast.GetChar(pos_AS_CharLit_val);
-    case TAG_TYPE_AS_TextLit :
+    }
+    case TAG_TYPE_AS_TextLit : {
       return ast.GetSequence(pos_AS_TextLit_val);
+    }
 
     case TAG_TYPE_AS_QuoteLit : {
       const SEQ<Char> & val (ast.GetField(pos_AS_QuoteLit_val));
@@ -189,24 +191,25 @@ Generic ConvASTRec2Generic(const Record & ast)
       const SEQ<TYPE_AS_Expr> & els (ast.GetSequence(pos_AS_SetEnumerationExpr_els));
       Set res;
       size_t len_els = els.Length(); 
-      for (size_t index = 1; index <= len_els; index++)
+      for (size_t index = 1; index <= len_els; index++) {
         res.Insert(ConvASTofSem2Generic(els[index]));
+      }
       return res;
     }
     case TAG_TYPE_AS_SeqEnumerationExpr : {
       const SEQ<TYPE_AS_Expr> & els (ast.GetSequence(pos_AS_SeqEnumerationExpr_els));
       Sequence res;
       size_t len_els = els.Length();
-      for (size_t index = 1; index <= len_els; index++)
+      for (size_t index = 1; index <= len_els; index++) {
         res.ImpAppend(ConvASTofSem2Generic(els[index]));
+      }
       return res;
     }
     case TAG_TYPE_AS_MapEnumerationExpr : {
       const SEQ<TYPE_AS_Maplet> & els (ast.GetSequence(pos_AS_MapEnumerationExpr_els));
       Map res;
       size_t len_els = els.Length();
-      for (size_t index = 1; index <= len_els; index++)
-      {
+      for (size_t index = 1; index <= len_els; index++) {
         const TYPE_AS_Maplet & m (els[index]);
         res.Insert(ConvASTofSem2Generic(m.GetRecord(pos_AS_Maplet_mapdom)),
                    ConvASTofSem2Generic(m.GetRecord(pos_AS_Maplet_maprng)));
@@ -265,10 +268,8 @@ int main()
   // Convert the expression to the corresponding meta-iv rep.
   Generic g (ConvASTofSem2Generic(exprs.Hd()));
 
-// 2010023 -->
   Generic ast (exprs.Hd());
-  if (ast.Is(TAG_TYPE_AS_RecordConstructorExpr))
-  {
+  if (ast.Is(TAG_TYPE_AS_RecordConstructorExpr)) {
     const TYPE_AS_Name & tagname (Record(ast).GetRecord(pos_AS_RecordConstructorExpr_tag));
     wstring tag_str (ASTAUX::ASName2String(tagname));
     if ( tag_str == L"SEM`EXIT" ) {
@@ -277,9 +278,11 @@ int main()
   }
   
   // Print the semantic value on the standard output.
-  if (g != Token(L"(no return value)"))
+  if (g != Token(L"(no return value)")) {
     g.pr_ascii(wcout, ( Settings.PrintFormat() ? 0 : -1 ));
-
-  if (cliOpt != NULL) delete cliOpt;
+  }
+  if (cliOpt != NULL) {
+    delete cliOpt;
+  }
   return 0;
 }

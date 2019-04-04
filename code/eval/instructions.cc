@@ -4263,37 +4263,38 @@ void StackEval::ExeINCRTIME_BIN (const TYPE_AS_BinaryOp & opr,
     int tag = ((Int) opr).GetValue();
     switch (tag) {
     case NUMEXP:
-      { if (rval.Is(TAG_TYPE_SEM_NUM))
+      { if (rval.Is(TAG_TYPE_SEM_NUM)) {
           time = Int((int)rval.GetReal(pos_SEM_NUM_v).GetValue() * oh1);
+        }
         break;
       }
     case SETUNION:
     case SETINTERSECT:
     case PROPERSUBSET:
     case SETMINUS:
-      { if (lval.Is(TAG_TYPE_SEM_SET) &&
-            rval.Is(TAG_TYPE_SEM_SET))
+      { if (lval.Is(TAG_TYPE_SEM_SET) && rval.Is(TAG_TYPE_SEM_SET)) {
           time = Int((lval.GetSet(pos_SEM_SET_v).Card() +
                       rval.GetSet(pos_SEM_SET_v).Card()) * oh1);
+        }
         break;
       }
     case SUBSET:
     case INSET:
     case NOTINSET:
-      { if (lval.Is(TAG_TYPE_SEM_SET))
+      { if (lval.Is(TAG_TYPE_SEM_SET)) {
           time = Int(lval.GetSet(pos_SEM_SET_v).Card() * oh1);
+        }
         break;
       }
     case SEQCONC:
-      { if (rval.Is(TAG_TYPE_SEM_SEQ) &&
-            lval.Is(TAG_TYPE_SEM_SEQ))
+      { if (rval.Is(TAG_TYPE_SEM_SEQ) && lval.Is(TAG_TYPE_SEM_SEQ)) {
            time = Int((lval.GetSequence(pos_SEM_SEQ_v).Length() +
                        rval.GetSequence(pos_SEM_SEQ_v).Length()) * oh1);
+        }
         break;
       }
     case MAPMERGE:
-      { if (rval.Is(TAG_TYPE_SEM_MAP) &&
-            lval.Is(TAG_TYPE_SEM_MAP))
+      { if (rval.Is(TAG_TYPE_SEM_MAP) && lval.Is(TAG_TYPE_SEM_MAP))
         {
           Map ls (lval.GetMap(pos_SEM_MAP_v)),
               rs (rval.GetMap(pos_SEM_MAP_v));
@@ -4303,13 +4304,13 @@ void StackEval::ExeINCRTIME_BIN (const TYPE_AS_BinaryOp & opr,
         break;
       }
     case MAPDOMRESTTO:
-      { if (lval.Is(TAG_TYPE_SEM_SET))
+      { if (lval.Is(TAG_TYPE_SEM_SET)) {
           time = Int(lval.GetSet(pos_SEM_SET_v).Card() * oh1);
+        }
         break;
       }
     case MAPDOMRESTBY:
-      { if (lval.Is(TAG_TYPE_SEM_SET) &&
-            rval.Is(TAG_TYPE_SEM_MAP))
+      { if (lval.Is(TAG_TYPE_SEM_SET) && rval.Is(TAG_TYPE_SEM_MAP))
         {
           Set ls (lval.GetSet(pos_SEM_SET_v));
           Map rm (rval.GetMap(pos_SEM_MAP_v));
@@ -4319,8 +4320,7 @@ void StackEval::ExeINCRTIME_BIN (const TYPE_AS_BinaryOp & opr,
         break;
       }
     case MAPRNGRESTTO:
-      { if (lval.Is(TAG_TYPE_SEM_MAP) &&
-            rval.Is(TAG_TYPE_SEM_SET))
+      { if (lval.Is(TAG_TYPE_SEM_MAP) && rval.Is(TAG_TYPE_SEM_SET))
         {
           Map lm (lval.GetMap(pos_SEM_MAP_v));
           Set rs (rval.GetSet(pos_SEM_SET_v));
@@ -4329,8 +4329,7 @@ void StackEval::ExeINCRTIME_BIN (const TYPE_AS_BinaryOp & opr,
         break;
       }
     case MAPRNGRESTBY:
-      { if (lval.Is(TAG_TYPE_SEM_MAP) &&
-            rval.Is(TAG_TYPE_SEM_SET))
+      { if (lval.Is(TAG_TYPE_SEM_MAP) && rval.Is(TAG_TYPE_SEM_SET))
         {
           Map lm (lval.GetMap(pos_SEM_MAP_v));
           Set rs (rval.GetSet(pos_SEM_SET_v));
@@ -4340,16 +4339,20 @@ void StackEval::ExeINCRTIME_BIN (const TYPE_AS_BinaryOp & opr,
         break;
       }
     case COMPOSE:
-      { if (lval.Is(TAG_TYPE_SEM_MAP))
+      { if (lval.Is(TAG_TYPE_SEM_MAP)) {
           time = Int(lval.GetMap(pos_SEM_MAP_v).Dom().Card() * oh1);
+        }
         break;
       }
     default: break;
     }
-    if (!theSystem().InDuration())
-    { if (time.IsNil())
+    if (!theSystem().InDuration()) {
+      if (time.IsNil()) {
         TimeError();
-      else theSystem().IncrRelTime(time);
+      }
+      else {
+        theSystem().IncrRelTime(time);
+      }
     }
   }
 }
@@ -4360,19 +4363,16 @@ void StackEval::ExeINCRTIME_BIN (const TYPE_AS_BinaryOp & opr,
 // ==> ()
 void StackEval::ExeINCRTIME_NEW (const Int & oh, const TYPE_AS_Name & nm)
 {
-  if (!theSystem().InDuration())
-  {
+  if (!theSystem().InDuration()) {
     Sequence inhstrct (theState().GetInhStrct(nm));
     inhstrct.ImpAppend(Set().Insert(nm));
     Sequence instvars;
     Generic g;
-    for (bool bb = inhstrct.First(g); bb; bb = inhstrct.Next(g))
-    {
+    for (bool bb = inhstrct.First(g); bb; bb = inhstrct.Next(g)) {
       Set cnms(g);
       Generic h;
       Map m;
-      for (bool cc = cnms.First(h); cc; cc = cnms.Next(h))
-      {
+      for (bool cc = cnms.First(h); cc; cc = cnms.Next(h)) {
         TYPE_AS_Name cnm (h);
         m.Insert(cnm, Int(theState().GetInstVars(cnm).Length()));
       }
@@ -4389,8 +4389,7 @@ Int StackEval::num_instvars (const Sequence & ivs)
 {
   int result = 0;
   size_t len_ivs = ivs.Length();
-  for (size_t idx = 1;idx <= len_ivs; idx++)
-  {
+  for (size_t idx = 1;idx <= len_ivs; idx++) {
     result += map_sum(Map(ivs[idx])).GetValue();
   }
   return Int(result);
@@ -4404,8 +4403,7 @@ Int StackEval::map_sum (const Map & m)
   int result = 0;
   Set dom_m (m.Dom());
   Generic g;
-  for (bool bb = dom_m.First(g); bb; bb = dom_m.Next(g))
-  {
+  for (bool bb = dom_m.First(g); bb; bb = dom_m.Next(g)) {
     result += ((Int) m[g]).GetValue();
   }
   return Int(result);
@@ -4422,29 +4420,31 @@ void StackEval::ExeINCRTIME_SETSEQMAP (const Int & oh)
   Generic rval (GetVal(r_esval));
   Generic mult = Nil();
 
-  if (lval.Is(TAG_TYPE_SEM_NUM) && rval.Is(TAG_TYPE_SEM_NUM))
-  {
+  if (lval.Is(TAG_TYPE_SEM_NUM) && rval.Is(TAG_TYPE_SEM_NUM)) {
     TYPE_SEM_NUM lnum (lval);
     TYPE_SEM_NUM rnum (rval);
     Int lval_v (lnum.get_v());
     Int rval_v (rnum.get_v());
 
-    if (rval_v.GetValue() > lval_v.GetValue())
+    if (rval_v.GetValue() > lval_v.GetValue()) {
       mult = rval_v - lval_v;
-    else mult = Int(0);
+    }
+    else {
+      mult = Int(0);
+    }
   }
-  else if (rval.Is(TAG_TYPE_SEM_MAP))
-  {
+  else if (rval.Is(TAG_TYPE_SEM_MAP)) {
     TYPE_SEM_MAP rmap (rval);
     mult = Int(rmap.get_v().Dom().Card());
   }
 
-  if (!theSystem().InDuration())
-  {
-    if (mult.IsNil())
+  if (!theSystem().InDuration()) {
+    if (mult.IsNil()) {
       TimeError();
-    else
+    }
+    else {
       theSystem().IncrRelTime(((Int)mult).GetValue() * oh);
+    }
   }
 }
 
@@ -4457,10 +4457,10 @@ void StackEval::ExeINCRTIME_STARTLIST (const Int & oh)
   Generic val (GetVal(esval));
 
 //  if (val.IsRecord() && !Record(val).Is(TAG_TYPE_SEM_SET))
-  if (!val.Is(TAG_TYPE_SEM_SET))
+  if (!val.Is(TAG_TYPE_SEM_SET)) {
     TimeError();
-  else if (!theSystem().InDuration())
-  {
+  }
+  else if (!theSystem().InDuration()) {
     TYPE_SEM_SET sv (val);
     theSystem().IncrRelTime(sv.get_v().Card() * Int(oh));
   }
@@ -4474,10 +4474,10 @@ void StackEval::ExeINCRTIME_STOPLIST (const Int & oh)
   const TYPE_STKM_EvalStackItem & esval (Head());
   Generic val (GetVal(esval));
 
-  if (!val.Is(TAG_TYPE_SEM_SET))
+  if (!val.Is(TAG_TYPE_SEM_SET)) {
     TimeError();
-  else if (!theSystem().InDuration())
-  {
+  }
+  else if (!theSystem().InDuration()) {
     TYPE_SEM_SET sv (val);
     theSystem().IncrRelTime(sv.get_v().Card() * Int(oh));
   }

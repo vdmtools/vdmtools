@@ -65,7 +65,7 @@ void VdmStdLib::InitRandom()
 long VdmStdLib::SetSeed(long seed)
 {
   this->rnd_seed = seed;
-  if( this->rnd_seed >= 0 ) {
+  if ( this->rnd_seed >= 0 ) {
     this->rnd.set_seed((unsigned long)seed);
   }
   return seed;
@@ -79,7 +79,7 @@ long VdmStdLib::GetSeed()
 int VdmStdLib::GetRandom(int i)
 {
   int ret = i;
-  if( this->rnd_seed >= 0 ) {
+  if ( this->rnd_seed >= 0 ) {
     ret = this->rnd.get_random (i);
   }
   return ret;
@@ -288,7 +288,6 @@ Tuple VdmStdLib::EvalStdLibIO (const TYPE_AS_Name & fnname, const SEQ<TYPE_SEM_V
 
     wstring sem (StripDoubleQuotes (VAL2X::val2asc (arg_lv[2]))); // text
 
-    // 20060621
     // convert backslashed char
     wstring sem_q, error;
     Backslashed::convert_backslashed( sem, sem_q, error );
@@ -1296,8 +1295,7 @@ Tuple VdmStdLib::EvalStdLibVDMUtil (const TYPE_AS_Name & fnname, const SEQ<TYPE_
     }
     return mk_(Bool(false), Nil());
   }
-  else if ((func == L"get_file_pos") || (func == L"P"))
-  {
+  else if ((func == L"get_file_pos") || (func == L"P")) {
     // get_file_pos : () +> [ seq of char * nat * nat * seq of char * seq of char ]
     // get_file_pos() == ...
     if (theStackMachine().CallStackLevel() > 1) {
@@ -1338,8 +1336,7 @@ Tuple VdmStdLib::EvalStdLibVDMUtil (const TYPE_AS_Name & fnname, const SEQ<TYPE_
     }
     return mk_(Bool(true), sem_nil);
   }
-  else if (func == L"val2seq_of_char")
-  {
+  else if (func == L"val2seq_of_char") {
     // val2seq_of_char[@T] : @T +> seq of char
     // val2seq_of_char(x) ==
     if (arg_lv.Length() == 1) {
@@ -1348,8 +1345,7 @@ Tuple VdmStdLib::EvalStdLibVDMUtil (const TYPE_AS_Name & fnname, const SEQ<TYPE_
     }
     return mk_(Bool(false), Nil());
   }
-  else if (func == L"seq_of_char2val")
-  {
+  else if (func == L"seq_of_char2val") {
     // seq_of_char2val[@p]:seq1 of char -> bool * [@p]
     // seq_of_char2val(s) ==
     if (arg_lv.Length() == 1) {
@@ -1357,13 +1353,11 @@ Tuple VdmStdLib::EvalStdLibVDMUtil (const TYPE_AS_Name & fnname, const SEQ<TYPE_
       if (g.IsSequence()) {
         wstring str (Sequence(g).GetString());
 
-// 20130430 -->
         SEQ<TYPE_SEM_BlkEnv> te (theStackMachine().TopEnvL());
         theStackMachine().PopEnvL ();
         SEQ<TYPE_SEM_BlkEnv> te2 (theStackMachine().TopEnvL());
         te2.ImpPrepend(te[1]);
         theStackMachine().PushEnvL(te2);
-// <-- 20130430
         wostringstream d;
         Tuple pe_res (TBDEBUG::ParseAndFullyEvalExprs(PTAUX::mk_ToolCommand (str), d, SEQ<Char>(L"seq_of_char2val")));
 
@@ -1412,7 +1406,6 @@ Tuple VdmStdLib::EvalStdLibVDMUtil (const TYPE_AS_Name & fnname, const SEQ<TYPE_
           envpushed = true;
         }
 
-//        TBDEBUG::DisplayCurrentState(vdm_iplog);
         Tuple res (theStackMachine().EvalUninterruptedCmd(pres.GetSequence(2)[1],
                                                           TYPE_STKM_SubProgram(),
                                                           TYPE_STKM_SubProgram(),
@@ -1572,8 +1565,9 @@ Tuple VdmStdLib::EvalStdLibVDMUtil (const TYPE_AS_Name & fnname, const SEQ<TYPE_
   else if (func == L"uname") {
     return mk_(Bool(true), EvalState::M42Sem (TBUTILS::GetOSName(), NULL));
   }
-  else
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 #ifdef VDMPP

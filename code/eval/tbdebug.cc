@@ -56,14 +56,11 @@
 // ==> bool * [SEM`VAL]
 Tuple TBDEBUG::ParseAndFullyEvalExprs (const Record & expr, wostream & wos, const SEQ<Char> & debugString)
 {
-// 20091211 -->
-  if (TOOLS::isBatchMode())
-  {
-    if (!Settings.PostCheck())
+  if (TOOLS::isBatchMode()) {
+    if (!Settings.PostCheck()) {
       theStackMachine().SetUsesOldName(false);
+    }
   }
-// <--20091211
-
   // Initialize the Stop button functionallity
   // For VDM++ this also includes invokation statement
   Tuple res (TOOLS::ParseExprs (expr, wos)); // bool * seq os AS`Expr
@@ -73,42 +70,39 @@ Tuple TBDEBUG::ParseAndFullyEvalExprs (const Record & expr, wostream & wos, cons
 
   const SEQ<TYPE_AS_Expr> & exprs (res.GetSequence(2));
 
-  if (!TOOLS::IsInScript())
-    ToolMediator::Errs()->vdm_ClearAll(); // 20090129
-
+  if (!TOOLS::IsInScript()) {
+    ToolMediator::Errs()->vdm_ClearAll();
+  }
   // evaluate the arguments
   Sequence res_lv;
 
   res.SetField (1, Bool(true));
 
-  if (Settings.Profile())
+  if (Settings.Profile()) {
     theStackMachine().ClearProfile();
-
+  }
   size_t len_exprs = exprs.Length();
-  for (size_t idx = 1; idx <= len_exprs; idx++)
-  {
+  for (size_t idx = 1; idx <= len_exprs; idx++) {
     try {
 
       uint64_t pre = TBUTILS::GetCurTimeMil();
 
       Tuple res (theStackMachine().EvalPrint(exprs[idx], debugString)); // STKM`EvaluationState * [SEM`VAL]
 
-      if (Settings.ElapsedTime())
-      {
+      if (Settings.ElapsedTime()) {
         uint64_t post = TBUTILS::GetCurTimeMil();
         wos << L"elapsed time: " << (post - pre) << L" micro seconds" << endl;
       }
 
       Tuple aie (AfterInterpreterEval(res.GetRecord(1), res.GetField(2), wos)); // bool * [SEM`VAL]
 
-      if (aie.GetBoolValue(1))
-      {
+      if (aie.GetBoolValue(1)) {
         res_lv.ImpAppend (aie.GetField(2));
-        if ((!cliOpt) || (!cliOpt->IsInternalTest()))
+        if ((!cliOpt) || (!cliOpt->IsInternalTest())) {
           VAL2X::PrintSemValue (aie.GetField(2), wos);
+        }
       }
-      else
-      {
+      else {
         res.SetField(1, Bool(false));
       }
       UpdateGui(!aie.GetBool(1), wos);
@@ -129,12 +123,12 @@ Tuple TBDEBUG::ParseAndFullyEvalExprs (const Record & expr, wostream & wos, cons
       res.SetField (1, Bool (false));
     }
   }
-  if (Settings.Profile())
+  if (Settings.Profile()) {
     theStackMachine().PrintProfile();
-
-  if (!TOOLS::IsInScript())
-    ToolMediator::Errs()->vdm_AllDone(); // 20090128
-
+  }
+  if (!TOOLS::IsInScript()) {
+    ToolMediator::Errs()->vdm_AllDone();
+  }
   res.SetField (2, res_lv);
   wos << flush;
   return res;
@@ -155,36 +149,34 @@ Tuple TBDEBUG::ParseAndStartEvalExprs (const Record & expr, wostream & wos, cons
 
   const SEQ<TYPE_AS_Expr> & exprs (res.GetSequence(2));
 
-  if (!TOOLS::IsInScript())
-    ToolMediator::Errs()->vdm_ClearAll(); // 20090129
-
+  if (!TOOLS::IsInScript()) {
+    ToolMediator::Errs()->vdm_ClearAll();
+  }
   Sequence res_lv;
   Quote evst;
 
-  if (Settings.Profile())
+  if (Settings.Profile()) {
     theStackMachine().ClearProfile();
-
+  }
   size_t len_exprs = exprs.Length();
-  for (size_t idx = 1; idx <= len_exprs; idx++)
-  {
+  for (size_t idx = 1; idx <= len_exprs; idx++) {
     try {
       uint64_t pre = TBUTILS::GetCurTimeMil();
 
       Tuple debugres (theStackMachine().EvalDebug(exprs[idx], debugString));
 
-      if (Settings.ElapsedTime())
-      {
+      if (Settings.ElapsedTime()) {
         uint64_t post = TBUTILS::GetCurTimeMil();
         wos << L"elapsed time: " << (post - pre) << L" micro seconds" << endl;
       }
 
       const TYPE_STKM_EvaluationState & evalstate (debugres.GetRecord(1));
       Tuple aie (AfterInterpreterEval(evalstate, debugres.GetRecord(2), wos));
-      if (aie.GetBoolValue(1))
-      {
+      if (aie.GetBoolValue(1)) {
         res_lv.ImpAppend (aie.GetField(2));
-        if ((!cliOpt) || (!cliOpt->IsInternalTest()))
+        if ((!cliOpt) || (!cliOpt->IsInternalTest())) {
           VAL2X::PrintSemValue (aie.GetField(2), wos);
+        }
       }
       evst = EvaluationStateToEvalState(evalstate);
       UpdateGui(!aie.GetBool(1), wos);
@@ -205,12 +197,12 @@ Tuple TBDEBUG::ParseAndStartEvalExprs (const Record & expr, wostream & wos, cons
     }
   }
 
-  if (Settings.Profile())
+  if (Settings.Profile()) {
     theStackMachine().PrintProfile();
-
-  if (!TOOLS::IsInScript())
-    ToolMediator::Errs()->vdm_AllDone(); // 20090128
-
+  }
+  if (!TOOLS::IsInScript()) {
+    ToolMediator::Errs()->vdm_AllDone();
+  }
   wos << flush;
   return mk_(evst, res_lv);
 }
@@ -225,23 +217,22 @@ void TBDEBUG::BreakIP()
 // ==> EvalState * [seq of token]
 Tuple TBDEBUG::DebugStep (TBDEBUG::StepType t, wostream & wos)
 {
-  if (!TOOLS::IsInScript())
+  if (!TOOLS::IsInScript()) {
     ToolMediator::Errs()->vdm_ClearAll();
-
+  }
   Tuple res;
   try {
     Tuple debugres (DebugStep(t)); // bool * [STKM`EvaluationState] * [SEM`VAL]
 
-    if (debugres.GetBoolValue(1))
-    {
+    if (debugres.GetBoolValue(1)) {
       const TYPE_STKM_EvaluationState & evalstate (debugres.GetRecord (2));
       Tuple aie (AfterInterpreterEval (evalstate, debugres.GetField (3), wos));
       Sequence res_lv;
-      if (aie.GetBoolValue(1))
-      {
+      if (aie.GetBoolValue(1)) {
         res_lv.ImpAppend (aie.GetField(2));
-        if ((!cliOpt) || (!cliOpt->IsInternalTest()))
+        if ((!cliOpt) || (!cliOpt->IsInternalTest())) {
           VAL2X::PrintSemValue (aie.GetField(2), wos);
+        }
       }
       res = mk_(EvaluationStateToEvalState(evalstate), res_lv);
       UpdateGui(!aie.GetBool(1), wos);
@@ -251,8 +242,7 @@ Tuple TBDEBUG::DebugStep (TBDEBUG::StepType t, wostream & wos)
       res = mk_(Quote (L"ERROR"), Nil());
     }
   }
-  catch (TB_Exception &e)
-  {
+  catch (TB_Exception &e) {
     switch (e.GetExType()) {
       case ERR_IP: {
         ProcessRuntimeError(wos);
@@ -267,9 +257,9 @@ Tuple TBDEBUG::DebugStep (TBDEBUG::StepType t, wostream & wos)
     res = mk_(Quote (L"ERROR"), Nil());
 
   }
-  if (!TOOLS::IsInScript())
+  if (!TOOLS::IsInScript()) {
     ToolMediator::Errs()->vdm_AllDone();
-
+  }
   wos << flush;
   return res;
 }
@@ -670,7 +660,6 @@ Tuple TBDEBUG::GetFnOpPosInfo(const wstring & fnopnm, wostream & wos)
 #ifdef VDMPP
 void TBDEBUG::EvalCreate(const string & args, wostream & wos)
 {
-  // 20060310
   if (!TOOLS::get_dobjs_init()) {
     wos << L"Warning: specification has changed since last 'init' of user defined objects" << endl << flush;
     TOOLS::set_dobjs_init(true);  // warning is now printed
@@ -1755,24 +1744,19 @@ void TBDEBUG::DisplayThreads(wostream & wos)
 
     wos << L", Status : ";
     PrintSCHDStatus(status, wos);
-// 20090417 -->
-    if (status.Is(TAG_TYPE_SCHDTP_Blocked))
-    {
+    if (status.Is(TAG_TYPE_SCHDTP_Blocked)) {
       EvaluatorStatusCt threadstate (threadinfo.get_stackeval());
       EvaluatorStatus & es = threadstate.get_shared_ref();
       Stack stack (es.call_stack);
       bool first = true;
       bool cont = true;
-      while (!stack.IsEmpty() && cont)
-      {
+      while (!stack.IsEmpty() && cont) {
         TYPE_STKM_CallStackItem csi (stack.Pop());
         switch(csi.get_type().GetValue()) {
           case CallStackItemType::CS_FNOP: {
             const Generic & nmOrDesc (csi.GetField(pos_STKM_CallStackItem_nmOrDesc));
-            if (nmOrDesc.IsRecord() && Record(nmOrDesc).Is(TAG_TYPE_AS_Name))
-            {
-              if (first)
-              {
+            if (nmOrDesc.IsRecord() && Record(nmOrDesc).Is(TAG_TYPE_AS_Name)) {
+              if (first) {
                 first = false;
                 wos << endl;
                 wos << L"          ";
@@ -1784,10 +1768,8 @@ void TBDEBUG::DisplayThreads(wostream & wos)
           }
           case CallStackItemType::CS_INTERNAL: {
             const Generic & nmOrDesc (csi.GetField(pos_STKM_CallStackItem_nmOrDesc));
-            if (nmOrDesc.IsSequence() && (nmOrDesc == SEQ<Char>(L"Thread Start")))
-            {
-              if (first)
-              {
+            if (nmOrDesc.IsSequence() && (nmOrDesc == SEQ<Char>(L"Thread Start"))) {
+              if (first) {
                 first = false;
                 wos << endl;
                 wos << L"          ";
@@ -1805,7 +1787,6 @@ void TBDEBUG::DisplayThreads(wostream & wos)
         }
       }
     }
-// <-- 20090417
     wos << endl;
   }
   wos << flush;
@@ -1897,12 +1878,10 @@ void TBDEBUG::DisplayObjectReferenceInfo (const wstring & args, wostream & wos)
 
 void TBDEBUG::EvalObjects (const wstring & args, wostream & wos)
 {
-  if (args.find(L"-a") != string::npos)
-  {
+  if (args.find(L"-a") != string::npos) {
     wstring params[20];
     int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-    if( nos == 1 )
-    {
+    if( nos == 1 ) {
       wos << L"Objects (all): " << endl << flush;
       theState().ShowAllObjects(wos);
       return;
@@ -1940,8 +1919,7 @@ void TBDEBUG::DisplayState(const wstring & args, wostream & wos)
     return;
   }
 
-  if (args.find(L"-f") != string::npos)
-  {
+  if (args.find(L"-f") != string::npos) {
     wos << L"spec_init=" << ( !TOOLS::get_ast_is_new() ? L"true" : L"false" ) << endl;
     wos << L"dobjs_init=" << ( TOOLS::get_dobjs_init() ? L"true" : L"false" ) << endl;
     wos << ToolMediator::Repos()->vdm_Files() << endl;
@@ -1949,8 +1927,7 @@ void TBDEBUG::DisplayState(const wstring & args, wostream & wos)
     return;
   }
 
-  if (args.find(L"-d") != string::npos)
-  {
+  if (args.find(L"-d") != string::npos) {
     wstring params[20];
     int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
     Sequence arg_s;
@@ -1980,8 +1957,7 @@ void TBDEBUG::DisplayState(const wstring & args, wostream & wos)
   }
 
   // static objects
-  if (args.find(L"-s") != string::npos)
-  {
+  if (args.find(L"-s") != string::npos) {
     theState().DisplayStaticObjects(wos);
     return;
   }
@@ -1989,8 +1965,7 @@ void TBDEBUG::DisplayState(const wstring & args, wostream & wos)
 
 Tuple TBDEBUG::GetOperations(const TYPE_AS_Name & clsnm)
 {
-  if(theState().IsAClass(clsnm))
-  {
+  if(theState().IsAClass(clsnm)) {
     try
     {
       return mk_(Bool(true), theState().GetAllOps(clsnm).Dom());
@@ -2129,14 +2104,14 @@ void TBDEBUG::ExecuteUpDownCommand(const wstring & cmd, const wstring & args, wo
     wos << L"Construct is fully evaluated" << endl << flush;
     return;
   }
-  else
-  {
+  else {
     bool ok;
-    if (cmd == L"up")
+    if (cmd == L"up") {
       ok = theStackMachine().EvalStackUp();
-    else // "down"
+    }
+    else  { // "down"
       ok = theStackMachine().EvalStackDown();
-
+    }
     UpdateGui(ok, wos);
   }
 }
@@ -2155,12 +2130,12 @@ void TBDEBUG::UpdateBreakpoints()
 void TBDEBUG::User_Init(const TYPE_AS_Document & ast, bool ast_is_new, wostream & wos)
 {
   try {
-    if (!TOOLS::isTracesMode())
-    {
+    if (!TOOLS::isTracesMode()) {
       wos << L"Initializing specification ... " << flush;
 
-      if (TOOLS::isBatchMode())
+      if (TOOLS::isBatchMode()) {
         wos << endl << flush;
+      }
     }
 
     // Reinitialize Random Number Generator for nondeterministic statements.
@@ -2175,8 +2150,7 @@ void TBDEBUG::User_Init(const TYPE_AS_Document & ast, bool ast_is_new, wostream 
     theStackMachine().User_Init(ast, ast_is_new);
     UpdateBreakpoints();
 
-    if (!TOOLS::isTracesMode())
-    {
+    if (!TOOLS::isTracesMode()) {
       wos << L"done" << endl << flush;
     }
   }
@@ -2250,16 +2224,13 @@ Tuple TBDEBUG::AfterInterpreterEval(const TYPE_STKM_EvaluationState & evalstate,
       break; 
     }
     case TAG_TYPE_STKM_Success: {
-      if (theStackMachine().IsRuntimeErrorException(val))
-      {
+      if (theStackMachine().IsRuntimeErrorException(val)) {
         ProcessRuntimeError(wos);
         return mk_(Bool(false), Nil());
       }
-      if (val.Is(TAG_TYPE_SEM_EXIT))
-      {
+      if (val.Is(TAG_TYPE_SEM_EXIT)) {
         TYPE_CI_ContextId cid (theStackMachine().GetLastExitCid());
-        if (cid != NilContextId)
-        {
+        if (cid != NilContextId) {
           Tuple t (GetCI().GetFileLineColPos(cid));
           wos << L"Exception raised at " << t.GetSequence(1) << L" l." << t.GetInt(2) << L" c." << t.GetInt(3) << endl;
         }
@@ -2327,8 +2298,7 @@ void TBDEBUG::EvalBackTrace (BacktraceType bt_type, wostream & wos)
   Sequence bt_l;
 
   size_t depth = backtrace.Length();
-  for (size_t i = 1 ; i <= depth; i++)
-  {
+  for (size_t i = 1 ; i <= depth; i++) {
     TYPE_STKM_CallStackItem callinfo (backtrace.GetNth(i));
     const Generic & nm (callinfo.GetField(pos_STKM_CallStackItem_nmOrDesc)); // AS`Name | seq of char
     const Generic & arg_l (callinfo.GetField(pos_STKM_CallStackItem_arg_ul)); // [seq of SEM`VAL]
@@ -2339,18 +2309,20 @@ void TBDEBUG::EvalBackTrace (BacktraceType bt_type, wostream & wos)
       case BT_PRINT: {
         /* Frame number information added 930413. MIAN*/
         wos << L"#" << i << L": " << name;
-        if (!arg_l.IsNil())
-        {
+        if (!arg_l.IsNil()) {
           SEQ<TYPE_SEM_VAL> args_lv (arg_l);
           wos << L" ( ";
           size_t maxj = args_lv.Length ();
           for (size_t j = 1; j <= maxj; j++) {
-            if (j > 1)
+            if (j > 1) {
               wos << L", ";
-            if (Settings.PrintFormat())
+            }
+            if (Settings.PrintFormat()) {
               VAL2X::val2stream (Record(args_lv[j]), wos, 7 + (name.length()));
-            else
+            }
+            else {
               VAL2X::val2stream( Record(args_lv[j]), wos, -1);
+            }
           }
           wos << L" )";
         }
@@ -2367,8 +2339,9 @@ void TBDEBUG::EvalBackTrace (BacktraceType bt_type, wostream & wos)
     }
   }
 
-  if (bt_type == BT_UPDATE)
+  if (bt_type == BT_UPDATE) {
     ToolMediator::Interf()->vdm_CallBack (PTAUX::mk_BackTrace(bt_l));
+  }
 }
 
 wstring TBDEBUG::GetTraceArgs(int index)
@@ -2379,15 +2352,16 @@ wstring TBDEBUG::GetTraceArgs(int index)
 
   Tuple info (loc_bt_seq[index]);
 
-  if (info.GetField(2).IsNil())
+  if (info.GetField(2).IsNil()) {
     return wstring(L"No arguments");
-
+  }
   Sequence args_lv (info.GetSequence (2));
   size_t len_args_lv = args_lv.Length ();
   os_args << L"(";
   for (size_t j = 1; j <= len_args_lv; j++) {
-    if (j > 1)
+    if (j > 1) {
       os_args << L", ";
+    }
     VAL2X::val2stream(args_lv[j], os_args, (Settings.PrintFormat() ? 0 : -1));
   }
   os_args << L")";
@@ -2403,24 +2377,11 @@ void TBDEBUG::Execute_popd(wostream & wos)
 
 Quote TBDEBUG::EvaluationStateToEvalState(const TYPE_STKM_EvaluationState & evalstate)
 {
-  switch (evalstate.GetTag())
-  {
-    case TAG_TYPE_STKM_Breakpoint: {
-      return Quote (L"BREAKPOINT");
-      break;
-    }
-    case TAG_TYPE_STKM_Interrupt: {
-      return Quote (L"INTERRUPT");
-      break;
-    }
-    case TAG_TYPE_STKM_Success: {
-      return Quote (L"SUCCESS");
-      break;
-    }
-    default: {
-      return Quote (L"ERROR");
-      break;
-    }
+  switch (evalstate.GetTag()) {
+    case TAG_TYPE_STKM_Breakpoint: { return Quote (L"BREAKPOINT"); break; }
+    case TAG_TYPE_STKM_Interrupt:  { return Quote (L"INTERRUPT"); break; }
+    case TAG_TYPE_STKM_Success:    { return Quote (L"SUCCESS"); break; }
+    default:                       { return Quote (L"ERROR"); break; }
   }
 }
 
@@ -2491,8 +2452,7 @@ void TBDEBUG::EvalSaveObjects (const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
     wos << L"save requires file name" << endl << flush;
     return;
   }
@@ -2523,8 +2483,7 @@ void TBDEBUG::EvalLoadObjects (const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
     wos << L"load requires file name" << endl << flush;
     return;
   }
@@ -2556,30 +2515,28 @@ void TBDEBUG::EvalPrintObjects(const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
     wos << L"PrintObjects requires oid(s)" << endl << flush;
     return;
   }
 
   Set oid_s;
-  for (int j = 0; j < nos; j++ )
-  {
+  for (int j = 0; j < nos; j++ ) {
     Int objid (atoi(TBWSTR::wstring2string(params[j]).c_str()));
-    if( objid != Int(0) )
-    {
+    if( objid != Int(0) ) {
       oid_s.Insert(objid);
     }
   }
   Map m (theState().CreateRefMap(oid_s));
   Set dom_m (m.Dom());
   Generic i;
-  for (bool bb = m.First(i); bb; bb = m.Next(i))
-  {
-    if (m[i].IsNil())
+  for (bool bb = m.First(i); bb; bb = m.Next(i)) {
+    if (m[i].IsNil()) {
       wos << L"Object(" << i << L") is't found" << endl << flush;
-    else
+    }
+    else {
       VAL2X::PrintSemValue(m[i], wos);
+    }
   }
 }
 
@@ -2597,20 +2554,18 @@ void TBDEBUG::DisplayThreadInfo(const wstring & args, wostream & wos)
 {
   wstring params[20];
   int nos = STR_split (args, params, 20, STR_RXwhite_and_comma);
-  if( 0 == nos )
-  {
+  if( 0 == nos ) {
     wos << L"threadinfo requires thread id" << endl << flush;
     return;
   }
-
   int id = 0;
-  if (TBUTILS::ExpectNumericArg((params[0]).c_str(), id))
-  {
+  if (TBUTILS::ExpectNumericArg((params[0]).c_str(), id)) {
     TYPE_SCHDTP_ThreadId tid (id);
     theScheduler().ShowThreadInfo(tid);
   }
-  else
+  else {
     vdm_err << L"threadifo: expected integer value." << endl;
+  }
 }
 #endif // VDMPP
 
@@ -2726,8 +2681,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   if(SavedSetting_RTEE) Settings.RTErrExceptionOn();
   theStackMachine().SetUsesOldName(SavedSetting_UsesOldName);
 
-  if (m.IsEmpty())
-  {
+  if (m.IsEmpty()) {
     wos << L"Testcase isn't defined." << endl;
     return;
   }
@@ -2739,8 +2693,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
   AS2ASCII conv;
   Set dom_m (m.Dom());
   Generic nm;
-  for (bool bb = dom_m.First(nm); bb; bb = dom_m.Next(nm))
-  {
+  for (bool bb = dom_m.First(nm); bb; bb = dom_m.Next(nm)) {
     Set e_l_s (m[nm]);
     int number_of_cases = e_l_s.Card();
     conv.Expr2ASCII(nm, wos);
@@ -2752,8 +2705,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
     Map errs;
     int num = 1;
     Generic e_l;
-    for (bool cc = e_l_s.First(e_l); cc; cc = e_l_s.Next(e_l))
-    {
+    for (bool cc = e_l_s.First(e_l); cc; cc = e_l_s.Next(e_l)) {
       conv.Expr2ASCII(nm, wos);
       wos << L" Case: " << num << L" / " << number_of_cases << endl;
       num++;
@@ -2762,13 +2714,14 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
       SEQ<TYPE_AS_Expr> expr_l (e_l);
       bool exists = false;
       size_t len_expr_l = expr_l.Length();
-      for (size_t idx = 1; idx <= len_expr_l; idx++)
-      {
-        if (idx > 1)
+      for (size_t idx = 1; idx <= len_expr_l; idx++) {
+        if (idx > 1) {
           wostr << L"; ";
+        }
         conv.Expr2ASCII(INT2Q::h2gAS(expr_l[idx]), wostr);
-        if (!dom_errs.IsEmpty())
+        if (!dom_errs.IsEmpty()) {
           exists = dom_errs.InSet(SEQ<Char>(wostr.str())) | exists;
+        }
       }
       wos << wostr.str() << endl;
 
@@ -2800,8 +2753,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
 #endif // VDMPP
         theStackMachine().PushEmptyEnv();
 
-        for (size_t idx = 1; (idx <= len_expr_l) && forall; idx++)
-        {
+        for (size_t idx = 1; (idx <= len_expr_l) && forall; idx++) {
           wostringstream wostr;
           conv.Expr2ASCII(INT2Q::h2gAS(expr_l[idx]), wostr);
           wos << wostr.str() << L": ";
@@ -2818,8 +2770,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
             const TYPE_SEM_VAL & val (res.GetRecord(2));
             wostringstream wostr;
 #ifdef VDMSL
-            if (clmodnm == defmod)
-            {
+            if (clmodnm == defmod) {
               switch (val.GetTag()) {
                 case TAG_TYPE_SEM_CONT: {
                   VAL2X::PrintSemValue(val, wostr);
@@ -2828,8 +2779,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
                 case TAG_TYPE_SEM_EXIT: {
                   wostr << L"exit";
                   const Generic & value (val.GetField(pos_SEM_EXIT_v));
-                  if (!value.IsNil())
-                  {
+                  if (!value.IsNil()) {
                     wostr << L" ";
                     conv.Expr2ASCII(SemRec::VAL2Expr(value), wostr);
                   }
@@ -2842,8 +2792,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
                 }
               }
             }
-            else
-            {
+            else {
               VAL2X::PrintSemValue(val, wostr);
             }
 #endif // VDMSL
@@ -2852,8 +2801,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
 #endif // VDMPP
             wos << wostr.str();
           }
-          else
-          {
+          else {
             forall = false;
           }
         }
@@ -2864,8 +2812,7 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
 #ifdef VDMPP
         theStackMachine().PopCurObj();
 #endif // VDMPP
-        if (forall)
-        {
+        if (forall) {
           count_ok++;
           wos << L"<OK>" << endl;
         }

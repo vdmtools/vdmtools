@@ -54,17 +54,17 @@ private:
   {
     vdm_ToolMediator * med = ObjGet_vdm_ToolMediator (vdm_mediator);
     Generic file = med->vdm_GetFileName (fileid);
-    if (file.IsRecord () && Record(file).Is(vdm_FileName))
+    if (file.IsRecord () && Record(file).Is(vdm_FileName)) {
       return ExtractFileName(file);
-    else
+    }
+    else {
       return L"";
+    }
   }
   
 public:
 
-  AsciiErrors ()
-    : run_time (true) 
-  {
+  AsciiErrors () : run_time (true) {
     wchar_t *_emacs; 
     emacs = ((_emacs=getenv(L"EMACS")) && strcmp(_emacs, "t")==0);
   }
@@ -78,15 +78,16 @@ public:
     wstring file = GetFileName (fileid);
 
     if (file != L"") {
-      if (emacs)
+      if (emacs) {
 	vdm_err << L"\032\032" << file << ":" << lineid << ":1\n";
-
-      if (run_time)
-	vdm_err << L"In " << file << ", l." << lineid
-		<< L", c." << columnid << "\n";
+      }
+      if (run_time) {
+	vdm_err << L"In " << file << ", l." << lineid << L", c." << columnid << "\n";
+      }
     }
-    else if (fileid != 0)
+    else if (fileid != 0) {
       vdm_err << L"c." << columnid << " in the command-line\n";
+    }
   }
 
   virtual void vdm_ShowMsg() {
@@ -101,17 +102,17 @@ public:
   virtual void vdm_MakeStatus(const Int & NoErr, const Int & NoWarn)
   {
     wstring msg;
-    if (NoErr > 0)
+    if (NoErr > 0) {
       msg = L"Errors: " + NoErr.ascii();
-
-    if (NoWarn > 0)
-    {
-      if (NoErr > 0) msg += L" ";
+    }
+    if (NoWarn > 0) {
+      if (NoErr > 0) {
+        msg += L" ";
+      }
       msg += L"Warnings: " + NoWarn.ascii();
     }
     
-    if ((NoErr > 0) || (NoWarn > 0))
-    {
+    if ((NoErr > 0) || (NoWarn > 0)) {
       vdm_err << msg << endl << flush;
     }
   }

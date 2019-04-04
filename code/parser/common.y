@@ -836,9 +836,9 @@ Module : LEX_MODULE Identifier TexBreak Interface Definitions LEX_END Identifier
           $$->SetField (pos_AS_Module_intf, *$4);
           $$->SetField (pos_AS_Module_defs, *$5);
 
-          if (! (*$2 == *$7))
+          if (! (*$2 == *$7)) {
             MYPARSER::Report (L"Identifiers in module heading must be identical." , @2, @7);
-
+          }
           delete $2;
           delete $3;
           delete $4;
@@ -859,9 +859,9 @@ DLModule
           $$->SetField (pos_AS_DLModule_intf,    *$3);
           $$->SetField (pos_AS_DLModule_useslib, *$4);
 
-          if (! (*$2 == *$6))
+          if (! (*$2 == *$6)) {
             MYPARSER::Report (L"Identifiers in dlmodule heading must be identical.", @2, @6);
-
+          }
           delete $2;
           delete $3;
           delete $4;
@@ -878,9 +878,9 @@ UseSignature
 
           wstring error, res;
           Backslashed::convert_backslashed(TBWSTR::string2wstring(*$2), res, error);
-          if (error.length() > 0)
+          if (error.length() > 0) {
             MYPARSER::Report(error.c_str(), @1);
-
+          }
           rec.SetField (pos_AS_TextLit_val, Sequence(res));
           $$ = new Generic(rec);
         }
@@ -946,10 +946,12 @@ DLListOfExportModuleSignatures
         | DLListOfExportModuleSignatures ValueSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_DLExportSig_val));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Value is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_DLExportSig_val, tmp_m);
 
           delete $2;
@@ -957,10 +959,12 @@ DLListOfExportModuleSignatures
         | DLListOfExportModuleSignatures FunctionSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_DLExportSig_fns));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Function is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_DLExportSig_fns, tmp_m);
 
           delete $2;
@@ -968,10 +972,12 @@ DLListOfExportModuleSignatures
         | DLListOfExportModuleSignatures OperationSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_DLExportSig_ops));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Operation is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_DLExportSig_ops, tmp_m);
 
           delete $2;
@@ -990,11 +996,12 @@ DLListOfImportDefinitions
         }
         | DLListOfImportDefinitions ',' LEX_FROM Identifier DLListOfImportModuleSignatures
         {
-          if ($1->DomExists (*$4))
+          if ($1->DomExists (*$4)) {
             MYPARSER::Report (L"That module is already being imported from.", @4);
-          else
+          }
+          else {
             $1->Insert (*$4, *$5); // was $5->GetField(1)
-
+          }
           delete $4;
           delete $5;
         }
@@ -1003,29 +1010,28 @@ DLListOfImportDefinitions
 DLListOfImportModuleSignatures
         : DLImportTypeSignatures
         { $$ = new TYPE_AS_DLImportSig();
-//          MYPARSER::SetPos2(*$$, @1, @1);
 
           Map ITS;
           Generic TI;
-          for(bool bb = $1->First (TI); bb; bb = $1->Next (TI))
-          {
+          for(bool bb = $1->First (TI); bb; bb = $1->Next (TI)) {
             Generic nmtd (((Tuple) (TI)).GetField (1));
-
             Record nm;
             Generic tp;
-            if (nmtd.IsRecord ())
-            { nm = nmtd;
+            if (nmtd.IsRecord ()) {
+              nm = nmtd;
               tp = Nil();
             }
-            else /* must be TypeDef */
-            { nm = ((Tuple) (nmtd)).GetField (1);
+            else { /* must be TypeDef */
+              nm = ((Tuple) (nmtd)).GetField (1);
               tp = ((Tuple) (nmtd)).GetField (2);
             }
 
-            if (ITS.DomExists (nm))
+            if (ITS.DomExists (nm)) {
               MYPARSER::Report (L"This type name is already imported.", @1); // @1 TBC/etn
-            else
+            }
+            else {
               ITS.Insert (nm, tp);
+            }
           }
           $$->SetField (pos_AS_DLImportSig_tps, ITS);
           delete $1;
@@ -1034,33 +1040,35 @@ DLListOfImportModuleSignatures
         {
           Map ITS;
           Generic TI;
-          for(bool bb = $2->First (TI); bb; bb = $2->Next (TI))
-          {  Generic nmtd (((Tuple) (TI)).GetField (1));
-
+          for(bool bb = $2->First (TI); bb; bb = $2->Next (TI)) {
+            Generic nmtd (((Tuple) (TI)).GetField (1));
             Record nm;
             Generic tp;
 
-            if (nmtd.IsRecord ())
-            { nm = nmtd;
+            if (nmtd.IsRecord ()) {
+              nm = nmtd;
               tp = Nil();
             }
-            else /* must be TypeDef */
-            { nm = ((Tuple) (nmtd)).GetField (1);
+            else { /* must be TypeDef */
+              nm = ((Tuple) (nmtd)).GetField (1);
               tp = ((Tuple) (nmtd)).GetField (2);
             }
 
-            if (ITS.DomExists (nm))
+            if (ITS.DomExists (nm)) {
               MYPARSER::Report (L"This type name is already imported.", @2);
-            else
+            }
+            else {
               ITS.Insert (nm, tp);
+            }
           }
           Map tmp_tp ($1->GetMap (pos_AS_DLImportSig_tps));
 
-          if (MYPARSER::DomOverlap (tmp_tp, ITS))
+          if (MYPARSER::DomOverlap (tmp_tp, ITS)) {
             MYPARSER::Report (L"Type is imported twice", @2);
-          else
+          }
+          else {
             tmp_tp.ImpOverride (ITS);
-
+          }
           $1->SetField (pos_AS_DLImportSig_tps, tmp_tp);
           delete $2;
           $$ = $1;
@@ -1151,11 +1159,12 @@ ListOfImportDefinitions
         }
         | ListOfImportDefinitions ',' LEX_FROM Identifier ImportModuleSignature
         {
-          if ($1->DomExists (*$4))
+          if ($1->DomExists (*$4)) {
             MYPARSER::Report (L"That module is already being imported from.", @4);
-          else
+          }
+          else {
             $1->Insert (*$4, *$5);
-
+          }
           delete $4;
           delete $5;
         }
@@ -1178,33 +1187,35 @@ ListOfImportModuleSignatures
 
           Map ITS, REN;
           Generic TI;
-          for(bool bb = $1->First (TI); bb; bb = $1->Next (TI))
-          { Generic nmtd (((Tuple) (TI)).GetField (1));
+          for(bool bb = $1->First (TI); bb; bb = $1->Next (TI)) {
+            Generic nmtd (((Tuple) (TI)).GetField (1));
             Generic ren (((Tuple) (TI)).GetField (2));
 
             Record nm;
             Generic tp;
-            if (nmtd.IsRecord ())
-            { nm = nmtd;
+            if (nmtd.IsRecord ()) {
+              nm = nmtd;
               tp = Nil();
             }
-            else /* must be TypeDef */
-            { nm = ((Tuple) (nmtd)).GetField (1);
+            else { /* must be TypeDef */
+              nm = ((Tuple) (nmtd)).GetField (1);
               tp = ((Tuple) (nmtd)).GetField (2);
             }
 
-            if (ITS.DomExists (nm))
+            if (ITS.DomExists (nm)) {
               MYPARSER::Report (L"This type name is already imported.", @1); // TBF
-            else
+            }
+            else {
               ITS.Insert (nm, tp);
-
-            if (! ren.IsNil ())
-            { Record renamed (ren);
-
-              if (REN.DomExists (renamed))
+            }
+            if (! ren.IsNil ()) {
+              Record renamed (ren);
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two types renamed to the same.", @1);
-              else
+              }
+              else {
                 REN.Insert (renamed, nm);
+              }
             }
           }
 
@@ -1222,22 +1233,25 @@ ListOfImportModuleSignatures
 
            Map IVS, REN;
            Generic VI;
-           for(bool bb = $1->First (VI); bb; bb = $1->Next (VI))
-           { Record name (((Tuple) (VI)).GetField (1));
+           for(bool bb = $1->First (VI); bb; bb = $1->Next (VI)) {
+             Record name (((Tuple) (VI)).GetField (1));
              Generic typ (((Tuple) (VI)).GetField (2));
              Generic ren (((Tuple) (VI)).GetField (3));
 
-             if (IVS.DomExists (name))
+             if (IVS.DomExists (name)) {
                MYPARSER::Report (L"This value name is already imported.", @1);
-             else
+             }
+             else {
                IVS.Insert (name, typ);
-
-             if (! ren.IsNil ())
-             { Record renamed (ren);
-               if (REN.DomExists (renamed))
+             }
+             if (! ren.IsNil ()) {
+               Record renamed (ren);
+               if (REN.DomExists (renamed)) {
                  MYPARSER::Report (L"Two values renamed to the same.", @1);
-               else
+               }
+               else {
                  REN.Insert (renamed, name);
+               }
              }
            }
 
@@ -1255,22 +1269,25 @@ ListOfImportModuleSignatures
 
           Map IFS, REN;
           Generic FI;
-          for(bool bb = $1->First (FI); bb; bb = $1->Next (FI))
-          { Record name (((Tuple) (FI)).GetField (1));
+          for(bool bb = $1->First (FI); bb; bb = $1->Next (FI)) {
+            Record name (((Tuple) (FI)).GetField (1));
             Generic typ (((Tuple) (FI)).GetField (2));
             Generic ren (((Tuple) (FI)).GetField (3));
 
-            if (IFS.DomExists (name))
+            if (IFS.DomExists (name)) {
               MYPARSER::Report (L"This function name is already imported.", @1);
-            else
+            }
+            else {
               IFS.Insert (name, typ);
-
-            if (! ren.IsNil ())
-            { Record renamed (ren);
-              if (REN.DomExists (renamed))
+            }
+            if (! ren.IsNil ()) {
+              Record renamed (ren);
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two functions renamed to the same.", @1);
-              else
+              }
+              else {
                 REN.Insert (renamed, name);
+              }
             }
           }
 
@@ -1288,22 +1305,25 @@ ListOfImportModuleSignatures
 
           Map IOS, REN;
           Generic OI;
-          for(bool bb = $1->First (OI); bb; bb = $1->Next (OI))
-          { Record name (((Tuple) (OI)).GetField (1));
+          for(bool bb = $1->First (OI); bb; bb = $1->Next (OI)) {
+            Record name (((Tuple) (OI)).GetField (1));
             Generic typ (((Tuple) (OI)).GetField (2));
             Generic ren (((Tuple) (OI)).GetField (3));
 
-            if (IOS.DomExists (name))
+            if (IOS.DomExists (name)) {
               MYPARSER::Report (L"This operation name is already imported.", @1);
-            else
+            }
+            else {
               IOS.Insert (name, typ);
-
-            if (! ren.IsNil ())
-            { Record renamed (ren);
-              if (REN.DomExists (renamed))
+            }
+            if (! ren.IsNil ()) {
+              Record renamed (ren);
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two operations renamed to the same.", @1);
-              else
+              }
+              else {
                 REN.Insert (renamed, name);
+              }
             }
           }
 
@@ -1319,49 +1339,54 @@ ListOfImportModuleSignatures
         {
           Map ITS, REN;
           Generic TI;
-          for(bool bb = $2->First (TI); bb; bb = $2->Next (TI))
-          { Generic nmtd (((Tuple) (TI)).GetField (1));
+          for(bool bb = $2->First (TI); bb; bb = $2->Next (TI)) {
+            Generic nmtd (((Tuple) (TI)).GetField (1));
             Generic ren (((Tuple) (TI)).GetField (2));
 
             Record nm;
             Generic tp;
 
-            if (nmtd.IsRecord ())
-            { nm = nmtd;
+            if (nmtd.IsRecord ()) {
+              nm = nmtd;
               tp = Nil();
             }
-            else /* must be TypeDef */
-            { nm = ((Tuple) (nmtd)).GetField (1);
+            else { /* must be TypeDef */
+              nm = ((Tuple) (nmtd)).GetField (1);
               tp = ((Tuple) (nmtd)).GetField (2);
             }
 
-            if (ITS.DomExists (nm))
+            if (ITS.DomExists (nm)) {
               MYPARSER::Report (L"This type name is already imported.", @2);
-            else
+            }
+            else {
               ITS.Insert (nm, tp);
-
-            if (! ren.IsNil ())
-            { Record renamed (ren);
-              if (REN.DomExists (renamed))
+            }
+            if (! ren.IsNil ()) {
+              Record renamed (ren);
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two types renamed to the same.", @2);
-              else
+              }
+              else {
                 REN.Insert (renamed, nm);
+              }
             }
           }
 
           Map tmp_tp ($1->GetMap (pos_AS_ImportSig_tps));
           Map tmp_ren ($1->GetMap (pos_AS_ImportSig_ren));
 
-          if (MYPARSER::DomOverlap (tmp_tp, ITS))
+          if (MYPARSER::DomOverlap (tmp_tp, ITS)) {
             MYPARSER::Report (L"Type is imported twice", @2);
-          else
+          }
+          else {
             tmp_tp.ImpOverride (ITS);
-
-          if (MYPARSER::DomOverlap (tmp_ren, REN))
+          }
+          if (MYPARSER::DomOverlap (tmp_ren, REN)) {
             MYPARSER::Report (L"More imports are renamed to the same.", @2);
-          else
+          }
+          else {
             tmp_ren.ImpOverride (REN);
-
+          }
           $1->SetField (pos_AS_ImportSig_tps, tmp_tp);
           $1->SetField (pos_AS_ImportSig_ren, tmp_ren);
 
@@ -1371,38 +1396,43 @@ ListOfImportModuleSignatures
         {
           Map IVS, REN;
           Generic VI;
-          for(bool bb = $2->First (VI); bb; bb = $2->Next (VI))
-          { Record name (((Tuple) (VI)).GetField (1));
+          for(bool bb = $2->First (VI); bb; bb = $2->Next (VI)) {
+            Record name (((Tuple) (VI)).GetField (1));
             Generic typ (((Tuple) (VI)).GetField (2));
             Generic ren (((Tuple) (VI)).GetField (3));
 
-            if (IVS.DomExists (name))
+            if (IVS.DomExists (name)) {
               MYPARSER::Report (L"This value name is already imported.", @2);
-            else
+            }
+            else {
               IVS.Insert (name, typ);
-
-            if (! ren.IsNil ())
-            { Record renamed (ren);
-              if (REN.DomExists (renamed))
+            }
+            if (! ren.IsNil ()) {
+              Record renamed (ren);
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two values renamed to the same.", @2);
-              else
+              }
+              else {
                 REN.Insert (renamed, name);
+              }
             }
           }
 
           Map tmp_val ($1->GetMap (pos_AS_ImportSig_val));
           Map tmp_ren ($1->GetMap (pos_AS_ImportSig_ren));
 
-          if (MYPARSER::DomOverlap (tmp_val, IVS))
+          if (MYPARSER::DomOverlap (tmp_val, IVS)) {
             MYPARSER::Report (L"Value is imported twice", @2);
-          else
+          }
+          else {
             tmp_val.ImpOverride (IVS);
-
-          if (MYPARSER::DomOverlap (tmp_ren, REN))
+          }
+          if (MYPARSER::DomOverlap (tmp_ren, REN)) {
             MYPARSER::Report (L"More imports are renamed to the same.", @2);
-          else
+          }
+          else {
             tmp_ren.ImpOverride (REN);
-
+          }
           $1->SetField (pos_AS_ImportSig_val, tmp_val);
           $1->SetField (pos_AS_ImportSig_ren, tmp_ren);
 
@@ -1412,38 +1442,43 @@ ListOfImportModuleSignatures
         {
           Map IFS, REN;
           Generic FI;
-          for(bool bb = $2->First (FI); bb; bb = $2->Next (FI))
-          { Record name (((Tuple) (FI)).GetField (1));
+          for(bool bb = $2->First (FI); bb; bb = $2->Next (FI)) {
+            Record name (((Tuple) (FI)).GetField (1));
             Generic typ (((Tuple) (FI)).GetField (2));
             Generic ren (((Tuple) (FI)).GetField (3));
 
-            if (IFS.DomExists (name))
+            if (IFS.DomExists (name)) {
               MYPARSER::Report (L"This function name is already imported.", @2);
-            else
+            }
+            else {
               IFS.Insert (name, typ);
-
-            if (! ren.IsNil ())
-            { Record renamed (ren);
-              if (REN.DomExists (renamed))
+            }
+            if (! ren.IsNil ()) {
+              Record renamed (ren);
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two functions renamed to the same.", @2);
-              else
+              }
+              else {
                 REN.Insert (renamed, name);
+              }
             }
           }
 
           Map tmp_fns ($1->GetMap (pos_AS_ImportSig_fns));
           Map tmp_ren ($1->GetMap (pos_AS_ImportSig_ren));
 
-          if (MYPARSER::DomOverlap (tmp_fns, IFS))
+          if (MYPARSER::DomOverlap (tmp_fns, IFS)) {
             MYPARSER::Report (L"Function is imported twice", @2);
-          else
+          }
+          else {
             tmp_fns.ImpOverride (IFS);
-
-          if (MYPARSER::DomOverlap (tmp_ren, REN))
+          }
+          if (MYPARSER::DomOverlap (tmp_ren, REN)) {
             MYPARSER::Report (L"More imports are renamed to the same.", @2);
-          else
+          }
+          else {
             tmp_ren.ImpOverride (REN);
-
+          }
           $1->SetField (pos_AS_ImportSig_fns, tmp_fns);
           $1->SetField (pos_AS_ImportSig_ren, tmp_ren);
 
@@ -1453,41 +1488,46 @@ ListOfImportModuleSignatures
         {
           Map IOS, REN;
           Generic OI;
-          for(bool bb = $2->First (OI); bb; bb = $2->Next (OI))
-          { Tuple t (OI);
+          for(bool bb = $2->First (OI); bb; bb = $2->Next (OI)) {
+            Tuple t (OI);
             const TYPE_AS_Name & name (t.GetRecord (1));
             const Generic & typ (t.GetField (2));
             const Generic & ren (t.GetField (3));
 
-            if (IOS.DomExists (name))
+            if (IOS.DomExists (name)) {
               MYPARSER::Report (L"This operation name is already imported.", @2);
-            else
+            }
+            else {
               IOS.Insert (name, typ);
-
-            if (! ren.IsNil ())
-            { TYPE_AS_Name renamed (ren);
+            }
+            if (! ren.IsNil ()) {
+              TYPE_AS_Name renamed (ren);
               //renamed.SetField (1, Record (ren).GetField (1));
 
-              if (REN.DomExists (renamed))
+              if (REN.DomExists (renamed)) {
                 MYPARSER::Report (L"Two operations renamed to the same.", @2);
-              else
+              }
+              else {
                 REN.Insert (renamed, name);
+              }
             }
           }
 
           Map tmp_ops ($1->GetMap (pos_AS_ImportSig_ops));
           Map tmp_ren ($1->GetMap (pos_AS_ImportSig_ren));
 
-          if (MYPARSER::DomOverlap (tmp_ops, IOS))
+          if (MYPARSER::DomOverlap (tmp_ops, IOS)) {
             MYPARSER::Report (L"Operation is imported twice", @2);
-          else
+          }
+          else {
             tmp_ops.ImpOverride (IOS);
-
-          if (MYPARSER::DomOverlap (tmp_ren, REN))
+          }
+          if (MYPARSER::DomOverlap (tmp_ren, REN)) {
             MYPARSER::Report (L"More imports are renamed to the same.", @2);
-          else
+          }
+          else {
             tmp_ren.ImpOverride (REN);
-
+          }
           $1->SetField (pos_AS_ImportSig_ops, tmp_ops);
           $1->SetField (pos_AS_ImportSig_ren, tmp_ren);
 
@@ -1764,10 +1804,12 @@ ListOfExportModuleSignatures
         | ListOfExportModuleSignatures ExportTypeSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_ExportSig_tps));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Type is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_ExportSig_tps, tmp_m);
 
           delete $2;
@@ -1775,10 +1817,12 @@ ListOfExportModuleSignatures
         | ListOfExportModuleSignatures ValueSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_ExportSig_val));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Value is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_ExportSig_val, tmp_m);
 
           delete $2;
@@ -1786,10 +1830,12 @@ ListOfExportModuleSignatures
         | ListOfExportModuleSignatures ExportFunctionSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_ExportSig_fns));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Function is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_ExportSig_fns, tmp_m);
 
           delete $2;
@@ -1797,10 +1843,12 @@ ListOfExportModuleSignatures
         | ListOfExportModuleSignatures OperationSignatures
         {
           Map tmp_m ($1->GetMap (pos_AS_ExportSig_ops));
-          if (MYPARSER::DomOverlap (tmp_m, *$2))
+          if (MYPARSER::DomOverlap (tmp_m, *$2)) {
             MYPARSER::Report (L"Operation is declared twice", @2);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$2);
+          }
           $1->SetField (pos_AS_ExportSig_ops, tmp_m);
 
           delete $2;
@@ -1821,11 +1869,13 @@ ListOfTypeExports
           delete $1;
         }
         | ListOfTypeExports ';' TypeExport
-        { if ($1->DomExists ($3->GetField (1)))
+        {
+          if ($1->DomExists ($3->GetField (1))) {
             MYPARSER::Report (L"Type already exported.", @3);
-          else
+          }
+          else {
             $1->Insert ($3->GetField (1), $3->GetField (2));
-
+          }
           delete $3;
         }
         ;
@@ -1856,22 +1906,26 @@ ListOfValueDescriptions
         {
           $$ = new Map;
           Generic name;
-          for(bool bb = $1->First (name); bb; bb = $1->Next (name))
-          { if ($$->DomExists (name))
+          for(bool bb = $1->First (name); bb; bb = $1->Next (name)) {
+            if ($$->DomExists (name)) {
               MYPARSER::Report (L"Value already described", @2);
-            else
+            }
+            else {
               $$->Insert (name, *$3);
+            }
           }
           delete $1;
           delete $3;
         }
         | ListOfValueDescriptions ';' NameList ':' Type
         { Generic name;
-          for(bool bb = $3->First (name); bb; bb = $3->Next (name))
-          { if ($1->DomExists (name))
+          for(bool bb = $3->First (name); bb; bb = $3->Next (name)) {
+            if ($1->DomExists (name)) {
               MYPARSER::Report (L"Value already described", @4);
-            else
+            }
+            else {
               $1->Insert (name, *$5);
+            }
           }
           delete $3;
           delete $5;
@@ -1894,22 +1948,26 @@ ListOfFunctionSignatures
         : NameList ':' FunctionType
         { $$ = new Map;
           Generic name;
-          for(bool bb = $1->First (name); bb; bb = $1->Next (name))
-          { if ($$->DomExists (name))
+          for(bool bb = $1->First (name); bb; bb = $1->Next (name)) {
+            if ($$->DomExists (name)) {
               MYPARSER::Report (L"Function already described", @2);
-            else
+            }
+            else {
               $$->Insert (name, *$3);
+            }
           }
           delete $1;
           delete $3;
         }
         | ListOfFunctionSignatures ';' NameList ':' FunctionType
         { Generic name;
-          for(bool bb = $3->First (name); bb; bb = $3->Next (name))
-          { if ($1->DomExists (name))
+          for(bool bb = $3->First (name); bb; bb = $3->Next (name)) {
+            if ($1->DomExists (name)) {
               MYPARSER::Report (L"Function already described", @4);
-            else
+            }
+            else {
               $1->Insert (name, *$5);
+            }
           }
           delete $3;
           delete $5;
@@ -1920,11 +1978,13 @@ ListOfFunctionExports
         : NameList TypeVarList ':' FunctionType
         { $$ = new Map;
           Generic name;
-          for(bool bb = $1->First (name); bb; bb = $1->Next (name))
-          { if ($$->DomExists (name))
+          for(bool bb = $1->First (name); bb; bb = $1->Next (name)) {
+            if ($$->DomExists (name)) {
               MYPARSER::Report (L"Function already described", @2);
-            else
+            }
+            else {
               $$->Insert (name, mk_(*$2,*$4));
+            }
           }
           delete $1;
           delete $2;
@@ -1932,11 +1992,13 @@ ListOfFunctionExports
         }
         | ListOfFunctionExports ';' NameList TypeVarList ':' FunctionType
         { Generic name;
-          for(bool bb = $3->First (name); bb; bb = $3->Next (name))
-          { if ($1->DomExists (name))
+          for(bool bb = $3->First (name); bb; bb = $3->Next (name)) {
+            if ($1->DomExists (name)) {
               MYPARSER::Report (L"Function already described", @4);
-            else
+            }
+            else {
               $1->Insert (name, mk_(*$4,*$6));
+            }
           }
           delete $3;
           delete $4;
@@ -1954,22 +2016,26 @@ ListOfOperationSignatures
         : NameList ':' OperationType
         { $$ = new Map;
           Generic name;
-          for(bool bb = $1->First (name); bb; bb = $1->Next (name))
-          { if ($$->DomExists (name))
+          for(bool bb = $1->First (name); bb; bb = $1->Next (name)) {
+            if ($$->DomExists (name)) {
               MYPARSER::Report (L"Operation already described", @2);
-            else
+            }
+            else {
               $$->Insert (name, *$3);
+            }
           }
           delete $1;
           delete $3;
         }
         | ListOfOperationSignatures ';' NameList ':' OperationType
         { Generic name;
-          for(bool bb = $3->First (name); bb; bb = $3->Next (name))
-          { if ($1->DomExists (name))
+          for(bool bb = $3->First (name); bb; bb = $3->Next (name)) {
+            if ($1->DomExists (name)) {
               MYPARSER::Report (L"Operation already described", @4);
-            else
+            }
+            else {
               $1->Insert (name, *$5);
+            }
           }
           delete $3;
           delete $5;
@@ -2057,15 +2123,16 @@ DefinitionBlockAlternatives
           TYPE_AS_Definitions * defs = $<Definitions_p>0;
           Map tmp_m (defs->GetMap(pos_AS_Definitions_typem));
 
-          if (MYPARSER::DomOverlap (tmp_m, *$1))
+          if (MYPARSER::DomOverlap (tmp_m, *$1)) {
             MYPARSER::Report (L"Type is defined twice", @1);
-
+          }
           Tuple noid (MYPARSER::NameOverlapInDefs(*defs, *$1, wstring(L"type"), wstring(L"types")));
-          if (noid.GetBool(1))
+          if (noid.GetBool(1)) {
             MYPARSER::Report(noid.GetSequence(2).GetString().c_str(), @1);
-          else
+          }
+          else {
             tmp_m.ImpOverride (*$1);
-
+          }
           defs->SetField (pos_AS_Definitions_typem, tmp_m);
 
           delete $1;
@@ -2076,13 +2143,15 @@ DefinitionBlockAlternatives
           TYPE_AS_Definitions * defs = $<Definitions_p>0;
 
           Tuple noisd (MYPARSER::NameOverlapInStateDef(*defs, *$1));
-          if (noisd.GetBool(1))
+          if (noisd.GetBool(1)) {
             MYPARSER::Report(noisd.GetSequence(2).GetString().c_str(), @1);
-          else if (defs->GetField(pos_AS_Definitions_State).IsNil ())
+          }
+          else if (defs->GetField(pos_AS_Definitions_State).IsNil ()) {
             defs->SetField (pos_AS_Definitions_State, *$1);
-          else
+          }
+          else {
             MYPARSER::Report (L"Only one state definition allowed.", @1);
-
+          }
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_StateDef, Nil ());
 
           delete $1;
@@ -2102,19 +2171,21 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_StateDef, Nil ());
           TYPE_AS_Definitions * defs = $<Definitions_p>0;
           Map tmp_m (defs->GetMap(pos_AS_Definitions_fnm));
 
-          if (MYPARSER::DomOverlap (tmp_m, *$1))
+          if (MYPARSER::DomOverlap (tmp_m, *$1)) {
             MYPARSER::Report (L"Function is defined twice", @1);
-
+          }
           Tuple noid (MYPARSER::NameOverlapInDefs(*defs, *$1, wstring(L"function"), wstring(L"functions")));
-          if (noid.GetBool(1))
+          if (noid.GetBool(1)) {
             MYPARSER::Report(noid.GetSequence(2).GetString().c_str());
-          else
+          }
+          else {
 #ifdef VDMSL
             tmp_m.ImpOverride (*$1);
 #endif // VDMSL
 #ifdef VDMPP
             tmp_m = MYPARSER::MergeOpFnDef(tmp_m, *$1);
 #endif // VDMPP
+          }
 
           defs->SetField (pos_AS_Definitions_fnm, tmp_m);
 
@@ -2125,19 +2196,21 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_StateDef, Nil ());
           TYPE_AS_Definitions * defs = $<Definitions_p>0;
           Map tmp_m (defs->GetMap(pos_AS_Definitions_opm));
 
-          if (MYPARSER::DomOverlap (tmp_m, *$1))
+          if (MYPARSER::DomOverlap (tmp_m, *$1)) {
             MYPARSER::Report (L"Operation is defined twice", @1);
-
+          }
           Tuple noid (MYPARSER::NameOverlapInDefs(*defs, *$1, wstring(L"operation"), wstring(L"operations")));
-          if (noid.GetBool(1))
+          if (noid.GetBool(1)) {
             MYPARSER::Report(noid.GetSequence(2).GetString().c_str(), @1);
-          else
+          }
+          else {
 #ifdef VDMSL
             tmp_m.ImpOverride (*$1);
 #endif // VDMSL
 #ifdef VDMPP
             tmp_m = MYPARSER::MergeOpFnDef(tmp_m, *$1);
 #endif // VDMPP
+          }
 
           defs->SetField (pos_AS_Definitions_opm, tmp_m);
 
@@ -2151,9 +2224,9 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_StateDef, Nil ());
           tmp_s.ImpConc (*$1);
 
           Tuple ivdo (MYPARSER::InstVarDomOverlap (tmp_s));
-          if (ivdo.GetBool(1))
+          if (ivdo.GetBool(1)) {
             MYPARSER::Report (ivdo.GetSequence(2).GetString().c_str(), @1);
-
+          }
           defs->SetField (pos_AS_Definitions_instvars, tmp_s);
 
           delete $1;
@@ -2178,9 +2251,9 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_StateDef, Nil ());
         | ThreadDefinition
         {
           TYPE_AS_Definitions * defs = $<Definitions_p>0;
-          if (!defs->GetField(pos_AS_Definitions_threaddef).IsNil())
+          if (!defs->GetField(pos_AS_Definitions_threaddef).IsNil()) {
             MYPARSER::Report (L"Thread already defined", @1);
-
+          }
           defs->SetField (pos_AS_Definitions_threaddef, *$1);
           delete $1;
         }
@@ -2189,9 +2262,9 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_StateDef, Nil ());
         {
           TYPE_AS_Definitions * defs = $<Definitions_p>0;
           Map tmp_m (defs->GetMap(pos_AS_Definitions_tracem));
-          if (!tmp_m.IsCompatible(*$1))
+          if (!tmp_m.IsCompatible(*$1)) {
             MYPARSER::Report (L"Traces already defined", @1);
-
+          }
           tmp_m.ImpOverride (*$1);
           defs->SetField (pos_AS_Definitions_tracem, tmp_m);
           delete $1;
@@ -2254,11 +2327,12 @@ Class   : LEX_CLASS Name OptInheritanceClause TexBreak OptDefinitionBlock LEX_EN
           VDMPARSER::mangledFnNames.Clear();
           VDMPARSER::currentClassMod = Nil();
 
-          if (!($2->GetField (pos_AS_Name_ids) == $7->GetField (pos_AS_Name_ids)))
+          if (!($2->GetField (pos_AS_Name_ids) == $7->GetField (pos_AS_Name_ids))) {
             MYPARSER::Report (L"Class identifiers must be identical.", @2, @7);
-          if ($3->Elems().InSet(*$2))
+          }
+          if ($3->Elems().InSet(*$2)) {
             MYPARSER::Report (L"Class name must not be in super classes.", @2);
-
+          }
           $$->SetField (pos_AS_Class_nm,       *$2);
           $$->SetField (pos_AS_Class_sys,      Bool(false));
           $$->SetField (pos_AS_Class_supercls, *$3);
@@ -2280,9 +2354,9 @@ Class   : LEX_CLASS Name OptInheritanceClause TexBreak OptDefinitionBlock LEX_EN
           VDMPARSER::mangledFnNames.Clear();
           VDMPARSER::currentClassMod = Nil();
 
-          if (!($2->GetField (pos_AS_Name_ids) == $9->GetField (pos_AS_Name_ids)))
+          if (!($2->GetField (pos_AS_Name_ids) == $9->GetField (pos_AS_Name_ids))) {
              MYPARSER::Report (L"Class identifiers must be identical.", @2,@9);
-
+          }
           $$->SetField (pos_AS_Class_nm,       *$2);
           $$->SetField (pos_AS_Class_sys,      Bool(false));
           $$->SetField (pos_AS_Class_supercls, *$3);
@@ -2305,9 +2379,9 @@ Class   : LEX_CLASS Name OptInheritanceClause TexBreak OptDefinitionBlock LEX_EN
           VDMPARSER::mangledFnNames.Clear();
           VDMPARSER::currentClassMod = Nil();
 
-          if (!($2->GetField (pos_AS_Name_ids) == $7->GetField (pos_AS_Name_ids)))
+          if (!($2->GetField (pos_AS_Name_ids) == $7->GetField (pos_AS_Name_ids))) {
              MYPARSER::Report (L"System identifiers must be identical.", @2,@7);
-
+          }
           $$->SetField (pos_AS_Class_nm,       *$2);
           $$->SetField (pos_AS_Class_sys,      Bool(true));
           $$->SetField (pos_AS_Class_supercls, *$3);
@@ -3012,8 +3086,9 @@ Type    : BracketedType
 AllType
         : '?'
         {
-          if (!Settings.IsAllTypeAllowed(VDMPARSER::currentClassMod))
+          if (!Settings.IsAllTypeAllowed(VDMPARSER::currentClassMod)) {
             MYPARSER::Report (L"Unknown type : ?", @1);
+          }
           $$ = new TYPE_AS_AllType();
           MYPARSER::SetPos2(*$$, @1, @1);
         }
@@ -3159,10 +3234,12 @@ UnionType
           $$ = new TYPE_AS_UnionType();
           MYPARSER::SetPos3(*$$, @1, @2, @3);
           SEQ<TYPE_AS_Type> Types ;
-          if ($1->Is (TAG_TYPE_AS_UnionType))
+          if ($1->Is (TAG_TYPE_AS_UnionType)) {
             Types.ImpConc($1->GetSequence (pos_AS_UnionType_tps));
-          else
+          }
+          else {
             Types.ImpAppend (*$1);
+          }
           Types.ImpAppend (*$3);
           $$->SetField(pos_AS_UnionType_tps, Types);
           delete $1;
@@ -3187,10 +3264,12 @@ ProductType
           MYPARSER::SetPos3(*$$, @1, @2, @3);
 
           SEQ<TYPE_AS_Type> Types;
-          if ($1->Is (TAG_TYPE_AS_ProductType))
+          if ($1->Is (TAG_TYPE_AS_ProductType)) {
             Types.ImpConc($1->GetSequence (pos_AS_ProductType_tps));
-          else
+          }
+          else {
             Types.ImpAppend (*$1);
+          }
           Types.ImpAppend (*$3);
 
           $$->SetField (pos_AS_ProductType_tps, Types);
@@ -3334,10 +3413,12 @@ TFunctionType
         {
           $$ = new TYPE_AS_TotalFnType();
           MYPARSER::SetPos3(*$$, @1, @2, @3);
-          if ($1->Is(TAG_TYPE_AS_ProductType))
+          if ($1->Is(TAG_TYPE_AS_ProductType)) {
             $$->SetField (pos_AS_TotalFnType_fndom, $1->GetSequence(pos_AS_ProductType_tps));
-          else
+          }
+          else {
             $$->SetField (pos_AS_TotalFnType_fndom, mk_sequence(*$1));
+          }
           $$->SetField (pos_AS_TotalFnType_fnrng, *$3);
           delete $1;
           delete $3;
@@ -3357,10 +3438,12 @@ PFunctionType
         {
           $$ = new TYPE_AS_PartialFnType();
           MYPARSER::SetPos3(*$$, @1, @2, @3);
-          if ($1->Is(TAG_TYPE_AS_ProductType))
+          if ($1->Is(TAG_TYPE_AS_ProductType)) {
             $$->SetField (pos_AS_PartialFnType_fndom, $1->GetSequence(pos_AS_ProductType_tps));
-          else
+          }
+          else {
             $$->SetField (pos_AS_PartialFnType_fndom, mk_sequence(*$1));
+          }
           $$->SetField (pos_AS_PartialFnType_fnrng, *$3);
           delete $1;
           delete $3;
@@ -3705,8 +3788,9 @@ ExplFunctionDefinition
 
           TYPE_AS_ExplFnDef efd;
           MYPARSER::SetPos2(efd, @1, @9);
-          if (! (*$1 == *$5))
+          if (! (*$1 == *$5)) {
             MYPARSER::Report (L"Identifiers in function heading should be identical.", @1, @5);
+          }
           efd.SetField (pos_AS_ExplFnDef_nm,      *$1);
           efd.SetField (pos_AS_ExplFnDef_tpparms, *$2);
           efd.SetField (pos_AS_ExplFnDef_tp,      *$4);
@@ -3941,12 +4025,14 @@ ImplOperationDefinition
           iod.SetField (pos_AS_ImplOpDef_access,   Int (DEFAULT_AS));
           iod.SetField (pos_AS_ImplOpDef_stat,     Bool(false));
 #if VDMPP
-          if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod))
+          if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod)) {
             iod.SetField (pos_AS_ImplOpDef_constr, Bool(true));
+          }
           else
 #endif //VDMPP
+          {
             iod.SetField (pos_AS_ImplOpDef_constr, Bool(false));
-
+          }
           $$->SetField (1, *$1);
           $$->SetField (2, iod);
 
@@ -3964,9 +4050,9 @@ ExplOperationDefinition
         : FnOpNameIdentifier ':' OperationType FnOpNameIdentifier Parameters LEX_IS_DEFINED_AS OpBody Externals PrePost Exceptions
         { $$ = new Tuple (2); // (AS`Name * AS`ExplOpDef)
 
-          if (! (*$1 == *$4))
+          if (! (*$1 == *$4)) {
             MYPARSER::Report (L"Identifiers in operation heading should be identical.", @1, @4);
-
+          }
           TYPE_AS_ExplOpDef eod;
           MYPARSER::SetPos2(eod, @1, @8);
           eod.SetField (pos_AS_ExplOpDef_nm,     *$1);
@@ -3982,12 +4068,14 @@ ExplOperationDefinition
           eod.SetField (pos_AS_ExplOpDef_access, Int (DEFAULT_AS));
           eod.SetField (pos_AS_ExplOpDef_stat,   Bool(false));
 #if VDMPP
-          if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod))
+          if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod)) {
             eod.SetField (pos_AS_ExplOpDef_constr, Bool(true));
+          }
           else
 #endif //VDMPP
+          {
             eod.SetField (pos_AS_ExplOpDef_constr, Bool(false));
-
+          }
           $$->SetField (1, *$1);
           $$->SetField (2, eod);
 
@@ -4021,12 +4109,14 @@ ExtExplOperationDefinition
           eeod.SetField (pos_AS_ExtExplOpDef_access,   Int (DEFAULT_AS));
           eeod.SetField (pos_AS_ExtExplOpDef_stat,     Bool(false));
 #if VDMPP
-          if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod))
+          if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod)) {
             eeod.SetField (pos_AS_ExtExplOpDef_constr, Bool(true));
+          }
           else
 #endif //VDMPP
+          {
             eeod.SetField (pos_AS_ExtExplOpDef_constr, Bool(false));
-
+          }
           $$->SetField (1, *$1);
           $$->SetField (2, eeod);
 
@@ -4052,11 +4142,12 @@ OpRngType
 OpDomType
         : Type
         { $$ = new Sequence ();
-          if ($1->Is(TAG_TYPE_AS_ProductType))
+          if ($1->Is(TAG_TYPE_AS_ProductType)) {
             $$->ImpConc($1->GetSequence(pos_AS_ProductType_tps));
-          else
+          }
+          else {
             $$->ImpAppend (*$1);
-
+          }
           delete $1;
         }
         | '(' ')'
@@ -4474,8 +4565,7 @@ CallOrAssignStatementList
 CallStatement
         : StateDesignator
         {
-          if($1->Is(TAG_TYPE_AS_MapOrSeqRef))
-          {
+          if($1->Is(TAG_TYPE_AS_MapOrSeqRef)) {
             // Revert State Designator to a call statement.
             $$ = new TYPE_AS_CallStmt();
             MYPARSER::SetPos2(*$$, @1, @1);
@@ -4520,8 +4610,9 @@ CallStatement
             }
             delete $1;
           }
-          else
+          else {
             MYPARSER::Report(L"Call Statement must have an argument list", @1);
+          }
         }
         ;
 
@@ -4548,8 +4639,9 @@ AtomicAssignStatement
         : LEX_ATOMIC '(' CallOrAssignStatementList OptSemi ')'
         { $$ = new TYPE_AS_AtomicAssignStmt ();
           MYPARSER::SetPos2 (*$$, @1, @5);
-          if ($3->Length() < 2)
+          if ($3->Length() < 2) {
             MYPARSER::Report (L"Atomic Assign statement must have at least two statements.", @3);
+          }
           $$->SetField (pos_AS_AtomicAssignStmt_atm, *$3);
           delete $3;
         }
@@ -5124,8 +5216,7 @@ StateDesignator
         {
           TYPE_AS_StateDesignator sd (*$1); //
           size_t len_sd = $2->Length();
-          for(size_t idx = 1; idx <= len_sd; idx++)
-          {
+          for(size_t idx = 1; idx <= len_sd; idx++) {
             TYPE_AS_StateDesignator frmose ($2->Index(idx));
             switch (frmose.GetTag()) {
               case TAG_TYPE_AS_FieldRef: {
@@ -5153,8 +5244,7 @@ StateDesignator
         {
           Generic sd = *$1;
           size_t len_sd = $2->Length();
-          for(size_t idx = 1; idx <= len_sd; idx++)
-          {
+          for(size_t idx = 1; idx <= len_sd; idx++) {
             TYPE_AS_StateDesignator frmose ($2->Index(idx));
             switch (frmose.GetTag()) {
               case TAG_TYPE_AS_FieldRef: {
@@ -5186,7 +5276,7 @@ NameOrNarrowRef
 #ifdef VDMPP
         | NewExpression
 #endif // VDMPP
-        | Name '[' TypeList ']'  // 20111012
+        | Name '[' TypeList ']'
         {
           $$ = new TYPE_AS_FctTypeInstExpr();
           MYPARSER::SetPos2(*$$, @1, @4);
@@ -5213,8 +5303,9 @@ FieldReference
 
           TYPE_AS_Ids id_l ($2->GetField (pos_AS_Name_ids));
 #ifdef VDMSL
-          if (id_l.Length () != 1)
+          if (id_l.Length () != 1) {
             MYPARSER::Report (L"Name references must be simple identifiers.", @3);
+          }
 #endif //VDMSL
           fr.SetField (pos_AS_FieldRef_sel, *$2);
           $3->ImpPrepend (fr);
@@ -5558,13 +5649,14 @@ ValueDefinition
         { $$ = new TYPE_AS_ExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @8);
 
-          if ($1->Is (TAG_TYPE_AS_PatternName))
-          { if (! ($1->GetField (pos_AS_PatternName_nm) == *$4))
+          if ($1->Is (TAG_TYPE_AS_PatternName)) {
+            if (! ($1->GetField (pos_AS_PatternName_nm) == *$4)) {
               MYPARSER::Report (L"Identifiers in function heading should be identical.",@1,@4);
+            }
             $$->SetField (pos_AS_ExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
           }
-          else
-          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+          else {
+            MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExplFnDef_nm, Record());
           }
 
@@ -5589,13 +5681,14 @@ ValueDefinition
         { $$ = new TYPE_AS_ExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @11);
 
-          if ($1->Is (TAG_TYPE_AS_PatternName))
-          { if (! ($1->GetField (pos_AS_PatternName_nm) == *$7))
+          if ($1->Is (TAG_TYPE_AS_PatternName)) {
+            if (! ($1->GetField (pos_AS_PatternName_nm) == *$7)) {
               MYPARSER::Report (L"Identifiers in function heading should be identical.",@1,@7);
+            }
             $$->SetField (pos_AS_ExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
           }
-          else
-          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+          else {
+            MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExplFnDef_nm, Record());
           }
 
@@ -5623,11 +5716,11 @@ LocalImplFunctionDefinition
         : Pattern TypeVarList ParameterTypes NonEmptyIdentifierTypePairList Pre Post
         { $$ = new TYPE_AS_ImplFnDef();
           MYPARSER::SetPos2(*$$, @1, @6);
-          if ($1->Is (TAG_TYPE_AS_PatternName))
-          { $$->SetField (pos_AS_ImplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
+          if ($1->Is (TAG_TYPE_AS_PatternName)) {
+            $$->SetField (pos_AS_ImplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
           }
-          else
-          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+          else {
+            MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ImplFnDef_nm, Record());
           }
 
@@ -5650,11 +5743,11 @@ LocalImplFunctionDefinition
         { $$ = new TYPE_AS_ExtExplFnDef();
           MYPARSER::SetPos2(*$$, @1, @7);
 
-          if ($1->Is (TAG_TYPE_AS_PatternName))
-          { $$->SetField (pos_AS_ExtExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
+          if ($1->Is (TAG_TYPE_AS_PatternName)) {
+            $$->SetField (pos_AS_ExtExplFnDef_nm, $1->GetField (pos_AS_PatternName_nm));
           }
-          else
-          { MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
+          else {
+            MYPARSER::Report (L"Local function identifiers must be simple identifiers.", @1);
             $$->SetField (pos_AS_ExtExplFnDef_nm, Record());
           }
 
@@ -6458,7 +6551,6 @@ BinaryExpression
           delete $1;
           delete $3;
         }
-// 20060105
 //#if VDMPP
 //        | Expression LEX_APPROX  Expression
 //        {
@@ -6834,10 +6926,12 @@ TupleConstructor
         {
           $$ = new TYPE_AS_TupleConstructorExpr();
           MYPARSER::SetPos2(*$$, @1, @4);
-          if ($3->Length() <= 1)
+          if ($3->Length() <= 1) {
             MYPARSER::Report (L"Tuples must have at least two elements.", @3);
-          else
+          }
+          else {
             $$->SetField (pos_AS_TupleConstructorExpr_fields, *$3);
+          }
           delete $3;
         }
         ;
@@ -7212,36 +7306,36 @@ Identifier
 KeywordIdentifier
         : LEX_START
         {
-          if (!Settings.GetJCGHackParser())
+          if (!Settings.GetJCGHackParser()) {
             MYPARSER::Report (L"'start' is vdm keyword.", @1);
-
+          }
           $$ = new TYPE_AS_Name();
           MYPARSER::SetPos2(*$$, @1, @1);
           $$->SetField (pos_AS_Name_ids, TYPE_AS_Ids().ImpAppend(ASTAUX::MkId(L"start")));
         }
         | LEX_SET
         {
-          if (!Settings.GetJCGHackParser())
+          if (!Settings.GetJCGHackParser()) {
             MYPARSER::Report (L"'set' is vdm keyword.", @1);
-
+          }
           $$ = new TYPE_AS_Name();
           MYPARSER::SetPos2(*$$, @1, @1);
           $$->SetField (pos_AS_Name_ids, TYPE_AS_Ids().ImpAppend(ASTAUX::MkId(L"set")));
         }
         | LEX_EXISTS
         {
-          if (!Settings.GetJCGHackParser())
+          if (!Settings.GetJCGHackParser()) {
             MYPARSER::Report (L"'exists' is vdm keyword.", @1);
-
+          }
           $$ = new TYPE_AS_Name();
           MYPARSER::SetPos2(*$$, @1, @1);
           $$->SetField (pos_AS_Name_ids, TYPE_AS_Ids().ImpAppend(ASTAUX::MkId(L"exists")));
         }
         | LEX_ERROR
         {
-          if (!Settings.GetJCGHackParser())
+          if (!Settings.GetJCGHackParser()) {
             MYPARSER::Report (L"'error' is vdm keyword.", @1);
-
+          }
           $$ = new TYPE_AS_Name();
           MYPARSER::SetPos2(*$$, @1, @1);
           $$->SetField (pos_AS_Name_ids, TYPE_AS_Ids().ImpAppend(ASTAUX::MkId(L"error")));
@@ -7288,20 +7382,19 @@ NumericLiteral
         : LEX_real_lit
         {
           Tuple t (TBUTILS::ConvRealLit ($1->c_str()));
-          if (t.GetBoolValue(1))
-          {
+          if (t.GetBoolValue(1)) {
             $$ = new TYPE_AS_RealLit();
             MYPARSER::SetPos2(*$$, @1, @1); // @?
             $$->SetField (pos_AS_RealLit_val, t.GetReal(2));
           }
-          else
+          else {
             MYPARSER::Report (L"NUM_INCONSISTENCY", @1);
+          }
         }
         | LEX_int_lit
         {
           Tuple t (TBUTILS::ConvRealLit ($1->c_str()));
-          if (t.GetBoolValue(1))
-          {
+          if (t.GetBoolValue(1)) {
             //$$ = new TYPE_AS_RealLit();
             //MYPARSER::SetPos2(*$$, @1, @1); // @?
             //$$->SetField (pos_AS_RealLit_val, t.GetReal(2));
@@ -7309,8 +7402,9 @@ NumericLiteral
             MYPARSER::SetPos2(*$$, @1, @1); // @?
             $$->SetField (pos_AS_NumLit_val, t.GetReal(2));
           }
-          else
+          else {
             MYPARSER::Report (L"NUM_INCONSISTENCY", @1);
+          }
         }
         ;
 
@@ -7320,12 +7414,10 @@ SymbolicLiteral
           $$ = new TYPE_AS_CharLit();
           MYPARSER::SetPos2(*$$, @1, @1); // @?
           wstring c (TBWSTR::string2wstring(*$1));
-          if ((c.size() == 1) && (c[0] == L'\\'))
-          {
+          if ((c.size() == 1) && (c[0] == L'\\')) {
             $$->SetField (pos_AS_CharLit_val, Char (c[0]));
           }
-          else
-          {
+          else {
             wstring error, res;
             Backslashed::convert_backslashed(TBWSTR::string2wstring(*$1), res, error);
             if (error.length() > 0) {
@@ -7364,9 +7456,9 @@ SymbolicLiteral
 
           wstring error, res;
           Backslashed::convert_backslashed(TBWSTR::string2wstring(*$1), res, error);
-          if (error.length() > 0)
+          if (error.length() > 0) {
             MYPARSER::Report(error.c_str(), @1);
-
+          }
           $$->SetField (pos_AS_TextLit_val, Sequence(res));
         }
         | NumericLiteral
@@ -7623,10 +7715,12 @@ TuplePattern
         {
           $$ = new TYPE_AS_TuplePattern();
           MYPARSER::SetPos2(*$$, @1, @4);
-          if ($3->Length() <= 1)
+          if ($3->Length() <= 1) {
             MYPARSER::Report (L"Tuples must have at least two elements.", @3);
-          else
+          }
+          else {
             $$->SetField (pos_AS_TuplePattern_fields, *$3);
+          }
           delete $3;
         }
         ;
@@ -7730,8 +7824,9 @@ TypeBind
         {
           $$ = new TYPE_AS_TypeBind();
           MYPARSER::SetPos2(*$$, @1, @3);
-          if ($1->Is(TAG_TYPE_AS_PatternName))
+          if ($1->Is(TAG_TYPE_AS_PatternName)) {
             $1->SetField(pos_AS_PatternName_tp, *$3);
+          }
           $$->SetField (pos_AS_TypeBind_pat, *$1);
           $$->SetField (pos_AS_TypeBind_tp,  *$3);
           delete $1;
@@ -7788,11 +7883,11 @@ MultipleTypeBind
           MYPARSER::SetPos3(*$$, @1, @2, @3);
           SEQ<TYPE_AS_Pattern> pat_l(*$1), n_pat_l;
           size_t len_pat_l = pat_l.Length();
-          for (size_t idx = 1; idx <= len_pat_l; idx++)
-          {
+          for (size_t idx = 1; idx <= len_pat_l; idx++) {
             TYPE_AS_Pattern p (pat_l[idx]);
-            if (p.Is(TAG_TYPE_AS_PatternName))
+            if (p.Is(TAG_TYPE_AS_PatternName)) {
               p.SetField(pos_AS_PatternName_tp, *$3);
+            }
             n_pat_l.ImpAppend(p);
           }
           $$->SetField (pos_AS_MultTypeBind_pat, n_pat_l);
@@ -7900,8 +7995,7 @@ static void yyerror(const char * ErrorMessage)
 
 TYPE_CI_ContextId MYPARSER::SetPos(YYLTYPE & yyltp_first, YYLTYPE & yyltp_middle, YYLTYPE & yyltp_last)
 {
-  if (yyltp_middle.pos.get_token_uast().GetValue() == -1)
-  {
+  if (yyltp_middle.pos.get_token_uast().GetValue() == -1) {
     return NilContextId;
   }
 
@@ -7912,29 +8006,29 @@ TYPE_CI_ContextId MYPARSER::SetPos(YYLTYPE & yyltp_first, YYLTYPE & yyltp_middle
     int ast = yyltp_middle.pos.get_token_uast();
     int end = yyltp_last.pos.get_token_uend();
 
-  if (st > end)
-  {
-    int new_st = end + 1;
-    int new_end = st - 1;
-    int new_ast = ast;
-    if (new_end < new_st)
-      new_end = new_st;
+    if (st > end) {
+      int new_st = end + 1;
+      int new_end = st - 1;
+      int new_ast = ast;
+      if (new_end < new_st) {
+        new_end = new_st;
+      }
+      if (ast == st) {
+        new_ast = new_st;
+      }
+      if (new_ast < new_st) {
+        new_ast = new_st;
+      }
+      else if(new_ast > new_end) {
+        new_ast = new_end;
+      }
+      TYPE_CI_TokenSpan ts;
+      ts.Init(Int(new_st), Int(new_ast), Int(new_end));
 
-    if (ast == st)
-      new_ast = new_st;
-    if (new_ast < new_st)
-      new_ast = new_st;
-    else if(new_ast > new_end)
-      new_ast = new_end;
+      MYPARSER::pars_context_info_p->SetPos(cid, ts);
 
-    TYPE_CI_TokenSpan ts;
-    ts.Init(Int(new_st), Int(new_ast), Int(new_end));
-
-    MYPARSER::pars_context_info_p->SetPos(cid, ts);
-
-    return TYPE_CI_ContextId(cid);
-  }
-//
+      return TYPE_CI_ContextId(cid);
+    }
     TYPE_CI_TokenSpan ts;
     ts.Init(Int(st), Int(ast), Int(end));
 
@@ -8028,14 +8122,14 @@ void MYPARSER::Report (const wchar_t * WhatIsWrong, YYLTYPE& pos, YYLTYPE&pos2)
 void MYPARSER::CheckNoDelimiter(YYLTYPE& pos)
 {
   TokenList * tl = SCANNER::GetTokenList();
-  if (tl != NULL)
-  {
+  if (tl != NULL) {
     int p = pos.pos.get_token_ust();
     const TokenInfo & ti1 = tl->Get(p);
     const TokenInfo & ti2 = tl->Get(p+1);
 
-    if ((ti1.get_abs_line_end() != ti2.get_abs_line_st()) || (ti1.get_col_end() != ti2.get_col_st()))
+    if ((ti1.get_abs_line_end() != ti2.get_abs_line_st()) || (ti1.get_col_end() != ti2.get_col_st())) {
       Report(L"no delimiter is allowed", pos);
+    }
   }
 }
 
@@ -8105,8 +8199,9 @@ TYPE_AS_Expr MYPARSER::StateDesignator2Expr(const TYPE_AS_StateDesignator & sd)
               sd.GetField(pos_AS_MapOrSeqRef_cid));
       return ae;
     }
-    default:
+    default: {
       return TYPE_AS_Expr();
+    }
   }
 }
 
@@ -8137,8 +8232,9 @@ Tuple MYPARSER::ProperSDInAsgnStmt(const TYPE_AS_StateDesignator & sd)
     case TAG_TYPE_AS_FieldRef: {
       const TYPE_AS_StateDesignator & var (sd.GetRecord(pos_AS_FieldRef_var));
 #ifdef VDMPP
-      if (var.Is(TAG_TYPE_AS_SelfExpr))
+      if (var.Is(TAG_TYPE_AS_SelfExpr)) {
         return mk_(Bool(true), Nil(), sd);
+      }
 #endif // VDMPP
       Tuple psdias (ProperSDInAsgnStmt(var));
       if (psdias.GetBoolValue(1)) {
@@ -8146,8 +8242,9 @@ Tuple MYPARSER::ProperSDInAsgnStmt(const TYPE_AS_StateDesignator & sd)
         newsd.SetField(pos_AS_FieldRef_var, psdias.GetRecord(3));
         return mk_(Bool(true), Nil(), newsd);
       }
-      else
+      else {
         return mk_(Bool(false), psdias.GetSequence(2), Nil());
+      }
     }
     case TAG_TYPE_AS_MapOrSeqRef: {
       Sequence arg (sd.GetSequence(pos_AS_MapOrSeqRef_arg));
@@ -8173,7 +8270,6 @@ Tuple MYPARSER::ProperSDInAsgnStmt(const TYPE_AS_StateDesignator & sd)
       }
     }
     case TAG_TYPE_AS_NarrowRef: {
-// 20151023 -->
       //Tuple psdias (ProperSDInAsgnStmt(sd.GetRecord(pos_AS_NarrowExpr_expr)));
 //      TYPE_AS_StateDesignator tsd (sd.GetRecord(pos_AS_NarrowExpr_expr));
 //       if (tsd.Is(TAG_TYPE_AS_ApplyExpr)) {
@@ -8185,14 +8281,14 @@ Tuple MYPARSER::ProperSDInAsgnStmt(const TYPE_AS_StateDesignator & sd)
 //       }
 //      Tuple psdias (ProperSDInAsgnStmt(tsd));
       Tuple psdias (ProperSDInAsgnStmt(sd.GetRecord(pos_AS_NarrowRef_var)));
-// <-- 20151023
       if (psdias.GetBoolValue(1)) {
         TYPE_AS_StateDesignator newsd (sd);
         newsd.SetField(pos_AS_NarrowExpr_expr, psdias.GetRecord(3));
         return mk_(Bool(true), Nil(), newsd);
       }
-      else
+      else {
         return mk_(Bool(false), psdias.GetSequence(2), Nil());
+      }
     }
 #ifdef VDMPP
     case TAG_TYPE_AS_NewExpr: {
@@ -8215,39 +8311,38 @@ bool MYPARSER::DomOverlap(const Map & m1, const Map & m2)
   Set dom_m1 (m1.Dom());
   Set dom_m2 (m2.Dom());
   Generic g1, g2;
-  for(bool b1 = dom_m1.First (g1); b1; b1 = dom_m1.Next (g1))
-  {
+  for(bool b1 = dom_m1.First (g1); b1; b1 = dom_m1.Next (g1)) {
     Generic h1 (m1[g1]);
-    for(bool b2 = dom_m2.First (g2); b2; b2 = dom_m2.Next (g2))
-    {
+    for(bool b2 = dom_m2.First (g2); b2; b2 = dom_m2.Next (g2)) {
       Generic h2 (m2[g2]);
 #ifdef VDMPP
-      if (h1.IsRecord() && h2.IsRecord())
-      {
+      if (h1.IsRecord() && h2.IsRecord()) {
         switch(Record(h1).GetTag()) {
           case TAG_TYPE_AS_ExplOpDef:
           case TAG_TYPE_AS_ImplOpDef:
           case TAG_TYPE_AS_ExtExplOpDef:
           case TAG_TYPE_AS_ExplFnDef:
           case TAG_TYPE_AS_ImplFnDef:
-          case TAG_TYPE_AS_ExtExplFnDef:
-          {
+          case TAG_TYPE_AS_ExtExplFnDef: {
             TYPE_AS_Name mangledName1 (g1);
             TYPE_AS_Name mangledName2 (g2);
-            if(!MANGLE::IsMangled(g1))
+            if(!MANGLE::IsMangled(g1)) {
               mangledName1 = MANGLE::Mangle(g1, MANGLE::MethType2Seq(GetMethType(h1)));
-            if(!MANGLE::IsMangled(g2))
+            }
+            if(!MANGLE::IsMangled(g2)) {
               mangledName2 = MANGLE::Mangle(g2, MANGLE::MethType2Seq(GetMethType(h2)));
-            if (mangledName1 == mangledName2)
+            }
+            if (mangledName1 == mangledName2) {
               return true;
-            else
+            }
+            else {
               continue;
+            }
           }
         }
       }
 #endif // VDMPP
-      if (g1 == g2)
-      {
+      if (g1 == g2) {
         return true;
       }
     }
@@ -8320,36 +8415,38 @@ Tuple MYPARSER::NameOverlapInDefs(const TYPE_AS_Definitions & defblock1,
   const Map & opm_m (defblock1.GetMap(pos_AS_Definitions_opm));
   Set dom_fnm_m (fnm_m.Dom());
   Generic g1;
-  for(bool bb = dom_fnm_m.First(g1); bb; bb = dom_fnm_m.Next(g1))
-  {
-    if(MANGLE::IsMangled(g1))
+  for(bool bb = dom_fnm_m.First(g1); bb; bb = dom_fnm_m.Next(g1)) {
+    if(MANGLE::IsMangled(g1)) {
       names.Insert(g1);
-    else
+    }
+    else {
       names.Insert(MANGLE::Mangle(g1, MANGLE::MethType2Seq(GetMethType(fnm_m[g1]))));
-
-    if (single == L"operation")
-    {
-      if(MANGLE::IsMangled(g1))
+    }
+    if (single == L"operation") {
+      if(MANGLE::IsMangled(g1)) {
         names2.Insert(MANGLE::GetUnmangledName(g1));
-      else
+      }
+      else {
         names2.Insert(g1);
+      }
     }
   }
   Set dom_opm_m (opm_m.Dom());
   Generic g2;
-  for(bool cc = dom_opm_m.First(g2); cc; cc = dom_opm_m.Next(g2))
-  {
-    if(MANGLE::IsMangled(g2))
+  for(bool cc = dom_opm_m.First(g2); cc; cc = dom_opm_m.Next(g2)) {
+    if(MANGLE::IsMangled(g2)) {
       names.Insert(g2);
-    else
+    }
+    else {
       names.Insert(MANGLE::Mangle(g2, MANGLE::MethType2Seq(GetMethType(opm_m[g2]))));
-
-    if (single == L"function")
-    {
-      if(MANGLE::IsMangled(g2))
+    }
+    if (single == L"function") {
+      if(MANGLE::IsMangled(g2)) {
         names2.Insert(MANGLE::GetUnmangledName(g2));
-      else
+      }
+      else {
         names2.Insert(g2);
+      }
     }
   }
 #endif // VDMPP
@@ -8361,26 +8458,21 @@ Tuple MYPARSER::NameOverlapInDefs(const TYPE_AS_Definitions & defblock1,
   Set dom_def_map (def_map.Dom());
   Set nms2, nms3; //checking types
   Generic g3;
-  for(bool dd = dom_def_map.First(g3); dd; dd = dom_def_map.Next(g3))
-  {
+  for(bool dd = dom_def_map.First(g3); dd; dd = dom_def_map.Next(g3)) {
     Generic h3 (def_map[g3]);
-    if (h3.IsRecord())
-    {
+    if (h3.IsRecord()) {
       switch(Record(h3).GetTag()) {
         case TAG_TYPE_AS_ExplOpDef:
         case TAG_TYPE_AS_ImplOpDef:
         case TAG_TYPE_AS_ExtExplOpDef:
         case TAG_TYPE_AS_ExplFnDef:
         case TAG_TYPE_AS_ImplFnDef:
-        case TAG_TYPE_AS_ExtExplFnDef:
-        {
-          if(MANGLE::IsMangled(g3))
-          {
+        case TAG_TYPE_AS_ExtExplFnDef: {
+          if(MANGLE::IsMangled(g3)) {
             nms2.Insert(g3);
             nms3.Insert(MANGLE::GetUnmangledName(g3));
           }
-          else
-          {
+          else {
             nms2.Insert(MANGLE::Mangle(g3, MANGLE::MethType2Seq(GetMethType(h3))));
             nms3.Insert(g3);
           }
@@ -8392,21 +8484,22 @@ Tuple MYPARSER::NameOverlapInDefs(const TYPE_AS_Definitions & defblock1,
         }
       }
     }
-    else
+    else {
       nms2.Insert(g3);
+    }
   }
 #endif // VDMPP
 
   Set res_nms (nms2.ImpIntersect(names));
-  if (! res_nms.IsEmpty())
+  if (! res_nms.IsEmpty()) {
     return mk_(Bool(true), ReportNameOverlapInDefs(res_nms, single, plural));
-
+  }
 #ifdef VDMPP
-  if ((single == L"function") || (single == L"operation"))
-  {
+  if ((single == L"function") || (single == L"operation")) {
     Set res_nms2 (nms3.ImpIntersect(names2));
-    if (! res_nms2.IsEmpty())
+    if (! res_nms2.IsEmpty()) {
       return mk_(Bool(true), ReportNameOverlapInDefs(res_nms2, single, plural));
+    }
   }
 #endif // VDMPP
 
@@ -8455,8 +8548,7 @@ Tuple MYPARSER::InstVarDomOverlap(const SEQ<TYPE_AS_InstanceVarDef> & instvar_de
 {
   Set nms;
   size_t len_instvar_defs = instvar_defs.Length();
-  for (size_t idx = 1; idx <= len_instvar_defs; idx++)
-  {
+  for (size_t idx = 1; idx <= len_instvar_defs; idx++) {
     const TYPE_AS_InstanceVarDef & ivd (instvar_defs[idx]);
     if (ivd.Is(TAG_TYPE_AS_InstAssignDef) ) {
       const TYPE_AS_AssignDef & ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
@@ -8481,61 +8573,59 @@ Tuple MYPARSER::InstVarDomOverlap(const SEQ<TYPE_AS_InstanceVarDef> & instvar_de
 // ==> map AS`Name to AS`FnDef | map AS`Name to AS`OpDef
 Map MYPARSER::MergeOpFnDef(const Map & m1, const Map & m2)
 {
-  if(m1.IsEmpty()) return m2;
-  if(m2.IsEmpty()) return m1;
-
-  Set dom_m1 (m1.Dom());
-  Set names;
-  Generic g1;
-  for(bool bb = dom_m1.First(g1); bb; bb = dom_m1.Next(g1))
-  {
-    names.Insert(Record(m1[g1]).GetField(1)); // nm
+  if(m1.IsEmpty()) {
+    return m2;
   }
-
-  Set dom_m2 (m2.Dom());
-  Set names2;
-  Generic g2;
-  for(bool cc = dom_m2.First(g2); cc; cc = dom_m2.Next(g2))
-  {
-    names2.Insert(Record(m2[g2]).GetField(1)); // nm
+  else if(m2.IsEmpty()) {
+    return m1;
   }
-  names.ImpIntersect(names2);
-  if(names.IsEmpty ())
-  {
-    Map res (m1);
-    res.ImpOverride(m2);
-    return res;
-  }
-  else
-  {
+  else {
     Set dom_m1 (m1.Dom());
-    Map res;
-    Generic g3;
-    for(bool dd = dom_m1.First(g3); dd; dd = dom_m1.Next(g3))
-    {
-      Generic h3 (m1[g3]);
-      TYPE_AS_Name nm (Record(h3).GetField(1));
-      if(!names.InSet(nm) || MANGLE::IsMangled(g3))
-        res.ImpModify(g3, h3);
-      else
-      {
-        res.ImpModify(MANGLE::Mangle(g3, MANGLE::MethType2Seq(GetMethType(h3))), h3);
-      }
+    Set names;
+    Generic g1;
+    for(bool bb = dom_m1.First(g1); bb; bb = dom_m1.Next(g1)) {
+      names.Insert(Record(m1[g1]).GetField(1)); // nm
     }
     Set dom_m2 (m2.Dom());
-    Generic g4;
-    for(bool ee = dom_m2.First(g4); ee; ee = dom_m2.Next(g4))
-    {
-      Generic h4 (m2[g4]);
-      TYPE_AS_Name nm (Record(h4).GetField(1));
-      if(!names.InSet(nm) || MANGLE::IsMangled(g4))
-        res.ImpModify(g4, h4);
-      else
-      {
-        res.ImpModify(MANGLE::Mangle(g4, MANGLE::MethType2Seq(GetMethType(h4))), h4);
-      }
+    Set names2;
+    Generic g2;
+    for(bool cc = dom_m2.First(g2); cc; cc = dom_m2.Next(g2)) {
+      names2.Insert(Record(m2[g2]).GetField(1)); // nm
     }
-    return res;
+    names.ImpIntersect(names2);
+    if(names.IsEmpty ()) {
+      Map res (m1);
+      res.ImpOverride(m2);
+      return res;
+    }
+    else {
+      Set dom_m1 (m1.Dom());
+      Map res;
+      Generic g3;
+      for(bool dd = dom_m1.First(g3); dd; dd = dom_m1.Next(g3)) {
+        Generic h3 (m1[g3]);
+        TYPE_AS_Name nm (Record(h3).GetField(1));
+        if(!names.InSet(nm) || MANGLE::IsMangled(g3)) {
+          res.ImpModify(g3, h3);
+        }
+        else {
+          res.ImpModify(MANGLE::Mangle(g3, MANGLE::MethType2Seq(GetMethType(h3))), h3);
+        }
+      }
+      Set dom_m2 (m2.Dom());
+      Generic g4;
+      for(bool ee = dom_m2.First(g4); ee; ee = dom_m2.Next(g4)) {
+        Generic h4 (m2[g4]);
+        TYPE_AS_Name nm (Record(h4).GetField(1));
+        if(!names.InSet(nm) || MANGLE::IsMangled(g4)) {
+          res.ImpModify(g4, h4);
+        }
+        else {
+          res.ImpModify(MANGLE::Mangle(g4, MANGLE::MethType2Seq(GetMethType(h4))), h4);
+        }
+      }
+      return res;
+    }
   }
 }
 
@@ -8572,14 +8662,13 @@ Tuple MYPARSER::NameOverlapInStateDef(const TYPE_AS_Definitions & defblock1, con
 
   names.ImpUnion(defblock1.GetMap(pos_AS_Definitions_typem).Dom()); //--typem
 
-  if (! (defblock1.get_State ()).IsNil())
-  { //-- StateDef
+  if (! (defblock1.get_State ()).IsNil()) {
+    //-- StateDef
     const TYPE_AS_StateDef & state (defblock1.GetRecord(pos_AS_Definitions_State));
     const TYPE_AS_CompositeType & tp (state.GetRecord(pos_AS_StateDef_tp));  //-- tp: CompositeType
     const SEQ<TYPE_AS_Field> & fields (tp.GetSequence(pos_AS_CompositeType_fields));//-- fields: seq of Field
     size_t len_fields = fields.Length();
-    for (size_t idx = 1; idx <= len_fields; idx++)
-    {
+    for (size_t idx = 1; idx <= len_fields; idx++) {
       const Generic & nm (fields[idx].GetField(pos_AS_Field_sel));
       if (!nm.IsNil()) {
         names.Insert(nm);
@@ -8596,16 +8685,18 @@ Tuple MYPARSER::NameOverlapInStateDef(const TYPE_AS_Definitions & defblock1, con
   const TYPE_AS_CompositeType & tp (statedef.GetRecord(pos_AS_StateDef_tp));
   const SEQ<TYPE_AS_Field> & fields (tp.GetSequence(pos_AS_CompositeType_fields));
   size_t len_fields = fields.Length();
-  for (size_t idx = 1; idx <= len_fields; idx++)
-  {
+  for (size_t idx = 1; idx <= len_fields; idx++) {
     const Generic & sel (fields[idx].GetField(pos_AS_Field_sel));
-    if (!sel.IsNil() && names.InSet(sel))
+    if (!sel.IsNil() && names.InSet(sel)) {
       res_nms.Insert(sel);
+    }
   }
-  if (!res_nms.IsEmpty())
+  if (!res_nms.IsEmpty()) {
     return mk_(Bool(true), ReportNameOverlapInDefs(res_nms, wstring(L"state"), wstring(L"states")));
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 #endif // VDMSL
 #endif // FULL
@@ -8740,9 +8831,9 @@ bool VDMEXPRPARSER::pars_vdm_expr(bool POS_WANTED,
   VDMEXPRPARSER::FileId = fid;
   VDMEXPRPARSER::pars_context_info_p = &ci;
 
-  if (fid != TYPE_CI_FileId(CI_FID_NO_CI))
+  if (fid != TYPE_CI_FileId(CI_FID_NO_CI)) {
     ci.UseContextTab(fid, reset_ci);
-
+  }
 #ifdef YYDEBUG
   yydebug = 1;
 #endif // YYDEBUG
@@ -8763,8 +8854,9 @@ bool VDMEXPRPARSER::pars_vdm_expr(bool POS_WANTED,
   SCANNER::SetTokenList(NULL);  // set the token list
   int result = vdm_repair.PreParse();
   if (result == 0) {
-    if (VDMEXPRPARSER::FileId != TYPE_CI_FileId(CI_FID_NO_CI))
+    if (VDMEXPRPARSER::FileId != TYPE_CI_FileId(CI_FID_NO_CI)) {
       SCANNER::SetTokenList(&(ci.GetTokenList(TYPE_CI_FileId(VDMEXPRPARSER::FileId))));
+    }
     SCANNER::InitLex(&VDMEXPRPARSER::Report);
     try {
       SCANNER::reread();

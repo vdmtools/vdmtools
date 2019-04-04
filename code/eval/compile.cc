@@ -43,7 +43,6 @@ void ProgramTable::ResetProgramTable(const TYPE_AS_Name & modnm)
 // ==> STKM`SubProgramId
 TYPE_STKM_SubProgramId ProgramTable::InsertProgram(const TYPE_AS_Name & modnm, const TYPE_STKM_SubProgram & instr)
 {
-  // 20060216
   if( !this->program_table.DomExists( modnm ) ) {
     this->ResetProgramTable( modnm );
   }

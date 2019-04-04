@@ -137,7 +137,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & 
     const SEQ<TYPE_STKM_Pattern> & elems_lp_ (pat.GetSequence (pos_STKM_SetEnumPattern_els));
     const Set & val_sv_ (val_v.GetSet(pos_SEM_SET_v));
     if (val_sv_.Card () == elems_lp_.Length ()) {
-// 20140301 -->
       SEQ<TYPE_STKM_Pattern> elems_lp;
       Set val_sv (val_sv_);
       size_t len_elems_lp_ = elems_lp_.Length();
@@ -163,7 +162,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & 
         }
       }
 
-// <-- 20140301
       switch(val_sv.Card()) {
         case 0: {
           //return eset;
@@ -201,10 +199,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & 
 SET<TYPE_SEM_BlkEnv> PAT::MatchSetUnionPattern (const TYPE_STKM_SetUnionPattern & pat, const TYPE_SEM_VAL & val_v)
 {
   if (val_v.Is(TAG_TYPE_SEM_SET)) {
-// 20140227 -->
-    //const TYPE_STKM_Pattern & lp_p (pat.GetRecord(pos_STKM_SetUnionPattern_lp));
-    //const TYPE_STKM_Pattern & rp_p (pat.GetRecord(pos_STKM_SetUnionPattern_rp));
-    
     bool swap_pat (!pat.GetRecord(pos_STKM_SetUnionPattern_lp).Is(TAG_TYPE_STKM_SetEnumPattern) ||
                    pat.GetRecord(pos_STKM_SetUnionPattern_rp).Is(TAG_TYPE_STKM_SetEnumPattern));
 
@@ -212,8 +206,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetUnionPattern (const TYPE_STKM_SetUnionPattern 
                                              : pat.GetRecord(pos_STKM_SetUnionPattern_lp));
     const TYPE_STKM_Pattern & rp_p (swap_pat ? pat.GetRecord(pos_STKM_SetUnionPattern_lp)
                                              : pat.GetRecord(pos_STKM_SetUnionPattern_rp));
-// <-- 20140227
-
     switch (lp_p.GetTag()) {
       case TAG_TYPE_STKM_SetEnumPattern:
       case TAG_TYPE_STKM_SetUnionPattern:
@@ -392,12 +384,10 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSeqConcPattern (const TYPE_STKM_SeqConcPattern & 
       from = len_val_lv - len_rp_p;
       to = from;
     }
-    else
-    {
+    else {
       // ?^?
       // !lp_p.Is(TAG_TYPE_STKM_SeqEnumPattern) && !rp_p.Is(TAG_TYPE_STKM_SeqEnumPattern)
-      if (len_val_lv > 1 )
-      {
+      if (len_val_lv > 1 ) {
 //        from = 1; // default
         to = len_val_lv - 1;
       }
@@ -518,9 +508,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapEnumPattern (const TYPE_STKM_MapEnumPattern & 
 SET<TYPE_SEM_BlkEnv> PAT::MatchMapMergePattern (const TYPE_STKM_MapMergePattern & pat, const TYPE_SEM_VAL & val_v)
 {
   if (val_v.Is(TAG_TYPE_SEM_MAP)) {
-// 20140227 -->
-    //const TYPE_STKM_Pattern & lp_p (pat.GetRecord(pos_STKM_MapMergePattern_lp));
-    //const TYPE_STKM_Pattern & rp_p (pat.GetRecord(pos_STKM_MapMergePattern_rp));
     bool swap_pat (!pat.GetRecord(pos_STKM_MapMergePattern_lp).Is(TAG_TYPE_STKM_MapEnumPattern) ||
                    pat.GetRecord(pos_STKM_MapMergePattern_rp).Is(TAG_TYPE_STKM_MapEnumPattern));
 
@@ -528,8 +515,6 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchMapMergePattern (const TYPE_STKM_MapMergePattern 
                                              : pat.GetRecord(pos_STKM_MapMergePattern_lp));
     const TYPE_STKM_Pattern & rp_p (swap_pat ? pat.GetRecord(pos_STKM_MapMergePattern_lp)
                                              : pat.GetRecord(pos_STKM_MapMergePattern_rp));
-// <-- 20140227
-
     switch (lp_p.GetTag()) {
       case TAG_TYPE_STKM_MapEnumPattern:
       case TAG_TYPE_STKM_MapMergePattern:
@@ -894,12 +879,12 @@ Tuple PAT::ConstructExplFN (const TYPE_AS_Name & clmodName, const TYPE_AS_FnDef 
   Map b_m;
   b_m.Insert(nm, body.GetField(pos_AS_FnBody_body)); // AS`Expr | AS`NoBody
 
-  if (!fnpre.IsNil())
+  if (!fnpre.IsNil()) {
     b_m.Insert(AUX::PreName(nm), fnpre);
-
-  if (!fnpost.IsNil())
+  }
+  if (!fnpost.IsNil()) {
     b_m.Insert(AUX::PostName(nm), fnpost);
-
+  }
   // map AS`Name to ((SEM`CompExplFN | SEM`ExplPOLY) * AS`Access)
   Map mp (tpparms.IsEmpty () ? DEF::CreatePrePostFns (clmodName, fndef, nm)
                              : DEF::CreatePolyPrePostFns (clmodName, fndef, nm));
@@ -931,12 +916,12 @@ Tuple PAT::ConstructExtExplFN (const TYPE_AS_Name & clmodName, const TYPE_AS_FnD
   Map b_m;
   b_m.Insert(nm, body.GetField(pos_AS_FnBody_body));
   
-  if (!fnpre.IsNil())
+  if (!fnpre.IsNil()) {
     b_m.Insert(AUX::PreName(nm), fnpre);
-  
-  if (!fnpost.IsNil())
+  } 
+  if (!fnpost.IsNil()) {
     b_m.Insert(AUX::PostName(nm), fnpost);
-
+  }
   Map mp (tpparms.IsEmpty() ? DEF::CreatePrePostFns(clmodName, fndef, nm)
                             : DEF::CreatePolyPrePostFns(clmodName, fndef, nm));
 
@@ -965,8 +950,9 @@ Tuple PAT::ConstructImplFN (const TYPE_AS_Name & clmodName, const TYPE_AS_FnDef 
   Map b_m;
   b_m.Insert(nm, TYPE_AS_UndefinedExpr().Init(NilContextId));
   
-  if (!fnpre.IsNil())
+  if (!fnpre.IsNil()) {
     b_m.Insert(AUX::PreName(nm), fnpre);
+  }
   b_m.Insert(AUX::PostName(nm), fnpost);
 
   // map AS`Name to ((SEM`CompExplFN * AS`Access) | (SEM`ExplPOLY * AS`Access))
@@ -1002,8 +988,9 @@ TYPE_AS_Expr PAT::GetExpr (const TYPE_AS_Pattern & pat_p)
 {
   switch(pat_p.GetTag()) {
     case TAG_TYPE_AS_PatternName: {
-      if ( pat_p.GetField(pos_AS_PatternName_nm).IsNil () )
+      if ( pat_p.GetField(pos_AS_PatternName_nm).IsNil () ) {
         return GetExpr(DoCarePattern (pat_p, ASTAUX::MkName(L"1")));
+      }
       else {
         return pat_p.GetRecord(pos_AS_PatternName_nm);
       }
@@ -1015,9 +1002,9 @@ TYPE_AS_Expr PAT::GetExpr (const TYPE_AS_Pattern & pat_p)
       const SEQ<TYPE_AS_Pattern> & els (pat_p.GetSequence(pos_AS_SetEnumPattern_Elems));
       SEQ<TYPE_AS_Expr> e_l;
       size_t len = els.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         e_l.ImpAppend (GetExpr (els[i]));
-
+      }
       return TYPE_AS_SetEnumerationExpr().Init(e_l, pat_p.GetInt(pos_AS_SetEnumPattern_cid));
     }
     case TAG_TYPE_AS_SetUnionPattern: {
@@ -1030,9 +1017,9 @@ TYPE_AS_Expr PAT::GetExpr (const TYPE_AS_Pattern & pat_p)
       const SEQ<TYPE_AS_Pattern> & els (pat_p.GetSequence(pos_AS_SeqEnumPattern_els));
       SEQ<TYPE_AS_Expr> e_l;
       size_t len = els.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         e_l.ImpAppend (GetExpr (els[i]));
-
+      }
       return TYPE_AS_SeqEnumerationExpr().Init(e_l, pat_p.GetInt(pos_AS_SeqEnumPattern_cid));
     }
     case TAG_TYPE_AS_SeqConcPattern: {
@@ -1064,18 +1051,18 @@ TYPE_AS_Expr PAT::GetExpr (const TYPE_AS_Pattern & pat_p)
       const SEQ<TYPE_AS_Pattern> & fields (pat_p.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_AS_Expr> e_l;
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++)
+      for (size_t i = 1; i <= len_fields; i++) {
         e_l.ImpAppend (GetExpr (fields[i]));
-
+      }
       return TYPE_AS_TupleConstructorExpr().Init(e_l, pat_p.GetInt(pos_AS_TuplePattern_cid));
     }
     case TAG_TYPE_AS_RecordPattern: {
       const SEQ<TYPE_AS_Pattern> & fields (pat_p.GetSequence(pos_AS_RecordPattern_fields));
       SEQ<TYPE_AS_Expr> e_l;
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++)
+      for (size_t i = 1; i <= len_fields; i++) {
         e_l.ImpAppend (GetExpr (fields[i]));
-
+      }
       return TYPE_AS_RecordConstructorExpr().Init(pat_p.GetField(pos_AS_RecordPattern_nm),
                                                   e_l,
                                                   pat_p.GetInt(pos_AS_RecordPattern_cid));
@@ -1094,10 +1081,12 @@ SET<Set> PAT::Partition (const SET<Set> & env_ls)
 {
   // { {e1,e2,e3}, {e4,e5,e6} } -> { {e1,e4}, {e1,e5}, {e1,e6}, {e2,e4}, {e2,e5}, {e2,e6}, {e3,e4}, {e3,e5}, {e3,e6} }
   SET<Set> env_ss (env_ls.Diff(mk_set(eset)));
-  if (!env_ss.IsEmpty())
+  if (!env_ss.IsEmpty()) {
     return env_ss.DistrDirectProduct();
-  else
+  }
+  else {
     return SET<Set>().Insert (eset);
+  }
 }
 
 // Collapse
@@ -1141,9 +1130,9 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       const SEQ<TYPE_AS_Pattern> & els (pat_p.GetSequence(pos_AS_SetEnumPattern_Elems));
       SEQ<TYPE_AS_Pattern> e_l;
       size_t len_els = els.Length();
-      for (size_t i = 1; i <= len_els; i++)
+      for (size_t i = 1; i <= len_els; i++) {
         e_l.ImpAppend (DoCarePattern (els[i], NewBase (id_base, i)));
-
+      }
       TYPE_AS_SetEnumPattern res_v (pat_p);
       res_v.set_Elems(e_l);
       return res_v;
@@ -1158,9 +1147,9 @@ TYPE_AS_PatternBind PAT::DoCarePattern (const TYPE_AS_PatternBind & pat_p, const
       const SEQ<TYPE_AS_Pattern> & els (pat_p.GetSequence(pos_AS_SeqEnumPattern_els));
       SEQ<TYPE_AS_Pattern> e_l;
       size_t len_els = els.Length();
-      for (size_t i = 1; i <= len_els; i++)
+      for (size_t i = 1; i <= len_els; i++) {
         e_l.ImpAppend (DoCarePattern (els[i], NewBase (id_base, i)));
-
+      }
       TYPE_AS_SeqEnumPattern res_v (pat_p);
       res_v.set_els(e_l);
       return res_v;
@@ -1277,9 +1266,9 @@ Record PAT::StripPatternTypeInfo (const Record & pat)
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_TuplePattern_fields));
       SEQ<TYPE_AS_Pattern> fields;
       size_t len_p_l = p_l.Length();
-      for (size_t i = 1; i <= len_p_l; i++)
+      for (size_t i = 1; i <= len_p_l; i++) {
         fields.ImpAppend (StripPatternTypeInfo(p_l[i]));
-
+      }
       TYPE_AS_TuplePattern res (pat);
       res.SetField (pos_AS_TuplePattern_fields, fields);
       res.SetField (pos_AS_TuplePattern_cid, NilContextId); // strip type info
@@ -1289,9 +1278,9 @@ Record PAT::StripPatternTypeInfo (const Record & pat)
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_SeqEnumPattern_els));
       SEQ<TYPE_AS_Pattern> els;
       size_t len_p_l = p_l.Length();
-      for (size_t i = 1; i <= len_p_l; i++)
+      for (size_t i = 1; i <= len_p_l; i++) {
         els.ImpAppend (StripPatternTypeInfo(p_l[i]));
-
+      }
       TYPE_AS_SeqEnumPattern res (pat);
       res.SetField (pos_AS_SeqEnumPattern_els, els);
       res.SetField (pos_AS_SeqEnumPattern_cid, NilContextId); // strip type info
@@ -1301,9 +1290,9 @@ Record PAT::StripPatternTypeInfo (const Record & pat)
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       SEQ<TYPE_AS_Pattern> elems;
       size_t len_p_l = p_l.Length();
-      for (size_t i = 1; i <= len_p_l; i++)
+      for (size_t i = 1; i <= len_p_l; i++) {
         elems.ImpAppend (StripPatternTypeInfo(p_l[i]));
-
+      }
       TYPE_AS_SetEnumPattern res (pat);
       res.SetField (pos_AS_SetEnumPattern_Elems, elems);
       res.SetField (pos_AS_SetEnumPattern_cid, NilContextId); // strip type info
@@ -1320,9 +1309,9 @@ Record PAT::StripPatternTypeInfo (const Record & pat)
       const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_RecordPattern_fields));
       SEQ<TYPE_AS_Pattern> fields;
       size_t len_p_l = p_l.Length();
-      for (size_t i = 1; i <= len_p_l; i++)
+      for (size_t i = 1; i <= len_p_l; i++) {
         fields.ImpAppend (StripPatternTypeInfo(p_l[i]));
-      
+      }
       TYPE_AS_RecordPattern res (pat);
       res.SetField (pos_AS_RecordPattern_nm, StripPatternTypeInfo (pat.GetRecord(pos_AS_RecordPattern_nm)));
       res.SetField (pos_AS_RecordPattern_fields, fields);

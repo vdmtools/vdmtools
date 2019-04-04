@@ -77,16 +77,15 @@ void RTERR::ReportError(const wchar_t * Where, const int What_,
 {
   POSITION::SetPosition (cid);
 
-// 20091125 -->
 //  wstring What (GetWhatStr(What_));
   wstring What;
   wstring lang (TBUTILS:: getLanguage());
-  if (TBUTILS::isJapanese() && Settings.UseTranslation())
+  if (TBUTILS::isJapanese() && Settings.UseTranslation()) {
     What = UTIL::ReplacePercent(GetWhatStrJP(What_), txts).GetString();
-  else
+  }
+  else {
     What = UTIL::ReplacePercent(GetWhatStr(What_), txts).GetString();
-// <-- 20091125
-  
+  } 
   // output to the file rterr.msg
   if (cliOpt->IsInternalTest()) {
     OutputToRterr(What);
@@ -116,11 +115,12 @@ void RTERR::ReportWarning(const wchar_t * Where, const int What_, const TYPE_CI_
   POSITION::SetPosition (cid);
   wstring What;
   wstring lang (TBUTILS:: getLanguage());
-  if (TBUTILS::isJapanese() && Settings.UseTranslation())
+  if (TBUTILS::isJapanese() && Settings.UseTranslation()) {
     What = UTIL::ReplacePercent(GetWhatStrJP(What_), txts).GetString();
-  else
+  }
+  else {
     What = UTIL::ReplacePercent(GetWhatStr(What_), txts).GetString();
-
+  }
   Sequence seq;
   seq.ImpAppend(SEQ<Char>(std::wstring(L"Run-Time Warning ") + std::wstring(What)));
 
@@ -168,14 +168,9 @@ void RTERR::PrintRunTimeError(wostream & wos)
   // This is necessary as due to the exception handling, this function
   // could be called several times for the same error message.
 
-  if (!RunTimeErrorOccured())
-    return;
-
-// 20090128
-//  PrintError(wos);
-//  wos << flush;
-
-  Reset();
+  if (RunTimeErrorOccured()) {
+    Reset();
+  }
 }
 
 TYPE_ProjectTypes_ErrMsg RTERR::GetErrMsg()
@@ -185,10 +180,12 @@ TYPE_ProjectTypes_ErrMsg RTERR::GetErrMsg()
 
   wstring valstr;
   if (RTErrMsg.exp_v.IsRecord()) {
-    if (RTErrMsg.exp_tp.IsRecord())
+    if (RTErrMsg.exp_tp.IsRecord()) {
       valstr = L"  actual value: ";
-    else
+    }
+    else {
       valstr = L"  value: ";
+    }
     valstr += VAL2X::val2asc(RTErrMsg.exp_v);
     seq.ImpAppend(SEQ<Char>(valstr));
   }
@@ -196,10 +193,12 @@ TYPE_ProjectTypes_ErrMsg RTERR::GetErrMsg()
 #ifndef NOSS
   wstring typstr;
   if (RTErrMsg.exp_tp.IsRecord()) {
-    if (RTErrMsg.exp_v.IsRecord())
+    if (RTErrMsg.exp_v.IsRecord()) {
       typstr = L"  expected type: ";
-    else
+    }
+    else {
       typstr = L"  type: ";
+    }
     typstr += GetStatSem().ASType2Ascii(RTErrMsg.exp_tp);
     seq.ImpAppend(SEQ<Char>(typstr));
   }
@@ -228,8 +227,7 @@ int RTERR::GetErrorNum(const Sequence & str)
   wstring s (str.GetString());
   int num = 0;
   int len = s.length();
-  for (int i = 0; i < len; i++)
-  {
+  for (int i = 0; i < len; i++) {
     wchar_t c = s[i];
     switch (c) {
       case L'0':

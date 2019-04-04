@@ -152,14 +152,6 @@ Record TestCoverage::GetRtInfoToken (std::ifstream & istr)
       else
       {
         length = str.size();
-// 20130209 -->
-/*
-        if(( str.find(MatchOutRTIStr) >= 0 ) && ( str.find(MatchOutRTIStr) < length )) length = str.find(MatchOutRTIStr);
-        if(( str.find("{") >= 0 ) && ( str.find("{") < length )) length = str.find("{");
-        if(( str.find("}") >= 0 ) && ( str.find("}") < length )) length = str.find("}");
-        if(( str.find("[") >= 0 ) && ( str.find("[") < length )) length = str.find("[");
-        if(( str.find("]") >= 0 ) && ( str.find("]") < length )) length = str.find("]");
-*/
         std::string::size_type n = str.find(MatchOutRTIStr);
         if ((n != std::string::npos) && (n < length)) length = n;
         n = str.find("{");
@@ -170,23 +162,20 @@ Record TestCoverage::GetRtInfoToken (std::ifstream & istr)
         if ((n != std::string::npos) && (n < length)) length = n;
         n = str.find("]");
         if ((n != std::string::npos) && (n < length)) length = n;
-// <-- 20130209
         rc = Record (ID_TOKEN_TC, 1);
         rc.SetField (1, SEQ<Char> (TBWSTR::string2wstring(str.substr(0,length))));
         str.replace(0, length, "");
       }
-
-      if (rc.GetTag () != 0)
-      {
+      if (rc.GetTag () != 0) {
         ReadAhead.ImpAppend (rc);
       }
     }
 
-    if (!ReadAhead.IsEmpty ()) //
-      { token = ReadAhead.Hd ();
-        ReadAhead.ImpTl ();
-        return token;
-      }
+    if (!ReadAhead.IsEmpty ()) {
+      token = ReadAhead.Hd ();
+      ReadAhead.ImpTl ();
+      return token;
+    }
     istr >> str;
     str = TBWSTR::wstring2string( TBWSTR::mbstr2wstring( str ) );
   }
@@ -444,26 +433,22 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
 
   TYPE_AS_Name emptyName (ASTAUX::MkName(L""));
 
-  if (mod_name == ASTAUX::MkNameFromVoid () || mod_name == emptyName)
+  if (mod_name == ASTAUX::MkNameFromVoid () || mod_name == emptyName) {
                                      //Print coverage info
                                      //for all modules in the
                                      //in the ast. 
                                      // This corresponds
                                      // to an empty module name
                                      // in rtinfo table.
-  {
      // Iterate through all asts.
     Generic ast_g;
-    Set asts (asts_); // 20060817
-    for (bool ii = asts.First(ast_g); ii; ii = asts.Next(ast_g))
-    {
+    Set asts (asts_);
+    for (bool ii = asts.First(ast_g); ii; ii = asts.Next(ast_g)) {
       // Don't generate entries for DL Modules
       Generic def_g = Nil();
 #ifdef VDMSL
-      if (Record(ast_g).Is(TAG_TYPE_AS_Module) || Record(ast_g).Is(TAG_TYPE_AS_Definitions))
-      {
-        if (Record(ast_g).Is(TAG_TYPE_AS_Module))
-        {
+      if (Record(ast_g).Is(TAG_TYPE_AS_Module) || Record(ast_g).Is(TAG_TYPE_AS_Definitions)) {
+        if (Record(ast_g).Is(TAG_TYPE_AS_Module)) {
           TYPE_AS_Module mod_ast (ast_g);
           mod_name = (mod_ast.GetRecord(pos_AS_Module_nm));
           def_g = mod_ast.GetField(pos_AS_Module_defs);
@@ -474,8 +459,7 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
         }
 #endif // VDMSL        
 #ifdef VDMPP
-      if (Record(ast_g).Is(TAG_TYPE_AS_Class))
-      {
+      if (Record(ast_g).Is(TAG_TYPE_AS_Class)) {
         TYPE_AS_Class mod_ast (ast_g);
         mod_name = mod_ast.GetRecord(pos_AS_Class_nm);
         def_g = mod_ast.GetField(pos_AS_Class_defs);
@@ -483,21 +467,17 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
         
         // If the definition part of the module is non-empty
         // generate the test coverage info for each definition.
-        if (!def_g.IsNil())
-        {
+        if (!def_g.IsNil()) {
           TYPE_AS_Definitions def (def_g);
           const Map & fnm (def.GetMap(pos_AS_Definitions_fnm));
           const Map & opm (def.GetMap(pos_AS_Definitions_opm));
             
           Set dom_fnm (fnm.Dom());
           Generic fnnm;
-          for (bool cc = dom_fnm.First(fnnm); cc; cc = dom_fnm.Next(fnnm))
-          {
-// 20130529 -->
+          for (bool cc = dom_fnm.First(fnnm); cc; cc = dom_fnm.Next(fnnm)) {
 #ifdef VDMPP
             if (ASTAUX::IsSubrespFnOp(fnm[fnnm])) continue;
 #endif // VDMPP
-// <-- 20130529
             int exprs, covered;
             PrintTestSuiteItem(ostr, mod_name, fnnm, 1, exprs, covered, asts, fmt, ci);
             totexprs += exprs;
@@ -506,13 +486,10 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
           
           Set dom_opm (opm.Dom());
           Generic opnm;
-          for (bool dd = dom_opm.First(opnm); dd; dd = dom_opm.Next(opnm))
-          {
-// 20130529 -->
+          for (bool dd = dom_opm.First(opnm); dd; dd = dom_opm.Next(opnm)) {
 #ifdef VDMPP
             if (ASTAUX::IsSubrespFnOp(opm[opnm])) continue;
 #endif // VDMPP
-// <-- 20130529
             int exprs, covered;
             PrintTestSuiteItem(ostr, mod_name, opnm, 1, exprs, covered, asts, fmt, ci);
             totexprs += exprs;
@@ -522,22 +499,19 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
       }
     }
   }
-  else
-  {
+  else {
     // A module name was specified in the rtinfo table
     // Find the ast corresponding to the module name.
 
-    Set asts (asts_); // 20060817
+    Set asts (asts_);
     Generic def_g = Nil();
     bool found = false;
     Generic ast_g;
 #ifdef VDMSL
-    for (bool bb = asts.First(ast_g); bb && !found; bb = asts.Next(ast_g))
-    {
+    for (bool bb = asts.First(ast_g); bb && !found; bb = asts.Next(ast_g)) {
       if (Record(ast_g).Is(TAG_TYPE_AS_Module)) {
         TYPE_AS_Module mod_ast (ast_g);
-        if (mod_ast.GetRecord(pos_AS_Module_nm) == mod_name)
-        {
+        if (mod_ast.GetRecord(pos_AS_Module_nm) == mod_name) {
           def_g = mod_ast.GetField(pos_AS_Module_defs);
           found = true;
         }
@@ -545,35 +519,30 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
     }
 #endif // VDMSL
 #ifdef VDMPP
-    for (bool bb = asts.First(ast_g); bb && !found; bb = asts.Next(ast_g))
-    {
+    for (bool bb = asts.First(ast_g); bb && !found; bb = asts.Next(ast_g)) {
       TYPE_AS_Class mod_ast (ast_g);
-      if (mod_ast.GetRecord(pos_AS_Class_nm) == mod_name) 
-      {
+      if (mod_ast.GetRecord(pos_AS_Class_nm) == mod_name) {
         def_g = mod_ast.GetField(pos_AS_Class_defs);
         found = true;
       }
     }
 #endif //VDMPP
 
-    if (!found) 
-    {
+    if (!found) {
       vdm_iplog << ModuleStr << L" '" << ASTAUX::ASName2String (mod_name) << L"' is not found in the file" << endl << flush;
       return 1;
     }
 
     // If the definition part of the module is non-empty
     // generate the test coverage info for each definition.
-    if (!def_g.IsNil())
-    {
+    if (!def_g.IsNil()) {
       TYPE_AS_Definitions def (def_g);
       Map fnm (def.GetMap(pos_AS_Definitions_fnm));
       fnm.ImpOverride(def.GetMap(pos_AS_Definitions_opm));
         
       Set dom_fnm (fnm.Dom());
       Generic fnopnm;
-      for (bool cc = dom_fnm.First(fnopnm); cc; cc = dom_fnm.Next(fnopnm) )
-      {
+      for (bool cc = dom_fnm.First(fnopnm); cc; cc = dom_fnm.Next(fnopnm) ) {
         int exprs, covered;
         PrintTestSuiteItem(ostr, mod_name, fnopnm, 1, exprs, covered, asts, fmt, ci);
         totexprs += exprs;
@@ -586,8 +555,9 @@ double TestCoverage::PrintEntireTestSuite (std::ofstream& ostr,  // output strea
     int percent = (int)floor((100.0 * (double)totcoverage)/(double)totexprs);
     return percent;
   }
-  else
+  else {
     return -1;
+  }
 }  
 
 ///////////////////////////
@@ -614,11 +584,11 @@ void TestCoverage::EvalListTestSuite (const std::wstring & fname, ContextInfo & 
   SEQ<Record> asts (ToolMediator::GetVDMASTs());
 
   size_t len_asts = asts.Length();
-  for (size_t idx = 1; idx <= len_asts; idx++)
-  {
+  for (size_t idx = 1; idx <= len_asts; idx++) {
 #ifdef VDMSL
-    if (!asts[idx].Is(TAG_TYPE_AS_Module))
+    if (!asts[idx].Is(TAG_TYPE_AS_Module)) {
       continue;
+    }
     const TYPE_AS_Module & ast (asts[idx]);
     const TYPE_AS_Name & mod_nm (ast.GetRecord(pos_AS_Module_nm));
     const Generic & gdef (ast.GetField(pos_AS_Module_defs));
@@ -629,38 +599,30 @@ void TestCoverage::EvalListTestSuite (const std::wstring & fname, ContextInfo & 
     const Generic & gdef (ast.GetField(pos_AS_Class_defs));
 #endif // VDMPP
 
-    if (!gdef.IsNil())
-    {
+    if (!gdef.IsNil()) {
       TYPE_AS_Definitions def (gdef);
       Map fnm (def.GetMap(pos_AS_Definitions_fnm));
       fnm.ImpOverride(def.GetMap(pos_AS_Definitions_opm));
       
-// 20130610 -->
       int clmodexprs = 0, clmodcoverage = 0;
-// <-- 20130610
       //////////////
       //// Compute coverage for all functions/operations/methods
       /////////////
       Set dom_fnm (fnm.Dom());
       Generic fnm_nm;
-      for (bool cc = dom_fnm.First(fnm_nm); cc; cc = dom_fnm.Next(fnm_nm))
-      {
+      for (bool cc = dom_fnm.First(fnm_nm); cc; cc = dom_fnm.Next(fnm_nm)) {
         Record fndef (fnm[fnm_nm]);
-// 20130529 -->
 #ifdef VDMPP
         if (ASTAUX::IsSubrespFnOp(fndef)) continue;
 #endif // VDMPP
-// <-- 20130529
         Tuple cv (RTINFO::Calc_Coverage(fndef, ci));
         int exprs = cv.GetIntValue(1);
         int covered = cv.GetIntValue(2);
         int pcov = (int)floor((100.0 * (double)covered)/(double)exprs);
         totexprs += exprs;
         totcoverage += covered;
-// 20130610 -->
         clmodexprs += exprs;
         clmodcoverage += covered;
-// <-- 20130610
         
         vdm_iplog.width ();
         vdm_iplog.width (5);
@@ -750,10 +712,8 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
   // Parse/read the  Runtime info
   ////////////////////////
 
-  if ((token = GetRtInfoToken (istr)).Is(LEFTBRACK_TOKEN_TC))
-  {
-    if (!((token = GetRtInfoToken (istr)).Is(ID_TOKEN_TC)))
-    {
+  if ((token = GetRtInfoToken (istr)).Is(LEFTBRACK_TOKEN_TC)) {
+    if (!((token = GetRtInfoToken (istr)).Is(ID_TOKEN_TC))) {
        vdm_iplog << L"Syntax error in rtinfo section: " << L"identifier expected after '['." << endl << flush;
        return false;
     }
@@ -761,23 +721,19 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
     LongString = token.GetSequence (1).GetString ();
 
       
-    if (!((token = GetRtInfoToken (istr)).Is(RIGHTBRACK_TOKEN_TC)))
-    {
+    if (!((token = GetRtInfoToken (istr)).Is(RIGHTBRACK_TOKEN_TC))) {
       vdm_iplog << L"Syntax error in rtinfo section: ']' expected." << endl << flush;
       return false;
     }
-      
     token = GetRtInfoToken (istr);
   }
 
-  if (!token.Is(LEFTCUR_TOKEN_TC))
-  {
+  if (!token.Is(LEFTCUR_TOKEN_TC)) {
     vdm_iplog << L"Syntax error in rtinfo section: '{' expected." << endl << flush;
     return false;
   }
 
-  if (!((token = GetRtInfoToken (istr)).Is(ID_TOKEN_TC)))
-  {
+  if (!((token = GetRtInfoToken (istr)).Is(ID_TOKEN_TC))) {
      vdm_iplog << L"Syntax error in rtinfo section: " << L"identifier expected after '{'." << endl << flush;
      return false;
   }
@@ -789,16 +745,13 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
   ToolMediator::ResetTestCoverage(ci);
   ToolMediator::LoadTestCoverageFile(suite_name, ci, load_files, false);
 
-  if (!((token = GetRtInfoToken (istr)).Is(RIGHTCUR_TOKEN_TC)))
-  {
+  if (!((token = GetRtInfoToken (istr)).Is(RIGHTCUR_TOKEN_TC))) {
     vdm_iplog << L"Syntax error in rtinfo section: '}' expected." << endl << flush;
     return false;
   }
       
-  if ((token = GetRtInfoToken (istr)).Is(LEFTBRACK_TOKEN_TC))
-  {
-    if (!((token = GetRtInfoToken (istr)).Is(ID_TOKEN_TC)))
-    {
+  if ((token = GetRtInfoToken (istr)).Is(LEFTBRACK_TOKEN_TC)) {
+    if (!((token = GetRtInfoToken (istr)).Is(ID_TOKEN_TC))) {
       vdm_iplog << L"Syntax error in rtinfo section: " << L"identifier expected after '['." << endl << flush;
       return false;
     }
@@ -806,8 +759,7 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
     get_mod_name = 1;
     mod_name = token.GetSequence (1).GetString ();
       
-    if (!((token = GetRtInfoToken (istr)).Is(RIGHTBRACK_TOKEN_TC)))
-    {
+    if (!((token = GetRtInfoToken (istr)).Is(RIGHTBRACK_TOKEN_TC))) {
       vdm_iplog << L"Syntax error in rtinfo section: ']' expected." << endl << flush;
       return false;
     }
@@ -822,8 +774,7 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
 
     get_all = 0;
     
-    if (!(token.Is(ID_TOKEN_TC)))
-    {
+    if (!(token.Is(ID_TOKEN_TC))) {
       vdm_iplog << L"Syntax error in rtinfo section: " << L"identifier expected." << endl << flush;
       return false;
     }
@@ -851,24 +802,28 @@ bool TestCoverage::EvalLatexRTI (std::ifstream & istr,
     token = GetRtInfoToken (istr);
   }
   
-  if (get_all)
+  if (get_all) {
     // PrintEntireTestSuite return -1 if pcoverage is undefined
     pcoverage = PrintEntireTestSuite (ostr,
                                       ASTAUX::MkName(mod_name),
                                       asts,
                                       FORMAT_LATEX,
                                       ci);
-  else if (totexprs > 0)
+  }
+  else if (totexprs > 0) {
     pcoverage = (int)floor((100.0 * (double)totcoverage)/(double)totexprs);
-  else
+  }
+  else {
     pcoverage = -1;
-
+  }
   ostr << "\\hline" << endl
        << "{\\bf Total Coverage} & & ";
-  if (pcoverage != -1)
+  if (pcoverage != -1) {
     ostr << "{\\bf " << pcoverage << "\\%}";
-  else
+  }
+  else {
     ostr << "{\\bf undefined}";
+  }
   ostr << " \\\\ \\hline" << endl;
   
   PrintTail (ostr);
@@ -889,19 +844,18 @@ int TestCoverage::MatchInRTI (int pm,          // ???
                               ContextInfo&ci,  // Context info table.
                               const std::wstring & short_name) // the file to pretty print
 { 
-  if (MatchInRTIStr[pm] == ch)
-  {
-    if (pm == MatchInRTILen - 1)
-    { 
+  if (MatchInRTIStr[pm] == ch) {
+    if (pm == MatchInRTILen - 1) { 
       EvalLatexRTI (istr, ostr, asts, ci, short_name);
       return 0;
     }
-    else
+    else {
       return pm + 1;
+    }
   }
-  else if (pm && pm < MatchInRTILen)
+  else if (pm && pm < MatchInRTILen) {
     ostr << MatchInRTIStr.substr(0, pm);
-
+  }
   ostr.put(ch);
   return 0;
 }
@@ -933,9 +887,9 @@ bool TestCoverage::texvdmrti2texvdm (std::ifstream& istr,
 
   ReadAhead = Sequence();
   
-  while (istr.get (ch))
+  while (istr.get (ch)) {
     pm = MatchInRTI  (pm, ch, istr, ostr, asts, ci, short_name);
-
+  }
   istr.close ();
   ostr.close ();
   return true;

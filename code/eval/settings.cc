@@ -44,21 +44,11 @@ void SETTINGS::InitSettings()
 {
   this->VDM10Off();
   this->OldReverseOff();
-//The following is the definition of the standard settings which
-// can be set by the 'set' command.
-// 20100409 -->
-/*
-  this->DtcOff();              // dynamic typechecking off
-  this->PreOff();              // pre-cond checking off
-  this->PostOff();             // post-cond checking off
-  this->InvOff();              // invariant checking off
-*/
   this->DtcOn();              // dynamic typechecking on
   this->PreOn();              // pre-cond checking on
   this->PostOn();             // post-cond checking on
   this->InvOn();              // invariant checking on
   this->AssertOff();
-// <-- 20100409
 
   this->PrintFormatOn();       // pretty print format for vdmsl values on.
 
@@ -406,19 +396,17 @@ bool SETTINGS::IsVirtualCPUCapacityInfinite()
 
 wstring SETTINGS::GetVirtualCPUCapacityStr() const
 {
-//  if( this->virtualcpucapacity.IsQuote() )
-//    return L"INFINITE";
-//  else 
-//    return Int(this->virtualcpucapacity).ascii();
   return this->virtualcpucapacity.ascii();
 }
 
 void SETTINGS::SetVirtualCPUCapacityStr(const wstring & capacity)
 {
-  if(( capacity == L"INFINITE" ) || ( capacity == L"<INFINITE>" ))
+  if(( capacity == L"INFINITE" ) || ( capacity == L"<INFINITE>" )) {
     this->virtualcpucapacity = Quote(L"INFINITE");
-  else
+  }
+  else {
     this->virtualcpucapacity = Int(atol(TBWSTR::wstring2string(capacity).c_str()));
+  }
 }
 
 int SETTINGS::GetStepSize() const
@@ -443,56 +431,51 @@ void SETTINGS::SetJitterMode(JitterModeType::JMType newjittermode)
 
 wstring SETTINGS::GetJitterModeStr() const
 {
-  if( this->jittermode == JitterModeType::JM_Early )
+  if( this->jittermode == JitterModeType::JM_Early ) {
     return L"Early";
-  else if( this->jittermode == JitterModeType::JM_Random )
+  }
+  else if( this->jittermode == JitterModeType::JM_Random ) {
     return L"Random";
-  else if( this->jittermode == JitterModeType::JM_Late )
+  }
+  else if( this->jittermode == JitterModeType::JM_Late ) {
     return L"Late";
-  else
+  }
+  else {
     return L"Early";
+  }
 }
 
 void SETTINGS::SetJitterModeStr(const wstring & mode)
 {
-  if( mode == L"Early" )
+  if( mode == L"Early" ) {
     this->jittermode = JitterModeType::JM_Early;
-  else if( mode == L"Random" )
+  }
+  else if( mode == L"Random" ) {
     this->jittermode = JitterModeType::JM_Random;
-  else if( mode == L"Late" )
+  }
+  else if( mode == L"Late" ) {
     this->jittermode = JitterModeType::JM_Late;
-  else
+  }
+  else {
     this->jittermode = JitterModeType::JM_Early;
-  
+  }
 }
 //#endif //VICE
 
 TYPE_SCHDTP_PrimarySchedulerAlgorithm SETTINGS::GetPrimaryAlgorithm ()
 {
-//#ifdef VICE
-//  return theSystem().GetPrimaryAlgorithm(Nil());
-//#else
   return this->primaryAlgorithm;
-//#endif // VICE
 }
 
 wstring SETTINGS::GetPrimaryAlgorithmStr()
 {
-  switch( this->primaryAlgorithm.GetTag() )
-  {
-    case TAG_TYPE_SCHDTP_PureCooperative:
-      return L"pure_cooperative";
-      break;
-    case TAG_TYPE_SCHDTP_InstrnumSlice:
-      return L"instruction_number_slice";
-      break;
+  switch( this->primaryAlgorithm.GetTag() ) {
+    case TAG_TYPE_SCHDTP_PureCooperative: { return L"pure_cooperative"; break; }
+    case TAG_TYPE_SCHDTP_InstrnumSlice:   { return L"instruction_number_slice"; break; }
 #ifdef VICE
-    case TAG_TYPE_SCHDTP_TimeSlice:
-      return L"timeslice";
-      break;
+    case TAG_TYPE_SCHDTP_TimeSlice:       { return L"timeslice"; break; }
 #endif // VICE
-    default:
-      return L"Unknown primary scheduling algorithm";
+    default:                              { return L"Unknown primary scheduling algorithm"; break; }
   }
 }
 
@@ -506,25 +489,23 @@ void SETTINGS::SetPrimaryAlgorithm(const TYPE_SCHDTP_PrimarySchedulerAlgorithm &
 
 bool SETTINGS::SetPrimaryAlgorithmStr(const wstring & algorithm)
 {
-  if ((algorithm == L"pure_cooperative") || (algorithm == L"pc"))
-  {
+  if ((algorithm == L"pure_cooperative") || (algorithm == L"pc")) {
     this->SetPureCooperative();
     return true;
   }
 #ifdef VICE
-  else if ((algorithm == L"timeslice") || (algorithm == L"ts"))
-  {
+  else if ((algorithm == L"timeslice") || (algorithm == L"ts")) {
     this->SetTimeSlice();
     return true;
   }
 #endif //VICE
-  else if ((algorithm == L"instruction_number_slice") || (algorithm == L"in"))
-  {
+  else if ((algorithm == L"instruction_number_slice") || (algorithm == L"in")) {
     this->SetInstrnumSlice();
     return true;
   }
-  else
+  else {
     return false;
+  }
 }
 
 void SETTINGS::SetPureCooperative()
@@ -590,18 +571,18 @@ void SETTINGS::SetLogArgs(const Set & s)
 wstring SETTINGS::GetLogArgsStr() const
 {
   Generic largs (this->GetLogArgs());
-  if( largs.IsQuote() )
+  if( largs.IsQuote() ) {
     return L"<ALL>";
-  else
-  {
+  }
+  else {
     wstring ret;
     Set s (largs);
     int count = 0;
     Generic g;
-    for(bool bb = s.First(g); bb; bb = s.Next(g))
-    {
-      if( count > 0 )
+    for(bool bb = s.First(g); bb; bb = s.Next(g)) {
+      if( count > 0 ) {
         ret += L",";
+      }
       ret += ASTAUX::ASName2String(g);
       count++;
     }
@@ -611,20 +592,18 @@ wstring SETTINGS::GetLogArgsStr() const
 
 TYPE_AS_Name wstring2asname(const wstring & name)
 {
-  if( name.length() == 0 )
+  if( name.length() == 0 ) {
     return ASTAUX::MkNameFromVoid();
-
+  }
   wstring clsnm;
   wstring opnm;
   int index = 0;
-  while( (name[index] != L'`') && index < (int)name.length() )
-  {
+  while( (name[index] != L'`') && index < (int)name.length() ) {
     clsnm += name[index];
     index++;
   }
   index++; 
-  while( index < (int)name.length() )
-  {
+  while( index < (int)name.length() ) {
     opnm += name[index];
     index++;
   }
@@ -638,27 +617,25 @@ TYPE_AS_Name wstring2asname(const wstring & name)
 
 void SETTINGS::SetLogArgsStr(const wstring & str)
 {
-  if( str == L"<ALL>" )
+  if( str == L"<ALL>" ) {
     this->SetLogArgsAll();
-  else
-  {
+  }
+  else {
     Set s;
     wstring fullopnm = L"";
     int index = 0;
-    while( index < (int)str.length() )
-    {
-      if( str[index] == L',' )
-      {
+    while( index < (int)str.length() ) {
+      if( str[index] == L',' ) {
         TYPE_AS_Name asnm (wstring2asname(fullopnm));
         s.Insert(asnm);
         fullopnm = L"";
       }
-      else
+      else {
         fullopnm += str[index];
+      }
       index++; 
     }
-    if(fullopnm.length() > 0 )
-    {
+    if(fullopnm.length() > 0 ) {
       TYPE_AS_Name asnm (wstring2asname(fullopnm));
       s.Insert(asnm);
     }
@@ -817,27 +794,27 @@ void SETTINGS::AddNoCheck(const TYPE_AS_Name & nm)
 {
 #ifdef VDMPP
   Set nm_s (theState().GetClasses().Dom());
-  if (nm_s.InSet(nm))
+  if (nm_s.InSet(nm)) {
     this->nocheck.Insert(nm);
+  }
 #endif // VDMPP
 }
 
 void SETTINGS::RemoveNoCheck(const TYPE_AS_Name & nm)
 {
 #ifdef VDMPP
-  if (this->nocheck.InSet(nm))
+  if (this->nocheck.InSet(nm)) {
     this->nocheck.RemElem(nm);
+  }
 #endif // VDMPP
 }
 
 bool SETTINGS::DoCheck() const
 {
 #ifdef VDMPP
-  if (this->docheck_enabled)
-  {
+  if (this->docheck_enabled) {
     TYPE_GLOBAL_OrigCl ocl (theStackMachine().GetCurCl());
-    if (ocl.Is(TAG_TYPE_AS_Name))
-    {
+    if (ocl.Is(TAG_TYPE_AS_Name)) {
       return !this->nocheck.InSet(ocl);
     }
   }

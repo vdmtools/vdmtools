@@ -55,8 +55,9 @@
 
 int LXINPUT::String_getchars (char*p, int maxsize)
 {
-  if (s_index == (int) st.length()) 
+  if (s_index == (int) st.length())  {
     return 0;
+  }
   else {
     int rest = st.length() - s_index; 
     int m = rest < maxsize ? rest : maxsize; 
@@ -142,11 +143,13 @@ void (*(SCANNER::ReportP)) (const wchar_t*, YYLTYPE & pos);
 const char * SCANNER::skipwsafter(const char*s, const char *after) 
 {
   const char *p = ::strstr(s, after); 
-  if (!p) 
+  if (!p) {
     return 0; 
+  }
   p += strlen(after); 
-  while (*p && isspace(*p))
+  while (*p && isspace(*p)) {
     p++; 
+  }
   return p; 
 }
 
@@ -403,8 +406,7 @@ not{separators}in{separators}{identifierorkeyword}  {
                            SCANNER::Save_LexStringP(yylval, yytext);
 			   if ((Token = SCANNER::SearchReservedWord (yytext)) >= 0) {
 @#if VDMSL
-                             if (Token == LEX_MODULE || Token == LEX_DLMODULE)
-                             {
+                             if (Token == LEX_MODULE || Token == LEX_DLMODULE) {
                                SCANNER::setLastWasLEX_CLASS_MOD (true);
                              }
 @#endif //VDMSL
@@ -942,10 +944,12 @@ static class SetReservedWord dummy_var;
 int SCANNER::SearchReservedWord (const char* Candidate)
 {
   std::map<string, int>::const_iterator itr (ReservedWordMap1.find(string(Candidate)));
-  if (itr != ReservedWordMap1.end())
+  if (itr != ReservedWordMap1.end()) {
     return itr->second;
-  else 
+  }
+  else {
     return -1;
+  }
 }
 
 /////////////////////////////////////
@@ -957,10 +961,12 @@ int SCANNER::SearchReservedWord (const char* Candidate)
 const char * SCANNER::SearchReservedName (int tk_num)
 {
   std::map<int, const char *>::const_iterator itr (ReservedWordMap2.find(tk_num));
-  if (itr != ReservedWordMap2.end())
+  if (itr != ReservedWordMap2.end()) {
     return itr->second;
-  else 
+  }
+  else {
     return NULL;
+  }
 }
 
 LXINPUT SCANNER::LEXINPUT;
@@ -1028,8 +1034,7 @@ void SCANNER::AdjustLineColumn(const char* s)
 {
   int64_t i = 0;
   CurrentPos = NextPos; 
-  while (s[i] != '\0')
-  {
+  while (s[i] != '\0') {
     switch (s[i]) {
       case ' ' : {
         NextPos.IncreaseColumn (SPACE_WIDTH);
@@ -1073,8 +1078,7 @@ void SCANNER::INSERT_TOKEN2(YYLTYPE *pos, int tok, const char * txt)
 {
   yytextstring = (txt != NULL) ? txt : "";
   IniPos(pos); 
-  if ( global_token_list != NULL )
-  {
+  if ( global_token_list != NULL ) {
     TYPE_CI_TokenPos start, end; 
     start.Init(Int(CurrentPos.GetSectionCount()),
                Int(CurrentPos.GetAbsLineCount()),

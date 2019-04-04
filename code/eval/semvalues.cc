@@ -224,8 +224,9 @@ TYPE_AS_Expr SemRec::VAL2Expr(const TYPE_SEM_VAL & val)
 //        exprs.ImpAppend(VAL2Expr(newargs[idx]));
 //      return TYPE_AS_NewExpr().Init(clnm, exprs, NilContextId);
       Generic nm (theState().GetBindName(val));
-      if (!nm.IsNil())
+      if (!nm.IsNil()) {
         return nm;
+      }
       return TYPE_AS_NewExpr().Init(clnm, theState().GetNewArgs(val), NilContextId);
     }
 #endif // VDMPP
@@ -722,11 +723,12 @@ wstring SemRec::Val2String( const TYPE_SEM_VAL & val )
     case TAG_TYPE_SEM_ExplPOLY:   { return L"polymorphic function value"; }
     case TAG_TYPE_SEM_SEQ: {
       const Sequence & s (val.GetSequence(pos_SEM_SEQ_v));
-      // 20071205
-      if (s.IsString())
+      if (s.IsString()) {
         return wstring(L"\"") + s.GetString() + L"\"";
-      else
+      }
+      else {
         return wstring(L"[ ") + ValSeq2String(s) + L" ]";
+      }
     }
     case TAG_TYPE_SEM_SET: {
       return wstring(L"{ ") + ValSet2String(val.GetSet(pos_SEM_SET_v)) + L" }";
@@ -762,7 +764,6 @@ wstring SemRec::Val2String( const TYPE_SEM_VAL & val )
     case TAG_TYPE_SEM_OverOPFN: { return L"Overloaded op/fn"; }
     case TAG_TYPE_SEM_OBJ:      { return L"Object value"; }
     case TAG_TYPE_SEM_OBJ_uRef: {
-//      return L"object reference";
       Int ref (val.GetInt(pos_SEM_OBJ_uRef_ref));
       return L"objref" + Num2String(ref);
     }

@@ -249,9 +249,9 @@ void VAL2X::print_obj_ref_v(wostream&os, const Record & r, VDMFormatter vg, bool
   //   objectname :: seq of wchar_t (Token, given by getobjrefid). 
 
   Token uniquename (r.GetField(3)); 
-  os << uniquename.GetString() << L"("; // 20100616
+  os << uniquename.GetString() << L"(";
   Token tpnm (r.GetField(1));
-  os << tpnm.GetString() << L"):" << endl; // 20100616
+  os << tpnm.GetString() << L"):" << endl;
 
   vg.IncrementIndent();
   my_space(os, vg.GetIndent());
@@ -272,7 +272,7 @@ void VAL2X::print_obj_ref_v(wostream&os, const Record & r, VDMFormatter vg, bool
       first = false;
     }
 
-    os  << Token(instvar).GetString() << L" = "; // 20100616
+    os  << Token(instvar).GetString() << L" = ";
     m[instvar].ostream_out(os, vg);
   }
   os << L" >" << flush;
@@ -385,7 +385,8 @@ Generic VAL2X::objval2generic(const TYPE_SEM_OBJ & sem_val,
       // and perhaps print unique object number instead of OBJREF.
       if (semval.Is(TAG_TYPE_SEM_OBJ_uRef)) {     
         m.ImpModify(Token(str), Token(getobjrefid(semval)));
-      } else {       
+      }
+      else {       
         m.ImpModify(Token(str), val2generic(semval, new_obj_refs));
       }
     }
@@ -482,24 +483,16 @@ Generic VAL2X::val2generic(const TYPE_SEM_VAL & value, const Set & obj_refs)
       return Nil ();
     }
     case TAG_TYPE_SEM_ExplFN: {
-// 20150325 -->
-      //return Token (L"FUNCTION_VAL");
       wstring res (L"FUNCTION_VAL: ");
       res += GetStatSem().ASType2Ascii(value.GetRecord(pos_SEM_ExplFN_tp));
       return Token (res);
-// <-- 20150325
     }
     case TAG_TYPE_SEM_ExplPOLY: {
-// 20150325 -->
-      //return Token (L"FUNCTION_VAL");
       wstring res (L"FUNCTION_VAL: ");
       res += GetStatSem().ASType2Ascii(value.GetRecord(pos_SEM_ExplPOLY_tp));
       return Token (res);
-// <-- 20150325
     }
     case TAG_TYPE_SEM_CompExplFN: {
-// 20150325 -->
-      //return Token (L"FUNCTION_VAL");
       const SEQ<TYPE_SEM_ExplFN> & fl (value.GetSequence(pos_SEM_CompExplFN_fl));
       const TYPE_SEM_ExplFN & ffn (fl[1]);
       TYPE_AS_Type ftp (ffn.GetRecord(pos_SEM_ExplFN_tp));
@@ -540,30 +533,20 @@ Generic VAL2X::val2generic(const TYPE_SEM_VAL & value, const Set & obj_refs)
       wstring res (L"FUNCTION_VAL: ");
       res += GetStatSem().ASType2Ascii(ftp);
       return Token (res);
-// <-- 20150325
     }
     case TAG_TYPE_SEM_ExplOP: {
-// 20150325 -->
-      //return Token (L"OPERATION_VAL");
       wstring res (L"OPERATION_VAL: ");
       res += GetStatSem().ASType2Ascii(value.GetRecord(pos_SEM_ExplOP_tp));
       return Token (res);
-// <-- 20150325
     }
 #ifdef VDMPP
     case TAG_TYPE_SEM_OverOPFN: {
       const Map & m (value.GetMap(pos_SEM_OverOPFN_overload));
       wstring res (L"OVERLOADED_VAL");
-      if (!m.IsEmpty())
-      {
+      if (!m.IsEmpty()) {
         Tuple t (m.Dom().GetElem());
         const TYPE_AS_Name & overnm (t.GetRecord(1));
-// 20120723 -->
-        //Tuple tlacc (m[t]);
-        //const SEQ<TYPE_AS_Type> & tp_l (tlacc.GetSequence(1));
-        //res += L": " + ASTAUX::ASName2String(MANGLE::GetUnmangledName(overnm)) + ASTypeList2Ascii(tp_l);
         res += L": " + ASTAUX::ASName2String(MANGLE::GetUnmangledName(overnm));
-// <-- 20120723
       }
       return Token (res);
     }
@@ -575,10 +558,7 @@ Generic VAL2X::val2generic(const TYPE_SEM_VAL & value, const Set & obj_refs)
       return Quote (L"<UNDEFINED>");
     }
     case TAG_TYPE_SEM_EXIT: {
-// 20120425 -->
-//      return val2generic(value.GetField(pos_SEM_EXIT_v), obj_refs);
       return SEQ<Char>(L"exit ").ImpConc(Sequence(val2generic(value.GetField(pos_SEM_EXIT_v), obj_refs).ascii()));
-// <-- 20120425
     }
     case TAG_TYPE_SEM_RETURN: {
       return Token (L"RETURN_VAL");
@@ -628,8 +608,7 @@ void VAL2X::PrintSemValue (const TYPE_SEM_VAL & val_v, wostream & ostr)
     case TAG_TYPE_SEM_EXIT: {
       ostr << L"exit";
       const Generic & value (val_v.GetField(pos_SEM_EXIT_v));
-      if (!value.IsNil())
-      {
+      if (!value.IsNil()) {
         ostr << L" ";
         val2stream (value, ostr, (Settings.PrintFormat() ? 0 : -1));
       }
@@ -648,16 +627,15 @@ void VAL2X::PrintSemValue (const TYPE_SEM_VAL & val_v, wostream & ostr)
 // +> seq of char
 wstring VAL2X::ASTypeList2Ascii(const SEQ<TYPE_AS_Type> & tp_l)
 {
-  if (tp_l.IsEmpty())
+  if (tp_l.IsEmpty()) {
     return L"()";
-
+  }
   wstring res (L"(");
   size_t len_tp_l = tp_l.Length();
-  for (size_t i = 1; i <= len_tp_l; i++)
-  {
-    if (i > 1)
+  for (size_t i = 1; i <= len_tp_l; i++) {
+    if (i > 1) {
       res += L", ";
-
+    }
     const TYPE_AS_Type & tp (tp_l[i]);
     res += GetStatSem().ASType2Ascii(tp);
   }
