@@ -145,23 +145,18 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_SigmaClass> DEF::ReadClasses(const TYPE_AS_Class & 
   sigmacl.SetField(pos_GLOBAL_SigmaClass_instvars,        tiv.GetSequence(1));
   sigmacl.SetField(pos_GLOBAL_SigmaClass_instvars_utp,    tiv.GetMap(3));
 
-// 20130709 -->
-  //sigmacl.SetField(pos_GLOBAL_SigmaClass_inst_uinv,       tiv.GetSequence(2)); // 
   TYPE_STKM_SubProgram code;
-  if (!tiv.GetSequence(2).IsEmpty())
-  {
+  if (!tiv.GetSequence(2).IsEmpty()) {
     SEQ<TYPE_AS_InstanceInv> instinv (tiv.GetSequence(2));
     size_t len_instinv = instinv.Length();
-    for (size_t i = len_instinv; i >= 1; i--)
-    {
+    for (size_t i = len_instinv; i >= 1; i--) {
       TYPE_STKM_SubProgram cond (theCompiler().E2I(instinv[i].GetRecord(pos_AS_InstanceInv_expr)));
       code = (i == 1 ? cond :
                        theCompiler().ConcIfThenElse(cond, code,
                                TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_false)))); 
     }
   }
-  sigmacl.SetField(pos_GLOBAL_SigmaClass_inst_uinv,       mk_(tiv.GetSequence(2), code)); // 
-// <-- 20130709
+  sigmacl.SetField(pos_GLOBAL_SigmaClass_inst_uinv,       mk_(tiv.GetSequence(2), code));
   sigmacl.SetField(pos_GLOBAL_SigmaClass_inst_uinit_uval, TYPE_SEM_InsStrct());
   sigmacl.SetField(pos_GLOBAL_SigmaClass_vls_udef,        valuem);
   sigmacl.SetField(pos_GLOBAL_SigmaClass_vls_uinit,       TYPE_GLOBAL_ValueMap());
@@ -262,14 +257,12 @@ Map DEF::UpdateConstructors(const TYPE_AS_Name & cls,
                             const MAP<TYPE_AS_Name, TYPE_AS_OpDef> & opm,
                             const SEQ<TYPE_AS_InstAssignDef> & instvars)
 {
-// 20090316 -->
 //  SEQ<TYPE_AS_Name> superlist;
 //  if (!supercls.IsEmpty())
 //    superlist = theState().AllSuperList(1, supercls);
 //  return CLASS::CreateConstructor(cls, instvars, superlist, opm);
 
   return CLASS::CreateConstructor(cls, instvars, supercls, opm);
-// <-- 20090316
 }
 
 // MergeFnsOpsPolys
@@ -314,8 +307,7 @@ MAP<TYPE_AS_Name,TYPE_AS_TypeDef> DEF::UpdateTypeDefs(const MAP<TYPE_AS_Name,TYP
   Set dom_typem (typem.Dom());
   MAP<TYPE_AS_Name,TYPE_AS_TypeDef> res;
   Generic nm;
-  for (bool bb = dom_typem.First(nm); bb; bb = dom_typem.Next(nm))
-  {
+  for (bool bb = dom_typem.First(nm); bb; bb = dom_typem.Next(nm)) {
     TYPE_AS_TypeDef td (typem[nm]);
     td.set_shape(UpdateType(td.GetRecord(pos_AS_TypeDef_shape), curcls));
     td.set_access(RealAccess(td.GetField(pos_AS_TypeDef_access), ACC_OP));
@@ -351,8 +343,7 @@ TYPE_AS_Type DEF::UpdateType(const TYPE_AS_Type & type, const TYPE_AS_Name & cur
       const SEQ<TYPE_AS_Field> & fields (type.GetSequence(pos_AS_CompositeType_fields));
       SEQ<TYPE_AS_Field> new_fls;
       size_t len = fields.Length();
-      for (size_t i = 1; i <= len; i++)
-      {
+      for (size_t i = 1; i <= len; i++) {
         TYPE_AS_Field f (fields[i]);
         f.SetField(pos_AS_Field_type, UpdateType(f.GetRecord(pos_AS_Field_type), curcls));
         new_fls.ImpAppend(f);
@@ -1324,8 +1315,7 @@ Map DEF::CreateImplPolyPrePostFns (const TYPE_AS_Name & mod_id,
 
   Map res_m;
 
-  if (! pre_e.IsNil ())
-  {
+  if (! pre_e.IsNil ()) {
     SEQ<type_dL> parm_pre; // seq of seq of STKM`Pattern
     parm_pre.ImpAppend (theCompiler().PL2PL(parms));
 
@@ -1873,7 +1863,7 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_Overloaded> DEF::TransOverloaded(const MAP<TYPE_AS_
         // add overload function
         TYPE_GLOBAL_Overloaded overload (over[realid]); // map nat to map AS`Name to ((seq of AS`Type) * AS`Access)
         Map thisAritVal (overload.DomExists(arit) ? Map(overload[arit]) : Map());
-        thisAritVal.ImpModify(id, mk_(tp_l, acc, Nil())); // 20111021
+        thisAritVal.ImpModify(id, mk_(tp_l, acc, Nil()));
 
         overload.ImpModify(arit, thisAritVal);
         over.ImpModify(realid, overload);
@@ -1882,7 +1872,7 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_Overloaded> DEF::TransOverloaded(const MAP<TYPE_AS_
         // new overload function
         TYPE_GLOBAL_Overloaded overload; // map nat to map AS`Name to ((seq of AS`Type) * AS`Access)
         Map thisAritVal; // map AS`Name to ((seq of AS`Type) * AS`Access)
-        thisAritVal.ImpModify(id, mk_(tp_l, acc, Nil())); // 20111021
+        thisAritVal.ImpModify(id, mk_(tp_l, acc, Nil()));
 
         overload.ImpModify(arit, thisAritVal);
         over.ImpModify(realid, overload);
@@ -1925,7 +1915,6 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_Overloaded> DEF::TransOverloaded(const MAP<TYPE_AS_
           Map newover (m.DomExists(arit) ? Map(m[arit]) : Map());
           Generic gid;
           for (bool dd = dom_thisAritVal.First(gid); dd; dd = dom_thisAritVal.Next(gid)) {
-//
             Tuple tacc (thisAritVal[gid]); // ((seq of AS`Type) * AS`Access)
             const SEQ<TYPE_AS_Type> & t (tacc.GetSequence(1)); // seq of AS`Type
             const TYPE_AS_Access & acc (tacc.GetField(2));     // AS`Access
@@ -1956,14 +1945,12 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_Overloaded> DEF::TransOverloaded(const MAP<TYPE_AS_
               }
             }
             TYPE_AS_TotalFnType tft (CreateFunctionPostType(t, restp, Sequence()));            
-//
             newover.ImpModify(postid, mk_(tft.GetSequence(pos_AS_TotalFnType_fndom), acc));
           }
           m.ImpModify(arit, newover);
         }
         over.ImpModify(realpostid, m);
       }
-//
     }
   }
   return over;
@@ -2127,8 +2114,7 @@ Map DEF::CreateOperationPrePostFns (const TYPE_AS_Name & mod_id,
   Map res_m;
   Set dom_opm (opm.Dom());
   Generic id;
-  for (bool bb = dom_opm.First (id); bb; bb = dom_opm.Next (id))
-  {
+  for (bool bb = dom_opm.First (id); bb; bb = dom_opm.Next (id)) {
     TYPE_AS_OpDef opd (opm[id]);
     switch(opd.GetTag()) {
       case TAG_TYPE_AS_ExplOpDef: {
@@ -2183,13 +2169,11 @@ SEQ<TYPE_AS_Parameters> DEF::CreateExplOperationPostParms (const SEQ<TYPE_AS_Pat
     pat_id.Init(ASTAUX::MkNameFromId (ASTAUX::MkId(L"RESULT"), NilContextId), Nil(), NilContextId);
     tmp_l.ImpAppend (pat_id);
   }
-
   if (! gst.IsNil ()) {
     TYPE_AS_StateDef sd (gst);
     tmp_l.ImpAppend (CreateSigmaPattern (sd.get_tp (), true));
     tmp_l.ImpAppend (CreateSigmaPattern (sd.get_tp (), false));
   }
-
   SEQ<TYPE_AS_Parameters> res_l;
   res_l.ImpAppend (tmp_l);
   return (res_l);
@@ -2213,7 +2197,6 @@ SEQ<TYPE_AS_Parameters> DEF::CreateExtExplOperationPostParms (const SEQ<TYPE_AS_
     res_parm.ImpAppend (CreateSigmaPattern (sd.get_tp (), true));
     res_parm.ImpAppend (CreateSigmaPattern (sd.get_tp (), false));
   }
-
   res_l.ImpAppend (res_parm);
   return (res_l);
 }
@@ -2587,7 +2570,6 @@ Map DEF::TransTP(const Set & typeset_)
         const TYPE_AS_Name & nm           (type.GetRecord(pos_AS_CompositeType_name));
         const SEQ<TYPE_AS_Field> & fields (type.GetSequence(pos_AS_CompositeType_fields));
 
-// 20141202 -->
         //res.Insert(nm, mk_(TCompT(nm, fields), access));
         //Tuple t (mk_(TCompT(nm, fields, access), access));
         Tuple t (TCompT(nm, fields, access));
@@ -2597,7 +2579,6 @@ Map DEF::TransTP(const Set & typeset_)
           }
         }
         res.Insert(nm, t);
-// <-- 20141202
   
         Set s;
         size_t len_fields = fields.Length();

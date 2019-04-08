@@ -71,7 +71,6 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
       const TYPE_AS_Access & access (vd.GetField(pos_AS_ValueDef_access));
 #endif // VDMPP
 
-// 20130530 -->
 //      Tuple euc (theStackMachine().EvalUninterruptedCmd(exp_e,
 //                                                        TYPE_STKM_SubProgram(),
 //                                                        TYPE_STKM_SubProgram(),
@@ -83,7 +82,6 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
       SEQ<Char> id (L"Init of Global Value: " + ASTAUX::ASName2String (nm) + L"`" + wostr.str());
 
       Tuple euc (theStackMachine().EvalUninterruptedCmd(exp_e, TYPE_STKM_SubProgram(), TYPE_STKM_SubProgram(), id));
-// <-- 20130530
 
       const TYPE_STKM_EvaluationState & eval_state (euc.GetRecord(1));
 
@@ -154,7 +152,6 @@ void CLASS::TransHierarchy()
   Generic name;
   for (bool bb = dom_classes.First(name); bb; bb = dom_classes.Next(name)) {
     // Skip CPP classes if any
-// 160113
 //    if(classes[name].Is(TAG_TYPE_CPP_Module)) continue;
 
     SET<TYPE_AS_Name> supers (theState().GetSupers( name ));
@@ -472,29 +469,25 @@ SEQ<TYPE_AS_Type> CLASS::ExtOpDom(const TYPE_AS_OpDef & opdef)
 void CLASS::TransSyncs(const TYPE_AS_Document & cs)
 {
 #ifdef VICE
-  bool usesThreads = true; // 20090129
+  bool usesThreads = true;
 #else
-  bool usesThreads = false; // 20090129
+  bool usesThreads = false;
 #endif // VDMPP
   Map class_m;  // map AS`Name to [AS`Definitions]
 
   size_t len_cs = cs.Length();
   for (size_t i = 1; i <= len_cs; i++) {
-    // Skip CPP classes if any
-// 160113
-    if(cs[i].Is(TAG_TYPE_CPP_Module)) continue;
+    if(!cs[i].Is(TAG_TYPE_CPP_Module)) {
+      const TYPE_AS_Class & as_class (cs[i]);
+      const Generic & def_g (as_class.GetField(pos_AS_Class_defs));
+      class_m.Insert(as_class.GetRecord(pos_AS_Class_nm), def_g);
 
-    const TYPE_AS_Class & as_class (cs[i]);
-    const Generic & def_g (as_class.GetField(pos_AS_Class_defs));
-    class_m.Insert(as_class.GetRecord(pos_AS_Class_nm), def_g);
-
-// 20090129 ->
-    if (!usesThreads && !def_g.IsNil()) {
-      TYPE_AS_Definitions def (def_g);
-      usesThreads = (!def.GetSequence(pos_AS_Definitions_syncs).IsEmpty() ||
-                     !def.GetField(pos_AS_Definitions_threaddef).IsNil());
+      if (!usesThreads && !def_g.IsNil()) {
+        TYPE_AS_Definitions def (def_g);
+        usesThreads = (!def.GetSequence(pos_AS_Definitions_syncs).IsEmpty() ||
+                       !def.GetField(pos_AS_Definitions_threaddef).IsNil());
+      }
     }
-// <- 20090129
   }
 
   if (usesThreads) {
@@ -517,15 +510,11 @@ SEQ<TYPE_AS_Name> CLASS::GetPermissionOrder(const TYPE_AS_Document & cs)
   Map dep_m; // map AS`Name to set of AS`Name
 
   size_t len_cs = cs.Length();
-//  Generic cl_nm;
-//  for (bool bb = cs.First(cl_nm); bb; bb = cs.Next(cl_nm))
   for (size_t i = 1; i <= len_cs; i++) {
-    // Skip CPP classes if any
-//    if(Record(cl_nm).Is(TAG_TYPE_CPP_Module)) continue;
-    if(cs[i].Is(TAG_TYPE_CPP_Module)) continue;
-
-    const TYPE_AS_Class & as_class (cs[i]);
-    dep_m.Insert(as_class.GetRecord(pos_AS_Class_nm), as_class.GetSequence(pos_AS_Class_supercls).Elems());
+    if(!cs[i].Is(TAG_TYPE_CPP_Module)) {
+      const TYPE_AS_Class & as_class (cs[i]);
+      dep_m.Insert(as_class.GetRecord(pos_AS_Class_nm), as_class.GetSequence(pos_AS_Class_supercls).Elems());
+    }
   }
 
   SEQ<TYPE_AS_Name> res;
@@ -539,7 +528,8 @@ SEQ<TYPE_AS_Name> CLASS::GetPermissionOrder(const TYPE_AS_Document & cs)
       SET<TYPE_AS_Name> supercl_s (dep_m[cl_nm]);
       if (supercl_s.IsEmpty()) {
         no_link.Insert(cl_nm);
-      } else {
+      }
+      else {
         rem_m.ImpModify(cl_nm, supercl_s);
       }
     }
@@ -610,7 +600,6 @@ Generic CLASS::GetInhThread (const TYPE_AS_Name & clnm)
   if (!td.IsNil()) {
     return td;
   }
-
   SET<TYPE_AS_Name> supers (theState().GetInhCon(clnm));
   Set super_threads;
   Generic g;
@@ -665,14 +654,12 @@ void CLASS::TransThreadDef(const TYPE_AS_Name & clnm, const Generic & Def)
       }
 #endif //VICE
       default: { // TYPE_AS_Stmt
-// 20151009 --> 
         //theState().SetThreadDef(clnm, TYPE_STKM_ProcThread().Init(theCompiler().S2I(Def)));
         TYPE_STKM_SubProgram code;
         code.ImpAppend(TYPE_INSTRTP_PUSHCONTEXT().Init(Int(ALL)));
         code.ImpConc(theCompiler().S2I(Def));
         code.ImpAppend(TYPE_INSTRTP_POPCONTEXT());
         theState().SetThreadDef(clnm, TYPE_STKM_ProcThread().Init(code));
-// <-- 20151009
         break;
       }
     }
@@ -690,16 +677,9 @@ void CLASS::TransSyncDef(const TYPE_AS_Name & nm,
                          const SET<TYPE_AS_Name> & supers)
 {
   switch(Def.GetTag()) {
-    case TAG_TYPE_AS_Permission: {
-      TransPermission(nm, Def, opnm_s, supers);
-      break;
-    }
-    case TAG_TYPE_AS_Mutex: {
-      TransMutex(nm, Def, opnm_s);
-      break;
-    }
-    default:
-      break;
+    case TAG_TYPE_AS_Permission: { TransPermission(nm, Def, opnm_s, supers); break; }
+    case TAG_TYPE_AS_Mutex:      { TransMutex(nm, Def, opnm_s); break; }
+    default: break;
   }
 }
 
@@ -752,11 +732,12 @@ void CLASS::InstallPermission(const TYPE_AS_Name & clnm,
     TYPE_STKM_SubProgram no_push_code (existing_code.SubSequence(2, existing_code.Length() -1));
     res_code = MergePermission(code, no_push_code);
   }
-  else if (local_ops.InSet(opnm) )
+  else if (local_ops.InSet(opnm) ) {
     res_code = code;
-  else
+  }
+  else {
     res_code = MergePermissionWithSupers(clnm, opnm, code);
-
+  }
   TYPE_STKM_SubProgram push_code;
   push_code.ImpAppend(TYPE_INSTRTP_PUSHCLNMCUROBJ().Init(clnm, clnm));
   push_code.ImpConc(res_code);
@@ -770,11 +751,12 @@ void CLASS::InstallPermission(const TYPE_AS_Name & clnm,
 // ==> STKM`SubProgram
 TYPE_STKM_SubProgram CLASS::MergePermission(const TYPE_STKM_SubProgram & prog1, const TYPE_STKM_SubProgram & prog2)
 {
-  if (prog1.IsEmpty())
+  if (prog1.IsEmpty()) {
     return prog2;
-  else if (prog2.IsEmpty())
+  }
+  else if (prog2.IsEmpty()) {
     return prog1;
-
+  }
   return theCompiler().ConcIfThenElse(prog1,
                                       prog2,
                                       TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_false)));
@@ -795,8 +777,9 @@ TYPE_STKM_SubProgram CLASS::MergePermissionWithSupers(const TYPE_AS_Name & clnm,
   for (bool bb = supers.First(supernm); bb; bb = supers.Next(supernm)) {
     TYPE_AS_Name q_opnm (AUX::ConstructDoubleName( supernm, opnm ));
     Generic super_code (theState().LookUpPermis(q_opnm));
-    if (!super_code.IsNil())
+    if (!super_code.IsNil()) {
       super_codes.Insert(super_code);
+    }
   }
   switch (super_codes.Card()) {
     case 0: {
@@ -826,12 +809,13 @@ void CLASS::TransMutex(const TYPE_AS_Name & clnm, const TYPE_AS_Mutex & mutex, c
   const Generic & gops (mutex.GetField(pos_AS_Mutex_ops));
 
   SET<TYPE_AS_Name> all_ops;
-  if (gops.IsNil())
+  if (gops.IsNil()) {
     all_ops = theState().GetAllOpsNmsSupers(clnm);
-  else
+  }
+  else {
 //    all_ops = (Generic)((Sequence) gops).Elems();
     all_ops.ImpUnion(Sequence(gops).Elems());
-
+  }
 // TODO: mutex with multiple operation names
 /*
   TYPE_AS_BinaryExpr pred;
@@ -848,19 +832,16 @@ void CLASS::TransMutex(const TYPE_AS_Name & clnm, const TYPE_AS_Mutex & mutex, c
   }
 */
   Generic opnm;
-  for (bool bb = all_ops.First(opnm); bb; bb = all_ops.Next(opnm))
-  {
+  for (bool bb = all_ops.First(opnm); bb; bb = all_ops.Next(opnm)) {
     SEQ<TYPE_AS_Name> ops;
-    if (all_ops.Card() == 1 )
+    if (all_ops.Card() == 1 ) {
       ops.ImpAppend(all_ops.GetElem());
-    else
-    {
-// 20090202 -->
+    }
+    else {
 // TODO
         ops.ImpConc(ASTAUX::SetToSequenceR(all_ops));
 //        // same as spec
 //        ops.ImpConc(ASTAUX::SetToSequenceR(Set(all_ops).RemElem(opnm)));
-// <-- 20090202
     }
 
     TYPE_AS_BinaryExpr pred;
@@ -889,25 +870,18 @@ Map CLASS::TransStaticRef(const MAP<TYPE_AS_Name, TYPE_GLOBAL_SigmaClass> & clas
   MAP< TYPE_AS_Name, SET<TYPE_AS_Name> > sdep;
   SET<TYPE_AS_Name> exp;
   Generic name;
-  for (bool bb = dom_classes.First(name); bb; bb = dom_classes.Next(name))
-  {
-    // Skip CPP classes if any
-// 160113
-//    if(Record(classes[name]).Is(TAG_TYPE_CPP_Module)) continue;
-
+  for (bool bb = dom_classes.First(name); bb; bb = dom_classes.Next(name)) {
     SET<TYPE_AS_Name> clsnms;
     const SEQ<TYPE_AS_ValueDef> & vls (classes[name].GetSequence(pos_GLOBAL_SigmaClass_vls_udef));
     size_t len_vls = vls.Length();
-    for (size_t i = 1; i <= len_vls; i++)
-    {
+    for (size_t i = 1; i <= len_vls; i++) {
       const TYPE_AS_Expr & val (vls[i].GetRecord(pos_AS_ValueDef_val));
       clsnms.ImpUnion(AUX::ClModNmInExpr(val)); 
     }
 
     const SEQ<TYPE_AS_InstAssignDef> & instvars (classes[name].GetSequence(pos_GLOBAL_SigmaClass_instvars));
     size_t len_instvars = instvars.Length();
-    for (size_t j = 1; j <= len_instvars; j++)
-    {
+    for (size_t j = 1; j <= len_instvars; j++) {
       const TYPE_AS_InstAssignDef & iad (instvars[j]);
 //      if (iad.GetBoolValue(pos_AS_InstAssignDef_stat))
 //      {
@@ -919,15 +893,12 @@ Map CLASS::TransStaticRef(const MAP<TYPE_AS_Name, TYPE_GLOBAL_SigmaClass> & clas
 //      }
     }
 
-// 20150121 -->
     const SEQ<TYPE_AS_InstanceInv> & invs (classes[name].GetTuple(pos_GLOBAL_SigmaClass_inst_uinv).GetSequence(1));
     size_t len_invs = invs.Length();
-    for (size_t k = 1; k <= len_invs; k++)
-    {
+    for (size_t k = 1; k <= len_invs; k++) {
       const TYPE_AS_Expr & expr (invs[k].GetRecord(pos_AS_InstanceInv_expr));
       clsnms.ImpUnion(AUX::ClModNmInExpr(expr)); 
     }
-// <-- 20150121
 
     clsnms.ImpDiff(mk_set(name));
     clsnms.ImpDiff(classes[name].GetSet(pos_GLOBAL_SigmaClass_inhcon));

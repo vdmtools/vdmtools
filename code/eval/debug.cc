@@ -44,20 +44,22 @@
 Tuple StackEval::EvalPrintDebugAux(const Record & e, const SEQ<Char> & debugString)
 {
   TYPE_STKM_SubProgram instr;
-  if (AUX::IsStmt(e))
+  if (AUX::IsStmt(e)) {
     instr.ImpConc(theCompiler().S2I(e));
-  else
+  }
+  else {
     instr.ImpConc(theCompiler().E2I(e));
-
+  }
   SetContinue();
   SetCid(NilContextId);
 
-  if (Settings.RTErrException())
+  if (Settings.RTErrException()) {
     PushDS(GetEvaluatorState(), debugString,
            TYPE_STKM_DebugCmd().Init(theCompiler().AddTrap(instr, TYPE_STKM_SubProgram())));
-  else
+  }
+  else {
     PushDS(GetEvaluatorState(), debugString, TYPE_STKM_DebugCmd().Init(instr));
-
+  }
   return EvalRun(true);
 }
 
@@ -81,12 +83,13 @@ Tuple StackEval::EvalAuxProgram(const TYPE_STKM_SubProgram & instr,
 {
   DeActivateAllBreakpoints();
 
-  if (Settings.RTErrException())
+  if (Settings.RTErrException()) {
     PushCS(TYPE_STKM_DebugCmd().Init(theCompiler().AddTrap(instr, TYPE_STKM_SubProgram())),
            debugStr, Nil(), CallStackItemType::CS_INTERNAL);
-  else
+  }
+  else {
     PushCS(TYPE_STKM_DebugCmd().Init(instr), debugStr, Nil(), CallStackItemType::CS_INTERNAL);
-
+  }
 #ifdef VDMPP
   theSystem().ResetSlice();
 #endif //VDMPP
@@ -174,10 +177,12 @@ TYPE_SEM_VAL StackEval::EvaluateExpression(const TYPE_AS_Name & clmod, const Gen
   PushModule (clmod);
 #endif // VDMSL
 #ifdef VDMPP
-  if (obj.IsNil())
+  if (obj.IsNil()) {
     PushClNmCurObj(clmod, clmod);
-  else
+  }
+  else {
     PushCurObj(obj, clmod, clmod);
+  }
 #endif // VDMPP
 
   PushEmptyEnv();
@@ -192,20 +197,23 @@ TYPE_SEM_VAL StackEval::EvaluateExpression(const TYPE_AS_Name & clmod, const Gen
   PopModule ();
 #endif // VDMSL
 #ifdef VDMPP
-  if (obj.IsNil())
+  if (obj.IsNil()) {
     PopClNmCurObj();
-  else
+  }
+  else {
     PopCurObj();
+  }
 #endif // VDMPP
 
   theStackMachine().SetLastRes(sem_undef);
 
   TYPE_STKM_EvaluationState eval_state (res.GetRecord(1));
-  if (eval_state.Is(TAG_TYPE_STKM_Success))
+  if (eval_state.Is(TAG_TYPE_STKM_Success)) {
     return res.GetRecord(2);
-  else
+  }
+  else {
     return RTERR::ErrorVal(L"EvaluateExpression", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-//  return TYPE_SEM_VAL(); // dummy;
+  }
 }
 
 // EvalRun
@@ -213,13 +221,14 @@ TYPE_SEM_VAL StackEval::EvaluateExpression(const TYPE_AS_Name & clmod, const Gen
 // ==> STKM`EvaluationState * [SEM`VAL]
 Tuple StackEval::EvalRun(bool ismain)
 {
-  ResetUserBREAK(); // 20071010
+  ResetUserBREAK();
 
 #ifdef VDMSL
   Tuple res (EvalMainLoop());
   if (res.GetRecord(1).Is(TAG_TYPE_STKM_Success)) {
-    if( CallStackLevel() > 0 )
+    if( CallStackLevel() > 0 ) {
       PopCS();
+    }
   }
   return res;
 #endif //VDMSL
@@ -228,15 +237,12 @@ Tuple StackEval::EvalRun(bool ismain)
   theSystem().ResetSlice();
 
 #ifdef VICE
-  if(theSystem().IsSystem())
-  {
+  if(theSystem().IsSystem()) {
     Tuple res (theScheduler().EvalScheduler());
-    if (res.GetRecord(1).Is(TAG_TYPE_STKM_Success))
-    {
-      if( this->CallStackLevel() > 0 )
-      {
+    if (res.GetRecord(1).Is(TAG_TYPE_STKM_Success)) {
+      if( this->CallStackLevel() > 0 ) {
         PopCS();
-        theScheduler().SaveCurThreadState(); // 20070423
+        theScheduler().SaveCurThreadState();
       }
     }
 //    theState().GC(true);
@@ -246,23 +252,12 @@ Tuple StackEval::EvalRun(bool ismain)
 #endif // VICE
 
   Tuple res (theScheduler().EvalScheduler());
-  if (res.GetRecord(1).Is(TAG_TYPE_STKM_Success))
-  {
-    if( this->CallStackLevel() > 0 )
-    {
+  if (res.GetRecord(1).Is(TAG_TYPE_STKM_Success)) {
+    if( this->CallStackLevel() > 0 ) {
       PopCS();
-      theScheduler().SaveCurThreadState(); // 20070423
+      theScheduler().SaveCurThreadState();
     }
-
-// 20111201 -->
-//    if(UsesThreads() && (theScheduler().GiveAllThreads().Dom().Card() > 1))
-//    {
-//      vdm_iplog << L"*** Warning *** User defined thread(s) exists." << endl;
-//      TBDEBUG::DisplayThreads(vdm_iplog);
-//    }
-// <-- 20111201
   }
-
 //  theState().GC(true);
   theState().GC(true, !UsesThreads() || (theScheduler().GiveAllThreads().Dom().Card() == 1));
   return res;
@@ -332,13 +327,13 @@ Tuple StackEval::EvalFinish()
 Tuple StackEval::RunIfAllowed()
 {
   ResetUpDn();
-  if (IsSteppingAllowed())
-  {
+  if (IsSteppingAllowed()) {
     Tuple t (EvalRun(false));
     return mk_(Bool(true), t.GetField(1), t.GetField(2));
   }
-  else
+  else {
     return mk_(Bool(false), Nil(), Nil());
+  }
 }
 
 // IsSteppingAllowed
@@ -387,7 +382,6 @@ Tuple StackEval::EvalBreakName(const TYPE_AS_Name & name, const Int & id, const 
   }
 
   if (t.GetBool(1)) {
-
     TYPE_CI_ContextId cid (t.GetInt(3));
     TYPE_AS_Name modcl (t.GetRecord(4));
     TYPE_AS_Name loc_nm (t.GetRecord(5));
@@ -404,13 +398,12 @@ Tuple StackEval::EvalBreakName(const TYPE_AS_Name & name, const Int & id, const 
     breakInfo.Init(modcl, loc_nm, status_, cid);
     this->breakpoints.ImpModify(Int(id_), breakInfo);
 
-    if (status_.Is(TAG_TYPE_DEBUGTP_Enabled))
+    if (status_.Is(TAG_TYPE_DEBUGTP_Enabled)) {
       GetCI().SetBreakpoint(cid);
-
+    }
     return mk_(Bool(true), Sequence(), Int(id_));
   }
-  else
-  {
+  else {
     return mk_(Bool(false), t.GetSequence(2), Nil());
   }
 }
@@ -433,15 +426,14 @@ Tuple StackEval::EvalBreakPos(const TYPE_AS_Id & fileName,
   Tuple gcap (GetCI().GetCidAtPos(fileName, line, col));
 
   if (gcap.GetBool(1)) {
-    // 20060605
     TYPE_CI_ContextId cid (gcap.GetInt(3));
     Tuple flc (GetCI().GetFileLineColPos(cid));
     Int line_new (flc.GetInt(2));
 
-    if( line != line_new )
+    if( line != line_new ) {
       return mk_(Bool(false),
                  SEQ<Char>(L"Could not find a break position"), Nil());
-
+    }
     Int id_ (id);
     if (id_ == -1) {
       this->breakId++;
@@ -452,13 +444,14 @@ Tuple StackEval::EvalBreakPos(const TYPE_AS_Id & fileName,
     breakInfo.Init(fileName, line, col, status, cid);
     this->breakpoints.ImpModify(id_, breakInfo);
 
-    if (status.Is(TAG_TYPE_DEBUGTP_Enabled))
+    if (status.Is(TAG_TYPE_DEBUGTP_Enabled)) {
       GetCI().SetBreakpoint(cid);
-
+    }
     return mk_(Bool(true), SEQ<Char>(), id_);
   }
-  else
+  else {
     return mk_(Bool(false), gcap.GetField(2), Nil());
+  }
 }
 
 // DeleteBreakpoint
@@ -466,9 +459,7 @@ Tuple StackEval::EvalBreakPos(const TYPE_AS_Id & fileName,
 // ==> bool * [seq of char]
 Tuple StackEval::DeleteBreakpoint(const Int & num)
 {
-  if (!this->breakpoints.DomExists(num))
-    return mk_(Bool(false), SEQ<Char>(L"No such break point"));
-  else {
+  if (this->breakpoints.DomExists(num)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[num]);
     switch (info.GetTag()) {
       case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
@@ -476,8 +467,9 @@ Tuple StackEval::DeleteBreakpoint(const Int & num)
         GetCI().RemoveBreakpoint(cid);
         this->breakpoints.RemElem(num);
 
-        if (this->conditions.DomExists(cid))
+        if (this->conditions.DomExists(cid)) {
           this->conditions.RemElem(cid);
+        }
         break;
       }
       case TAG_TYPE_DEBUGTP_PosBreakInfo: {
@@ -485,12 +477,16 @@ Tuple StackEval::DeleteBreakpoint(const Int & num)
         GetCI().RemoveBreakpoint(cid);
         this->breakpoints.RemElem(num);
 
-        if (this->conditions.DomExists(cid))
+        if (this->conditions.DomExists(cid)) {
           this->conditions.RemElem(cid);
+        }
         break;
       }
     }
     return mk_(Bool(true), SEQ<Char>());
+  }
+  else {
+    return mk_(Bool(false), SEQ<Char>(L"No such break point"));
   }
 }
 
@@ -501,31 +497,30 @@ SET<Int> StackEval::UpdateBreakPoint()
   SET<Int> ids;
   Set dom_breakpoints (this->breakpoints.Dom());
   Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
+  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
     switch (info.GetTag()) {
       case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
-        if (!UpdateFnNameBreakInfo(id, info))
-        {
+        if (!UpdateFnNameBreakInfo(id, info)) {
           this->breakpoints.RemElem(id);
           ids.Insert(id);
 
           TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
-          if (this->conditions.DomExists(cid))
+          if (this->conditions.DomExists(cid)) {
             this->conditions.RemElem(cid);
+          }
         }
         break;
       }
       case TAG_TYPE_DEBUGTP_PosBreakInfo: {
-        if (!UpdatePosBreakInfo(id, info))
-        {
+        if (!UpdatePosBreakInfo(id, info)) {
           this->breakpoints.RemElem(id);
           ids.Insert(id);
 
           TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
-          if (this->conditions.DomExists(cid))
+          if (this->conditions.DomExists(cid)) {
             this->conditions.RemElem(cid);
+          }
         }
         break;
       }
@@ -571,8 +566,6 @@ bool StackEval::UpdatePosBreakInfo(const Int & id, const TYPE_DEBUGTP_PosBreakIn
 // ==> bool
 bool StackEval::ActiveBreakpoint(const TYPE_CI_ContextId & cid)
 {
-// 20081127 for conditional break
-//  return (inActiveLevel == 0) && GetCI().IsBreakpointAtCid(cid);
   return (this->inActiveLevel == 0) &&
          GetCI().IsBreakpointAtCid(cid) &&
          CheckCondition(cid, vdm_iplog);
@@ -587,14 +580,13 @@ bool StackEval::ExistsBreakpointForName(const TYPE_AS_Name &modClName,
 {
   Set dom_breakpoints (this->breakpoints.Dom());
   Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
+  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
-    if (info.Is(TAG_TYPE_DEBUGTP_FnNameBreakInfo))
-    {
+    if (info.Is(TAG_TYPE_DEBUGTP_FnNameBreakInfo)) {
       if ((info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_modcl) == modClName) &&
-          (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_name) == name))
+          (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_name) == name)) {
         return true;
+      }
     }
   }
   return false;
@@ -611,15 +603,14 @@ bool StackEval::ExistsBreakpointForPos(const TYPE_AS_Id & name,
 {
   Set dom_breakpoints (this->breakpoints.Dom());
   Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
+  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
-    if (info.Is(TAG_TYPE_DEBUGTP_PosBreakInfo))
-    {
+    if (info.Is(TAG_TYPE_DEBUGTP_PosBreakInfo)) {
       if ((info.GetSequence(pos_DEBUGTP_PosBreakInfo_fileName) == name) &&
           (info.GetInt(pos_DEBUGTP_PosBreakInfo_line) == line) &&
-          (info.GetInt(pos_DEBUGTP_PosBreakInfo_col) == col))
+          (info.GetInt(pos_DEBUGTP_PosBreakInfo_col) == col)) {
         return true;
+      }
     }
   }
   return false;
@@ -637,14 +628,13 @@ Int StackEval::GetBreakpointNumForName(const TYPE_AS_Name &modClName,
 {
   Set dom_breakpoints (this->breakpoints.Dom());
   Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
+  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
-    if (info.Is(TAG_TYPE_DEBUGTP_FnNameBreakInfo))
-    {
+    if (info.Is(TAG_TYPE_DEBUGTP_FnNameBreakInfo)) {
       if ((info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_modcl) == modClName) &&
-          (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_name) == name))
+          (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_name) == name)) {
         return (Int(id));
+      }
     }
   }
   return Int(-1);
@@ -663,15 +653,14 @@ Int StackEval::GetBreakpointNumForPos(const TYPE_AS_Id & name,
 {
   Set dom_breakpoints (this->breakpoints.Dom());
   Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
+  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
-    if (info.Is(TAG_TYPE_DEBUGTP_PosBreakInfo))
-    {
+    if (info.Is(TAG_TYPE_DEBUGTP_PosBreakInfo)) {
       if ((info.GetSequence(pos_DEBUGTP_PosBreakInfo_fileName) == name) &&
           (info.GetInt(pos_DEBUGTP_PosBreakInfo_line) == line) &&
-          (info.GetInt(pos_DEBUGTP_PosBreakInfo_col) == col))
+          (info.GetInt(pos_DEBUGTP_PosBreakInfo_col) == col)) {
         return (Int(id));
+      }
     }
   }
   return Int(-1);
@@ -695,61 +684,56 @@ void StackEval::ResetBreakpoints ()
 // PrintBreakpoints
 void StackEval::PrintBreakpoints(wostream & out)
 {
-  if (this->breakpoints.IsEmpty()) {
-    out << L"No breakpoints are set" << endl;
-    return;
-  }
-  
-  Set dom_breakpoints (this->breakpoints.Dom());
-  Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
-    TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
-    switch (info.GetTag()) {
-      case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
-        TYPE_AS_Name modcl (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_modcl));
-        TYPE_AS_Name name (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_name));
-        TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_status));
-        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
+  if (!this->breakpoints.IsEmpty()) {
+    Set dom_breakpoints (this->breakpoints.Dom());
+    Generic id;
+    for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
+      TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
+      switch (info.GetTag()) {
+        case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
+          TYPE_AS_Name modcl (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_modcl));
+          TYPE_AS_Name name (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_name));
+          TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_status));
+          TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
 
-        out << L"#" << Int(id) << L": ";
-        out << (status.Is(TAG_TYPE_DEBUGTP_Enabled) ? L"+ " : L"- ");
-        out << ASTAUX::ASName2String(ASTAUX::Combine2Names(modcl, name));
+          out << L"#" << Int(id) << L": ";
+          out << (status.Is(TAG_TYPE_DEBUGTP_Enabled) ? L"+ " : L"- ");
+          out << ASTAUX::ASName2String(ASTAUX::Combine2Names(modcl, name));
 
-        if (this->conditions.DomExists(cid)) 
-        {
-          out << L" : ";
-          PrintCondition(cid, out);
+          if (this->conditions.DomExists(cid)) {
+            out << L" : ";
+            PrintCondition(cid, out);
+          }
+          out << endl;
+          break;
         }
-        out << endl;
-
-        break;
-      }
-      case TAG_TYPE_DEBUGTP_PosBreakInfo: {
-        SEQ<Char> fileName (info.GetSequence(pos_DEBUGTP_PosBreakInfo_fileName));
-        Int line (info.GetInt(pos_DEBUGTP_PosBreakInfo_line));
-        Int col (info.GetInt(pos_DEBUGTP_PosBreakInfo_col));
-        TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_PosBreakInfo_status));
-        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
+        case TAG_TYPE_DEBUGTP_PosBreakInfo: {
+          SEQ<Char> fileName (info.GetSequence(pos_DEBUGTP_PosBreakInfo_fileName));
+          Int line (info.GetInt(pos_DEBUGTP_PosBreakInfo_line));
+          Int col (info.GetInt(pos_DEBUGTP_PosBreakInfo_col));
+          TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_PosBreakInfo_status));
+          TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
       
-        out << L"#" << Int(id) << L": ";
-        out << (status.Is(TAG_TYPE_DEBUGTP_Enabled) ? L"+ " : L"- ");
-        out << ASTAUX::Id2String(fileName);
-        out << L" line " << line;
-      
-        if (col != 1 )
-          out << L" column " << col;
-
-        if (this->conditions.DomExists(cid)) 
-        {
-          out << L" : ";
-          PrintCondition(cid, out);
+          out << L"#" << Int(id) << L": ";
+          out << (status.Is(TAG_TYPE_DEBUGTP_Enabled) ? L"+ " : L"- ");
+          out << ASTAUX::Id2String(fileName);
+          out << L" line " << line;
+        
+          if (col != 1 ) {
+            out << L" column " << col;
+          }
+          if (this->conditions.DomExists(cid)) {
+            out << L" : ";
+            PrintCondition(cid, out);
+          }
+          out << endl;
+          break;
         }
-        out << endl;
-
-        break;
       }
     }
+  }
+  else {
+    out << L"No breakpoints are set" << endl;
   }
 }
 
@@ -768,38 +752,36 @@ void StackEval::PrintBreakpoints(wostream & out)
 // ==> bool * [seq of char]
 Tuple StackEval::EnableBreakpoint(const Int & num)
 {
-// 20081126
-//  return EnableDisableBreakpoint(num, true);
-
-  if (!this->breakpoints.DomExists(num))
-    return mk_(Bool(false), Sequence(L"No such break point"));
-
-  TYPE_DEBUGTP_BreakInfo info (this->breakpoints[num]);
-  switch (info.GetTag()) {
-    case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
-      TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_status));
-      if (status.Is(TAG_TYPE_DEBUGTP_Enabled))
-        return mk_(Bool(false), Sequence(L"Breakpoint is already enabled"));
-
-      TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
-      GetCI().SetBreakpoint(cid);
-      info.SetField(pos_DEBUGTP_FnNameBreakInfo_status, TYPE_DEBUGTP_Enabled());
-      break;
+  if (this->breakpoints.DomExists(num)) {
+    TYPE_DEBUGTP_BreakInfo info (this->breakpoints[num]);
+    switch (info.GetTag()) {
+      case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
+        TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_status));
+        if (status.Is(TAG_TYPE_DEBUGTP_Enabled)) {
+          return mk_(Bool(false), Sequence(L"Breakpoint is already enabled"));
+        }
+        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
+        GetCI().SetBreakpoint(cid);
+        info.SetField(pos_DEBUGTP_FnNameBreakInfo_status, TYPE_DEBUGTP_Enabled());
+        break;
+      }
+      case TAG_TYPE_DEBUGTP_PosBreakInfo: {
+        TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_PosBreakInfo_status));
+        if (status.Is(TAG_TYPE_DEBUGTP_Enabled)) {
+          return mk_(Bool(false), Sequence(L"Breakpoint is already enabled"));
+        }
+        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
+        GetCI().SetBreakpoint(cid);
+        info.SetField(pos_DEBUGTP_PosBreakInfo_status, TYPE_DEBUGTP_Enabled());
+        break;
+      }
     }
-    case TAG_TYPE_DEBUGTP_PosBreakInfo: {
-      TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_PosBreakInfo_status));
-      if (status.Is(TAG_TYPE_DEBUGTP_Enabled))
-        return mk_(Bool(false), Sequence(L"Breakpoint is already enabled"));
-
-      TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
-      GetCI().SetBreakpoint(cid);
-      info.SetField(pos_DEBUGTP_PosBreakInfo_status, TYPE_DEBUGTP_Enabled());
-      break;
-    }
+    this->breakpoints.ImpModify(num, info);
+    return mk_(Bool(true), Sequence());
   }
-  
-  this->breakpoints.ImpModify(num, info);
-  return mk_(Bool(true), Sequence());
+  else {
+    return mk_(Bool(false), Sequence(L"No such break point"));
+  }
 }
 
 // DisableBreakpoint
@@ -807,37 +789,36 @@ Tuple StackEval::EnableBreakpoint(const Int & num)
 // ==> bool * [seq of char]
 Tuple StackEval::DisableBreakpoint(const Int & num)
 {
-// 20081126
-//  return EnableDisableBreakpoint(num, false);
-
-  if (!this->breakpoints.DomExists(num))
-    return mk_(Bool(false), Sequence(L"No such break point"));
-
-  TYPE_DEBUGTP_BreakInfo info (this->breakpoints[num]);
-  switch (info.GetTag()) {
-    case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
-      TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_status));
-      if (status.Is(TAG_TYPE_DEBUGTP_Disabled))
-        return mk_(Bool(false), Sequence(L"Breakpoint is already disabled"));
-
-      TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
-      GetCI().RemoveBreakpoint(cid);
-      info.SetField(pos_DEBUGTP_FnNameBreakInfo_status, TYPE_DEBUGTP_Disabled());
-      break;
+  if (this->breakpoints.DomExists(num)) {
+    TYPE_DEBUGTP_BreakInfo info (this->breakpoints[num]);
+    switch (info.GetTag()) {
+      case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
+        TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_FnNameBreakInfo_status));
+        if (status.Is(TAG_TYPE_DEBUGTP_Disabled)) {
+          return mk_(Bool(false), Sequence(L"Breakpoint is already disabled"));
+        }
+        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
+        GetCI().RemoveBreakpoint(cid);
+        info.SetField(pos_DEBUGTP_FnNameBreakInfo_status, TYPE_DEBUGTP_Disabled());
+        break;
+      }
+      case TAG_TYPE_DEBUGTP_PosBreakInfo: {
+        TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_PosBreakInfo_status));
+        if (status.Is(TAG_TYPE_DEBUGTP_Disabled)) {
+          return mk_(Bool(false), Sequence(L"Breakpoint is already disabled"));
+        }
+        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
+        GetCI().RemoveBreakpoint(cid);
+        info.SetField(pos_DEBUGTP_PosBreakInfo_status, TYPE_DEBUGTP_Disabled());
+        break;
+      }
     }
-    case TAG_TYPE_DEBUGTP_PosBreakInfo: {
-      TYPE_DEBUGTP_BreakStatus status (info.GetRecord(pos_DEBUGTP_PosBreakInfo_status));
-      if (status.Is(TAG_TYPE_DEBUGTP_Disabled))
-        return mk_(Bool(false), Sequence(L"Breakpoint is already disabled"));
-
-      TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
-      GetCI().RemoveBreakpoint(cid);
-      info.SetField(pos_DEBUGTP_PosBreakInfo_status, TYPE_DEBUGTP_Disabled());
-      break;
-    }
+    this->breakpoints.ImpModify(num, info);
+    return mk_(Bool(true), Sequence());
   }
-  this->breakpoints.ImpModify(num, info);
-  return mk_(Bool(true), Sequence());
+  else {
+    return mk_(Bool(false), Sequence(L"No such break point"));
+  }
 }
 
 // AddCondition
@@ -846,25 +827,24 @@ Tuple StackEval::DisableBreakpoint(const Int & num)
 // ==> bool * seq of char * [nat]
 Tuple StackEval::AddCondition(const Int & id, const TYPE_AS_Expr & e)
 {
-  if (!this->breakpoints.DomExists(id))
-    return mk_(Bool(false), SEQ<Char>(L"No such break point"));
-  else {
+  if (this->breakpoints.DomExists(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
     switch (info.GetTag()) {
       case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
         TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
-        //this->conditions.ImpModify(cid, e);
         this->conditions.ImpModify(cid, mk_(e, theCompiler().E2I(e)));
         break;
       }
       case TAG_TYPE_DEBUGTP_PosBreakInfo: {
         TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
-        //this->conditions.ImpModify(cid, e);
         this->conditions.ImpModify(cid, mk_(e, theCompiler().E2I(e)));
         break;
       }
     }
     return mk_(Bool(true), SEQ<Char>());
+  }
+  else {
+    return mk_(Bool(false), SEQ<Char>(L"No such break point"));
   }
 }
 
@@ -873,29 +853,34 @@ Tuple StackEval::AddCondition(const Int & id, const TYPE_AS_Expr & e)
 // ==> bool * seq of char * [nat]
 Tuple StackEval::RemoveCondition(const Int & id)
 {
-  if (!this->breakpoints.DomExists(id))
-    return mk_(Bool(false), SEQ<Char>(L"No such break point"));
-  else {
+  if (this->breakpoints.DomExists(id)) {
     TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
     switch (info.GetTag()) {
       case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
         TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
-        if (this->conditions.DomExists(cid))
+        if (this->conditions.DomExists(cid)) {
           this->conditions.RemElem(cid);
-        else
+        }
+        else {
           return mk_(Bool(false), SEQ<Char>(L"No condition"));
+        }
         break;
       }
       case TAG_TYPE_DEBUGTP_PosBreakInfo: {
         TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
-        if (this->conditions.DomExists(cid))
+        if (this->conditions.DomExists(cid)) {
           this->conditions.RemElem(cid);
-        else
+        }
+        else {
           return mk_(Bool(false), SEQ<Char>(L"No condition"));
+        }
         break;
       }
     }
     return mk_(Bool(true), SEQ<Char>());
+  }
+  else {
+    return mk_(Bool(false), SEQ<Char>(L"No such break point"));
   }
 }
 
@@ -904,69 +889,61 @@ Tuple StackEval::RemoveCondition(const Int & id)
 // ==> bool
 bool StackEval::CheckCondition(const TYPE_CI_ContextId & cid, wostream & wos)
 {
-  if (!this->conditions.DomExists(cid))
-    return true;
-
-  int oldLevel = this->inActiveLevel;
-  try {
-// 20130709 -->
-    //TYPE_AS_Expr e (this->conditions[cid]);
-    //Tuple res (theStackMachine().EvalUninterruptedCmd(e,
-    //                                                TYPE_STKM_SubProgram(),
-    //                                                TYPE_STKM_SubProgram(),
-    //                                                SEQ<Char>(L"Checking break condition")));
-    Tuple t (this->conditions[cid]);
-    SEQ<Char> id (L"Checking break condition");
-    Tuple res (theStackMachine().EvalAuxProgram(t.GetSequence(2), id, false));
-// <-- 20130709
-    SetCid(cid);
-    TYPE_STKM_EvaluationState eval_state (res.GetRecord(1));
-    if (eval_state.Is(TAG_TYPE_STKM_Success))
-    {
-      TYPE_SEM_VAL expr_v (res.GetRecord(2));  // SEM`VAL
-      if (expr_v.Is(TAG_TYPE_SEM_BOOL))
-      {
-        return expr_v.GetBool(pos_SEM_BOOL_v);
-      }
-      else
-      {
-        wos << L"Warning: condition must return bool value." << endl;
-      }
-    }
-    else
-    {
-      wos << L"Warning: condition check failed." << endl;
-    }
-  }
-  catch (TB_Exception & e) {
-    switch (e.GetExType()) {
-      case ERR_IP: {
-        // Report error
-        wos << L"Warning: check break condition is failed." << endl;
-//        RTERR::PrintRunTimeError(wos);
-        TBDEBUG::ProcessRuntimeError(wos);
-
-        // Recover internal state
-        bool more = (CallStackLevel() > 0);
-        while (more) 
-        {
-          TYPE_STKM_CallStackItem item (HeadCS());
-          if (item.get_nmOrDesc() != SEQ<Char>(L"Checking break condition"))
-          {
-            PopCS();
-            more = (CallStackLevel() > 0);
-          }
-          else
-            more = false; 
+  if (this->conditions.DomExists(cid)) {
+    int oldLevel = this->inActiveLevel;
+    try {
+      //TYPE_AS_Expr e (this->conditions[cid]);
+      //Tuple res (theStackMachine().EvalUninterruptedCmd(e,
+      //                                                TYPE_STKM_SubProgram(),
+      //                                                TYPE_STKM_SubProgram(),
+      //                                                SEQ<Char>(L"Checking break condition")));
+      Tuple t (this->conditions[cid]);
+      SEQ<Char> id (L"Checking break condition");
+      Tuple res (theStackMachine().EvalAuxProgram(t.GetSequence(2), id, false));
+      SetCid(cid);
+      TYPE_STKM_EvaluationState eval_state (res.GetRecord(1));
+      if (eval_state.Is(TAG_TYPE_STKM_Success)) {
+        TYPE_SEM_VAL expr_v (res.GetRecord(2));  // SEM`VAL
+        if (expr_v.Is(TAG_TYPE_SEM_BOOL)) {
+          return expr_v.GetBool(pos_SEM_BOOL_v);
         }
-        PopCS();
-        this->inActiveLevel = oldLevel;
-        break;
+        else {
+          wos << L"Warning: condition must return bool value." << endl;
+        }
       }
-      default: {
-        // It must not happen
-        vdm_err << L"Internal Error" << endl;
-        break;
+      else {
+        wos << L"Warning: condition check failed." << endl;
+      }
+    }
+    catch (TB_Exception & e) {
+      switch (e.GetExType()) {
+        case ERR_IP: {
+          // Report error
+          wos << L"Warning: check break condition is failed." << endl;
+//          RTERR::PrintRunTimeError(wos);
+          TBDEBUG::ProcessRuntimeError(wos);
+
+          // Recover internal state
+          bool more = (CallStackLevel() > 0);
+          while (more) {
+            TYPE_STKM_CallStackItem item (HeadCS());
+            if (item.get_nmOrDesc() != SEQ<Char>(L"Checking break condition")) {
+              PopCS();
+              more = (CallStackLevel() > 0);
+            }
+            else {
+              more = false; 
+            }
+          }
+          PopCS();
+          this->inActiveLevel = oldLevel;
+          break;
+        }
+        default: {
+          // It must not happen
+          vdm_err << L"Internal Error" << endl;
+          break;
+        }
       }
     }
   }
@@ -977,29 +954,26 @@ bool StackEval::CheckCondition(const TYPE_CI_ContextId & cid, wostream & wos)
 // PrintConditions
 void StackEval::PrintConditions(wostream & out)
 {
-  if (this->breakpoints.IsEmpty()) {
-    return;
-  }
-  
-  Set dom_breakpoints (this->breakpoints.Dom());
-  Generic id;
-  for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id))
-  {
-    TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
-    switch (info.GetTag()) {
-      case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
-        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
-        out << L"#" << Int(id) << L": ";
-        PrintCondition(cid, out);
-        out << endl;
-        break;
-      }
-      case TAG_TYPE_DEBUGTP_PosBreakInfo: {
-        TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
-        out << L"#" << Int(id) << L": ";
-        PrintCondition(cid, out);
-        out << endl;
-        break;
+  if (!this->breakpoints.IsEmpty()) {
+    Set dom_breakpoints (this->breakpoints.Dom());
+    Generic id;
+    for (bool bb = dom_breakpoints.First(id); bb; bb = dom_breakpoints.Next(id)) {
+      TYPE_DEBUGTP_BreakInfo info (this->breakpoints[id]);
+      switch (info.GetTag()) {
+        case TAG_TYPE_DEBUGTP_FnNameBreakInfo: {
+          TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_FnNameBreakInfo_cid));
+          out << L"#" << Int(id) << L": ";
+          PrintCondition(cid, out);
+          out << endl;
+          break;
+        }
+        case TAG_TYPE_DEBUGTP_PosBreakInfo: {
+          TYPE_CI_ContextId cid (info.GetInt(pos_DEBUGTP_PosBreakInfo_cid));
+          out << L"#" << Int(id) << L": ";
+          PrintCondition(cid, out);
+          out << endl;
+          break;
+        }
       }
     }
   }
@@ -1007,15 +981,10 @@ void StackEval::PrintConditions(wostream & out)
 
 void StackEval::PrintCondition(const TYPE_CI_ContextId & cid, wostream & out)
 {
-  if (this->conditions.DomExists(cid))
-  {
+  if (this->conditions.DomExists(cid)) {
     AS2ASCII conv;
-// 20130709 -->
-    //TYPE_AS_Expr e (this->conditions[cid]);
-    //conv.Expr2ASCII(INT2Q::h2gAS(e), out);
     Tuple t (this->conditions[cid]);
     conv.Expr2ASCII(INT2Q::h2gAS(t.GetRecord(1)), out);
-// <-- 20130709
   }
 }
 

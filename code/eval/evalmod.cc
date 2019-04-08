@@ -24,8 +24,7 @@ TYPE_GLOBAL_SigmaMO MOD::TranslateModule(const TYPE_AS_Module & mod_sig)
   const Generic & exp (intf.GetField (pos_AS_Interface_exp));
   MAP<TYPE_AS_Name,TYPE_AS_Name> ren (BuildRenameMap (intf.GetMap (pos_AS_Interface_imp)));
 
-  if (! body.IsNil ())
-  {
+  if (! body.IsNil ()) {
     // Set the current module name in the SemRecTable
     SemRec::SetCurrentModClass(mod_id);
     TYPE_GLOBAL_SigmaDEFS sigmadefs (DEF::TranslateDefinitions ( mod_id, body ));
@@ -50,8 +49,7 @@ TYPE_GLOBAL_SigmaMO MOD::TranslateModule(const TYPE_AS_Module & mod_sig)
                  ren);                                                            // ren
     return sigmamo;
   }
-  else
-  {
+  else {
     TYPE_GLOBAL_SigmaMO sigmamo;
     sigmamo.Init(Map(),                     // explfns
                  Map(),                     // explops
@@ -81,15 +79,15 @@ MAP<TYPE_AS_Name,TYPE_AS_Name> MOD::BuildRenameMap (const Map & imp_m)
   Set dom_imp_m (imp_m.Dom());
 
   Generic id;
-  for (bool bb = dom_imp_m.First (id); bb; bb = dom_imp_m.Next (id))
-  {
+  for (bool bb = dom_imp_m.First (id); bb; bb = dom_imp_m.Next (id)) {
     Generic imp_sig (imp_m[id]);
     if (! imp_sig.IsNil ()) {
       TYPE_AS_ImportSig isig (imp_sig);
       const Map & ren (isig.GetMap (pos_AS_ImportSig_ren));
       Set dom_ren (ren.Dom ());
-      if (dom_ren.ImpIntersect (rename_m.Dom ()).IsEmpty ())
+      if (dom_ren.ImpIntersect (rename_m.Dom ()).IsEmpty ()) {
         rename_m.ImpOverride (MakeRenamings (id, ren));
+      }
       else {
         const TYPE_CI_ContextId & cid (isig.GetInt(pos_AS_ImportSig_cid));
         RTERR::InitError (L"BuildRenameMap", RTERR_EQUAL_RENAMINGS, Nil(), Nil(), cid, Sequence());
@@ -110,8 +108,7 @@ MAP<TYPE_AS_Name,TYPE_AS_Name> MOD::MakeRenamings (const TYPE_AS_Name & mod_nm,
   TYPE_AS_Id mod_id (ASTAUX::GetFirstId(mod_nm));
   Set dom_ren_m (ren_m.Dom());
   Generic nm_key;
-  for (bool bb = dom_ren_m.First (nm_key); bb; bb = dom_ren_m.Next (nm_key))
-  {
+  for (bool bb = dom_ren_m.First (nm_key); bb; bb = dom_ren_m.Next (nm_key)) {
     TYPE_AS_Name thisNm (ren_m[nm_key]);
     TYPE_AS_Ids ids (thisNm.GetSequence(pos_AS_Name_ids));
     ids.ImpPrepend(mod_id);
@@ -129,9 +126,9 @@ MAP<TYPE_AS_Name,TYPE_AS_Name> MOD::MakeRenamings (const TYPE_AS_Name & mod_nm,
 Generic MOD::BuildExportSig (const Generic & exp_sig, const Map & explfns, const Map & explpolys,
                              const MAP<TYPE_AS_Name,TYPE_AS_Name> & ren)
 {
-  if (exp_sig.IsNil ())
+  if (exp_sig.IsNil ()) {
     return (exp_sig);
-
+  }
   const Map & fns (Record(exp_sig).GetMap(pos_AS_ExportSig_fns));
   const Map & ops (Record(exp_sig).GetMap(pos_AS_ExportSig_ops));
   const Map & tps (Record(exp_sig).GetMap(pos_AS_ExportSig_tps));
@@ -172,9 +169,9 @@ Generic MOD::BuildExportSig (const Generic & exp_sig, const Map & explfns, const
 // ==> bool
 bool MOD::HasFnPrePostCond (const TYPE_AS_Name & name, const Map & efns, const Map & epfns)
 {
-  if (AUX::IsRealName (name))
+  if (AUX::IsRealName (name)) {
     return false;
-
+  }
   TYPE_AS_Name pre_name (AUX::PreName(name));
   TYPE_AS_Name post_name (AUX::PostName(name));
 
@@ -224,9 +221,9 @@ Map MOD::GetPrePostFns (const TYPE_AS_Name & name, const Map & efns, const Map &
 // ==> bool
 bool MOD::HasOpPrePostCond (const TYPE_AS_Name & name, const Map & efns)
 {
-  if (AUX::IsRealName (name))
+  if (AUX::IsRealName (name)) {
     return false;
-
+  }
   TYPE_AS_Name pre_nm (AUX::PreName(name));
   TYPE_AS_Name post_nm (AUX::PostName(name));
 
@@ -244,15 +241,13 @@ Map MOD::GetPrePostOps (const TYPE_AS_Name & name, const Map & efn)
 
   Map res_m;
 
-  if (efn.DomExists (pre_name))
-  {
+  if (efn.DomExists (pre_name)) {
     const TYPE_SEM_CompExplFN & fnval (efn[pre_name]);
     const SEQ<TYPE_SEM_ExplFN> & fl (fnval.GetSequence(pos_SEM_CompExplFN_fl));
     res_m.Insert (pre_name, mk_(Sequence(), fl[1].GetRecord(pos_SEM_ExplFN_tp)));
   }
 
-  if (efn.DomExists (post_name))
-  {
+  if (efn.DomExists (post_name)) {
     const TYPE_SEM_CompExplFN & fnval (efn[post_name]);
     const SEQ<TYPE_SEM_ExplFN> & fl (fnval.GetSequence(pos_SEM_CompExplFN_fl));
     res_m.Insert (post_name, mk_(Sequence(), fl[1].GetRecord(pos_SEM_ExplFN_tp)));
@@ -266,9 +261,9 @@ Map MOD::GetPrePostOps (const TYPE_AS_Name & name, const Map & efn)
 // ==> bool
 bool MOD::HasTpInvariant (const TYPE_AS_Name & name, const Map & efns)
 {
-  if (AUX::IsRealName (name))
+  if (AUX::IsRealName (name)) {
     return false;
-
+  }
   return efns.DomExists (AUX::InvName (name));
 }
 
@@ -303,29 +298,26 @@ TYPE_GLOBAL_ValueMap MOD::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TYPE
 // ==> GLOBAL`StateMap
 TYPE_GLOBAL_StateMap MOD::InitGS (const Generic & sd_)
 {
-  if (sd_.IsNil ())
+  if (sd_.IsNil ()) {
     return TYPE_GLOBAL_StateMap ();
-  else
-  {
+  }
+  else {
     TYPE_AS_StateDef sd (sd_);
     const TYPE_AS_CompositeType & comp_t (sd.GetRecord(pos_AS_StateDef_tp));
     const TYPE_AS_Name & name (comp_t.GetRecord(pos_AS_CompositeType_name));
     const SEQ<TYPE_AS_Field> & fields_lv (comp_t.GetSequence(pos_AS_CompositeType_fields));
 
-    if (sd.GetField(pos_AS_StateDef_Init).IsNil ())
-    {
+    if (sd.GetField(pos_AS_StateDef_Init).IsNil ()) {
       TYPE_GLOBAL_StateMap sm;
       size_t maxi = fields_lv.Length ();
-      for (size_t i = 1; i <= maxi; i++)
-      {
+      for (size_t i = 1; i <= maxi; i++) {
         const TYPE_AS_Field & fld (fields_lv[i]);
         sm.Insert (fld.GetField(pos_AS_Field_sel),
                    TYPE_GLOBAL_State().Init(sem_undef, fld.GetRecord(pos_AS_Field_type)));
       }
       return sm;
     }
-    else
-    {
+    else {
       const TYPE_AS_StateInit & inits (sd.GetRecord(pos_AS_StateDef_Init));
       const TYPE_AS_Pattern & initp (inits.GetRecord(pos_AS_StateInit_pat));
       const TYPE_AS_Expr & inite    (inits.GetRecord(pos_AS_StateInit_expr));
@@ -345,8 +337,7 @@ TYPE_GLOBAL_StateMap MOD::InitGS (const Generic & sd_)
       switch(inite.GetTag()) {
         case TAG_TYPE_AS_BinaryExpr: {
           // init s == s = mk_sigma(...)
-          if (inite.GetInt(pos_AS_BinaryExpr_opr) != Int(EQ))
-          {
+          if (inite.GetInt(pos_AS_BinaryExpr_opr) != Int(EQ)) {
             // no equal expression
             RTERR::InitError (L"InitGS", RTERR_ILL_STATE_INIT_PAT, Nil(), Nil(), cid, Sequence());
             return TYPE_GLOBAL_StateMap ();
@@ -354,20 +345,17 @@ TYPE_GLOBAL_StateMap MOD::InitGS (const Generic & sd_)
   
           const TYPE_AS_Expr & left (inite.GetRecord(pos_AS_BinaryExpr_left));
   
-          if(!left.Is(TAG_TYPE_AS_Name))
-          {
+          if(!left.Is(TAG_TYPE_AS_Name)) {
             RTERR::InitError (L"InitGS", RTERR_ILL_STATE_INIT_PAT, Nil(), Nil(), ASTAUX::GetCid(left), Sequence());
             return TYPE_GLOBAL_StateMap ();
           }
   
-          if (!(initp.Is(TAG_TYPE_AS_PatternName) && !initp.GetField(pos_AS_PatternName_nm).IsNil()))
-          {
+          if (!(initp.Is(TAG_TYPE_AS_PatternName) && !initp.GetField(pos_AS_PatternName_nm).IsNil())) {
             RTERR::InitError (L"InitGS", RTERR_ILL_STATE_INIT_PAT, Nil(), Nil(), ASTAUX::GetCid(initp), Sequence());
             return TYPE_GLOBAL_StateMap ();
           }
 
-          if (!AUX::EqualNames(initp.GetRecord(pos_AS_PatternName_nm), left))
-          {
+          if (!AUX::EqualNames(initp.GetRecord(pos_AS_PatternName_nm), left)) {
             RTERR::InitError (L"InitGS", RTERR_ILL_STATE_INIT_PAT, Nil(), Nil(), ASTAUX::GetCid(initp), Sequence());
             return TYPE_GLOBAL_StateMap ();
           }
@@ -417,40 +405,33 @@ TYPE_GLOBAL_StateMap MOD::InitGS (const Generic & sd_)
       Tuple eac (theStackMachine().EvalAuxCmd(expr, pre_sp, TYPE_STKM_SubProgram(),
                                               SEQ<Char>(L"Init of Global State")));
 
-      if (!eac.GetRecord(1).Is(TAG_TYPE_STKM_Success))
-      {
+      if (!eac.GetRecord(1).Is(TAG_TYPE_STKM_Success)) {
         RTERR::InitError(L"InitGS", RTERR_INTERNAL_ERROR, Nil(), Nil(), ASTAUX::GetCid(inite), Sequence());
         return TYPE_GLOBAL_StateMap ();
       }
 
       const TYPE_SEM_VAL & initv (eac.GetField(2));
 
-      if (initv.Is(TAG_TYPE_DYNSEM_SEM_REC))
-      {
+      if (initv.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
         const TYPE_AS_Name & initname (initv.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
         SEQ<TYPE_SEM_VAL> initfields_lv (initv.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
   
         TYPE_AS_Name name_q (AUX::UniqueTagName (name));
-        if (AUX::EqualNames (name_q, initname) && (fields_lv.Length () == initfields_lv.Length ()))
-        {
+        if (AUX::EqualNames (name_q, initname) && (fields_lv.Length () == initfields_lv.Length ())) {
           TYPE_GLOBAL_StateMap res;
           size_t len = fields_lv.Length ();
-          for (size_t i = 1; i <= len; i++)
-          {
+          for (size_t i = 1; i <= len; i++) {
             const TYPE_AS_Field & fld (fields_lv[i]);
             res.Insert (fld.GetField(pos_AS_Field_sel),
                           TYPE_GLOBAL_State().Init(initfields_lv[i], fld.GetRecord(pos_AS_Field_type)));
           }
 
-          if (Settings.DTC())
-          {
+          if (Settings.DTC()) {
             SET<TYPE_AS_Name> dom_res (res.Dom ());
             Generic id;
-            for (bool bb = dom_res.First (id); bb; bb = dom_res.Next (id))
-            {
+            for (bool bb = dom_res.First (id); bb; bb = dom_res.Next (id)) {
               const TYPE_GLOBAL_State & st (res[id]);
-              if( !theState().SubType(st.GetRecord(pos_GLOBAL_State_val), st.GetRecord(pos_GLOBAL_State_tp)) )
-              {
+              if( !theState().SubType(st.GetRecord(pos_GLOBAL_State_val), st.GetRecord(pos_GLOBAL_State_tp)) ) {
                 RTERR::InitError (L"InitGS", RTERR_STATE_INVARIANT_ERROR,
                                   inite, st.get_val(), ASTAUX::GetCid(st.get_tp()), Sequence());
                 return TYPE_GLOBAL_StateMap();
@@ -459,11 +440,13 @@ TYPE_GLOBAL_StateMap MOD::InitGS (const Generic & sd_)
           }
           return res;
         }
-        else
+        else {
           RTERR::InitError (L"InitGS", RTERR_ILLEGAL_STATE_INIT, Nil(), Nil(), ASTAUX::GetCid(name_q), Sequence());
+        }
       }
-      else
+      else {
         RTERR::InitError (L"InitGS", RTERR_REC_EXPECTED, Nil(), Nil(), ASTAUX::GetCid(inite), Sequence());
+      }
 //
     }
   }
@@ -479,22 +462,25 @@ bool MOD::IsAllPatternName (const TYPE_AS_PatternBind & pat_p)
     case TAG_TYPE_AS_PatternName: {
       return !pat_p.GetField(pos_AS_PatternName_nm).IsNil ();
     }
-    case TAG_TYPE_AS_MatchVal:
+    case TAG_TYPE_AS_MatchVal: {
       return false;
+    }
     case TAG_TYPE_AS_SetEnumPattern: {
       const SEQ<TYPE_AS_Pattern> & pat_lp (pat_p.GetSequence(pos_AS_SetEnumPattern_Elems));
       bool forall = true;
       size_t len_pat_lp = pat_lp.Length();
-      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++)
+      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++) {
         forall = IsAllPatternName (pat_lp[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_SeqEnumPattern: {
       const SEQ<TYPE_AS_Pattern> & pat_lp (pat_p.GetSequence(pos_AS_SeqEnumPattern_els));
       bool forall = true;
       size_t len_pat_lp = pat_lp.Length();
-      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++)
+      for (size_t idx = 1; (idx <= len_pat_lp) && forall; idx++) {
         forall = IsAllPatternName (pat_lp[idx]);
+      }
       return forall;
     }
     case TAG_TYPE_AS_MapEnumPattern: {
@@ -539,8 +525,9 @@ bool MOD::IsAllPatternName (const TYPE_AS_PatternBind & pat_p)
       return forall;
     }
     case TAG_TYPE_AS_SetBind:
-    case TAG_TYPE_AS_TypeBind:
+    case TAG_TYPE_AS_TypeBind: {
       return false;
+    }
     default: {
       RTERR::Error (L"IsAllPatternName", RTERR_PATTERN_UNKNOWN, Nil(), Nil(), Sequence());
     }
@@ -583,43 +570,43 @@ Map MOD::TransStaticRef(const Map & mods )
   SET<TYPE_AS_Name> exp;
   Set dom_mods (mods.Dom());
   Generic name;
-  for (bool bb = dom_mods.First(name); bb; bb = dom_mods.Next(name))
-  {
+  for (bool bb = dom_mods.First(name); bb; bb = dom_mods.Next(name)) {
     TYPE_GLOBAL_SigmaMO sigmamo (mods[name]);
 
     SET<TYPE_AS_Name> modnms;
     // search module names in initialization of values.
     SEQ<TYPE_AS_ValueDef> vls (sigmamo.GetSequence(pos_GLOBAL_SigmaMO_gv_uinit));
     size_t len_vls = vls.Length();
-    for (size_t i = 1; i <= len_vls; i++)
-    {
+    for (size_t i = 1; i <= len_vls; i++) {
       modnms.ImpUnion(AUX::ClModNmInExpr(vls[i].GetRecord(pos_AS_ValueDef_val)));
     }
 
     // search module names in initialization of state and
     // state invaliants.
     const Generic & gs_init (sigmamo.GetField(pos_GLOBAL_SigmaMO_gs_uinit));
-    if (!gs_init.IsNil())
-    {
+    if (!gs_init.IsNil()) {
       TYPE_AS_StateDef sd (gs_init);
       const Generic & Inv (sd.GetField(pos_AS_StateDef_Inv));
       const Generic & Init (sd.GetField(pos_AS_StateDef_Init));
-      if (!Inv.IsNil())
+      if (!Inv.IsNil()) {
         modnms.ImpUnion(AUX::ClModNmInExpr(Inv));
-      if (!Init.IsNil())
+      }
+      if (!Init.IsNil()) {
         modnms.ImpUnion(AUX::ClModNmInExpr(Init));
+      }
     }
 
     // check rename
     const MAP<TYPE_AS_Name, TYPE_AS_Name> & ren (sigmamo.GetMap(pos_GLOBAL_SigmaMO_ren));
     SET<TYPE_AS_Name> rmodnms;
     Generic nm;
-    for (bool dd = modnms.First(nm); dd; dd = modnms.Next(nm))
-    {
-      if (ren.DomExists(nm))
+    for (bool dd = modnms.First(nm); dd; dd = modnms.Next(nm)) {
+      if (ren.DomExists(nm)) {
         rmodnms.Insert(ren[nm]);
-      else
+      }
+      else {
         rmodnms.Insert(nm);
+      }
     }
 
     // current module name should be removed.
@@ -629,8 +616,9 @@ Map MOD::TransStaticRef(const Map & mods )
     sdep.ImpModify( name, rmodnms );
 
     // 
-    if (rmodnms.IsEmpty())
+    if (rmodnms.IsEmpty()) {
       exp.Insert( name );
+    }
   }
 
   return CLASS::ExpandStaticRef(sdep, exp);
