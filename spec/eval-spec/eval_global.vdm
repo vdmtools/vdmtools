@@ -257,7 +257,7 @@ SigmaClass ::
   inhcon         : InhCon
   instvars       : seq of AS`InstAssignDef
   instvars_tp    : map AS`Name to AS`Type
-  inst_inv       : seq of AS`InstanceInv * STKM`SubProgram -- seq of AS`InstanceInv -- 20130709
+  inst_inv       : seq of AS`InstanceInv * STKM`SubProgram
   inst_init_val  : SEM`InsStrct
   vls_def        : seq of AS`ValueDef
   vls_init       : ValueMap

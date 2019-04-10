@@ -32,13 +32,11 @@ Tuple StatSem::wf_SeqModify (const Int & i,
   Generic mtp_g (ExtractMapType (m));
 
   Generic Dom, Rng;
-  if (mtp_g.IsNil () || mtp_g.Is(TAG_TYPE_REP_EmptyMapTypeRep))
-  {
+  if (mtp_g.IsNil () || mtp_g.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
     Dom = Nil();
     Rng = Nil();
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep mtp (mtp_g);
     switch(mtp.GetTag()) {
       case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -54,8 +52,7 @@ Tuple StatSem::wf_SeqModify (const Int & i,
       case TAG_TYPE_REP_UnionTypeRep: {
         Set d_s, r_s, utps (mtp.GetSet(pos_REP_UnionTypeRep_tps));
         Generic g;
-        for (bool bb = utps.First(g); bb; bb = utps.Next(g))
-        {
+        for (bool bb = utps.First(g); bb; bb = utps.Next(g)) {
           TYPE_REP_TypeRep r (g);
           switch(r.GetTag()) {
             case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -116,8 +113,7 @@ Tuple StatSem::wf_SeqModify (const Int & i,
     }
   }
 
-  if (Dom.IsNil())
-  {
+  if (Dom.IsNil()) {
     //------------------------------
     // Error message #242
     // An empty modification is used
@@ -125,8 +121,7 @@ Tuple StatSem::wf_SeqModify (const Int & i,
     GenErr (SeqModMapOverride, ERR,242, Sequence());
     return mk_(Bool (false), stp);
   }
-  else if (stp.Is(TAG_TYPE_REP_EmptySeqTypeRep))
-  {
+  else if (stp.Is(TAG_TYPE_REP_EmptySeqTypeRep)) {
     //-------------------------------------
     // Error message #243
     // An empty sequence cannot be modified
@@ -134,10 +129,8 @@ Tuple StatSem::wf_SeqModify (const Int & i,
     GenErr (SeqModMapOverride, ERR,243, Sequence());
     return mk_(Bool (false), stp);
   }
-  else if (IsCompatible (i, Dom, btp_natone))
-  {
-    if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-    {
+  else if (IsCompatible (i, Dom, btp_natone)) {
+    if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
       //----------------------------------------------------
       // Error message #244
       // Modification of non-existing index may be attempted
@@ -145,11 +138,11 @@ Tuple StatSem::wf_SeqModify (const Int & i,
       GenErr (SeqModMapOverride, ERR2, 244, Sequence());
       return mk_(Bool (false),  MergeTypes (stp, mk_REP_SeqTypeRep(Rng)));
     }
-    else
+    else {
       return mk_(Bool (true),  MergeTypes (stp, mk_REP_SeqTypeRep(Rng)));
+    }
   }
-  else
-  {
+  else {
     //------------------------------------------------------------------------
     // Error message #246
     // A sequence can only be modified with indices which are positive natural
@@ -172,8 +165,7 @@ Tuple StatSem::wf_MapOverride ( const TYPE_REP_TypeRep & s,
   Generic m1tp (ExtractMapType (s));
   Generic m2tp (ExtractMapType (m));
 
-  if (m2tp.Is(TAG_TYPE_REP_EmptyMapTypeRep))
-  {
+  if (m2tp.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
     //------------------------------
     // Error message #242
     // An empty modification is used
@@ -181,10 +173,10 @@ Tuple StatSem::wf_MapOverride ( const TYPE_REP_TypeRep & s,
     GenErr (SeqModMapOverride, ERR, 242, Sequence());
     return mk_(Bool(false), m1tp);
   }
-  else if (m2tp.IsNil () )
+  else if (m2tp.IsNil () ) {
     return mk_(Bool(false), m1tp);
-  else
-  {
+  }
+  else {
     return mk_(Bool(true), MapTypeMerge (mk_set(m1tp, m2tp)));
   }
 }
@@ -204,12 +196,10 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
   const TYPE_CI_ContextId & cid (SeqModMapOverride.GetInt(pos_AS_SeqModifyMapOverrideExpr_cid));
 
   Generic expelemtp (rep_alltp);
-  if (IsCompatible(i, seq_alltp, exptp))
-  {
+  if (IsCompatible(i, seq_alltp, exptp)) {
     expelemtp = UnmaskSeqType (POS, ExtractSeqType (exptp));
   }
-  else if (IsCompatible(i, map_alltp, exptp))
-  {
+  else if (IsCompatible(i, map_alltp, exptp)) {
     Tuple dr (SplitMapType(ExtractMapType (exptp)));
     expelemtp = dr.GetField(2);
   }
@@ -232,8 +222,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
   bool mapcomp      (IsCompatible (i, seqmaptp, m1tp));
   bool seqormapcomp (IsCompatible (i, seqmaptp, ExpectedType));
 
-  if (seqcomp && !mapcomp)
-  {
+  if (seqcomp && !mapcomp) {
     // modify sequence
     Tuple infer2 (wf_Expr(i, m, expmaptp));
     const Bool & wf_map (infer2.GetBool (1));
@@ -244,8 +233,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     const TYPE_REP_TypeRep & restp (infer3.GetRecord(2));
 
     bool amap (IsCompatible(i, maptp, m1tp));
-    if (!amap)
-    {
+    if (!amap) {
       //---------------------------------
       // Error message #240
       // Rhs expression is not a map type
@@ -256,8 +244,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     GetCI().SetTypeInfo (cid, restp);
     return mk_(wf_seqmap && wf_map && wf && amap, restp);
   }
-  else if (!seqcomp && mapcomp)
-  {
+  else if (!seqcomp && mapcomp) {
     // override map
     Tuple infer2 (wf_Expr(i, m, RemoveEmptyMapType(exptp)));
     const Bool & wf_map (infer2.GetBool (1));
@@ -268,8 +255,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     const TYPE_REP_TypeRep & restp (infer3.GetRecord(2));
 
     bool amap (IsCompatible(i, maptp, m1tp));
-    if (!amap)
-    {
+    if (!amap) {
       //---------------------------------
       // Error message #240
       // Rhs expression is not a map type
@@ -280,8 +266,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     GetCI().SetTypeInfo (cid, restp);
     return mk_(wf_seqmap && wf_map && wf && amap, restp);
   }
-  else if (seqormapcomp)
-  {
+  else if (seqormapcomp) {
     TYPE_REP_TypeRep m_exptp (MergeTypes(exptp, expmaptp));
 
     Tuple infer2 (wf_Expr(i, m, m_exptp));
@@ -289,8 +274,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     const TYPE_REP_TypeRep & maptp (infer2.GetRecord (2));
 
     bool amap (IsCompatible(i, maptp, m1tp));
-    if (!amap)
-    {
+    if (!amap) {
       //---------------------------------
       // Error message #240
       // Rhs expression is not a map type
@@ -302,20 +286,21 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     Generic resmtp (ExtractMapType (seqmaptp));
     Generic resmap (ExtractMapType (maptp));
     TYPE_REP_TypeRep restp;
-    if (!amap)
+    if (!amap) {
       restp = MergeTypes (stp, m1tp);
-    else
-    {
-      if (resmap.IsNil () || resmap.Is(TAG_TYPE_REP_EmptyMapTypeRep))
+    }
+    else {
+      if (resmap.IsNil () || resmap.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
         restp = MergeTypes (resstp, resmtp);
-      else
+      }
+      else {
         restp = SeqMapTypeModify (resstp, resmtp, resmap);
+      }
     }
 
     GetCI().SetTypeInfo (cid, restp);
 
-    if (resmap.Is(TAG_TYPE_REP_EmptyMapTypeRep) && !maptp.Is(TAG_TYPE_REP_AllTypeRep))
-    {
+    if (resmap.Is(TAG_TYPE_REP_EmptyMapTypeRep) && !maptp.Is(TAG_TYPE_REP_AllTypeRep)) {
       //------------------------------
       // Error message #242
       // An empty modification is used
@@ -323,8 +308,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
       GenErr (SeqModMapOverride, ERR, 242, Sequence());
       return mk_(Bool (false), restp);
     }
-    else if (resstp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && !seqmaptp.Is(TAG_TYPE_REP_AllTypeRep))
-    {
+    else if (resstp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && !seqmaptp.Is(TAG_TYPE_REP_AllTypeRep)) {
       //-------------------------------------
       // Error message #243
       // An empty sequence cannot be modified
@@ -332,8 +316,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
       GenErr (SeqModMapOverride, ERR, 243, Sequence());
       return mk_(Bool(false), restp);
     }
-    else if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-    {
+    else if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
       //----------------------------------------------------
       // Error message #244
       // Modification of non-existing index may be attempted
@@ -341,11 +324,11 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
       GenErr (SeqModMapOverride, ERR2, 244, Sequence());
       return mk_(Bool(false), restp);
     }
-    else
+    else {
       return mk_(wf_seqmap && wf_map && amap, restp);
+    }
   }
-  else if (!seqcomp && !mapcomp && !seqormapcomp)
-  {
+  else if (!seqcomp && !mapcomp && !seqormapcomp) {
     //------------------------------------------------
     // Error message #245
     // Expression is neither a sequence nor a map type
@@ -354,8 +337,7 @@ Tuple StatSem::wf_SeqModifyMapOverrideExpr (const Int & i,
     GetCI().SetTypeInfo (cid, ExpectedType);
     return mk_(Bool(false), ExpectedType);
   }
-  else
-  {
+  else {
     InternalError(L"SeqModMapOverride");
     GetCI().SetTypeInfo (cid, ExpectedType);
     return mk_(Bool(false), ExpectedType);
@@ -385,19 +367,18 @@ Tuple StatSem::wf_SubSequenceExpr (const Int & i,
   Bool scomp (IsCompatible (i, sqtp, seq_alltp));
   Bool reswf (wf_s && scomp);
   TYPE_REP_TypeRep restp (seq_alltp);
-  if (!scomp)
-  {
+  if (!scomp) {
     //----------------------------------
     // Error message #237
     // Expression is not a sequence type
     //----------------------------------
     GenErrTp (s, ERR, 237, sqtp, seq_alltp , Sequence());
   }
-  else
-  {
+  else {
     restp = ExtractSeqType(sqtp);
-    if (!IsCompatible (POS, restp, mk_REP_EmptySeqTypeRep(rep_alltp)))
+    if (!IsCompatible (POS, restp, mk_REP_EmptySeqTypeRep(rep_alltp))) {
       restp = MergeTypes (restp, mk_REP_EmptySeqTypeRep(rep_alltp));
+    }
   }
 
   Tuple infer2 (wf_Expr (i, f, btp_natone));
@@ -405,8 +386,7 @@ Tuple StatSem::wf_SubSequenceExpr (const Int & i,
   const TYPE_REP_TypeRep & ftp (infer2.GetRecord(2));
   Bool fcomp (IsCompatible (i, ftp, btp_natone));
   reswf = reswf && wf_f && fcomp;
-  if (!fcomp)
-  {
+  if (!fcomp) {
     //---------------------------------------------
     // Error message #238
     // Lower index is not a positive natural number
@@ -419,8 +399,7 @@ Tuple StatSem::wf_SubSequenceExpr (const Int & i,
   const TYPE_REP_TypeRep & ttp (infer3.GetRecord(2));
   Bool tcomp (IsCompatible (i, ttp, btp_natone));
   reswf = reswf && wf_t && tcomp;
-  if (!tcomp)
-  {
+  if (!tcomp) {
     //---------------------------------------------
     // Error message #239
     // Upper index is not a positive natural number
@@ -447,9 +426,9 @@ Tuple StatSem::wf_Maplet (const Int & i, const TYPE_AS_Maplet & maplet, const TY
   Tuple expmaptp (mk_(rep_alltp, rep_alltp));
   if (IsCompatible(POS, maptype, exptp) &&
       ! exptp.Is(TAG_TYPE_REP_AllTypeRep) &&
-      ! exptp.Is(TAG_TYPE_REP_TypeVarRep))
+      ! exptp.Is(TAG_TYPE_REP_TypeVarRep)) {
     expmaptp = SplitMapType (ExtractMapType (exptp)); // [REP`TypeRep] * [REP`TypeRep]
-
+  }
   Tuple inferlhs (wf_Expr(i, Dom, expmaptp.GetField(1)));
   const Bool & wf_Dom (inferlhs.GetBool(1));
   const TYPE_REP_TypeRep & Domtp (inferlhs.GetRecord(2));
@@ -458,16 +437,18 @@ Tuple StatSem::wf_Maplet (const Int & i, const TYPE_AS_Maplet & maplet, const TY
   const Bool & wf_Rng (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & Rngtp (inferrhs.GetRecord(2));
 
-  if (wf_Dom && wf_Rng)
+  if (wf_Dom && wf_Rng) {
     return mk_(Bool(true), mk_REP_GeneralMapTypeRep(Domtp, Rngtp));
-// 20100713 -->
-  else if (wf_Dom)
+  }
+  else if (wf_Dom) {
     return mk_(Bool(false), mk_REP_GeneralMapTypeRep(Domtp, rep_alltp));
-  else if (wf_Rng)
+  }
+  else if (wf_Rng) {
     return mk_(Bool(false), mk_REP_GeneralMapTypeRep(rep_alltp, Rngtp));
-// <-- 20100713
-  else
+  }
+  else {
     return mk_(Bool(false), mk_REP_GeneralMapTypeRep(rep_alltp, rep_alltp));
+  }
 }
 
 // wf_MapEnumerationExpr
@@ -482,16 +463,13 @@ Tuple StatSem::wf_MapEnumerationExpr (const Int & i,
   const SEQ<TYPE_AS_Maplet> & els (MapEnum.GetSequence(pos_AS_MapEnumerationExpr_els));
   const TYPE_CI_ContextId & cid (MapEnum.GetInt(pos_AS_MapEnumerationExpr_cid));
 
-  if (els.IsEmpty())
-  {
+  if (els.IsEmpty()) {
     GetCI().SetTypeInfo (cid, mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
     return mk_(Bool(true), mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep realexptp;
-    if(exptp.Is(TAG_TYPE_REP_UnionTypeRep))
-    {
+    if(exptp.Is(TAG_TYPE_REP_UnionTypeRep)) {
       SET<TYPE_REP_TypeRep> exptp_tps (exptp.GetSet(pos_REP_UnionTypeRep_tps).Diff(mk_set(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))));
       switch (exptp_tps.Card()) {
         case 1: {
@@ -511,8 +489,7 @@ Tuple StatSem::wf_MapEnumerationExpr (const Int & i,
     Bool reswf (true);
     Generic restp = Nil();
     size_t len_els = els.Length();
-    for (size_t idx = 1; idx <= len_els; idx++)
-    {
+    for (size_t idx = 1; idx <= len_els; idx++) {
       Tuple infer (wf_Maplet(i, els[idx], realexptp));
       const Bool & wf (infer.GetBool(1));
       const TYPE_REP_TypeRep & tp (infer.GetRecord(2));
@@ -521,8 +498,7 @@ Tuple StatSem::wf_MapEnumerationExpr (const Int & i,
     }
 
     GetCI().SetTypeInfo (cid, restp);
-    if ((els.Length() > 1) && (i == DEF) && (Settings.ErrorLevel() >= ERR2))
-    {
+    if ((els.Length() > 1) && (i == DEF) && (Settings.ErrorLevel() >= ERR2)) {
       //----------------------------------------------------
       // Error message #247
       // Same domain value may map to different range values
@@ -530,8 +506,9 @@ Tuple StatSem::wf_MapEnumerationExpr (const Int & i,
       GenErr (MapEnum, ERR2, 247, Sequence());
       return mk_(Bool(false), restp);
     }
-    else
+    else {
       return mk_(reswf, restp);
+    }
   }
 }
 
@@ -558,13 +535,13 @@ Tuple StatSem::wf_MapComprehensionExpr (const Int & i,
   Generic nm;
   MAP<TYPE_AS_Name, TYPE_REP_TypeRep> bdm;
   SET<TYPE_AS_Name> dom_bd (bd.Dom());
-  for (bool bb = dom_bd.First(nm); bb; bb = dom_bd.Next(nm))
+  for (bool bb = dom_bd.First(nm); bb; bb = dom_bd.Next(nm)) {
     bdm.Insert(nm, bd[nm].GetRecord(1));
+  }
   GetCI().SetPidM (cid, bdm);
 
 
-  if (wf_bd.IsNil())
-  {
+  if (wf_bd.IsNil()) {
     //------------------------------
     // Error message #229
     // Binding for L"%1" is erroneous
@@ -575,8 +552,7 @@ Tuple StatSem::wf_MapComprehensionExpr (const Int & i,
     return mk_(Bool(false), rc1);
   }
 
-  if (wf_bd == Bool(false))
-  {
+  if (wf_bd == Bool(false)) {
     //---------------------------------
     // Error message #230
     // Not all bindings are well-formed
@@ -594,8 +570,7 @@ Tuple StatSem::wf_MapComprehensionExpr (const Int & i,
     bool predcomp = IsCompatible (i, pr_tp, btp_bool);
 
     reswf = reswf && wf_pr && predcomp;
-    if (!predcomp)
-    {
+    if (!predcomp) {
       //-----------------------------------------------
       // Error message #231
       // Predicate for L"%1" is not a boolean expression
@@ -610,13 +585,11 @@ Tuple StatSem::wf_MapComprehensionExpr (const Int & i,
   reswf = reswf && wf_e;
   LeaveScope();
 
-  if (!wf_e)
-  {
+  if (!wf_e) {
     GetCI().SetTypeInfo (cid, e_tp);
     return mk_(Bool(false), e_tp);
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep rc1 (mk_REP_UnionTypeRep(mk_set(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp), e_tp)));
     GetCI().SetTypeInfo (cid, rc1);
     return mk_(reswf, rc1);
@@ -636,28 +609,23 @@ Tuple StatSem::wf_TupleConstructorExpr (const Int & i,
   const TYPE_CI_ContextId & cid (TupleConstr.GetInt(pos_AS_TupleConstructorExpr_cid));
   size_t len_fields = fields.Length();
 
-// 20150619 -->
   Generic ptp (ExtractProductType (exptp, (int)len_fields, EQ));
   SEQ<TYPE_REP_TypeRep> fldtp;
   if (ptp.IsNil()) {
-    for (size_t idx = 1; idx <= len_fields; idx++)
+    for (size_t idx = 1; idx <= len_fields; idx++) {
       fldtp.ImpAppend(rep_alltp);
+    }
   }
   else {
     fldtp.ImpConc(Record(ptp).GetSequence(pos_REP_ProductTypeRep_tps));
   }
-// <-- 20150619
 
   Bool reswf (true);
 
   SEQ<TYPE_REP_TypeRep> restp;
   //size_t len_fields = fields.Length();
-  for (size_t idx = 1; idx <= len_fields; idx++)
-  {
-// 20150619 -->
+  for (size_t idx = 1; idx <= len_fields; idx++) {
     Tuple infer (wf_Expr (i, fields[idx], rep_alltp));
-    //Tuple infer (wf_Expr (i, fields[idx], fldtp[idx]));
-// <-- 20150619
     const Bool & wf (infer.GetBool(1));
     const TYPE_REP_TypeRep & tp (infer.GetRecord(2));
 
@@ -693,17 +661,11 @@ Tuple StatSem::wf_TupleSelectExpr (const Int & i,
   if (!wf_no) {
     return mk_(Bool(false), rep_alltp);
   }
-  else
-  {
+  else {
     double no_int = no.GetRealValue(pos_AS_RealLit_val);
 
-// 20131216 -->
-    //TYPE_REP_ProductTypeRep ptp (ExtractProductType (argtp, (int)no_int, NUMGE));
-    //const SEQ<TYPE_REP_TypeRep> & ptp_l (ptp.GetSequence (pos_REP_ProductTypeRep_tps));
- 
     Generic ptp (ExtractProductType (argtp, (int)no_int, NUMGE));
-    if (ptp.IsNil())
-    {
+    if (ptp.IsNil()) {
       //---------------------
       // Error message #365
       // A tuple was expected
@@ -713,10 +675,8 @@ Tuple StatSem::wf_TupleSelectExpr (const Int & i,
     }
 
     const SEQ<TYPE_REP_TypeRep> & ptp_l (Record(ptp).GetSequence (pos_REP_ProductTypeRep_tps));
-// <-- 20131216
 
-    if (ptp_l.Length () < 2 )
-    {
+    if (ptp_l.Length () < 2 ) {
       //---------------------
       // Error message #365
       // A tuple was expected
@@ -724,13 +684,11 @@ Tuple StatSem::wf_TupleSelectExpr (const Int & i,
       GenErr (expr, ERR, 365, Sequence());
       return mk_(Bool(false), rep_alltp);
     }
-    else if (ptp_l.Length () >= no_int)
-    {
+    else if (ptp_l.Length () >= no_int) {
       GetCI().SetTypeInfo (cid, ptp_l[(int)no_int]);
       return mk_(wf_arg, ptp_l[(int)no_int]);
     }
-    else
-    {
+    else {
       //-------------------------
       // Error message #364
       // Tuple selector too large
@@ -791,8 +749,7 @@ Tuple StatSem::wf_TokenConstructorExpr (const Int & i,
   const Bool & wf (infer.GetBool (1));
 
   Bool reswf (true);
-  if (!(IsCompatible(i, btp_token, exptp)))
-  {
+  if (!(IsCompatible(i, btp_token, exptp))) {
     //---------------------------------
     //-- Error message #398
     //-- Token value was not expected
@@ -822,8 +779,7 @@ Tuple StatSem::wf_RecordConstructorExpr (const Int & i,
   SEQ<TYPE_REP_FieldRep> restp;
 
   size_t len_fields = fields.Length();
-  for (size_t idx = 1; idx <= len_fields; idx++)
-  {
+  for (size_t idx = 1; idx <= len_fields; idx++) {
     Tuple infer (wf_Expr (i, fields[idx], rep_alltp));
     const Bool & wf (infer.GetBool(1));
     const TYPE_REP_TypeRep & tp (infer.GetRecord(2));
@@ -836,8 +792,7 @@ Tuple StatSem::wf_RecordConstructorExpr (const Int & i,
   // pp : [AS`Name * (AccessFieldRep|TagRepElem)]
   Generic lut_g (LookUpTag (i, tag, Set()));
 
-  if (lut_g.IsNil ())
-  {
+  if (lut_g.IsNil ()) {
     //--------------------------------------------
     // Error message #254
     // Composite type L"%1" is not defined in "%2".
@@ -860,8 +815,7 @@ Tuple StatSem::wf_RecordConstructorExpr (const Int & i,
   const Generic & fl_q (lut.GetField (2));
   Generic fl_tmp_g (CheckAccessCurClass (fl_q));
 
-  if (fl_tmp_g.IsNil ())
-  {
+  if (fl_tmp_g.IsNil ()) {
     //-------------------
     // Error message #368
     // Access violation
@@ -875,8 +829,7 @@ Tuple StatSem::wf_RecordConstructorExpr (const Int & i,
   TYPE_REP_TypeRep ctr (mk_REP_CompositeTypeRep(newtag, fl));
   GetCI().SetTypeInfo (cid, ctr);
 
-  if (fl.Length () != restp.Length ())
-  {
+  if (fl.Length () != restp.Length ()) {
     //--------------------------------
     // Error message #297
     // Wrong number of fields for L"%1"
@@ -884,13 +837,10 @@ Tuple StatSem::wf_RecordConstructorExpr (const Int & i,
     GenErr (RecordConstr, ERR, 297, mk_sequence(SEQ<Char>(L"Record-Constructor-Expr")));
     return mk_(Bool(false), ctr);
   }
-  else
-  {
+  else {
     size_t len_fl = fl.Length ();
-    for(size_t idx = 1; idx <= len_fl; idx++)
-    {
-      if (! IsCompatible (i, restp[idx].get_tp(), fl[idx].get_tp()))
-      {
+    for(size_t idx = 1; idx <= len_fl; idx++) {
+      if (! IsCompatible (i, restp[idx].get_tp(), fl[idx].get_tp())) {
         //---------------------------------------------------------------------
         // Error message #250
         // Type of field number %1 is not compatible with its defined type in
@@ -900,7 +850,6 @@ Tuple StatSem::wf_RecordConstructorExpr (const Int & i,
         reswf = Bool (false);
       }
     }
-//    return mk_(reswf, ctr);
     return mk_(reswf, mk_REP_TypeNameRep(tag));
   }
 }
@@ -949,8 +898,7 @@ bool StatSem::CheckModifications (const Int & i,
 #endif // VDMPP
       MAP<TYPE_AS_Name, TYPE_REP_TypeRep> ftp;
       size_t len_fl = fl.Length();
-      for(size_t idx = 1; idx <= len_fl; idx++)
-      {
+      for(size_t idx = 1; idx <= len_fl; idx++) {
         const TYPE_REP_FieldRep & fr (fl[idx]);
         const Generic & nm (fr.GetField(pos_REP_FieldRep_sel));
         if (!nm.IsNil () && !ftp.DomExists (nm))
@@ -959,13 +907,11 @@ bool StatSem::CheckModifications (const Int & i,
 
       SET<TYPE_AS_Name> domm;
       size_t len_mods = mods.Length();
-      for(size_t idm = 1; idm <= len_mods; idm++)
-      {
+      for(size_t idm = 1; idm <= len_mods; idm++) {
         const TYPE_AS_RecordModification & ng (mods[idm]);
         const TYPE_AS_Name & mid (ng.GetRecord(pos_AS_RecordModification_field));
         const TYPE_AS_Expr & mid_e (ng.GetRecord(pos_AS_RecordModification_newexpr));
-        if (ftp.DomExists (mid))
-        {
+        if (ftp.DomExists (mid)) {
           Tuple infer (wf_Expr (i, mid_e, ftp[mid]));
           const Bool & wf_arg (infer.GetBool (1));
           const TYPE_REP_TypeRep & argtp (infer.GetRecord (2));
@@ -981,8 +927,7 @@ bool StatSem::CheckModifications (const Int & i,
             reswf = false;
           }
 
-          if (domm.InSet (mid))
-          {
+          if (domm.InSet (mid)) {
             //--------------------------------------
             // Error message #348
             // Field L"%1" is modified more than once
@@ -1007,14 +952,12 @@ bool StatSem::CheckModifications (const Int & i,
       Bool onewf(false);
       SEQ<TYPE_AS_Name> nms;
       Generic g;
-      for (bool bb = Utps.First (g); bb; bb = Utps.Next (g))
-      {
+      for (bool bb = Utps.First (g); bb; bb = Utps.Next (g)) {
         TYPE_REP_CompositeTypeRep ctr (g);
         const TYPE_AS_Name & nm (ctr.GetRecord(pos_REP_CompositeTypeRep_nm));
         nms.ImpAppend (nm);
         Generic pair_g (LookUpTag(i, nm, Set()));
-        if (! pair_g.IsNil ())
-        {
+        if (! pair_g.IsNil ()) {
           Tuple pair (pair_g);
 #ifdef VDMSL
           const SEQ<TYPE_REP_FieldRep> & fl (pair.GetSequence (2));
@@ -1022,8 +965,7 @@ bool StatSem::CheckModifications (const Int & i,
 #ifdef VDMPP
           const Generic & fl_q (pair.GetField (2));
           Generic fl_tmp (CheckAccessCurClass (fl_q));
-          if (fl_tmp.IsNil ())
-          {
+          if (fl_tmp.IsNil ()) {
             //-------------------
             // Error message #368
             // Access violation
@@ -1035,35 +977,32 @@ bool StatSem::CheckModifications (const Int & i,
 #endif // VDMPP
           MAP<TYPE_AS_Name, TYPE_REP_TypeRep> ftp;
           size_t len_fl = fl.Length();
-          for (size_t idx = 1; idx <= len_fl; idx++)
-          {
+          for (size_t idx = 1; idx <= len_fl; idx++) {
             const TYPE_REP_FieldRep & fr (fl[idx]);
             const Generic & fnm (fr.GetField(pos_REP_FieldRep_sel));
-            if (! fnm.IsNil ())
+            if (! fnm.IsNil ()) {
               ftp.ImpModify (fnm, fr.GetRecord(pos_REP_FieldRep_tp));
+            }
           }
           SET<TYPE_AS_Name> domm;
           size_t len_mods = mods.Length();
-          for (size_t idm = 1; idm <= len_mods; idm++)
-          {
+          for (size_t idm = 1; idm <= len_mods; idm++) {
             const TYPE_AS_RecordModification & ng (mods[idm]);
             const TYPE_AS_Name & mnm (ng.GetRecord(pos_AS_RecordModification_field));
             const TYPE_AS_Expr & new_e (ng.GetRecord(pos_AS_RecordModification_newexpr));
 
-            if (ftp.DomExists (mnm))
-            {
+            if (ftp.DomExists (mnm)) {
               Tuple infer (wf_Expr (i, new_e, ftp[mnm]));
               const Bool & wf_arg (infer.GetBool (1));
               const TYPE_REP_TypeRep & argtp (infer.GetRecord (2));
 
               reswf = reswf && (wf_arg.GetValue());
 
-              if (IsCompatible (i, argtp, ftp[mnm]))
+              if (IsCompatible (i, argtp, ftp[mnm])) {
                 onewf = Bool(true);
-              else
-              {
-                if (i == DEF)
-                {
+              }
+              else {
+                if (i == DEF) {
                   //-----------------------------------------------------------
                   // Error message #251
                   // Type of field L"%1" is not compatible with its defined type
@@ -1072,8 +1011,7 @@ bool StatSem::CheckModifications (const Int & i,
                   reswf = false;
                 }
               }
-              if (domm.InSet (mnm))
-              {
+              if (domm.InSet (mnm)) {
                 //--------------------------------------
                 // Error message #348
                 // Field L"%1" is modified more than once
@@ -1082,8 +1020,7 @@ bool StatSem::CheckModifications (const Int & i,
               }
               domm.Insert (mnm);
             }
-            else
-            {
+            else {
               if (i == DEF) {
                 //-----------------------------------------------
                 // Error message #253
@@ -1095,8 +1032,7 @@ bool StatSem::CheckModifications (const Int & i,
             }
           }
         }
-        else
-        {
+        else {
           if (i == DEF) {
             // There is no need to report an error here
             // as it is already done, when the record was created.
@@ -1106,14 +1042,13 @@ bool StatSem::CheckModifications (const Int & i,
           }
         }
       }
-      if (! onewf.GetValue ())
-      {
+      if (! onewf.GetValue ()) {
         size_t len_nms = nms.Length();
         SEQ<Char> s;
-        for (size_t idx = 1; idx <= len_nms; idx++)
-        {
-          if (idx > 1)
+        for (size_t idx = 1; idx <= len_nms; idx++) {
+          if (idx > 1) {
             s.ImpConc(SEQ<Char>(L", "));
+          }
           s.ImpConc(PrintName(nms[idx]));
         }
         //------------------------------------------------------------------------
@@ -1155,11 +1090,9 @@ Tuple StatSem::wf_RecordModifierExpr (const Int & i,
 
   TYPE_REP_TypeRep cmptp (mk_REP_CompositeTypeRep(ASTAUX::MkNameFromVoid (), SEQ<TYPE_REP_FieldRep>()));
 
-  if (IsCompatible(i, argtp, cmptp))
-  {
+  if (IsCompatible(i, argtp, cmptp)) {
     TYPE_REP_TypeRep r1tp (ExtractCompositeType(argtp));
-    if (cmptp == r1tp)
-    {
+    if (cmptp == r1tp) {
       //---------------------------------
       // Error message #257
       // Modifications cannot be analyzed
@@ -1168,19 +1101,14 @@ Tuple StatSem::wf_RecordModifierExpr (const Int & i,
       GetCI().SetTypeInfo (cid, rep_alltp);
       return mk_(Bool(false), rep_alltp);
     }
-    else
-    {
+    else {
       UpdateLastPosition (vRecordModifier);
       reswf &= CheckModifications (i, r1tp, mods, exptp);
       GetCI().SetTypeInfo (cid, r1tp);
-// 20100721 -->
-//      return mk_(wf_arg && reswf, r1tp);
       return mk_(wf_arg && reswf, argtp);
-// <-- 20100721
     }
   }
-  else
-  {
+  else {
     //----------------------------
     // Error message #258
     // Rhs is not a composite type
@@ -1211,33 +1139,31 @@ Tuple StatSem::CheckOverloadedApply(const Int & p_i,
   SET<TYPE_REP_TypeRep> l_fnTps;
   SET<TYPE_REP_TypeRep> l_compatTps;
   Generic b_tp;
-  for (bool bb = p_overloadedTps_q.First(b_tp); bb; bb = p_overloadedTps_q.Next(b_tp))
-  {
+  for (bool bb = p_overloadedTps_q.First(b_tp); bb; bb = p_overloadedTps_q.Next(b_tp)) {
     SEQ<TYPE_REP_TypeRep> b_tpDom (GetMethDom(b_tp));
-    if (b_tpDom.Length() == p_argTps.Length())
-    {
+    if (b_tpDom.Length() == p_argTps.Length()) {
       l_fnTps.Insert(b_tp);
 
       bool forall = true;
       size_t len_b_tpDom = b_tpDom.Length();
-      for (size_t b_i = 1; (b_i <= len_b_tpDom) && forall; b_i++)
-      {
+      for (size_t b_i = 1; (b_i <= len_b_tpDom) && forall; b_i++) {
         forall = IsCompatible(p_i, p_argTps[b_i], b_tpDom[b_i]);
       }
-      if (forall)
+      if (forall) {
         l_compatTps.Insert(b_tp);
+      }
     }
   }
 
-  if (l_fnTps.IsEmpty())
-  {
+  if (l_fnTps.IsEmpty()) {
     // -------------------------------
     // -- Error message #385
     // -- No overloaded function or operation with this
     // -- number of arguments exists
     // -------------------------------
-    if (p_repErr)
+    if (p_repErr) {
       GenErr(p_expr, ERR, 385, Sequence());
+    }
     return mk_(Bool(false), rep_alltp);
   }
 
@@ -1248,25 +1174,31 @@ Tuple StatSem::CheckOverloadedApply(const Int & p_i,
       // -- No overloaded function or operation matches
       // -- these arguments
       // -------------------------------
-      if (p_repErr)
+      if (p_repErr) {
         GenErr (p_expr, ERR, 386, Sequence());
+      }
       return mk_(Bool(false), rep_alltp);
     }
     case 1: {
       TYPE_REP_TypeRep l_tp (l_compatTps.GetElem());
       switch(l_tp.GetTag()) {
         case TAG_TYPE_REP_OpTypeRep: {
-          if (p_retRng)
+          if (p_retRng) {
             return mk_(Bool(true), l_tp.GetField(pos_REP_OpTypeRep_Rng));
-          else
+          }
+          else {
             return mk_(Bool(true), l_tp);
+          }
         }
-        case TAG_TYPE_REP_PartialFnTypeRep:
+        case TAG_TYPE_REP_PartialFnTypeRep: {
           return mk_(Bool(true), l_tp.GetField(pos_REP_PartialFnTypeRep_fnrng));
-        case TAG_TYPE_REP_TotalFnTypeRep:
+        }
+        case TAG_TYPE_REP_TotalFnTypeRep: {
           return mk_(Bool(true), l_tp.GetField(pos_REP_TotalFnTypeRep_fnrng));
-        default:
+        }
+        default: {
           return mk_(Bool(false), rep_alltp); // dummy
+        }
       }
     }
     default: { // l_compatTps.Card() > 1)
@@ -1275,8 +1207,9 @@ Tuple StatSem::CheckOverloadedApply(const Int & p_i,
       // -- More than one overloaded function or
       // -- operation matches these arguments
       // -------------------------------
-      if (p_repErr)
+      if (p_repErr) {
        GenErr (p_expr, ERR, 387, Sequence());
+      }
       return mk_(Bool(false), rep_alltp);
     }
   }
@@ -1299,42 +1232,41 @@ Tuple StatSem::CheckBasicApply (const Int & i,
   switch(tp1.GetTag()) {
     case TAG_TYPE_REP_SeqTypeRep: {
       const TYPE_REP_TypeRep & stp (tp1.GetRecord(pos_REP_SeqTypeRep_elemtp));
-      if (tp_l.Length() == 1)
-      {
-        if (IsCompatible (i, tp_l.Hd(), btp_natone))
-        {
-          if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-          {
+      if (tp_l.Length() == 1) {
+        if (IsCompatible (i, tp_l.Hd(), btp_natone)) {
+          if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
             //-------------------------------------------------
             // Error message #265
             // Given index may not exist for the given sequence
             //-------------------------------------------------
-            if (callerr)
+            if (callerr) {
               GenErr (vApply, ERR2, 265, Sequence());
+             }
             return mk_(Bool(false), stp);
           }
-          else
+          else {
             return mk_(Bool(true), stp);
+          }
         }
-        else
-        {
+        else {
           //---------------------------------------
           // Error message #268
           // Sequence index is not a natural number
           //---------------------------------------
-          if (callerr)
+          if (callerr) {
             GenErrTp (vApply, ERR, 268, tp_l.Hd(), btp_natone, Sequence());
+          }
           return mk_(Bool(false), stp);
         }
       }
-      else
-      {
+      else {
         //---------------------------------------------
         // Error message #266
         // Sequence is applied with more than one index
         //---------------------------------------------
-        if (callerr)
+        if (callerr) {
           GenErr (vApply, ERR, 266, Sequence());
+        }
         return mk_(Bool(false), stp);
       }
     }
@@ -1343,41 +1275,41 @@ Tuple StatSem::CheckBasicApply (const Int & i,
       const TYPE_REP_TypeRep & Dom (tp1.GetRecord(1));
       const TYPE_REP_TypeRep & Rng (tp1.GetRecord(2));
   
-      if (tp_l.Length() == 1)
-      {
-        if (IsCompatible (i, tp_l.Hd(), Dom))
-        {
-          if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-          {
+      if (tp_l.Length() == 1) {
+        if (IsCompatible (i, tp_l.Hd(), Dom)) {
+          if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
             //-----------------------------------------------------
             // Error message #269
             // Given domain element may not exist for the given map
             //-----------------------------------------------------
-            if (callerr)
+            if (callerr) {
               GenErr (vApply, ERR2, 269, Sequence());
+            }
             return mk_(Bool(false), Rng);
           }
-          else
+          else {
             return mk_(Bool(true), Rng);
+          }
         }
         else {
           //----------------------------------
           // Error message #270
           // Map domain type of incorrect type
           //----------------------------------
-          if (callerr)
+          if (callerr) {
             GenErrTp (vApply, ERR, 270, tp_l.Hd(), Dom, Sequence());
+          }
           return mk_(Bool(false), Rng);
         }
       }
-      else
-      {
+      else {
         //----------------------------------------
         // Error message #271
         // Map is applied with more than one value
         //----------------------------------------
-        if (callerr)
+        if (callerr) {
           GenErr (vApply, ERR, 271, Sequence());
+        }
         return mk_(Bool(false), Rng);
       }
     }
@@ -1387,33 +1319,34 @@ Tuple StatSem::CheckBasicApply (const Int & i,
       const SEQ<TYPE_REP_TypeRep> & Dom (tp1.GetSequence(1));
       const TYPE_REP_TypeRep & Rng (tp1.GetRecord(2));
 
-      if (Dom.Length() == tp_l.Length())
-      {
+      if (Dom.Length() == tp_l.Length()) {
         size_t len_Dom = Dom.Length();
         bool reswf = true;
-        for (size_t index = 1; index <= len_Dom; index++)
+        for (size_t index = 1; index <= len_Dom; index++) {
           reswf &= IsCompatible (i, tp_l[index], Dom[index]);
-        if (reswf)
+        }
+        if (reswf) {
           return mk_(Bool(true), Rng);
-        else
-        {
+        }
+        else {
           //------------------------------------------------------------
           // Error message #272
           // Function is not applied with parameters of the correct type
           //------------------------------------------------------------
-          if (callerr)
+          if (callerr) {
             GenErrTp (vApply, ERR, 272, mk_REP_ProductTypeRep(tp_l), mk_REP_ProductTypeRep(Dom), Sequence());
+          }
           return mk_(Bool(false), Rng);
         }
       }
-      else
-      {
+      else {
         //-------------------------------------------------
         // Error message #273
         // Function applied with wrong number of parameters
         //-------------------------------------------------
-        if (callerr)
+        if (callerr) {
           GenErr (vApply, ERR, 273, Sequence());
+        }
         return mk_(Bool(false), Rng);
       }
     }
@@ -1422,19 +1355,18 @@ Tuple StatSem::CheckBasicApply (const Int & i,
       const TYPE_REP_TypeRep & Rng (tp1.GetRecord(pos_REP_OpTypeRep_Rng));
 
 #ifdef VDMSL
-      if (Settings.VDMSLmode())
-      {
+      if (Settings.VDMSLmode()) {
         //-----------------------------
         // Error message #349
         // Operation call in expression
         //-----------------------------
-        if (callerr)
+        if (callerr) {
           GenErr (vApply, ERR, 349, Sequence());
+        }
         return mk_(Bool(false), Rng);
       }
 // 20130724 -->
-      if (IsInVDContext())
-      {
+      if (IsInVDContext()) {
         //-----------------------------
         // Error message #349
         // Operation call in expression
@@ -1444,8 +1376,7 @@ Tuple StatSem::CheckBasicApply (const Int & i,
 // <-- 20130724
 #endif // VDMSL
 
-      if ((Settings.ErrorLevel() >= ERR2) && ((GetContext() == PRE) || (GetContext() == POST)))
-      {
+      if ((Settings.ErrorLevel() >= ERR2) && ((GetContext() == PRE) || (GetContext() == POST))) {
         //-----------------------------
         // Error message #448
         // Operation call in pre/post function
@@ -1453,38 +1384,40 @@ Tuple StatSem::CheckBasicApply (const Int & i,
         GenErr (vApply, WRN1, 448, Sequence());
       }
 
-      if (Dom.Length() == tp_l.Length())
-      {
+      if (Dom.Length() == tp_l.Length()) {
         size_t len_Dom = Dom.Length();
         bool reswf = true;
-        for (size_t index = 1; index <= len_Dom; index++)
+        for (size_t index = 1; index <= len_Dom; index++) {
           reswf &= IsCompatible (i, tp_l[index], Dom[index]);
-        if (reswf)
+        }
+        if (reswf) {
           return mk_(Bool(true), Rng);
-        else
-        {
+        }
+        else {
           //-------------------------------------------------------------
           // Error message #274
           // Operation is not applied with parameters of the correct type
           //-------------------------------------------------------------
-          if (callerr)
+          if (callerr) {
             GenErrTp (vApply, ERR, 274, mk_REP_ProductTypeRep(tp_l), mk_REP_ProductTypeRep(Dom), Sequence());
+          }
           return mk_(Bool(false), Rng);
         }
       }
-      else
-      {
+      else {
         //-------------------------------------------------
         // Error message #275
         // Operation applied with wrong number of arguments
         //-------------------------------------------------
-        if (callerr)
+        if (callerr) {
           GenErr (vApply, ERR, 275, Sequence());
+        }
         return mk_(Bool(false), Rng);
       }
     }
-    default:
+    default: {
       return Tuple(); //This is only to avoid warnings from the compiler
+    }
   }
 }
 
@@ -1504,12 +1437,9 @@ Tuple StatSem::CheckUnionApply (const Int & i,
   switch(tp1.GetTag()) {
     case TAG_TYPE_REP_SeqTypeRep: {
       const TYPE_REP_TypeRep & stp (tp1.GetRecord(pos_REP_SeqTypeRep_elemtp));
-      if (tp_l.Length() == 1)
-      {
-        if (IsCompatible (i, tp_l.Hd(), btp_natone))
-        {
-          if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-          {
+      if (tp_l.Length() == 1) {
+        if (IsCompatible (i, tp_l.Hd(), btp_natone)) {
+          if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
             //-------------------------------------------------
             // Error message #265
             // Given index may not exist for the given sequence
@@ -1517,11 +1447,11 @@ Tuple StatSem::CheckUnionApply (const Int & i,
             GenErr (vApply, ERR2, 265, Sequence());
             return mk_(Bool(false), stp);
           }
-          else
+          else {
             return mk_(Bool(true), stp);
+          }
         }
-        else
-        {
+        else {
           //---------------------------------------
           // Error message #268
           // Sequence index is not a natural number
@@ -1530,8 +1460,7 @@ Tuple StatSem::CheckUnionApply (const Int & i,
           return mk_(Bool(false), rep_alltp);
         }
       }
-      else
-      {
+      else {
         //---------------------------------------------
         // Error message #266
         // Sequence is applied with more than one index
@@ -1541,15 +1470,12 @@ Tuple StatSem::CheckUnionApply (const Int & i,
       }
     }
     case TAG_TYPE_REP_GeneralMapTypeRep:
-    case TAG_TYPE_REP_InjectiveMapTypeRep:
-    {
+    case TAG_TYPE_REP_InjectiveMapTypeRep: {
       const TYPE_REP_TypeRep & Dom (tp1.GetRecord(1));
       const TYPE_REP_TypeRep & Rng (tp1.GetRecord(2));
-      if (tp_l.Length() == 1)
-        if (IsCompatible (i, tp_l.Hd(), Dom))
-        {
-          if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-          {
+      if (tp_l.Length() == 1) {
+        if (IsCompatible (i, tp_l.Hd(), Dom)) {
+          if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
             //-----------------------------------------------------
             // Error message #269
             // Given domain element may not exist for the given map
@@ -1557,11 +1483,11 @@ Tuple StatSem::CheckUnionApply (const Int & i,
             GenErr (vApply, ERR2, 269, Sequence());
             return mk_(Bool(false), Rng);
           }
-          else
+          else {
             return mk_(Bool(true), Rng);
+          }
         }
-        else
-        {
+        else {
           //----------------------------------
           // Error message #270
           // Map domain type of incorrect type
@@ -1569,8 +1495,8 @@ Tuple StatSem::CheckUnionApply (const Int & i,
           GenErrTp (vApply, msgtp, 270, tp_l.Hd(), Dom, Sequence());
           return mk_(Bool(false), Rng);
         }
-      else
-      {
+      }
+      else {
         //----------------------------------------
         // Error message #271
         // Map is applied with more than one value
@@ -1587,17 +1513,17 @@ Tuple StatSem::CheckUnionApply (const Int & i,
         const TYPE_REP_TypeRep & Rng (tp1.GetRecord(2));
 
         size_t len_tp_l = tp_l.Length();
-        if ((size_t)(Dom.Length()) == len_tp_l)
-        {
+        if ((size_t)(Dom.Length()) == len_tp_l) {
           if ((len_tp_l == 1) &&
               (tp_l[1].Is (TAG_TYPE_REP_PartialFnTypeRep) || tp_l[1].Is (TAG_TYPE_REP_TotalFnTypeRep)) &&
-              (Rng.Is (TAG_TYPE_REP_PartialFnTypeRep) || Rng.Is (TAG_TYPE_REP_TotalFnTypeRep)))
+              (Rng.Is (TAG_TYPE_REP_PartialFnTypeRep) || Rng.Is (TAG_TYPE_REP_TotalFnTypeRep))) {
             return CheckHigherOrder(i, tp_l[i], Dom, Rng, vApply);
-
+          }
           size_t len_Dom = Dom.Length();
           bool reswf = true;
-          for (size_t index = 1; index <= len_Dom; index++)
+          for (size_t index = 1; index <= len_Dom; index++) {
             reswf = IsCompatible (i, tp_l[index], Dom[index]) && reswf;
+          }
           if (reswf) {
             return mk_(Bool(true), Rng);
           }
@@ -1619,23 +1545,24 @@ Tuple StatSem::CheckUnionApply (const Int & i,
           return mk_(Bool(false), Rng);
         }
       }
-      else
+      else {
         return mk_(Bool(false), tp1.GetField(2));
+      }
     }
     case TAG_TYPE_REP_OpTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & Dom (tp1.GetSequence(pos_REP_OpTypeRep_Dom));
       const TYPE_REP_TypeRep & Rng (tp1.GetRecord(pos_REP_OpTypeRep_Rng));
 
-      if (Dom.Length() == tp_l.Length())
-      {
+      if (Dom.Length() == tp_l.Length()) {
         size_t len_Dom = Dom.Length();
         bool reswf = true;
-        for (size_t index = 1; index <= len_Dom; index++)
+        for (size_t index = 1; index <= len_Dom; index++) {
           reswf = IsCompatible (i, tp_l[index], Dom[index]) && reswf;
-        if (reswf)
+        }
+        if (reswf) {
           return mk_(Bool(true), Rng);
-        else
-        {
+        }
+        else {
           //-------------------------------------------------------------
           // Error message #274
           // Operation is not applied with parameters of the correct type
@@ -1644,8 +1571,7 @@ Tuple StatSem::CheckUnionApply (const Int & i,
           return mk_(Bool(false), Rng);
         }
       }
-      else
-      {
+      else {
         //-------------------------------------------------
         // Error message #275
         // Operation applied with wrong number of arguments
@@ -1654,8 +1580,9 @@ Tuple StatSem::CheckUnionApply (const Int & i,
         return mk_(Bool(false), Rng);
       }
     }
-    default:
+    default: {
       return Tuple(); //This is only to avoid warnings from the compiler
+    }
   }
 }
 
@@ -1679,15 +1606,12 @@ Tuple StatSem::CheckHigherOrder (const Int & i,
   TYPE_REP_TypeRep restRng (Rng);
 
   bool stop = false;
-  while(!stop)
-  {
+  while(!stop) {
     stop = true;
     if ((restargtp.Is (TAG_TYPE_REP_PartialFnTypeRep) || restargtp.Is (TAG_TYPE_REP_TotalFnTypeRep)) &&
-        (restRng.Is (TAG_TYPE_REP_PartialFnTypeRep) || restRng.Is (TAG_TYPE_REP_TotalFnTypeRep))) 
-    {
+        (restRng.Is (TAG_TYPE_REP_PartialFnTypeRep) || restRng.Is (TAG_TYPE_REP_TotalFnTypeRep))) {
       TYPE_REP_TypeRep atp (realdomtp [realdomtp.Length ()].Hd());
-      if (!(atp.Is (TAG_TYPE_REP_PartialFnTypeRep) || atp.Is (TAG_TYPE_REP_TotalFnTypeRep)))
-      {
+      if (!(atp.Is (TAG_TYPE_REP_PartialFnTypeRep) || atp.Is (TAG_TYPE_REP_TotalFnTypeRep))) {
         switch(restRng.GetTag()) {
           case TAG_TYPE_REP_PartialFnTypeRep: {
             realdomtp.ImpAppend (restRng.GetSequence (pos_REP_PartialFnTypeRep_fndom));
@@ -1718,18 +1642,21 @@ Tuple StatSem::CheckHigherOrder (const Int & i,
   bool reswf ((realdomtp.Length () == 1) ? IsCompatible(i, argtp, realdomtp.Hd ().Hd ())
                                          : IsCompatible(i, argtp, CreateFnType(realdomtp)));
 
-  if (reswf)
+  if (reswf) {
     return mk_(Bool(reswf), restRng);
+  }
   else {
     //------------------------------------------------------------
     // Error message #272
     // Function is not applied with parameters of the correct type
     //------------------------------------------------------------
     //GenErr(vApply, ERR, 272, Sequence());
-    if (realdomtp.Length () == 1)
+    if (realdomtp.Length () == 1) {
       GenErrTp (vApply, ERR, 272, argtp, realdomtp.Hd ().Hd (), Sequence());
-    else
+    }
+    else {
       GenErrTp (vApply, ERR, 272, argtp, CreateFnType(realdomtp), Sequence());
+    }
     return mk_(Bool (false), restRng);
   }
 }
@@ -1744,11 +1671,12 @@ TYPE_REP_PartialFnTypeRep StatSem::CreateFnType (const Sequence & tp_l_l)
   }
   else { // tp_l_l.Length () == 2
     SEQ<TYPE_REP_TypeRep> tp2_l (tp_l_l[2]);
-    if (tp2_l.Length () == 1)
+    if (tp2_l.Length () == 1) {
       return mk_REP_PartialFnTypeRep(tp_l_l.Hd (), tp2_l.Hd ());
-    else
-      // 20060306
+    }
+    else {
       return mk_REP_PartialFnTypeRep(tp_l_l.Hd (), mk_REP_ProductTypeRep(tp2_l));
+    }
   }
 }
 
@@ -1780,25 +1708,20 @@ Tuple StatSem::wf_ApplyExpr (const Int & i, const TYPE_AS_ApplyExpr & vApply, co
 #ifdef VDMPP
   Bool wf_fct;
   TYPE_REP_TypeRep fcttp;
-  if (fct.Is(TAG_TYPE_AS_Name))
-  {
+  if (fct.Is(TAG_TYPE_AS_Name)) {
     Generic gtp (LookUpInObject (GetCurClass (), fct, false, false));
-    if (gtp.IsSet())
-    {
+    if (gtp.IsSet()) {
       wf_fct = Bool(true);
-      //fcttp = mk_REP_OverTypeRep(CheckAccess (GetCurClass (), gtp));
       fcttp = mk_REP_OverTypeRep(CheckAccessCurClass (gtp));
       GetCI().SetTypeInfo (fct.GetInt(pos_AS_Name_cid), fcttp);
     }
-    else
-    {
+    else {
       Tuple infer (wf_Expr(i, fct, fnmapseqtp));
       wf_fct = (infer.GetBool(1));
       fcttp = (infer.GetRecord(2));
     }
   }
-  else
-  {
+  else {
     Tuple infer (wf_Expr(i, fct, fnmapseqtp));
     wf_fct = (infer.GetBool(1));
     fcttp = (infer.GetRecord(2));
@@ -1808,8 +1731,7 @@ Tuple StatSem::wf_ApplyExpr (const Int & i, const TYPE_AS_ApplyExpr & vApply, co
   Bool wf_arg (true);
   SEQ<TYPE_REP_TypeRep> argtp_l;
   size_t len_arg = arg.Length();
-  for (size_t idx = 1; idx <= len_arg; idx++)
-  {
+  for (size_t idx = 1; idx <= len_arg; idx++) {
     Tuple infer2 (wf_Expr (i, arg[idx], rep_alltp));
     wf_arg = infer2.GetBool (1) && wf_arg;
     argtp_l.ImpAppend(infer2.GetRecord (2));
@@ -1819,8 +1741,7 @@ Tuple StatSem::wf_ApplyExpr (const Int & i, const TYPE_AS_ApplyExpr & vApply, co
   const Bool & wf_apply (infer3.GetBool (1));
   const TYPE_REP_TypeRep & res_tp (infer3.GetRecord (2));
 
-  if (res_tp.Is(TAG_TYPE_REP_UnitTypeRep))
-  {
+  if (res_tp.Is(TAG_TYPE_REP_UnitTypeRep)) {
     //-------------------------------
     // Error message #259
     // Apply-Expr must return a value
@@ -1829,8 +1750,7 @@ Tuple StatSem::wf_ApplyExpr (const Int & i, const TYPE_AS_ApplyExpr & vApply, co
     GetCI().SetTypeInfo (cid, rep_alltp);
     return mk_(Bool (false), rep_alltp);
   }
-  else
-  {
+  else {
     GetCI().SetTypeInfo (cid, res_tp);
     return mk_(wf_fct && wf_arg && wf_apply, res_tp);
   }
@@ -1865,8 +1785,7 @@ Tuple StatSem::CheckApply (const Int & i,
 
   TYPE_REP_TypeRep ExpectedTypeRep (mk_REP_UnionTypeRep(st));
 
-  while (realfcttp.Is(TAG_TYPE_REP_TypeNameRep) && !IsUnionRecursive (realfcttp))
-  {
+  while (realfcttp.Is(TAG_TYPE_REP_TypeNameRep) && !IsUnionRecursive (realfcttp)) {
 #ifdef VDMPP
     Generic acctp = Nil ();
     Generic realfcttp_q (LookUpTypeName (Record(realfcttp).GetRecord(pos_REP_TypeNameRep_nm), true));
@@ -1896,32 +1815,31 @@ Tuple StatSem::CheckApply (const Int & i,
 #endif // VDMSL
   }
 
-  if (realfcttp.IsNil())
+  if (realfcttp.IsNil()) {
     return mk_(Bool(false), rep_alltp);
-  else
-  {
+  } 
+  else {
     TYPE_REP_TypeRep fcttp (realfcttp);
     switch (fcttp.GetTag()) {
       case TAG_TYPE_REP_AllTypeRep:
-      case TAG_TYPE_REP_TypeNameRep:
-      {
+      case TAG_TYPE_REP_TypeNameRep: {
         return mk_(Bool(false), rep_alltp);
       }
-      case TAG_TYPE_REP_InvTypeRep:
-      {
-        if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-        {
+      case TAG_TYPE_REP_InvTypeRep: {
+        if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
           //----------------------------------
           // Error message #260
           // Invariant type used in Apply-Expr
           //----------------------------------
-          if (callerr)
+          if (callerr) {
             GenErr (vApply, ERR2, 260, Sequence());
+          }
           Tuple infer (CheckApply (i, fcttp.GetRecord(pos_REP_InvTypeRep_shape), argtp_l, vApply, callerr));
           return mk_(Bool(false), infer.GetField (2));
         }
-        else
+        else {
           return CheckApply (i, fcttp.GetRecord(pos_REP_InvTypeRep_shape), argtp_l, vApply, callerr);
+        }
       }
       case TAG_TYPE_REP_SeqTypeRep:
       case TAG_TYPE_REP_GeneralMapTypeRep:
@@ -1934,70 +1852,67 @@ Tuple StatSem::CheckApply (const Int & i,
       case TAG_TYPE_REP_UnionTypeRep: {
         SET<TYPE_REP_TypeRep> utps (fcttp.GetSet(pos_REP_UnionTypeRep_tps));
 
-        if (utps.InSet(mk_REP_EmptySeqTypeRep(rep_alltp)) && (utps.Card () == 2))
-        {
+        if (utps.InSet(mk_REP_EmptySeqTypeRep(rep_alltp)) && (utps.Card () == 2)) {
           SET<TYPE_REP_TypeRep> tmps (utps.Diff(mk_set(mk_REP_EmptySeqTypeRep(rep_alltp))));
           TYPE_REP_TypeRep rc (tmps.GetElem());
-          if (rc.Is (TAG_TYPE_REP_SeqTypeRep))
-          {
-            if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-            {
+          if (rc.Is (TAG_TYPE_REP_SeqTypeRep)) {
+            if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
               Tuple infer (CheckBasicApply (i, rc, argtp_l, vApply, callerr));
               //----------------------
               // Error message #261
               // Sequence may be empty
               //----------------------
-              if (callerr)
+              if (callerr) {
                 GenErr (vApply, ERR2, 261, Sequence());
+              }
               return mk_(Bool (false), infer.GetField(2));
             }
-            else
+            else {
               return CheckBasicApply (i, rc, argtp_l, vApply, callerr);
+            }
           }
         }
 
-        if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)) && (utps.Card () == 2))
-        {
+        if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)) && (utps.Card () == 2)) {
           SET<TYPE_REP_TypeRep> tmps (utps.Diff(mk_set(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))));
           TYPE_REP_TypeRep rc (tmps.GetElem());
-          if (rc.Is (TAG_TYPE_REP_GeneralMapTypeRep))
-          {
-            if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-            {
+          if (rc.Is (TAG_TYPE_REP_GeneralMapTypeRep)) {
+            if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
               Tuple infer (CheckBasicApply (i, rc, argtp_l, vApply, callerr));
               //--------------------
               // Error message #262
               // Map may be empty
               //--------------------
-              if (callerr)
+              if (callerr) {
                 GenErr (vApply, ERR2, 262, Sequence());
+              }
               return mk_(Bool (false), infer.GetField(2));
             }
-            else
+            else {
               return CheckBasicApply (i, rc, argtp_l, vApply, callerr);
+            }
           }
-          else if (rc.Is (TAG_TYPE_REP_InjectiveMapTypeRep))
-          {
-            if (i == DEF && (Settings.ErrorLevel() >= ERR2))
-            {
+          else if (rc.Is (TAG_TYPE_REP_InjectiveMapTypeRep)) {
+            if (i == DEF && (Settings.ErrorLevel() >= ERR2)) {
               Tuple infer (CheckBasicApply (i, rc, argtp_l, vApply, callerr));
               //--------------------
               // Error message #262
               // Map may be empty
               //--------------------
-              if (callerr)
+              if (callerr) {
                 GenErr (vApply, ERR2, 262, Sequence());
+              }
               return mk_(Bool (false), infer.GetField(2));
             }
-            else
+            else {
               return CheckBasicApply (i, rc, argtp_l, vApply, callerr);
+            }
           }
         }
 
         Generic restp = Nil();
         Generic gutp;
-        for (bool bb = utps.First(gutp); bb; bb = utps.Next(gutp))
-        {
+        for (bool bb = utps.First(gutp); bb; bb = utps.Next(gutp)) {
           TYPE_REP_TypeRep utp (gutp);
           if (utp.Is(TAG_TYPE_REP_SeqTypeRep) ||
               utp.Is(TAG_TYPE_REP_GeneralMapTypeRep) ||
@@ -2006,36 +1921,36 @@ Tuple StatSem::CheckApply (const Int & i,
               utp.Is(TAG_TYPE_REP_TotalFnTypeRep) ||
               utp.Is(TAG_TYPE_REP_TypeNameRep) ||
               utp.Is(TAG_TYPE_REP_InvTypeRep) ||
-              utp.Is(TAG_TYPE_REP_OpTypeRep))
-          {
+              utp.Is(TAG_TYPE_REP_OpTypeRep)) {
             Tuple infer (2);
             if (utp.Is(TAG_TYPE_REP_InvTypeRep) ||
-                utp.Is(TAG_TYPE_REP_TypeNameRep))
-            {
+                utp.Is(TAG_TYPE_REP_TypeNameRep)) {
               Tuple infer1 (CanBeApplied (utp));
               const Bool & ok (infer1.GetBool (1));
               const Generic & t (infer1.GetField (2));
 
-              if (ok)
+              if (ok) {
                 infer = CheckApply (i, t, argtp_l, vApply, Bool(false));
-              else
+              }
+              else {
                 infer = mk_(Bool(false), rep_alltp);
+              }
             }
-            else
+            else {
               infer = CheckUnionApply (i, utp, argtp_l, vApply);
-
+            }
             const Bool & wf (infer.GetBool (1));
             const TYPE_REP_TypeRep & tp (infer.GetRecord (2));
 
 #ifdef VDMSL
-            if (Settings.VDMSLmode() && utp.Is(TAG_TYPE_REP_OpTypeRep))
-            {
+            if (Settings.VDMSLmode() && utp.Is(TAG_TYPE_REP_OpTypeRep)) {
               //-----------------------------
               // Error message #349
               // Operation call in expression
               //-----------------------------
-              if (callerr)
+              if (callerr) {
                 GenErr (vApply, ERR, 349, Sequence());
+              }
               defwf = false;
               poswf = false;
             }
@@ -2046,8 +1961,9 @@ Tuple StatSem::CheckApply (const Int & i,
               poswf |= wf;
             }
 
-            if (restp.IsNil())
+            if (restp.IsNil()) {
               restp = tp;
+            }
             else if (! tp.Is(TAG_TYPE_REP_AllTypeRep)) {
               if (! restp.Is(TAG_TYPE_REP_AllTypeRep)) {
                 restp = MergeTypes (restp, tp);
@@ -2056,43 +1972,43 @@ Tuple StatSem::CheckApply (const Int & i,
                 restp = tp;
               }
             }
-//            anyfct = Bool(anyfct==1).mor(wf).GetValue()? 1 : 0;//anyfct = 1;
             anyfct |= wf; // anyfct = 1;
           }
-          else if (!utp.Is(TAG_TYPE_REP_EmptyMapTypeRep) && !utp.Is(TAG_TYPE_REP_EmptySeqTypeRep))
+          else if (!utp.Is(TAG_TYPE_REP_EmptyMapTypeRep) && !utp.Is(TAG_TYPE_REP_EmptySeqTypeRep)) {
             allfct = false;
-          else if (Settings.ErrorLevel() >= ERR2)
+          }
+          else if (Settings.ErrorLevel() >= ERR2) {
             allfct = false;
+          }
         } // end of loop
 
-        if (restp.IsNil ())
+        if (restp.IsNil ()) {
           restp = rep_alltp;
-
-        if (!anyfct)
-        {
+        }
+        if (!anyfct) {
           //-----------------------------
           // Error message #263
           // Expression cannot be applied
           //-----------------------------
-          if (callerr)
+          if (callerr) {
             GenErrTp (vApply, ERR, 263, fcttp, ExpectedTypeRep, Sequence());
+          }
           return mk_(Bool(false), restp);
         }
 
-        if ((i == DEF) && !allfct)
-        {
+        if ((i == DEF) && !allfct) {
           //------------------------------------------
           // Error message #264
           // Expression cannot be applied in all cases
           //------------------------------------------
-          if (callerr)
+          if (callerr) {
             GenErr (vApply, ERR, 264, Sequence());
+          }
           return mk_(Bool(false), restp);
         }
 
         Bool reswf ((i == POS) ? poswf : defwf);
-        if (!reswf && callerr)
-        {
+        if (!reswf && callerr) {
           //--------------------
           // Error message #267
           // Error in Apply-Expr
@@ -2107,14 +2023,14 @@ Tuple StatSem::CheckApply (const Int & i,
         return CheckOverloadedApply(i, fcttp.GetSet(pos_REP_OverTypeRep_tps), argtp_l, vApply, true, true);
       }
 #endif // VDMPP
-      default:
-      {
+      default: {
         //-----------------------------
         // Error message #263
         // Expression cannot be applied
         //-----------------------------
-        if (callerr)
+        if (callerr) {
           GenErrTp (vApply, ERR, 263, fcttp, ExpectedTypeRep, Sequence());
+        }
         return mk_(Bool(false), rep_alltp);
       }
     }
@@ -2142,17 +2058,15 @@ Tuple StatSem::wf_FctTypeInstExpr (const Int & i,
 #ifdef VDMPP
   Generic p (LookUpInObject (GetCurClass (), polyfct, false, true));
   Generic p_q (p);
-  if (p.IsNil ())
+  if (p.IsNil ()) {
     p_q = LookUp (polyfct, true);
-
+  }
   Generic poly = Nil ();
-  if (!p_q.IsNil ())
-  {
+  if (!p_q.IsNil ()) {
     // [ REP`TypeRep | TagRepElem | set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ]
     Generic poly_q (CheckAccessCurClass (p_q));
 
-    if (poly_q.IsNil ())
-    {
+    if (poly_q.IsNil ()) {
       // ----------------------
       //  -- Error message #368
       //  -- Access violation
@@ -2160,45 +2074,37 @@ Tuple StatSem::wf_FctTypeInstExpr (const Int & i,
       GenErr (polyfct, ERR, 368, mk_sequence(PrintName (polyfct)));
       return mk_(Bool(false), rep_alltp);
     }
-    else if (poly_q.IsRecord())
-    {
+    else if (poly_q.IsRecord()) {
       // poly_q : REP`TypeRep | TagRepElem
       if (poly_q.Is (TAG_TYPE_REP_PolyTypeRep)) {
         TYPE_REP_PolyTypeRep pp (poly_q);
         poly = mk_(pp.get_vars (), pp.get_tp ());
       }
     }
-    else if (poly_q.IsSet ())
-    {
+    else if (poly_q.IsSet ()) {
       // poly_q : set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep)
-      //SET<TYPE_REP_PolyTypeRep> poly_q_s (poly_q), poly_set;
       SET<TYPE_REP_PolyTypeRep> poly_q_s (poly_q), poly_set;
       Generic g;
       for (bool bb = poly_q_s.First(g); bb ; bb = poly_q_s.Next(g)) {
         TYPE_REP_PolyTypeRep pp (g);
-        if (pp.get_vars().Length() == inst.Length())
-        {
+        if (pp.get_vars().Length() == inst.Length()) {
           poly_set.Insert(pp);
         }
       }
 
-      if (!poly_set.IsEmpty())
-      {
-// 20111019 -->
-        //TYPE_REP_PolyTypeRep pp (poly_set.GetElem());
-        //poly = mk_(pp.get_vars (), pp.get_tp ());
+      if (!poly_set.IsEmpty()) {
         Set p_s;
         Generic e;
-        for (bool cc = poly_set.First(e); cc; cc = poly_set.Next(e))
-        {
+        for (bool cc = poly_set.First(e); cc; cc = poly_set.Next(e)) {
           TYPE_REP_PolyTypeRep pp (e);
           p_s.Insert(mk_(pp.get_vars (), pp.get_tp ()));
         }
-        if (p_s.Card() == 1)
+        if (p_s.Card() == 1) {
           poly = p_s.GetElem();
-        else
+        }
+        else {
           poly = p_s;
-// <-- 20111019
+        }
       }  
     }
   }
@@ -2226,8 +2132,7 @@ Tuple StatSem::CheckFctTypeInst (const Int & i,
 
   Bool wf_inst (wf_TypeList (i, inst));
 
-  if (poly.IsNil ())
-  {
+  if (poly.IsNil ()) {
     //------------------------------------
     // Error message #366
     // Unknown polymorphic identifier L"%1"
@@ -2237,18 +2142,15 @@ Tuple StatSem::CheckFctTypeInst (const Int & i,
     return mk_(Bool(false), rep_alltp);
   }
 #ifdef VDMPP
-  else if(poly.IsSet())
-  {
+  else if(poly.IsSet()) {
     Set poly_s (poly);
     SET<TYPE_REP_TypeRep> t_s;
     Generic e;
-    for (bool bb = poly_s.First(e); bb; bb = poly_s.Next(e))
-    {
+    for (bool bb = poly_s.First(e); bb; bb = poly_s.Next(e)) {
       Tuple poly_t (e); // (seq of REP`TypeVarRep) * REP`FnTypeRep
       const SEQ<TYPE_REP_TypeVarRep> & tv_l (poly_t.GetSequence (1));
       //const TYPE_REP_TypeRep & fntp (poly_t.GetRecord (2));
-      if (inst.Length () == tv_l.Length ())
-      {
+      if (inst.Length () == tv_l.Length ()) {
         t_s.Insert(CheckFctTypeInstAux (e, field));
       }
     }
@@ -2270,13 +2172,11 @@ Tuple StatSem::CheckFctTypeInst (const Int & i,
     }
   }
 #endif // VDMPP
-  else // poly.IsTuple()
-  {
+  else  { // poly.IsTuple()
     Tuple poly_t (poly); // (seq of REP`TypeVarRep) * REP`FnTypeRep
     const SEQ<TYPE_REP_TypeVarRep> & tv_l (poly_t.GetSequence (1));
     const TYPE_REP_TypeRep & fntp (poly_t.GetRecord (2));
-    if (inst.Length () != tv_l.Length ())
-    {
+    if (inst.Length () != tv_l.Length ()) {
       //----------------------------------------
       // Error message #281
       // All type variables must be instantiated
@@ -2285,24 +2185,22 @@ Tuple StatSem::CheckFctTypeInst (const Int & i,
 
       MAP<TYPE_AS_Name,TYPE_REP_TypeRep> tpbd;
       size_t len_tv_l = tv_l.Length();
-      for (size_t j = 1; j <= len_tv_l; j++)
+      for (size_t j = 1; j <= len_tv_l; j++) {
         tpbd.ImpModify (tv_l[j].get_nm (), rep_alltp);
-
+      }
       TYPE_REP_TypeRep restp (InstFn (VAR, fntp, tpbd));
       GetCI().SetTypeInfo (cid, restp);
       return mk_(Bool(false), restp);
     }
     else {
-// 20150714 -->     
       const TYPE_CI_ContextId & pcid (polyfct.GetInt(pos_AS_Name_cid));
       MAP<TYPE_AS_Name,TYPE_REP_TypeRep> tpbd;
       size_t len_tv_l = tv_l.Length();
-      for (size_t j = 1; j <= len_tv_l; j++)
+      for (size_t j = 1; j <= len_tv_l; j++) {
         tpbd.ImpModify (tv_l[j].get_nm (), rep_alltp);
-
+      }
       TYPE_REP_TypeRep restp (InstFn (VAR, fntp, tpbd));
       GetCI().SetTypeInfo (pcid, restp);
-// <-- 20150714
       return mk_(wf_inst, CheckFctTypeInstAux (poly, field));
     }
   }
@@ -2324,9 +2222,9 @@ TYPE_REP_TypeRep StatSem::CheckFctTypeInstAux (const Tuple & poly, const TYPE_AS
   MAP<TYPE_AS_Name,TYPE_REP_TypeRep> tpbd;
 
   size_t len_tp_l = tp_l.Length();
-  for (size_t j = 1; j <= len_tp_l; j++)
+  for (size_t j = 1; j <= len_tp_l; j++) {
     tpbd.ImpModify (tv_l[j].GetRecord(pos_REP_TypeVarRep_nm), tp_l[j]);
-
+  }
   TYPE_REP_TypeRep restp (InstFn (VAR, fntp, tpbd));
   GetCI().SetTypeInfo (cid, restp);
   return restp;
@@ -2382,10 +2280,10 @@ Tuple StatSem::wf_LambdaExpr (const Int & i,
 
   GetCI().SetTypeInfo (cid, fntp);
 
-  if (wf_parms.IsNil ())
+  if (wf_parms.IsNil ()) {
     return mk_(Bool(false), fntp);
-  else if (wf_parms == Bool(false))
-  {
+  }
+  else if (wf_parms == Bool(false)) {
     //---------------------------------------------
     // Error message #282
     // No binding is possible in the parameter list
@@ -2393,8 +2291,9 @@ Tuple StatSem::wf_LambdaExpr (const Int & i,
     GenErr (VLambdaExpr, ERR,282, Sequence());
     return mk_(Bool(false), fntp);
   }
-  else
+  else {
     return mk_(wf_body, fntp);
+  }
 }
 
 // IsAValidField
@@ -2413,8 +2312,7 @@ Tuple StatSem::IsAValidField (const TYPE_AS_Name & fnm, const TYPE_REP_Composite
   }
 
   size_t len_flds = flds.Length();
-  for(size_t i = 1; i <= len_flds; i++)
-  {
+  for(size_t i = 1; i <= len_flds; i++) {
     const TYPE_REP_FieldRep & field (flds[i]);
     if (field.GetField(pos_REP_FieldRep_sel) == fnm) {
       return mk_(Bool (true), field.GetRecord(pos_REP_FieldRep_tp), Nil(), Nil());
@@ -2447,8 +2345,7 @@ Tuple StatSem::wf_FieldSelectExpr (const Int & i,
   bool objRefComp    = IsCompatible (i, argtp, otp);
   bool compositeComp = IsCompatible (i, argtp, ctp);
 
-  if (!(compositeComp || objRefComp))
-  {
+  if (!(compositeComp || objRefComp)) {
     TYPE_REP_TypeRep utp (mk_REP_UnionTypeRep(mk_set(ctp, otp)));
 
     //---------------------------------------------------------------
@@ -2466,8 +2363,7 @@ Tuple StatSem::wf_FieldSelectExpr (const Int & i,
 
 #ifdef VDMPP
   Bool stat (GetStatic());
-  if (objRefComp)
-  {
+  if (objRefComp) {
     SetStatic(false);
   }
 #endif // VDMPP
@@ -2481,27 +2377,25 @@ Tuple StatSem::wf_FieldSelectExpr (const Int & i,
 #endif // VDMPP
 
   TYPE_REP_TypeRep l_actResTp;
-  if (res_tp.IsRecord())
+  if (res_tp.IsRecord()) {
     l_actResTp = res_tp;
-  else
-  {
+  }
+  else {
     SET<TYPE_REP_TypeRep> res_tps (res_tp);
-    if (res_tps.Card() == 1)
+    if (res_tps.Card() == 1) {
       l_actResTp = res_tps.GetElem();
-    else
+    }
+    else {
 #ifdef VDMSL
       l_actResTp = mk_REP_UnionTypeRep(res_tps);
 #endif // VDMSL
 #ifdef VDMPP
       l_actResTp = mk_REP_OverTypeRep(res_tps);
 #endif // VDMPP
+    }
   }
-
   GetCI().SetTypeInfo (cid, l_actResTp);
-// 20100708 -->
-//  return mk_(wf_arg && wf_field, res_tp);
   return mk_(wf_arg && wf_field, l_actResTp);
-// <-- 20100708
 }
 
 
@@ -2517,11 +2411,13 @@ bool StatSem::CheckQualifiedField (const Int & i,
                                         bool objRefComp,
                                         const TYPE_REP_TypeRep & objtp)
 {
-  if (!field.Is(TAG_TYPE_AS_Name))
+  if (!field.Is(TAG_TYPE_AS_Name)) {
     return true;
+  }
   else {
-    if (field.GetSequence(pos_AS_Name_ids).Length() != 2)
+    if (field.GetSequence(pos_AS_Name_ids).Length() != 2) {
       return true;
+    }
     else if (!objRefComp) {
       // -------------------------------------
       //  -- Error message #396
@@ -2558,20 +2454,23 @@ bool StatSem::CheckQualifiedField (const Int & i,
       if (i == POS) {
         bool exists = false;
         Generic cl;
-        for (bool bb = cls.First(cl); bb && !exists; bb = cls.Next(cl))
+        for (bool bb = cls.First(cl); bb && !exists; bb = cls.Next(cl)) {
           exists = ((cl == qualif) || IsSubClass(cl, qualif));
+        }
         qualif_ok = exists;
       }
       else {
         bool forall = true;
         Generic cl;
-        for (bool bb = cls.First(cl); bb && forall; bb = cls.Next(cl))
+        for (bool bb = cls.First(cl); bb && forall; bb = cls.Next(cl)) {
           forall = ((cl == qualif) || IsSubClass(cl, qualif));
+        }
         qualif_ok = forall;
       }
 
-      if (qualif_ok)
+      if (qualif_ok) {
         return true;
+      }
       else {
         // -------------------------------------
         //  -- Error message #394
@@ -2600,8 +2499,9 @@ Tuple StatSem::CheckFieldSelect (const Int & i, const TYPE_REP_TypeRep & rectp, 
   Generic restp = infer.GetField(2);
 
 #ifdef VDMSL
-  if (!restp.IsNil())
+  if (!restp.IsNil()) {
     return infer;
+  }
   else {
     TYPE_REP_TypeRep ctp (mk_REP_CompositeTypeRep(ASTAUX::MkNameFromVoid (), SEQ<TYPE_REP_FieldRep>()));
 
@@ -2621,15 +2521,19 @@ Tuple StatSem::CheckFieldSelect (const Int & i, const TYPE_REP_TypeRep & rectp, 
 
   reswf = reswf || wf;
 
-  if (!restp.IsNil() && !tp.IsNil())
+  if (!restp.IsNil() && !tp.IsNil()) {
     restp = MergeTypes(restp, tp);
-  else if (wf)
+  }
+  else if (wf) {
     restp = tp;
+  }
 
-  if (!restp.IsNil())
+  if (!restp.IsNil()) {
     return mk_(Bool(reswf), restp);
-  else
+  }
+  else {
     return mk_(Bool(false), rep_alltp);
+  }
 #endif //VDMPP
 }
 
@@ -2647,11 +2551,9 @@ Tuple StatSem::CheckRecordFieldSelect (const Int & i, const TYPE_REP_TypeRep & r
 
   TYPE_REP_TypeRep ctp (mk_REP_CompositeTypeRep(ASTAUX::MkNameFromVoid (), SEQ<TYPE_REP_FieldRep>()));
 
-  if (IsCompatible (i, rectp, ctp))
-  {
+  if (IsCompatible (i, rectp, ctp)) {
 #ifdef VDMPP
-    if (field.Is (TAG_TYPE_AS_FctTypeInstExpr))
-    {
+    if (field.Is (TAG_TYPE_AS_FctTypeInstExpr)) {
       //----------------------------------------------------------------
       // Error message #367
       // Cannot apply polymorphic function L"%1" to record field selector
@@ -2686,8 +2588,7 @@ Tuple StatSem::CheckRecordFieldSelect (const Int & i, const TYPE_REP_TypeRep & r
           //-----------------------------
           GenErr (field, ERR, 278, Sequence());
 
-          if (!nvf.IsNil() && !tag.IsNil())
-          {
+          if (!nvf.IsNil() && !tag.IsNil()) {
             //--------------------------------------------------------------
             // Error message #279
             // The field L"%1" is not defined for the record tagged with "%2"
@@ -2701,8 +2602,7 @@ Tuple StatSem::CheckRecordFieldSelect (const Int & i, const TYPE_REP_TypeRep & r
         Set nvfields;
         SET<TYPE_REP_TypeRep> utps (rtp.GetSet(pos_REP_UnionTypeRep_tps));
         Generic utp;
-        for (bool bb = utps.First(utp); bb ; bb = utps.Next(utp))
-        {
+        for (bool bb = utps.First(utp); bb ; bb = utps.Next(utp)) {
           bool wf = false;
           TYPE_REP_TypeRep tp (rep_unittp);
           Generic nvf, tag;
@@ -2716,26 +2616,28 @@ Tuple StatSem::CheckRecordFieldSelect (const Int & i, const TYPE_REP_TypeRep & r
   
           allwf = allwf && wf;
           onewf = onewf || wf;
-          if (restp.IsNil() && wf)
+          if (restp.IsNil() && wf) {
             restp = tp;
-          else if (wf)
+          }
+          else if (wf) {
             restp = MergeTypes (restp, tp);
+          }
           if (!wf && !nvf.IsNil() && !tag.IsNil()) {
             nvfields.Insert (mk_(nvf, tag));
           }
         }
   
-        if (restp.IsNil ())
+        if (restp.IsNil ()) {
           restp = rep_alltp;
-  
+        } 
         bool reswf;
-        if (i == DEF)
+        if (i == DEF) {
           reswf = allwf;
-        else
+        }
+        else {
           reswf = onewf;
-  
-        if (!reswf)
-        {
+        } 
+        if (!reswf) {
           //-----------------------------
           // Error message #278
           // An invalid field is selected
@@ -2743,8 +2645,7 @@ Tuple StatSem::CheckRecordFieldSelect (const Int & i, const TYPE_REP_TypeRep & r
           GenErr (field, ERR, 278, Sequence());
 
           Generic nvf_tag_tup;
-          for (bool cc = nvfields.First(nvf_tag_tup); cc; cc = nvfields.Next(nvf_tag_tup))
-          {
+          for (bool cc = nvfields.First(nvf_tag_tup); cc; cc = nvfields.Next(nvf_tag_tup)) {
             TYPE_AS_Name nvf (((Tuple) (nvf_tag_tup)).GetRecord (1));
             TYPE_AS_Name tag (((Tuple) (nvf_tag_tup)).GetRecord (2));
             //--------------------------------------------------------------
@@ -2762,8 +2663,9 @@ Tuple StatSem::CheckRecordFieldSelect (const Int & i, const TYPE_REP_TypeRep & r
       }
     } // end of switch
   }
-  else
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 #ifdef VDMPP
@@ -2786,25 +2688,24 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
   TYPE_REP_TypeRep otp (mk_REP_ObjRefTypeRep(ASTAUX::MkNameFromVoid ()));
 
   TYPE_AS_Name field_q;
-  if (field.Is (TAG_TYPE_AS_FctTypeInstExpr))
+  if (field.Is (TAG_TYPE_AS_FctTypeInstExpr)) {
     field_q = field.GetRecord(pos_AS_FctTypeInstExpr_polyfct);
-  else
+  }
+  else {
     field_q = TYPE_AS_Name(field);
-
-  if (IsCompatible (i, objtp, otp))
-  {
+  }
+  if (IsCompatible (i, objtp, otp)) {
     Generic rtpg (ExtractObjRefType (objtp));
 
-    if (rtpg.IsNil ())
+    if (rtpg.IsNil ()) {
       return mk_(Bool (false), rep_alltp);
-
+    }
     TYPE_REP_TypeRep rtp (rtpg);
     switch(rtp.GetTag()) {
       case TAG_TYPE_REP_ObjRefTypeRep: {
         const TYPE_AS_Name & cls (rtp.GetRecord(pos_REP_ObjRefTypeRep_nm));
         Generic tp_q (LookUpInObject(cls, field_q, writable, true));
-        if (!tp_q.IsNil())
-        {
+        if (!tp_q.IsNil()) {
           Generic tp (CheckAccess (cls, tp_q));
           if (tp.IsNil ()) {
             // ------------------
@@ -2821,42 +2722,37 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
                 TYPE_REP_PolyTypeRep ptr (tp);
                 poly = mk_(ptr.get_vars (), ptr.get_tp ());
               }
-              else
+              else {
                 poly = Nil ();
+              }
             }
             else if (tp.IsSet ()) {
               SET<TYPE_REP_TypeRep> tps (tp);
               SET<TYPE_REP_PolyTypeRep> poly_set;
               SEQ<TYPE_AS_Type> inst (field.GetSequence(pos_AS_FctTypeInstExpr_inst));
               Generic pp;
-              for (bool bb = tps.First(pp); bb ; bb = tps.Next(pp))
-              {
-                if (pp.Is (TAG_TYPE_REP_PolyTypeRep))
-                {
-                  if (TYPE_REP_PolyTypeRep(pp).get_vars().Length() == inst.Length())
-                  {
+              for (bool bb = tps.First(pp); bb ; bb = tps.Next(pp)) {
+                if (pp.Is (TAG_TYPE_REP_PolyTypeRep)) {
+                  if (TYPE_REP_PolyTypeRep(pp).get_vars().Length() == inst.Length()) {
                     poly_set.Insert(pp);
                     break;
                   }
                 }
               }
-              if (poly_set.IsEmpty())
+              if (poly_set.IsEmpty()) {
                 poly = Nil ();
-              else
-              {
+              }
+              else {
                 TYPE_REP_PolyTypeRep pp (poly_set.GetElem());
                 poly = mk_(pp.get_vars (), pp.get_tp ());
               }
             }
-            else
+            else {
               poly = Nil ();
-  
-// 20121222-->
-            if (poly.IsTuple())
-            {
+            }
+            if (poly.IsTuple()) {
               GetCI().SetTypeInfo (ASTAUX::GetCid(field_q), Tuple(poly).GetField(2));
             }
-// <-- 20121222
             return CheckFctTypeInst (i, poly, field);
           }
           else {
@@ -2879,8 +2775,7 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
         bool one_acc_wf = false;
         SET<TYPE_REP_TypeRep> utps (rtp.GetSet(pos_REP_UnionTypeRep_tps));
         Generic utp;
-        for (bool bb = utps.First(utp); bb ; bb = utps.Next(utp))
-        {
+        for (bool bb = utps.First(utp); bb ; bb = utps.Next(utp)) {
           TYPE_AS_Name cls (TYPE_REP_ObjRefTypeRep(utp).get_nm());
   
           Generic tp_q (LookUpInObject(cls, field_q, false, true));
@@ -2894,13 +2789,10 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
             }
             else {
               one_acc_wf = true;
-              if (field.Is (TAG_TYPE_AS_FctTypeInstExpr))
-              {
-                if (tp.Is (TAG_TYPE_REP_PolyTypeRep))
-                {
+              if (field.Is (TAG_TYPE_AS_FctTypeInstExpr)) {
+                if (tp.Is (TAG_TYPE_REP_PolyTypeRep)) {
                   TYPE_REP_PolyTypeRep ptr (tp);
-                  if (ptr.get_vars().Length () == field.GetSequence(pos_AS_FctTypeInstExpr_inst).Length ())
-                  {
+                  if (ptr.get_vars().Length () == field.GetSequence(pos_AS_FctTypeInstExpr_inst).Length ()) {
                     onewf = true;
                     Tuple tp_t (mk_(ptr.get_vars(), ptr.get_tp()));
                     TYPE_REP_TypeRep tp_q (CheckFctTypeInstAux (tp_t, field));
@@ -2916,12 +2808,9 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
                   SET<TYPE_REP_PolyTypeRep> poly_set;
                   const SEQ<TYPE_AS_Type> & inst (field.GetSequence(pos_AS_FctTypeInstExpr_inst));
                   Generic pp;
-                  for (bool bb = tp_set.First(pp); bb ; bb = tp_set.Next(pp))
-                  {
-                    if (pp.Is(TAG_TYPE_REP_PolyTypeRep))
-                    {
-                      if (TYPE_REP_PolyTypeRep(pp).get_vars().Length() == inst.Length()) // 20130209
-                      {
+                  for (bool bb = tp_set.First(pp); bb ; bb = tp_set.Next(pp)) {
+                    if (pp.Is(TAG_TYPE_REP_PolyTypeRep)) {
+                      if (TYPE_REP_PolyTypeRep(pp).get_vars().Length() == inst.Length()) {
                         poly_set.Insert(pp);
                         break;
                       }
@@ -2929,7 +2818,6 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
                   }
   
                   if (poly_set.IsEmpty()) {
-  //                  insttp.Insert (tp);
                     insttp.ImpUnion (tp_set);
                     allwf = false;
                   }
@@ -2947,10 +2835,12 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
               }
               else { // not FctTypeInstExpr
                 onewf = true;
-                if (restp.IsNil())
+                if (restp.IsNil()) {
                   restp = tp;
-                else
+                }
+                else {
                   restp = MergeTypes(restp, tp);
+                }
               }
             }
           }
@@ -2962,23 +2852,21 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
         }
   
         bool reswf;
-        if (i == DEF)
+        if (i == DEF) {
           reswf = allwf;
-        else
+        }
+        else {
           reswf = onewf;
-  
-        if (!reswf)
-        {
-          if (!nvfields.IsEmpty ())
-          {
+        } 
+        if (!reswf) {
+          if (!nvfields.IsEmpty ()) {
             //-----------------------------
             // Error message #278
             // An invalid field is selected
             //-----------------------------
             GenErr (field_q, ERR, 278, Sequence());
             Generic nvf_tup;
-            for (bool cc = nvfields.First(nvf_tup); cc; cc = nvfields.Next(nvf_tup))
-            {
+            for (bool cc = nvfields.First(nvf_tup); cc; cc = nvfields.Next(nvf_tup)) {
               Tuple t (nvf_tup);
               const TYPE_AS_Name & nvf (t.GetRecord (1));
               const TYPE_AS_Name & cls (t.GetRecord (2));
@@ -2996,20 +2884,23 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
               CheckFctTypeInst (i, mk_(t.get_vars (), t.get_tp ()), field);
             }
           }
-          else
-            if (field.Is (TAG_TYPE_AS_FctTypeInstExpr))
+          else {
+            if (field.Is (TAG_TYPE_AS_FctTypeInstExpr)) {
               CheckFctTypeInst (i, Nil(), field);
-  
-          if (nvfields.IsEmpty() && ((i == DEF && !all_acc_wf) || (i == POS && !one_acc_wf)))
+            }
+          }
+          if (nvfields.IsEmpty() && ((i == DEF && !all_acc_wf) || (i == POS && !one_acc_wf))) {
             // ------------------
             // Error message #368
             // Access violation
             // ------------------
             GenErr(field_q, ERR, 368, mk_sequence(PrintName (field_q)));
+          }
         }
   
-        if (field.Is (TAG_TYPE_AS_FctTypeInstExpr))
+        if (field.Is (TAG_TYPE_AS_FctTypeInstExpr)) {
           reswf = wf_TypeList (i, field.GetField(pos_AS_FctTypeInstExpr_inst)) && reswf;
+        }
         return mk_(Bool(reswf), restp);
       }
       default: {
@@ -3018,8 +2909,9 @@ Tuple StatSem::CheckObjRefFieldSelect (const Int & i,
       }
     } // end of switch
   }
-  else
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 #endif //VDMPP
 
@@ -3050,8 +2942,7 @@ Tuple StatSem::wf_IsExpr (const Int & i, const Record & isexpr, const TYPE_REP_T
 
   if (tp.Is (TAG_TYPE_AS_BooleanType) || tp.Is (TAG_TYPE_AS_NumericType) ||
       tp.Is (TAG_TYPE_AS_TokenType) || tp.Is (TAG_TYPE_AS_CharType) ||
-      isexpr.Is (TAG_TYPE_AS_TypeJudgementExpr))
-  {
+      isexpr.Is (TAG_TYPE_AS_TypeJudgementExpr)) {
     TYPE_REP_TypeRep rep_tp (TransType(Nil(), tp));
 
     Tuple infer (wf_Expr(i, arg, rep_alltp));
@@ -3064,8 +2955,7 @@ Tuple StatSem::wf_IsExpr (const Int & i, const Record & isexpr, const TYPE_REP_T
 #ifdef VDMPP
     Bool iscomp (IsCompatible(POS, argtp, rep_tp));
 #endif // VDMPP
-    if (!(iscomp.GetValue()))
-    {
+    if (!(iscomp.GetValue())) {
       //-----------------------------
       // Error message #283
       // Is-Expr will always be false
@@ -3075,12 +2965,10 @@ Tuple StatSem::wf_IsExpr (const Int & i, const Record & isexpr, const TYPE_REP_T
     }
     return mk_(wf_arg && iscomp, restp);
   }
-  else
-  {
+  else {
     Generic pair_g (LookUpTag (i, tp, Set()));
 
-    if (pair_g.IsNil ())
-    {
+    if (pair_g.IsNil ()) {
       //--------------------------------------------
       // Error message #254
       // Composite type L"%1" is not defined in "%2".
@@ -3088,8 +2976,7 @@ Tuple StatSem::wf_IsExpr (const Int & i, const Record & isexpr, const TYPE_REP_T
       GenErr (isexpr, ERR, 254, mk_sequence(PrintName(tp), SEQ<Char>(L"Is-Expr")));
       return mk_(Bool (false), restp);
     }
-    else
-    {
+    else {
       Tuple pair (pair_g);
       const TYPE_AS_Name & newtag (pair.GetRecord(1));
 #ifdef VDMSL
@@ -3098,8 +2985,7 @@ Tuple StatSem::wf_IsExpr (const Int & i, const Record & isexpr, const TYPE_REP_T
 #ifdef VDMPP
       const Generic & flds_q (pair.GetField(2));
       Generic flds (CheckAccessCurClass (flds_q));
-      if (flds.IsNil ())
-      {
+      if (flds.IsNil ()) {
         //-------------------
         // Error message #368
         // Access violation
@@ -3120,8 +3006,7 @@ Tuple StatSem::wf_IsExpr (const Int & i, const Record & isexpr, const TYPE_REP_T
 #ifdef VDMPP
       Bool iscomp (IsCompatible (POS, argtp, rep_tp));
 #endif // VDMPP
-      if (!iscomp.GetValue())
-      {
+      if (!iscomp.GetValue()) {
         //-----------------------------
         // Error message #283
         // Is-Expr will always be false
@@ -3152,16 +3037,12 @@ Tuple StatSem::wf_NarrowExpr (const Int & i, const TYPE_AS_NarrowExpr & narrowex
   const TYPE_REP_TypeRep & argtp (infer.GetRecord(2));
 
 #ifdef VDMSL
-  //Bool iscomp (IsCompatible(POS, argtp, CurMod(ADD, GetCurMod(), rep_tp)));
-  //Bool iscomp (IsCompatible(1, CurMod(ADD, GetCurMod(), rep_tp), argtp));
   Bool iscomp (IsCompatible(i, CurMod(ADD, GetCurMod(), rep_tp), argtp));
 #endif // VDMPP
 #ifdef VDMPP
-  //Bool iscomp (IsCompatible(POS, argtp, rep_tp));
   Bool iscomp (IsCompatible(i, rep_tp, argtp));
 #endif // VDMPP
-  if (!iscomp)
-  {
+  if (!iscomp) {
     //-----------------------------
     // Error message #446
     // Narrow-Expr will always be fail
@@ -3181,8 +3062,7 @@ Tuple StatSem::wf_NarrowExpr (const Int & i, const TYPE_AS_NarrowExpr & narrowex
 Tuple StatSem::wf_SelfExpr (const Int &, const TYPE_AS_SelfExpr & selexp, const TYPE_REP_TypeRep &)
 {
   TYPE_REP_TypeRep rc (mk_REP_ObjRefTypeRep(GetCurClass()));
-  if (GetStatic().GetValue())
-  {
+  if (GetStatic().GetValue()) {
     // --------------------------------------------
     // -- Error message #379
     // -- Can not use self expression in a static class member
@@ -3190,8 +3070,7 @@ Tuple StatSem::wf_SelfExpr (const Int &, const TYPE_AS_SelfExpr & selexp, const 
     GenErr(selexp, ERR, 379, Sequence());
     return mk_(Bool(false), rc);
   }
-  else
-  {
+  else {
     const TYPE_CI_ContextId & cid (selexp.GetInt(pos_AS_SelfExpr_cid));
     GetCI().SetTypeInfo (cid, rc);
     return mk_(Bool(true), rc);
@@ -3226,19 +3105,14 @@ Tuple StatSem::wf_ThreadIdExpr (const Int &, const TYPE_AS_ThreadIdExpr & thread
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const TYPE_REP_TypeRep & exptp)
 {
-// 20120116 -->
-//  const TYPE_AS_Name & nm (newrc.GetRecord(pos_AS_NewExpr_cls));
   TYPE_AS_Name nm (newrc.GetRecord(pos_AS_NewExpr_cls));
-// <-- 20120116
   const SEQ<TYPE_AS_Expr> & exprs (newrc.GetSequence(pos_AS_NewExpr_args));
   const TYPE_CI_ContextId & cid (newrc.GetInt(pos_AS_NewExpr_cid));
 
-// 20120116 -->
   Tuple t (ExpandClassName(nm, Set()));
-  if (t.GetBoolValue(1))
+  if (t.GetBoolValue(1)) {
     nm = t.GetRecord(2);
-// <-- 20120116
-
+  }
   TYPE_REP_ObjRefTypeRep tprep (mk_REP_ObjRefTypeRep(nm));
 
   SET<TYPE_AS_Name> s;
@@ -3264,8 +3138,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         return mk_(Bool(false), tprep);
       }
     }
-    else if (IsSysClass(nm))
-    {
+    else if (IsSysClass(nm)) {
       //--------------------------------------------
       //-- Error message #410
       //-- Instances of system classes cannot be made: "%1"
@@ -3276,8 +3149,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
     else
 #endif // VICE
 
-    if (!CheckSubRespIsImplemented(i, nm))
-    {
+    if (!CheckSubRespIsImplemented(i, nm)) {
       //--------------------------------------------
       //-- Error message #395
       //-- Abstract class "%1" can not be instantiated
@@ -3286,8 +3158,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
       return mk_(Bool(false), tprep);
     }
 
-    if (exprs.IsEmpty())
-    {
+    if (exprs.IsEmpty()) {
       // default constructor
       if (!DefaultConstructorAccessible(nm)) {
         // --------------------------------------------
@@ -3297,13 +3168,11 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         GenErr(nm, ERR, 389, mk_sequence(PrintName(nm)));
         return mk_(Bool(false), tprep);
       }
-      else
-      {
+      else {
         TYPE_REP_OpTypeRep oprt (mk_REP_OpTypeRep(Sequence(), mk_REP_TypeNameRep(nm)));
 
         GetCI().SetTypeInfo (nm.get_cid(), oprt);
         GetCI().SetTypeInfo (cid, tprep);
-// 20081020
          
         Bool iscomp (IsCompatible(POS, tprep, exptp));
         if ( !iscomp ) {
@@ -3317,14 +3186,12 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         return mk_(iscomp, tprep);
       }
     }
-    else
-    {
+    else {
       // constructor has argument(s)
       bool l_wf_arg = true;
       SEQ<TYPE_REP_TypeRep> l_argtpL;
       size_t len_exprs = exprs.Length();
-      for (size_t idx = 1; idx <= len_exprs; idx++)
-      {
+      for (size_t idx = 1; idx <= len_exprs; idx++) {
         Tuple t (wf_Expr(i, exprs[idx], rep_alltp));
         l_wf_arg = t.GetBoolValue(1) && l_wf_arg;
         l_argtpL.ImpAppend(t.GetRecord(2));
@@ -3340,8 +3207,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         GenErr(nm, ERR, 388, Sequence());
         l_wf_arg = false;
       }
-      else
-      {
+      else {
         if (!ConstructorExists(i, nm, l_argtpL, nm, true)) {
           // ------------------------------------------------------------
           // -- Error message #440
@@ -3354,7 +3220,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         GetCI().SetTypeInfo (nm.get_cid(), oprt);
         GetCI().SetTypeInfo (cid, tprep);
       }
-      UnSetDefClass(); // 20070301
+      UnSetDefClass();
       return mk_(Bool(l_wf_arg), tprep);
     }
   }
@@ -3396,8 +3262,7 @@ Tuple StatSem::wf_SameClassExpr (const Int & i, const Record & sameexp, const TY
   const TYPE_REP_TypeRep & tp_exp2 (infer2.GetRecord (2));
 
   bool iscomp1 = IsCompatible (i, tp_exp1,objtp);
-  if (!iscomp1)
-  {
+  if (!iscomp1) {
     //-------------------------------------------
     // Error message #285
     // Expression must return an object reference
@@ -3406,8 +3271,7 @@ Tuple StatSem::wf_SameClassExpr (const Int & i, const Record & sameexp, const TY
   }
 
   bool iscomp2 = IsCompatible (i, tp_exp2, objtp);
-  if (!iscomp2)
-  {
+  if (!iscomp2) {
     //-------------------------------------------
     // Error message #285
     // Expression must return an object reference
@@ -3445,12 +3309,8 @@ Tuple StatSem::wf_IsOfClassExpr (const Int & i, const Record & isofexp, const TY
 
   bool wf_class = CheckClassName (cls);
 
-// 20131126 -->
-  //bool iscomp = IsCompatible (i, tp_e, objtp);
   bool iscomp = IsCompatible (POS, tp_e, objtp);
-// <-- 20131126
-  if (!iscomp)
-  {
+  if (!iscomp) {
     //-----------------------------------------------------------------
     // Error message #286
     // Expression is not compatible with object reference of class L"%1"
@@ -3458,8 +3318,7 @@ Tuple StatSem::wf_IsOfClassExpr (const Int & i, const Record & isofexp, const TY
     GenErrTp (isofexp, ERR, 286, tp_e, objtp, mk_sequence(PrintName(cls)));
   }
 
-  if (!wf_class)
-  {
+  if (!wf_class) {
     //------------------------
     // Error message #287
     // Class L"%1" is undefined
@@ -3479,11 +3338,9 @@ Tuple StatSem::wf_NameList (const SEQ<TYPE_AS_Name> & name_l)
   bool reswf = true;
   SET<TYPE_AS_Name> prev_nm;
   size_t len_name_l = name_l.Length();
-  for (size_t idx = 1; idx <= len_name_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_name_l; idx++) {
     const TYPE_AS_Name & name (name_l[idx]);
-    if (name == GetCurClass())
-    {
+    if (name == GetCurClass()) {
       //------------------------------ 
       // Error message #431
       // History counters cannot be used for constructors like "%1"
@@ -3491,11 +3348,9 @@ Tuple StatSem::wf_NameList (const SEQ<TYPE_AS_Name> & name_l)
       GenErr (name, ERR, 431, mk_sequence(PrintName (name)));
       reswf = false;
     }
-    else
-    {
+    else {
       Set mthtp (LookUpOperationName (Nil(), name, Nil())); // set of ENV`AccessType
-      if (mthtp.IsEmpty ())
-      {
+      if (mthtp.IsEmpty ()) {
         //------------------------------
         // Error message #28
         // Operation L"%1" is not defined
@@ -3503,15 +3358,14 @@ Tuple StatSem::wf_NameList (const SEQ<TYPE_AS_Name> & name_l)
         GenErr (name, ERR, 28, mk_sequence(PrintName (name)));
         reswf = false;
       }
-      else
-      {
+      else {
         bool forall = true;
         Generic tp; // REP`TypeRep|ENV`AccessType
-        for (bool cc = mthtp.First(tp); cc && forall; cc = mthtp.Next(tp))
+        for (bool cc = mthtp.First(tp); cc && forall; cc = mthtp.Next(tp)) {
           forall = tp.Is(TAG_TYPE_SSENV_AccessOpTypeRep) ||
                    tp.Is(TAG_TYPE_SSENV_AccessFnTypeRep);
-        if (forall && (mthtp.Card() > 1))
-        {
+        }
+        if (forall && (mthtp.Card() > 1)) {
           //------------------------------
           // Warning message #423
           // Overloaded operation "%1" used in permission guard
@@ -3520,10 +3374,10 @@ Tuple StatSem::wf_NameList (const SEQ<TYPE_AS_Name> & name_l)
         }
 
         bool forallFn = true;
-        for (bool cc = mthtp.First(tp); cc && forallFn; cc = mthtp.Next(tp))
+        for (bool cc = mthtp.First(tp); cc && forallFn; cc = mthtp.Next(tp)) {
           forallFn = tp.Is(TAG_TYPE_SSENV_AccessFnTypeRep);
-        if (forallFn)
-        {
+        }
+        if (forallFn) {
           //------------------------------
           // Warning message #429
           // History counters cannot be used for functions like "%1"
@@ -3546,16 +3400,16 @@ Tuple StatSem::wf_NameList (const SEQ<TYPE_AS_Name> & name_l)
         }
       }
 
-      if (prev_nm.InSet (name))
-      {
+      if (prev_nm.InSet (name)) {
         //------------------------------
         // Warning message #73
         // L"%1" multiple defined
         //------------------------------
         GenErr (name, WRN1, 73, mk_sequence(PrintName (name)));
       }
-      else
+      else {
         prev_nm.Insert (name);
+      }
     }
   }
   return mk_(Bool(reswf), btp_nat);
@@ -3568,16 +3422,14 @@ Tuple StatSem::wf_NameList (const SEQ<TYPE_AS_Name> & name_l)
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_ActExpr (const Int &, const TYPE_AS_ActExpr & nnm, const TYPE_REP_TypeRep&)
 {
-  if (GetContext () == PERM)
-  {
+  if (GetContext () == PERM) {
     const SEQ<TYPE_AS_Name> & name_l (nnm.GetSequence(pos_AS_ActExpr_mthd));
     const TYPE_CI_ContextId & cid (nnm.GetInt(pos_AS_ActExpr_cid));
 
     GetCI().SetTypeInfo (cid, btp_nat);
     return wf_NameList (name_l);
   }
-  else
-  {
+  else {
     //-----------------------------------------------
     // Error message #288
     // Act-Expr only allowed in permission predicates
@@ -3594,16 +3446,14 @@ Tuple StatSem::wf_ActExpr (const Int &, const TYPE_AS_ActExpr & nnm, const TYPE_
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_FinExpr (const Int &, const TYPE_AS_FinExpr & nnm, const TYPE_REP_TypeRep &)
 {
-  if (GetContext () == PERM)
-  {
+  if (GetContext () == PERM) {
     const SEQ<TYPE_AS_Name> & name_l (nnm.GetSequence(pos_AS_FinExpr_mthd));
     const TYPE_CI_ContextId & cid (nnm.GetInt(pos_AS_FinExpr_cid));
 
     GetCI().SetTypeInfo (cid, btp_nat);
     return wf_NameList (name_l);
   }
-  else
-  {
+  else {
     //-----------------------------------------------
     // Error message #289
     // Fin-Expr only allowed in permission predicates
@@ -3620,16 +3470,14 @@ Tuple StatSem::wf_FinExpr (const Int &, const TYPE_AS_FinExpr & nnm, const TYPE_
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_ActiveExpr (const Int &, const TYPE_AS_ActiveExpr & nnm, const TYPE_REP_TypeRep &)
 {
-  if (GetContext () == PERM)
-  {
+  if (GetContext () == PERM) {
     const SEQ<TYPE_AS_Name> & name_l (nnm.GetSequence(pos_AS_ActiveExpr_mthd));
     const TYPE_CI_ContextId & cid    (nnm.GetInt(pos_AS_ActiveExpr_cid));
 
     GetCI().SetTypeInfo (cid, btp_nat);
     return wf_NameList (name_l);
   }
-  else
-  {
+  else {
     //-----------------------------------------------
     // Error message #411
     // Active-Expr only allowed in permission predicates
@@ -3646,16 +3494,14 @@ Tuple StatSem::wf_ActiveExpr (const Int &, const TYPE_AS_ActiveExpr & nnm, const
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_WaitingExpr (const Int &, const TYPE_AS_WaitingExpr & nnm, const TYPE_REP_TypeRep &)
 {
-  if (GetContext () == PERM)
-  {
+  if (GetContext () == PERM) {
     const SEQ<TYPE_AS_Name> & name_l (nnm.GetSequence(pos_AS_WaitingExpr_mthd));
     const TYPE_CI_ContextId & cid    (nnm.GetInt(pos_AS_WaitingExpr_cid));
 
     GetCI().SetTypeInfo (cid, btp_nat);
     return wf_NameList (name_l);
   }
-  else
-  {
+  else {
     //---------------------------------------------------
     // Error message #290
     // Waiting-Expr only allowed in permission predicates
@@ -3672,16 +3518,14 @@ Tuple StatSem::wf_WaitingExpr (const Int &, const TYPE_AS_WaitingExpr & nnm, con
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_ReqExpr (const Int &, const TYPE_AS_ReqExpr & nnm, const TYPE_REP_TypeRep &)
 {
-  if (GetContext () == PERM)
-  {
+  if (GetContext () == PERM) {
     const SEQ<TYPE_AS_Name> & name_l (nnm.GetSequence(pos_AS_ReqExpr_mthd));
     const TYPE_CI_ContextId & cid    (nnm.GetInt(pos_AS_ReqExpr_cid));
 
     GetCI().SetTypeInfo (cid, btp_nat);
     return wf_NameList (name_l);
   }
-  else
-  {
+  else {
     //-----------------------------------------------
     // Error message #291
     // Req-Expr only allowed in permission predicates
@@ -3701,25 +3545,18 @@ Tuple StatSem::wf_Name (const Int &, const TYPE_AS_Name& nm)
   const TYPE_CI_ContextId & cid (nm.GetInt(pos_AS_Name_cid));
   Generic restp (LookUp(nm, true));
 
-// 20130730 -->
-  if (restp.IsNil())
-  {
+  if (restp.IsNil()) {
     GetCI().SetTypeInfo (cid, rep_alltp);
     return mk_(Bool(false), rep_alltp);
   }
-  else
-  {
+  else {
 #ifdef VDMSL
     GetCI().SetTypeInfo (cid, restp);
     return mk_(Bool(true), restp);
 #endif // VDMSL
 #ifdef VDMPP
-// 20150324 -->
-    //Generic reptp = CheckAccess (nm, restp);
     Generic reptp = CheckAccessCurClass(restp);
-// <-- 20150324
-    if (reptp.IsNil ())
-    {
+    if (reptp.IsNil ()) {
       //-------------------
       // Error message #368
       // Access violation
@@ -3728,21 +3565,21 @@ Tuple StatSem::wf_Name (const Int &, const TYPE_AS_Name& nm)
       GetCI().SetTypeInfo (cid, rep_alltp);
       return mk_(Bool (false), rep_alltp);
     }
-    else
-    {
+    else {
       TYPE_REP_TypeRep l_actResTp;
-      if (reptp.IsSet())
-      {
+      if (reptp.IsSet()) {
         SET<TYPE_REP_TypeRep> reptp_s (reptp);
-        if (reptp_s.Card() == 1)
+        if (reptp_s.Card() == 1) {
           l_actResTp = reptp_s.GetElem();
-        else
+        }
+        else {
           l_actResTp = mk_REP_OverTypeRep(reptp);
+        }
       }
-      else
+      else {
         l_actResTp = reptp;
+      }
       GetCI().SetTypeInfo (cid, l_actResTp);
-//      return mk_(Bool(true), reptp);
       return mk_(Bool(true), l_actResTp);
     }
 #endif // VDMPP
@@ -3760,8 +3597,7 @@ Tuple StatSem::wf_OldName (const Int &, const TYPE_AS_OldName & onm)
   TYPE_AS_Name nm (ASTAUX::MkNameFromIds (onm.get_ids (), cid));
 
   Generic restp;
-  if (GetContext () != POST)
-  {
+  if (GetContext () != POST) {
     //-----------------------------------------
     // Error message #292
     // Old names cannot be used in this context
@@ -3769,24 +3605,21 @@ Tuple StatSem::wf_OldName (const Int &, const TYPE_AS_OldName & onm)
     GenErr (onm, ERR, 292, Sequence());
     restp = Nil();
   }
-  else
+  else {
     restp = LookUpState (nm, Bool (true), OLD);
-
+  }
   if (restp.IsNil()) {
     GetCI().SetTypeInfo (cid, rep_alltp);
     return mk_(Bool(false), rep_alltp);
   }
   else {
-// 20081006 -->
 #ifdef VDMPP
-    if (IsAccessType(restp))
-    {
+    if (IsAccessType(restp)) {
       Generic restp2 = StripAccessType(restp);
       GetCI().SetTypeInfo (cid, restp2);
       return mk_(Bool(true), restp2);
     }
 #endif // VDMPP
-// <-- 20081006
     GetCI().SetTypeInfo (cid, restp);
     return mk_(Bool(true), restp);
   }
@@ -3853,10 +3686,12 @@ Tuple StatSem::wf_Literal (const Int & i, const TYPE_AS_Literal & lit, const TYP
       break;
     }
     case TAG_TYPE_AS_TextLit: {
-      if (lit.GetSequence(pos_AS_TextLit_val).IsEmpty())
+      if (lit.GetSequence(pos_AS_TextLit_val).IsEmpty()) {
         restp = mk_REP_EmptySeqTypeRep(btp_char);
-      else
+      }
+      else {
         restp = mk_REP_SeqTypeRep(btp_char);
+      }
       cid = lit.GetInt(pos_AS_TextLit_cid);
       break;
     }
@@ -3874,8 +3709,9 @@ Tuple StatSem::wf_Literal (const Int & i, const TYPE_AS_Literal & lit, const TYP
 
   GetCI().SetTypeInfo (cid, restp);
 
-  if (IsCompatible (i, restp, exptp))
+  if (IsCompatible (i, restp, exptp)) {
     return mk_(Bool(true), restp);
+  }
   else {
     //----------------------------------------
     // Error message #397
@@ -3899,68 +3735,27 @@ Tuple StatSem::wf_PrefixExpr (const Int & i, const TYPE_AS_PrefixExpr & unexpr, 
 
   Tuple tpl;
   switch(op.GetValue ()) {
-    case NUMPLUS:
-      tpl = wf_UNARYNUMPLUS (i, unexpr, exptp);
-      break;
-    case NUMMINUS:
-      tpl = wf_UNARYNUMMINUS (i, unexpr, exptp);
-      break;
-    case NUMABS:
-      tpl = wf_NUMABS (i, unexpr, exptp);
-      break;
-    case FLOOR:
-      tpl = wf_FLOOR (i, unexpr, exptp);
-      break;
-    case NOT:
-      tpl = wf_NOT (i, unexpr, exptp);
-      break;
-    case SETCARD:
-      tpl = wf_SETCARD (i, unexpr, exptp);
-      break;
-    case SETDISTRUNION:
-      tpl = wf_SETDISTRUNION (i, unexpr, exptp);
-      break;
-    case SETDISTRINTERSECT:
-      tpl = wf_SETDISTRINTERSECT (i, unexpr, exptp);
-      break;
-    case SETPOWER:
-      tpl = wf_SETPOWER (i, unexpr, exptp);
-      break;
-    case SEQLEN:
-      tpl = wf_SEQLEN (i, unexpr, exptp);
-      break;
-    case SEQDISTRCONC:
-      tpl = wf_SEQDISTRCONC (i, unexpr, exptp);
-      break;
-    case SEQELEMS:
-      tpl = wf_SEQELEMS (i, unexpr, exptp);
-      break;
-    case SEQINDICES:
-      tpl = wf_SEQINDICES (i, unexpr, exptp);
-      break;
-    case SEQHEAD:
-      tpl = wf_SEQHEAD (i, unexpr, exptp);
-      break;
-    case SEQTAIL:
-      tpl = wf_SEQTAIL (i, unexpr, exptp);
-      break;
-    case SEQREVERSE:
-      tpl = wf_SEQREVERSE (i, unexpr, exptp);
-      break;
-    case MAPDOM:
-      tpl = wf_MAPDOM (i, unexpr, exptp);
-      break;
-    case MAPRNG:
-      tpl = wf_MAPRNG (i, unexpr, exptp);
-      break;
-    case MAPDISTRMERGE:
-      tpl = wf_MAPDISTRMERGE (i, unexpr, exptp);
-      break;
-    case MAPINVERSE:
-      tpl = wf_MAPINVERSE (i, unexpr, exptp);
-      break;
-    default:
-    {
+    case NUMPLUS:           { tpl = wf_UNARYNUMPLUS (i, unexpr, exptp); break; }
+    case NUMMINUS:          { tpl = wf_UNARYNUMMINUS (i, unexpr, exptp); break; }
+    case NUMABS:            { tpl = wf_NUMABS (i, unexpr, exptp); break; }
+    case FLOOR:             { tpl = wf_FLOOR (i, unexpr, exptp); break; }
+    case NOT:               { tpl = wf_NOT (i, unexpr, exptp); break; }
+    case SETCARD:           { tpl = wf_SETCARD (i, unexpr, exptp); break; }
+    case SETDISTRUNION:     { tpl = wf_SETDISTRUNION (i, unexpr, exptp); break; }
+    case SETDISTRINTERSECT: { tpl = wf_SETDISTRINTERSECT (i, unexpr, exptp); break; }
+    case SETPOWER:          { tpl = wf_SETPOWER (i, unexpr, exptp); break; }
+    case SEQLEN:            { tpl = wf_SEQLEN (i, unexpr, exptp); break; }
+    case SEQDISTRCONC:      { tpl = wf_SEQDISTRCONC (i, unexpr, exptp); break; }
+    case SEQELEMS:          { tpl = wf_SEQELEMS (i, unexpr, exptp); break; }
+    case SEQINDICES:        { tpl = wf_SEQINDICES (i, unexpr, exptp); break; }
+    case SEQHEAD:           { tpl = wf_SEQHEAD (i, unexpr, exptp); break; }
+    case SEQTAIL:           { tpl = wf_SEQTAIL (i, unexpr, exptp); break; }
+    case SEQREVERSE:        { tpl = wf_SEQREVERSE (i, unexpr, exptp); break; }
+    case MAPDOM:            { tpl = wf_MAPDOM (i, unexpr, exptp); break; }
+    case MAPRNG:            { tpl = wf_MAPRNG (i, unexpr, exptp); break; }
+    case MAPDISTRMERGE:     { tpl = wf_MAPDISTRMERGE (i, unexpr, exptp); break; }
+    case MAPINVERSE:        { tpl = wf_MAPINVERSE (i, unexpr, exptp); break; }
+    default: {
       InternalError (L"wf_PrefixExpr");
       tpl = mk_(Bool(false), rep_alltp);
     }
@@ -3988,10 +3783,10 @@ Tuple StatSem::wf_UNARYNUMPLUS (const Int & i, const TYPE_AS_PrefixExpr & unexpr
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     return mk_(wf_arg, ExtractNumericType(argtp));
-  else
-  {
+  }
+  else {
     //---------------------------------------
     // Error message #122
     // Rhs of unary '+' is not a numeric type
@@ -4017,18 +3812,18 @@ Tuple StatSem::wf_UNARYNUMMINUS (const Int & i, const TYPE_AS_PrefixExpr & unexp
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep restp (ExtractNumericType(argtp));
     if (restp.Is(TAG_TYPE_REP_NumericTypeRep) &&
         ((restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == NAT) ||
-         (restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == NATONE)))
+         (restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == NATONE))) {
       return mk_(wf_arg, btp_int);
-    else
+    }
+    else {
       return mk_(wf_arg, restp);
+    }
   }
-  else
-  {
+  else {
     //---------------------------------------
     // Error message #123
     // Rhs of unary '-' is not a numeric type
@@ -4054,16 +3849,16 @@ Tuple StatSem::wf_NUMABS (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep restp (ExtractNumericType(argtp));
-    if (restp.Is(TAG_TYPE_REP_NumericTypeRep) && (restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == INTEGER))
+    if (restp.Is(TAG_TYPE_REP_NumericTypeRep) && (restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == INTEGER)) {
       return mk_(wf_arg, btp_nat);
-    else
+    }
+    else {
       return mk_(wf_arg, restp);
+    }
   }
-  else
-  {
+  else {
     //----------------------------------------
     // Error message #124
     // Argument of 'abs' is not a numeric type
@@ -4089,18 +3884,18 @@ Tuple StatSem::wf_FLOOR (const Int & i, const TYPE_AS_PrefixExpr & unexpr, const
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep restp (ExtractNumericType(argtp));
     if (restp.Is(TAG_TYPE_REP_NumericTypeRep) &&
         ((restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == NAT) ||
-         (restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == NATONE)))
+         (restp.GetIntValue(pos_REP_NumericTypeRep_qtp) == NATONE))) {
       return mk_(wf_arg, restp);
-    else
+    }
+    else {
       return mk_(wf_arg, btp_int);
+    }
   }
-  else
-  {
+  else {
     //------------------------------------------
     // Error message #125
     // Argument to 'floor' is not a numeric type
@@ -4126,10 +3921,10 @@ Tuple StatSem::wf_NOT (const Int & i, const TYPE_AS_PrefixExpr & unexpr, const T
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     return mk_(wf_arg, ExpectedRhsType);
-  else
-  {
+  }
+  else {
     //----------------------------------------
     // Error message #126
     // Argument to 'not' is not a boolean type
@@ -4154,16 +3949,13 @@ Tuple StatSem::wf_SETCARD (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
-// 20130108 -->
-    if (IsCompatible (DEF, argtp, RemoveEmptySetType(ExpectedRhsType)))
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
+    if (IsCompatible (DEF, argtp, RemoveEmptySetType(ExpectedRhsType))) {
       return mk_(wf_arg, btp_natone);
-// <-- 20130108
+    }
     return mk_(wf_arg, btp_nat);
   }
-  else
-  {
+  else {
     //-------------------------------------
     // Error message #127
     // Argument to 'card' is not a set type
@@ -4187,25 +3979,24 @@ Tuple StatSem::wf_SETDISTRUNION (const Int & i, const TYPE_AS_PrefixExpr & unexp
                                                                mk_REP_SetTypeRep(ExpRes))));
 
   TYPE_REP_TypeRep rhsexptp;
-  if (IsCompatible (i, exptp, ExpRes))
+  if (IsCompatible (i, exptp, ExpRes)) {
     rhsexptp = mk_REP_UnionTypeRep(mk_set(mk_REP_SetTypeRep(mk_REP_UnionTypeRep(mk_set(ExtractSetType(exptp),
                                                                                 mk_REP_EmptySetTypeRep(rep_alltp)))),
                                           mk_REP_EmptySetTypeRep(rep_alltp)));
-  else
+  }
+  else {
     rhsexptp = ExpectedRhsType;
-
+  }
   TYPE_REP_TypeRep intertp (IntersectTypeReps (ExpectedRhsType, rhsexptp));
 
   Tuple inferrhs (wf_Expr(i, rhs, intertp));
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     Generic elmtpg (UnmaskSetType (i, ExtractSetType (argtp)));
 
-    if (elmtpg.IsNil())
-    {
+    if (elmtpg.IsNil()) {
       //-------------------------------------------
       // Error message #128
       // The 'dunion' will always give an empty set
@@ -4213,17 +4004,17 @@ Tuple StatSem::wf_SETDISTRUNION (const Int & i, const TYPE_AS_PrefixExpr & unexp
       GenErr (unexpr, WRN1, 128, Sequence());
       return mk_(wf_arg, mk_REP_EmptySetTypeRep(rep_alltp));
     }
-    else
-    {
+    else {
       TYPE_REP_TypeRep elmtp (ExtractSetType (elmtpg));
-      if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep))
+      if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
         return mk_(wf_arg, SetTypeUnion (elmtp.GetSet(pos_REP_UnionTypeRep_tps)));
-      else
+      }
+      else {
         return mk_(wf_arg, elmtp);
+      }
     }
   }
-  else
-  {
+  else {
     //----------------------------------------------
     // Error message #129
     // Argument of 'dunion' is not a set of set type
@@ -4248,20 +4039,20 @@ Tuple StatSem::wf_SETDISTRINTERSECT (const Int & i,
   TYPE_REP_TypeRep ExpectedRhsType (mk_REP_SetTypeRep(ExpRes)); // empty not allowed
 
   TYPE_REP_TypeRep rhsexptp;
-  if (IsCompatible (i, exptp, ExpRes))
+  if (IsCompatible (i, exptp, ExpRes)) {
     rhsexptp = mk_REP_SetTypeRep(mk_REP_UnionTypeRep(mk_set(ExtractSetType(exptp),
                                                             mk_REP_EmptySetTypeRep(rep_alltp))));
-  else
+  }
+  else {
     rhsexptp = ExpectedRhsType;
-
+  }
   TYPE_REP_TypeRep intertp (IntersectTypeReps (ExpectedRhsType, rhsexptp));
 
   Tuple inferrhs (wf_Expr(i, rhs, intertp));
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (argtp.Is (TAG_TYPE_REP_EmptySetTypeRep))
-  {
+  if (argtp.Is (TAG_TYPE_REP_EmptySetTypeRep)) {
     //----------------------------------------------
     // Error message #130
     // An empty set is given as argument to 'dinter'
@@ -4269,11 +4060,9 @@ Tuple StatSem::wf_SETDISTRINTERSECT (const Int & i,
     GenErr (unexpr, ERR, 130, Sequence());
     return mk_(Bool (false), ExpRes);
   }
-  else if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  else if (IsCompatible (i, argtp, ExpectedRhsType)) {
     Generic elmtpg (UnmaskSetType (i, ExtractSetType (argtp)));
-    if (elmtpg.IsNil())
-    {
+    if (elmtpg.IsNil()) {
       //----------------------------------------------
       // Error message #130
       // An empty set is given as argument to 'dinter'
@@ -4281,15 +4070,12 @@ Tuple StatSem::wf_SETDISTRINTERSECT (const Int & i,
       GenErr (unexpr, ERR, 130, Sequence());
       return mk_(Bool(false), ExpRes);
     }
-    else
-    {
+    else {
       TYPE_REP_TypeRep elmtp (ExtractSetType (elmtpg));
-      if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep) && (i == DEF))
-      {
+      if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep) && (i == DEF)) {
         TYPE_REP_TypeRep restp (SetTypeInter (elmtp.GetSet(pos_REP_UnionTypeRep_tps)));
 
-        if (restp.Is(TAG_TYPE_REP_EmptySetTypeRep))
-        {
+        if (restp.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
           //---------------------------------------
           // Error message #131
           // Result of 'dinter' can be an empty set
@@ -4298,12 +4084,12 @@ Tuple StatSem::wf_SETDISTRINTERSECT (const Int & i,
         }
         return mk_(wf_arg, restp);
       }
-      else
+      else {
         return mk_(wf_arg, elmtp);
+      }
     }
   }
-  else
-  {
+  else {
     //----------------------------------------------
     // Error message #132
     // Argument of 'dinter' is not a set of set type
@@ -4326,24 +4112,23 @@ Tuple StatSem::wf_SETPOWER (const Int & i, const TYPE_AS_PrefixExpr & unexpr, co
   TYPE_REP_SetTypeRep ExpectedType (mk_REP_SetTypeRep(rep_alltp));
 
   TYPE_REP_TypeRep rhsexptp;
-  if (IsCompatible (i, exptp, ExpectedType))
+  if (IsCompatible (i, exptp, ExpectedType)) {
     rhsexptp = UnmaskSetType(i, ExtractSetType(exptp));
-  else
+  }
+  else {
     rhsexptp = ExpectedRhsType;
-
+  }
   TYPE_REP_TypeRep intertp (IntersectTypeReps (ExpectedRhsType, rhsexptp));
 
   Tuple inferrhs (wf_Expr(i, rhs, intertp));
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep r1tp (ExtractSetType(argtp));
     TYPE_REP_TypeRep restp;
     switch(r1tp.GetTag()) {
       case TAG_TYPE_REP_EmptySetTypeRep: {
-        //restp = mk_REP_EmptySetTypeRep(rep_alltp);
         restp = r1tp;
         break;
       }
@@ -4360,8 +4145,7 @@ Tuple StatSem::wf_SETPOWER (const Int & i, const TYPE_AS_PrefixExpr & unexpr, co
     }
     return mk_(wf_arg, mk_REP_SetTypeRep(restp));
   }
-  else
-  {
+  else {
     //--------------------------------------
     // Error message #133
     // Argument to 'power' is not a set type
@@ -4386,16 +4170,13 @@ Tuple StatSem::wf_SEQLEN (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
-// 20130108 -->
-    if (IsCompatible (DEF, argtp, RemoveEmptySeqType(ExpectedRhsType)))
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
+    if (IsCompatible (DEF, argtp, RemoveEmptySeqType(ExpectedRhsType))) {
       return mk_(wf_arg, btp_natone);
-// <-- 20130108
+    }
     return mk_(wf_arg, btp_nat);
   }
-  else
-  {
+  else {
     //-----------------------------------------
     // Error message #134
     // Argument of 'len' is not a sequence type
@@ -4425,24 +4206,19 @@ Tuple StatSem::wf_SEQDISTRCONC (const Int & i, const TYPE_AS_PrefixExpr & unexpr
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     Generic elmtpg (UnmaskSeqType (i, ExtractSeqType (argtp)));
 
-    if (elmtpg.IsNil())
-    { //GenErr (unexpr, WRN1,
+    if (elmtpg.IsNil()) { //GenErr (unexpr, WRN1,
       //  L"'conc' will always give an empty sequence");
       return mk_(wf_arg, mk_REP_EmptySeqTypeRep(rep_alltp));
     }
-    else
-    {
+    else {
       TYPE_REP_TypeRep elmtp (ExtractSeqType (elmtpg));
-      if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
         TYPE_REP_TypeRep restp (SeqTypeConc (elmtp.GetSet(pos_REP_UnionTypeRep_tps)));
 
-        if (restp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && (i == DEF))
-        {
+        if (restp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && (i == DEF)) {
           //------------------------------------------
           // Error message #135
           // Result of 'conc' can be an empty sequence
@@ -4450,20 +4226,17 @@ Tuple StatSem::wf_SEQDISTRCONC (const Int & i, const TYPE_AS_PrefixExpr & unexpr
           GenErr (unexpr, WRN2, 135, Sequence());
         }
 
-        if(restp.Is(TAG_TYPE_REP_SeqTypeRep))
-        {
+        if(restp.Is(TAG_TYPE_REP_SeqTypeRep)) {
           restp = mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySeqTypeRep(rep_alltp), restp));
         }
         return mk_(wf_arg, restp);
       }
-      else
-      {
+      else {
         return mk_(wf_arg, elmtp);
       }
     }
   }
-  else
-  {
+  else {
     //--------------------------------------------------
     // Error message #136
     // Argument of 'conc' is not a sequence of sequences
@@ -4486,9 +4259,9 @@ Tuple StatSem::wf_SEQELEMS (const Int & i, const TYPE_AS_PrefixExpr & unexpr, co
   TYPE_REP_TypeRep ExpectedType (set_alltp);
 
   TYPE_REP_TypeRep elemtp (rep_alltp);
-  if (IsCompatible (i, exptp, ExpectedType))
+  if (IsCompatible (i, exptp, ExpectedType)) {
     elemtp = UnmaskSetType(i, ExtractSetType(exptp));
-
+  }
   TYPE_REP_SeqTypeRep expseqtp (mk_REP_SeqTypeRep(elemtp));
 
   TYPE_REP_TypeRep intertp (IntersectTypeReps (ExpectedRhsType, expseqtp));
@@ -4497,8 +4270,7 @@ Tuple StatSem::wf_SEQELEMS (const Int & i, const TYPE_AS_PrefixExpr & unexpr, co
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep r1tp (ExtractSeqType(argtp));
     switch(r1tp.GetTag()) {
       case TAG_TYPE_REP_EmptySeqTypeRep: {
@@ -4510,8 +4282,7 @@ Tuple StatSem::wf_SEQELEMS (const Int & i, const TYPE_AS_PrefixExpr & unexpr, co
       case TAG_TYPE_REP_UnionTypeRep: {
         SET<TYPE_REP_TypeRep> u (r1tp.GetSet(pos_REP_UnionTypeRep_tps)), restp;
         Generic utp;
-        for (bool bb = u.First(utp); bb ; bb = u.Next(utp))
-        {
+        for (bool bb = u.First(utp); bb ; bb = u.Next(utp)) {
           TYPE_REP_TypeRep rc (utp);
           switch (rc.GetTag()) {
             case TAG_TYPE_REP_EmptySeqTypeRep: {
@@ -4526,12 +4297,12 @@ Tuple StatSem::wf_SEQELEMS (const Int & i, const TYPE_AS_PrefixExpr & unexpr, co
         }
         return mk_(wf_arg, mk_REP_UnionTypeRep(restp));
       }
-      default:
+      default: {
         return Tuple();
+      }
     }
   }
-  else
-  {
+  else {
     //-------------------------------------------
     // Error message #137
     // Argument of 'elems' is not a sequence type
@@ -4556,15 +4327,15 @@ Tuple StatSem::wf_SEQINDICES (const Int & i, const TYPE_AS_PrefixExpr & unexpr, 
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
-    if (argtp.Is(TAG_TYPE_REP_EmptySeqTypeRep))
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
+    if (argtp.Is(TAG_TYPE_REP_EmptySeqTypeRep)) {
       return mk_(wf_arg, mk_REP_EmptySetTypeRep(btp_natone));
-    else
+    }
+    else {
       return mk_(wf_arg, mk_REP_SetTypeRep(btp_natone));
+    }
   }
-  else
-  {
+  else {
     //------------------------------------------
     // Error message #138
     // Argument of 'inds' is not a sequence type
@@ -4592,8 +4363,7 @@ Tuple StatSem::wf_SEQHEAD (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
   Bool reswf (true);
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep restp (ExtractSeqType(argtp));
     switch(restp.GetTag()) {
       case TAG_TYPE_REP_EmptySeqTypeRep: {
@@ -4610,8 +4380,7 @@ Tuple StatSem::wf_SEQHEAD (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
       case TAG_TYPE_REP_UnionTypeRep: {
         SET<TYPE_REP_TypeRep> utps (restp.GetSet(pos_REP_UnionTypeRep_tps));
         if (utps.InSet(mk_REP_EmptySeqTypeRep(rep_alltp)) &&
-            (i == DEF) && (Settings.ErrorLevel() >= ERR2))
-        {
+            (i == DEF) && (Settings.ErrorLevel() >= ERR2)) {
           //------------------------------------------
           // Error message #140
           // Argument of 'hd' can be an empty sequence
@@ -4621,10 +4390,10 @@ Tuple StatSem::wf_SEQHEAD (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
         }
         SET<TYPE_REP_TypeRep> r1tp;
         Generic utp;
-        for (bool bb = utps.First(utp); bb ; bb = utps.Next(utp))
-        {
-          if (utp.Is(TAG_TYPE_REP_SeqTypeRep))
+        for (bool bb = utps.First(utp); bb ; bb = utps.Next(utp)) {
+          if (utp.Is(TAG_TYPE_REP_SeqTypeRep)) {
             r1tp.Insert(Record(utp).GetRecord(pos_REP_SeqTypeRep_elemtp));
+          }
         }
         SET<TYPE_REP_TypeRep> r2tp (MergeNumericTypes(r1tp));
         switch(r2tp.Card()) {
@@ -4643,12 +4412,12 @@ Tuple StatSem::wf_SEQHEAD (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
         }
         return mk_(wf_arg && reswf, restp);
       }
-      default:
+      default: {
         return Tuple(); //This is only to avoid warnings from the compiler
+      }
     }
   }
-  else
-  {
+  else {
     //----------------------------------------
     // Error message #141
     // Argument of 'hd' is not a sequence type

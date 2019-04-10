@@ -1396,7 +1396,7 @@ CGBlockStmt(mk_AS`BlockStmt(dcls, stmts,-), isLast) ==
   for i = 1 to len stmts do
     rb := rb ^ GenStmt( stmts(i), isLast and i = len stmts );
 
-  CGAUX`PopEnv(); -- 20130305
+  CGAUX`PopEnv();
   CGAUX`PopEnv();
 
   if dcls = []

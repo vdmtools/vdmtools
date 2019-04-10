@@ -312,8 +312,6 @@ operations
         ( CI`SetTypeInfo(cid, tp_e);
           if TYPE`IsCompatible(i,tp_e,tp)
           then if wf_e
-               -- 20100721
-               --then return mk_((i = <POS> or TYPE`IsOneValueType(i,tp)), {|->})
                then return mk_((i = <POS> or TYPE`IsOneValueType(i,tp_e)), {|->})
                else return mk_(nil,{|->})
           else return mk_(false,{|->}));

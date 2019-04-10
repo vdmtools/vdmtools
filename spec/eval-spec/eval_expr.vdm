@@ -443,7 +443,7 @@ EvalRecordModifierExpr(rec_v,fid_l,val_l) ==
                 else
                   let index = pos(fid)
                   in
-                   (if SETTINGS`DTC() -- 20140121
+                   (if SETTINGS`DTC()
                     then
                       cases AUX`IsTypeDef(tagname):
                         mk_(true,-,-,-,-,defcl,-) ->

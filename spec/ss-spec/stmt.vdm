@@ -1536,13 +1536,9 @@ handler.
                     ---------------------------------------
               --then (ERR`GenErr(stmt, <WARNING>,329,[]);
               --      reswf := true));
-        -- 20100730
-        --if fullcheck
-        --then etp := ExtractRealExitTypeRep(tpstmt,stmt);
         if etp = nil
         then etp := mk_REP`AllTypeRep();
         restp := tpstmt;
-        -- 20100730
         (for mk_AS`Trap(match,trappost,-) in trap_l do
            def mk_(wf,tp) = wf_TrapAltn(i, match, trappost, etp, exptp) 
            in

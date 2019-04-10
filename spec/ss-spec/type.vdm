@@ -447,7 +447,7 @@ case and you need not to continue the unfolding.
                            mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
                                                 mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
                                                 mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())})}
-                   or tps = {} -- 20100729
+                   or tps = {}
                    or exists tp in set tps & IsOverlapping(tp, TpR2, assump),
           mk_REP`TypeNameRep(name) ->
             if is_REP`TypeNameRep (TpR2) and mk_(TpR1, TpR2) in set assump or mk_(TpR2, TpR1) in set assump
@@ -703,7 +703,6 @@ case and you need not to continue the unfolding.
           mk_REP`TotalFnTypeRep(d_l,r) -> return (forall d in set elems d_l & IsEmpty(i,d) or IsEmpty(i,r)) or
                                                  (forall d in set elems d_l & IsOneValueTypeAux(i,d,new_tps) and
                                                                               IsOneValueTypeAux(i,r,new_tps)),
-             -- 20100804
           mk_REP`EmptySeqTypeRep(-),
           mk_REP`EmptySetTypeRep(-),
           mk_REP`EmptyMapTypeRep(-, -) -> return true,

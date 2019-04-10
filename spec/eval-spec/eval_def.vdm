@@ -117,8 +117,6 @@ ReadClasses(mk_AS`Class(nm, -, supercls, defs, -, -))== -- VDMRT
     in
      (sigmacl.instvars    := instvars;
       sigmacl.instvars_tp := instvars_tp;
-      -- 20130709
-      --sigmacl.inst_inv := instinv;
       if instinv <> []
       then
        (dcl code : STKM`SubProgram := [];
@@ -128,7 +126,6 @@ ReadClasses(mk_AS`Class(nm, -, supercls, defs, -, -))== -- VDMRT
             code := if i = 1
                     then cond
                     else CEXPR`ConcIfThenElse(cond, code, [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
-        --sigmacl.inst_inv := code;
         sigmacl.inst_inv := mk_(instinv, code);
        )
       else sigmacl.inst_inv := mk_([], []);

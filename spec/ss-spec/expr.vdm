@@ -3504,8 +3504,6 @@ operations
                           ------------------------------------------------------
                         ( ERR`GenErr(fields(j), <ERROR>,250,[UTIL`itoa(j)]);
                           reswf := false);
-                    -- 20100721
-                    --return mk_(reswf, ctr))) );
                     return mk_(reswf, mk_REP`TypeNameRep(tag)))) );
 
     CheckModifications: TYPE`Ind *
@@ -3667,8 +3665,6 @@ operations
             if r1tp <> cmptp then
               ( reswf := CheckModifications(i,r1tp,mods,exptp);
                 CI`SetTypeInfo(cid, r1tp);
-                -- 20100721
-                --return mk_(wf_arg and reswf, r1tp))
                 return mk_(wf_arg and reswf, argtp))
             else
                 -----------------------------------

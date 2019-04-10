@@ -3809,9 +3809,8 @@ GetInstVarsTp(nm) ==
 
 The operation {\em GetInstInv} returns the invariants expressions of the instance variables of class {\em nm}.
 \begin{vdm_al}
-GetInstInv: AS`Name ==> STKM`SubProgram -- seq of AS`InstanceInv -- 20130709
+GetInstInv: AS`Name ==> STKM`SubProgram
 GetInstInv(nm) ==
-  --return classes(nm).inst_inv;
   return classes(nm).inst_inv.#2;
 \end{vdm_al}
 
