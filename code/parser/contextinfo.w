@@ -226,19 +226,9 @@ ContextInfo& GetCI();
 #include "intconvquotes.h"
 #include <iterator>
 
-//#define node_bits          22
-////#define MaxNid        4094304 // (1 << node_bits);
-//#define MaxNid     0x00400000 // (1 << node_bits);
-//#define MaxNidMask 0x003FFFFF // MaxNid - 1
-////#define MaxFid           1024 // (1 << (32 - node_bits));
-//#define MaxFid     0x00000400 // (1 << (32 - node_bits));
-//#define MaxFidMask 0x000003FF // MaxFid - 1
-//const int node_bits = 24;
 #define node_bits          24
-//#define MaxNid       16777216 // (1 << node_bits);
 #define MaxNid     0x01000000 // (1 << node_bits);
 #define MaxNidMask 0x00FFFFFF // MaxNid - 1
-//#define MaxFid           1024 // (1 << (34 - node_bits));
 #define MaxFid     0x00000400 // (1 << (34 - node_bits));
 #define MaxFidMask 0x000003FF // MaxFid - 1
 
@@ -248,8 +238,6 @@ ContextInfo& GetCI();
 
 @<class cntxt_file_info@>
 
-//static const int64_t nilcontextid = -1;
-//const TYPE_CI_ContextId NilContextId = Int (nilcontextid);
 TokenList ContextInfo::nulltk;
 static ContextInfo global_context_info;
 
@@ -344,10 +332,8 @@ void ContextInfo::SaveCounters(const wstring & s, const Map & num_map, wostream 
     log << L"Couldn't create file `" << s << L"'" << endl;
     return;
   }
-  for (size_t i = 0; i < this->tll_ci.size(); i++)
-  {
-    if ((this->tll_ci[i]->node_l.Length() > 0) && num_map.DomExists(Int(i)))
-    {
+  for (size_t i = 0; i < this->tll_ci.size(); i++) {
+    if ((this->tll_ci[i]->node_l.Length() > 0) && num_map.DomExists(Int(i))) {
       Sequence fnm (num_map[Int(i)]);
       wstring fname (fnm.GetString());
       print_counter_line(f, fname, i);
@@ -385,8 +371,7 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
   }
 
   string fn;
-  while (!f.eof())
-  {
+  while (!f.eof()) {
     string t;
     f >> t;                     // Read field name.
     if (t.compare("file:") != 0) {
@@ -403,10 +388,8 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
     {
       // transform =xx to a single wchar_t
       string res;
-      for (string::size_type i = 0; i < fn.size(); )
-      {
-        if ((fn[i] == '=') && (i+2 < fn.size()))
-        {
+      for (string::size_type i = 0; i < fn.size(); ) {
+        if ((fn[i] == '=') && (i+2 < fn.size())) {
           string buf;
           buf += fn[i+1];
           buf += fn[i+2];
@@ -414,7 +397,8 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
           sscanf(buf.c_str(), "%x", &h);
           res += (char) h;
           i += 3;
-        } else {
+        }
+        else {
           res += fn[i];
           i++;
         }
@@ -438,10 +422,10 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
     for ( ; !(i == end); ++i) {
         v.push_back(*i);
     }
-    if (found)
-    {
-      if( short_names.DomExists(Sequence(short_fn)) ) // 20060523
+    if (found) {
+      if( short_names.DomExists(Sequence(short_fn)) ) {
         short_names.RemElem(Sequence(short_fn));
+      }
       int64_t fid = Int(g).GetValue();
       if (fid >= (int64_t)(this->tll_ci.size())) {
         log << L"Internal inconsistence in CI file map" << endl;
@@ -450,7 +434,8 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
       if (len != this->tll_ci[fid]->node_l.Length()) {
         log << L"Ignored coverage info from file `" << TBWSTR::string2wstring(fn) << L"' "
             << L"since it is inconsistent with the syntax checked file." << endl;
-      } else {
+      }
+      else {
         this->tll_ci[fid]->has_coverage = true;
         // Copy the counters into the node_l list.
         deque<int>::const_iterator first = v.begin(), last=v.end();
@@ -462,8 +447,9 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
           this->tll_ci[fid]->node_l.ImpModify(index, cni);
         }
       }
-    } else {
-      if (all){
+    }
+    else {
+      if (all) {
         log << L"Ignored coverage info from unknown file: `" << TBWSTR::string2wstring(fn) << L"'" << endl;
       }
     }
@@ -474,11 +460,9 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
   }
   f.close();
 
-  if (! short_names.IsEmpty())
-  {
+  if (! short_names.IsEmpty()) {
     Set dom_short_names (short_names.Dom());
-    if (short_names.Size() == 1)
-    {
+    if (short_names.Size() == 1) {
       Generic g (dom_short_names.GetElem());
       log << L"Could not find coverage info for file: " << g.ascii() << endl;
     }
@@ -486,10 +470,10 @@ void ContextInfo::LoadCounters(const wstring & s, const Map & long_names, const 
       log << L"Could not find coverage info for the files: ";
       Generic g;
       bool first (true);
-      for (bool bb = dom_short_names.First(g); bb; bb = dom_short_names.Next(g))
-      {
-        if (first)
+      for (bool bb = dom_short_names.First(g); bb; bb = dom_short_names.Next(g)) {
+        if (first) {
           first = false;
+        }
         else {
           log << L", ";
         }
@@ -518,7 +502,8 @@ void ContextInfo::print_counter_line(ostream & f, const wstring & ws, int64_t fi
       char b[1+2+1];
       sprintf(b, "=%02x", (unsigned int)s[i]);
       f << b;
-    } else {
+    }
+    else {
       f << s[i];
     }
   }
@@ -528,8 +513,7 @@ void ContextInfo::print_counter_line(ostream & f, const wstring & ws, int64_t fi
   // output list of testcoverage field.
   size_t len_cni_l = cni_l.Length();
   f << " " << len_cni_l << " ";
-  for (size_t idx = 1; idx <= len_cni_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_cni_l; idx++) {
     f << cni_l[idx].GetIntValue(pos_CI_ContextNodeInfo_coverage) << " ";
   }
   f << endl;
@@ -569,8 +553,7 @@ bool ContextInfo::IsAValidFileId(const TYPE_CI_FileId & fileid) const
 // ==> bool
 bool ContextInfo::IsAValidContextId(const TYPE_CI_ContextId & cid)
 {
-  if ( cid != NilContextId )
-  {
+  if ( cid != NilContextId ) {
     int64_t ci = cid.GetValue();
     int64_t fid = ci >> node_bits;
     int64_t nid = ci & MaxNidMask;
@@ -584,15 +567,12 @@ bool ContextInfo::IsAValidContextId(const TYPE_CI_ContextId & cid)
 // ==> bool * ContextNodeInfo
 bool ContextInfo::IsAValidContextId(const TYPE_CI_ContextId & cid, TYPE_CI_ContextNodeInfo * & cp)
 {
-  if ( cid != NilContextId )
-  {
+  if ( cid != NilContextId ) {
     int64_t ci = cid.GetValue();
     int64_t fid = ci >> node_bits;
     int64_t nid = ci & MaxNidMask;
 
-    if ((fid < this->cur_fid_max) && (nid <= this->tll_ci[fid]->node_l.Length()) )
-    {
-//      cp = &(TYPE_CI_ContextNodeInfo &)(this->tll_ci[fid]->node_l.GetIndexRef(nid));
+    if ((fid < this->cur_fid_max) && (nid <= this->tll_ci[fid]->node_l.Length()) ) {
       cp = &(this->tll_ci[fid]->node_l.GetIndexRef(nid));
       return true;
     }
@@ -616,8 +596,7 @@ void ContextInfo::complain(const wstring & s, int64_t number)
 // ==> ContextId
 TYPE_CI_ContextId ContextInfo::Push(const TYPE_CI_FileId & fileid)
 {
-  if (IsAValidFileId(fileid))
-  {
+  if (IsAValidFileId(fileid)) {
     TYPE_CI_ContextNodeInfo cni;
     cni.Init(Nil(), Int(0), Nil(), Nil(), Int(0), Bool(false), Bool(false));
 
@@ -625,8 +604,7 @@ TYPE_CI_ContextId ContextInfo::Push(const TYPE_CI_FileId & fileid)
     this->tll_ci[fid]->node_l.ImpAppend(cni);
     return CreateCid(fid, this->tll_ci[fid]->node_l.Length());
   }
-  else
-  {
+  else {
     complain(L"ContextInfo::Push", fileid.GetValue());
     return NilContextId;
   }
@@ -638,8 +616,7 @@ TYPE_CI_ContextId ContextInfo::Push(const TYPE_CI_FileId & fileid)
 // fileid : int
 void ContextInfo::resizetab(int64_t fileid)
 {
-  if ((int64_t)(this->tll_ci.size()) < fileid + 1)
-  {
+  if ((int64_t)(this->tll_ci.size()) < fileid + 1) {
     while ((int64_t)(this->tll_ci.size()) < fileid + 1) {
       this->tll_ci.push_back (cntxt_file_info_p (new cntxt_file_info()));
     }
@@ -652,15 +629,11 @@ void ContextInfo::resizetab(int64_t fileid)
 // ==> TokenList
 TokenList& ContextInfo::GetTokenList(const TYPE_CI_FileId & fileid)
 {
-  if (IsAValidFileId(fileid))
-  {
+  if (IsAValidFileId(fileid)) {
     return tll_ci[fileid.GetValue()]->token_l;
   }
-  else
-  {
-//    resizetab(fid);
+  else {
     complain(L"ContextInfo::GetTokenList", fileid.GetValue());
-//    return *(new TokenList());  // Memory leak, but what else can we do?
     return nulltk;
   }
 }
@@ -673,16 +646,14 @@ void ContextInfo::UseContextTab(const TYPE_CI_FileId & fileid, bool reset)
   // If fileid is not in range then extend the file table to the
   // proper size.
   int fid = fileid.GetValue();
-  if (fid < 0 || MaxFid <= fid)
-  {
+  if (fid < 0 || MaxFid <= fid) {
     complain(L"UseContextTab: invalid fileid", fid);
     return;
   }
 
   resizetab(fid);
 
-  if (reset)
-  {
+  if (reset) {
     // Now tab[fid] is a valid entry. Clear it.
     tll_ci[fid].p->node_l.Clear();
     tll_ci[fid].p->token_l.Clear();
@@ -701,12 +672,10 @@ int64_t ContextInfo::cid2int(const TYPE_CI_ContextId & c) const
 Generic ContextInfo::GetTypeInfo(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     return p->get_typeinfo();
   }
-  else
-  {
+  else {
     complain(L"GetTypeInfo: invalid cid", cid2int(cid));
     return Nil();
   }
@@ -718,12 +687,12 @@ Generic ContextInfo::GetTypeInfo(const TYPE_CI_ContextId & cid)
 void ContextInfo::SetTypeInfo(const TYPE_CI_ContextId & cid, const Generic& type)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     p->set_typeinfo(type);
   }
-  else
+  else {
     complain(L"SetTypeInfo: invalid cid", cid2int(cid));
+  }
 }
 
 // HasTypeInfo
@@ -732,10 +701,10 @@ void ContextInfo::SetTypeInfo(const TYPE_CI_ContextId & cid, const Generic& type
 bool ContextInfo::HasTypeInfo(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     return !p->get_typeinfo().IsNil();
-  } else {
+  }
+  else {
     complain(L"HasTypeInfo: invalid cid", cid2int(cid));
     return false;
   }
@@ -744,12 +713,10 @@ bool ContextInfo::HasTypeInfo(const TYPE_CI_ContextId & cid)
 // ResetTestCoverageInfo
 void ContextInfo::ResetTestCoverageInfo()
 {
-  for (int64_t fid = 0; fid < this->cur_fid_max; fid++)
-  {
+  for (int64_t fid = 0; fid < this->cur_fid_max; fid++) {
     tll_ci[fid]->has_coverage = false;
     SEQ<TYPE_CI_ContextNodeInfo> cni_l (tll_ci[fid]->node_l);
-    for (int64_t nid = 1; nid <= cni_l.Length(); nid++)
-    {
+    for (int64_t nid = 1; nid <= cni_l.Length(); nid++) {
       TYPE_CI_ContextNodeInfo cni (cni_l[nid]);
       cni.set_coverage(Int(0));
       tll_ci[fid]->node_l.ImpModify(nid, cni);
@@ -762,13 +729,13 @@ void ContextInfo::ResetTestCoverageInfo()
 // ==> bool
 bool ContextInfo::HasTestCoverage(const TYPE_CI_ContextId & cid)
 {
-  if (IsAValidContextId(cid))
-  {
+  if (IsAValidContextId(cid)) {
     Tuple sc (SplitCid(cid));
     return tll_ci[sc.GetIntValue(1)]->has_coverage;
   }
-  if (cid != NilContextId)
+  if (cid != NilContextId) {
     complain(L"HasTestCoverage: invalid cid", cid2int(cid));
+  }
   return false;
 }
 
@@ -778,8 +745,7 @@ bool ContextInfo::HasTestCoverage(const TYPE_CI_ContextId & cid)
 int ContextInfo::GetTestCoverageInfo(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     return p->get_coverage().GetValue();
   }
   complain(L"GetTestCoverageInfo: invalid cid", cid2int(cid));
@@ -791,13 +757,12 @@ int ContextInfo::GetTestCoverageInfo(const TYPE_CI_ContextId & cid)
 void ContextInfo::IncTestCoverageInfo(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
-//    p->set_coverage(Int(p->get_coverage().GetValue() + 1));
+  if (IsAValidContextId(cid, p)) {
     p->set_coverage(p->get_coverage().Incr());
   }
-  else
+  else {
     complain(L"IncTestCoverageInfo: invalid cid", cid2int(cid));
+  }
 }
 
 // GetPidM
@@ -806,8 +771,7 @@ void ContextInfo::IncTestCoverageInfo(const TYPE_CI_ContextId & cid)
 Map ContextInfo::GetPidM(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     return p->get_pid_um();
   }
   complain(L"GetPidM: invalid cid", cid2int(cid));
@@ -820,12 +784,12 @@ Map ContextInfo::GetPidM(const TYPE_CI_ContextId & cid)
 void ContextInfo::SetPidM(const TYPE_CI_ContextId & cid, const Map& pidm)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     p->set_pid_um(pidm);
   }
-  else
+  else {
     complain(L"SetPidM: invalid cid", cid2int(cid));
+  }
 }
 
 // HasPidM
@@ -834,8 +798,7 @@ void ContextInfo::SetPidM(const TYPE_CI_ContextId & cid, const Map& pidm)
 bool ContextInfo::HasPidM(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     return !p->get_pid_um().IsNil();
   }
   complain(L"HasPidM: invalid cid", cid2int(cid));
@@ -848,8 +811,7 @@ bool ContextInfo::HasPidM(const TYPE_CI_ContextId & cid)
 Tuple ContextInfo::GetFileLineColPos(const TYPE_CI_ContextId & cid)
 {
   Tuple gfp (GetFilePos(cid));
-  if (gfp.GetBoolValue(1))
-  {
+  if (gfp.GetBoolValue(1)) {
     const TYPE_CI_FileId & fid (gfp.GetInt(2));
     const TYPE_CI_TokenPos & pos_ast (gfp.GetRecord(4));
 
@@ -859,8 +821,9 @@ Tuple ContextInfo::GetFileLineColPos(const TYPE_CI_ContextId & cid)
       return mk_(fileName, pos_ast.GetInt(pos_CI_TokenPos_abs_uline), pos_ast.GetInt(pos_CI_TokenPos_column));
     }
   }
-  if (cid != NilContextId)
+  if (cid != NilContextId) {
     complain(L"GetFileLineColPos: invalid cid", cid2int(cid));
+  }
   return mk_(Nil(), Nil(), Nil());
 }
 
@@ -870,8 +833,7 @@ Tuple ContextInfo::GetFileLineColPos(const TYPE_CI_ContextId & cid)
 Generic ContextInfo::GetPos(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
-  {
+  if (IsAValidContextId(cid, p)) {
     return p->get_tokenpos();
   }
   complain(L"GetPos: invalid cid", cid2int(cid));
@@ -884,11 +846,9 @@ Generic ContextInfo::GetPos(const TYPE_CI_ContextId & cid)
 Tuple ContextInfo::GetFilePos(const TYPE_CI_ContextId & cid)
 {
   TYPE_CI_ContextNodeInfo * cp = NULL;
-  if (IsAValidContextId(cid, cp))
-  {
+  if (IsAValidContextId(cid, cp)) {
     Generic tsg (cp->get_tokenpos());
-    if (!tsg.IsNil())
-    {
+    if (!tsg.IsNil()) {
       TYPE_CI_TokenSpan ts (tsg);
 
       Tuple sc (SplitCid(cid));
@@ -901,8 +861,9 @@ Tuple ContextInfo::GetFilePos(const TYPE_CI_ContextId & cid)
                  tll.Get(ts.GetIntValue(pos_CI_TokenSpan_token_uend)).get_pos_end());
     }
   }
-  if (cid != NilContextId)
+  if (cid != NilContextId) {
     complain(L"GetFilePos: invalid cid", cid2int(cid));
+  }
   return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
 }
 
@@ -912,12 +873,12 @@ Tuple ContextInfo::GetFilePos(const TYPE_CI_ContextId & cid)
 void ContextInfo::SetPos(const TYPE_CI_ContextId & cid, const TYPE_CI_TokenSpan & ts)
 {
   TYPE_CI_ContextNodeInfo * cp = NULL;
-  if (IsAValidContextId(cid, cp))
-  {
+  if (IsAValidContextId(cid, cp)) {
     cp->set_tokenpos(ts);
   }
-  else
+  else {
     complain(L"SetPos: invalid cid", cid2int(cid));
+  }
 }
 
 // PushCGPosType
@@ -949,27 +910,24 @@ void ContextInfo::pp(ostream & os, bool vdm_format)
 {
   os << "[ " << endl;
   cntxt_file_tab_t::iterator itr = tll_ci.begin();
-  if (itr != tll_ci.end())
+  if (itr != tll_ci.end()) {
     ++itr;    // the first element is empty. Don't print this empty
               // element. The if makes sure that problems don't occur
               // when tab is empty.
-  for ( ; itr != tll_ci.end(); ++itr)
-  {
+  }
+  for ( ; itr != tll_ci.end(); ++itr) {
     SEQ<TYPE_CI_ContextNodeInfo> cni_l ((*itr)->node_l);
     TokenList &tll = (*itr)->token_l;
 
     os << " mk_CI`TokenContextInfo([";
 
-    if (tll.Length() != 0)
-    {
+    if (tll.Length() != 0) {
       os << endl;
-
-//    tll.pp(os);
       size_t len_tll = tll.Length();
-      for (size_t i = 1; i <= len_tll; i++)
-      {
-        if (i > 1)
+      for (size_t i = 1; i <= len_tll; i++) {
+        if (i > 1) {
           os << "," << endl;
+        }
         os << "  ";
         tll.Get(i).pp(os);
       }
@@ -977,44 +935,34 @@ void ContextInfo::pp(ostream & os, bool vdm_format)
     }
     os << "],[";
 
-    if (!cni_l.IsEmpty())
-    {
+    if (!cni_l.IsEmpty()) {
       os << endl;
 
-      for (int64_t j = 1; j <= cni_l.Length(); j++)
-      {
+      for (int64_t j = 1; j <= cni_l.Length(); j++) {
         TYPE_CI_ContextNodeInfo c (cni_l[j]);
-//        os << TBWSTR::wstring2string(c.ascii());
+        os << "  mk_CI`ContextNodeInfo(";
 
-//        c.pp(os);
-// CI`ContextNodeInfo
-      os << "  mk_CI`ContextNodeInfo(";
+        if( c.get_tokenpos().IsNil() ) {
+          os << "mk_CI`TokenSpan(-1,-1,-1)" ;
+        }
+        else {
+          TYPE_CI_TokenSpan ts (c.get_tokenpos());
+          os << "mk_CI`TokenSpan("
+             << ts.get_token_ust().GetValue() << ","
+             << ts.get_token_uast().GetValue() << ","
+             << ts.get_token_uend().GetValue() << ")";
+        }
+        os << ", "
+           << c.get_coverage().GetValue() << ", "
+           << TBWSTR::wstring2string(INT2Q::TransformIntegers(c.get_typeinfo()).ascii()) << ", "
+           << TBWSTR::wstring2string(INT2Q::TransformIntegers(c.get_pid_um()).ascii()) << ", "
+           << Int(c.get_index()).GetValue() << ", "
+           << (c.get_isBreakable().GetValue() ? "true" : "false") << ", "
+           << (c.get_breakpoint().GetValue() ? "true" : "false") << ")";
 
-// CI`TokenSpan
-      if( c.get_tokenpos().IsNil() )
-      {
-        os << "mk_CI`TokenSpan(-1,-1,-1)" ;
-      }
-      else
-      {
-        TYPE_CI_TokenSpan ts (c.get_tokenpos());
-        os << "mk_CI`TokenSpan("
-           << ts.get_token_ust().GetValue() << ","
-           << ts.get_token_uast().GetValue() << ","
-           << ts.get_token_uend().GetValue() << ")";
-      }
-//
-      os << ", "
-         << c.get_coverage().GetValue() << ", "
-         << TBWSTR::wstring2string(INT2Q::TransformIntegers(c.get_typeinfo()).ascii()) << ", "
-         << TBWSTR::wstring2string(INT2Q::TransformIntegers(c.get_pid_um()).ascii()) << ", "
-         << Int(c.get_index()).GetValue() << ", "
-         << (c.get_isBreakable().GetValue() ? "true" : "false") << ", "
-         << (c.get_breakpoint().GetValue() ? "true" : "false") << ")";
-//
-
-        if (j < cni_l.Length())
+        if (j < cni_l.Length()) {
           os << ",";
+        }
         os << endl;
       }
       os << " ";
@@ -1105,9 +1053,9 @@ Tuple ContextInfo::FindPosInContextInfo(const SEQ<TYPE_CI_ContextNodeInfo> & ci,
     Generic tokenpos (cni.get_tokenpos());
     bool isBreakable = cni.get_isBreakable().GetValue();
 
-    if (tokenpos.IsNil() || !isBreakable)
+    if (tokenpos.IsNil() || !isBreakable) {
       continue;
-
+    }
     TYPE_CI_TokenSpan ts (tokenpos);
     int token_ast = ts.get_token_uast();
     const TokenInfo &token_info =  tll.Get(token_ast);
@@ -1123,22 +1071,22 @@ Tuple ContextInfo::FindPosInContextInfo(const SEQ<TYPE_CI_ContextNodeInfo> & ci,
       token_len = tokenText.length();
     }
 
-//    int curLine = token_st.get_relAbs_uline(); // 20051219
-    int curLine = token_st.get_abs_uline().GetValue(); // 20051219 for rtf
+    int curLine = token_st.get_abs_uline().GetValue();
     int curCol = token_st.get_column().GetValue();
 
-    if (PointCloser(col, line, closestX, closestY, curCol+token_len-1, curLine))
-    {
+    if (PointCloser(col, line, closestX, closestY, curCol+token_len-1, curLine)) {
       closestX = curCol;
       closestY = curLine;
       nid = index;
     }
   }
 
-  if( nid == 0 )
+  if( nid == 0 ) {
     return mk_(Bool(false), Int(0));
-  else
+  }
+  else {
     return mk_(Bool(true), Int(nid));
+  }
 }
 
 bool ContextInfo::PointCloser(int sp_x, int sp_y, int cp_x, int cp_y, int ca_x, int ca_y) const
@@ -1168,8 +1116,9 @@ void ContextInfo::SetBreakable(const TYPE_CI_ContextId& cid)
   if (IsAValidContextId(cid, p)) {
     p->set_isBreakable(Bool(true));
   }
-  else
+  else {
     complain(L"SetBreakable: invalid cid", cid2int(cid));
+  }
 }
 
 // SetBreakpoint
@@ -1180,8 +1129,9 @@ void ContextInfo::SetBreakpoint(const TYPE_CI_ContextId& cid)
   if (IsAValidContextId(cid, p)) {
     p->set_breakpoint(Bool(true));
   }
-  else
+  else {
     complain(L"SetBreakpoint: invalid cid", cid2int(cid));
+  }
 }
 
 // RemoveBreakpoint
@@ -1208,27 +1158,21 @@ bool ContextInfo::IsBreakpointAtCid(const TYPE_CI_ContextId& cid)
 Sequence ContextInfo::getGUITokenInfo(const SEQ<Char> & file)
 {
   Generic fid (GetFidForFile( file ));
-  if ( !fid.IsNil() )
-  {
+  if ( !fid.IsNil() ) {
     TokenList & tl = this->GetTokenList(fid);
-//
     SEQ<TYPE_CI_TokenSpan> ts_l;
     SEQ<TYPE_CI_ContextNodeInfo> citt (this->tll_ci[TYPE_CI_FileId(fid)]->node_l);
-    for (int64_t i = 1; i <= citt.Length(); i++ )
-    {
+    for (int64_t i = 1; i <= citt.Length(); i++ ) {
       TYPE_CI_ContextNodeInfo ni (citt[i]);
       Generic tokenpos (ni.get_tokenpos());
-      if (!tokenpos.IsNil())
-      {
+      if (!tokenpos.IsNil()) {
         TYPE_CI_TokenSpan ts (tokenpos);
         const TokenInfo & stk = tl.Get(ts.get_token_ust().GetValue());
-        if (stk.isClassOrModuleToken())
-        {
+        if (stk.isClassOrModuleToken()) {
           ts_l.ImpAppend(ts);
         }
       }
     }
-//
     return tl.getGUIInfo(ts_l);
   }
   return Sequence();
@@ -1244,12 +1188,10 @@ void ContextInfo::DumpNodeList( const TYPE_CI_FileId & fid, wostream& wos )
 {
   TokenList & tl = this->GetTokenList(fid);
   SEQ<TYPE_CI_ContextNodeInfo> citt (this->tll_ci[fid]->node_l);
-  for (int64_t i = 1; i <= citt.Length(); i++ )
-  {
+  for (int64_t i = 1; i <= citt.Length(); i++ ) {
     TYPE_CI_ContextNodeInfo ni (citt[i]);
     Generic tokenpos (ni.get_tokenpos());
-    if (!tokenpos.IsNil())
-    {
+    if (!tokenpos.IsNil()) {
       TYPE_CI_TokenSpan ts (tokenpos);
       const TokenInfo & stk = tl.Get(ts.get_token_ust().GetValue());
       const TokenInfo & etk = tl.Get(ts.get_token_uend().GetValue());
@@ -1278,18 +1220,13 @@ void ContextInfo::DumpNodeList( const TYPE_CI_FileId & fid, wostream& wos )
           << L", "
           << (ni.get_breakpoint().GetValue() ? L"true" : L"false");
 
-      if( ni.get_isBreakable().GetValue() )
-      {
+      if( ni.get_isBreakable().GetValue() ) {
         wos << L" --> count: " << ni.get_coverage();
-        if( ni.get_coverage().GetValue() == 0 )
-        {
+        if( ni.get_coverage().GetValue() == 0 ) {
           wos << L" <= UNCOV =";
         }
       }
       wos << endl << flush;
-
-//      wos << ni.ascii() << endl;
-
       stk.dump( wos );
       etk.dump( wos );
     }
@@ -1305,8 +1242,7 @@ void ContextInfo::AdjustPosInfoForMultibyteText( const TYPE_CI_FileId & fileid )
 bool ContextInfo::CheckToken(const TYPE_CI_ContextId & cid, const wstring & name)
 {
   Tuple gfp (GetFilePos(cid));
-  if (gfp.GetBoolValue(1))
-  {
+  if (gfp.GetBoolValue(1)) {
     const TYPE_CI_FileId & fileid (gfp.GetInt(2));
     const TYPE_CI_TokenPos & firstpos (gfp.GetRecord(3));
     //const TYPE_CI_TokenPos & astpos (gfp.GetRecord(4));;
@@ -1315,11 +1251,11 @@ bool ContextInfo::CheckToken(const TYPE_CI_ContextId & cid, const wstring & name
     TokenList& tl = GetTokenList(fileid);
     bool exists = false;
     int len_tl = tl.Length();
-    for( int i = 1; (i <= len_tl ) && !exists; i++ )
-    {
+    for( int i = 1; (i <= len_tl ) && !exists; i++ ) {
       const TokenInfo & ti = tl.Get(i);
-      if((ti.get_pos_st() == firstpos) && (ti.get_pos_end() == lastpos))
+      if((ti.get_pos_st() == firstpos) && (ti.get_pos_end() == lastpos)) {
         exists = (ti.get_text() == name);
+      }
     }
     return exists;
   }
@@ -1332,10 +1268,12 @@ bool ContextInfo::CheckToken(const TYPE_CI_ContextId & cid, const wstring & name
 Generic ContextInfo::GetContextNodeInfo(const TYPE_CI_ContextId& cid)
 {
   TYPE_CI_ContextNodeInfo * p = NULL;
-  if (IsAValidContextId(cid, p))
+  if (IsAValidContextId(cid, p)) {
     return (*p);
-  else
+  }
+  else {
     return Nil();
+  }
 }
 
 // GetTokehInfo
@@ -1344,23 +1282,24 @@ Generic ContextInfo::GetContextNodeInfo(const TYPE_CI_ContextId& cid)
 Generic ContextInfo::GetTokenInfos(const SEQ<Char> & file)
 {
   Generic fid (GetFidForFile( file ));
-  if (fid.IsNil())
-    return Nil();
+  if (!fid.IsNil()) {
+    SEQ<TYPE_CI_TokenInfo> res;
+    TokenList & tl = this->GetTokenList(fid);
+    for (size_t i = 1; i <= tl.Length(); i++) {
+      const TokenInfo & ti = tl.Get(i);
+  
+      TYPE_CI_TextId text ((Generic)Sequence(BINOPS::id2str(ti.get_id(), ti.get_text())));
 
-  SEQ<TYPE_CI_TokenInfo> res;
-  TokenList & tl = this->GetTokenList(fid);
-  for (size_t i = 1; i <= tl.Length(); i++)
-  {
-    const TokenInfo & ti = tl.Get(i);
+      TYPE_CI_TokenInfo cti;
+      cti.Init(Int(ti.get_id()), text, ti.get_pos_st(), ti.get_pos_end());
 
-    TYPE_CI_TextId text ((Generic)Sequence(BINOPS::id2str(ti.get_id(), ti.get_text())));
-
-    TYPE_CI_TokenInfo cti;
-    cti.Init(Int(ti.get_id()), text, ti.get_pos_st(), ti.get_pos_end());
-
-    res.ImpAppend(cti);
+      res.ImpAppend(cti);
+    }
+    return res;
   }
-  return res;
+  else {
+    return Nil();
+  }
 }
 
 // GetContextNodeInfo
@@ -1369,11 +1308,13 @@ Generic ContextInfo::GetTokenInfos(const SEQ<Char> & file)
 Generic ContextInfo::GetContextNodeInfos(const SEQ<Char> & file)
 {
   Generic fileid (GetFidForFile( file ));
-  if (fileid.IsNil())
+  if (!fileid.IsNil()) {
+    int fid = TYPE_CI_FileId(fileid).GetValue();
+    return this->tll_ci[fid]->node_l;
+  }
+  else {
     return Nil();
-
-  int fid = TYPE_CI_FileId(fileid).GetValue();
-  return this->tll_ci[fid]->node_l;
+  }
 }
 
 // GetSize

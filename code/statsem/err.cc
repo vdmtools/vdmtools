@@ -7,7 +7,7 @@
 
 #include "statsem.h"
 #include "UTIL.h"
-#include "contextinfo.h"     // to get GetCI
+#include "contextinfo.h"  // to get GetCI
 #include "astaux.h"       // to get GetCid
 #include "settings.h"
 #include "tbutils.h"
@@ -17,64 +17,83 @@
 
 void StatSem::UpdateLastPosition (const Record & ast)
 {
-  int no_of_fields = ast.Length ();
-  if (no_of_fields < 1)
-    return;
-  int l = -1 , c = -1 , f = -1;
-  if (ast.GetField (no_of_fields).IsTuple ()) {
-    Tuple posinfo (ast.GetField (no_of_fields));
-    no_of_fields = posinfo.Length ();
-    if (no_of_fields < 3)
-      return;
-    if (posinfo.GetField (1).IsInt ()) 
-      l = Int (posinfo.GetField (1));
-    if (posinfo.GetField (2).IsInt ()) 
-      c = Int (posinfo.GetField (2));
-    if (posinfo.GetField (3).IsInt ()) 
-      f = Int (posinfo.GetField (3));
-  }
+  if (ast.Length () > 0 ) {
+    int no_of_fields = ast.Length ();
+    int l = -1 , c = -1 , f = -1;
+    if (ast.GetField (no_of_fields).IsTuple ()) {
+      Tuple posinfo (ast.GetField (no_of_fields));
+      no_of_fields = posinfo.Length ();
+      if (no_of_fields < 3) {
+        return;
+      }
+      if (posinfo.GetField (1).IsInt ()) {
+        l = Int (posinfo.GetField (1));
+      }
+      if (posinfo.GetField (2).IsInt ()) {
+        c = Int (posinfo.GetField (2));
+      }
+      if (posinfo.GetField (3).IsInt ()) {
+        f = Int (posinfo.GetField (3));
+      }
+    }
   
-  if (l != -1) 
-    this->lastline = l;
-  if (c != -1) 
-    this->lastcol  = c;
-  if (f != -1) 
-    this->lastfile = f;
+    if (l != -1) {
+      this->lastline = l;
+    }
+    if (c != -1) {
+      this->lastcol  = c;
+    }
+    if (f != -1) {
+      this->lastfile = f;
+    }
+  }
 }
   
 wstring StatSem::GenLineColNo (const Record & ast)
 {
   wstring PosStr;
-  wstring message;
-  int no_of_fields = ast.Length ();
-  if (no_of_fields < 1)
-    return PosStr;
-  int l = -1 , c = -1 , f = -1;
-  if (ast.GetField (no_of_fields).IsTuple ())
-    { Tuple posinfo (ast.GetField (no_of_fields));
-      no_of_fields = posinfo.Length ();
-      if (no_of_fields < 3)
-        return PosStr;
-      if (posinfo.GetField (1).IsInt ()) 
-        l = Int (posinfo.GetField (1));
-      if (posinfo.GetField (2).IsInt ()) 
-        c = Int (posinfo.GetField (2));
-      if (posinfo.GetField (3).IsInt ()) 
-        f = Int (posinfo.GetField (3));
+  if (ast.Length () > 0) {
+    wstring message;
+    int no_of_fields = ast.Length ();
+    if (no_of_fields < 1) {
+      return PosStr;
     }
-
-  if (l != -1) 
-    this->lastline = l;
-  if (c != -1) 
-    this->lastcol  = c;
-  if (f != -1) 
-    this->lastfile = f;
-  if ((this->lastline != 0) && (this->lastcol != 0))
-    message = L"line : " + Int(this->lastline).ascii() + 
-              L" Column : " + Int(this->lastcol).ascii() + L" : ";
-
-  PosStr += message;
-  return PosStr;
+    int l = -1 , c = -1 , f = -1;
+    if (ast.GetField (no_of_fields).IsTuple ()) {
+      Tuple posinfo (ast.GetField (no_of_fields));
+      no_of_fields = posinfo.Length ();
+      if (no_of_fields < 3) {
+        return PosStr;
+      }
+      if (posinfo.GetField (1).IsInt ()) {
+        l = Int (posinfo.GetField (1));
+      }
+      if (posinfo.GetField (2).IsInt ()) {
+        c = Int (posinfo.GetField (2));
+      }
+      if (posinfo.GetField (3).IsInt ()) {
+        f = Int (posinfo.GetField (3));
+      }
+    }
+    if (l != -1) {
+      this->lastline = l;
+    }
+    if (c != -1) {
+      this->lastcol  = c;
+    }
+    if (f != -1) {
+      this->lastfile = f;
+    }
+    if ((this->lastline != 0) && (this->lastcol != 0)) {
+      message = L"line : " + Int(this->lastline).ascii() + 
+                L" Column : " + Int(this->lastcol).ascii() + L" : ";
+    }
+    PosStr += message;
+    return PosStr;
+  }
+  else {
+    return PosStr;
+  }
 }
 
 // LookUpErrMsg
@@ -83,15 +102,14 @@ wstring StatSem::GenLineColNo (const Record & ast)
 // ==> seq of char
 SEQ<Char> StatSem::LookUpErrMsg(int num, const SEQ< SEQ<Char> > & Txts)
 {
-// 20091026 -->
-  if (TBUTILS::isJapanese() && Settings.UseTranslation())
-  {
+  if (TBUTILS::isJapanese() && Settings.UseTranslation()) {
     SEQ<Char> err (TBWSTR::string2wstring(getErrMsgJp(num)));
     return UTIL::ReplacePercent(err, Txts);
   } 
-// <-- 20091026
-  SEQ<Char> err (getErrMsg(num));
-  return UTIL::ReplacePercent(err, Txts);
+  else {
+    SEQ<Char> err (getErrMsg(num));
+    return UTIL::ReplacePercent(err, Txts);
+  }
 }
 
 void StatSem::GenErr (const Generic & ast, int SvTp, int errnum, const SEQ< SEQ<Char> > & Txts)
@@ -103,32 +121,31 @@ void StatSem::GenErrTp (const Generic & ast, int SvTp, int errnum,
                              const Generic & tp1, const Generic & tp2, 
                              const SEQ< SEQ<Char> > & Txts)
 {
-//wcout << L"GenErrTp: " << errnum << endl;
-  SEQ<Char> Txt (LookUpErrMsg(errnum, Txts));
-
   if (SvTp > Settings.ErrorLevel()) return;
+
+  SEQ<Char> Txt (LookUpErrMsg(errnum, Txts));
 
   Int pos_fid (this->lastfile);
   Int pos_line (this->lastline);
   Int pos_col (this->lastcol);
 
   Sequence descr_l;
-  if (!ast.IsNil())
-  {
+  if (!ast.IsNil()) {
     Tuple gfp (GetCI().GetFilePos(ASTAUX::GetCid(ast)));
-    if (gfp.GetBoolValue(1))
-    {
+    if (gfp.GetBoolValue(1)) {
       const TYPE_CI_FileId & fid (gfp.GetInt(2));
       const TYPE_CI_TokenPos & astpos (gfp.GetRecord(4));
       pos_fid = fid;
       pos_line = astpos.get_abs_uline();
       pos_col  = astpos.get_column();
     }
-    else
+    else {
       descr_l.ImpAppend (SEQ<Char>(L"(Imprecise position information.)"));
+    }
   }
-  else
+  else {
     descr_l.ImpAppend (SEQ<Char>(L"(Imprecise position information.)"));
+  }
   
   if (!tp1.IsNil () && !tp2.IsNil ()) {
 #ifdef VDMSL
@@ -139,13 +156,11 @@ void StatSem::GenErrTp (const Generic & ast, int SvTp, int errnum,
     TYPE_REP_TypeRep tp1_t (StripAccessType (tp1));
     TYPE_REP_TypeRep tp2_t (StripAccessType (tp2));
 #endif // VDMPP
-    if (TBUTILS::isJapanese() && Settings.UseTranslation())
-    {
+    if (TBUTILS::isJapanese() && Settings.UseTranslation()) {
       descr_l.ImpAppend (SEQ<Char>(L"act : " + Type2Ascii (tp1_t)));
       descr_l.ImpAppend (SEQ<Char>(L"exp : " + Type2Ascii (tp2_t)));
     }
-    else
-    {
+    else {
       descr_l.ImpAppend (SEQ<Char>(L"act : " + Type2Ascii (tp1_t)));
       descr_l.ImpAppend (SEQ<Char>(L"exp : " + Type2Ascii (tp2_t)));
     }
@@ -186,10 +201,12 @@ void StatSem::GenErrTp (const Generic & ast, int SvTp, int errnum,
   //  if (!already_reported || runningTestEnv) {
   if (!this->StatSemErrors.Elems().InSet(ss)) {
     this->StatSemErrors.ImpAppend (ss);
-    if (SvTp == WRN1 || SvTp == WRN2)
+    if (SvTp == WRN1 || SvTp == WRN2) {
       TBUTILS::IncrementWarningsCount();
-    else
+    }
+    else {
       TBUTILS::IncrementErrorsCount();
+    }
   }
 }
 
@@ -272,11 +289,12 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
     case TAG_TYPE_REP_ObjRefTypeRep: {
       wstring str;
       const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_ObjRefTypeRep_nm));
-      if (nm.get_ids().IsEmpty())
-        //str += L"ObjectRefType";
+      if (nm.get_ids().IsEmpty()) {
         str += L"a object reference type";
-      else
+      }
+      else {
         str += PrintName (nm).GetString();
+      }
       return str;
     }
     case TAG_TYPE_REP_OverTypeRep: {
@@ -286,10 +304,12 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
       bool first = true;
       Generic g;
       for(bool bb = tp_s.First(g); bb; bb = tp_s.Next(g)) {
-        if (!first)
+        if (!first) {
           str += L" | ";
-        else
+        }
+        else {
           first = false;
+        }
         str += Type2Ascii (g, newlevel);
       }
       str += L" )";
@@ -298,30 +318,25 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
 #endif //VDMPP
     case TAG_TYPE_REP_CompositeTypeRep: {
       const TYPE_AS_Name & tag (tp.GetRecord(pos_REP_CompositeTypeRep_nm));
-      if (!tag.get_ids().IsEmpty())
-      {
+      if (!tag.get_ids().IsEmpty()) {
         wstring str;
         str += L"compose " + PrintName (tag).GetString() + L" of ";
 
         const SEQ<TYPE_REP_FieldRep> & fld_l (tp.GetField(pos_REP_CompositeTypeRep_fields));
         size_t len_fld_l = fld_l.Length();
-        for (size_t idx = 1; idx <= len_fld_l; idx++)
-        {
+        for (size_t idx = 1; idx <= len_fld_l; idx++) {
           str += Type2Ascii (fld_l[idx].GetRecord(pos_REP_FieldRep_tp), newlevel) + L" ";
         }
         str += L"end";
         return str;
       }
-      else
-      {
+      else {
         return wstring(L"a record type");
       }
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> tp_s (tp.GetSet(pos_REP_UnionTypeRep_tps));
-// 20110531 -->
-      if (tp_s.Card() == 2)
-      {
+      if (tp_s.Card() == 2) {
         SET<TYPE_REP_TypeRep> tp_s2 (tp_s);
         Generic g;
         for(bool bb = tp_s2.First(g); bb; bb = tp_s2.Next(g)) {
@@ -332,8 +347,7 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
               tmp.RemElem(g);
               TYPE_REP_TypeRep e (tmp.GetElem());
               if (e.Is(TAG_TYPE_REP_EmptySeqTypeRep) &&
-                 (e.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) == t.GetRecord(pos_REP_SeqTypeRep_elemtp)))
-              {
+                 (e.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) == t.GetRecord(pos_REP_SeqTypeRep_elemtp))) {
                 wstring str;
                 str += L"seq of ";
                 str += Type2Ascii (t.GetRecord(pos_REP_SeqTypeRep_elemtp), newlevel);
@@ -346,8 +360,7 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
               tmp.RemElem(g);
               TYPE_REP_TypeRep e (tmp.GetElem());
               if (e.Is(TAG_TYPE_REP_EmptySetTypeRep) &&
-                 (e.GetRecord(pos_REP_EmptySetTypeRep_elemtp) == t.GetRecord(pos_REP_SetTypeRep_elemtp)))
-              {
+                 (e.GetRecord(pos_REP_EmptySetTypeRep_elemtp) == t.GetRecord(pos_REP_SetTypeRep_elemtp))) {
                 return Type2Ascii(t, newlevel);
               }
               break;
@@ -358,8 +371,7 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
               TYPE_REP_TypeRep e (tmp.GetElem());
               if (e.Is(TAG_TYPE_REP_EmptyMapTypeRep) &&
                  (e.GetRecord(pos_REP_EmptyMapTypeRep_mapdom) == t.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)) &&
-                 (e.GetRecord(pos_REP_EmptyMapTypeRep_maprng) == t.GetRecord(pos_REP_GeneralMapTypeRep_maprng)))
-              {
+                 (e.GetRecord(pos_REP_EmptyMapTypeRep_maprng) == t.GetRecord(pos_REP_GeneralMapTypeRep_maprng))) {
                 return Type2Ascii(t, newlevel);
               }
               break;
@@ -370,8 +382,7 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
               TYPE_REP_TypeRep e (tmp.GetElem());
               if (e.Is(TAG_TYPE_REP_EmptyMapTypeRep) &&
                  (e.GetRecord(pos_REP_EmptyMapTypeRep_mapdom) == t.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)) &&
-                 (e.GetRecord(pos_REP_EmptyMapTypeRep_maprng) == t.GetRecord(pos_REP_InjectiveMapTypeRep_maprng)))
-              {
+                 (e.GetRecord(pos_REP_EmptyMapTypeRep_maprng) == t.GetRecord(pos_REP_InjectiveMapTypeRep_maprng))) {
                 return Type2Ascii(t, newlevel);
               }
               break;
@@ -379,7 +390,6 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
           }
         }
       }
-// <-- 20110531
       wstring str;
       str += L"( ";
       bool first = true;
@@ -439,22 +449,21 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
       const Generic & fndom (tp.GetField(pos_REP_PartialFnTypeRep_fndom));
       wstring str;
       str += L"( ";
-      if (fndom.IsSequence())
-      {
+      if (fndom.IsSequence()) {
         SEQ<TYPE_REP_TypeRep> tp_l (fndom);
-        if (tp_l.IsEmpty())
+        if (tp_l.IsEmpty()) {
           str += L"()";
-        else if (tp_l.Length () == 1)
+        }
+        else if (tp_l.Length () == 1) {
           str += Type2Ascii (tp_l.Hd (), newlevel);
-        else
-        {
+        }
+        else {
           TYPE_REP_ProductTypeRep rc;
           rc.SetField (pos_REP_ProductTypeRep_tps, tp_l);
           str += Type2Ascii (rc, newlevel);
         }
       }
-      else
-      {
+      else {
         str += L"*";
       }
       str += L" -> ";
@@ -466,13 +475,14 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
       const Generic & fndom (tp.GetField(pos_REP_TotalFnTypeRep_fndom));
       wstring str;
       str += L"( ";
-      if (fndom.IsSequence())
-      {
+      if (fndom.IsSequence()) {
         SEQ<TYPE_REP_TypeRep> tp_l (fndom);
-        if (tp_l.IsEmpty())
+        if (tp_l.IsEmpty()) {
           str += L"()";
-        else if (tp_l.Length () == 1)
+        }
+        else if (tp_l.Length () == 1) {
           str += Type2Ascii (tp_l.Hd (), newlevel);
+        }
         else
         {
           TYPE_REP_ProductTypeRep rc;
@@ -480,8 +490,7 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
           str += Type2Ascii (rc, newlevel);
         }
       }
-      else
-      {
+      else {
         str += L"*";
       }
       str += L" +> ";
@@ -495,33 +504,33 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
     
       wstring str;
       str += L"[ ";
-      if (!l_vars.IsEmpty())
-      {
+      if (!l_vars.IsEmpty()) {
         bool first = true;
         size_t len_l_vars = l_vars.Length();
-        for(size_t idx = 1; idx <= len_l_vars; idx++)
-        {
-          if (!first)
+        for(size_t idx = 1; idx <= len_l_vars; idx++) {
+          if (!first) {
             str += L" , ";
-          else
+          }
+          else {
             first = false;
+          }
           str += Type2Ascii (l_vars[idx], newlevel);
         }
       }
       str += L" ] ";    
-    
       str += Type2Ascii (l_tp, newlevel);
       return str;
     }
     case TAG_TYPE_REP_OpTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tp_l (tp.GetSequence(pos_REP_OpTypeRep_Dom));
       wstring str;
-      if (tp_l.IsEmpty())
+      if (tp_l.IsEmpty()) {
         str += L"()";
-      else if (tp_l.Length () == 1)
+      }
+      else if (tp_l.Length () == 1) {
         str += Type2Ascii (tp_l.Hd (), newlevel);
-      else
-      {
+      }
+      else {
         TYPE_REP_ProductTypeRep rc;
         rc.SetField (pos_REP_ProductTypeRep_tps, tp_l);
         str += Type2Ascii (rc, newlevel);
