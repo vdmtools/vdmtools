@@ -5706,10 +5706,11 @@ Generic vdmcg::FindMapRngType(const TYPE_REP_TypeRep & ti_)
   }
 }
 
-// FindProductElemType
+// FindProductElemTypeList
 // ti : REP`TypeRep
+// len : nat
 // ==> [seq of REP`TypeRep]
-Generic vdmcg::FindProductElemType(const TYPE_REP_TypeRep & ti_, size_t len)
+Generic vdmcg::FindProductElemTypeList(const TYPE_REP_TypeRep & ti_, size_t len)
 {
   TYPE_REP_TypeRep ti (RemoveInvType(ti_));
   switch (ti.GetTag()) {
@@ -5721,7 +5722,7 @@ Generic vdmcg::FindProductElemType(const TYPE_REP_TypeRep & ti_, size_t len)
         TYPE_REP_TypeRep tp (CleanFlatType(g));
         if (IsProductType(tp))
         {
-          Generic gtpl(FindProductElemType(tp, len));
+          Generic gtpl(FindProductElemTypeList(tp, len));
           if (!gtpl.IsNil())
             tti_l.ImpAppend(gtpl);
         }
@@ -5770,9 +5771,8 @@ Generic vdmcg::FindProductElemType(const TYPE_REP_TypeRep & ti_, size_t len)
         return Nil();
     }
     case TAG_TYPE_REP_InvTypeRep: {
-      return FindProductElemType(ti.GetRecord(pos_REP_InvTypeRep_shape), len);
+      return FindProductElemTypeList(ti.GetRecord(pos_REP_InvTypeRep_shape), len);
     }
-// 20140711 -->
     case TAG_TYPE_REP_AllTypeRep: {
       SEQ<TYPE_REP_TypeRep> tp_l;
       for (size_t i = 1; i <= len; i++) {
@@ -5780,11 +5780,55 @@ Generic vdmcg::FindProductElemType(const TYPE_REP_TypeRep & ti_, size_t len)
       }
       return tp_l;
     }
-// <-- 20140711
     default: {
       //vdm_err << L"Type must be product type." << endl;;
-      //ReportError(L"FindProductElemType");
+      //ReportError(L"FindProductElemTypeList");
       return Nil(); // To avoid warnings
+    }
+  }
+}
+
+// FindProductElemType
+// ti : REP`TypeRep
+// no : nat
+// ==> [REP`TypeRep]
+Generic vdmcg::FindProductElemType(const TYPE_REP_TypeRep & ti_, size_t no)
+{
+  TYPE_REP_TypeRep ti (RemoveInvType(ti_));
+  switch (ti.GetTag()) {
+    case TAG_TYPE_REP_ProductTypeRep: {
+      SEQ<TYPE_REP_TypeRep> tp_l (ti.GetSequence(pos_REP_ProductTypeRep_tps));
+      if (no <= (size_t)tp_l.Length()) {
+        return tp_l[no];
+      }
+      else {
+        return Nil();
+      }
+    }
+    case TAG_TYPE_REP_UnionTypeRep: {
+      SET<TYPE_REP_TypeRep> tps (ti.GetSet(pos_REP_UnionTypeRep_tps));
+      SET<TYPE_REP_TypeRep> etps;
+      Generic tp;
+      for (bool bb = tps.First(tp); bb; bb = tps.Next(tp)) {
+        Generic etp = FindProductElemType(tp, no);
+        if (!etp.IsNil()) {
+          etps.Insert(etp);
+        }
+      }
+      switch (etps.Card()) {
+        case 0: { 
+          return Nil();
+        }
+        case 1: { 
+          return etps.GetElem();
+        }
+        default: {
+          return mk_REP_UnionTypeRep(etps);
+        }
+      }
+    }
+    default: {
+      return Nil();
     }
   }
 }

@@ -1259,7 +1259,7 @@ Tuple vdmcg::CGMatchTuplePattern (const TYPE_AS_TuplePattern & pat,
   const Generic & varExpr_tp      (rc2.GetField(pos_CGMAIN_VT_type));
 
   const SEQ<TYPE_AS_Pattern> & p_l (pat.GetSequence(pos_AS_TuplePattern_fields));
-  Generic tp_l (FindProductElemType(varExpr_tp, p_l.Length()));
+  Generic tp_l (FindProductElemTypeList(varExpr_tp, p_l.Length()));
 
   if (tp_l.IsNil()) {
     SEQ<TYPE_CPP_Stmt> rb;

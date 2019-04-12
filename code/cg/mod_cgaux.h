@@ -214,6 +214,7 @@ private:
   Generic FindSetElemType(const TYPE_REP_TypeRep &);
   Generic FindMapDomType(const TYPE_REP_TypeRep &);
   Generic FindMapRngType(const TYPE_REP_TypeRep &);
+  Generic FindProductElemTypeList(const TYPE_REP_TypeRep &, size_t len);
   Generic FindProductElemType(const TYPE_REP_TypeRep &, size_t len);
   TYPE_REP_TypeRep posFieldApplyTypes(const TYPE_REP_TypeRep &, const TYPE_AS_Name &);
   TYPE_REP_TypeRep posRngMapOrIndsSeqType(const TYPE_REP_TypeRep &);

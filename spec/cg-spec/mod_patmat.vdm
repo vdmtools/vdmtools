@@ -1100,7 +1100,7 @@ CGMatchTuplePattern: AS`TuplePattern * CGMAIN`VT * set of (AS`Name | AS`OldName)
                     [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool * bool
                     ==> seq of CPP`Stmt * bool
 CGMatchTuplePattern(pat, mk_CGMAIN`VT(varExpr_v, varExpr_tp), pn_s, succ_v, pid_m, inner, nonstop, declLocal) == 
-  def tp_l = CGAUX`FindProductElemType(varExpr_tp, len pat.fields)
+  def tp_l = CGAUX`FindProductElemTypeList(varExpr_tp, len pat.fields)
   in
     if tp_l = nil
     then return mk_([ BC`GenAsgnStmt(succ_v, BC`GenBoolLit(false)) ], false)

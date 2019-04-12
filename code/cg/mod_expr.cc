@@ -2257,7 +2257,7 @@ Generic vdmcg::CGTupleConstructorExpr (const TYPE_AS_TupleConstructorExpr & rc1,
   size_t len_fields = fields.Length();
 
 #ifdef VDMPP
-  SEQ<TYPE_REP_TypeRep> etp_l (FindProductElemType(rType, len_fields));
+  SEQ<TYPE_REP_TypeRep> etp_l (FindProductElemTypeList(rType, len_fields));
 #endif // VDMPP
   for (size_t i = 1; i <= len_fields; i++) {
     const TYPE_CPP_Expr & e (fields[i]);
@@ -2544,7 +2544,7 @@ Generic vdmcg::ConvertTypeJudgementExprAS(const TYPE_AS_Expr & expr, const TYPE_
       TYPE_CI_ContextId ncid (GetCI().PushCGType(mk_REP_NumericTypeRep(Int(NATONE))));
 
       size_t len_tp_l = tp_l.Length();
-      Generic fpet (FindProductElemType (FindType(expr), len_tp_l));
+      Generic fpet (FindProductElemTypeList (FindType(expr), len_tp_l));
       if (fpet.IsNil()) return Nil();
       SEQ<TYPE_REP_TypeRep> ptp_l (fpet);
       TYPE_CI_ContextId pcid (GetCI().PushCGType(mk_REP_ProductTypeRep(ptp_l)));
@@ -2956,6 +2956,14 @@ Generic vdmcg::CGTupleSelectExpr(const TYPE_AS_TupleSelectExpr & ts, const TYPE_
     else
 #endif // VDMPP
       tupleVal = vdm_BC_GenFctCall(GenProductType().get_tp(), mk_sequence(tupleName));
+  }
+
+  if (no.Is(TAG_TYPE_AS_NumLit)) {
+    size_t ind = no.GetReal(pos_AS_NumLit_val).GetIntValue();
+    Generic etp (FindProductElemType(tupleTp, ind));
+    if (!etp.IsNil()) {
+      TYPE_AS_Id method (GenGetMethod(etp));
+    }
   }
 
   TYPE_CPP_Identifier selector (vdm_BC_GiveName(ASTAUX::MkId(L"fieldsel")));

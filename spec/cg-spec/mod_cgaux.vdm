@@ -3003,8 +3003,8 @@ FindMapRngType(ti_) ==
     others -> return mk_REP`AllTypeRep()
   end;
 
-FindProductElemType: REP`TypeRep * nat ==> [seq of REP`TypeRep]
-FindProductElemType(ti_, l) ==
+FindProductElemTypeList: REP`TypeRep * nat ==> [seq of REP`TypeRep]
+FindProductElemTypeList(ti_, l) ==
   def ti = RemoveInvType(ti_)
   in
     cases ti:
@@ -3016,7 +3016,7 @@ FindProductElemType(ti_, l) ==
              in
                if IsProductType(tp')
                then
-                 def gtpl = FindProductElemType(tp', l)
+                 def gtpl = FindProductElemTypeList(tp', l)
                  in if gtpl <> nil
                     then tti_l := tti_l ^ [gtpl];
            cases tti_l:
@@ -3035,10 +3035,32 @@ FindProductElemType(ti_, l) ==
       mk_REP`ProductTypeRep(tp_l) -> if len tp_l = l
                                      then return tp_l
                                      else return nil,
-      mk_REP`InvTypeRep(-,shape,-) -> return FindProductElemType(shape, l),
+      mk_REP`InvTypeRep(-,shape,-) -> return FindProductElemTypeList(shape, l),
       mk_REP`AllTypeRep() -> return [ mk_REP`AllTypeRep() | - in set {1,...,l} ],
       --others -> error
       others -> return nil
+    end;
+
+FindProductElemType: REP`TypeRep * nat ==> [REP`TypeRep]
+FindProductElemType(ti_, no) ==
+  def ti = RemoveInvType(ti_)
+  in
+    cases ti:
+      mk_REP`ProductTypeRep(tp_l) -> if no <= len tp_l
+                                     then return tp_l(no)
+                                     else return nil,
+      mk_REP`UnionTypeRep(tps)    -> (dcl etps : set of REP`TypeRep := {};
+                                      for all tp in set tps do
+                                        def etp = FindProductElemType(tp, no)
+                                        in
+                                          if etp <> nil
+                                          then etps := etps union {etp};
+                                      return cases etps:
+                                               {}     -> nil,
+                                               {e}    -> e,
+                                               others -> mk_REP`UnionTypeRep(etps)
+                                      end),
+      others                      -> return nil
     end;
 \end{vdm_al}
 

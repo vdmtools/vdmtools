@@ -2137,7 +2137,7 @@ CGTupleConstructorExpr(mk_AS`TupleConstructorExpr(fields,-), mk_CGMAIN`VT(resVar
   rb := [BC`GenAsgnStmt(resVar_v, tc)];
 
 #ifdef VDMPP
-  def etp_l = CGAUX`FindProductElemType(rType, len fields)
+  def etp_l = CGAUX`FindProductElemTypeList(rType, len fields)
   in
 #endif VDMPP
     for i = 1 to len fields do
@@ -2366,7 +2366,7 @@ ConvertTypeJudgementExprAS(expr, tp) ==
       --   end
       mk_AS`ProductType(tp_l,-) ->
          def ncid = CI`PushCGType(mk_REP`NumericTypeRep(<NATONE>));
-             ptp_l = CGAUX`FindProductElemType(CGAUX`FindType(expr), len tp_l)
+             ptp_l = CGAUX`FindProductElemTypeList(CGAUX`FindType(expr), len tp_l)
          in
            if ptp_l = nil
            then return nil
