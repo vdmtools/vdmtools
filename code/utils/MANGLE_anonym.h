@@ -17,8 +17,8 @@
 *  *    (C) Kyushu University
 ***/
 
-#ifndef __MANGLE_anonym_h__
-#define __MANGLE_anonym_h__
+#ifndef __mangle_anonym_h__
+#define __mangle_anonym_h__
 
 #undef INCLFILE
 #ifdef VDMSL
@@ -39,4 +39,4 @@
 
 #include INCLFILE
 
-#endif // __MANGLE_anonym_h__
+#endif // __mangle_anonym_h__

@@ -1933,7 +1933,7 @@ libeval-sl.a(genlatex.o): genlatex.cc backslash.h metaiv.h m4lib_errmsg.h \
   UpdateSes_userdef.h UMLTool_anonym.h UMLTool_userdef.h Errors.h \
   ToolColleague.h ToolColleague_anonym.h ToolColleague_userdef.h \
   semvalues.h cli_options.h projectval.h ToolKit.h ToolKit_anonym.h \
-  ToolKit_userdef.h Repository.h BaseTools.h Interface.h MANGLE.h
+  ToolKit_userdef.h Repository.h BaseTools.h Interface.h
 libeval-sl.a(instructions.o): instructions.cc astaux.h AS.h AS-sl.h metaiv.h \
   m4lib_errmsg.h tb_wstring.h cg.h cg_aux.h CI.h CI-sl.h \
   REP.h REP-sl.h REP_anonym.h REP_anonym-sl.h REP_userdef.h main_tag.h \
@@ -1987,7 +1987,7 @@ libeval-sl.a(libman.o): libman.cc dlfactory.h evaldl.h metaiv.h \
   DEBUGTP_userdef.h objtab.h pattern.h \
   evalexpr.h tbdebug.h libman.h oldname.h position.h \
   rt_info.h val2x.h vdmstdlib.h rt_errmsg.h asquotes.h compile.h \
-  MANGLE.h UTIL.h
+  UTIL.h
 libeval-sl.a(oldname.o): oldname.cc semvalues.h metaiv.h m4lib_errmsg.h \
   tb_wstring.h contextinfo.h \
   tokenlist.h intconvquotes.h CI.h CI-sl.h cg.h cg_aux.h AS.h AS-sl.h \
@@ -2285,7 +2285,7 @@ libss-sl.a(env.o): env.cc main_tag.h metaiv.h m4lib_errmsg.h tb_wstring.h \
   RepDatabase_userdef.h UpdateSes_anonym.h UpdateSes_userdef.h \
   UMLTool_anonym.h UMLTool_userdef.h Errors.h ToolColleague.h \
   ToolColleague_anonym.h ToolColleague_userdef.h \
-  cli_options.h astaux.h MANGLE.h
+  cli_options.h astaux.h
 libss-sl.a(err.o): err.cc ProjectTypes.h metaiv.h m4lib_errmsg.h tb_wstring.h \
   cg.h cg_aux.h CGBase.h ProjectTypes_anonym.h \
   ProjectTypes_userdef.h main_tag.h FileStatus_anonym.h \
@@ -2496,7 +2496,7 @@ libss-sl.a(vcm.o): vcm.cc main_tag.h metaiv.h m4lib_errmsg.h tb_wstring.h \
   RepDatabase_userdef.h UpdateSes_anonym.h UpdateSes_userdef.h \
   UMLTool_anonym.h UMLTool_userdef.h Errors.h ToolColleague.h \
   ToolColleague_anonym.h ToolColleague_userdef.h \
-  cli_options.h astaux.h MANGLE.h
+  cli_options.h astaux.h
 libss-rt.a(type.o): type.cc metaiv.h m4lib_errmsg.h tb_wstring.h \
   main_tag.h AS.h AS-rt.h cg.h cg_aux.h CI.h CI-pp.h REP.h REP-pp.h \
   REP_anonym.h REP_anonym-pp.h REP_userdef.h AS_anonym.h AS_anonym-rt.h \

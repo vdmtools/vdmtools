@@ -17,8 +17,8 @@
 *  *    (C) Kyushu University
 ***/
 
-#ifndef _MANGLE_H_
-#define _MANGLE_H_
+#ifndef __mangle_h__
+#define __mangle_h__
 
 #undef INCLFILE
 #ifdef VDMSL
@@ -39,5 +39,5 @@
 
 #include INCLFILE
 
-#endif //_MANGLE_H_
+#endif //__mangle_h__
 
