@@ -764,7 +764,7 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
   int len = id.length()-2;
   if (len >= 0 && id.substr(len) == L".h") {
     //string def ("_" + TBWSTR::wstring2mbstr(id.substr(0, len)) + "_h");
-    string def ("_" + TBWSTR::wstring2mbstr(id.substr(0, len)) + "_h_");
+    string def ("__" + TBWSTR::wstring2mbstr(id.substr(0, len)) + "_h__");
 
     m4code << "#ifndef " << def;
     GenNewLine(m4code);
