@@ -4302,7 +4302,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenIterSeq(const TYPE_CGMAIN_VT & vt1,
   const TYPE_REP_TypeRep & type  (vt2.GetRecord(pos_CGMAIN_VT_type));
 
   TYPE_CPP_Identifier tmpe_v (vdm_BC_GiveName(ASTAUX::MkId(L"tmpe")));
-  TYPE_CPP_Identifier tmpSeq_v (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq"))); // 20101219
+  TYPE_CPP_Identifier tmpSeq_v (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq")));
 
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {

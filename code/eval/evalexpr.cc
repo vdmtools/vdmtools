@@ -1595,42 +1595,40 @@ TYPE_SEM_VAL EXPR::EvalOrderExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, c
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalNumBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v)
 {
-// 20130409 -->  -- experimental
+// -- experimental
 /*
   if (op1_v.Is(TAG_TYPE_SEM_SEQ) &&
       (op2_v.Is(TAG_TYPE_SEM_NUM) || op2_v.Is(TAG_TYPE_SEM_BOOL)) &&
-      (opr == Int(NUMPLUS)))
-  {
+      (opr == Int(NUMPLUS))) {
     Sequence l (op1_v.GetSequence(pos_SEM_SEQ_v)); 
     bool forall = true;
     size_t len_l = l.Length();
-    for (size_t i = 1; (i <= len_l) && forall; i++)
+    for (size_t i = 1; (i <= len_l) && forall; i++) {
       forall = l[i].Is(TAG_TYPE_SEM_CHAR);
-
-    if (forall)
-    {
+    }
+    if (forall) {
       Sequence num_l (op2_v.Is(TAG_TYPE_SEM_NUM) ? op2_v.GetReal(pos_SEM_NUM_v).ascii()
                                                  : op2_v.GetReal(pos_SEM_BOOL_v).ascii());
       size_t len_num_l = num_l.Length();
-      for (size_t i = 1; i <= len_num_l; i++)
+      for (size_t i = 1; i <= len_num_l; i++) {
         l.ImpAppend(mk_SEM_CHAR(num_l[i]));
+      }
       return mk_SEM_SEQ(l);
     }
   }
 */
-// <-- 20130409
-// 20140324 -->  -- experimental
+//  -- experimental
 /*
   if ((opr.GetValue() == NUMMULT) && op1_v.Is(TAG_TYPE_SEM_SET) && op2_v.Is(TAG_TYPE_SEM_SET)) {
     Set s (op1_v.GetSet(pos_SEM_SET_v).DirectProduct(op2_v.GetSet(pos_SEM_SET_v)));
     Set ps;
     Generic e;
-    for (bool bb = s.First(e); bb; bb = s.Next(e))
+    for (bool bb = s.First(e); bb; bb = s.Next(e)) {
       ps.Insert(mk_SEM_SET(e));
+    }
     return mk_SEM_SET(ps);
   }
 */
-// <-- 20140324
   if (op1_v.Is(TAG_TYPE_SEM_NUM) && op2_v.Is(TAG_TYPE_SEM_NUM)) {
     switch(opr.GetValue()) {
       case NUMPLUS:

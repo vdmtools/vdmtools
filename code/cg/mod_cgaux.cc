@@ -1176,15 +1176,12 @@ SET<TYPE_REP_TypeRep> vdmcg::CleanAndFlattenTypeAux (const TYPE_REP_TypeRep& typ
       SET<TYPE_REP_TypeRep> res;
       return res.Insert(r);
     }
-// 20110626 -->
     case TAG_TYPE_REP_InvTypeRep : {
       SET<TYPE_REP_TypeRep> res;
-      //return res.Insert(CleanAndFlattenType(type.GetRecord(pos_REP_InvTypeRep_shape)));
       TYPE_REP_InvTypeRep r (type);
       r.SetField(pos_REP_InvTypeRep_shape, CleanAndFlattenType(type.GetRecord(pos_REP_InvTypeRep_shape)));
       return res.Insert(r);
     }
-// <-- 20110626
     default: {
       SET<TYPE_REP_TypeRep> res;
       return res.Insert(type);
@@ -1320,7 +1317,7 @@ TYPE_REP_TypeRep vdmcg::CombineInjectiveMapTypeRep(const SET<TYPE_REP_TypeRep>& 
         md_s.Insert(t.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom));
         mr_s.Insert(t.GetRecord(pos_REP_InjectiveMapTypeRep_maprng));
       }
-      else if (t.Is(TAG_TYPE_REP_EmptyMapTypeRep)) { // 20110626
+      else if (t.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
         md_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_mapdom));
         mr_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_maprng));
       }
@@ -1350,7 +1347,7 @@ TYPE_REP_TypeRep vdmcg::CombineGeneralMapTypeRep(const SET<TYPE_REP_TypeRep>& ts
         md_s.Insert(t.GetRecord(pos_REP_GeneralMapTypeRep_mapdom));
         mr_s.Insert(t.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
       }
-      else if (t.Is(TAG_TYPE_REP_EmptyMapTypeRep)) { // 20110626
+      else if (t.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
         md_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_mapdom));
         mr_s.Insert(t.GetRecord(pos_REP_EmptyMapTypeRep_maprng));
       }
@@ -3606,7 +3603,7 @@ Generic vdmcg::QuotePMExprWithClNm(const Generic & patg, const TYPE_AS_Name & cl
   
       TYPE_AS_CasesExpr ce (pat);
       ce.SetField(pos_AS_CasesExpr_sel, QuotePMExprWithClNm(sel, clnm, lb));
-      ce.SetField(pos_AS_CasesExpr_altns, newaltns); // 20070208
+      ce.SetField(pos_AS_CasesExpr_altns, newaltns);
       ce.SetField(pos_AS_CasesExpr_Others, QuotePMExprWithClNm(Others, clnm, lb));
       return ce;
     }
@@ -4971,7 +4968,7 @@ void vdmcg::InitState_CGAUX(const Generic & nm)
     this->usesSuper                  = false;
     this->isStatic                   = false;
     this->usesThis                   = false;
-    this->cause                      = Sequence().ImpAppend(Nil()); // 20121217 
+    this->cause                      = Sequence().ImpAppend(Nil());
   }
 }
 
@@ -5938,15 +5935,14 @@ TYPE_REP_TypeRep vdmcg::posRngMapOrIndsSeqType(const TYPE_REP_TypeRep& type)
 // ==> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::LOThelp (const TYPE_REP_TypeRep& tp, const SET<TYPE_REP_TypeRep> & dones_)
 {
-  if (!tp.Is(TAG_TYPE_REP_TypeNameRep))
+  if (!tp.Is(TAG_TYPE_REP_TypeNameRep)) {
     return tp;
-  else if (dones_.InSet (tp))
-  {
+  }
+  else if (dones_.InSet (tp)) {
     GetStatSem().GenErr(tp.GetRecord(pos_REP_TypeNameRep_nm), StatSem::ERR, 358, Sequence());
     return TYPE_REP_AllTypeRep();
   }
-  else
-  {
+  else {
     SET<TYPE_REP_TypeRep> dones (dones_);
     dones.Insert (tp);
     TYPE_AS_Name tn (tp.GetRecord(pos_REP_TypeNameRep_nm));
@@ -5958,33 +5954,26 @@ TYPE_REP_TypeRep vdmcg::LOThelp (const TYPE_REP_TypeRep& tp, const SET<TYPE_REP_
     Tuple t (GetStatSem().PublicLookUpTypeName (tn, GiveCurCASName()));
     Generic g (t.GetField(1));
 
-// 20100519 -->
-    if (!g.IsNil() && !t.GetField(2).IsNil())
-    {
-      if (Record(g).Is(TAG_TYPE_REP_CompositeTypeRep))
-      {
+    if (!g.IsNil() && !t.GetField(2).IsNil()) {
+      if (Record(g).Is(TAG_TYPE_REP_CompositeTypeRep)) {
         TYPE_AS_Name cls (t.GetField(2));
         TYPE_REP_CompositeTypeRep ctr (g);
         TYPE_AS_Name tag (ctr.GetRecord(pos_REP_CompositeTypeRep_nm));
-        if (tag.GetSequence(pos_AS_Name_ids).Length() == 1)
-        {
+        if (tag.GetSequence(pos_AS_Name_ids).Length() == 1) {
            TYPE_AS_Name new_tag (ASTAUX::Combine2Names(cls, tag));
            ctr.SetField(pos_REP_CompositeTypeRep_nm, new_tag);
            g = ctr;
         }
       }
     }
-// <-- 20100519
 #endif // VDMPP
 
-    if (g.IsNil ())
-    {
+    if (g.IsNil ()) {
       GetStatSem().GenErr(tn, StatSem::WRN2, 359, mk_sequence(SEQ<Char>(ASTAUX::ASName2String(tn))));
       return TYPE_REP_AllTypeRep();
     }
     return LOThelp (g, dones);
   }
-//  return TYPE_REP_TypeRep(0,0); // To avoid warnings
 }
 
 // LOT
@@ -5992,9 +5981,9 @@ TYPE_REP_TypeRep vdmcg::LOThelp (const TYPE_REP_TypeRep& tp, const SET<TYPE_REP_
 // ==> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::LOT (const Generic & tp_q)
 {
-  if (!tp_q.Is(TAG_TYPE_REP_TypeNameRep))
+  if (!tp_q.Is(TAG_TYPE_REP_TypeNameRep)) {
     return tp_q;
-
+  }
   TYPE_REP_TypeRep t (LOThelp (tp_q, Set ()));
 
 #ifdef VDMSL
@@ -6005,23 +5994,17 @@ TYPE_REP_TypeRep vdmcg::LOT (const Generic & tp_q)
   if(known_types.DomExists(qnm))
   {
     Generic tp (known_types[qnm]);
-// 20120912 -->
-//    if(!tp.IsNil() && tp.Is(TAG_TYPE_AS_CompositeType) &&
-//       (qnm == Record(tp).GetRecord(pos_AS_CompositeType_name)))
-    if(tp.Is(TAG_TYPE_AS_CompositeType))
-// <-- 20120912
-    {
+    if(tp.Is(TAG_TYPE_AS_CompositeType)) {
       TYPE_REP_TypeRep tr (FromAS2RepType(tp));
 
-      if (t.Is(TAG_TYPE_REP_InvTypeRep))
-      { 
+      if (t.Is(TAG_TYPE_REP_InvTypeRep)) { 
         TYPE_REP_InvTypeRep itr (t);
         itr.SetField(pos_REP_InvTypeRep_shape, tr);
         return itr;
       }
-      else
-
+      else {
         return tr;
+      }
     }
   }
 #endif // VDMSL
@@ -6170,8 +6153,7 @@ void vdmcg::AddSuperClasses(const SEQ<TYPE_AS_Name> & supers)
 // ==> ()
 void vdmcg::AddAbstractMethods(const TYPE_AS_Class &cl)
 {
-  if (!cl.get_defs().IsNil())
-  {
+  if (!cl.get_defs().IsNil()) {
     const TYPE_AS_Definitions & defs (cl.GetRecord(pos_AS_Class_defs));
     const MAP<TYPE_AS_Name, TYPE_AS_FnDef> & fctDefs (defs.GetMap(pos_AS_Definitions_fnm));
     const MAP<TYPE_AS_Name, TYPE_AS_OpDef> & opDefs (defs.GetMap(pos_AS_Definitions_opm));
@@ -6181,36 +6163,28 @@ void vdmcg::AddAbstractMethods(const TYPE_AS_Class &cl)
     Generic g;
     for (bool bb = dom_fctDefs.First(g); bb; bb = dom_fctDefs.Next(g)) {
       TYPE_AS_Name fnm (g);
-// 20120717 -->
-//      if (IsAbstractFunction(fctDefs[fnm]))
-//        absFctDefs.Insert(fnm.get_ids());
-//      else
-//        nonAbsFctDefs.Insert(fnm.get_ids());
       TYPE_AS_FnDef fd (fctDefs[fnm]);
       TYPE_AS_Name mangledNm (MANGLE::IsMangled(fnm) ? fnm : MANGLE::Mangle(fnm, GetFnParms(fd)));
-      if (IsAbstractFunction(fctDefs[fnm]))
+      if (IsAbstractFunction(fctDefs[fnm])) {
         absFctDefs.Insert(mangledNm.get_ids());
-      else
+      }
+      else {
         nonAbsFctDefs.Insert(mangledNm.get_ids());
-// <-- 20120717
+      }
     }
 
     Set dom_opDefs (opDefs.Dom());
     SET<TYPE_AS_Ids> absOpDefs, nonAbsOpDefs;
     for (bool dd = dom_opDefs.First(g); dd; dd = dom_opDefs.Next(g)) {
       TYPE_AS_Name opnm (g);
-// 20120717 -->
-//      if (IsAbstractOperation(opDefs[opnm]))
-//        absOpDefs.Insert(opnm.get_ids());
-//      else
-//        nonAbsOpDefs.Insert(opnm.get_ids());
       TYPE_AS_OpDef od (opDefs[opnm]);
       TYPE_AS_Name mangledNm (MANGLE::IsMangled(opnm) ? opnm : MANGLE::Mangle(opnm, GetOpParms(od)));
-      if (IsAbstractOperation(od))
+      if (IsAbstractOperation(od)) {
         absOpDefs.Insert(mangledNm.get_ids());
-      else
+      }
+      else {
         nonAbsOpDefs.Insert(mangledNm.get_ids());
-// <-- 20120717
+      }
     }
 
     SET<TYPE_AS_Ids> thisAbstractMethods (absFctDefs), thisNonAbstractMethods (nonAbsFctDefs);
@@ -6446,11 +6420,9 @@ Set vdmcg::GetUnhiddenNames(const TYPE_AS_Name& p_cl)
 // ==> bool
 bool vdmcg::IsInClassNamespace(const TYPE_AS_Name& p_cl, const TYPE_AS_Name& p_methNm) const
 {
-//  Set l_meths;
   Set l_unhiddenNms (this->unhiddenNames[p_cl]);
   Generic g;
-  for (bool bb = l_unhiddenNms.First(g); bb; bb = l_unhiddenNms.Next(g))
-  {
+  for (bool bb = l_unhiddenNms.First(g); bb; bb = l_unhiddenNms.Next(g)) {
     TYPE_AS_Name l_nm (Tuple(g).GetField(1));
     TYPE_AS_Name l_unmangled (l_nm);
     if (MANGLE::IsMangled(l_nm))
@@ -6461,19 +6433,16 @@ bool vdmcg::IsInClassNamespace(const TYPE_AS_Name& p_cl, const TYPE_AS_Name& p_m
 
   Set l_otherNms (this->abstractMethods[p_cl]);
   l_otherNms.ImpUnion(this->nonAbstractMethods[p_cl]);
-  for (bool dd = l_otherNms.First(g); dd; dd = l_otherNms.Next(g))
-  {
+  for (bool dd = l_otherNms.First(g); dd; dd = l_otherNms.Next(g)) {
     TYPE_AS_Ids ids (g);
     TYPE_AS_Name l_nm (ASTAUX::MkNameFromIds(ids, NilContextId));
-// 20120717 -->
-//    if (p_methNm == l_nm)
-//      return true;
     TYPE_AS_Name l_unmangled (l_nm);
-    if (MANGLE::IsMangled(l_nm))
+    if (MANGLE::IsMangled(l_nm)) {
       l_unmangled = MANGLE::GetUnmangledName(l_nm);
-    if (l_unmangled == p_methNm)
+    }
+    if (l_unmangled == p_methNm) {
       return true;
-// <-- 20120717
+    }
   }
 
   return false;
@@ -6482,7 +6451,6 @@ bool vdmcg::IsInClassNamespace(const TYPE_AS_Name& p_cl, const TYPE_AS_Name& p_m
 // HasAbstractMethods
 // ==> bool
 bool vdmcg::HasAbstractMethods() {
-  //  if(!this->abstractMethods.Dom().InSet(cc)) return false;
   return (!Set(this->abstractMethods[cc]).IsEmpty());
 }
 
@@ -6491,7 +6459,6 @@ bool vdmcg::HasAbstractMethods() {
 // ==> bool
 bool vdmcg::IsAbstractClass(const TYPE_AS_Name & nm)
 {
-  //  if(!this->abstractMethods.Dom().InSet(nm)) return false;
   return (!Set(this->abstractMethods[nm]).IsEmpty());
 }
 
@@ -6588,11 +6555,6 @@ void vdmcg::AddInstanceVars(const TYPE_AS_Name & nm, const SEQ<TYPE_AS_InstanceV
 
         // not in spec -->
         if (repType.Is(TAG_TYPE_REP_CompositeTypeRep)) {
-//          TYPE_REP_CompositeTypeRep ctr (repType);
-//          if (ctr.get_nm().get_ids().Length() == 1) {
-//            ctr.set_nm(UTIL::QualiName(nm, ctr.get_nm()));
-//            repType = ctr;
-//          }
           const TYPE_AS_Name & tag (repType.GetRecord(pos_REP_CompositeTypeRep_nm));
           if (tag.GetSequence(pos_AS_Name_ids).Length() == 1)
           {
@@ -6624,12 +6586,12 @@ Generic vdmcg::GetInstanceVarTp(const TYPE_AS_Name & className,
   searchClasses.ImpConc(this->orderedSupers[className]);
 
   size_t len_searchClasses = searchClasses.Length();
-  for (size_t idx = 1; idx <= len_searchClasses; idx++)
-  {
+  for (size_t idx = 1; idx <= len_searchClasses; idx++) {
     const TYPE_AS_Name & cl (searchClasses[idx]);
     Map m (this->instanceVariables[cl]);
-    if (m.DomExists(varName))
+    if (m.DomExists(varName)) {
       return m[varName];
+    }
   }
   return Nil();
 }

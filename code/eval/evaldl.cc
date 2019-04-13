@@ -149,7 +149,7 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
   if (val.IsInt()) {
     /************************* INT **************************/
     // Force copy
-    Real r (Int(val).GetValue()); // TODO: 20100302
+    Real r (Int(val).GetValue()); // TODO:
     return TYPE_SEM_NUM().Init(r);
   }
   if (val.IsReal()) {

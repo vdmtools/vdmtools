@@ -686,7 +686,7 @@ Tuple vdmcg::CGMatchSetEnumPattern (const TYPE_AS_SetEnumPattern & pat,
     TYPE_REP_TypeRep permSL_t (mk_REP_SetTypeRep (mk_REP_SeqTypeRep (p_type)));
     Tuple cgml (CGMatchList (p_l, mk_CG_VT (perm_v, perm_t), succ_v, pn_s, pid_m, inner, false, declLocal));
     const SEQ<TYPE_CPP_Stmt> & pm (cgml.GetSequence(1));
-    const Bool & Is_excl (cgml.GetBool(2)); // 20120406
+    const Bool & Is_excl (cgml.GetBool(2));
 
     SEQ<TYPE_CPP_Stmt> inner_rb;
     if (Is_excl) {

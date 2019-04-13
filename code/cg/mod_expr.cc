@@ -654,11 +654,9 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
   const Map & pid_m (spi.GetMap (2)); // map AS`Name to set of REP`TypeRep
 
   SEQ<TYPE_CPP_Stmt> rb;
-// 20100622 -->
 //#ifdef VDMPP
 //    rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(MPP::MiniPP(INT2Q::h2gAS(rc1)))));
 //#endif // VDMPP
-// <-- 20100622
   if (samepatternIds.GetValue ()) {
     SEQ<TYPE_CPP_Stmt> decl (DeclarePatterns (pid_m)); // must be first of CGPatternMatch
 
@@ -1236,14 +1234,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetComprehensionExpr (const TYPE_AS_SetComprehension
   const SEQ<TYPE_AS_MultBind> & bind (expr.GetSequence(pos_AS_SetComprehensionExpr_bind));
   const Generic & pred               (expr.GetField   (pos_AS_SetComprehensionExpr_pred));
 
-//  TYPE_REP_TypeRep type (FindType(expr));
   MAP<TYPE_AS_Name, TYPE_REP_TypeRep> pid_m (FindPatIdMap(expr));
 
   PushEnv_CGAUX();
   InsertNamesinEnv_CGAUX(pid_m.Dom());
   PushFctLoc (pid_m.Dom());
 
-// 20150827 -->
   Set seqapply_s;
   if (bind.Length() == 1) {
     const TYPE_AS_MultBind & mb (bind[1]);
@@ -1265,7 +1261,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetComprehensionExpr (const TYPE_AS_SetComprehension
     }
   }
   AddNoCheckSeqApply(seqapply_s);
-// <-- 20150827
 
   TYPE_CPP_Identifier resS_v (vdm_BC_GiveName(ASTAUX::MkId(L"res_s")));
 
@@ -1275,7 +1270,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetComprehensionExpr (const TYPE_AS_SetComprehension
 
   RemNoCheckSeqApply(seqapply_s);
 
-  //SEQ<TYPE_CPP_Stmt> todo (Sequence(elem_stmt).ImpAppend(GenSetInsert(resS_v, elem_v)));
   SEQ<TYPE_CPP_Stmt> todo (ExpandCompoundStmt(elem_stmt).ImpAppend(GenSetInsert(resS_v, elem_v)));
 
   SEQ<TYPE_CPP_Stmt> rb;
@@ -3093,12 +3087,9 @@ Generic vdmcg::CGMapApplyExpr (const TYPE_AS_ApplyExpr & rc1,
 
   TYPE_CPP_Expr cond (GenDomExists(tmpmap_v, tmppar_v));
 
-// 20090805 -->
-//  TYPE_CPP_Expr alt1 (GenMapApply(mk_CG_VT(tmpmap_v, tmpmapType), tmppar_v));
   TYPE_CPP_Expr alt1;
   if (vdm_CPP_isCPP()) {
     if (type1.IsNil()) {
-//      FindType(par)
       alt1 = GenMapApply(mk_CG_VT(tmpmap_v, nil), tmppar_v);
       if (!rngType.IsNil()) {
         alt1 = GenCastType(rngType, alt1);
@@ -3111,7 +3102,6 @@ Generic vdmcg::CGMapApplyExpr (const TYPE_AS_ApplyExpr & rc1,
   else {
     alt1 = GenMapApply(mk_CG_VT(tmpmap_v, tmpmapType), tmppar_v);
   }
-// <-- 20090805
 
   SEQ<TYPE_CPP_Stmt> rb;
 
@@ -3772,13 +3762,7 @@ Generic vdmcg::CGObjRef (const TYPE_AS_FieldSelectExpr & fexpr,
       }
       else {
         TYPE_CPP_Identifier obj (vdm_BC_GiveName(ASTAUX::MkId(L"obj")));
-// 20140801 -->
-        //SEQ<TYPE_CPP_Stmt> declObj (GenDecl_DS (ti, obj, vdm_BC_GenAsgnInit(tmpobj)));
         SEQ<TYPE_CPP_Stmt> declObj (GenDeclInit_DS (ti, obj, tmpobj));
-        //TYPE_CPP_DeclarationStmt declObj (vdm_CPP_isCPP()
-        //             ? GenDecl_DS (ti, obj, vdm_BC_GenObjectInit(mk_sequence(tmpobj)))
-        //             : GenDecl_DS (ti, obj, vdm_BC_GenAsgnInit(tmpobj)));
-// <-- 20140801
         TYPE_CGMAIN_VT objvt (mk_CG_VT (obj, ti));
 
         SEQ<TYPE_CPP_Stmt> dos;
@@ -3804,7 +3788,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMethodInvoke(const Generic & obj,
                                           const Tuple & mi,
                                           const Bool & last)
 {
-//  bool res_decl_b(res_decl.GetValue());
   if( obj.IsNil() ) {
     return GenSimpleInvoke(obj, res, res_decl, mi, last);
   }
@@ -3851,8 +3834,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
 
     TYPE_CPP_Expr id_q (IsObjRefType(ti) ? id : vdm_BC_GenCastExpr(GenObjRefType_DS(nil), id));
 
-// 20120216 -->
-    //fcall = GenInvokeExpr(TYPE_REP_ObjRefTypeRep(ti), id_q, vdm_BC_Rename (mthd), id_l);
     TYPE_CPP_Identifier mthdid (vdm_BC_Rename (mthd));
     if (vdm_CPP_isJAVA() && ti.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
       TYPE_AS_Id clnm (ASTAUX::GetFirstId(ti.GetRecord(pos_REP_ObjRefTypeRep_nm)));
@@ -3861,7 +3842,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
         if (mid.SubSequence(1,4) == SEQ<Char>(L"vdm_")) {
           mthdid = vdm_BC_GenIdentifier(mid.SubSequence(5, mid.Length()));
         }
-// 20121106 -->
         SEQ<TYPE_CPP_Expr> id_l_q (id_l);
         if (clnm == SEQ<Char>(L"JDK_Calendar")) {
           if ((mid == SEQ<Char>(L"add")) ||
@@ -3875,7 +3855,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
           }
         }
         fcall = GenInvokeExpr(ti, id_q, mthdid, id_l_q);
-// <-- 20121106
       }
       else {
         fcall = GenInvokeExpr(ti, id_q, mthdid, id_l);
@@ -3884,7 +3863,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
     else {
       fcall = GenInvokeExpr(ti, id_q, mthdid, id_l);
     }
-// <-- 20120216
 
     if (vdm_CPP_isCPP()) {
       Generic exprtp (FindType(mthd));
@@ -3964,7 +3942,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
 
       // hack TODO: to check object is JDK_ class
       SEQ<Char> mnm (mi.GetRecord(1).GetSequence(pos_AS_Name_ids)[1]);
-// 20121219 -->
       if (! obj.IsNil() ) {
         TYPE_CGMAIN_VT vt (obj);
         const TYPE_REP_TypeRep & ti (vt.GetRecord(pos_CGMAIN_VT_type));
@@ -3977,20 +3954,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
         TYPE_AS_Id clnm (ASTAUX::GetFirstId(GiveCurCASName()));
         fcall = CheckJavaPrimitiveType(fcall, clnm, mnm);
       }
-// <-- 20121219
     }
   }
-// 20120313 -->
   else {
     Generic exprtp (FindType(mthd));
     if (exprtp.IsRecord()) {
       Generic fnrng = Nil();
       TYPE_REP_TypeRep etp (exprtp);
-// 20120718 -->
       if (etp.Is(TAG_TYPE_REP_OverTypeRep)) {
         etp = GetOverFNOP(etp, mi.GetSequence(2));
       }
-// <-- 20120718
       switch (etp.GetTag ()) {
         case TAG_TYPE_REP_PartialFnTypeRep: {
           fnrng = etp.GetSequence(pos_REP_PartialFnTypeRep_fnrng);
@@ -4008,13 +3981,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSimpleInvoke(const Generic & obj,
       // fix for Map
       if (!fnrng.IsNil()) {
         if (IsMapType(fnrng)) {
-          //fcall = GenCastMap(fcall);
           fcall = vdm_BC_GenFctCall(GenMapType().get_tp(), mk_sequence(fcall));
         }
       }
     }
   }
-// <-- 20120313
 
   SEQ<TYPE_CPP_Stmt> stmts( GenInvoke(res, res_decl, fcall, last) );
 
@@ -4064,7 +4035,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
 
   SET<TYPE_REP_ObjRefTypeRep> ti_s;
   SET<TYPE_AS_Name> nm_s;
-  //SET<TYPE_AS_Name> tinm_s;
   Generic ti;
   for (bool bb = t_s.First(ti); bb; bb = t_s.Next(ti)) {
     if (ti.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
@@ -4079,7 +4049,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
       Generic luofn (GetStatSem().LookUpOpOrFnName(nm, mthd));
                 // [REP_OpTypeRep || REP`TotalFnTypeRep || REP`PartialFnTypeRep]
       if ( !luofn.IsNil() && IsInClassNamespace(nm, mthd)) {
-// 20100104 -->
 // TODO: arguments must be checked 
 //        nm_s.Insert(nm);
         if (luofn.IsRecord()) {
@@ -4115,7 +4084,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
           // TODO: for overload
           nm_s.Insert(nm);
         }
-// <-- 20100104
       }
     }
   }
@@ -4409,8 +4377,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGUnionTypeApply (const TYPE_AS_ApplyExpr & applexpr,
 #ifdef VDMPP
     if (IsUnionFunctionType (tmpGenType)) {
       Generic apex (CGFctApplyExpr (applexpr, rv));
-      if ( apex.IsSequence() ) // 20070220
-      {
+      if ( apex.IsSequence() ) {
         // seq of CPP`Stmt
         SEQ<TYPE_CPP_Stmt> stmts (apex);
         alt2 = vdm_BC_GenBlock (apex);

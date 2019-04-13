@@ -102,7 +102,6 @@ SET<TYPE_CPP_File> vdmcg::GenClasses(const SEQ<TYPE_AS_Class> & cs_l_,
     }
     else // for Java
     {
-// 20110622
       const TYPE_AS_Ids & ids (nm.GetSequence(pos_AS_Name_ids));
       if (
           (ids[1].SubSequence(1,4) != Sequence(L"JDK_")) &&
@@ -530,25 +529,18 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Class & cs)
       cpp_l.ImpConc(GenOpDef_FD(onm, oper[onm], Nil (), !useslib.IsNil()));
     }
 
-// 20120530 -->
-    //pp_l.ImpConc(GenClassIncls());
     Sequence cincls (GenClassIncls());
     size_t len_cincls = cincls.Length();
     for (size_t idx = 1; idx <= len_cincls; idx++) {
-      //if (!pp_l.Elems().InSet(cincls[idx]))
       if ( 0 == pp_l.Find(cincls[idx])) {
         pp_l.ImpAppend(cincls[idx]);
       }
     }
-// <-- 20120530
     pp_l.ImpConc(IncludeExternalCC());
   }
   cpp_l.ImpConc(GenModuleCCPart());
 
-// 20120522 -->
-//  return vdm_BC_GenFile(Nil(), GenFileExt(id), pp_l, cpp_l);
   return vdm_BC_GenFile2(Nil(), GenFileExt(id), pp_l, cpp_l, cs.GetInt(pos_AS_Class_cid));
-// <-- 20120522
 }
 
 // GenJavaFile
@@ -567,7 +559,7 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
 
   SEQ<TYPE_CPP_MemberDeclaration> evpp;
 
-//  ClearUncaught(); // 20061204 for clear static member list
+//  ClearUncaught(); // for clear static member list
 
   if (isInterface && !IsPossibleInterface(cs)) {
     CannotCG(L"Erroneous attempt to generate an interface for class ", nm);
@@ -582,19 +574,12 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
   if (!defs.IsNil ()) {
     TYPE_AS_Definitions defin (defs);
     const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> & tps (defin.GetMap(pos_AS_Definitions_typem));
-// 20120208 -->
-//    const SEQ<TYPE_AS_ValueDef> & vals (defin.GetSequence(pos_AS_Definitions_valuem));
     const SEQ<TYPE_AS_ValueDef> & vals (GetJCGOption(defin.GetSequence(pos_AS_Definitions_valuem)));
-// <-- 20120208
     const MAP<TYPE_AS_Name, TYPE_AS_FnDef> & fcts (defin.GetMap(pos_AS_Definitions_fnm));
     const MAP<TYPE_AS_Name, TYPE_AS_OpDef> & oper (defin.GetMap(pos_AS_Definitions_opm));
     const SEQ<TYPE_AS_InstanceVarDef> & iVars (defin.GetSequence(pos_AS_Definitions_instvars));
 
     // comparator only needed if TreeSet is used as jdk implementation  of sets
-// 20110526 -->
-    //if (!get_onlytypes_option() && !isInterface)
-    //  pr_l.ImpAppend(GenLocalComparator(nm));
-// <-- 20110526
 
     SEQ<TYPE_AS_TypeDef> type_l;
     Set dom_tps (tps.Dom());
@@ -746,13 +731,8 @@ TYPE_CPP_File vdmcg::GenJavaFile(const TYPE_AS_Class& cs, bool isInterface)
   TYPE_CPP_CPPAS new_cpp_l;
   new_cpp_l.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), cs_l, nil));
   Generic package_name (get_package_option());
-
-// 20120522 -->
-//  return vdm_BC_GenFile(PackageToDir(package_name), GiveLastName(nm).ImpConc(ASTAUX::MkId(L".java")), decl,
-//                        new_cpp_l);
   return vdm_BC_GenFile2(PackageToDir(package_name), GiveLastName(nm).ImpConc(ASTAUX::MkId(L".java")), decl,
                           new_cpp_l, cs.GetInt(pos_AS_Class_cid));
-// <--20120522
 }
 
 // GenJavaExternalFile
@@ -805,14 +785,11 @@ TYPE_CPP_File vdmcg::GenJavaExternalFile(const TYPE_AS_Class & cls)
 SEQ<TYPE_CPP_ImportDeclaration> vdmcg::GenImportDeclarations()
 {
   SEQ<TYPE_CPP_ImportDeclaration> impdecls;
-// 20120208 -->
   Set inm_s (get_imports_names());
   Generic nm;
-  for (bool bb = inm_s.First(nm); bb; bb = inm_s.Next(nm))
-    //impdecls.ImpAppend(vdm_BC_GenSingleTypeImportDeclaration(vdm_BC_GenIdentifier(nm)));
+  for (bool bb = inm_s.First(nm); bb; bb = inm_s.Next(nm)) {
     InsertImport(nm);
-// <-- 20120208
-
+  }
   InsertImport(SEQ<Char>(L"jp.vdmtools.VDM.UTIL"));
 
   if (get_conc_option()) {
@@ -868,11 +845,12 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenJavaClassInit()
   l_body.ImpConc(l_caughtBody);
   l_body.ImpConc(l_init);
 
-  if (!l_body.IsEmpty())
+  if (!l_body.IsEmpty()) {
     idecl_l.ImpAppend(vdm_BC_GenFctDef(SEQ<TYPE_CPP_DeclSpecifier>(),
                                        fdecl,
                                        nil,
                                        vdm_BC_GenBlock(l_body)));
+  }
   return idecl_l;
 }
 
@@ -952,8 +930,7 @@ SEQ<TYPE_CPP_Declaration> vdmcg::GenStaticInstVarInit(const SEQ<TYPE_AS_Instance
     TYPE_AS_InstanceVarDef ivd (p_ivds[i]);
     if (ivd.Is(TAG_TYPE_AS_InstAssignDef) &&
         ivd.GetBoolValue(pos_AS_InstAssignDef_stat) &&
-        ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil()) // 20110525
-    {
+        ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil()) {
       const TYPE_AS_AssignDef & l_ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
       TYPE_REP_TypeRep l_rtp (FromAS2RepType(l_ad.GetRecord(pos_AS_AssignDef_tp)));
       TYPE_CPP_Name l_nm (vdm_BC_Rename(QualiName(p_clnm, l_ad.GetRecord(pos_AS_AssignDef_var))));
@@ -1347,30 +1324,27 @@ TYPE_CPP_MemberDeclaration vdmcg::GenInstVar(const TYPE_AS_InstAssignDef & iad)
   }
   else { // for Java
     bool inStaticInitializer = false;
-//    ClearUncaught(); // 20060710 for clear static member list
+//    ClearUncaught(); // for clear static member list
 
     Generic arg = Nil();
     if (stat) {
       TYPE_AS_ValueDef vd;
       vd.Init(TYPE_AS_PatternName().Init(nm, Nil(), nm.get_cid()), tp, ex, acc, stat, cid);
-      //      if (AreDefinedDirectly(Sequence().ImpAppend(vd)))
-      //      {
-        TYPE_REP_TypeRep l_rtp (FromAS2RepType(tp));
-        TYPE_AS_Name l_nm (vdm_BC_Rename(QualiName(GiveCurCASName(), nm)));
-        TYPE_CGMAIN_VT l_vt (mk_CG_VT(l_nm, l_rtp));
-        SEQ<TYPE_CPP_Stmt> l_expr (CGExpr(ex, l_vt));
+      TYPE_REP_TypeRep l_rtp (FromAS2RepType(tp));
+      TYPE_AS_Name l_nm (vdm_BC_Rename(QualiName(GiveCurCASName(), nm)));
+      TYPE_CGMAIN_VT l_vt (mk_CG_VT(l_nm, l_rtp));
+      SEQ<TYPE_CPP_Stmt> l_expr (CGExpr(ex, l_vt));
 
-        if (AreDefinedDirectly(Sequence().ImpAppend(vd)) &&
-            (!((l_expr.Length() != 1) ||
-             !(l_expr.Hd().Is(TAG_TYPE_CPP_ExpressionStmt))))) {
-          TYPE_CPP_AssignExpr ae (TYPE_CPP_ExpressionStmt(l_expr.Hd()).get_expr());
-          arg = vdm_BC_GenAsgnInit(ae.get_assignexpr());
-        }
-        else {
-          AddUncaughtValInit(l_expr);
-          inStaticInitializer = true;
-        }
-        //      }
+      if (AreDefinedDirectly(Sequence().ImpAppend(vd)) &&
+          (!((l_expr.Length() != 1) ||
+           !(l_expr.Hd().Is(TAG_TYPE_CPP_ExpressionStmt))))) {
+        TYPE_CPP_AssignExpr ae (TYPE_CPP_ExpressionStmt(l_expr.Hd()).get_expr());
+        arg = vdm_BC_GenAsgnInit(ae.get_assignexpr());
+      }
+      else {
+        AddUncaughtValInit(l_expr);
+        inStaticInitializer = true;
+      }
     }
 
     Generic newarg (arg);
@@ -1411,13 +1385,8 @@ TYPE_CPP_MemberDeclaration vdmcg::GenInstVar(const TYPE_AS_InstAssignDef & iad)
       TYPE_CPP_Modifier vo (vdm_BC_GenModifier(quote_STATIC));
       modifiers.ImpAppend(vo);
     }
-    // 20140718 -->
     // annotation for instance variable
     return vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), modifiers.ImpConc(ds_l),dl);
-    //TYPE_CPP_Identifier id (vdm_BC_GenIdentifier(ASTAUX::MkId(L"Instvar")));
-    //TYPE_CPP_Annotation anno (vdm_BC_GenAnnotation(id, ASTAUX::MkId(L"xxxr")));
-    //return vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>().ImpAppend(anno), modifiers.ImpConc(ds_l),dl);
-    // <-- 20140718
   }
 }
 
@@ -1436,8 +1405,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenVarInits(const SEQ<TYPE_AS_InstanceVarDef> & iInit_
       if (ivd.Is(TAG_TYPE_AS_InstAssignDef))
       {
         if (!ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil () &&
-            !ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) // 20110510
+            !ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) {
           res.ImpConc (GenVarInit (ivd));
+        }
       }
     }
   }
@@ -1455,21 +1425,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenVarInit(const TYPE_AS_InstAssignDef & ii)
   const TYPE_AS_Type & tp  (ad.GetRecord(pos_AS_AssignDef_tp));
   const Generic & dclinit (ad.GetField(pos_AS_AssignDef_dclinit));
 
-// 20130313 -->
-//  TYPE_CPP_Expr varname (vdm_CPP_isCPP() ? vdm_BC_Rename (var) : vdm_BC_Rename (InsertGlobalName(var)));
   TYPE_CPP_Expr varname (vdm_BC_Rename (InsertGlobalName(var)));
-// <-- 20130313
   TYPE_REP_TypeRep tpe (FromAS2RepType (tp));
   TYPE_CGMAIN_VT vt (mk_CG_VT (varname, tpe));
-// 20100706 -->
-//  return CGExpr (dclinit, vt);
-  if (vdm_CPP_isCPP())
+  if (vdm_CPP_isCPP()) {
     return CGExpr (dclinit, vt);
-  else
-  {
-// 20121210 -->
+  }
+  else {
     // hack for String 
-    //return CGExpr (dclinit, vt);
     SEQ<TYPE_CPP_Stmt> stmts (CGExpr (dclinit, vt));
     if ((stmts.Length() == 1) && IsStringType(tpe)) {
       const TYPE_CPP_Stmt & stmt (stmts[1]);
@@ -1491,9 +1454,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenVarInit(const TYPE_AS_InstAssignDef & ii)
       }
     }
     return stmts;
-// <-- 20121210
   }
-// <-- 20100706
 }
 
 // IsCandidateInterface
@@ -1512,24 +1473,19 @@ bool vdmcg::IsCandidateInterface(const TYPE_AS_Class & cl)
 
     InitState_CGAUX(cl.GetRecord(pos_AS_Class_nm));
 
-// 20120904 -->
     size_t len_valuem = valuem.Length();
     SEQ<TYPE_AS_ValueDef> vals;
-    for (size_t idx = 1; idx <= len_valuem; idx++)
-    {
+    for (size_t idx = 1; idx <= len_valuem; idx++) {
       const TYPE_AS_ValueDef & vd (valuem[idx]);
       const TYPE_AS_Pattern & p (vd.GetRecord(pos_AS_ValueDef_pat));
-      if (p.Is(TAG_TYPE_AS_PatternName) && !p.GetField(pos_AS_PatternName_nm).IsNil())
-      {
+      if (p.Is(TAG_TYPE_AS_PatternName) && !p.GetField(pos_AS_PatternName_nm).IsNil()) {
         const TYPE_AS_Name & nm (p.GetField(pos_AS_PatternName_nm));
-        if (Sequence(nm.GetSequence(pos_AS_Name_ids)[1]).SubSequence(1,11) != Sequence(L"JCGControl_"))
+        if (Sequence(nm.GetSequence(pos_AS_Name_ids)[1]).SubSequence(1,11) != Sequence(L"JCGControl_")) {
           vals.ImpAppend(vd);
+        }
       }
     }
-
-    //bool isCandidateInterface = AreDefinedDirectly(valuem) &&
     bool isCandidateInterface = AreDefinedDirectly(vals) &&
-// <-- 20120904
                                 defs.GetSequence(pos_AS_Definitions_instvars).IsEmpty() &&
                                 defs.GetSequence(pos_AS_Definitions_syncs).IsEmpty() &&
                                 defs.GetField(pos_AS_Definitions_threaddef).IsNil();
@@ -1560,19 +1516,18 @@ bool vdmcg::IsJ2VAbstractOp(const TYPE_AS_OpDef& opdef) const
 {
   switch(opdef.GetTag()) {
     case TAG_TYPE_AS_ExplOpDef: {
-      //return (opdef.GetRecord(pos_AS_ExplOpDef_body).GetField(pos_AS_OpBody_body) == Int(NOTYETSPEC)) &&
       return (opdef.GetRecord(pos_AS_ExplOpDef_body).GetField(pos_AS_OpBody_body) == Int(NOTYETSPEC)) ||
              (opdef.GetBoolValue(pos_AS_ExplOpDef_constr) &&
               opdef.GetSequence(pos_AS_ExplOpDef_parms).IsEmpty());
     }
     case TAG_TYPE_AS_ExtExplOpDef: {
-      //return (opdef.GetRecord(pos_AS_ExtExplOpDef_body).GetField(pos_AS_OpBody_body) == Int(NOTYETSPEC)) &&
       return (opdef.GetRecord(pos_AS_ExtExplOpDef_body).GetField(pos_AS_OpBody_body) == Int(NOTYETSPEC)) ||
              (opdef.GetBoolValue(pos_AS_ExtExplOpDef_constr) &&
               opdef.GetSequence(pos_AS_ExtExplOpDef_partps).IsEmpty());
     }
-    default:
+    default: {
       return false;
+    }
   }
 }
 
@@ -1601,13 +1556,13 @@ SET<TYPE_AS_Name> vdmcg::GetPossibleInterfaces(const SEQ<TYPE_AS_Class> & classe
 
   SET<TYPE_AS_Name> result;
   size_t len_classes = classes.Length();
-  for (size_t idx = 1; idx <= len_classes; idx++)
-  {
+  for (size_t idx = 1; idx <= len_classes; idx++) {
     const TYPE_AS_Class & cl (classes[idx]);
     const TYPE_AS_Name & nm (cl.GetRecord(pos_AS_Class_nm));
     InitState_TPGEN(nm);
-    if (IsPossibleInterface(cl))
+    if (IsPossibleInterface(cl)) {
       result.Insert(nm);
+    }
   }
   return result;
 }
@@ -1627,7 +1582,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
 
   Generic body = Nil();
   if (!Init_l.IsEmpty()) {
-// 20120213 -->
     bool allsimple = !get_conc_option();
     if (!iVars.IsEmpty() ) {
       size_t len_iVars = iVars.Length();
@@ -1635,7 +1589,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
         const TYPE_AS_InstanceVarDef & ivd (iVars[i]);
         if (ivd.Is(TAG_TYPE_AS_InstAssignDef)) {
           if (!ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit).IsNil () &&
-              !ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) { // 20110510
+              !ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) {
             const TYPE_AS_Expr & dclinit (ivd.GetRecord(pos_AS_InstAssignDef_ad).GetField(pos_AS_AssignDef_dclinit));
             switch (dclinit.GetTag()) {
               case TAG_TYPE_AS_BoolLit:
@@ -1658,7 +1612,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
       body = vdm_BC_GenBlock(Init_l);
     }
     else {
-// <-- 20120213
       SEQ<TYPE_CPP_TypeSpecifier> res;
       res.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Exception"))));
       TYPE_CPP_ExceptionDeclaration expdecl (vdm_BC_GenExceptionDeclaration(
@@ -1679,9 +1632,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
       handlers.ImpAppend(vdm_BC_GenHandler(expdecl, stmt));
 
       body = vdm_BC_GenTryBlock(Init_l, handlers, nil);
-// 20120213 -->
     }
-// <-- 20120213
   }
   else {
     body = vdm_BC_GenBlock(type_dL());
@@ -1690,10 +1641,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
                           SEQ<TYPE_CPP_Modifier>().ImpAppend(vdm_BC_GenModifier(quote_PRIVATE)),
                           mk_sequence(vdm_BC_GenTypeSpecifier(vdm_BC_GenVoid())),
                           vdm_BC_GenFctDecl(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")), type_dL()),
-// 20120213 -->
-                          //GenExceptionsHdr(),
                           nil,
-// <-- 20120213 
                           body);
 }
 

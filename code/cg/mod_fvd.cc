@@ -88,7 +88,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GetUncaught() const
   return this->uncaught;
 }
 
-// 20060710
 // ClearUncaught
 //void vdmcg::ClearUncaught()
 //{

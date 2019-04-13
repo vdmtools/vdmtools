@@ -36,9 +36,7 @@
 
 const Int SCHD::Default_priority = Int(1);
 
-// 20120224 -->
 static Generic dbthres = Nil();
-// <-- 20120224
 
 SCHD::SCHD()
 {
@@ -127,13 +125,10 @@ void SCHD::ClearScheduler()
   this->lastswapedin.Clear();
   this->lastswapedout.Clear();
   this->potentialperchanged.Clear();
-  // 20080513
   this->tobekilled.Clear();
 #endif // VICE
 
-// 20120214 -->
   dbthres = Nil();
-// <-- 20120224
 }
 
 // This operation is not specified yet. It initialiases the scheduler.
@@ -269,29 +264,27 @@ Tuple SCHD::EvalScheduler()
           {
             evalres = RunNextPeriodicThread(theSystem().GetCurCPU());
           }
-          else
-          {
+          else {
             bool found = false;
-            if (!this->potentialperchanged.IsEmpty())
-            {
+            if (!this->potentialperchanged.IsEmpty()) {
               Set dom_threads (this->threads.Dom());
               Generic tid;
-              for(bool bb = dom_threads.First(tid); bb && !found; bb = dom_threads.Next(tid))
-              {
+              for(bool bb = dom_threads.First(tid); bb && !found; bb = dom_threads.Next(tid)) {
                 TYPE_SCHDTP_ThreadInfo thr (this->threads[tid]);
                 if( !thr.get_status().Is(TAG_TYPE_SCHDTP_Blocked) ) continue;
                 TYPE_SCHDTP_Blocked bs (thr.get_status());
                 if( ( bs.get_objref().IsNil() ) ||
-                    this->potentialperchanged.InSet(bs.get_objref()) )
+                    this->potentialperchanged.InSet(bs.get_objref()) ) {
                   found = true;
+                }
               }
             }
-            if(found)
-            {
+            if(found) {
               evalres = SelAndRunThread(TYPE_SCHDTP_MaxReached(), false);
             }
-            else
+            else {
               RTERR::Error(L"EvalScheduler", RTERR_DEADLOCK_DETECTED, Nil(), Nil(), Sequence());
+            }
           }
         }
         else
@@ -301,12 +294,10 @@ Tuple SCHD::EvalScheduler()
       } // TAG_TYPE_STKM_EndOfSlice
 #ifdef VICE
       case TAG_TYPE_STKM_EndOfCPUSlice: {
-// 20150123 -->
         if(!CheckingGuard() && theStackMachine().GetUserBREAK()) {
           theStackMachine().ResetUserBREAK();
           return mk_(TYPE_STKM_Interrupt(), Nil());
         }
-// <-- 20150123
         Tuple ffcpu (theSystem().FindFirstCPU());
         const Generic & cpunm (ffcpu.GetField(1));
         int cput = ffcpu.GetIntValue(2);
@@ -318,90 +309,78 @@ Tuple SCHD::EvalScheduler()
         const Generic & bswapt_g (ffbus.GetField(3));
 //wcout << ffcpu << endl;
 //wcout << ffbus << endl;
-        if( bust <= cput )
-        {
+        if( bust <= cput ) {
           int swapt = cput;
-          if( bswapt_g.IsNil() )
+          if( bswapt_g.IsNil() ) {
             swapt = cput;
-          else
-          {
-             int bswapt = Int(bswapt_g).GetValue();
-             if (bust == bswapt)
-               swapt = cput;
-             else if (bswapt < cput)
-               swapt = bswapt;
+          }
+          else {
+            int bswapt = Int(bswapt_g).GetValue();
+            if (bust == bswapt) {
+              swapt = cput;
+            }
+            else if (bswapt < cput) {
+              swapt = bswapt;
+            }
           }
 //wcout << L"BUS: " << ASTAUX::ASName2String(busnm) << L" " << theSystem().GetTime() << L" " << swapt << endl;
 //wcout << L"BUS: " << ASTAUX::ASName2String(busnm) << L" " << bust << L" " << swapt << endl;
           theSystem().ProcessBUS(busnm, swapt);
           evalres = DefaultEvalRes();
         }
-        else
-        {
+        else {
           int swapt = bust;
-          if( cswapt_g.IsNil() )
+          if( cswapt_g.IsNil() ) {
             swapt = bust;
-          else
-          {
+          }
+          else {
             int cswapt = Int(cswapt_g).GetValue();
-            if (cput == cswapt)
+            if (cput == cswapt) {
               swapt = bust;
-            else if (cswapt < bust)
+            }
+            else if (cswapt < bust) {
               swapt = cswapt;
+            }
           }
 //wcout << L"CPU: " << SYSTEM::PrintCPU(cpunm) << L" " << theSystem().GetTime() << L" " << swapt << endl;
 //wcout << L"CPU: " << SYSTEM::PrintCPU(cpunm) << L" " << cput << L" " << swapt << endl;
 //wcout << cpunm << endl;
 //wcout << swapt << endl;
 //wcout << (theSystem().CPUWork(cpunm,swapt) ? L"true" : L"false") << endl;
-          if(!theSystem().CPUWork(cpunm,swapt))
-          {
+          if(!theSystem().CPUWork(cpunm,swapt)) {
             theSystem().IncrIdleTime(cpunm, Settings.GetStepSize());
             evalres = DefaultEvalRes();
           }
-          else
-          {
-// 20151110 -->
+          else {
             Generic curcpu (theSystem().GetCurCPU());
-// <-- 20151110
             theSystem().SetCurCPU(cpunm, swapt);
 
-            if( theSystem().CurCPUAnyMessages(cpunm) )
-            {
-// 20151110 -->
+            if( theSystem().CurCPUAnyMessages(cpunm) ) {
   Generic cpu (theSystem().GetCurCPU());
   Generic cur (CurThreadId());
 /*
 wcout << L"CPUWork: curcpu: " << theSystem().PrintCPU(curcpu) << endl;
 */
-              //SwapOut(false, true); // 20061113
-              SwapOut(cur, cpu, false, true); // 20061113
-              //SwapOut(cur, curcpu, false, true); // 20061113
-// <-- 20151110
+              //SwapOut(false, true);
+              SwapOut(cur, cpu, false, true);
+              //SwapOut(cur, curcpu, false, true);
               evalres = theSystem().SelAndRunMessageCall(cpunm);
             }
-// 20140414 -->
             else if( theSystem().CurCPUAnyThread(cpunm) )
             //else if( theSystem().CurCPUAnyThread(cpunm) ||
             //         (this->perthreads.DomExists(cpunm) && !Map(this->perthreads[cpunm]).IsEmpty()) )
-// <-- 20140414
             {
-// 20140414 -->
               //this->cpusblocked.Clear();
               this->cpusblocked.ImpDiff(mk_set(cpunm));
-// <--20140414
               evalres = SelAndRunThread(Nil(), true);
             }
-            else if( this->cpusblocked == theSystem().GetAllCPUs() )
-            {
+            else if( this->cpusblocked == theSystem().GetAllCPUs() ) {
               RTERR::Error(L"EvalScheduler", RTERR_DEADLOCK_DETECTED, Nil(), Nil(), Sequence());
             }
-            else if( PeriodicReady(cpunm, Map(this->perthreads[cpunm]).Dom()) )
-            {
+            else if( PeriodicReady(cpunm, Map(this->perthreads[cpunm]).Dom()) ) {
               evalres = RunNextPeriodicThread(cpunm);
             }
-            else
-            {
+            else {
               bool mainloop = false;
               Generic curcpu (theSystem().GetCurCPU());
               Generic tid;
@@ -481,40 +460,35 @@ wcout << L"CPUWork: curcpu: " << theSystem().PrintCPU(curcpu) << endl;
         //if ( theStackMachine().CallStackLevel() > (theStackMachine().UsesThreads() ? 1 : 0) )
         //  return evalres;
         if ( IsDebugThread(CurThreadId()) &&
-             ( theStackMachine().CallStackLevel() > (theStackMachine().UsesThreads() ? 1 : 0) ) )
+             ( theStackMachine().CallStackLevel() > (theStackMachine().UsesThreads() ? 1 : 0) ) ) {
           return evalres;
-// 20151110 -->
+        }
   Generic cpu (theSystem().GetCurCPU());
   Generic cur (CurThreadId());
         //SwapOut(true, true);
         SwapOut(cur, cpu, true, true);
-// <-- 20151110
 
         if (IsDebugThread(CurThreadId())) {
           return evalres;
         } else {
           Generic cur (CurThreadId());
-          if (!IsPeriodicThread(cur))
-          {
+          if (!IsPeriodicThread(cur)) {
             TYPE_SCHDTP_ThreadInfo thr (this->threads[cur]);
             const Generic & mesid (thr.GetField(pos_SCHDTP_ThreadInfo_mesid));
 
             this->threads.RemElem(cur);
-            this->cpualloc.RemElem(cur); // 20061026
+            this->cpualloc.RemElem(cur);
             theSystem().DeleteThread(cur);
 
             Generic cpu (theSystem().GetCurCPU());
-            if( !mesid.IsNil() || this->tobekilled.DomExists(cpu) )
-            {
+            if( !mesid.IsNil() || this->tobekilled.DomExists(cpu) ) {
               TIMETRACE::LogKillThread(this->tobekilled[cpu], cpu);
             }
             this->killed.ImpModify(cpu, Bool(true));
             evalres = DefaultEvalRes();
           }
-          else
-          {
-            if( !cur.IsNil() )
-            {
+          else {
+            if( !cur.IsNil() ) {
               SetThreadStatus(cur, TYPE_SCHDTP_Completed());
             }
             TYPE_SCHDTP_ThreadInfo thr (this->threads[cur]);
@@ -526,7 +500,8 @@ wcout << L"CPUWork: curcpu: " << theSystem().PrintCPU(curcpu) << endl;
         TYPE_SCHDTP_ThreadId cur (CurThreadId());
         if (IsDebugThread(cur)) {
           return evalres;
-        } else {
+        }
+        else {
           this->threads.RemElem(cur);
           theSystem().DeleteThread(cur); //
           evalres = SelAndRunThread(Nil(), true);
@@ -679,20 +654,15 @@ Tuple SCHD::SelAndRunThread(const Generic & threadstatus, bool curthread_termina
 
 //wcout << L"next thread: " << nextthread << endl;
 
-  if (nextthread.IsNil())
-  {
+  if (nextthread.IsNil()) {
 #ifdef VICE
     Generic curcpu (theSystem().GetCurCPU());
     theSystem().IncrIdleTime(curcpu, Settings.GetStepSize());
     this->cpusblocked.Insert(curcpu);
-// 20140416 -->
     //if (this->perthreads.IsEmpty())
     if (this->perthreads.IsEmpty() ||
-        (this->perthreads.DomExists(curcpu) && Map(this->perthreads[curcpu]).IsEmpty()) )
-// <-- 20140416
-    {
-      if (this->cpusblocked == theSystem().GetAllCPUs())
-      {
+        (this->perthreads.DomExists(curcpu) && Map(this->perthreads[curcpu]).IsEmpty()) ) {
+      if (this->cpusblocked == theSystem().GetAllCPUs()) {
         RTERR::Error(L"EvalScheduler", RTERR_DEADLOCK_DETECTED, Nil(), Nil(), Sequence());
       }
     }
@@ -702,8 +672,7 @@ Tuple SCHD::SelAndRunThread(const Generic & threadstatus, bool curthread_termina
     return DefaultEvalRes(); // dummy
 #endif // VICE
   }
-  else
-  {
+  else {
     SetCurThread(nextthread, true);
     SetThreadStatus(nextthread, TYPE_SCHDTP_Running());
     RestoreSTKM(nextthread);
@@ -725,8 +694,7 @@ Tuple SCHD::RunNextPeriodicThread(const Generic & cpu)
   Set dom_orpt_m (orpt_m.Dom());
   Map perthrm;       // map SEM`OBJ_Ref to nat
   Generic objref;
-  for(bool bb = dom_orpt_m.First(objref); bb; bb = dom_orpt_m.Next(objref))
-  {
+  for(bool bb = dom_orpt_m.First(objref); bb; bb = dom_orpt_m.Next(objref)) {
     perthrm.Insert(objref, Int(TimePerThread(orpt_m[objref])));
   }
 
@@ -735,18 +703,16 @@ Tuple SCHD::RunNextPeriodicThread(const Generic & cpu)
   Set dom_perthrm (perthrm.Dom());
   TYPE_SEM_OBJ_uRef first (objs.GetElem());
   Generic o;
-  for(bool cc = dom_perthrm.First(o); cc; cc = dom_perthrm.Next(o))
-  {
-    if( Int(perthrm[first]).GetValue() > Int(perthrm[o]).GetValue() )
+  for(bool cc = dom_perthrm.First(o); cc; cc = dom_perthrm.Next(o)) {
+    if( Int(perthrm[first]).GetValue() > Int(perthrm[o]).GetValue() ) {
       first = o;
+    }
   }
 
-// 20081008
 //  int time = theSystem().GetTime();
   int time = theSystem().GetTimeOfCPU(cpu);
 
-  if( Int(perthrm[first]).GetValue() > time )
-  {
+  if( Int(perthrm[first]).GetValue() > time ) {
     theSystem().IncrIdleTime(cpu, Int(perthrm[first]).GetValue() - time);
   }
   return SelAndRunThread(Nil(), true);
@@ -770,9 +736,9 @@ int SCHD::TimePerThread(const Record & thrinfo)
         int max = thrinfo.GetIntValue(pos_SCHDTP_PerThreadInfo_next_umax);
         int min = thrinfo.GetIntValue(pos_SCHDTP_PerThreadInfo_next_umin);
 
-        if (max == min)
+        if (max == min) {
           return max;
-
+        }
         int num = theStackMachine().GetRandom(max - min + 1);
         return (min + num);
       }
@@ -1065,32 +1031,28 @@ Sequence SCHD::SortTheThreads()
   int curtime = theSystem().GetTime();
   Generic cpu (theSystem().GetCurCPU());
   Set objrefs;
-  if( this->perthreads.DomExists(cpu))
+  if( this->perthreads.DomExists(cpu)) {
     objrefs = Map(this->perthreads[cpu]).Dom();
-
-// 20090319-->
-  if (!cpu.IsNil() || !theSystem().MultiThreads(cpu))
-  {
+  }
+  if (!cpu.IsNil() || !theSystem().MultiThreads(cpu)) {
 //    ssa = theSystem().GetSecondaryAlgorithm(cpu);
     ssa = TYPE_SCHDTP_RoundRobin();
   }
-// <--20090319
 #endif // VICE
 
   switch (ssa.GetTag()) {
-    case TAG_TYPE_SCHDTP_RoundRobin:
-    {
+    case TAG_TYPE_SCHDTP_RoundRobin: {
       Sequence res; // seq of seq of SCHDTP`ThreadId
 #ifdef VICE
       SET<TYPE_SCHDTP_ThreadId> dom_threads (this->threads.Dom());
       SET<TYPE_SCHDTP_ThreadId> thrs;
       Generic tid;
-      for(bool bb = dom_threads.First(tid); bb; bb = dom_threads.Next(tid))
-      {
+      for(bool bb = dom_threads.First(tid); bb; bb = dom_threads.Next(tid)) {
         if(!this->cpualloc.DomExists(tid)) continue;
         if( this->cpualloc[tid] != cpu ) continue;
-        if( this->tobekilled.DomExists(cpu) )
+        if( this->tobekilled.DomExists(cpu) ) {
           if (tid == this->tobekilled[cpu] ) continue;
+        }
         thrs.Insert(tid);
       }
       res.ImpAppend(SortSelectedThreads(thrs, objrefs, cpu, curtime, SCHD::Default_priority));
@@ -1103,61 +1065,53 @@ Sequence SCHD::SortTheThreads()
     case TAG_TYPE_SCHDTP_PriorityBased: {
 #ifdef VICE
       Map locres; // map nat to set of SCHDTP`ThreadId
-      if (this->perthreads.DomExists(cpu))
-      {
+      if (this->perthreads.DomExists(cpu)) {
         Map orpt (this->perthreads[cpu]); // map SEM`OBJ_Ref toSCHDTP`PerThreadInfo
         Generic objref;
-        for(bool bb = objrefs.First(objref); bb; bb = objrefs.Next(objref))
-        {
+        for(bool bb = objrefs.First(objref); bb; bb = objrefs.Next(objref)) {
           //TYPE_SCHDTP_PerThreadInfo ptinfo (orpt[objref]);
           Record ptinfo (orpt[objref]);
           Int prio (ptinfo.Is(TAG_TYPE_SCHDTP_PerThreadInfo) ? ptinfo.GetInt(pos_SCHDTP_PerThreadInfo_priority)
                                                              : ptinfo.GetInt(pos_SCHDTP_SpoThreadInfo_priority));
-          if( !locres.DomExists(prio) )
+          if( !locres.DomExists(prio) ) {
             locres.ImpModify(prio, SET<TYPE_SCHDTP_ThreadId>());
+          }
         }
       }
-      else
-      {
-// 20090226 -->
+      else {
         // for old model (thread on nil cpu)
-        if (cpu.IsNil())
-        {
+        if (cpu.IsNil()) {
           Set dom_cpualloc (this->cpualloc.Dom());
           bool forall = true;
           Map locres_tmp; // map nat to set of SCHDTP`ThreadId
           Generic id;
-          for(bool cc = dom_cpualloc.First(id); cc && forall; cc = dom_cpualloc.Next(id))
-          {
+          for(bool cc = dom_cpualloc.First(id); cc && forall; cc = dom_cpualloc.Next(id)) {
             forall = this->cpualloc[id].IsNil();
-            if (forall)
-            {
+            if (forall) {
               TYPE_SCHDTP_ThreadInfo ti (this->threads[id]);
               Int prio (ti.get_priority());
-              if( !locres_tmp.DomExists(prio) )
+              if( !locres_tmp.DomExists(prio) ) {
                 locres_tmp.ImpModify(prio, SET<TYPE_SCHDTP_ThreadId>());
+              }
             } 
           }
-          if (forall)
+          if (forall) {
             locres = locres_tmp;
+          }
         }
-// <-- 20090226
       } 
 
-      if (!locres.IsEmpty())
-      {
+      if (!locres.IsEmpty()) {
         Set dom_threads (this->threads.Dom());
         Generic id;
-        for(bool cc = dom_threads.First(id); cc; cc = dom_threads.Next(id))
-        {
+        for(bool cc = dom_threads.First(id); cc; cc = dom_threads.Next(id)) {
           TYPE_SCHDTP_ThreadInfo ti (this->threads[id]);
           Int prio (ti.get_priority());
 
           Generic tmpcpu, tmpid;
           if( this->cpualloc.DomExists(id, tmpcpu) &&
               (tmpcpu == cpu) &&
-              (!this->tobekilled.DomExists(cpu, tmpid) || (tmpid != id)))
-          {
+              (!this->tobekilled.DomExists(cpu, tmpid) || (tmpid != id))) {
             SET<TYPE_SCHDTP_ThreadId> id_s (locres[prio]);
             id_s.Insert(id);
             locres.ImpModify(prio, id_s);
@@ -1167,16 +1121,15 @@ Sequence SCHD::SortTheThreads()
         Sequence res; // seq of seq of SCHDTP`ThreadId
 // differ from spec
         SET<Int> pr_s (locres.Dom());
-        while(!pr_s.IsEmpty())
-        {
+        while(!pr_s.IsEmpty()) {
           // find max value
           Int prio (pr_s.GetElem());
           Generic g;
-          for(bool bb = pr_s.First(g); bb; bb = pr_s.Next(g))
-          {
+          for(bool bb = pr_s.First(g); bb; bb = pr_s.Next(g)) {
             Int p (g);
-            if( p.GetValue() > prio.GetValue() )
+            if( p.GetValue() > prio.GetValue() ) {
               prio = p;
+            }
           }
           pr_s.RemElem(prio);
 
@@ -1190,10 +1143,10 @@ Sequence SCHD::SortTheThreads()
       // vdm++
       Sequence res; // seq of seq of SCHDTP`ThreadId
       int maxp = this->maxPriority.GetValue();
-      for(int i = 1; i <= maxp; i++)
+      for(int i = 1; i <= maxp; i++) {
         res.ImpAppend(Sequence());
-      for(int p = maxp; p >= 1; p--)
-      {
+      }
+      for(int p = maxp; p >= 1; p--) {
         SET<TYPE_SCHDTP_ThreadId> threadsWithThisPriority;
         Set dom_threads (this->threads.Dom());
         Generic id;
@@ -1643,12 +1596,10 @@ void SCHD::SelThread(const TYPE_SCHDTP_ThreadId & selid)
 
     SetCurThread(selid, true);
 
-// 20090414 -->
 //    RestoreSTKM(cur);
 //    SetThreadStatus(cur, TYPE_SCHDTP_Running());
     RestoreSTKM(selid);
     SetThreadStatus(selid, TYPE_SCHDTP_Running());
-// <-- 20090414
   }
 }
 
@@ -1657,10 +1608,12 @@ void SCHD::SelThread(const TYPE_SCHDTP_ThreadId & selid)
 // ==> bool
 bool SCHD::Deschedule(const EvaluatorStatus & threadstate) const
 {
-  if (CheckingGuard())
+  if (CheckingGuard()) {
     return false;
-  else
+  }
+  else {
     return EndOfSliceReached(threadstate);
+  }
 }
 
 // IncInstrnum
@@ -1672,8 +1625,9 @@ void SCHD::IncInstrnum(EvaluatorStatus & threadstate) const
   // Note that this is different from the specification as
   // we are able to work with references here
 //  if (!CheckingGuard() && pa.Is(TAG_TYPE_SCHDTP_InstrnumSlice))
-  if (!CheckingGuard() && Settings.GetPrimaryAlgorithm ().Is(TAG_TYPE_SCHDTP_InstrnumSlice))
+  if (!CheckingGuard() && Settings.GetPrimaryAlgorithm ().Is(TAG_TYPE_SCHDTP_InstrnumSlice)) {
     threadstate.instrno++;
+  }
 }
 
 // EndOfSliceReached
@@ -1686,16 +1640,12 @@ bool SCHD::EndOfSliceReached(const EvaluatorStatus & threadstate) const
 
   Generic cpu (theSystem().GetCurCPU());
 
-// 20090319-->
-  if (!cpu.IsNil() || !theSystem().MultiThreads(cpu))
-  {
+  if (!cpu.IsNil() || !theSystem().MultiThreads(cpu)) {
 //    ssa = theSystem().GetSecondaryAlgorithm(cpu);
     ssa = TYPE_SCHDTP_RoundRobin();
   }
-// <--20090319
 
-  if( ssa.Is(TAG_TYPE_SCHDTP_PriorityBased) )
-  {
+  if( ssa.Is(TAG_TYPE_SCHDTP_PriorityBased) ) {
 //    Generic cpu (theSystem().GetCurCPU());
     TYPE_SCHDTP_ThreadId tid (this->curthread_m[cpu]);
     TYPE_SCHDTP_ThreadInfo tinfo(this->threads[tid]);
@@ -2064,31 +2014,24 @@ void SCHD::SetCurThread(const TYPE_SCHDTP_ThreadId & tid, bool log)
   if( this->curthread_m.DomExists(curcpu) ||
       (this->threads.DomExists(tid) &&
        Record(this->threads[tid]).GetBoolValue(pos_SCHDTP_ThreadInfo_periodic)) ||
-      ( id == 1 && this->curthread_m.IsEmpty() ))
-  {
+      ( id == 1 && this->curthread_m.IsEmpty() )) {
     Tuple org_objcl (GetObjRefAndClass(id));
     const Generic & org_obj_ref (org_objcl.GetField(1));
     const Generic & org_cl (org_objcl.GetField(2));
 
-    if( log && ( id != 0 ) && ( !this->lastswapedin.DomExists(curcpu) || tid != this->lastswapedin[curcpu]))
-    {
+    if( log && ( id != 0 ) && ( !this->lastswapedin.DomExists(curcpu) || tid != this->lastswapedin[curcpu])) {
       int ts = Settings.GetTaskSwitch();
-      if( this->curthread_m.DomExists(curcpu) && !this->curthread_m[curcpu].IsNil() )
-      {
-// 20151110-->
+      if( this->curthread_m.DomExists(curcpu) && !this->curthread_m[curcpu].IsNil() ) {
   Generic cpu (theSystem().GetCurCPU());
   Generic cur (CurThreadId());
         //SwapOut(false,true);
         SwapOut(cur, cpu, false,true);
-// <-- 20151110
       }
 
-      if( this->delayed.IsNil() )
-      {
+      if( this->delayed.IsNil() ) {
         TIMETRACE::LogThreadSwapIn(id, org_obj_ref, org_cl, ts);
       }
-      else
-      {
+      else {
         TIMETRACE::LogDelayedThreadSwapIn(id, org_obj_ref, org_cl, this->delayed, ts);
         this->delayed = Nil();
       }
@@ -2111,8 +2054,7 @@ void SCHD::SetCurThread(const TYPE_SCHDTP_ThreadId & tid, bool log)
 void SCHD::SaveCurThreadState()
 {
   Generic cur (CurThreadId());
-  if( this->threads.DomExists(cur) )
-  {
+  if( this->threads.DomExists(cur) ) {
     TYPE_SCHDTP_ThreadInfo threadinfo (this->threads[cur]);
     EvaluatorStatusCt es (theStackMachine().GetEvaluatorState());
 #ifdef VICE
@@ -2153,18 +2095,14 @@ bool SCHD::ASyncOpThread(const TYPE_SCHDTP_ThreadId & curthread) const
 {
   TYPE_SCHDTP_ThreadInfo threadinfo (this->threads[curthread]);
   EvaluatorStatusCt ev (threadinfo.get_stackeval());
-  if (ev.get_const_ref().call_stack.Length() > 0)
-  {
+  if (ev.get_const_ref().call_stack.Length() > 0) {
     TYPE_STKM_CallStackItem csi (ev.get_const_ref().call_stack.Head());
-    if (csi.get_type() == CallStackItemType::CS_DEBUGCMD)
-    {
+    if (csi.get_type() == CallStackItemType::CS_DEBUGCMD) {
       const TYPE_STKM_SubProgram & debug_cmd (csi.GetSequence(pos_STKM_CallStackItem_code));
       const TYPE_INSTRTP_Instruction & instr (debug_cmd[1]);
-      if(instr.Is(TAG_TYPE_INSTRTP_PUSH))
-      {
+      if(instr.Is(TAG_TYPE_INSTRTP_PUSH)) {
         const Generic & val (instr.GetField(pos_INSTRTP_PUSH_val));
-        if( val.Is(TAG_TYPE_SEM_ExplOP))
-        {
+        if( val.Is(TAG_TYPE_SEM_ExplOP)) {
           TYPE_SEM_ExplOP eop (val);
           return (!eop.GetBoolValue(pos_SEM_ExplOP_sync));
         }
@@ -2182,20 +2120,17 @@ SET<TYPE_AS_Name> SCHD::BlockedObjRef(const TYPE_SEM_OBJ_uRef & obj_ref)
   Set dom_threads (this->threads.Dom());
   SET<TYPE_AS_Name> res;
   Generic tid;
-  for(bool bb = dom_threads.First(tid); bb; bb = dom_threads.Next(tid))
-  {
+  for(bool bb = dom_threads.First(tid); bb; bb = dom_threads.Next(tid)) {
     Generic cpu;
     if( (!this->cpualloc.DomExists(tid, cpu)) ||
         ( cpu != theSystem().GetCurCPU() ) ) continue;
 
     TYPE_SCHDTP_ThreadInfo thr (this->threads[tid]);
     const TYPE_SCHDTP_ThreadStatus & status (thr.GetRecord(pos_SCHDTP_ThreadInfo_status));
-    if (status.Is(TAG_TYPE_SCHDTP_Blocked))
-    {
+    if (status.Is(TAG_TYPE_SCHDTP_Blocked)) {
       const Generic & objref (status.GetField(pos_SCHDTP_Blocked_objref));
       if((objref == obj_ref) ||
-         (objref.IsNil() && (thr.GetField(pos_SCHDTP_ThreadInfo_obj) == obj_ref)))
-      {
+         (objref.IsNil() && (thr.GetField(pos_SCHDTP_ThreadInfo_obj) == obj_ref))) {
         res.Insert(status.GetRecord(pos_SCHDTP_Blocked_opnm));
       }
     }
@@ -2216,22 +2151,20 @@ void SCHD::PotentialPerChange(const TYPE_SEM_OBJ_uRef & obj_ref)
 //  ==> nat
 Int SCHD::ObjRefPriority(const TYPE_SEM_OBJ_uRef & obj_ref) const
 {
-  if ( ThreadBlockedOnObjRefExists(obj_ref, this->threads) )
-  {
+  if ( ThreadBlockedOnObjRefExists(obj_ref, this->threads) ) {
     Set dom_threads (this->threads.Dom());
     Generic tid;
-    for (bool bb = dom_threads.First(tid); bb; bb = dom_threads.Next(tid))
-    {
+    for (bool bb = dom_threads.First(tid); bb; bb = dom_threads.Next(tid)) {
       TYPE_SCHDTP_ThreadInfo thr (this->threads[tid]);
-      if ( thr.GetField(pos_SCHDTP_ThreadInfo_obj) == obj_ref )
+      if ( thr.GetField(pos_SCHDTP_ThreadInfo_obj) == obj_ref ) {
         return thr.GetInt(pos_SCHDTP_ThreadInfo_priority);
-      else
-      {
+      }
+      else {
         const TYPE_SCHDTP_ThreadStatus & status (thr.GetRecord(pos_SCHDTP_ThreadInfo_status));
-        if (status.Is(TAG_TYPE_SCHDTP_Blocked))
-        {
-          if ( status.GetField(pos_SCHDTP_Blocked_objref) == obj_ref )
+        if (status.Is(TAG_TYPE_SCHDTP_Blocked)) {
+          if ( status.GetField(pos_SCHDTP_Blocked_objref) == obj_ref ) {
             return thr.GetInt(pos_SCHDTP_ThreadInfo_priority);
+          }
         }
       }
     }
@@ -2249,18 +2182,17 @@ bool SCHD::ThreadBlockedOnObjRefExists(const TYPE_SEM_OBJ_uRef & obj_ref,
   Set dom_t_m (t_m.Dom());
   bool exists = false;
   Generic tid;
-  for (bool bb = dom_t_m.First(tid); bb && !exists; bb = dom_t_m.Next(tid))
-  {
+  for (bool bb = dom_t_m.First(tid); bb && !exists; bb = dom_t_m.Next(tid)) {
     TYPE_SCHDTP_ThreadInfo thr (t_m[tid]);
-    if ( thr.GetField(pos_SCHDTP_ThreadInfo_obj) == obj_ref )
+    if ( thr.GetField(pos_SCHDTP_ThreadInfo_obj) == obj_ref ) {
       exists = true;
-    else
-    {
+    }
+    else {
       const TYPE_SCHDTP_ThreadStatus & status (thr.GetRecord(pos_SCHDTP_ThreadInfo_status));
-      if ( status.Is(TAG_TYPE_SCHDTP_Blocked) )
-      {
-        if ( status.GetField(pos_SCHDTP_Blocked_objref) == obj_ref )
+      if ( status.Is(TAG_TYPE_SCHDTP_Blocked) ) {
+        if ( status.GetField(pos_SCHDTP_Blocked_objref) == obj_ref ) {
           exists = true;
+        }
       }
     }
   }
@@ -2275,8 +2207,7 @@ bool SCHD::WellFormedPriorityFile (const SEQ<TYPE_SCHDTP_PriorityEntry> & pf)
 {
   SET<TYPE_AS_Id> clnms;
   size_t len_pf = pf.Length();
-  for (size_t index = 1; index <= len_pf; index++)
-  {
+  for (size_t index = 1; index <= len_pf; index++) {
     const TYPE_SCHDTP_PriorityEntry & pe (pf[index]);
     clnms.Insert(pe.GetSequence(pos_SCHDTP_PriorityEntry_clnm));
   }
@@ -2290,8 +2221,7 @@ MAP<TYPE_AS_Id,Int> SCHD::MakePriorityMap(const SEQ<TYPE_SCHDTP_PriorityEntry> &
 {
   MAP<TYPE_AS_Id,Int> pm;
   size_t len_pf = pf.Length();
-  for (size_t index = 1; index <= len_pf; index++)
-  {
+  for (size_t index = 1; index <= len_pf; index++) {
     const TYPE_SCHDTP_PriorityEntry & pe (pf[index]);
     pm.Insert(pe.GetSequence(pos_SCHDTP_PriorityEntry_clnm),
               pe.GetInt(pos_SCHDTP_PriorityEntry_priority));
@@ -2316,8 +2246,7 @@ void SCHD::SetPriorityMap(const MAP<TYPE_AS_Id,Int> & pm)
   Int maxP (SCHD::Default_priority);
 
   Generic pr;
-  for (bool bb = pmRng.First(pr); bb; bb = pmRng.Next(pr))
-  {
+  for (bool bb = pmRng.First(pr); bb; bb = pmRng.Next(pr)) {
     Int priority (pr);
     if (priority > maxP)
       maxP = priority;
@@ -2359,8 +2288,7 @@ Tuple SCHD::RunMessageThread(const Generic & clnm,
 
   TYPE_SCHDTP_ThreadId tid (AddNewThreadId(Bool(false), objref, instr, p, Bool(false), mesid));
 
-  if ( tid != GetLastSwapedIn(theSystem().GetCurCPU()) )
-  {
+  if ( tid != GetLastSwapedIn(theSystem().GetCurCPU()) ) {
     TIMETRACE::LogThreadSwapIn(tid, objref, clnm, Settings.GetTaskSwitch());
     SetLastSwapedIn(tid,theSystem().GetCurCPU());
   }
@@ -2375,9 +2303,7 @@ Tuple SCHD::RunThread(const TYPE_SCHDTP_ThreadId & tid)
   SetCurThread(tid, true);
   SetThreadStatus(CurThreadId(), TYPE_SCHDTP_Running());
   RestoreInstrAndSTKM(CurThreadId());
-// 20150204 -->
   theSystem().ResetSlice();
-// <-- 20150204
   return theStackMachine().EvalMainLoop();
 }
 
@@ -2389,9 +2315,11 @@ bool SCHD::IsSyncOpThread()
 
 void SCHD::ShowThreadInfo(const TYPE_SCHDTP_ThreadId & tid)
 {
-  if (this->threads.DomExists(tid))
+  if (this->threads.DomExists(tid)) {
     vdm_iplog << this->threads[tid] << endl;
-  else
+  }
+  else {
     vdm_iplog << L"thread with id: " << tid << L" is't exists."  << endl;
+  }
 }
 

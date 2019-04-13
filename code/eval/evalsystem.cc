@@ -124,62 +124,68 @@ TYPE_STKM_CPUSigma SYSTEM::EmptyCPU(const Generic & decl)
   if( !decl.IsNil() )
     capacity = Int(Settings.GetDefaultCapacity());
 
-  if( !decl.IsNil() )
-  {
+  if( !decl.IsNil() ) {
     TYPE_AS_Expr r (decl);
-    if( r.Is(TAG_TYPE_AS_NewExpr) )
-    {
+    if( r.Is(TAG_TYPE_AS_NewExpr) ) {
       TYPE_AS_NewExpr ne (decl);
-      GetCI().IncTestCoverageInfo(ne.get_cid()); // 20081030
+      GetCI().IncTestCoverageInfo(ne.get_cid());
       if( (ASTAUX::ASName2String(ne.get_cls()) == L"CPU") &&
-          (ne.get_args().Length() == 2) )
-      {
-        GetCI().IncTestCoverageInfo(ne.get_cls().get_cid()); // 20081030
+          (ne.get_args().Length() == 2) ) {
+        GetCI().IncTestCoverageInfo(ne.get_cls().get_cid());
         Generic first (ne.get_args().Index(1));
         Generic second (ne.get_args().Index(2));
-        if( first.Is(TAG_TYPE_AS_QuoteLit) )
-        {
+        if( first.Is(TAG_TYPE_AS_QuoteLit) ) {
           TYPE_AS_QuoteLit ql (first);
-          GetCI().IncTestCoverageInfo(ql.get_cid()); // 20081030
-          if( ql.get_val().GetString() == L"FP" )
+          GetCI().IncTestCoverageInfo(ql.get_cid());
+          if( ql.get_val().GetString() == L"FP" ) {
             prio = TYPE_SCHDTP_PriorityBased();
-          else if( ql.get_val().GetString() == L"FCFS" )
+          }
+          else if( ql.get_val().GetString() == L"FCFS" ) {
             prio = TYPE_SCHDTP_RoundRobin();
-          else
+          }
+          else {
             RTERR::InitError (L"EmptyCPU", RTERR_UNSUPPRIO, Nil(), Nil(), ASTAUX::GetCid(first), Sequence());
+          }
         }
-        else
+        else {
           RTERR::InitError (L"EmptyCPU", RTERR_WRONGCPUCONS, Nil(), Nil(), ASTAUX::GetCid(decl), Sequence());
-        if( second.Is(TAG_TYPE_AS_RealLit) )
-        {
-          TYPE_AS_RealLit rl (second);
-          GetCI().IncTestCoverageInfo(rl.get_cid()); // 20081030
-          if( rl.get_val().GetValue() >= 1 )
-            capacity = Int(rl.get_val());
-          else
-            RTERR::InitError (L"EmptyCPU", RTERR_UNSUPCPUCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
         }
-        else if( second.Is(TAG_TYPE_AS_NumLit) )
-        {
+        if( second.Is(TAG_TYPE_AS_RealLit) ) {
+          TYPE_AS_RealLit rl (second);
+          GetCI().IncTestCoverageInfo(rl.get_cid());
+          if( rl.get_val().GetValue() >= 1 ) {
+            capacity = Int(rl.get_val());
+          }
+          else {
+            RTERR::InitError (L"EmptyCPU", RTERR_UNSUPCPUCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
+          }
+        }
+        else if( second.Is(TAG_TYPE_AS_NumLit) ) {
           TYPE_AS_NumLit rl (second);
           GetCI().IncTestCoverageInfo(rl.get_cid()); // 20081030
-          if( rl.get_val().GetValue() >= 1 )
+          if( rl.get_val().GetValue() >= 1 ) {
             capacity = Int(rl.get_val());
-          else
+          }
+          else {
             RTERR::InitError (L"EmptyCPU", RTERR_UNSUPCPUCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
+          }
         }
-        else
+        else {
           RTERR::InitError (L"EmptyCPU", RTERR_UNSUPCPUCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
+        }
       }
-      else
+      else {
         RTERR::InitError (L"EmptyCPU", RTERR_WRONGCPUCONS, Nil(), Nil(), ASTAUX::GetCid(decl), Sequence());
+      }
     }
-    else
+    else {
       RTERR::InitError (L"EmptyCPU", RTERR_WRONGCPUCONS, Nil(), Nil(), ASTAUX::GetCid(decl), Sequence());
+    }
   }
   TYPE_SCHDTP_PrimarySchedulerAlgorithm psa = TYPE_SCHDTP_PureCooperative();
-  if (decl.IsNil())
+  if (decl.IsNil()) {
     psa = Settings.GetPrimaryAlgorithm();
+  }
 #endif // VICE
 
   TYPE_STKM_CPUSigma csigma;
@@ -246,87 +252,90 @@ TYPE_STKM_BUSSigma SYSTEM::RemoveMesAndLog(const TYPE_STKM_BUSSigma & bs)
 // ==> BUSSigma
 TYPE_STKM_BUSSigma SYSTEM::EmptyBUS(const Generic & decl)
 {
-  if( !decl.IsNil() )
-  {
+  if( !decl.IsNil() ) {
     TYPE_SCHDTP_BUSKind kind = TYPE_SCHDTP_FCFS();
     Generic cap = Quote(L"INFINITE");
     Set cpus;
     cpus.Insert(Nil());
 
     TYPE_AS_Expr r (decl);
-    if( r.Is(TAG_TYPE_AS_NewExpr) )
-    {
+    if( r.Is(TAG_TYPE_AS_NewExpr) ) {
       TYPE_AS_NewExpr ne (decl);
       GetCI().IncTestCoverageInfo(ne.get_cid()); // 20081030
       if( (ASTAUX::ASName2String(ne.get_cls()) == L"BUS") &&
-          (ne.get_args().Length() == 3) )
-      {
+          (ne.get_args().Length() == 3) ) {
         GetCI().IncTestCoverageInfo(ne.get_cls().get_cid()); // 20081030
         Generic first (ne.get_args().Index(1));
         Generic second (ne.get_args().Index(2));
         Generic third (ne.get_args().Index(3));
-        if( first.Is(TAG_TYPE_AS_QuoteLit) )
-        {
+        if( first.Is(TAG_TYPE_AS_QuoteLit) ) {
           TYPE_AS_QuoteLit ql (first);
           GetCI().IncTestCoverageInfo(ql.get_cid()); // 20081030
-          if( ql.get_val().GetString() == L"CSMACD" )
+          if( ql.get_val().GetString() == L"CSMACD" ) {
             kind = TYPE_SCHDTP_CSMACD();
-          else if( ql.get_val().GetString() == L"TDMA" )
+          }
+          else if( ql.get_val().GetString() == L"TDMA" ) {
             kind = TYPE_SCHDTP_TDMA();
-          else if( ql.get_val().GetString() == L"FCFS" )
+          }
+          else if( ql.get_val().GetString() == L"FCFS" ) {
             kind = TYPE_SCHDTP_FCFS();
-          else
+          }
+          else {
             RTERR::InitError (L"EmptyBUS", RTERR_UNSUPPKIND, Nil(), Nil(), ASTAUX::GetCid(first), Sequence());
+          }
         }
-        else
+        else {
           RTERR::InitError (L"EmptyBUS", RTERR_UNSUPPKIND, Nil(), Nil(), ASTAUX::GetCid(first), Sequence());
+        }
 
-        if( second.Is(TAG_TYPE_AS_RealLit) )
-        {
+        if( second.Is(TAG_TYPE_AS_RealLit) ) {
           TYPE_AS_RealLit rl (second);
-          GetCI().IncTestCoverageInfo(rl.get_cid()); // 20081030
-          if( rl.get_val().GetValue() >= 1 )
+          GetCI().IncTestCoverageInfo(rl.get_cid());
+          if( rl.get_val().GetValue() >= 1 ) {
             cap = rl.get_val();
-          else
+          }
+          else {
             RTERR::InitError (L"EmptyBUS", RTERR_UNSUPBUSCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
+          }
         }
-        else if( second.Is(TAG_TYPE_AS_NumLit) )
-        {
+        else if( second.Is(TAG_TYPE_AS_NumLit) ) {
           TYPE_AS_NumLit rl (second);
-          GetCI().IncTestCoverageInfo(rl.get_cid()); // 20081030
-          if( rl.get_val().GetValue() >= 1 )
+          GetCI().IncTestCoverageInfo(rl.get_cid());
+          if( rl.get_val().GetValue() >= 1 ) {
             cap = rl.get_val();
-          else
+          }
+          else {
             RTERR::InitError (L"EmptyBUS", RTERR_UNSUPBUSCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
+          }
         }
-        else
+        else {
           RTERR::InitError (L"EmptyBUS", RTERR_UNSUPBUSCAP, Nil(), Nil(), ASTAUX::GetCid(second), Sequence());
-
-        if( third.Is(TAG_TYPE_AS_SetEnumerationExpr) )
-        {
+        }
+        if( third.Is(TAG_TYPE_AS_SetEnumerationExpr) ) {
           TYPE_AS_SetEnumerationExpr see (third);
-          GetCI().IncTestCoverageInfo(see.get_cid()); // 20081030
+          GetCI().IncTestCoverageInfo(see.get_cid());
           const SEQ<TYPE_AS_Expr> & els (see.GetSequence(pos_AS_SetEnumerationExpr_els));
           bool allok = true;
           size_t len_els = els.Length();
-          for (size_t index= 1; index <= len_els; index++)
-          {
+          for (size_t index= 1; index <= len_els; index++) {
             const TYPE_AS_Expr & el (els[index]);
-            GetCI().IncTestCoverageInfo(ASTAUX::GetCid(el)); // 20081030
+            GetCI().IncTestCoverageInfo(ASTAUX::GetCid(el));
             allok = el.Is(TAG_TYPE_AS_Name);
           }
-          if(allok)
-          {
+          if(allok) {
             cpus = els.Elems();
           }
-          else
+          else {
             RTERR::InitError (L"EmptyBUS", RTERR_NOSETOFCPUS, Nil(), Nil(), ASTAUX::GetCid(third), Sequence());
+          }
         }
-        else
+        else {
           RTERR::InitError (L"EmptyBUS", RTERR_NOSETOFCPUS, Nil(), Nil(), ASTAUX::GetCid(third), Sequence());
+        }
       }
-      else
+      else {
         RTERR::InitError (L"EmptyBUS", RTERR_WRONGBUSCONS, Nil(), Nil(), ASTAUX::GetCid(decl), Sequence());
+      }
     }
     TYPE_STKM_BUSSigma bsigma;
     bsigma.SetField(pos_STKM_BUSSigma_kind,     kind);
@@ -352,39 +361,6 @@ TYPE_STKM_BUSSigma SYSTEM::EmptyBUS(const Generic & decl)
   }
 }
 
-// AddThreadId
-// newt : SCHDTP`ThreadId
-// ==> ()
-//void SYSTEM::AddThreadId(const TYPE_SCHDTP_ThreadId & newt)
-//{
-//  TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
-//  Set threads (csigma.GetSet(pos_STKM_CPUSigma_threads));
-//  threads.Insert(newt);
-//  csigma.set_threads(threads);
-//  this->cpustate.ImpModify(this->curcpu,csigma);
-//}
-
-// KillThreadId
-// newt : SCHDTP`ThreadId
-// ==> ()
-/*
-void SYSTEM::KillThreadId(const TYPE_SCHDTP_ThreadId & newt)
-{
-  TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
-
-  Set threads (csigma.GetSet(pos_STKM_CPUSigma_threads));
-  threads.RemElem(newt);
-  csigma.set_threads(threads);
-
-  // 20061025
-  Map threadstate (csigma.GetMap(pos_STKM_CPUSigma_threadstate));
-  threadstate.RemElem(newt);
-  csigma.set_threadstate(threadstate);
-
-  this->cpustate.ImpModify(this->curcpu,csigma);
-}
-*/
-
 // DeployInst
 // cpunm : [AS`Name]
 // obj_ref : SEM`OBJ_Ref
@@ -402,13 +378,11 @@ void SYSTEM::DeployInst(const Generic & cpunm, const TYPE_SEM_OBJ_uRef & obj_ref
     theState().SetCPUOfObjRef(cpunm, obj_ref);
 
 //vdm_iplog << L"DeployInst:    " << PrintCPU(cpunm) << L" OID:" << theState().PrintOID(obj_ref) << endl;
-// 20061213
 //  if( !this->allocated.DomExists(obj_ref) ) //// %%%%%%%%%%%%%%%%%%%
     this->allocated.ImpModify(obj_ref, cpunm);
 
 //  const TYPE_AS_Name & clnm (obj_ref.GetRecord(pos_SEM_OBJ_uRef_tp));
 
-// 20081023
 //  TYPE_STKM_CPUSigma nsigma (this->cpustate[Nil()]);
 //  Int time (nsigma.GetInt(pos_STKM_CPUSigma_time));
   Int time (csigma.GetInt(pos_STKM_CPUSigma_time));
@@ -499,8 +473,7 @@ void SYSTEM::IncrIdleTime(const Generic & cpunm, int delta)
 // ==> bool
 bool SYSTEM::CurCPUAnyThread(const Generic & nm) const
 {
-  if( this->cpustate.DomExists(nm) )
-  {
+  if( this->cpustate.DomExists(nm) ) {
     TYPE_STKM_CPUSigma csigma (this->cpustate[nm]);
     return !csigma.GetSet(pos_STKM_CPUSigma_threads).IsEmpty();
   }
@@ -515,20 +488,18 @@ bool SYSTEM::CurCPUAnyMessages(const Generic & nm) const
   if( this->cpustate.DomExists(nm) )
   {
     TYPE_STKM_CPUSigma csigma (this->cpustate[nm]);
-// 20090430 -->
 //    return !csigma.GetMap(pos_STKM_CPUSigma_messages).IsEmpty();
     const Map & mes_m (csigma.GetMap(pos_STKM_CPUSigma_messages));
-    if (!mes_m.IsEmpty())
-    {
+    if (!mes_m.IsEmpty()) {
       Generic opnm (FindFirstOpMes(mes_m));
-      if( opnm.IsNil() )
+      if( opnm.IsNil() ) {
         opnm = mes_m.Dom().GetElem();
+      }
       SEQ<TYPE_STKM_Message> mes_s (mes_m[opnm]);
       TYPE_STKM_Message mes (mes_s.Hd());
       const Int & t (mes.GetInt(pos_STKM_Message_time));
       return ( t <= csigma.GetInt(pos_STKM_CPUSigma_swaptime) );
     }
-// <-- 20090430
   }
   return false;
 }
@@ -539,25 +510,25 @@ bool SYSTEM::CurCPUAnyMessages(const Generic & nm) const
 Tuple SYSTEM::SelAndRunMessageCall(const Generic & cpunm)
 {
 //wcout << PrintCPU(this->curcpu) << L" " << PrintCPU(cpunm) << endl;
-  if( this->cpustate.DomExists(cpunm) && CurCPUAnyMessages(cpunm) )
-  {
+  if( this->cpustate.DomExists(cpunm) && CurCPUAnyMessages(cpunm) ) {
     TYPE_STKM_CPUSigma csigma (this->cpustate[cpunm]);
     Map mes_m (csigma.GetMap(pos_STKM_CPUSigma_messages));
 
     Generic opnm (FindFirstOpMes(mes_m));
 
-    if( opnm.IsNil() )
+    if( opnm.IsNil() ) {
       opnm = mes_m.Dom().GetElem();
-
+    }
     SEQ<TYPE_STKM_Message> mes_s (mes_m[opnm]);
     TYPE_STKM_Message mes (mes_s.Hd());
     
     mes_s.ImpTl();
-    if( mes_s.IsEmpty() )
+    if( mes_s.IsEmpty() ) {
       mes_m.RemElem(opnm);
-    else
+    }
+    else {
       mes_m.ImpModify(opnm, mes_s);
-
+    }
     csigma.SetField(pos_STKM_CPUSigma_messages, mes_m);
     this->cpustate.ImpModify(cpunm, csigma);
     return RunMessage(mes,cpunm);
@@ -570,23 +541,19 @@ Tuple SYSTEM::SelAndRunMessageCall(const Generic & cpunm)
 // ==> [AS`Name]
 Generic SYSTEM::FindFirstOpMes(const Map & mes_m) const
 {
-  if( !mes_m.IsEmpty() )
-  {
+  if( !mes_m.IsEmpty() ) {
     TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
     const MAP<TYPE_AS_Name, Int> & prio_tab (csigma.GetMap(pos_STKM_CPUSigma_prio_utab));
     Set ops (prio_tab.Dom());
 
     ops.ImpIntersect(mes_m.Dom());
 
-    if( !ops.IsEmpty() )
-    {
+    if( !ops.IsEmpty() ) {
       TYPE_AS_Name opnm (ops.GetElem());
       Int prio (prio_tab[opnm]);
       Generic op;
-      for(bool bb = ops.First(op); bb; bb = ops.Next(op))
-      {
-        if( prio < Int(prio_tab[op]) )
-        {
+      for(bool bb = ops.First(op); bb; bb = ops.Next(op)) {
+        if( prio < Int(prio_tab[op]) ) {
           opnm = op;
           prio = prio_tab[op];
         }
@@ -610,8 +577,7 @@ Tuple SYSTEM::RunMessage(const TYPE_STKM_Message & m, const Generic & cpunm)
 
   TYPE_STKM_CPUSigma csigma (this->cpustate[cpunm]);
 
-  if( t <= csigma.GetInt(pos_STKM_CPUSigma_swaptime) )
-  {
+  if( t <= csigma.GetInt(pos_STKM_CPUSigma_swaptime) ) {
     SetCurCPU(cpunm, csigma.GetInt(pos_STKM_CPUSigma_swaptime));
     switch(mes.GetTag()) {
       case TAG_TYPE_STKM_MessageBroadcast: {
@@ -621,8 +587,7 @@ Tuple SYSTEM::RunMessage(const TYPE_STKM_Message & m, const Generic & cpunm)
         const Generic & obj_ref (mes.GetField(pos_STKM_MessageInfo_obj_uref));
 
         Generic clnm = Nil();
-        if(!obj_ref.IsNil() && theState().IsInObjTab(obj_ref))
-        {
+        if(!obj_ref.IsNil() && theState().IsInObjTab(obj_ref)) {
           clnm = Record(obj_ref).GetRecord(pos_SEM_OBJ_uRef_tp);
         }
         const TYPE_AS_Name & opnm (mes.GetRecord(pos_STKM_MessageInfo_opname));
@@ -776,22 +741,16 @@ TYPE_CI_ContextId SYSTEM::GetCID(const TYPE_SEM_VAL & val) const
 // swapt : nat ==> bool
 bool SYSTEM::CPUWork(const Generic & cpunm, int swapt) const
 {
-  if( this->cpustate.DomExists( cpunm ) )
-  {
+  if( this->cpustate.DomExists( cpunm ) ) {
     TYPE_STKM_CPUSigma csigma (this->cpustate[cpunm]);
     SET<TYPE_SCHDTP_ThreadId> threads (csigma.GetSet(pos_STKM_CPUSigma_threads));
     Set objrefs (csigma.GetSet(pos_STKM_CPUSigma_objrefs));
     bool exists = false;
-// 20071022---
-//    if( !csigma.get_curr_program().IsEmpty() )
-//    {
-      Generic tid;
-      for(bool bb = threads.First(tid); bb && !exists; bb = threads.Next(tid))
-      {
-        TYPE_SCHDTP_ThreadStatus ts (theScheduler().GetThreadStatus(tid));
-        exists = !ts.Is(TAG_TYPE_SCHDTP_SyncOp) && !ts.Is(TAG_TYPE_SCHDTP_SyncOpRet);
-      }
-//    }
+    Generic tid;
+    for(bool bb = threads.First(tid); bb && !exists; bb = threads.Next(tid)) {
+      TYPE_SCHDTP_ThreadStatus ts (theScheduler().GetThreadStatus(tid));
+      exists = !ts.Is(TAG_TYPE_SCHDTP_SyncOp) && !ts.Is(TAG_TYPE_SCHDTP_SyncOpRet);
+    }
     return exists ||
            !csigma.GetMap(pos_STKM_CPUSigma_messages).IsEmpty() ||
            theScheduler().PeriodicReady(cpunm, objrefs);
@@ -806,8 +765,7 @@ bool SYSTEM::CPUWork(const Generic & cpunm, int swapt) const
 // ==> ()
 void SYSTEM::ProcessBUS(const TYPE_AS_Name & nm, int swapt)
 {
-  if( !this->busstate.DomExists(nm) )
-  {
+  if( !this->busstate.DomExists(nm) ) {
     RTERR::InitError (L"ProcessBUS", RTERR_INTERNAL_ERROR, Nil(), Nil(), nm.get_cid(), Sequence());
     return;
   }
@@ -824,8 +782,7 @@ void SYSTEM::ProcessBUS(const TYPE_AS_Name & nm, int swapt)
 
   int newt = t;
 
-  if( !BUSWork(newt, swapt, mes_m, waiting) )
-  {
+  if( !BUSWork(newt, swapt, mes_m, waiting) ) {
     Int time (t + Settings.GetStepSize());
     bsigma.SetField(pos_STKM_BUSSigma_time, time);
     this->busstate.ImpModify(nm, bsigma);
@@ -833,12 +790,10 @@ void SYSTEM::ProcessBUS(const TYPE_AS_Name & nm, int swapt)
     return;
   }
 
-  while( newt <= swapt && BUSWork(newt, swapt, mes_m, waiting) )
-  {
+  while( newt <= swapt && BUSWork(newt, swapt, mes_m, waiting) ) {
     Generic first_mes (FindFirstMessage(mes_m));
 //
-    while( !waiting.IsEmpty() )
-    {
+    while( !waiting.IsEmpty() ) {
       Record req (waiting.Hd()); // (MessageReq | MessageReplyReq)
 
       Int time;
@@ -856,9 +811,9 @@ void SYSTEM::ProcessBUS(const TYPE_AS_Name & nm, int swapt)
       }
 
       if( !first_mes.IsNil() &&  
-          (time.GetValue() > mes_m[first_mes].get_time().GetValue()))
+          (time.GetValue() > mes_m[first_mes].get_time().GetValue())) {
         break;
-
+      }
       SEQ<TYPE_GLOBAL_ChanUsage> log (bsigma.GetSequence(pos_STKM_BUSSigma_log));
       Int lastuse (0);
       if (!log.IsEmpty())
@@ -1312,8 +1267,7 @@ void SYSTEM::SetGuard(const Generic & fullopnm, const Generic & obj)
 {
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
   const Generic & curthread (csigma.GetField(pos_STKM_CPUSigma_curthread));
-  if( !curthread.IsNil() )
-  {
+  if( !curthread.IsNil() ) {
     Map threadstate (csigma.GetMap(pos_STKM_CPUSigma_threadstate));
     EvaluatorStatusCt es ((const EvaluatorStatusCt &)threadstate[curthread]);
     es.get_shared_ref().guard = TYPE_STKM_Guard().Init(fullopnm, obj);
@@ -1328,12 +1282,11 @@ void SYSTEM::SetGuard(const Generic & fullopnm, const Generic & obj)
 void SYSTEM::ResetGuard()
 {
 #ifndef VICE
-  if (!theStackMachine().UsesThreads()) return; // 20110328
+  if (!theStackMachine().UsesThreads()) return;
 #endif // VICE
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
   const Generic & curthread (csigma.GetField(pos_STKM_CPUSigma_curthread));
-  if( !curthread.IsNil() )
-  {
+  if( !curthread.IsNil() ) {
     Map threadstate (csigma.GetMap(pos_STKM_CPUSigma_threadstate));
     EvaluatorStatusCt es ((const EvaluatorStatusCt &)threadstate[curthread]);
     es.get_shared_ref().guard = Nil();
@@ -1349,8 +1302,7 @@ bool SYSTEM::HasGuard() const
 {
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
   const Generic & curthread (csigma.GetField(pos_STKM_CPUSigma_curthread));
-  if( !curthread.IsNil() )
-  {
+  if( !curthread.IsNil() ) {
     EvaluatorStatusCt es ((const EvaluatorStatusCt &)csigma.GetMap(pos_STKM_CPUSigma_threadstate)[curthread]);
     return !es.get_const_ref().guard.IsNil();
   }
@@ -1363,14 +1315,12 @@ void SYSTEM::RemoveAllGuards()
 {
   Set cpu_s (this->cpustate.Dom());
   Generic cpu;
-  for (bool bb = cpu_s.First(cpu); bb; bb = cpu_s.Next(cpu))
-  {
+  for (bool bb = cpu_s.First(cpu); bb; bb = cpu_s.Next(cpu)) {
     TYPE_STKM_CPUSigma csigma (this->cpustate[cpu]);
     Map t_m (csigma.GetMap(pos_STKM_CPUSigma_threadstate));
     Set tid_s (t_m.Dom());
     Generic tid;
-    for (bool cc = tid_s.First(tid); cc; cc = tid_s.Next(tid))
-    {
+    for (bool cc = tid_s.First(tid); cc; cc = tid_s.Next(tid)) {
       EvaluatorStatusCt es ((const EvaluatorStatusCt &)t_m[tid]);
       es.get_shared_ref().guard = Nil();
       t_m.ImpModify(tid, es);
@@ -1386,14 +1336,13 @@ void SYSTEM::ResetSlice()
 {
 //wcout << L"ResetSlice: " << this->curcpu  << " (" << GetTimeOfCPU(this->curcpu) << ")" << endl;
 #ifndef VICE
-  if (!theStackMachine().UsesThreads()) return; // 20110328
+  if (!theStackMachine().UsesThreads()) return;
 #endif // VICE
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
   const Generic & curthread (csigma.GetField(pos_STKM_CPUSigma_curthread));
 //wcout << L"curcpu: " << this->curcpu << endl;
 //wcout << L"curthread: " << curthread << endl;
-  if( !curthread.IsNil() )
-  {
+  if( !curthread.IsNil() ) {
     Map threadstate (csigma.GetMap(pos_STKM_CPUSigma_threadstate));
     EvaluatorStatusCt es ((const EvaluatorStatusCt &)threadstate[curthread]);
     threadstate.ImpModify(curthread, theScheduler().InitSlice(es));
@@ -1422,8 +1371,7 @@ bool SYSTEM::RunTimeError() const
 {
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
   const Generic & curthread (csigma.GetField(pos_STKM_CPUSigma_curthread));
-  if( !curthread.IsNil() )
-  {
+  if( !curthread.IsNil() ) {
     EvaluatorStatusCt es ((const EvaluatorStatusCt &)csigma.GetMap(pos_STKM_CPUSigma_threadstate)[curthread]);
     return es.get_const_ref().rterror;
   }
@@ -1438,9 +1386,9 @@ void SYSTEM::DeleteThread(const TYPE_SCHDTP_ThreadId & id)
 //vdm_iplog << L"DeleteThread TID:" << id << L" " << PrintCPU(this->curcpu) << endl;
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
 
-  if (id == csigma.GetField(pos_STKM_CPUSigma_curthread)) // 20140411
+  if (id == csigma.GetField(pos_STKM_CPUSigma_curthread)) {
     csigma.SetField(pos_STKM_CPUSigma_curthread, Nil());
-
+  }
   if (((Map &)(csigma.GetFieldRef(pos_STKM_CPUSigma_threadstate))).DomExists(id)) {
 //  Map threadstate (csigma.GetMap(pos_STKM_CPUSigma_threadstate)); // %%%%%
 //  threadstate.RemElem(id);
@@ -1468,8 +1416,7 @@ void SYSTEM::SaveCurrentState(const EvaluatorStatusCt & es)
 //#endif // VICE
   TYPE_STKM_CPUSigma csigma (this->cpustate[this->curcpu]);
   const Generic & curthread (csigma.GetField(pos_STKM_CPUSigma_curthread));
-  if( !curthread.IsNil() )
-  {
+  if( !curthread.IsNil() ) {
 //    Map threadstate (csigma.GetMap(pos_STKM_CPUSigma_threadstate)); // %%%%%
 //    threadstate.ImpModify(curthread, es);
 //    csigma.SetField(pos_STKM_CPUSigma_threadstate, threadstate); // %%%%%
@@ -1688,18 +1635,19 @@ int SYSTEM::GetTime () const
 
 int SYSTEM::GetTimeOfCPU (const Generic & cpu) const
 {
-  // 20061213
-  if( !this->cpustate.DomExists(cpu) )
+  if( !this->cpustate.DomExists(cpu) ) {
     return GetTimeOfCPU(this->curcpu);
-
+  }
   TYPE_STKM_CPUSigma csigma (this->cpustate[cpu]);
   int idletime = csigma.GetIntValue(pos_STKM_CPUSigma_idletime);
   int time = csigma.GetIntValue(pos_STKM_CPUSigma_time);
 
-  if( idletime < time )
+  if( idletime < time ) {
     return time;
-  else
+  }
+  else {
     return idletime;
+  }
 }
 
 void SYSTEM::PushDuration()
@@ -1716,8 +1664,9 @@ void SYSTEM::PopDuration(const Real & t)
   int dur = csigma.GetIntValue(pos_STKM_CPUSigma_dur);
   csigma.SetField(pos_STKM_CPUSigma_dur, Int(dur - 1));
   this->cpustate.ImpModify(this->curcpu, csigma);
-  if( !InDuration() )
+  if( !InDuration() ) {
     IncrAbsTime(Int(t));
+  }
 }
 
 void SYSTEM::PushCycle()
@@ -1901,13 +1850,11 @@ TYPE_STKM_MessageId SYSTEM::AddMessageToBUS(const Generic & objref,
 
   Int prio (theScheduler().GetThreadPriority());
 
-// 20090501-->
 //  TYPE_STKM_MessageInfo m_info;
 //  m_info.Init(objref, opsem.get_fnName(), arg_lv, threadid, this->curcpu);
   TYPE_AS_Name fullnm (AUX::ConstructDoubleName(opsem.get_modName(), opsem.get_fnName()));
   TYPE_STKM_MessageInfo m_info;
   m_info.Init(objref, fullnm, arg_lv, threadid, this->curcpu);
-// <-- 20090501
 
   TYPE_STKM_Message mes;
   mes.Init(mesid, GetTime(), prio, m_info, Int(1));
@@ -1928,9 +1875,7 @@ TYPE_STKM_MessageId SYSTEM::AddMessageToBUS(const Generic & objref,
       tcpu = theState().GetCPUOfObjRef(objref);
   }
 
-// 20090501-->
 //  TYPE_AS_Name fullnm (AUX::ConstructDoubleName(opsem.get_modName(), opsem.get_fnName()));
-// <-- 20090501
   Int time (theSystem().GetTime());
 
 //wcout << L"AddMessageToBUS:       MID:" << mesid << L" " << PrintCurThread() << L" ==> " << PrintCPU(tcpu) << L" " << ASTAUX::ASName2String(fullnm) << endl;
@@ -2394,7 +2339,7 @@ TYPE_SEM_VAL SYSTEM::UpdateObjRef(const TYPE_SEM_VAL & val_)
 // -> [AS`Name] * nat * [nat]
 Tuple SYSTEM::SmallNameAndNextTime(const Map & t_m) const
 {
-// 20071024 change schan direction
+// change schan direction
 //  Generic first (t_m.Dom().GetElem());
 //  Int t_f (t_m[first]);
 //  Generic f_g, ft_g;
@@ -2402,24 +2347,21 @@ Tuple SYSTEM::SmallNameAndNextTime(const Map & t_m) const
   Sequence t_l (ASTAUX::SetToSequenceR(t_m.Dom()));
   Generic first (t_l[1]);
   
-// 20071206 hack
-  if (t_m.Dom().InSet(Nil()))
+// hack
+  if (t_m.Dom().InSet(Nil())) {
     first = Nil();
-
+  }
   Int t_f (t_m[first]);
   Generic f_g;
-  for(bool bb = t_l.First(f_g); bb; bb = t_l.Next(f_g))
-  {
+  for(bool bb = t_l.First(f_g); bb; bb = t_l.Next(f_g)) {
     Generic ft_g = t_m[f_g];
-    if( Int(ft_g) < t_f )
-    {
+    if( Int(ft_g) < t_f ) {
       first = f_g;
       t_f = ft_g;
     }
   }
 
-  if( t_m.Dom().Card() > 1)
-  {
+  if( t_m.Dom().Card() > 1) {
     Map t_m_2(t_m);
     t_m_2.RemElem(first);
 
@@ -2428,11 +2370,9 @@ Tuple SYSTEM::SmallNameAndNextTime(const Map & t_m) const
     Int t_n (t_m_2[next]);
 
     Generic n;
-    for(bool bb = dom_t_m_2.First(n); bb; bb = dom_t_m_2.Next(n))
-    {
+    for(bool bb = dom_t_m_2.First(n); bb; bb = dom_t_m_2.Next(n)) {
       Int nt (t_m_2[n]);
-      if( nt < t_n )
-      {
+      if( nt < t_n ) {
         next = n;
         t_n = nt;
       }
@@ -2450,19 +2390,17 @@ void SYSTEM::AddNewObj(const TYPE_SEM_OBJ_uRef & ref)
 {
 //wcout << L"AddNewObj: " << ref << endl;
 //vdm_iplog << L"AddNewObj:                 OID:" << theState().PrintOID(ref) << endl;
-  if (theStackMachine().HasCurObjRef())
-  {
+  if (theStackMachine().HasCurObjRef()) {
     TYPE_SEM_OBJ_uRef curref (theStackMachine().GetCurObjRef());
-    if (this->allocated.DomExists(curref))
+    if (this->allocated.DomExists(curref)) {
       DeployInst(this->allocated[curref], ref);
-    else
-    {
+    }
+    else {
       TYPE_STKM_CPUSigma ncsigma (this->cpustate[Nil()]);
       TIMETRACE::LogObjAlloc(ref, Nil(), ncsigma.GetInt(pos_STKM_CPUSigma_time));
     }
   }
-  else if( !this->allocated.DomExists(ref) )
-  {
+  else if( !this->allocated.DomExists(ref) ) {
     TYPE_STKM_CPUSigma ncsigma (this->cpustate[Nil()]);
     TIMETRACE::LogObjAlloc(ref, Nil(), ncsigma.GetInt(pos_STKM_CPUSigma_time));
   }
@@ -2470,13 +2408,13 @@ void SYSTEM::AddNewObj(const TYPE_SEM_OBJ_uRef & ref)
 
 bool SYSTEM::MultiThreads(const Generic & cpu) const
 {
-  if (this->cpustate.DomExists(cpu))
-  {
+  if (this->cpustate.DomExists(cpu)) {
     TYPE_STKM_CPUSigma csigma (this->cpustate[cpu]);
     return (csigma.GetSet(pos_STKM_CPUSigma_threads).Card() > 1);
   }
-  else
+  else {
     return false;
+  }
 }
 #endif // VICE
 

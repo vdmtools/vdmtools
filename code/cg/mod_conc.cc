@@ -208,13 +208,13 @@ void vdmcg::ScanSyncDefs(const SET<TYPE_AS_Name> & classes)
       Generic a;
       for (bool ff = basecls.First(a); ff; ff = basecls.Next(a))
       {
-// 20081114 -->
         if (!this->classInfos.DomExists(a)) continue;
-// <-- 20081114
-        if (this->classInfos[a].get_topPerThread().GetValue())
+        if (this->classInfos[a].get_topPerThread().GetValue()) {
           doexist1 = true;
-        if (this->classInfos[a].get_topProcThread().GetValue())
+        }
+        if (this->classInfos[a].get_topProcThread().GetValue()) {
           doexist2 = true;
+        }
       }
 
       Bool isTopPerThread;
@@ -224,8 +224,7 @@ void vdmcg::ScanSyncDefs(const SET<TYPE_AS_Name> & classes)
         isTopPerThread = false;
         isTopProcThread = false;
       }
-      else
-      {
+      else {
         TYPE_AS_ThreadDef td (thread);
         switch(td.GetTag()) {
           case TAG_TYPE_AS_PerObl: {
@@ -843,10 +842,10 @@ TYPE_AS_Name vdmcg::MakeNameJavaCompliant(const TYPE_AS_Name& p_nm)
 // -> seq of char
 TYPE_AS_Id vdmcg::MakeStringJavaCompliant(const TYPE_AS_Id & p_str)
 {
-  if (p_str.IsEmpty())
+  if (p_str.IsEmpty()) {
     return p_str;
-  else
-  {
+  }
+  else {
     TYPE_AS_Id result;
     size_t len_p_str = p_str.Length();
     for (size_t idx = 1; idx <= len_p_str; idx++)
@@ -860,16 +859,21 @@ TYPE_AS_Id vdmcg::MakeStringJavaCompliant(const TYPE_AS_Id & p_str)
 // -> seq of char
 TYPE_AS_Id vdmcg::MakeCharJavaCompliant(const Char& p_c)
 {
-  if (p_c.GetValue() == L'#')
+  if (p_c.GetValue() == L'#') {
     return ASTAUX::MkId(L"__");
-  else if (p_c.GetValue() == L'|')
+  }
+  else if (p_c.GetValue() == L'|') {
     return ASTAUX::MkId(L"_");
-  else if (p_c.GetValue() == L'`')
+  }
+  else if (p_c.GetValue() == L'`') {
     return ASTAUX::MkId(L"___");
-  else if (p_c.GetValue() == L'-') // 20080215
+  }
+  else if (p_c.GetValue() == L'-') {
     return ASTAUX::MkId(L"_");
-  else
+  }
+  else {
     return TYPE_AS_Id().ImpAppend(p_c);
+  }
 }
 
 // GenConcInterface
@@ -879,13 +883,12 @@ SEQ<TYPE_CPP_PackageName> vdmcg::GenConcInterface(const TYPE_AS_Name & cname)
 {
   SEQ<TYPE_CPP_PackageName> interfaces;
 
-  if (this->classInfos[cname].get_topClass().GetValue())
-    interfaces.ImpAppend(
-      vdm_BC_GenClass2Package(vdm_BC_GenIdentifier(ASTAUX::MkId(L"EvaluatePP"))));
-
-  if (this->classInfos[cname].get_topProcThread().GetValue())
+  if (this->classInfos[cname].get_topClass().GetValue()) {
+    interfaces.ImpAppend(vdm_BC_GenClass2Package(vdm_BC_GenIdentifier(ASTAUX::MkId(L"EvaluatePP"))));
+  }
+  if (this->classInfos[cname].get_topProcThread().GetValue()) {
     interfaces.ImpAppend(vdm_BC_GenSimplePackageName(ASTAUX::MkId(L"Runnable")));
-
+  }
   return interfaces;
 }
 
@@ -958,9 +961,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenProceduralThread(const TYPE_AS_Thread
   SEQ<TYPE_CPP_Handler> handlers;
   handlers.ImpAppend(vdm_BC_GenHandler(expdecl, println));
 
-// 20110523 -->
   CurrentRType(TYPE_REP_UnitTypeRep());
-// <-- 20110523
 
   TYPE_CPP_FunctionDefinition runMthd (vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                          SEQ<TYPE_CPP_Modifier>().ImpAppend(vdm_BC_GenModifier(quote_PUBLIC)),
@@ -1016,10 +1017,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenConstrExtensions(const TYPE_AS_Name & cname)
   SEQ<TYPE_CPP_Stmt> stmts;
   stmts.ImpConc(GenPeriodicThreads());
 
-  if (this->classInfos[cname].get_topClass().GetValue())
+  if (this->classInfos[cname].get_topClass().GetValue()) {
     stmts.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"setSentinel")),
                                                                SEQ<TYPE_CPP_Expr>())));
-
+  }
   return stmts;
 }
 
@@ -1032,8 +1033,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenPeriodicThreads()
   const Generic & thread (defs.GetField(pos_AS_Definitions_threaddef));
 
   SEQ<TYPE_CPP_Stmt> stmts;
-  if (thread.Is(TAG_TYPE_AS_PerObl))
-  {
+  if (thread.Is(TAG_TYPE_AS_PerObl)) {
     TYPE_AS_PerObl perObl (thread);
     const TYPE_AS_Expr & period (perObl.GetRecord (pos_AS_PerObl_period));
     const TYPE_AS_Expr & jit    (perObl.GetRecord (pos_AS_PerObl_jitter));
@@ -1103,11 +1103,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStartStmt(const TYPE_AS_StartStmt & sstmt, bool isL
   SEQ<TYPE_CPP_Stmt> rb_l;
   rb_l.ImpConc(res_stmt);
   rb_l.ImpAppend(vdm_BC_GenExpressionStmt(fctCallExpr));
-
-//  if (rb_l.Length() == 1)
-//    return rb_l[1];
-//  else
-//    return vdm_BC_GenBlock(rb_l);
   return rb_l;
 }
 
@@ -1142,8 +1137,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStartlistStmt(const TYPE_AS_StartListStmt & sstmt, 
     rb_l.ImpConc(GenSetTypeCheck(res_v, L""));
   }
   rb_l.ImpConc(GenIterSet(setVT, nil, elemVT, body_l));
-
-//  return vdm_BC_GenBlock(rb_l);
   return rb_l;
 }
 
@@ -1195,8 +1188,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStoplistStmt(const TYPE_AS_StopListStmt & sstmt, bo
     rb_l.ImpConc(GenSetTypeCheck(res_v, L""));
   }
   rb_l.ImpConc(GenIterSet(setVT, nil, elemVT, body_l));
-
-//  return vdm_BC_GenBlock(rb_l);
   return rb_l;
 }
 

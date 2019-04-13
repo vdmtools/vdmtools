@@ -169,7 +169,7 @@ void vdmcg::AddClassTypes(const TYPE_AS_Class & cs)
 
   if (!defs.IsNil()) {
     const SEQ<TYPE_AS_Name> & inh (cs.GetSequence(pos_AS_Class_supercls));
-//    const Bool & sys (cs.GetBool(pos_AS_Class_sys)); // 20070227
+//    const Bool & sys (cs.GetBool(pos_AS_Class_sys));
 
     MAP<TYPE_AS_Name, TYPE_AS_TypeDef> tps (Record(defs).GetMap(pos_AS_Definitions_typem));
     this->typeDefs.ImpModify(nm, tps);
@@ -2716,12 +2716,10 @@ TYPE_AS_Id vdmcg::GenUnionType(const TYPE_REP_UnionTypeRep & tp,
         cont = StringAsBefore(id, wstring(L"n")); // id = "n";
         break;
       }
-// 20150717 --> Generic
 //      case TAG_TYPE_REP_QuoteTypeRep: {
 //        cont = StringAsBefore(id, wstring(L"Q")); // id = "Q";
 //        break;
 //      }
-// <-- 20150717
 #ifdef VDMPP
       case TAG_TYPE_REP_ObjRefTypeRep: {
         cont = StringAsBefore (id, wstring(L"o")); // id = "o"
@@ -3448,9 +3446,7 @@ TYPE_CPP_CPPAS vdmcg::GenModuleCCPart()
 TYPE_CPP_CPPAS vdmcg::GenModuleHPart()
 {
   TYPE_CPP_CPPAS code;
-// 20120912 -->
 /*
-// <-- 20120912
 #ifdef VDMSL
   SET<TYPE_AS_Name> itypes (this->imported_types);
   Generic nm;
@@ -3462,9 +3458,7 @@ TYPE_CPP_CPPAS vdmcg::GenModuleHPart()
     code.ImpAppend(this->cppenv[key]);
   }
 #endif //VDMSL
-// 20120912 -->
 */
-// <-- 20120912
 
   return code;
 }
@@ -3517,11 +3511,7 @@ TYPE_CPP_Files vdmcg::GenAnonymFiles(const TYPE_AS_Class& md)
     code.ImpConc(this->anonym_tpdefs);
   }
   //-- anonym type tag if defs for anonym and module/class types
-// 20150508 -->
-  //SEQ<TYPE_CPP_Identifier> glttags (this->anonym_decl);
-  //glttags.ImpConc(this->quotes_l);
   SEQ<TYPE_CPP_Identifier> glttags (this->quotes_l);
-// <-- 20150508
 
   for (bool dd = glttags.First(i); dd; dd = glttags.Next(i)) {
     TYPE_CPP_Identifier deftag (GenTypeTagCppId(i));
@@ -3532,19 +3522,13 @@ TYPE_CPP_Files vdmcg::GenAnonymFiles(const TYPE_AS_Class& md)
   //-- anonym includes
   Set i_set (impl);
 #ifdef VDMPP
-//  i_set.ImpUnion(this->obj_refs);
-//// 20121113 -->
   i_set.ImpDiff(mk_set(this->modnm));
-//// <-- 20121113
 #endif //VDMPP
   Generic nm;
   for (bool ee = i_set.First(nm); ee; ee = i_set.Next(nm) ) {
     TYPE_AS_Id inclSeq (GiveLastName(nm).ImpConc(Anonym_Suffix).ImpConc(ASTAUX::MkId(L".h")));
     code.ImpAppend(vdm_BC_GenInclusion(inclSeq));
   }
-
-  //  code.ImpConc(GenIfNotDef(vdm_BC_GenIdentifier(ASTAUX::MkId(L"EXT_MEMFCT")),
-  //                           vdm_BC_GenIdentifier(ASTAUX::MkId(L" "))));
 
   size_t len_mod_decl = this->mod_decl.Length();
   for (size_t idx = 1; idx <= len_mod_decl; idx++) {

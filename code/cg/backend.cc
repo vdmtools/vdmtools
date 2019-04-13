@@ -746,7 +746,6 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
 
   GenLogInfo(m4code);
 
-// 20120522 -->
 #ifndef TESTSPEC
   TYPE_CI_ContextId cid (rc.GetInt(pos_CPP_File_cid));
   Tuple flcp (GetCI().GetFileLineColPos(cid));
@@ -755,7 +754,6 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
     m4code << endl;
   }
 #endif // TESTSPEC
-// <--20120522
 
   if (isCPP()) {
     OutputLog(id + L"...");
@@ -774,7 +772,6 @@ void CGBackEnd::GenFile(const TYPE_CPP_File & rc)
     if (!head.IsNil() || (head.IsSequence() && !Sequence(head).IsEmpty())) {
       GenCode(head);
       GenNewLine(m4code);
-//      GenNewLine(m4code);
     }
 
     GenCode(cpp);
@@ -834,7 +831,6 @@ void CGBackEnd::GenPackageAndImportDeclarations(const TYPE_CPP_PackageAndImportD
     const Generic & packdecl (rc.GetField(pos_CPP_PackageAndImportDeclarations_pd));  // [PackageDeclaration]
     if (!packdecl.IsNil()) {
       GenCode(packdecl);
-//      GenNewLine(m4code); //20120208
     }
   }
   m4code << EndKeepTag(Sequence(L"package"), true);
@@ -848,7 +844,7 @@ void CGBackEnd::GenPackageAndImportDeclarations(const TYPE_CPP_PackageAndImportD
     const SEQ<TYPE_CPP_ImportDeclaration> & ds (rc.GetSequence(pos_CPP_PackageAndImportDeclarations_ims));
     m4code << StartKeepTag(Sequence(L"imports"), true, false);
     if (!ds.IsEmpty()) {
-      SetContext(IMPORT); // 20120208
+      SetContext(IMPORT);
       GenCodeSeq(ds, "\n");
       GenNewLine(m4code);
     }
@@ -1038,7 +1034,6 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
         GenCodeSeq(dl, ", ");
       }
     }
-// 20160609 -->
     bool semicolon = true;
     if ( !ds.IsEmpty() ) {
       const TYPE_CPP_DeclSpecifier & decl (ds[1]);
@@ -1052,7 +1047,6 @@ void CGBackEnd::GenIdentDeclaration(const TYPE_CPP_IdentDeclaration & rc)
     if (semicolon ) {
       m4code << ";";
     }
-// <-- 20160609
   }
 
   if (dl.IsSequence()) {
@@ -2272,52 +2266,29 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_Expr & expr_ (rc.GetRecord(pos_CPP_CastExpr_expr));
 
       TYPE_CPP_Expr expr (expr_);
-      while (expr.Is(TAG_TYPE_CPP_BracketedExpr))
+      while (expr.Is(TAG_TYPE_CPP_BracketedExpr)) {
         expr = expr.GetRecord(pos_CPP_BracketedExpr_expr);
-
-// 20111208 -->
-//      if ( OpPrec(expr) < OpPrec(rc) ) {
-//        m4code << "(";
-//        GenCode(rhstypenm);
-//        m4code << ") (";
-//        GenCode(expr);
-//        m4code << ")";
-//      }
-//      else {
-//        m4code << "(";
-//        GenCode(rhstypenm);
-//        m4code << ") ";
-//        GenCode(expr);
-//      }
-      if (isJAVA())
-      {
+      }
+      if (isJAVA()) {
         m4code << "(";
         GenCode(rhstypenm);
         m4code << ")";
         if ( OpPrec(expr) < OpPrec(rc) ) {
           m4code << "(";
-//          if (expr.Is(TAG_TYPE_CPP_BracketedExpr))
-//            GenCode(expr.GetRecord(pos_CPP_BracketedExpr_expr));
-//          else
-            GenCode(expr);
+          GenCode(expr);
           m4code << ")";
         }
         else {
           GenCode(expr);
         }
       }
-      else
-      {
+      else {
         m4code << "static_cast<";
         GenCode(rhstypenm);
         m4code << ">(";
-//        if (expr.Is(TAG_TYPE_CPP_BracketedExpr))
-//          GenCode(expr.GetRecord(pos_CPP_BracketedExpr_expr));
-//        else
-          GenCode(expr);
+        GenCode(expr);
         m4code << ")";
       }
-// <-- 20111208
       break;
     }
 
@@ -2599,18 +2570,15 @@ void CGBackEnd::GenCode(const Generic & ast)
         GenCode(fct);
         m4code << ")";
       }
-      else
+      else {
         GenCode(fct);
-
-//20131129 -->
-      if (exprs.Length() == 1)
-      {
+      }
+      if (exprs.Length() == 1) {
         TYPE_CPP_Expr e (exprs[1]);
         while (e.Is(TAG_TYPE_CPP_BracketedExpr))
           e = e.GetRecord(pos_CPP_BracketedExpr_expr);
         exprs.ImpModify(1, e);
       }
-// <-- 20131129
 
       m4code << "(";
       GenCodeSeq(exprs, ", ");
@@ -2630,13 +2598,15 @@ void CGBackEnd::GenCode(const Generic & ast)
         GenCode(obj);
         m4code << ")";
       }
-      else
+      else {
         GenCode(obj);
-
-      if (rc.Is(TAG_TYPE_CPP_ObjectMemberAccess) || isJAVA())
+      }
+      if (rc.Is(TAG_TYPE_CPP_ObjectMemberAccess) || isJAVA()) {
         m4code << ".";
-      else
+      }
+      else {
         m4code << "->";
+      }
       GenCode(name);
       break;
     }
@@ -2666,15 +2636,18 @@ void CGBackEnd::GenCode(const Generic & ast)
       wstr += ch.GetValue();
 
       wstring res;
-      if (isJAVA())
+      if (isJAVA()) {
         Backslashed::convert_internal_to_java_backslash (wstr, res);
-      else
+      }
+      else {
         Backslashed::convert_internal_to_cxx_backslash (wstr, res);
-
-      if (rc.Is(TAG_TYPE_CPP_CharacterLit) || isJAVA())
+      }
+      if (rc.Is(TAG_TYPE_CPP_CharacterLit) || isJAVA()) {
         m4code << "\'" << TBWSTR::wstring2mbstr(res) << "\'";
-      else
+      }
+      else {
         m4code << "L\'" << TBWSTR::wstring2mbstr(res) << "\'";
+      }
       break;
     }
 
@@ -2683,16 +2656,19 @@ void CGBackEnd::GenCode(const Generic & ast)
       wstring str (PTAUX::Seq2Str(rc.GetSequence(1)));
 
       wstring res;
-      if (isJAVA())
+      if (isJAVA()) {
         Backslashed::convert_internal_to_java_backslash (str, res);
-      else
+      }
+      else {
         Backslashed::convert_internal_to_cxx_backslash (str, res);
-
-      if (rc.Is(TAG_TYPE_CPP_StringLit) || isJAVA()) // This is a hack - jcg
+      }
+      if (rc.Is(TAG_TYPE_CPP_StringLit) || isJAVA()) { // This is a hack - jcg
         // should never generate WStringLit
         m4code << "\"" + TBWSTR::wstring2mbstr(res) + "\"";
-      else
+      }
+      else {
         m4code << "L\"" + TBWSTR::wstring2mbstr(res) + "\"";
+      }
       break;
     }
 
@@ -2702,12 +2678,12 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_Expr & expr (rc.GetRecord(pos_CPP_BracketedExpr_expr));
 
       m4code << "(";
-//
-      if (expr.Is(TAG_TYPE_CPP_BracketedExpr))
+      if (expr.Is(TAG_TYPE_CPP_BracketedExpr)) {
         GenCode(expr.GetRecord(pos_CPP_BracketedExpr_expr));
-      else
+      }
+      else {
         GenCode(expr);
-//
+      }
       m4code << ")";
       break;
     }
@@ -2982,9 +2958,9 @@ void CGBackEnd::GenCode(const Generic & ast)
       const Generic & decl (rc.GetField(pos_CPP_ExceptionDeclaration_decl));
 
       m4code << "(";
-      if (!ts.IsEmpty())
+      if (!ts.IsEmpty()) {
         GenCodeSeq(ts, " ");
-
+      }
       m4code << " ";
       GenCode(decl);
       m4code << ")";
@@ -3013,8 +2989,9 @@ void CGBackEnd::GenCode(const Generic & ast)
 
     case TAG_TYPE_CPP_SingleLineComments: {
       const SEQ<Char> & txt (rc.GetSequence(pos_CPP_SingleLineComments_txt));
-      if (isJAVA())
+      if (isJAVA()) {
         GenNewLine(m4code);
+      }
       IND(m4code);
       m4code << "/* " << TBWSTR::wstring2mbstr(txt.GetString()) << " */";
       break;
@@ -3038,8 +3015,7 @@ void CGBackEnd::GenCode(const Generic & ast)
     case TAG_TYPE_CPP_GenericsSpec: {
       const SEQ<TYPE_CPP_GenericsClasses> & defs (rc.GetSequence(pos_CPP_GenericsSpec_defs));
       m4code << "<";
-      if (!defs.IsEmpty())
-      {
+      if (!defs.IsEmpty()) {
         GenCodeSeq(defs, ", ");
       }
       m4code << ">";
@@ -3122,8 +3098,7 @@ void CGBackEnd::GenClassSpecifier(const TYPE_CPP_ClassSpecifier & rc)
 
     OpenBlock();
 
-    if ((GetLevel() == 1) && (isJAVA()))
-    {
+    if ((GetLevel() == 1) && (isJAVA())) {
       Generic g;
       for (bool bb = existingEntitiesOrder.First(g); bb; bb = existingEntitiesOrder.Next(g)) {
         if (!generatedEntities.InSet(g)) {
@@ -3144,18 +3119,15 @@ void CGBackEnd::GenClassSpecifier(const TYPE_CPP_ClassSpecifier & rc)
     GenNewLine(m4code);
     CloseBlock();
 
-// 20160609 -->
-    if (isCPP())
+    if (isCPP()) {
       m4code << ";";
-// <-- 20160609
-
+    }
     GenNewLine(m4code);
-    //level--;
     DecLevel();
   }
-  if (isJAVA())
+  if (isJAVA()) {
     SetContext(CLASS);
-
+  }
   m4code << EndKeepTag(ch, false);
 }
 
@@ -3168,8 +3140,7 @@ void CGBackEnd::GenClassHead(const TYPE_CPP_ClassHead & rc)
   const Generic & ispec (rc.GetField(pos_CPP_ClassHead_ispec));
   const Generic & tpspec (rc.GetField(pos_CPP_ClassHead_tpspec));
 
-  if(!ms.IsEmpty())
-  {
+  if(!ms.IsEmpty()) {
     GenCodeSeq(ms, " ");
     m4code << " ";
   }
@@ -3178,19 +3149,16 @@ void CGBackEnd::GenClassHead(const TYPE_CPP_ClassHead & rc)
 
   GenCode(name);
 
-  if (!tpspec.IsNil())  // Java only
-  {
+  if (!tpspec.IsNil()) { // Java only
     SEQ<TYPE_CPP_Identifier> id_l (tpspec);
-    if (!id_l.IsEmpty())
-    {
+    if (!id_l.IsEmpty()) {
       m4code << "<";
       GenCodeSeq(id_l, ", ");
       m4code << ">";
     }
   }
 
-  if(!bs.IsEmpty())
-  {
+  if(!bs.IsEmpty()) {
     m4code << (isJAVA() ? " extends " : " : ");
 
     GenCodeSeq(bs, ", ");
@@ -3212,15 +3180,13 @@ void CGBackEnd::GenMemberList(const TYPE_CPP_MemberList & rc)
 
   GenNewLine(m4code);
 
-  if (a.IsQuote())
+  if (a.IsQuote()) {
     m4code << Quote2String(Quote(a)) << ":";
-
-  if (md.IsSequence())
-  {
+  }
+  if (md.IsSequence()) {
     SEQ<TYPE_CPP_MemberDeclaration> s (md);
     size_t len_s = s.Length();
-    for (size_t idx = 1; idx<= len_s; idx++)
-    {
+    for (size_t idx = 1; idx<= len_s; idx++) {
       const TYPE_CPP_MemberDeclaration & md (s[idx]);
       switch(md.GetTag()) {
         case TAG_TYPE_CPP_FunctionDefinition:
@@ -3270,8 +3236,9 @@ void CGBackEnd::GenMemberSpecifier(const TYPE_CPP_MemberSpecifier & rc)
     }
   }
 
-  if (!mdl.IsNil())
+  if (!mdl.IsNil()) {
     GenCode(mdl);
+  }
 }
 
 #ifdef VDMPP
@@ -3529,84 +3496,123 @@ int CGBackEnd::Quote2Int(const Quote & op)
 {
   wstring q (op.GetValue());
   int res = 0;
-  if (q == L"ASEQUAL")
+  if (q == L"ASEQUAL") {
     res = TAG_quote_ASEQUAL;
-  else if (q == L"ASMULT")
+  }
+  else if (q == L"ASMULT") {
     res = TAG_quote_ASMULT;
-  else if (q == L"ASDIV")
+  }
+  else if (q == L"ASDIV") {
     res = TAG_quote_ASDIV;
-  else if (q == L"ASMOD")
+  }
+  else if (q == L"ASMOD") {
     res = TAG_quote_ASMOD;
-  else if (q == L"ASPLUS")
+  }
+  else if (q == L"ASPLUS") {
     res = TAG_quote_ASPLUS;
-  else if (q == L"ASMINUS")
+  }
+  else if (q == L"ASMINUS") {
     res = TAG_quote_ASMINUS;
-  else if (q == L"ASRIGHTSHIFT")
+  }
+  else if (q == L"ASRIGHTSHIFT") {
     res = TAG_quote_ASRIGHTSHIFT;
-  else if (q == L"ASLEFTSHIFT")
+  }
+  else if (q == L"ASLEFTSHIFT") {
     res = TAG_quote_ASLEFTSHIFT;
-  else if (q == L"ASBITWISEAND")
+  }
+  else if (q == L"ASBITWISEAND") {
     res = TAG_quote_ASBITWISEAND;
-  else if (q == L"ASBITWISEEXOR")
+  }
+  else if (q == L"ASBITWISEEXOR") {
     res = TAG_quote_ASBITWISEEXOR;
-  else if (q == L"ASBITWISEINCLOR")
+  }
+  else if (q == L"ASBITWISEINCLOR") {
     res = TAG_quote_ASBITWISEINCLOR;
-  else if (q == L"OR")
+  }
+  else if (q == L"OR") {
     res = TAG_quote_OR;
-  else if (q == L"AND")
+  }
+  else if (q == L"AND") {
     res = TAG_quote_AND;
-  else if (q == L"EXCLOR")
+  }
+  else if (q == L"EXCLOR") {
     res = TAG_quote_EXCLOR;
-  else if (q == L"REFERENCE")
+  }
+  else if (q == L"REFERENCE") {
     res = TAG_quote_REFERENCE;
-  else if (q == L"BITAND")
+  }
+  else if (q == L"BITAND") {
     res = TAG_quote_BITAND;
-  else if (q == L"BITOR")
+  }
+  else if (q == L"BITOR") {
     res = TAG_quote_BITOR;
-  else if (q == L"EQ")
+  }
+  else if (q == L"EQ") {
     res = TAG_quote_EQ;
-  else if (q == L"NEQ")
+  }
+  else if (q == L"NEQ") {
     res = TAG_quote_NEQ;
-  else if (q == L"LT")
+  }
+  else if (q == L"LT") {
     res = TAG_quote_LT;
-  else if (q == L"GT")
+  }
+  else if (q == L"GT") {
     res = TAG_quote_GT;
-  else if (q == L"LEQ")
+  }
+  else if (q == L"LEQ") {
     res = TAG_quote_LEQ;
-  else if (q == L"GEQ")
+  }
+  else if (q == L"GEQ") {
     res = TAG_quote_GEQ;
-  else if (q == L"LEFTSHIFT")
+  }
+  else if (q == L"LEFTSHIFT") {
     res = TAG_quote_LEFTSHIFT;
-  else if (q == L"RIGHTSHIFT")
+  }
+  else if (q == L"RIGHTSHIFT") {
     res = TAG_quote_RIGHTSHIFT;
-  else if (q == L"PLUS")
+  }
+  else if (q == L"PLUS") {
     res = TAG_quote_PLUS;
-  else if (q == L"MINUS")
+  }
+  else if (q == L"MINUS") {
     res = TAG_quote_MINUS;
-  else if (q == L"MULT")
+  }
+  else if (q == L"MULT") {
     res = TAG_quote_MULT;
-  else if (q == L"DIV")
+  }
+  else if (q == L"DIV") {
     res = TAG_quote_DIV;
-  else if (q == L"MOD")
+  }
+  else if (q == L"MOD") {
     res = TAG_quote_MOD;
-  else if (q == L"DOTSTAR")
+  }
+  else if (q == L"DOTSTAR") {
     res = TAG_quote_DOTSTAR;
-  else if (q == L"ARROWSTAR")
+  }
+  else if (q == L"ARROWSTAR") {
     res = TAG_quote_ARROWSTAR;
-  else if (q == L"PPLUS")
+  }
+  else if (q == L"PPLUS") {
     res = TAG_quote_PPLUS;
-  else if (q == L"PMINUS")
+  }
+  else if (q == L"PMINUS") {
     res = TAG_quote_PMINUS;
-  else if (q == L"ISINSTANCEOF")
+  }
+  else if (q == L"ISINSTANCEOF") {
     res = TAG_quote_ISINSTANCEOF;
-  else if (q == L"INDIRECTION")
+  }
+  else if (q == L"INDIRECTION") {
     res = TAG_quote_INDIRECTION;
-  else if (q == L"ADDROP")
+  }
+  else if (q == L"ADDROP") {
     res = TAG_quote_ADDROP;
-  else if (q == L"NEG")
+  }
+  else if (q == L"NEG") {
     res = TAG_quote_NEG;
-  else if (q == L"COMPL")
+  }
+  else if (q == L"COMPL") {
     res = TAG_quote_COMPL;
+  }
 //  else if (q == L"OPEQUAL")
 //    res = TAG_quote_OPEQUAL;
 //  else if (q == L"STAREQUAL")
@@ -3679,40 +3685,57 @@ int CGBackEnd::Quote2Int(const Quote & op)
 //    res = TAG_quote_BRACKETS;
 //  else if (q == L"SQUAREBRACKETS")
 //    res = TAG_quote_SQUAREBRACKETS;
-  else if (q == L"CONST")
+  else if (q == L"CONST") {
     res = TAG_quote_CONST;
-  else if (q == L"VOLATILE")
+  }
+  else if (q == L"VOLATILE") {
     res = TAG_quote_VOLATILE;
-  else if (q == L"ELLIPSIS")
+  }
+  else if (q == L"ELLIPSIS") {
     res = TAG_quote_ELLIPSIS;
-  else if (q == L"CLASS")
+  }
+  else if (q == L"CLASS") {
     res = TAG_quote_CLASS;
-  else if (q == L"STRUCT")
+  }
+  else if (q == L"STRUCT") {
     res = TAG_quote_STRUCT;
-  else if (q == L"UNION")
+  }
+  else if (q == L"UNION") {
     res = TAG_quote_UNION;
-  else if (q == L"PRIVATE")
+  }
+  else if (q == L"PRIVATE") {
     res = TAG_quote_PRIVATE;
-  else if (q == L"PROTECTED")
+  }
+  else if (q == L"PROTECTED") {
     res = TAG_quote_PROTECTED;
-  else if (q == L"ABSTRACT")
+  }
+  else if (q == L"ABSTRACT") {
     res = TAG_quote_ABSTRACT;
-  else if (q == L"PUBLIC")
+  }
+  else if (q == L"PUBLIC") {
     res = TAG_quote_PUBLIC;
-  else if (q == L"FINAL")
+  }
+  else if (q == L"FINAL") {
     res = TAG_quote_FINAL;
-  else if (q == L"INLINE")
+  }
+  else if (q == L"INLINE") {
     res = TAG_quote_INLINE;
-  else if (q == L"VIRTUAL")
+  }
+  else if (q == L"VIRTUAL") {
     res = TAG_quote_VIRTUAL;
-  else if (q == L"AUTO")
+  }
+  else if (q == L"AUTO") {
     res = TAG_quote_AUTO;
-  else if (q == L"REGISTER")
+  }
+  else if (q == L"REGISTER") {
     res = TAG_quote_REGISTER;
-  else if (q == L"STATIC")
+  }
+  else if (q == L"STATIC") {
     res = TAG_quote_STATIC;
-  else if (q == L"EXTERN")
+  }
+  else if (q == L"EXTERN") {
     res = TAG_quote_EXTERN;
+  }
 
   return res;
 }
@@ -4197,8 +4220,7 @@ int CGBackEnd::OpPrec(const Generic & g)
       break;
     }
   }
-  else if (g.IsRecord())
-  {
+  else if (g.IsRecord()) {
     TYPE_CPP_Expr rc (g);
     switch (rc.GetTag()) {
     case TAG_TYPE_CPP_AssignExpr:

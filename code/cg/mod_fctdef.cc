@@ -2192,7 +2192,7 @@ Tuple vdmcg::FindDomRngTypes(const Record & df)
         case 1: {
           const TYPE_AS_Type & tp (resnmtp_l[1].GetRecord(pos_AS_NameType_tp));
           rt = FromAS2RepType(tp);
-          atp = tp; // 20070824
+          atp = tp;
           break;
         }
         default: {
@@ -2292,7 +2292,7 @@ Tuple vdmcg::FindExpDomRngTypes(const Record & df, const Map & m)
         case 1: {
           const TYPE_AS_Type & tp (resnmtp_l[1].GetRecord(pos_AS_NameType_tp));
           rt = FromAS2RepType(RenameType(tp, m));
-          atp = RenameType(tp, m); // 20070824
+          atp = RenameType(tp, m);
           break;
         }
         default: {

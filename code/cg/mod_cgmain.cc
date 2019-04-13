@@ -55,8 +55,6 @@ void vdmcg::InitState_CGMAIN()
   this->imports_names.Clear();
   this->entries_names.Clear();
   this->throws_names.Clear();
-// 20081114
-//  this->j2v_option = true;
   this->j2v_option = false;
   this->generics_option = false;
   this->java_rename_option = true;
@@ -137,11 +135,12 @@ bool vdmcg::get_smalltypes_option() const
 
 void vdmcg::set_package_option(const Generic & ch_l)
 {
-  if (ch_l.IsNil())
+  if (ch_l.IsNil()) {
     this->package_name = Nil();
-  else
-    //this->package_name = GenPackageName((Generic)UTIL::split(ch_l, Char('.')));
+  }
+  else {
     this->package_name = GenPackageName(UTIL::split(ch_l, Char('.')));
+  }
 }
 
 Generic vdmcg::get_package_option()

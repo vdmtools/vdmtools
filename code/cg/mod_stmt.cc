@@ -480,7 +480,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGStateDesignator(const TYPE_AS_StateDesignator & sd, 
 
       TYPE_REP_TypeRep e_tp (FindType(e));
 
-// 20150703 -->
       Generic etp = Nil();
       Generic ftp (FindType(sd1));
       if (!ftp.IsNil()) {
@@ -492,9 +491,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGStateDesignator(const TYPE_AS_StateDesignator & sd, 
         }
       }
 
-      //Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"e"), nil));
       Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"e"), etp));
-// <-- 20150703
       const TYPE_CPP_Expr & e_v (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
@@ -1715,13 +1712,13 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGBlockStmt(const TYPE_AS_BlockStmt & block, bool isLa
     }
   }
 
-  PushEnv_CGAUX(); // 20130305
+  PushEnv_CGAUX();
 
   int numStmts = stmts.Length();
   for (int i = 1; i <= numStmts; i++) {
     rb.ImpConc(GenStmt(stmts[i], isLast && (i == numStmts)));
   }
-  PopEnv_CGAUX(); // 20130305
+  PopEnv_CGAUX();
   PopEnv_CGAUX();
 
   if (dcls.IsEmpty()) {

@@ -164,9 +164,9 @@ SEQ<TYPE_CPP_Expr> vdmcg::GetCurFileName()
 TYPE_CPP_Stmt vdmcg::GenPushFile()
 {
   SEQ<TYPE_CPP_Expr> arg_l (GetCurFileName());
-  if (arg_l.IsEmpty())
+  if (arg_l.IsEmpty()) {
     arg_l.ImpAppend(vdm_BC_GenStringLit(SEQ<Char>(L"??")));
-
+  }
   return vdm_BC_GenExpressionStmt(vdm_BC_GenFctCall(vdm_BC_GenIdentifier(SEQ<Char>(L"CGUTIL::PushFile")), arg_l));
 }
 
@@ -214,10 +214,10 @@ void vdmcg::Reset(const TYPE_AS_Document & doc_l)
   size_t len_mod_l = mod_l.Length();
   for (size_t idx = 1; idx <= len_mod_l; idx++) {
     const Record & md (mod_l[idx]);
-    if (md.Is (TAG_TYPE_AS_Module))
+    if (md.Is (TAG_TYPE_AS_Module)) {
       AddModuleTypes(md);
+    }
   }
-
   InitState_FCTDEF();
 }
 #endif // VDMSL
@@ -245,46 +245,40 @@ void vdmcg::Reset(const TYPE_AS_Document & allClasses)
 
   SEQ<TYPE_AS_Class> nonCPPModules;
   size_t len_allClasses = allClasses.Length();
-  for (size_t idx = 1; idx <= len_allClasses; idx++)
-  {
-    if( !allClasses[idx].Is(TAG_TYPE_CPP_Module) )
+  for (size_t idx = 1; idx <= len_allClasses; idx++) {
+    if( !allClasses[idx].Is(TAG_TYPE_CPP_Module) ) {
       nonCPPModules.ImpAppend(allClasses[idx]);
+    }
   }
 
   SET<TYPE_AS_Name> as_nms;
   size_t len_nonCPPModules = nonCPPModules.Length();
-  for (size_t idx2 = 1; idx2 <= len_nonCPPModules; idx2++)
-  {
+  for (size_t idx2 = 1; idx2 <= len_nonCPPModules; idx2++) {
     const TYPE_AS_Class & cs(nonCPPModules[idx2]);
     InitState_CGAUX(cs.get_nm());
     AddSuperClasses(cs.get_supercls());
     AddAbstractMethods(cs);
     as_nms.Insert(cs.get_nm());
 
-// 20130730 -->
     AddClassTypes(cs);
-// <-- 20130710
   }
   GenerateOrderedSupers();
   ProcessMethodNames();
 
-  if (vdm_CPP_isJAVA())
+  if (vdm_CPP_isJAVA()) {
     ProcessAbstractMethods();
-
-  for (size_t idx3 = 1; idx3 <= len_nonCPPModules; idx3++)
-  {
+  }
+  for (size_t idx3 = 1; idx3 <= len_nonCPPModules; idx3++) {
     const TYPE_AS_Class & cs(nonCPPModules[idx3]);    
     Generic optdefs(cs.get_defs());
-    if(!optdefs.IsNil())
-    {
+    if(!optdefs.IsNil()) {
       TYPE_AS_Definitions defs(optdefs);
       InitState_TPGEN(cs.get_nm());
       GetStatSem().ExpandClass (POS, cs);
       AddInstanceVars(cs.get_nm(), defs.get_instvars());
-// 20120702 -->
-      if (vdm_CPP_isJAVA())
+      if (vdm_CPP_isJAVA()) {
         AddPackageName(cs.get_nm(), defs.get_valuem());
-// <-- 20120702
+      }
     }
   }
 
