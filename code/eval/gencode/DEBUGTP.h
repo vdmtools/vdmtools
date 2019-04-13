@@ -17,8 +17,8 @@
 *  *    (C) Kyushu University
 ***/
 
-#ifndef _DEBUGTP_h_
-#define _DEBUGTP_h_
+#ifndef __debugtp_h__
+#define __debugtp_h__
 
 #undef INCLFILE
 #ifdef VDMSL
@@ -39,4 +39,4 @@
 
 #include INCLFILE
 
-#endif // _DEBUGTP_h_
+#endif // __debugtp_h__

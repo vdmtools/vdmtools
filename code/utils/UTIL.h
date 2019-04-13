@@ -17,8 +17,8 @@
 *  *    (C) Kyushu University
 ***/
 
-#ifndef __UTIL_h__
-#define __UTIL_h__
+#ifndef __util_h__
+#define __util_h__
 
 #undef INCLFILE
 #ifdef VDMSL
@@ -39,5 +39,5 @@
 
 #include INCLFILE
 
-#endif // __UTIL_h__
+#endif // __util_h__
 

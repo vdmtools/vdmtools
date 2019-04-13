@@ -17,8 +17,8 @@
 *  *    (C) Kyushu University
 ***/
 
-#ifndef __UTIL_anonym_h__
-#define __UTIL_anonym_h__
+#ifndef __util_anonym_h__
+#define __util_anonym_h__
 
 #undef INCLFILE
 #ifdef VDMSL
@@ -39,4 +39,4 @@
 
 #include INCLFILE
 
-#endif // __UTIL_anonym_h__
+#endif // __util_anonym_h__
