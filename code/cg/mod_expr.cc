@@ -2958,14 +2958,6 @@ Generic vdmcg::CGTupleSelectExpr(const TYPE_AS_TupleSelectExpr & ts, const TYPE_
       tupleVal = vdm_BC_GenFctCall(GenProductType().get_tp(), mk_sequence(tupleName));
   }
 
-  if (no.Is(TAG_TYPE_AS_NumLit)) {
-    size_t ind = no.GetReal(pos_AS_NumLit_val).GetIntValue();
-    Generic etp (FindProductElemType(tupleTp, ind));
-    if (!etp.IsNil()) {
-      TYPE_AS_Id method (GenGetMethod(etp));
-    }
-  }
-
   TYPE_CPP_Identifier selector (vdm_BC_GiveName(ASTAUX::MkId(L"fieldsel")));
   TYPE_CPP_Expr selObj (CGLiteral(no, mk_CG_VT(selector, mk_REP_NumericTypeRep(Int(NATONE)))));
   TYPE_CPP_Expr selVal (GenGetValue(selObj, mk_REP_NumericTypeRep(Int(NATONE))));
@@ -2976,8 +2968,18 @@ Generic vdmcg::CGTupleSelectExpr(const TYPE_AS_TupleSelectExpr & ts, const TYPE_
 #endif // VDMPP
 
   TYPE_CPP_Expr tupleCall (vdm_BC_GenFctCallObjMemAcc(tupleVal, ASTAUX::MkId(L"GetField"), mk_sequence(selVal)));
-
   TYPE_CPP_Expr expr (GenCastType(resTp, tupleCall));
+
+  if (vdm_CPP_isCPP() && no.Is(TAG_TYPE_AS_NumLit)) {
+    size_t ind = no.GetReal(pos_AS_NumLit_val).GetIntValue();
+    Generic etp (FindProductElemType(tupleTp, ind));
+    if (!etp.IsNil()) {
+      if (IsSubType(etp, resTp)) {
+        expr = (vdm_BC_GenFctCallObjMemAcc(tupleVal, GenGetMethod(etp), mk_sequence(selVal)));
+      }
+    }
+  }
+
   if (tupleCode.IsEmpty()) {
     return expr;
   }

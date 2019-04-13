@@ -2684,11 +2684,20 @@ result.
           tupleVal := BC`GenFctCall(DS`GenProductType().tp, [tupleName]);
 
       def tupleCall = BC`GenFctCallObjMemAcc(tupleVal,"GetField",[selVal]);
-          expr = DS`GenCastType(resTp,tupleCall);
       in
+       (dcl expr : CPP`Expr := DS`GenCastType(resTp,tupleCall);
+        if CPP`isCPP() and is_AS`NumLit(no)
+        then
+          def etp = CGAUX`FindProductElemType(tupleTp, no.val)
+          in
+            if etp <> nil
+            then 
+              if CGAUX`IsSubType(etp, resTp)
+              then expr := BC`GenFctCallObjMemAcc(tupleVal,DS`GenGetMethod(etp),[selVal]);
         if tupleCode = []
         then return expr
         else return tupleCode ^ [BC`GenAsgnStmt(resvar, expr)];
+       )
      );
 \end{vdm_al}
 
