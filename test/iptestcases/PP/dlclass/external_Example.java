@@ -46,8 +46,9 @@ public class external_Example {
 // ***** VDMTOOLS START Name=impl_f#1|Number KEEP=YES
   public List impl_f (final Number n) throws CGException {
     List childResult_2 = new ArrayList();
-    for (int i = 0; i < 10; i++)
-      childResult_2.add(new Integer(i));
+    for (int i = 0; i < 10; i++) {
+      childResult_2.add(Integer.valueOf(i));
+    }
     return childResult_2;
   }
 // ***** VDMTOOLS END Name=impl_f#1|Number
@@ -56,8 +57,9 @@ public class external_Example {
 // ***** VDMTOOLS START Name=impl_extop#1|Number KEEP=YES
   public List impl_extop (final Number n) throws CGException {
     List childResult_2 = new ArrayList();
-    for (int i = 0; i < 5; i++)
-      childResult_2.add(new Integer(i));
+    for (int i = 0; i < 5; i++) {
+      childResult_2.add(Integer.valueOf(i));
+    }
     return childResult_2;
   }
 // ***** VDMTOOLS END Name=impl_extop#1|Number

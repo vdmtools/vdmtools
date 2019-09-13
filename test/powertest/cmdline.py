@@ -494,7 +494,7 @@ def LookUpWildCard(env, lang, type, which, extraType = None):
 def GetUsedWildCards():
   global parameters
   res = []
-  for key in parameters.keys():
+  for key in sorted(parameters.keys()):
     if parameters[key].used:
       res.append((key, parameters[key].origWildCard))
   return res

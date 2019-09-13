@@ -1,9 +1,7 @@
 import jp.vdmtools.VDM.*
 
-public class TMAIN
-{
-  public static void main(String args) 
-  {
+public class TMAIN {
+  public static void main(String args) {
   
       //--------------- Initialization ---------------------------------------
       <<INIT>>
