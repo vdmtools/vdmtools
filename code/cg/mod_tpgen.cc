@@ -1998,9 +1998,10 @@ TYPE_CPP_FunctionDefinition vdmcg::GenEqualsMethod(const TYPE_CPP_Identifier & c
     stmts.ImpAppend(vdm_BC_GenDecl(clsTp, temp, ai));
     stmts.ImpAppend(vdm_BC_GenReturnStmt(expr));
 
-    stmt = vdm_BC_GenIfStmt(test,
-                            vdm_BC_GenBlock(stmts),
-                            vdm_BC_GenReturnStmt(vdm_BC_GenIdentifier(ASTAUX::MkId(L"false"))));
+    SEQ<TYPE_CPP_Stmt> else_stmts;
+    else_stmts.ImpAppend(vdm_BC_GenReturnStmt(vdm_BC_GenIdentifier(ASTAUX::MkId(L"false"))));
+
+    stmt = vdm_BC_GenIfStmt(test, vdm_BC_GenBlock(stmts), vdm_BC_GenBlock(else_stmts));
   }
   
   TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(SEQ<TYPE_CPP_DeclSpecifier>().ImpAppend(vdm_BC_GenGeneric()),

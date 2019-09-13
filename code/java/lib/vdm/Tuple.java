@@ -52,28 +52,23 @@ public class Tuple extends Object implements Cloneable, Serializable{
    */
   
   public boolean equals (Object obj) {
-    if (obj == null) return false;
-    if (!(obj instanceof Tuple)) return false;
-    else {
+    if (obj instanceof Tuple) {
       Tuple tu = (Tuple) obj;
-      if ((tu.value.length) != (this.value.length)) return false;
-      else {
-        for (int i = 0; i < this.value.length; i++) {
-          if (!UTIL.equals(this.value[i], tu.value[i])) 
-            { 
-              return false;
-            }
-        }
+      boolean forall = (tu.value.length == this.value.length);
+      for (int i = 0; (i < this.value.length) && forall; i++) {
+        forall = UTIL.equals(this.value[i], tu.value[i]);
       }
+      return forall;
     }
-    return true;
+    return false;
   }
 
   public int hashCode() {
     int hash = 0;
     for (int i = 0; i < this.value.length; i++) {
-	if (this.value[i] != null)
-	    hash += this.value[i].hashCode();
+      if (this.value[i] != null) {
+        hash += this.value[i].hashCode();
+      }
     }
     return hash;
   }

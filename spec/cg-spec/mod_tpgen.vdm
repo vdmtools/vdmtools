@@ -1936,10 +1936,9 @@ GenEqualsMethod(cn,sl,tenv, dcenv) ==
              );
 
         let ai = BC`GenAsgnInit(BC`GenCastExpr(clsTp, argNm)),
-            stmts = [BC`GenDecl(clsTp, temp, ai), BC`GenReturnStmt(expr)]
-        in stmt := BC`GenIfStmt(test,
-                                BC`GenBlock(stmts),
-                                BC`GenReturnStmt(BC`GenIdentifier("false")));
+            stmts = [BC`GenDecl(clsTp, temp, ai), BC`GenReturnStmt(expr)],
+            else_stmts = [BC`GenReturnStmt(BC`GenIdentifier("false"))]
+        in stmt := BC`GenIfStmt(test, BC`GenBlock(stmts), BC`GenBlock(else_stmts));
        );
 
     let arg  = BC`GenArgDecl([BC`GenGeneric()], argNm),

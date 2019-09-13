@@ -35,7 +35,7 @@ public class IO {
 
 // ***** VDMTOOLS START Name=evaluatePP#1|int KEEP=YES
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP#1|int
 
@@ -55,11 +55,11 @@ public class IO {
   public Boolean writeval (final Object val) throws CGException {
     try {
       System.out.println(UTIL.toString(val));
-      return new Boolean(true);
+      return Boolean.TRUE;
     }
     catch (Exception e) {
       this.error = e.getMessage();
-      return new Boolean(false);
+      return Boolean.FALSE;
     }
   }
 // ***** VDMTOOLS END Name=writeval#1|Object
@@ -72,11 +72,11 @@ public class IO {
       fw.write(UTIL.toString(val));
       fw.flush();
       fw.close();
-      return new Boolean(true);
+      return Boolean.TRUE;
     }
     catch (Exception e) {
       this.error = e.getMessage();
-      return new Boolean(false);
+      return Boolean.FALSE;
     }
   }
 // ***** VDMTOOLS END Name=fwriteval#3|String|Object|Object
@@ -91,7 +91,7 @@ public class IO {
       try {
         Tuple result = new Tuple(2);
         this.error = e.getMessage();
-        result.SetField(1, new Boolean(false));
+        result.SetField(1, Boolean.FALSE);
         result.SetField(2, this.error);
         return result;
       }
@@ -108,14 +108,17 @@ public class IO {
 // ***** VDMTOOLS START Name=post_freadval#2|String|Tuple KEEP=YES
   public Boolean post_freadval (final String f, final Tuple RESULT) throws CGException
   {
-    if (RESULT.Length() != 2)
+    if (RESULT.Length() != 2) {
       UTIL.RunTime("Pattern match did not succeed in value definition");
+    }
     Boolean b = (Boolean) RESULT.GetField(1);
     Object t = RESULT.GetField(2);
-    if (!b.booleanValue())
-      return new Boolean(t == null);
-    else
-      return new Boolean(true);
+    if (!b.booleanValue()) {
+      return Boolean.valueOf(t == null);
+    }
+    else {
+      return Boolean.TRUE;
+    }
   }
 // ***** VDMTOOLS END Name=post_freadval#2|String|Tuple
 
@@ -124,41 +127,41 @@ public class IO {
   public Boolean echo (final String text) throws CGException {
     try {
       System.out.println(text);
-      return new Boolean(true);
+      return Boolean.TRUE;
     }
     catch (Exception e) {
       this.error = e.getMessage();
-      return new Boolean(false);
+      return Boolean.FALSE;
     }
   }
 // ***** VDMTOOLS END Name=echo#1|String
 
 
 // ***** VDMTOOLS START Name=fecho#3|String|String|Object KEEP=YES
-  public Boolean fecho (final String filename, final String text, final Object fdir) throws CGException
-  {
+  public Boolean fecho (final String filename, final String text, final Object fdir) throws CGException {
     try {
       FileWriter fw = new FileWriter(filename, (fdir instanceof quotes.append));
       fw.write(text);
       fw.flush();
       fw.close();
-      return new Boolean(true);
+      return Boolean.TRUE;
     }
     catch (Exception e) {
       this.error = e.getMessage();
-      return new Boolean(false);
+      return Boolean.FALSE;
     }
   }
 // ***** VDMTOOLS END Name=fecho#3|String|String|Object
 
 
 // ***** VDMTOOLS START Name=pre_fecho#3|String|String|Object KEEP=YES
-  public Boolean pre_fecho (final String filename, final String text, final Object fdir) throws CGException
-  {
-    if (filename.equals(""))
-      return new Boolean(fdir == null);
-    else
-      return new Boolean(fdir != null);
+  public Boolean pre_fecho (final String filename, final String text, final Object fdir) throws CGException {
+    if (filename.equals("")) {
+      return Boolean.valueOf(fdir == null);
+    }
+    else {
+      return Boolean.valueOf(fdir != null);
+    }
   }
 // ***** VDMTOOLS END Name=pre_fecho#3|String|String|Object
 

@@ -39,12 +39,10 @@ public class VDMUtil {
 
 // ***** VDMTOOLS START Name=get_ufile_upos KEEP=YES
   static public Tuple get_ufile_upos () throws CGException {
-    // TODO
-    //return null;
     StackTraceElement[] ste = (new Throwable()).getStackTrace();
     return Tuple.mk_(ste[1].getFileName(),
-                     new Integer(ste[1].getLineNumber()),
-                     new Integer(0), // not supported
+                     Integer.valueOf(ste[1].getLineNumber()),
+                     Integer.valueOf(0), // not supported
                      ste[1].getClassName(),
                      ste[1].getMethodName());
   }
@@ -52,12 +50,10 @@ public class VDMUtil {
 
 // ***** VDMTOOLS START Name=get_file_pos KEEP=YES
   static public Tuple get_file_pos () throws CGException {
-    // TODO
-    //return null;
     StackTraceElement[] ste = (new Throwable()).getStackTrace();
     return Tuple.mk_(ste[1].getFileName(),
-                     new Integer(ste[1].getLineNumber()),
-                     new Integer(0), // not supported
+                     Integer.valueOf(ste[1].getLineNumber()),
+                     Integer.valueOf(0), // not supported
                      ste[1].getClassName(),
                      ste[1].getMethodName());
   }
@@ -83,7 +79,7 @@ public class VDMUtil {
     catch (Exception e) {
       try {
         Tuple result = new Tuple(2);
-        result.SetField(1, new Boolean(false));
+        result.SetField(1, Boolean.FALSE);
         result.SetField(2, e.getMessage());
         return result;
       }

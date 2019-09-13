@@ -34,24 +34,34 @@ public abstract class UTIL {
       if ((x instanceof Number) && (y instanceof Number)) {
         double xval = ((Number) x).doubleValue();
         double yval = ((Number) y).doubleValue();
-        if (xval < yval)
+        if (xval < yval) {
           return -1;
-        else if (xval > yval)
+        }
+        else if (xval > yval) {
           return 1;
-        else return 0;
+        }
+        else {
+          return 0;
+        }
       }
-      else if ((x == null) && (y == null))
+      else if ((x == null) && (y == null)) {
         return 0;
-      else if (x == null)
+      }
+      else if (x == null) {
         return -1;
-      else if (y == null)
+      }
+      else if (y == null) {
         return 1;
-      else if (UTIL.equals(x,y))
+      }
+      else if (UTIL.equals(x,y)) {
         return 0;
-      else if (UTIL.toString(x).compareTo(UTIL.toString(y)) < 0)
+      }
+      else if (UTIL.toString(x).compareTo(UTIL.toString(y)) < 0) {
         return -1;
-      else
+      }
+      else {
         return 1;
+      }
     }
   }
 
@@ -59,30 +69,39 @@ public abstract class UTIL {
   public static class VDMCompare2 implements Comparator {
     public int compare(Object x, Object y) {
 
-      if ((x == null) && (y == null))
+      if ((x == null) && (y == null)) {
         return 0;
-      else if (x == null)
+      }
+      else if (x == null) {
         return -1;
-      else if (y == null)
+      }
+      else if (y == null) {
         return 1;
-      else if (x.equals(y))
+      }
+      else if (x.equals(y)) {
         return 0;
+      }
       else if (x instanceof Character) {
-        if (y instanceof Character)
+        if (y instanceof Character) {
           return ((Character)x).compareTo((Character)y);
-        else
+        }
+        else {
           return -1;
+        }
       }
       else if (x instanceof Number) {
         if (y instanceof Number) {
           double xval = ((Number) x).doubleValue();
           double yval = ((Number) y).doubleValue();
-          if (xval < yval)
+          if (xval < yval) {
             return -1;
-          else if (xval > yval)
+          }
+          else if (xval > yval) {
             return 1;
-          else
+          }
+          else {
            return 0;
+          }
         }
         return ((y instanceof Character) ? 1 : -1);
       }
@@ -93,12 +112,12 @@ public abstract class UTIL {
           int len1 = t1.Length();
           int len2 = t2.Length();
           if (len1 == len2) {
-            for (int i = 1; i <= len1; i++)
-            {
+            for (int i = 1; i <= len1; i++) {
               try {
                 int c = compare(t1.GetField(i), t2.GetField(i));
-                if (c != 0)
+                if (c != 0) {
                   return c;
+                }
               } catch (INDEX_OUT_OF_RANGE e) {}
             }
             return 0;
@@ -110,8 +129,9 @@ public abstract class UTIL {
       else if (x instanceof Record) {
         if (y instanceof Record) {
           // TODO:
-          if (((Record)x).equals(y))
+          if (((Record)x).equals(y)) {
             return 0;
+          }
           String nm1 = x.getClass().getName();
           String nm2 = y.getClass().getName();
           return nm1.compareTo(nm2);
@@ -125,18 +145,17 @@ public abstract class UTIL {
           Set s2 = (Set)y;
           int size1 = s1.size();
           int size2 = s2.size();
-          if (size1 == size2)
-          {
+          if (size1 == size2) {
             try {
               Set ts1 = new TreeSet(s1);
               Set ts2 = new TreeSet(s2);
               Iterator iter1 = ts1.iterator();
               Iterator iter2 = ts2.iterator();
-              for (; iter1.hasNext();)
-              {
+              for (; iter1.hasNext();) {
                 int c = compare(iter1.next(), iter2.next());
-                if (c != 0)
+                if (c != 0) {
                   return c;
+                }
               }
               return 0;
             } catch (ClassCastException e) {
@@ -175,21 +194,21 @@ public abstract class UTIL {
           Map m2 = (Map)y;
           int size1 = m1.size();
           int size2 = m2.size();
-          if (size1 == size2)
-          {
+          if (size1 == size2) {
             try {
               TreeSet ts1 = new TreeSet (m1.keySet());
               TreeSet ts2 = new TreeSet (m2.keySet());
               int kc = compare(ts1, ts2);
-              if (kc != 0)
+              if (kc != 0) {
                 return kc;
+              }
               Iterator iter1 = ts1.iterator();
               Iterator iter2 = ts2.iterator();
-              for (; iter1.hasNext();)
-              {
+              for (; iter1.hasNext();) {
                 int c = compare(m1.get(iter1.next()), m2.get(iter2.next()));
-                if (c != 0)
+                if (c != 0) {
                   return c;
+                }
               }
               return 0;
             } catch (ClassCastException e) {
@@ -230,8 +249,7 @@ public abstract class UTIL {
         if (y instanceof Boolean) {
           return ((Boolean)x).compareTo((Boolean)y);
         }
-        return (((y instanceof String) || (y instanceof List))
-                 ? -1 : 1);
+        return (((y instanceof String) || (y instanceof List)) ? -1 : 1);
       }
       else if (x instanceof String) {
         if (y instanceof String) {
@@ -242,13 +260,12 @@ public abstract class UTIL {
           List l2 = (List)y;
           int len1 = l1.size();
           int len2 = l2.size();
-          if (len1 == len2)
-          {
-            for (int i = 0; i < len1; i++)
-            {
+          if (len1 == len2) {
+            for (int i = 0; i < len1; i++) {
               int c = compare(l1.get(i), l2.get(i));
-              if (c != 0)
+              if (c != 0) {
                 return c;
+              }
             }
             return 0;
           }
@@ -262,31 +279,28 @@ public abstract class UTIL {
           List l2 = (List)y;
           int len1 = l1.size();
           int len2 = l2.size();
-          if (len1 == len2)
-          {
-            for (int i = 0; i < len1; i++)
-            {
+          if (len1 == len2) {
+            for (int i = 0; i < len1; i++) {
               int c = compare(l1.get(i), l2.get(i));
-              if (c != 0)
+              if (c != 0) {
                 return c;
+              }
             }
             return 0;
           }
           return ((len1 < len2) ? -1 : 1);
         }
-        else if (y instanceof String)
-        {
+        else if (y instanceof String) {
           List l1 = (List)x;
           List l2 = UTIL.ConvertToList((String)y);
           int len1 = l1.size();
           int len2 = l2.size();
-          if (len1 == len2)
-          {
-            for (int i = 0; i < len1; i++)
-            {
+          if (len1 == len2) {
+            for (int i = 0; i < len1; i++) {
               int c = compare(l1.get(i), l2.get(i));
-              if (c != 0)
+              if (c != 0) {
                 return c;
+              }
             }
             return 0;
           }
@@ -294,111 +308,106 @@ public abstract class UTIL {
         }
         return 1;
       }
-      else
-      {
+      else {
         return 1;
       }
     }
 
-    private static Set getCharacterSet(Set s)
-    {
+    private static Set getCharacterSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Character)
+        if (o instanceof Character) {
           rs.add(o);
+        }
       }
       return rs;
     }
 
-    private static Set getNumberSet(Set s)
-    {
+    private static Set getNumberSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Number)
+        if (o instanceof Number) {
           rs.add(o);
+        }
       }
       return rs;
     }
 
-    private static Set getTupleSet(Set s)
-    {
+    private static Set getTupleSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Tuple)
+        if (o instanceof Tuple) {
           rs.add(o);
+        }
       }
       return rs;
     }
 
-    private static Set getRecordSet(Set s)
-    {
+    private static Set getRecordSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Record)
+        if (o instanceof Record) {
           rs.add(o);
+        }
       }
       return rs;
     }
-    private static Set getSetSet(Set s)
-    {
+
+    private static Set getSetSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Set)
+        if (o instanceof Set) {
           rs.add(o);
+        }
       }
       return rs;
     }
-    private static Set getMapSet(Set s)
-    {
+
+    private static Set getMapSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Map)
+        if (o instanceof Map) {
           rs.add(o);
+        }
       }
       return rs;
     }
-    private static Set getBooleanSet(Set s)
-    {
+
+    private static Set getBooleanSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof Boolean)
+        if (o instanceof Boolean) {
           rs.add(o);
+        }
       }
       return rs;
     }
-    private static Set getStringSet(Set s)
-    {
+
+    private static Set getStringSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof String)
+        if (o instanceof String) {
           rs.add(o);
+        }
       }
       return rs;
     }
-    private static Set getListSet(Set s)
-    {
+
+    private static Set getListSet(Set s) {
       Set rs = UTIL.createSet();
-      for (Iterator iter = s.iterator(); iter.hasNext();)
-      {
+      for (Iterator iter = s.iterator(); iter.hasNext();) {
         Object o = iter.next();
-        if (o instanceof List)
+        if (o instanceof List) {
           rs.add(o);
+        }
       }
       return rs;
     }
@@ -426,8 +435,9 @@ public abstract class UTIL {
 
   @SuppressWarnings("unchecked")
   private static void toStringBuffer(Object obj, StringBuffer buffer) {
-    if (obj == null)
+    if (obj == null) {
       buffer.append("nil");
+    }
     else if (obj instanceof String) {
       buffer.append("\"");
       buffer.append(obj.toString());
@@ -438,16 +448,19 @@ public abstract class UTIL {
       buffer.append(obj.toString());
       buffer.append("'");
     }
-    else if (obj instanceof Tuple)
+    else if (obj instanceof Tuple) {
       buffer.append(((Tuple)obj).toString());
+    }
     else if  (obj instanceof Map) {
       Map m = (Map) obj;
       buffer.append("{ ");
-      if (m.isEmpty())
+      if (m.isEmpty()) {
         buffer.append("|->");
-      else
+      }
+      else {
         UTIL.collectionToString((Collection) m.entrySet(), buffer);
-        buffer.append(" }");
+      }
+      buffer.append(" }");
     }
     else if (obj instanceof Map.Entry) {
       Map.Entry entry = (Map.Entry) obj;
@@ -468,16 +481,13 @@ public abstract class UTIL {
       List l = (List)obj;
       int len_l = l.size();
       boolean forall = (len_l > 0);
-      for (int i = 0; (i < len_l) && forall; i++)
-      {
+      for (int i = 0; (i < len_l) && forall; i++) {
         forall = (l.get(i) instanceof Character);
       }
-      if (forall)
-      {
+      if (forall) {
         UTIL.toStringBuffer(UTIL.ConvertToString(l), buffer);
       }
-      else
-      {
+      else {
         buffer.append("[ ");
         UTIL.vectorToString((List)obj, buffer);
         buffer.append(" ]");
@@ -485,12 +495,12 @@ public abstract class UTIL {
     }
     else if (obj instanceof Double) {
       Double dv = (Double)obj;
-      if( dv.doubleValue() == dv.intValue() )
-      {
-        buffer.append(new Integer(dv.intValue()).toString());
+      if( dv.doubleValue() == dv.intValue() ) {
+        buffer.append(Integer.valueOf(dv.intValue()).toString());
       }
-      else
+      else {
         buffer.append(obj.toString());
+      }
     }
     else
       buffer.append(obj.toString());
@@ -530,8 +540,9 @@ public abstract class UTIL {
     for(Iterator i = c.iterator(); i.hasNext();) {
       Object obj = i.next();
       buffer.append(toString(obj));
-      if (i.hasNext())
+      if (i.hasNext()) {
         buffer.append(", ");
+      }
     }
   }
 
@@ -539,8 +550,9 @@ public abstract class UTIL {
     for(Iterator i = v.iterator(); i.hasNext();) {
       Object obj = i.next();
       buffer.append(toString(obj));
-      if (i.hasNext())
+      if (i.hasNext()) {
         buffer.append(", ");
+      }
     }
   }
 
@@ -551,11 +563,11 @@ public abstract class UTIL {
    * @throws CGException run-time error exception.
    */
   public static void RunTime(Object obj) throws CGException {
-    if (obj instanceof String)
-    {
+    if (obj instanceof String) {
       String s = (String)obj;
-      if (!s.startsWith("Run-Time Error:"))
+      if (!s.startsWith("Run-Time Error:")) {
         throw new VDMRunTimeException("Run-Time Error:" + s);
+      }
     }
     throw new VDMRunTimeException(obj);
     // for 
@@ -569,11 +581,11 @@ public abstract class UTIL {
    * @throws NotSupportedConstructException not supported error exception.
    */
   public static void NotSupported(Object obj) throws NotSupportedConstructException {
-    if (obj instanceof String)
-    {
+    if (obj instanceof String) {
       String s = (String)obj;
-      if (!s.startsWith("The construct is not supported: "))
+      if (!s.startsWith("The construct is not supported: ")) {
         throw new NotSupportedConstructException("The construct is not supported: " + s);
+      }
     }
     throw new NotSupportedConstructException(obj);
   }
@@ -586,7 +598,9 @@ public abstract class UTIL {
    * @return returns true, if obj1 and obj2 have the same VDM base class.
    */
   public static boolean samebaseclass(Object obj1, Object obj2) {
-    if ((obj1 == null) || (obj2 == null) ) return false;
+    if ((obj1 == null) || (obj2 == null) ) {
+      return false;
+    }
 
     Class c1 = obj1.getClass();
     Class c2 = obj2.getClass();
@@ -605,18 +619,22 @@ public abstract class UTIL {
         c2.getName().equals("java.lang.Boolean") ||
         c2.getName().equals("jp.vdmtools.VDM.Tuple") ||
         c2.getName().endsWith("Token") ||
-        c2.getName().startsWith("quotes")) return false;
+        c2.getName().startsWith("quotes")) {
+      return false;
+    }
 
     Class interfs[] = c1.getInterfaces();
     for (int i = 0; i < interfs.length; i++) {
-      if (interfs[i].getName().equals("jp.vdmtools.VDM.Record"))
+      if (interfs[i].getName().equals("jp.vdmtools.VDM.Record")) {
         return false;
+      }
     }
 
     Class interfs2[] = c2.getInterfaces();
     for (int i = 0; i < interfs2.length; i++) {
-      if (interfs2[i].getName().equals("jp.vdmtools.VDM.Record"))
+      if (interfs2[i].getName().equals("jp.vdmtools.VDM.Record")) {
         return false;
+      }
     }
 
     Class base1 = c1;
@@ -658,7 +676,9 @@ public abstract class UTIL {
    * @return returns true, if obj1 and obj2 are instances of the same VDM class
    */
   public static boolean sameclass(Object obj1, Object obj2) {
-    if ((obj1 == null) || (obj2 == null) ) return false;
+    if ((obj1 == null) || (obj2 == null) ) {
+      return false;
+    }
 
     Class c1 = obj1.getClass();
     Class c2 = obj2.getClass();
@@ -677,18 +697,22 @@ public abstract class UTIL {
         c2.getName().equals("java.lang.Boolean") ||
         c2.getName().equals("jp.vdmtools.VDM.Tuple") ||
         c2.getName().endsWith("Token") ||
-        c2.getName().startsWith("quotes")) return false;
+        c2.getName().startsWith("quotes")) {
+      return false;
+    }
 
     Class interfs[] = c1.getInterfaces();
     for (int i = 0; i < interfs.length; i++) {
-      if (interfs[i].getName().equals("jp.vdmtools.VDM.Record"))
+      if (interfs[i].getName().equals("jp.vdmtools.VDM.Record")) {
         return false;
+      }
     }
 
     Class interfs2[] = c2.getInterfaces();
     for (int i = 0; i < interfs2.length; i++) {
-      if (interfs2[i].getName().equals("jp.vdmtools.VDM.Record"))
+      if (interfs2[i].getName().equals("jp.vdmtools.VDM.Record")) {
         return false;
+      }
     }
 
     return (c1 == c2);
@@ -701,7 +725,9 @@ public abstract class UTIL {
    * @return a clone of input VDMvalue.
    */
   public static Object clone(Object obj) {
-    if (obj == null) { return null; }
+    if (obj == null) {
+       return null;
+    }
 
     if (!(obj instanceof Cloneable)) {
       return obj;
@@ -723,8 +749,7 @@ public abstract class UTIL {
       if (obj instanceof ArrayList) {
         return ((ArrayList)obj).clone();
       }
-      else
-      {
+      else {
         return ((Vector)obj).clone();
       }
     }
@@ -733,8 +758,7 @@ public abstract class UTIL {
       if (obj instanceof HashSet) {
         return ((HashSet)obj).clone();
       }
-      else
-      {
+      else {
         return ((HashSet)obj).clone();
       }
     }
@@ -743,8 +767,7 @@ public abstract class UTIL {
       if (obj instanceof HashMap) {
         return ((HashMap)obj).clone();
       }
-      else
-      {
+      else {
         return ((HashMap)obj).clone();
       }
     }
@@ -763,60 +786,65 @@ public abstract class UTIL {
    * @return returns true, if the two objects are equal.
    */
   public static boolean equals(final Object obj1, final Object obj2) {
-    if ((obj1 == null) && (obj2 == null)) return true;
-
-    if ((obj1 == null) || (obj2 == null)) return false;
-
-    if ((obj1 instanceof Number) && (obj2 instanceof Number))
-      return (((Number) obj1).doubleValue() == ((Number) obj2).doubleValue());
-
-    if ((obj1 instanceof String) && (obj2 instanceof List))
-      return UTIL.equals(UTIL.ConvertToList(obj1), obj2);
-
-    if ((obj2 instanceof String) && (obj1 instanceof List))
-      return UTIL.equals(UTIL.ConvertToList(obj2), obj1);
-
-    if ((obj1 instanceof List) && (obj2 instanceof List))
-      return UTIL.listEquals((List) obj1, (List) obj2);
-
-    if ((obj1 instanceof Set) && (obj2 instanceof Set))
-      return UTIL.setEquals((Set) obj1, (Set) obj2);
-
-    if ((obj1 instanceof Map) && (obj2 instanceof Map))
-      return UTIL.mapEquals((Map) obj1, (Map) obj2);
-
-    if (!(obj1.getClass() == obj2.getClass()))
+    if ((obj1 == null) && (obj2 == null)) {
+      return true;
+    }
+    if ((obj1 == null) || (obj2 == null)) {
       return false;
-    else
+    }
+    if ((obj1 instanceof Number) && (obj2 instanceof Number)) {
+      return (((Number) obj1).doubleValue() == ((Number) obj2).doubleValue());
+    }
+    if ((obj1 instanceof String) && (obj2 instanceof List)) {
+      return UTIL.equals(UTIL.ConvertToList(obj1), obj2);
+    }
+    if ((obj2 instanceof String) && (obj1 instanceof List)) {
+      return UTIL.equals(UTIL.ConvertToList(obj2), obj1);
+    }
+    if ((obj1 instanceof List) && (obj2 instanceof List)) {
+      return UTIL.listEquals((List) obj1, (List) obj2);
+    }
+    if ((obj1 instanceof Set) && (obj2 instanceof Set)) {
+      return UTIL.setEquals((Set) obj1, (Set) obj2);
+    }
+    if ((obj1 instanceof Map) && (obj2 instanceof Map)) {
+      return UTIL.mapEquals((Map) obj1, (Map) obj2);
+    }
+    if (!(obj1.getClass() == obj2.getClass())) {
+      return false;
+    }
+    else {
       return obj1.equals(obj2);
+    }
   }
 
-  private static boolean listEquals (List l1, List l2){
-    if (l1.size() != l2.size())
+  private static boolean listEquals (List l1, List l2) {
+    if (l1.size() != l2.size()) {
       return false;
+    }
     else {
       boolean equal = true;
       int s = l1.size();
-      for (int i = 0; i < s && equal; i++)
+      for (int i = 0; i < s && equal; i++) {
         equal = (UTIL.equals(l1.get(i), l2.get(i)));
+      }
       return equal;
     }
   }
 
   @SuppressWarnings("unchecked")
-  private static boolean setEquals (Set s1, Set s2){
-    if (s1.size() != s2.size())
+  private static boolean setEquals (Set s1, Set s2) {
+    if (s1.size() != s2.size()) {
       return false;
+    }
     else {
       boolean forall = true;
       Set s3 = new HashSet(s2);
-      for (Iterator iter = s1.iterator(); iter.hasNext() && forall;)
-      {
+      for (Iterator iter = s1.iterator(); iter.hasNext() && forall;) {
         Object o1 = iter.next();
         boolean exists = false;
         Set s4 = s3;
-        for (Iterator iter2 = s4.iterator(); iter2.hasNext() && !exists;)
-        {
+        for (Iterator iter2 = s4.iterator(); iter2.hasNext() && !exists;) {
           Object o2 = iter2.next();
           exists = UTIL.equals(o1, o2);
           if(exists) {
@@ -830,20 +858,19 @@ public abstract class UTIL {
   }
 
   @SuppressWarnings("unchecked")
-  private static boolean mapEquals (Map m1, Map m2){
-    if (m1.size() != m2.size())
+  private static boolean mapEquals (Map m1, Map m2) {
+    if (m1.size() != m2.size()) {
       return false;
+    }
     else {
       boolean forall = true;
       Set ks1 = new HashSet(m1.keySet());
       Set ks2 = new HashSet(m2.keySet());
-      for (Iterator iter = ks1.iterator(); iter.hasNext() && forall;)
-      {
+      for (Iterator iter = ks1.iterator(); iter.hasNext() && forall;) {
         Object k1 = iter.next();
         boolean exists = false;
         Set ks3 = ks2;
-        for (Iterator iter2 = ks3.iterator(); iter2.hasNext() && !exists;)
-        {
+        for (Iterator iter2 = ks3.iterator(); iter2.hasNext() && !exists;) {
           Object k2 = iter2.next();
           exists = UTIL.equals(k1, k2) && UTIL.equals(m1.get(k1), m2.get(k2));
           if(exists) {
@@ -866,17 +893,20 @@ public abstract class UTIL {
    * @throws VDMRunTimeException if the instance has no integer value.
    */
   public static Integer NumberToInt(Object n) throws VDMRunTimeException {
-    if (n==null)
+    if (n==null) {
       return null;
-
-    if (n instanceof Number) {
-      if (((Number) n).intValue() == ((Number) n).doubleValue())
-        return new Integer(((Number) n).intValue());
-      else
-        throw new VDMRunTimeException("<UTIL.NumberToInt>: number is not int " + n.toString());
     }
-    else
+    if (n instanceof Number) {
+      if (((Number) n).intValue() == ((Number) n).doubleValue()) {
+        return Integer.valueOf(((Number) n).intValue());
+      }
+      else {
+        throw new VDMRunTimeException("<UTIL.NumberToInt>: number is not int " + n.toString());
+      }
+    }
+    else {
       return (Integer) n;
+    }
   }
 
   /**
@@ -888,17 +918,20 @@ public abstract class UTIL {
    * @throws VDMRunTimeException if the instance has no integer value.
    */
   public static Short NumberToShort(Object n) throws VDMRunTimeException {
-    if (n==null)
+    if (n == null) {
       return null;
-
-    if (n instanceof Number) {
-      if (((Number) n).intValue() == ((Number) n).doubleValue())
-        return new Short(((Number) n).shortValue());
-      else
-        throw new VDMRunTimeException("<UTIL.NumberToShort>: number is not int " + n.toString());
     }
-    else
+    if (n instanceof Number) {
+      if (((Number) n).intValue() == ((Number) n).doubleValue()) {
+        return new Short(((Number) n).shortValue());
+      }
+      else {
+        throw new VDMRunTimeException("<UTIL.NumberToShort>: number is not int " + n.toString());
+      }
+    }
+    else {
       return (Short) n;
+    }
   }
 
   /**
@@ -910,17 +943,20 @@ public abstract class UTIL {
    * @throws VDMRunTimeException if the instance has no integer value.
    */
   public static Long NumberToLong(Object n) throws VDMRunTimeException {
-    if (n == null)
+    if (n == null) {
       return null;
-
-    if (n instanceof Number) {
-      if (((Number) n).intValue() == ((Number) n).doubleValue())
-        return new Long(((Number) n).longValue());
-      else
-        throw new VDMRunTimeException("<UTIL.NumberToLong>: number is not int " + n.toString());
     }
-    else
+    if (n instanceof Number) {
+      if (((Number) n).intValue() == ((Number) n).doubleValue()) {
+        return Long.valueOf(((Number) n).longValue());
+      }
+      else {
+        throw new VDMRunTimeException("<UTIL.NumberToLong>: number is not int " + n.toString());
+      }
+    }
+    else {
       return (Long) n;
+    }
   }
 
   /**
@@ -930,10 +966,10 @@ public abstract class UTIL {
    * @return Double value.
    */
   public static Double NumberToReal(Object n) {
-    if (n == null)
+    if (n == null) {
       return null;
-
-    return new Double(((Number) n).doubleValue());
+    }
+    return Double.valueOf(((Number) n).doubleValue());
   }
 
   /**
@@ -947,12 +983,14 @@ public abstract class UTIL {
     if (s instanceof String) {
       List v = UTIL.createList();
       char cs[] = ((String) s).toCharArray();
-      for (int i = 0; i < cs.length; i++)
-        v.add(new Character(cs[i]));
+      for (int i = 0; i < cs.length; i++) {
+        v.add(Character.valueOf(cs[i]));
+      }
       return v;
     }
-    else
+    else {
       return (List) s;
+    }
   }
 
   /**
@@ -969,21 +1007,25 @@ public abstract class UTIL {
       StringBuffer str_s = new StringBuffer();
       List l = (List) s;
       boolean succ = true;
-      for (Iterator iter = l.iterator(); iter.hasNext() && succ;)
-      {
+      for (Iterator iter = l.iterator(); iter.hasNext() && succ;) {
         Object c = iter.next();
-        if (c instanceof Character)
+        if (c instanceof Character) {
           str_s.append(c);
-        else
+        }
+        else {
           succ = false;
+        }
       }
-      if (!succ)
+      if (!succ) {
         return "";
-      else
+      }
+      else {
         return str_s.toString();
+      }
     }
-    else
+    else {
       return s.toString();
+    }
   }
 
   /**
@@ -996,8 +1038,9 @@ public abstract class UTIL {
     StringBuffer str_s = new StringBuffer();
     if (s instanceof String) {
       char cs[] = ((String) s).toCharArray();
-      for (int i = cs.length - 1; i >= 0; i--)
-        str_s.append(new Character(cs[i]));
+      for (int i = cs.length - 1; i >= 0; i--) {
+        str_s.append(Character.valueOf(cs[i]));
+      }
     }
     return str_s.toString();
   }
@@ -1013,8 +1056,7 @@ public abstract class UTIL {
     List v = UTIL.createList();
     if (s instanceof List) {
       List l = (List) s;
-      for (int i = l.size() - 1; i >= 0; i--)
-      {
+      for (int i = l.size() - 1; i >= 0; i--) {
         v.add(l.get(i));
       }
     }
@@ -1072,7 +1114,9 @@ public abstract class UTIL {
   public static Set Permute (List s) {
     //VDMCompare vdmComp = new VDMCompare();
     Set perm = UTIL.createSet();
-    if (s.size() == 0) return perm;
+    if (s.size() == 0) {
+      return perm;
+    }
     if (s.size() == 1) {
       List elem = UTIL.createList();
       try {
@@ -1124,29 +1168,33 @@ public abstract class UTIL {
       for (Iterator e = help.iterator(); e.hasNext();) {
         Object obj = e.next();
         if (IsInteger(obj)) {
-          Long I = new Long(obj.toString());
+          Long I = Long.valueOf(obj.toString());
           if (maxi instanceof Integer) {
-            if (I.intValue() < ((Integer) maxi).intValue())
+            if (I.intValue() < ((Integer) maxi).intValue()) {
                maxi = I;
-          };
+            }
+          }
           if (maxi instanceof Long) {
-            if (I.longValue() < ((Long) maxi).longValue())
+            if (I.longValue() < ((Long) maxi).longValue()) {
               maxi = I;
-          };
+            }
+          }
           if (maxi instanceof Character) {
             maxi = I;
           }
         }
-        else
+        else {
           if (obj instanceof Character) {
             Character C;
             C = (Character) obj;
             if (maxi instanceof Character) {
               if (Character.getNumericValue(C.charValue()) <
-                  Character.getNumericValue(((Character) maxi).charValue()))
+                  Character.getNumericValue(((Character) maxi).charValue())) {
                 maxi = C;
-            };
+              }
+            }
           }
+        }
       }
       ss.add(maxi);
       help.remove(maxi);
@@ -1155,15 +1203,16 @@ public abstract class UTIL {
   }
 
   public static boolean Contains(Set s, Object o) {
-    if (!s.contains(o))
-    {
-      if (o instanceof Number)
-      {
+    if (!s.contains(o)) {
+      if (o instanceof Number) {
         double val = ((Number)o).doubleValue();
         for (Iterator it = s.iterator(); it.hasNext();) {
           Object e = it.next();
-          if (e instanceof Number)
-            if (val == ((Number)e).doubleValue()) return true;
+          if (e instanceof Number) {
+            if (val == ((Number)e).doubleValue()) {
+              return true;
+            }
+          }
         }
       }
       return false;
@@ -1171,59 +1220,51 @@ public abstract class UTIL {
     return true;
   }
 
-  public static List createList()
-  {
+  public static List createList() {
     return UTIL.createList(Collections.EMPTY_LIST);
   }
 
   @SuppressWarnings("unchecked")
-  public static List createList(Collection c)
-  {
+  public static List createList(Collection c) {
     return new ArrayList(c);
   }
 
-  public static Set createSet()
-  {
+  public static Set createSet() {
     return UTIL.createSet(Collections.EMPTY_SET);
   }
 
   @SuppressWarnings("unchecked")
-  public static Set createSet(Collection c)
-  {
+  public static Set createSet(Collection c) {
     return new HashSet(c);
   }
 
-  public static Map createMap()
-  {
+  public static Map createMap() {
     return createMap(Collections.EMPTY_MAP);
   }
 
   @SuppressWarnings("unchecked")
-  public static Map createMap(Map m)
-  {
+  public static Map createMap(Map m) {
     return new HashMap(m);
   }
 
-  public static void SetRandomSeed(long s)
-  {
+  public static void SetRandomSeed(long s) {
     rseed = s;
-    if (s >= 0)
+    if (s >= 0) {
       rnd.set_seed(rseed);
+    }
   }
 
   @SuppressWarnings("unchecked")
-  public static List GetRandomSequence(Number n)
-  {
+  public static List GetRandomSequence(Number n) {
     ArrayList l = new ArrayList();
-    for (int i = 1; i <= n.intValue(); i++)
-      l.add(new Integer(i));
-
-    if ((rseed < 0) || (l.size() <= 1))
+    for (int i = 1; i <= n.intValue(); i++) {
+      l.add(Integer.valueOf(i));
+    }
+    if ((rseed < 0) || (l.size() <= 1)) {
       return l;
-
+    }
     List res = new ArrayList();
-    while(l.size() > 1)
-    {
+    while(l.size() > 1) {
       int idx = rnd.get_random(l.size());
       res.add(l.remove(idx));
     }

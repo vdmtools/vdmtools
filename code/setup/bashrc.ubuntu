@@ -106,6 +106,8 @@ export JDKHOME=/usr
 export ANTHOME=/usr
 export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
 
+export PYTHON=/usr/bin/python3
+
 export QTVERSION=4
 export QTDIR=/usr
 if [ -f ${QTDIR}/bin/qtchooser ]; then
