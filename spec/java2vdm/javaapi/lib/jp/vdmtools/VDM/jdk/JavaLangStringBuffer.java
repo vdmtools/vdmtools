@@ -82,7 +82,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
 
 
     public Character charAt(final Integer charIndex) {
-        return new Character(wrappedObject.charAt(charIndex.intValue()));
+        return Character.valueOf(wrappedObject.charAt(charIndex.intValue()));
     }
 
 

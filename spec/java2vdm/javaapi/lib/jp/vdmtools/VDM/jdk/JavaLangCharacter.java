@@ -9,9 +9,9 @@ public class JavaLangCharacter extends JavaLangObject {
     public static final Integer MIN_uRADIX = Integer.valueOf(Character.MIN_RADIX);
     public static final Integer MAX_uRADIX = Integer.valueOf(Character.MAX_RADIX);
     public static final Character MIN_uVALUE =
-            new Character(Character.MIN_VALUE);
+            Character.valueOf(Character.MIN_VALUE);
     public static final Character MAX_uVALUE =
-            new Character(Character.MAX_VALUE);
+            Character.valueOf(Character.MAX_VALUE);
 
 
     private Character wrappedObject;
@@ -21,7 +21,7 @@ public class JavaLangCharacter extends JavaLangObject {
     }
 
     public JavaLangCharacter() {
-        wrappedObject = new Character('a');
+        wrappedObject = Character.valueOf('a');
     }
 
     public JavaLangCharacter(final Character ch) {
@@ -76,7 +76,7 @@ public class JavaLangCharacter extends JavaLangObject {
 
     static public Character forDigit(final Integer digit_1,
                                      final Integer radix) {
-        return new Character(Character.forDigit(digit_1.intValue(),
+        return Character.valueOf(Character.forDigit(digit_1.intValue(),
                 radix.intValue()));
     }
 
@@ -97,17 +97,17 @@ public class JavaLangCharacter extends JavaLangObject {
 
 
     static public Character toLowerCase(final Character ch) {
-        return new Character(Character.toLowerCase(ch.charValue()));
+        return Character.valueOf(Character.toLowerCase(ch.charValue()));
     }
 
 
     static public Character toTitleCase(final Character ch) {
-        return new Character(Character.toTitleCase(ch.charValue()));
+        return Character.valueOf(Character.toTitleCase(ch.charValue()));
     }
 
 
     static public Character toUpperCase(final Character ch) {
-        return new Character(Character.toUpperCase(ch.charValue()));
+        return Character.valueOf(Character.toUpperCase(ch.charValue()));
     }
 
 

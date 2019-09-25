@@ -14,11 +14,11 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
     private File wrappedObject;
 
-    public static JavaLangCharacter separatorChar = new JavaLangCharacter(new Character(File.separatorChar));
+    public static JavaLangCharacter separatorChar = new JavaLangCharacter(Character.valueOf(File.separatorChar));
 
     public static JavaLangString separator = new JavaLangString(File.separator);
 
-    public static JavaLangCharacter pathSeparatorChar = new JavaLangCharacter(new Character(File.pathSeparatorChar));
+    public static JavaLangCharacter pathSeparatorChar = new JavaLangCharacter(Character.valueOf(File.pathSeparatorChar));
 
     public static JavaLangString pathSeparator = new JavaLangString(File.pathSeparator);
 

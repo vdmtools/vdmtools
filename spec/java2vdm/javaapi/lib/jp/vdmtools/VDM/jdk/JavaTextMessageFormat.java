@@ -294,7 +294,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                         Character ch = null;
                         ch = newPattern.charAt(i);
                         if (Boolean.valueOf(part.intValue() == Integer.valueOf(0).intValue()).booleanValue()) {
-                            if (Boolean.valueOf(UTIL.equals(ch, new Character('\''))).booleanValue()) {
+                            if (Boolean.valueOf(UTIL.equals(ch, Character.valueOf('\''))).booleanValue()) {
                                 Boolean cond_65 = null;
                                 Boolean var1_66 = null;
                                 Integer var2_70 = null;
@@ -305,7 +305,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                                         Boolean var2_71 = null;
                                         Character var1_72 = null;
                                         var1_72 = newPattern.charAt(Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue()));
-                                        var2_71 = Boolean.valueOf(UTIL.equals(var1_72, new Character('\'')));
+                                        var2_71 = Boolean.valueOf(UTIL.equals(var1_72, Character.valueOf('\'')));
                                         cond_65 = var2_71;
                                     }
                                 }
@@ -326,7 +326,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                             } else {
                                 Boolean cond_52 = null;
                                 {
-                                    if ((cond_52 = Boolean.valueOf(UTIL.equals(ch, new Character('{')))).booleanValue())
+                                    if ((cond_52 = Boolean.valueOf(UTIL.equals(ch, Character.valueOf('{')))).booleanValue())
                                         cond_52 = Boolean.valueOf(!inQuote.booleanValue());
                                 }
                                 if (cond_52.booleanValue())
@@ -347,7 +347,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                                 tmpVal_40 = (JavaLangStringBuffer) obj_41.append(ch);
                                 ;
                             }
-                            if (Boolean.valueOf(UTIL.equals(ch, new Character('\''))).booleanValue())
+                            if (Boolean.valueOf(UTIL.equals(ch, Character.valueOf('\''))).booleanValue())
                                 inQuote = Boolean.FALSE;
                         } else {
                             UTIL.NotSupported("The construct is not supported: Non-type binds in trap statement");
@@ -656,7 +656,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                    }
 //                    if (Boolean.FALSE.booleanValue()) {
 //                        JavaLangStringBuffer tmpVal_88 = null;
-//                        tmpVal_88 = (JavaLangStringBuffer) result.append(new Character('D'));
+//                        tmpVal_88 = (JavaLangStringBuffer) result.append(Character.valueOf('D'));
 //                        ;
 //                    } else {
 //                        JavaLangObject obj = (JavaLangObject) arguments.get(argumentNumber);
@@ -701,7 +701,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                                Boolean var2_70 = null;
 //                                Integer var1_71 = null;
 //                                Object tmpGen_72 = null;
-//                                var1_71 = UTIL.NumberToInt(arg.indexOf(new Character('{')));
+//                                var1_71 = UTIL.NumberToInt(arg.indexOf(Character.valueOf('{')));
 //                                var2_70 = Boolean.valueOf((var1_71.intValue()) >= (Integer.valueOf(0).intValue()));
 //                                cond_68 = var2_70;
 //                            }

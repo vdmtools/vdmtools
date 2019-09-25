@@ -47,7 +47,7 @@ public class JavaTextParsePosition extends JavaLangObject {
         par_15 = J2VUTIL.Convert(new String("JavaLangString"), errorIndex);
         par_2 = (JavaLangString) J2VUTIL.ConcatStr((JavaLangString) par_3, (JavaLangString) par_15);
         Object par_18 = null;
-        par_18 = J2VUTIL.Convert(new String("JavaLangString"), new Character(']'));
+        par_18 = J2VUTIL.Convert(new String("JavaLangString"), Character.valueOf(']'));
         rexpr_1 = (JavaLangString) J2VUTIL.ConcatStr((JavaLangString) par_2, (JavaLangString) par_18);
         return (JavaLangString) rexpr_1;
     }

@@ -85,7 +85,7 @@ public class JavaTextFieldPosition extends JavaLangObject {
         par_22 = J2VUTIL.Convert(new String("JavaLangString"), endIndex);
         par_2 = (JavaLangString) J2VUTIL.ConcatStr((JavaLangString) par_3, (JavaLangString) par_22);
         Object par_25 = null;
-        par_25 = J2VUTIL.Convert(new String("JavaLangString"), new Character(']'));
+        par_25 = J2VUTIL.Convert(new String("JavaLangString"), Character.valueOf(']'));
         rexpr_1 = (JavaLangString) J2VUTIL.ConcatStr((JavaLangString) par_2, (JavaLangString) par_25);
         return (JavaLangString) rexpr_1;
     }

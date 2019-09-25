@@ -68,7 +68,7 @@ public class JavaIoOutputStreamWriter extends JavaIoWriter {
                     succ_5 = true;
                     l_u3 = elem_13;
                     if (succ_5)
-                        res_m_2.put(l_u3, new Character(' '));
+                        res_m_2.put(l_u3, Character.valueOf(' '));
                 }
             }
         }
@@ -203,7 +203,7 @@ public class JavaIoOutputStreamWriter extends JavaIoWriter {
                         succ_11 = true;
                         l_u4 = elem_19;
                         if (succ_11)
-                            res_m_8.put(l_u4, new Character(' '));
+                            res_m_8.put(l_u4, Character.valueOf(' '));
                     }
                 }
             }

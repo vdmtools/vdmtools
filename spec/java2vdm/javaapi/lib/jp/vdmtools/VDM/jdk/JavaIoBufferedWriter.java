@@ -252,7 +252,7 @@ public class JavaIoBufferedWriter extends JavaIoWriter {
                     succ_20 = true;
                     l_u3 = elem_28;
                     if (succ_20)
-                        res_m_17.put(l_u3, new Character(' '));
+                        res_m_17.put(l_u3, Character.valueOf(' '));
                 }
             }
         }

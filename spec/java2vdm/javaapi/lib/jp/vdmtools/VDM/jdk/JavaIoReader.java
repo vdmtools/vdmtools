@@ -22,7 +22,7 @@ public abstract class JavaIoReader extends JavaLangObject {
     public Integer read() throws CGException {
         HashMap cb = new HashMap();
         cb = new HashMap();
-        cb.put(Integer.valueOf(0), new Character(' '));
+        cb.put(Integer.valueOf(0), Character.valueOf(' '));
         {
             boolean succ_3;
             Tuple tmpVal_4 = new Tuple(2);

@@ -82,7 +82,7 @@ public class JavaLangString extends JavaLangObject
 
 
     public Character charAt(final Integer index) {
-        return new Character(wrappedObject.charAt(index.intValue()));
+        return Character.valueOf(wrappedObject.charAt(index.intValue()));
     }
 
 
@@ -165,7 +165,7 @@ public class JavaLangString extends JavaLangObject
         char chars[] = wrappedObject.toCharArray();
         HashMap result = new HashMap();
         for (int i = 0; i < chars.length; i++)
-            result.put(Integer.valueOf(i), new Character(chars[i]));
+            result.put(Integer.valueOf(i), Character.valueOf(chars[i]));
         return result;
     }
 

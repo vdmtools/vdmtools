@@ -86,7 +86,7 @@ public class JavaLangInteger extends JavaLangObject
 
 
     public Character charValue() {
-        return new Character((char) wrappedObject.intValue());
+        return Character.valueOf((char) wrappedObject.intValue());
     }
 
 

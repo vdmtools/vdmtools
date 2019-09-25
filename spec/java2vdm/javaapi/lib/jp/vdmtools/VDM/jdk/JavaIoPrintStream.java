@@ -275,7 +275,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                 var2_10 = Integer.valueOf(unArg_11.size());
                 whCrtl_8 = Boolean.valueOf((i.intValue()) < (var2_10.intValue()));
                 if (whCrtl_8.booleanValue()) {
-                    if (Boolean.valueOf(UTIL.equals((Character) buf.get(i), new Character('\n'))).booleanValue())
+                    if (Boolean.valueOf(UTIL.equals((Character) buf.get(i), Character.valueOf('\n'))).booleanValue())
                         out.flush();
                     i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue())));
                 } else
@@ -299,10 +299,10 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                 Integer var1_10 = null;
                 Object tmpGen_11 = null;
                 Integer par_14 = null;
-                par_14 = J2VUTIL.toInt(new Character('\n'));
+                par_14 = J2VUTIL.toInt(Character.valueOf('\n'));
                 {
                     Integer par_16 = null;
-                    par_16 = J2VUTIL.toInt(new Character('\n'));
+                    par_16 = J2VUTIL.toInt(Character.valueOf('\n'));
                     var1_10 = UTIL.NumberToInt(s.indexOf(par_16));
                 }
                 var2_9 = Boolean.valueOf((var1_10.intValue()) >= (Integer.valueOf(0).intValue()));
