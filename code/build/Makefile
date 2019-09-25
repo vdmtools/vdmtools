@@ -4325,10 +4325,26 @@ inst-uml: NewClass.rtf
 	cp $^ $(DISTDIR)/uml
 endif
 
+JAVA_VERSION_MAJOR=$(shell java -version 2>&1 | head -1 | awk -F '["|.]' '{print $$2}')
+JAVA_VERSION_MINOR=$(shell java -version 2>&1 | head -1 | awk -F '["|.]' '{print $$3}')
+ifeq ($(JAVA_VERSION_MAJOR),1)
+JAVA_VERSION=$(JAVA_VERSION_MINOR)
+else
+JAVA_VERSION=$(JAVA_VERSION_MAJOR)
+endif
+
 # inst-corbafiles is share used both by window and unix dist* targets
 ToolboxAPI.jar: Makefile.javaapi ToolboxClient.java
 	$(MAKE) VPATH=$(VPATH) JDKHOME=$(JDKHOME) -f $< $@
 	$(MAKE) VPATH=$(VPATH) JDKHOME=$(JDKHOME) -f $< ToolboxAPIDoc
+ifeq ($(strip $(JAVA_VERSION)),11)
+inst-corbafiles: corba/Makefile corba/Makefile.win32 corba/client_example.cc \
+                 corba/corba_client.cc corba/corba_client.h corba/metaiv_idl.idl \
+                 corba/client_example.java corba/corba_api.idl \
+                 corba/runtest-pp corba/runtest-sl \
+                 corba/runtest-pp-win corba/runtest-sl-win \
+                 corba/nameservice corba/nameservice-win
+else
 inst-corbafiles: corba/Makefile corba/Makefile.win32 corba/client_example.cc \
                  corba/corba_client.cc corba/corba_client.h corba/metaiv_idl.idl \
                  corba/client_example.java corba/corba_api.idl ToolboxAPI.jar \
@@ -4338,12 +4354,16 @@ inst-corbafiles: corba/Makefile corba/Makefile.win32 corba/client_example.cc \
 		 corba/javatest-pp-win corba/javatest-sl-win \
 		 corba/javatest-pp-cygwin corba/javatest-sl-cygwin \
                  corba/nameservice corba/nameservice-win
+endif
 	mkdir -p $(DISTDIR)/api/corba
 	cp -r $^ $(DISTDIR)/api/corba
+ifeq ($(strip $(JAVA_VERSION)),11)
+else
 ifeq ($(strip $(OSTYPE)),win32)
 	cp -r $(VPATH)/javaapi-doc $(DISTDIR)/api/corba
 else
 	cp -r javaapi-doc $(DISTDIR)/api/corba
+endif
 endif
 
 # bin.ARCH.tar.gz file. 
