@@ -54,9 +54,9 @@ public class JavaIoFileInputStream extends JavaIoInputStream {
     }
 
 
-    protected void finalize() {
-        //wrappedObject.finalize();
-    }
+//    protected void finalize() {
+//        //wrappedObject.finalize();
+//    }
 
 
     public Integer available() throws CGException {

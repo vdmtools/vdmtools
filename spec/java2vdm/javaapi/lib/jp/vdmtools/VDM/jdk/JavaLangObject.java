@@ -47,7 +47,7 @@ public class JavaLangObject implements Nullable {
         return Boolean.valueOf(UTIL.equals(this, obj));
     }
 
-    protected void vdm_finalize() throws CGException
-    {
-    }
+//    protected void vdm_finalize() throws CGException
+//    {
+//    }
 }

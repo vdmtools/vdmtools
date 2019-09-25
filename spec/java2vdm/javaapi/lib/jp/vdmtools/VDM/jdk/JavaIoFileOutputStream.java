@@ -43,14 +43,14 @@ public class JavaIoFileOutputStream extends JavaIoOutputStream {
     }
 
 
-    protected void finalize() throws CGException {
+//    protected void finalize() throws CGException {
 //	try {
 //	    wrappedObject.finalize();
 //	}
 //	catch (java.io.IOException e){
 //	    throw new VDMSpecException(new JavaIoIOException());
 //	}
-    }
+//    }
 
 
     public JavaIoFileOutputStream(final JavaIoFile file) throws CGException {
