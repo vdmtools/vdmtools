@@ -16,7 +16,14 @@ JDKHOME=/usr/java/current
 endif
 endif
 
-JAVA_VERSION=$(shell java -version 2>&1 | head -1 | awk -F '.' '{print $$2}' )
+#JAVA_VERSION=$(shell java -version 2>&1 | head -1 | awk -F '.' '{print $$2}' )
+JAVA_VERSION_MAJOR=$(shell java -version 2>&1 | head -1 | awk -F '["|.]' '{print $$2}')
+JAVA_VERSION_MINOR=$(shell java -version 2>&1 | head -1 | awk -F '["|.]' '{print $$3}')
+ifeq ($(JAVA_VERSION_MAJOR),1)
+JAVA_VERSION=$(JAVA_VERSION_MINOR)
+else
+JAVA_VERSION=$(JAVA_VERSION_MAJOR)
+endif
 
 ifeq ($(strip $(OSTYPE)),Darwin)
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
