@@ -54,7 +54,7 @@ public class VEnumeration extends JavaLangObject implements JavaUtilEnumeration 
         this();
         {
             ((VEnumeration) this).v = (JavaUtilVector) UTIL.clone(v_1);
-            count = UTIL.NumberToInt(UTIL.clone(new Integer(1)));
+            count = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(1)));
         }
     }
 // ***** VDMTOOLS END Name=VEnumeration
@@ -65,7 +65,7 @@ public class VEnumeration extends JavaLangObject implements JavaUtilEnumeration 
         Boolean rexpr_1 = null;
         Integer var2_3 = null;
         var2_3 = v.size();
-        rexpr_1 = new Boolean((count.intValue()) <= (var2_3.intValue()));
+        rexpr_1 = Boolean.valueOf((count.intValue()) <= (var2_3.intValue()));
         return rexpr_1;
     }
 // ***** VDMTOOLS END Name=hasMoreElements
@@ -77,7 +77,7 @@ public class VEnumeration extends JavaLangObject implements JavaUtilEnumeration 
         Boolean cond_2 = null;
         Integer var2_4 = null;
         var2_4 = v.size();
-        cond_2 = new Boolean((count.intValue()) <= (var2_4.intValue()));
+        cond_2 = Boolean.valueOf((count.intValue()) <= (var2_4.intValue()));
         if (cond_2.booleanValue()) {
             JavaLangObject rhs_6 = null;
             Vector tmp_l_7 = null;
@@ -87,7 +87,7 @@ public class VEnumeration extends JavaLangObject implements JavaUtilEnumeration 
             else
                 UTIL.RunTime("Run-Time Error:Illegal index");
             o = (JavaLangObject) UTIL.clone(rhs_6);
-            count = UTIL.NumberToInt(UTIL.clone(new Integer(count.intValue() + new Integer(1).intValue())));
+            count = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(count.intValue() + Integer.valueOf(1).intValue())));
         }
         return (JavaLangObject) o;
     }

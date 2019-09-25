@@ -43,7 +43,7 @@ public class JavaIoUnsupportedEncodingException extends JavaIoIOException {
 // ***** VDMTOOLS START Name=JavaIoUnsupportedEncodingException KEEP=NO
     public JavaIoUnsupportedEncodingException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaIoUnsupportedEncodingException
 

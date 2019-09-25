@@ -15,7 +15,7 @@ public class JavaLangString extends JavaLangObject
     public static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaLangString"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
 
     String wrappedObject;
 
@@ -57,7 +57,7 @@ public class JavaLangString extends JavaLangObject
 
     public JavaLangString(final quotes.NIL p) {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 
@@ -77,7 +77,7 @@ public class JavaLangString extends JavaLangObject
 
 
     public Integer length() {
-        return new Integer(wrappedObject.length());
+        return Integer.valueOf(wrappedObject.length());
     }
 
 
@@ -90,25 +90,25 @@ public class JavaLangString extends JavaLangObject
         HashMap result = new HashMap();
         byte dst[] = wrappedObject.getBytes();
         for (int i = 0; i < dst.length; i++)
-            result.put(new Integer(i), new Integer(dst[i]));
+            result.put(Integer.valueOf(i), Integer.valueOf(dst[i]));
         return result;
     }
 
 
     public Integer jHashCode() {
-        return new Integer(wrappedObject.hashCode());
+        return Integer.valueOf(wrappedObject.hashCode());
     }
 
     public Integer vdm_hashCode() {
-        return new Integer(wrappedObject.hashCode());
+        return Integer.valueOf(wrappedObject.hashCode());
     }
 
 
     public Integer indexOf(final Object ch) {
         if (ch instanceof Integer)
-            return new Integer(wrappedObject.indexOf(((Integer) ch).intValue()));
+            return Integer.valueOf(wrappedObject.indexOf(((Integer) ch).intValue()));
         else
-            return new Integer(wrappedObject.indexOf(((Character) ch).charValue()));
+            return Integer.valueOf(wrappedObject.indexOf(((Character) ch).charValue()));
     }
 
 
@@ -118,7 +118,7 @@ public class JavaLangString extends JavaLangObject
 
 
     public Integer indexOf(final Integer ch, final Integer fromIndex) {
-        return new Integer(wrappedObject.indexOf(ch.intValue(),
+        return Integer.valueOf(wrappedObject.indexOf(ch.intValue(),
                 fromIndex.intValue()));
     }
 
@@ -146,16 +146,16 @@ public class JavaLangString extends JavaLangObject
         if (value_u.size() == 0)
             setWrappedObject(new String(""));
 
-        Object obj = value_u.get(new Integer(0));
+        Object obj = value_u.get(Integer.valueOf(0));
         if (obj instanceof Character) {
             char chars[] = new char[value_u.size()];
             for (int i = 0; i < value_u.size(); i++)
-                chars[i] = ((Character) value_u.get(new Integer(i))).charValue();
+                chars[i] = ((Character) value_u.get(Integer.valueOf(i))).charValue();
             setWrappedObject(new String(chars));
         } else {
             byte bytes[] = new byte[value_u.size()];
             for (int i = 0; i < value_u.size(); i++)
-                bytes[i] = (byte) ((Integer) value_u.get(new Integer(i))).intValue();
+                bytes[i] = (byte) ((Integer) value_u.get(Integer.valueOf(i))).intValue();
             setWrappedObject(new String(bytes));
         }
     }
@@ -165,7 +165,7 @@ public class JavaLangString extends JavaLangObject
         char chars[] = wrappedObject.toCharArray();
         HashMap result = new HashMap();
         for (int i = 0; i < chars.length; i++)
-            result.put(new Integer(i), new Character(chars[i]));
+            result.put(Integer.valueOf(i), new Character(chars[i]));
         return result;
     }
 
@@ -181,21 +181,21 @@ public class JavaLangString extends JavaLangObject
 
 
     public Integer lastIndexOf(final Integer ch) {
-        return new Integer(wrappedObject.lastIndexOf(ch.intValue()));
+        return Integer.valueOf(wrappedObject.lastIndexOf(ch.intValue()));
     }
 
 /*
     public JavaLangString(final HashMap ascii, final Integer hibyte) {
         byte bytes[] = new byte[ascii.size()];
         for (int i = 0; i < ascii.size(); i++)
-            bytes[i] = (byte) ((Integer) ascii.get(new Integer(i))).intValue();
+            bytes[i] = (byte) ((Integer) ascii.get(Integer.valueOf(i))).intValue();
         wrappedObject = new String(bytes,
                 hibyte.intValue());
     }
 */
 
     public Integer lastIndexOf(final Integer ch, final Integer fromIndex) {
-        return new Integer(wrappedObject.lastIndexOf(ch.intValue(),
+        return Integer.valueOf(wrappedObject.lastIndexOf(ch.intValue(),
                 fromIndex.intValue()));
     }
 
@@ -207,18 +207,18 @@ public class JavaLangString extends JavaLangObject
             setWrappedObject(new String(""));
         } else {
 
-            Object o = value_u.get(new Integer(0));
+            Object o = value_u.get(Integer.valueOf(0));
             if (o instanceof Character) {
                 char chars[] = new char[value_u.size()];
                 for (int i = 0; i < value_u.size(); i++)
-                    chars[i] = ((Character) value_u.get(new Integer(i))).charValue();
+                    chars[i] = ((Character) value_u.get(Integer.valueOf(i))).charValue();
                 wrappedObject = new String(chars,
                         offset.intValue(),
                         count.intValue());
             } else {
                 byte bytes[] = new byte[value_u.size()];
                 for (int i = 0; i < value_u.size(); i++)
-                    bytes[i] = (byte) ((Integer) value_u.get(new Integer(i))).intValue();
+                    bytes[i] = (byte) ((Integer) value_u.get(Integer.valueOf(i))).intValue();
                 setWrappedObject(new String(bytes));
             }
         }
@@ -234,7 +234,7 @@ public class JavaLangString extends JavaLangObject
         int size = data.size();
         char chars[] = new char[size];
         for (int i = 0; i < size; i++) {
-            Character ch = (Character) data.get(new Integer(i));
+            Character ch = (Character) data.get(Integer.valueOf(i));
             chars[i] = ch.charValue();
         }
         return new JavaLangString(String.copyValueOf(chars));
@@ -243,17 +243,17 @@ public class JavaLangString extends JavaLangObject
 
     public Boolean equals(final JavaLangObject anObject) {
         if (anObject instanceof JavaLangString)
-            return new Boolean(wrappedObject.equals(((JavaLangString) anObject).getWrappedObject()));
+            return Boolean.valueOf(wrappedObject.equals(((JavaLangString) anObject).getWrappedObject()));
         else
-            return new Boolean(false);
+            return Boolean.FALSE;
     }
 
 
     public Boolean vdm_equals(final JavaLangObject anObject) {
         if (anObject instanceof JavaLangString)
-            return new Boolean(wrappedObject.equals(((JavaLangString) anObject).getWrappedObject()));
+            return Boolean.valueOf(wrappedObject.equals(((JavaLangString) anObject).getWrappedObject()));
         else
-            return new Boolean(false);
+            return Boolean.FALSE;
     }
 
     public JavaLangString vdm_toString()
@@ -268,13 +268,13 @@ public class JavaLangString extends JavaLangObject
                           final Integer count) {
         byte bytes[] = new byte[ascii.size()];
         for (int i = 0; i < ascii.size(); i++)
-            bytes[i] = (byte) ((Integer) ascii.get(new Integer(i))).intValue();
+            bytes[i] = (byte) ((Integer) ascii.get(Integer.valueOf(i))).intValue();
         setWrappedObject(new String(bytes));
     }
 
 
     public Boolean endsWith(final JavaLangString suffix) {
-        return new Boolean(wrappedObject.endsWith(suffix.toSeqOfChar()));
+        return Boolean.valueOf(wrappedObject.endsWith(suffix.toSeqOfChar()));
     }
 
 
@@ -283,7 +283,7 @@ public class JavaLangString extends JavaLangObject
         try {
             byte bytes[] = wrappedObject.getBytes(enc.toSeqOfChar());
             for (int i = 0; i < bytes.length; i++)
-                result.put(new Integer(i), new Integer(bytes[i]));
+                result.put(Integer.valueOf(i), Integer.valueOf(bytes[i]));
         } catch (java.io.UnsupportedEncodingException e) {
         }
         return result;
@@ -295,7 +295,7 @@ public class JavaLangString extends JavaLangObject
     }
 
     public Integer compareTo_q(final String o) {
-        return new Integer(wrappedObject.compareTo(o));
+        return Integer.valueOf(wrappedObject.compareTo(o));
     }
 
 
@@ -316,12 +316,12 @@ public class JavaLangString extends JavaLangObject
 
 
     public Integer indexOf(final JavaLangString str) {
-        return new Integer(wrappedObject.indexOf(str.toSeqOfChar()));
+        return Integer.valueOf(wrappedObject.indexOf(str.toSeqOfChar()));
     }
 
 
     public Integer indexOf(final JavaLangString str, final Integer fromIndex) {
-        return new Integer(wrappedObject.indexOf(str.toSeqOfChar(),
+        return Integer.valueOf(wrappedObject.indexOf(str.toSeqOfChar(),
                 fromIndex.intValue()));
     }
 
@@ -332,7 +332,7 @@ public class JavaLangString extends JavaLangObject
         int size = data.size();
         char chars[] = new char[size];
         for (int i = 0; i < size; i++) {
-            Character ch = (Character) data.get(new Integer(i));
+            Character ch = (Character) data.get(Integer.valueOf(i));
             chars[i] = ch.charValue();
         }
         return new JavaLangString(String.copyValueOf(chars, offset.intValue(),
@@ -342,25 +342,25 @@ public class JavaLangString extends JavaLangObject
 
     public Boolean startsWith(final JavaLangString prefix,
                               final Integer toffset) {
-        return new Boolean(wrappedObject.startsWith(prefix.toSeqOfChar(),
+        return Boolean.valueOf(wrappedObject.startsWith(prefix.toSeqOfChar(),
                 toffset.intValue()));
 
     }
 
 
     public Boolean startsWith(final JavaLangString prefix) {
-        return new Boolean(wrappedObject.startsWith(prefix.toSeqOfChar()));
+        return Boolean.valueOf(wrappedObject.startsWith(prefix.toSeqOfChar()));
     }
 
 
     public Integer lastIndexOf(final JavaLangString str) {
-        return new Integer(wrappedObject.lastIndexOf(str.toSeqOfChar()));
+        return Integer.valueOf(wrappedObject.lastIndexOf(str.toSeqOfChar()));
     }
 
 
     public Integer lastIndexOf(final JavaLangString str,
                                final Integer fromIndex) {
-        return new Integer(wrappedObject.lastIndexOf(str.toSeqOfChar(),
+        return Integer.valueOf(wrappedObject.lastIndexOf(str.toSeqOfChar(),
                 fromIndex.intValue()));
     }
 
@@ -368,7 +368,7 @@ public class JavaLangString extends JavaLangObject
     public JavaLangString(final HashMap bytes,
                           final JavaLangString enc) {
 
-        this(bytes, new Integer(0), new Integer(bytes.size()), enc);
+        this(bytes, Integer.valueOf(0), Integer.valueOf(bytes.size()), enc);
     }
 
 
@@ -379,7 +379,7 @@ public class JavaLangString extends JavaLangObject
         int size = data.size();
         byte bytes[] = new byte[size];
         for (int i = 0; i < size; i++) {
-            Integer ch = (Integer) data.get(new Integer(i));
+            Integer ch = (Integer) data.get(Integer.valueOf(i));
             bytes[i] = (byte) ch.intValue();
         }
         try {
@@ -394,12 +394,12 @@ public class JavaLangString extends JavaLangObject
 
 
     public Boolean equalsIgnoreCase(final JavaLangString anotherString) {
-        return new Boolean(compareToIgnoreCase((JavaLangString) anotherString).intValue() == 0);
+        return Boolean.valueOf(compareToIgnoreCase((JavaLangString) anotherString).intValue() == 0);
     }
 
 
     public Integer compareToIgnoreCase(final JavaLangString anotherString) {
-        return new Integer(wrappedObject.compareToIgnoreCase(anotherString.toSeqOfChar()));
+        return Integer.valueOf(wrappedObject.compareToIgnoreCase(anotherString.toSeqOfChar()));
     }
 
 
@@ -407,7 +407,7 @@ public class JavaLangString extends JavaLangObject
                                  final JavaLangString other,
                                  final Integer ooffset,
                                  final Integer len_u) {
-        return new Boolean(wrappedObject.regionMatches(toffset.intValue(),
+        return Boolean.valueOf(wrappedObject.regionMatches(toffset.intValue(),
                 other.toSeqOfChar(),
                 ooffset.intValue(),
                 len_u.intValue()));
@@ -419,7 +419,7 @@ public class JavaLangString extends JavaLangObject
                                  final JavaLangString other,
                                  final Integer ooffset,
                                  final Integer len_u) {
-        return new Boolean(wrappedObject.regionMatches(ignoreCase.booleanValue(),
+        return Boolean.valueOf(wrappedObject.regionMatches(ignoreCase.booleanValue(),
                 toffset.intValue(),
                 other.toSeqOfChar(),
                 ooffset.intValue(),
@@ -433,7 +433,7 @@ public class JavaLangString extends JavaLangObject
         int size = data.size();
         char chars[] = new char[size];
         for (int i = 0; i < size; i++) {
-            Character ch = (Character) data.get(new Integer(i));
+            Character ch = (Character) data.get(Integer.valueOf(i));
             chars[i] = ch.charValue();
         }
         return new JavaLangString(String.valueOf(chars,
@@ -446,7 +446,7 @@ public class JavaLangString extends JavaLangObject
         int size = data.size();
         char chars[] = new char[size];
         for (int i = 0; i < size; i++) {
-            Character ch = (Character) data.get(new Integer(i));
+            Character ch = (Character) data.get(Integer.valueOf(i));
             chars[i] = ch.charValue();
         }
         return new JavaLangString(String.valueOf(chars));

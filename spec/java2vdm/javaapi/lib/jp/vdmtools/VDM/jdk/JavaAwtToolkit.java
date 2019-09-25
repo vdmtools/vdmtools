@@ -7,7 +7,7 @@ public class JavaAwtToolkit extends JavaLangObject {
     private static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaAwtToolkit"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
 
     public JavaAwtToolkit() {
     }
@@ -18,7 +18,7 @@ public class JavaAwtToolkit extends JavaLangObject {
     }
 
     public JavaAwtToolkit(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 

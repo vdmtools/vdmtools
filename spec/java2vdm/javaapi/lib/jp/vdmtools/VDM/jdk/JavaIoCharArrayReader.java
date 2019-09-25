@@ -58,13 +58,13 @@ public class JavaIoCharArrayReader extends JavaIoReader {
 // ***** VDMTOOLS END Name=count
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoCharArrayReader"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoCharArrayReader"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
 // ***** VDMTOOLS START Name=JavaIoCharArrayReader KEEP=NO
     public JavaIoCharArrayReader() throws CGException {
-        markedPos = new Integer(0);
+        markedPos = Integer.valueOf(0);
     }
 // ***** VDMTOOLS END Name=JavaIoCharArrayReader
 
@@ -72,13 +72,13 @@ public class JavaIoCharArrayReader extends JavaIoReader {
 // ***** VDMTOOLS START Name=read KEEP=NO
     public Integer read() throws CGException {
         ensureOpen();
-        if (new Boolean((pos.intValue()) >= (count.intValue())).booleanValue())
-            return new Integer(-new Integer(1).intValue());
+        if (Boolean.valueOf((pos.intValue()) >= (count.intValue())).booleanValue())
+            return Integer.valueOf(-Integer.valueOf(1).intValue());
         else {
             Integer l_u4 = pos;
             Integer l_u3 = l_u4;
             {
-                pos = UTIL.NumberToInt(UTIL.clone(new Integer(l_u4.intValue() + new Integer(1).intValue())));
+                pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u4.intValue() + Integer.valueOf(1).intValue())));
                 {
                     Integer l_u1 = null;
                     l_u1 = J2VUTIL.toInt((Character) buf.get(l_u3));
@@ -112,7 +112,7 @@ public class JavaIoCharArrayReader extends JavaIoReader {
 // ***** VDMTOOLS START Name=ready KEEP=NO
     public Boolean ready() throws CGException {
         ensureOpen();
-        return new Boolean((new Integer(count.intValue() - pos.intValue()).intValue()) > (new Integer(0).intValue()));
+        return Boolean.valueOf((Integer.valueOf(count.intValue() - pos.intValue()).intValue()) > (Integer.valueOf(0).intValue()));
     }
 // ***** VDMTOOLS END Name=ready
 
@@ -132,13 +132,13 @@ public class JavaIoCharArrayReader extends JavaIoReader {
     public Integer skip_u_u(final Integer n_u) throws CGException {
         Integer n = n_u;
         ensureOpen();
-        if (new Boolean((new Integer(pos.intValue() + n.intValue()).intValue()) > (count.intValue())).booleanValue())
-            n = UTIL.NumberToInt(UTIL.clone(new Integer(count.intValue() - pos.intValue())));
-        if (new Boolean((n.intValue()) < (new Integer(0).intValue())).booleanValue())
-            return new Integer(0);
+        if (Boolean.valueOf((Integer.valueOf(pos.intValue() + n.intValue()).intValue()) > (count.intValue())).booleanValue())
+            n = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(count.intValue() - pos.intValue())));
+        if (Boolean.valueOf((n.intValue()) < (Integer.valueOf(0).intValue())).booleanValue())
+            return Integer.valueOf(0);
         {
             Integer l_u3 = pos;
-            pos = UTIL.NumberToInt(UTIL.clone(new Integer(l_u3.intValue() + n.intValue())));
+            pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u3.intValue() + n.intValue())));
         }
         return n;
     }
@@ -154,7 +154,7 @@ public class JavaIoCharArrayReader extends JavaIoReader {
 
 // ***** VDMTOOLS START Name=ensureOpen KEEP=NO
     private void ensureOpen() throws CGException {
-        if (new Boolean(UTIL.equals(buf, new HashMap())).booleanValue())
+        if (Boolean.valueOf(UTIL.equals(buf, new HashMap())).booleanValue())
             throw new VDMSpecException(new JavaIoIOException(new JavaLangString(new String("Stream closed"))));
         ;
     }
@@ -163,14 +163,14 @@ public class JavaIoCharArrayReader extends JavaIoReader {
 
 // ***** VDMTOOLS START Name=markSupported KEEP=NO
     public Boolean markSupported() throws CGException {
-        return new Boolean(true);
+        return Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=markSupported
 
     public Integer readMICIntInt(final HashMap cbuf, final Integer off, final Integer len_u_u)
             throws CGException
     {
-        return new Integer(-1);
+        return Integer.valueOf(-1);
     }
 
     public Tuple readMICIntInt_q(final HashMap b_u, final Integer off, final Integer len_u_u_u)
@@ -189,20 +189,20 @@ public class JavaIoCharArrayReader extends JavaIoReader {
         Boolean var1_7 = null;
         Boolean var1_8 = null;
         {
-            if (!(var1_8 = new Boolean((off.intValue()) < (new Integer(0).intValue()))).booleanValue()) {
+            if (!(var1_8 = Boolean.valueOf((off.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue()) {
                 Boolean var2_12 = null;
                 Integer var2_14 = null;
                 HashSet unArg_15 = new HashSet();
                 unArg_15.clear();
                 unArg_15.addAll(b.keySet());
-                var2_14 = new Integer(unArg_15.size());
-                var2_12 = new Boolean((off.intValue()) > (var2_14.intValue()));
+                var2_14 = Integer.valueOf(unArg_15.size());
+                var2_12 = Boolean.valueOf((off.intValue()) > (var2_14.intValue()));
                 var1_8 = var2_12;
             }
         }
         {
             if (!(var1_7 = var1_8).booleanValue())
-                var1_7 = new Boolean((len_u_u.intValue()) < (new Integer(0).intValue()));
+                var1_7 = Boolean.valueOf((len_u_u.intValue()) < (Integer.valueOf(0).intValue()));
         }
         {
             if (!(var1_6 = var1_7).booleanValue()) {
@@ -211,50 +211,50 @@ public class JavaIoCharArrayReader extends JavaIoReader {
                 HashSet unArg_25 = new HashSet();
                 unArg_25.clear();
                 unArg_25.addAll(b.keySet());
-                var2_24 = new Integer(unArg_25.size());
-                var2_20 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) > (var2_24.intValue()));
+                var2_24 = Integer.valueOf(unArg_25.size());
+                var2_20 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) > (var2_24.intValue()));
                 var1_6 = var2_20;
             }
         }
         {
             if (!(cond_5 = var1_6).booleanValue())
-                cond_5 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) < (new Integer(0).intValue()));
+                cond_5 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) < (Integer.valueOf(0).intValue()));
         }
         if (cond_5.booleanValue())
             throw new VDMSpecException(new JavaLangIndexOutOfBoundsException());
-        else if (new Boolean(len_u_u.intValue() == new Integer(0).intValue()).booleanValue()) {
+        else if (Boolean.valueOf(len_u_u.intValue() == Integer.valueOf(0).intValue()).booleanValue()) {
             Tuple rexpr_35 = new Tuple(2);
             rexpr_35 = new Tuple(2);
-            rexpr_35.SetField(1, new Integer(0));
+            rexpr_35.SetField(1, Integer.valueOf(0));
             rexpr_35.SetField(2, b);
             return rexpr_35;
         }
-        if (new Boolean((pos.intValue()) >= (count.intValue())).booleanValue()) {
+        if (Boolean.valueOf((pos.intValue()) >= (count.intValue())).booleanValue()) {
             Tuple rexpr_42 = new Tuple(2);
             rexpr_42 = new Tuple(2);
-            rexpr_42.SetField(1, new Integer(-new Integer(1).intValue()));
+            rexpr_42.SetField(1, Integer.valueOf(-Integer.valueOf(1).intValue()));
             rexpr_42.SetField(2, b);
             return rexpr_42;
         }
-        if (new Boolean((new Integer(pos.intValue() + len_u_u.intValue()).intValue()) > (count.intValue())).booleanValue())
-            len_u_u = UTIL.NumberToInt(UTIL.clone(new Integer(count.intValue() - pos.intValue())));
-        if (new Boolean((len_u_u.intValue()) <= (new Integer(0).intValue())).booleanValue()) {
+        if (Boolean.valueOf((Integer.valueOf(pos.intValue() + len_u_u.intValue()).intValue()) > (count.intValue())).booleanValue())
+            len_u_u = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(count.intValue() - pos.intValue())));
+        if (Boolean.valueOf((len_u_u.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue()) {
             Tuple rexpr_57 = new Tuple(2);
             rexpr_57 = new Tuple(2);
-            rexpr_57.SetField(1, new Integer(0));
+            rexpr_57.SetField(1, Integer.valueOf(0));
             rexpr_57.SetField(2, b);
             return rexpr_57;
         }
         {
             Integer k = pos;
-            while (new Boolean((k.intValue()) < (new Integer(pos.intValue() + len_u_u.intValue()).intValue())).booleanValue()) {
-                b.put(new Integer(off.intValue() + (new Integer(k.intValue() - pos.intValue())).intValue()), (Character) buf.get(k));
-                k = UTIL.NumberToInt(UTIL.clone(new Integer(k.intValue() + new Integer(1).intValue())));
+            while (Boolean.valueOf((k.intValue()) < (Integer.valueOf(pos.intValue() + len_u_u.intValue()).intValue())).booleanValue()) {
+                b.put(Integer.valueOf(off.intValue() + (Integer.valueOf(k.intValue() - pos.intValue())).intValue()), (Character) buf.get(k));
+                k = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(k.intValue() + Integer.valueOf(1).intValue())));
             }
         }
         {
             Integer l_u3 = pos;
-            pos = UTIL.NumberToInt(UTIL.clone(new Integer(l_u3.intValue() + len_u_u.intValue())));
+            pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u3.intValue() + len_u_u.intValue())));
         }
         Tuple rexpr_82 = new Tuple(2);
         rexpr_82 = new Tuple(2);
@@ -270,12 +270,12 @@ public class JavaIoCharArrayReader extends JavaIoReader {
         this();
         {
             ((JavaIoCharArrayReader) this).buf = (HashMap) UTIL.clone(buf_1);
-            ((JavaIoCharArrayReader) this).pos = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
+            ((JavaIoCharArrayReader) this).pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
             Integer rhs_4 = null;
             HashSet unArg_5 = new HashSet();
             unArg_5.clear();
             unArg_5.addAll(buf_1.keySet());
-            rhs_4 = new Integer(unArg_5.size());
+            rhs_4 = Integer.valueOf(unArg_5.size());
             ((JavaIoCharArrayReader) this).count = UTIL.NumberToInt(UTIL.clone(rhs_4));
         }
     }
@@ -285,7 +285,7 @@ public class JavaIoCharArrayReader extends JavaIoReader {
 // ***** VDMTOOLS START Name=JavaIoCharArrayReader KEEP=NO
     public JavaIoCharArrayReader(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaIoCharArrayReader
 
@@ -298,24 +298,24 @@ public class JavaIoCharArrayReader extends JavaIoReader {
             Boolean var1_5 = null;
             Boolean var1_6 = null;
             {
-                if (!(var1_6 = new Boolean((offset.intValue()) < (new Integer(0).intValue()))).booleanValue()) {
+                if (!(var1_6 = Boolean.valueOf((offset.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue()) {
                     Boolean var2_10 = null;
                     Integer var2_12 = null;
                     HashSet unArg_13 = new HashSet();
                     unArg_13.clear();
                     unArg_13.addAll(buf_1.keySet());
-                    var2_12 = new Integer(unArg_13.size());
-                    var2_10 = new Boolean((offset.intValue()) > (var2_12.intValue()));
+                    var2_12 = Integer.valueOf(unArg_13.size());
+                    var2_10 = Boolean.valueOf((offset.intValue()) > (var2_12.intValue()));
                     var1_6 = var2_10;
                 }
             }
             {
                 if (!(var1_5 = var1_6).booleanValue())
-                    var1_5 = new Boolean((length.intValue()) < (new Integer(0).intValue()));
+                    var1_5 = Boolean.valueOf((length.intValue()) < (Integer.valueOf(0).intValue()));
             }
             {
                 if (!(cond_4 = var1_5).booleanValue())
-                    cond_4 = new Boolean((new Integer(offset.intValue() + length.intValue()).intValue()) < (new Integer(0).intValue()));
+                    cond_4 = Boolean.valueOf((Integer.valueOf(offset.intValue() + length.intValue()).intValue()) < (Integer.valueOf(0).intValue()));
             }
             if (cond_4.booleanValue())
                 throw new VDMSpecException(new JavaLangIllegalArgumentException());
@@ -327,15 +327,15 @@ public class JavaIoCharArrayReader extends JavaIoReader {
             HashSet unArg_33 = new HashSet();
             unArg_33.clear();
             unArg_33.addAll(buf_1.keySet());
-            var2_32 = new Integer(unArg_33.size());
-            cond_28 = new Boolean((new Integer(offset.intValue() + length.intValue()).intValue()) < (var2_32.intValue()));
+            var2_32 = Integer.valueOf(unArg_33.size());
+            cond_28 = Boolean.valueOf((Integer.valueOf(offset.intValue() + length.intValue()).intValue()) < (var2_32.intValue()));
             if (cond_28.booleanValue())
-                rhs_26 = new Integer(offset.intValue() + length.intValue());
+                rhs_26 = Integer.valueOf(offset.intValue() + length.intValue());
             else {
                 HashSet unArg_35 = new HashSet();
                 unArg_35.clear();
                 unArg_35.addAll(buf_1.keySet());
-                rhs_26 = new Integer(unArg_35.size());
+                rhs_26 = Integer.valueOf(unArg_35.size());
             }
             ((JavaIoCharArrayReader) this).count = UTIL.NumberToInt(UTIL.clone(rhs_26));
             ((JavaIoCharArrayReader) this).markedPos = UTIL.NumberToInt(UTIL.clone(offset));

@@ -42,7 +42,7 @@ public class JavaNetURL extends JavaLangObject {
 // ***** VDMTOOLS START Name=JavaNetURL KEEP=NO
     public JavaNetURL(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaNetURL
 

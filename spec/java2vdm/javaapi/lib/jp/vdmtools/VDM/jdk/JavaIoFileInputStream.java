@@ -20,7 +20,7 @@ public class JavaIoFileInputStream extends JavaIoInputStream {
     public Integer read() throws CGException {
         try {
             int res = wrappedObject.read();
-            return new Integer(res);
+            return Integer.valueOf(res);
         } catch (java.io.IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -47,7 +47,7 @@ public class JavaIoFileInputStream extends JavaIoInputStream {
 
     public Integer skip_u_u(final Integer n) throws CGException {
         try {
-            return new Integer((int) wrappedObject.skip(n.intValue()));
+            return Integer.valueOf((int) wrappedObject.skip(n.intValue()));
         } catch (java.io.IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -61,7 +61,7 @@ public class JavaIoFileInputStream extends JavaIoInputStream {
 
     public Integer available() throws CGException {
         try {
-            return new Integer(wrappedObject.available());
+            return Integer.valueOf(wrappedObject.available());
         } catch (java.io.IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -89,7 +89,7 @@ public class JavaIoFileInputStream extends JavaIoInputStream {
         HashMap b = b_u;
         for (int i = off.intValue(); i <= off.intValue() + l_len - 1;
              i++)
-            b.put(new Integer(i), l_b.get(new Integer(i - off.intValue())));
+            b.put(Integer.valueOf(i), l_b.get(Integer.valueOf(i - off.intValue())));
         Tuple result = new Tuple(2);
         result.SetField(1, l_n);
         result.SetField(2, b);
@@ -105,10 +105,10 @@ public class JavaIoFileInputStream extends JavaIoInputStream {
             for (int i = 0; (i < lval) && (bytev != -1); i++) {
                 bytev = wrappedObject.read();
                 if (bytev != -1)
-                    bytes.put(new Integer(i), new Integer(bytev));
+                    bytes.put(Integer.valueOf(i), Integer.valueOf(bytev));
             }
             Tuple result = new Tuple(2);
-            result.SetField(1, new Integer(bytes.size()));
+            result.SetField(1, Integer.valueOf(bytes.size()));
             result.SetField(2, bytes);
             return result;
         } catch (java.io.IOException e) {

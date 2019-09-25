@@ -25,7 +25,7 @@ public class JavaLangClass extends JavaLangObject implements JavaIoSerializable 
 
         public CLASS() {
 	    name = "undefined";
-	    isPrim = new Boolean(false);
+	    isPrim = Boolean.FALSE;
 	    cori = null;
         }
 
@@ -76,7 +76,7 @@ public class JavaLangClass extends JavaLangObject implements JavaIoSerializable 
 
     public JavaLangClass(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 
@@ -105,7 +105,7 @@ public class JavaLangClass extends JavaLangObject implements JavaIoSerializable 
 
 
     public Boolean isArray() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 
 
@@ -149,7 +149,7 @@ public class JavaLangClass extends JavaLangObject implements JavaIoSerializable 
         Boolean rexpr_1 = null;
         Object var1_2 = null;
         var1_2 = (val).cori;
-        rexpr_1 = new Boolean(UTIL.equals(var1_2, new quotes.INTERFACE()));
+        rexpr_1 = Boolean.valueOf(UTIL.equals(var1_2, new quotes.INTERFACE()));
         return rexpr_1;
     }
 
@@ -171,15 +171,15 @@ public class JavaLangClass extends JavaLangObject implements JavaIoSerializable 
     }
 
     public Integer vdm_hashCode() throws CGException {
-	return new Integer(val.hashCode());
+	return Integer.valueOf(val.hashCode());
     }
 
     public Boolean vdm_equals(JavaLangObject obj) throws CGException {
 	if (!(obj instanceof JavaLangClass))
-	    return new Boolean(true);
+	    return Boolean.TRUE;
 	
 	JavaLangClass cl = (JavaLangClass) obj;
-	return new Boolean (cl.toJString().toSeqOfChar().equals(toJString().toSeqOfChar()));
+	return Boolean.valueOf (cl.toJString().toSeqOfChar().equals(toJString().toSeqOfChar()));
     }
 
 
@@ -188,7 +188,7 @@ public class JavaLangClass extends JavaLangObject implements JavaIoSerializable 
 	    Class.forName(className.toSeqOfChar());
 	    return new JavaLangClass(className.toSeqOfChar(), 
 				     new quotes.CLASS(), 
-				     new Boolean(false));
+				     Boolean.FALSE);
 	} catch (ClassNotFoundException e) {
 	    throw new VDMSpecException("Class not found: " + 
 				       className.toSeqOfChar());

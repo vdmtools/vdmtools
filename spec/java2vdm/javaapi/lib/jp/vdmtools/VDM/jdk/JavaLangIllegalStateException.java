@@ -43,7 +43,7 @@ public class JavaLangIllegalStateException extends JavaLangRuntimeException {
 // ***** VDMTOOLS START Name=JavaLangIllegalStateException KEEP=NO
     public JavaLangIllegalStateException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaLangIllegalStateException
 

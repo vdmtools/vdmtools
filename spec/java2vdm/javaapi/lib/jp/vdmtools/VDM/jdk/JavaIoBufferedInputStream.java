@@ -40,7 +40,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=defaultBufferSize KEEP=NO
-    private static Integer defaultBufferSize = new Integer(80);
+    private static Integer defaultBufferSize = Integer.valueOf(80);
 // ***** VDMTOOLS END Name=defaultBufferSize
 
 // ***** VDMTOOLS START Name=buf KEEP=NO
@@ -64,15 +64,15 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS END Name=marklimit
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoBufferedInputStream"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoBufferedInputStream"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
 // ***** VDMTOOLS START Name=JavaIoBufferedInputStream KEEP=NO
     public JavaIoBufferedInputStream() throws CGException {
         try {
-            defaultBufferSize = new Integer(80);
-            markpos = new Integer(-new Integer(1).intValue());
+            defaultBufferSize = Integer.valueOf(80);
+            markpos = Integer.valueOf(-Integer.valueOf(1).intValue());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -82,39 +82,39 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 
 // ***** VDMTOOLS START Name=fill KEEP=NO
     private void fill() throws CGException {
-        if (new Boolean((markpos.intValue()) < (new Integer(0).intValue())).booleanValue())
-            pos = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
+        if (Boolean.valueOf((markpos.intValue()) < (Integer.valueOf(0).intValue())).booleanValue())
+            pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
         else {
             Boolean cond_4 = null;
             Integer var2_6 = null;
             HashSet unArg_7 = new HashSet();
             unArg_7.clear();
             unArg_7.addAll(buf.keySet());
-            var2_6 = new Integer(unArg_7.size());
-            cond_4 = new Boolean((pos.intValue()) >= (var2_6.intValue()));
+            var2_6 = Integer.valueOf(unArg_7.size());
+            cond_4 = Boolean.valueOf((pos.intValue()) >= (var2_6.intValue()));
             if (cond_4.booleanValue()) {
-                if (new Boolean((markpos.intValue()) > (new Integer(0).intValue())).booleanValue()) {
-                    Integer sz = new Integer(pos.intValue() - markpos.intValue());
-                    for (int ilb_56 = 0; ilb_56 <= new Integer(sz.intValue() - new Integer(1).intValue()).intValue(); ilb_56++) {
-                        Integer i = new Integer(ilb_56);
-                        buf.put(i, UTIL.NumberToInt(buf.get(new Integer(i.intValue() + markpos.intValue()))));
+                if (Boolean.valueOf((markpos.intValue()) > (Integer.valueOf(0).intValue())).booleanValue()) {
+                    Integer sz = Integer.valueOf(pos.intValue() - markpos.intValue());
+                    for (int ilb_56 = 0; ilb_56 <= Integer.valueOf(sz.intValue() - Integer.valueOf(1).intValue()).intValue(); ilb_56++) {
+                        Integer i = Integer.valueOf(ilb_56);
+                        buf.put(i, UTIL.NumberToInt(buf.get(Integer.valueOf(i.intValue() + markpos.intValue()))));
                     }
                     pos = UTIL.NumberToInt(UTIL.clone(sz));
-                    markpos = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
+                    markpos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
                 } else {
                     Boolean cond_12 = null;
                     Integer var1_13 = null;
                     HashSet unArg_14 = new HashSet();
                     unArg_14.clear();
                     unArg_14.addAll(buf.keySet());
-                    var1_13 = new Integer(unArg_14.size());
-                    cond_12 = new Boolean((var1_13.intValue()) >= (marklimit.intValue()));
+                    var1_13 = Integer.valueOf(unArg_14.size());
+                    cond_12 = Boolean.valueOf((var1_13.intValue()) >= (marklimit.intValue()));
                     if (cond_12.booleanValue()) {
-                        markpos = UTIL.NumberToInt(UTIL.clone(new Integer(-new Integer(1).intValue())));
-                        pos = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
+                        markpos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(-Integer.valueOf(1).intValue())));
+                        pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
                     } else {
-                        Integer nsz = new Integer(pos.intValue() * new Integer(2).intValue());
-                        if (new Boolean((nsz.intValue()) > (marklimit.intValue())).booleanValue())
+                        Integer nsz = Integer.valueOf(pos.intValue() * Integer.valueOf(2).intValue());
+                        if (Boolean.valueOf((nsz.intValue()) > (marklimit.intValue())).booleanValue())
                             nsz = UTIL.NumberToInt(UTIL.clone(marklimit));
                         {
                             HashMap nbuf = new HashMap();
@@ -123,9 +123,9 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                                 boolean succ_26 = true;
                                 HashSet e_set_27 = new HashSet();
                                 e_set_27 = new HashSet();
-                                int ubi_32 = new Integer(nsz.intValue() - new Integer(1).intValue()).intValue();
-                                for (int count_33 = new Integer(0).intValue(); count_33 <= ubi_32; count_33++)
-                                    e_set_27.add(new Integer(count_33));
+                                int ubi_32 = Integer.valueOf(nsz.intValue() - Integer.valueOf(1).intValue()).intValue();
+                                for (int count_33 = Integer.valueOf(0).intValue(); count_33 <= ubi_32; count_33++)
+                                    e_set_27.add(Integer.valueOf(count_33));
                                 Integer l_u7 = null;
                                 {
                                     for (Iterator enum_35 = e_set_27.iterator(); enum_35.hasNext();) {
@@ -133,13 +133,13 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                                         succ_26 = true;
                                         l_u7 = elem_34;
                                         if (succ_26)
-                                            res_m_23.put(l_u7, new Integer(0));
+                                            res_m_23.put(l_u7, Integer.valueOf(0));
                                     }
                                 }
                             }
                             nbuf = res_m_23;
-                            for (int ilb_40 = 0; ilb_40 <= new Integer(pos.intValue() - new Integer(1).intValue()).intValue(); ilb_40++) {
-                                Integer i = new Integer(ilb_40);
+                            for (int ilb_40 = 0; ilb_40 <= Integer.valueOf(pos.intValue() - Integer.valueOf(1).intValue()).intValue(); ilb_40++) {
+                                Integer i = Integer.valueOf(ilb_40);
                                 nbuf.put(i, UTIL.NumberToInt(buf.get(i)));
                             }
                             buf = (HashMap) UTIL.clone(nbuf);
@@ -159,8 +159,8 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                 HashSet unArg_74 = new HashSet();
                 unArg_74.clear();
                 unArg_74.addAll(buf.keySet());
-                var1_73 = new Integer(unArg_74.size());
-                par_72 = new Integer(var1_73.intValue() - pos.intValue());
+                var1_73 = Integer.valueOf(unArg_74.size());
+                par_72 = Integer.valueOf(var1_73.intValue() - pos.intValue());
                 tmpVal_69 = in_u_u.readMIIIntInt_q(buf, pos, par_72);
                 Integer l_un = null;
                 HashMap l_ubuf = new HashMap();
@@ -181,8 +181,8 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                     buf = (HashMap) UTIL.clone(l_ubuf);
                 }
             }
-            if (new Boolean((n.intValue()) > (new Integer(0).intValue())).booleanValue())
-                count = UTIL.NumberToInt(UTIL.clone(new Integer(n.intValue() + pos.intValue())));
+            if (Boolean.valueOf((n.intValue()) > (Integer.valueOf(0).intValue())).booleanValue())
+                count = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(n.intValue() + pos.intValue())));
         }
         ;
     }
@@ -192,20 +192,20 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS START Name=read KEEP=NO
     public Integer read() throws CGException {
         ensureOpen();
-        if (new Boolean((pos.intValue()) >= (count.intValue())).booleanValue()) {
+        if (Boolean.valueOf((pos.intValue()) >= (count.intValue())).booleanValue()) {
             fill();
-            if (new Boolean((pos.intValue()) >= (count.intValue())).booleanValue())
-                return new Integer(-new Integer(1).intValue());
+            if (Boolean.valueOf((pos.intValue()) >= (count.intValue())).booleanValue())
+                return Integer.valueOf(-Integer.valueOf(1).intValue());
         }
         {
             Integer l_u6 = pos;
             Integer l_u5 = l_u6;
             {
-                pos = UTIL.NumberToInt(UTIL.clone(new Integer(l_u6.intValue() + new Integer(1).intValue())));
+                pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u6.intValue() + Integer.valueOf(1).intValue())));
                 {
                     Integer l_u3 = UTIL.NumberToInt(buf.get(l_u5));
                     Integer l_u2 = null;
-                    l_u2 = J2VUTIL.BitOp(l_u3, new quotes.AND(), new Integer(255));
+                    l_u2 = J2VUTIL.BitOp(l_u3, new quotes.AND(), Integer.valueOf(255));
                     return l_u2;
                 }
             }
@@ -240,7 +240,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS START Name=reset KEEP=NO
     public void reset() throws CGException {
         ensureOpen();
-        if (new Boolean((markpos.intValue()) < (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((markpos.intValue()) < (Integer.valueOf(0).intValue())).booleanValue())
             throw new VDMSpecException(new JavaIoIOException(new JavaLangString(new String("Resetting to invalid mark"))));
         pos = UTIL.NumberToInt(UTIL.clone(markpos));
         ;
@@ -251,30 +251,30 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS START Name=skip_u_u KEEP=NO
     public Integer skip_u_u(final Integer n) throws CGException {
         ensureOpen();
-        if (new Boolean((n.intValue()) <= (new Integer(0).intValue())).booleanValue())
-            return new Integer(0);
+        if (Boolean.valueOf((n.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue())
+            return Integer.valueOf(0);
         {
-            Integer avail = new Integer(count.intValue() - pos.intValue());
-            if (new Boolean((avail.intValue()) <= (new Integer(0).intValue())).booleanValue()) {
-                if (new Boolean((markpos.intValue()) < (new Integer(0).intValue())).booleanValue()) {
+            Integer avail = Integer.valueOf(count.intValue() - pos.intValue());
+            if (Boolean.valueOf((avail.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue()) {
+                if (Boolean.valueOf((markpos.intValue()) < (Integer.valueOf(0).intValue())).booleanValue()) {
                     Integer rexpr_15 = null;
                     rexpr_15 = in_u_u.skip_u_u(n);
                     return rexpr_15;
                 }
                 fill();
-                avail = UTIL.NumberToInt(UTIL.clone(new Integer(count.intValue() - pos.intValue())));
-                if (new Boolean((avail.intValue()) <= (new Integer(0).intValue())).booleanValue())
-                    return new Integer(0);
+                avail = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(count.intValue() - pos.intValue())));
+                if (Boolean.valueOf((avail.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue())
+                    return Integer.valueOf(0);
             }
             {
                 Integer skipped = null;
-                if (new Boolean((avail.intValue()) < (n.intValue())).booleanValue())
+                if (Boolean.valueOf((avail.intValue()) < (n.intValue())).booleanValue())
                     skipped = avail;
                 else
                     skipped = n;
                 {
                     Integer l_u3 = pos;
-                    pos = UTIL.NumberToInt(UTIL.clone(new Integer(l_u3.intValue() + skipped.intValue())));
+                    pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u3.intValue() + skipped.intValue())));
                 }
                 return skipped;
             }
@@ -296,7 +296,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
         Integer rexpr_2 = null;
         Integer var2_6 = null;
         var2_6 = in_u_u.available();
-        rexpr_2 = new Integer(new Integer(count.intValue() - pos.intValue()).intValue() + var2_6.intValue());
+        rexpr_2 = Integer.valueOf(Integer.valueOf(count.intValue() - pos.intValue()).intValue() + var2_6.intValue());
         return rexpr_2;
     }
 // ***** VDMTOOLS END Name=available
@@ -315,7 +315,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 
 // ***** VDMTOOLS START Name=markSupported KEEP=NO
     public Boolean markSupported() throws CGException {
-        return new Boolean(true);
+        return Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=markSupported
 
@@ -338,20 +338,20 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
         Boolean var1_7 = null;
         Boolean var1_8 = null;
         {
-            if (!(var1_8 = new Boolean((off.intValue()) < (new Integer(0).intValue()))).booleanValue()) {
+            if (!(var1_8 = Boolean.valueOf((off.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue()) {
                 Boolean var2_12 = null;
                 Integer var2_14 = null;
                 HashSet unArg_15 = new HashSet();
                 unArg_15.clear();
                 unArg_15.addAll(b.keySet());
-                var2_14 = new Integer(unArg_15.size());
-                var2_12 = new Boolean((off.intValue()) > (var2_14.intValue()));
+                var2_14 = Integer.valueOf(unArg_15.size());
+                var2_12 = Boolean.valueOf((off.intValue()) > (var2_14.intValue()));
                 var1_8 = var2_12;
             }
         }
         {
             if (!(var1_7 = var1_8).booleanValue())
-                var1_7 = new Boolean((len_u_u.intValue()) < (new Integer(0).intValue()));
+                var1_7 = Boolean.valueOf((len_u_u.intValue()) < (Integer.valueOf(0).intValue()));
         }
         {
             if (!(var1_6 = var1_7).booleanValue()) {
@@ -360,21 +360,21 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                 HashSet unArg_25 = new HashSet();
                 unArg_25.clear();
                 unArg_25.addAll(b.keySet());
-                var2_24 = new Integer(unArg_25.size());
-                var2_20 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) > (var2_24.intValue()));
+                var2_24 = Integer.valueOf(unArg_25.size());
+                var2_20 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) > (var2_24.intValue()));
                 var1_6 = var2_20;
             }
         }
         {
             if (!(cond_5 = var1_6).booleanValue())
-                cond_5 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) < (new Integer(0).intValue()));
+                cond_5 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) < (Integer.valueOf(0).intValue()));
         }
         if (cond_5.booleanValue())
             throw new VDMSpecException(new JavaLangIndexOutOfBoundsException());
-        else if (new Boolean(len_u_u.intValue() == new Integer(0).intValue()).booleanValue()) {
+        else if (Boolean.valueOf(len_u_u.intValue() == Integer.valueOf(0).intValue()).booleanValue()) {
             Tuple rexpr_35 = new Tuple(2);
             rexpr_35 = new Tuple(2);
-            rexpr_35.SetField(1, new Integer(0));
+            rexpr_35.SetField(1, Integer.valueOf(0));
             rexpr_35.SetField(2, new HashMap());
             return rexpr_35;
         }
@@ -403,7 +403,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                     b = (HashMap) UTIL.clone(l_ub);
                 }
             }
-            if (new Boolean((n.intValue()) <= (new Integer(0).intValue())).booleanValue()) {
+            if (Boolean.valueOf((n.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue()) {
                 Tuple rexpr_51 = new Tuple(2);
                 rexpr_51 = new Tuple(2);
                 rexpr_51.SetField(1, n);
@@ -420,19 +420,19 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS START Name=read1 KEEP=NO
     private Tuple read1(final HashMap b_u, final Integer off, final Integer len_u_u) throws CGException {
         HashMap b = b_u;
-        Integer avail = new Integer(count.intValue() - pos.intValue());
-        if (new Boolean((avail.intValue()) <= (new Integer(0).intValue())).booleanValue()) {
+        Integer avail = Integer.valueOf(count.intValue() - pos.intValue());
+        if (Boolean.valueOf((avail.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue()) {
             Boolean cond_9 = null;
             Boolean var1_10 = null;
             Integer var2_12 = null;
             HashSet unArg_13 = new HashSet();
             unArg_13.clear();
             unArg_13.addAll(buf.keySet());
-            var2_12 = new Integer(unArg_13.size());
-            var1_10 = new Boolean((len_u_u.intValue()) >= (var2_12.intValue()));
+            var2_12 = Integer.valueOf(unArg_13.size());
+            var1_10 = Boolean.valueOf((len_u_u.intValue()) >= (var2_12.intValue()));
             {
                 if ((cond_9 = var1_10).booleanValue())
-                    cond_9 = new Boolean((markpos.intValue()) < (new Integer(0).intValue()));
+                    cond_9 = Boolean.valueOf((markpos.intValue()) < (Integer.valueOf(0).intValue()));
             }
             if (cond_9.booleanValue()) {
                 Tuple rexpr_18 = new Tuple(2);
@@ -440,28 +440,28 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                 return rexpr_18;
             }
             fill();
-            avail = UTIL.NumberToInt(UTIL.clone(new Integer(count.intValue() - pos.intValue())));
-            if (new Boolean((avail.intValue()) <= (new Integer(0).intValue())).booleanValue()) {
+            avail = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(count.intValue() - pos.intValue())));
+            if (Boolean.valueOf((avail.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue()) {
                 Tuple rexpr_29 = new Tuple(2);
                 rexpr_29 = new Tuple(2);
-                rexpr_29.SetField(1, new Integer(-new Integer(1).intValue()));
+                rexpr_29.SetField(1, Integer.valueOf(-Integer.valueOf(1).intValue()));
                 rexpr_29.SetField(2, new HashMap());
                 return rexpr_29;
             }
         }
         {
             Integer cnt = null;
-            if (new Boolean((avail.intValue()) < (len_u_u.intValue())).booleanValue())
+            if (Boolean.valueOf((avail.intValue()) < (len_u_u.intValue())).booleanValue())
                 cnt = avail;
             else
                 cnt = len_u_u;
-            for (int ilb_43 = off.intValue(); ilb_43 <= new Integer(new Integer(off.intValue() + cnt.intValue()).intValue() - new Integer(1).intValue()).intValue(); ilb_43++) {
-                Integer i = new Integer(ilb_43);
-                b.put(i, UTIL.NumberToInt(buf.get(new Integer(new Integer(pos.intValue() + i.intValue()).intValue() - off.intValue()))));
+            for (int ilb_43 = off.intValue(); ilb_43 <= Integer.valueOf(Integer.valueOf(off.intValue() + cnt.intValue()).intValue() - Integer.valueOf(1).intValue()).intValue(); ilb_43++) {
+                Integer i = Integer.valueOf(ilb_43);
+                b.put(i, UTIL.NumberToInt(buf.get(Integer.valueOf(Integer.valueOf(pos.intValue() + i.intValue()).intValue() - off.intValue()))));
             }
             {
                 Integer l_u3 = pos;
-                pos = UTIL.NumberToInt(UTIL.clone(new Integer(l_u3.intValue() + cnt.intValue())));
+                pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u3.intValue() + cnt.intValue())));
             }
             Tuple rexpr_58 = new Tuple(2);
             rexpr_58 = new Tuple(2);
@@ -476,7 +476,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS START Name=JavaIoBufferedInputStream KEEP=NO
     public JavaIoBufferedInputStream(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaIoBufferedInputStream
 
@@ -493,7 +493,7 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
 // ***** VDMTOOLS START Name=JavaIoBufferedInputStream KEEP=NO
     public JavaIoBufferedInputStream(final JavaIoInputStream in_u_u, final Integer size) throws CGException {
         super(in_u_u);
-        if (new Boolean((size.intValue()) <= (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((size.intValue()) <= (Integer.valueOf(0).intValue())).booleanValue())
             throw new VDMSpecException(new JavaLangIllegalArgumentException(new JavaLangString(new String("Buffer size <= 0"))));
         HashMap rhs_15 = new HashMap();
         HashMap res_m_16 = new HashMap();
@@ -501,9 +501,9 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
             boolean succ_19 = true;
             HashSet e_set_20 = new HashSet();
             e_set_20 = new HashSet();
-            int ubi_25 = new Integer(size.intValue() - new Integer(1).intValue()).intValue();
-            for (int count_26 = new Integer(0).intValue(); count_26 <= ubi_25; count_26++)
-                e_set_20.add(new Integer(count_26));
+            int ubi_25 = Integer.valueOf(size.intValue() - Integer.valueOf(1).intValue()).intValue();
+            for (int count_26 = Integer.valueOf(0).intValue(); count_26 <= ubi_25; count_26++)
+                e_set_20.add(Integer.valueOf(count_26));
             Integer l_u3 = null;
             {
                 for (Iterator enum_28 = e_set_20.iterator(); enum_28.hasNext();) {
@@ -511,14 +511,14 @@ public class JavaIoBufferedInputStream extends JavaIoFilterInputStream {
                     succ_19 = true;
                     l_u3 = elem_27;
                     if (succ_19)
-                        res_m_16.put(l_u3, new Integer(0));
+                        res_m_16.put(l_u3, Integer.valueOf(0));
                 }
             }
         }
         rhs_15 = res_m_16;
         buf = (HashMap) UTIL.clone(rhs_15);
-        count = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
-        pos = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
+        count = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
+        pos = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
     }
 // ***** VDMTOOLS END Name=JavaIoBufferedInputStream
 

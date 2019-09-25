@@ -54,7 +54,7 @@ public abstract class JavaUtilHTKeySet extends JavaUtilAbstractSet {
 // ***** VDMTOOLS START Name=iterator KEEP=NO
     public JavaUtilIterator iterator() throws CGException {
         JavaUtilIterator rexpr_1 = null;
-        rexpr_1 = (JavaUtilIterator) ht.getIterator(new Integer(0));
+        rexpr_1 = (JavaUtilIterator) ht.getIterator(Integer.valueOf(0));
         return (JavaUtilIterator) rexpr_1;
     }
 // ***** VDMTOOLS END Name=iterator
@@ -85,7 +85,7 @@ public abstract class JavaUtilHTKeySet extends JavaUtilAbstractSet {
         JavaLangObject obj_4 = null;
         obj_4 = (JavaLangObject) ht.remove((JavaLangObject) key);
         unArg_3 = obj_4.IsNil();
-        rexpr_2 = new Boolean(!unArg_3.booleanValue());
+        rexpr_2 = Boolean.valueOf(!unArg_3.booleanValue());
         return rexpr_2;
     }
 // ***** VDMTOOLS END Name=remove

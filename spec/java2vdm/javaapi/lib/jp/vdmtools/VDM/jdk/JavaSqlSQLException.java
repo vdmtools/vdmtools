@@ -39,7 +39,7 @@ public class JavaSqlSQLException extends JavaLangException {
 
     private Integer vendorCode = null;
 
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaSqlSQLException"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaSqlSQLException"), new quotes.CLASS(), Boolean.FALSE);
 
     public JavaLangClass getJClass() throws CGException {
         return (JavaLangClass) CLASS;
@@ -59,7 +59,7 @@ public class JavaSqlSQLException extends JavaLangException {
 
     public JavaSqlSQLException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
     public JavaSqlSQLException(final JavaLangString reason_1) throws CGException {
@@ -88,7 +88,7 @@ public class JavaSqlSQLException extends JavaLangException {
     {
         this(new JavaLangString(e.getMessage()),
              new JavaLangString(e.getSQLState()),
-             new Integer(e.getErrorCode()));
+             Integer.valueOf(e.getErrorCode()));
     }
 
     public JavaSqlSQLException getNextException()

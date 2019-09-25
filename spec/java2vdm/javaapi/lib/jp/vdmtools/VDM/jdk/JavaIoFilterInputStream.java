@@ -15,7 +15,7 @@ public class JavaIoFilterInputStream extends JavaIoInputStream {
 
     protected JavaIoInputStream in_u_u = null;
 
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoFilterInputStream"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoFilterInputStream"), new quotes.CLASS(), Boolean.FALSE);
 
 
     public JavaIoFilterInputStream() throws CGException {
@@ -62,7 +62,7 @@ public class JavaIoFilterInputStream extends JavaIoInputStream {
 
 
     public Integer read(final HashMap b) throws CGException {
-        return read(b, new Integer(0), new Integer(b.size()));
+        return read(b, Integer.valueOf(0), Integer.valueOf(b.size()));
     }
 
 
@@ -82,7 +82,7 @@ public class JavaIoFilterInputStream extends JavaIoInputStream {
 
     public JavaIoFilterInputStream(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 

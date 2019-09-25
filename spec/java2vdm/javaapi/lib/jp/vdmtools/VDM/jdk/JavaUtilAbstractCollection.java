@@ -35,7 +35,7 @@ public abstract class JavaUtilAbstractCollection extends JavaLangObject implemen
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilAbstractList"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilAbstractList"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
@@ -59,7 +59,7 @@ public abstract class JavaUtilAbstractCollection extends JavaLangObject implemen
 
 // ***** VDMTOOLS START Name=isEmpty KEEP=NO
     public Boolean isEmpty() throws CGException {
-        return new Boolean(size().intValue() == new Integer(0).intValue());
+        return Boolean.valueOf(size().intValue() == Integer.valueOf(0).intValue());
     }
 // ***** VDMTOOLS END Name=isEmpty
 
@@ -97,7 +97,7 @@ public abstract class JavaUtilAbstractCollection extends JavaLangObject implemen
 // ***** VDMTOOLS START Name=JavaUtilAbstractCollection KEEP=NO
     public JavaUtilAbstractCollection(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilAbstractCollection
 

@@ -42,7 +42,7 @@ public class JavaIoFileWriter extends JavaIoOutputStreamWriter {
 
     public JavaIoFileWriter(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public JavaIoFileWriter(final JavaLangString fileName) throws CGException {

@@ -66,7 +66,7 @@ public class JavaUtilProperties extends JavaUtilHashtable {
 
 // ***** VDMTOOLS START Name=toHex KEEP=NO
     private Character toHex(final Integer nibble) throws CGException {
-        return (Character) hexDigit.get(new Integer((int) (nibble.doubleValue() - new Integer(16).doubleValue() * Math.floor(nibble.doubleValue() / new Integer(16).doubleValue()))));
+        return (Character) hexDigit.get(Integer.valueOf((int) (nibble.doubleValue() - Integer.valueOf(16).doubleValue() * Math.floor(nibble.doubleValue() / Integer.valueOf(16).doubleValue()))));
     }
 // ***** VDMTOOLS END Name=toHex
 
@@ -85,7 +85,7 @@ public class JavaUtilProperties extends JavaUtilHashtable {
         }
 
         public Boolean hasMoreElements(){
-            return new Boolean(wrappedObject.hasMoreElements());
+            return Boolean.valueOf(wrappedObject.hasMoreElements());
         }
 
         public PropertiesEnumeration(Enumeration e){
@@ -94,7 +94,7 @@ public class JavaUtilProperties extends JavaUtilHashtable {
 
         public Boolean IsNil()
         {
-            return new Boolean(false);
+            return Boolean.FALSE;
         }
     }
 
@@ -106,7 +106,7 @@ public class JavaUtilProperties extends JavaUtilHashtable {
 
     public JavaUtilProperties(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 
@@ -130,7 +130,7 @@ public class JavaUtilProperties extends JavaUtilHashtable {
 //                        Boolean cond_9 = null;
 //                        Integer var1_10 = null;
 //                        var1_10 = val.length();
-//                        cond_9 = new Boolean((var1_10.intValue()) > (new Integer(40).intValue()));
+//                        cond_9 = Boolean.valueOf((var1_10.intValue()) > (Integer.valueOf(40).intValue()));
 //                        if (cond_9.booleanValue()) {
 //                            JavaLangString rhs_12 = null;
 //                            JavaLangString obj_13 = null;
@@ -211,7 +211,7 @@ public class JavaUtilProperties extends JavaUtilHashtable {
 //        Boolean cond_8 = null;
 //        Boolean unArg_9 = null;
 //        unArg_9 = header.IsNil();
-//        cond_8 = new Boolean(!unArg_9.booleanValue());
+//        cond_8 = Boolean.valueOf(!unArg_9.booleanValue());
 //        if (cond_8.booleanValue()) {
 //            s = (JavaLangString) UTIL.clone(new JavaLangString(new String("#")));
 //            JavaLangString rhs_12 = null;
@@ -229,8 +229,8 @@ public class JavaUtilProperties extends JavaUtilHashtable {
 //                    JavaLangString key = null;
 //                    key = (JavaLangString) e.nextElement();
 //                    JavaLangString val = (JavaLangString) (JavaLangString) get((JavaLangObject) key);
-//                    key = (JavaLangString) UTIL.clone((JavaLangString) saveConvert((JavaLangString) key, new Boolean(true)));
-//                    val = (JavaLangString) UTIL.clone((JavaLangString) saveConvert((JavaLangString) val, new Boolean(false)));
+//                    key = (JavaLangString) UTIL.clone((JavaLangString) saveConvert((JavaLangString) key, Boolean.TRUE));
+//                    val = (JavaLangString) UTIL.clone((JavaLangString) saveConvert((JavaLangString) val, Boolean.FALSE));
 //                    s = (JavaLangString) UTIL.clone(key);
 //                    JavaLangString rhs_30 = null;
 //                    rhs_30 = (JavaLangString) s.concat((JavaLangString) new JavaLangString(new String("=")));

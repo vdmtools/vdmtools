@@ -16,7 +16,7 @@ public class JavaLangException extends JavaLangThrowable {
 
     public JavaLangException(final quotes.NIL var_1_1) {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 

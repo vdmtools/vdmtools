@@ -65,8 +65,8 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
 
 // ***** VDMTOOLS START Name=close KEEP=NO
     public void close() throws CGException {
-        if (new Boolean(!closing.booleanValue()).booleanValue()) {
-            closing = (Boolean) UTIL.clone(new Boolean(true));
+        if (Boolean.valueOf(!closing.booleanValue()).booleanValue()) {
+            closing = Boolean.TRUE;
             {
                 textOut.close();
                 out.close();
@@ -91,7 +91,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
         boolean succ_2 = true;
         {
             succ_2 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean((b instanceof Boolean))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((b instanceof Boolean))))
                 succ_2 = false;
             if (succ_2) {
                 JavaLangString t = new JavaLangString(new String("true"));
@@ -104,7 +104,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                 writeStr((JavaLangString) r);
             } else {
                 succ_2 = true;
-                if (!UTIL.equals(new Boolean(true), new Boolean((b instanceof Character))))
+                if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((b instanceof Character))))
                     succ_2 = false;
                 if (succ_2) {
                     Character c = (Character) b;
@@ -113,7 +113,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                     write(tmpArg_v_43);
                 } else {
                     succ_2 = true;
-                    if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(b))))
+                    if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(b))))
                         succ_2 = false;
                     if (succ_2) {
                         Integer i = UTIL.NumberToInt(b);
@@ -121,7 +121,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                         writeStr((JavaLangString) tmpArg_v_35);
                     } else {
                         succ_2 = true;
-                        if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsReal(b))))
+                        if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsReal(b))))
                             succ_2 = false;
                         if (succ_2) {
                             Double r = UTIL.NumberToReal(b);
@@ -131,12 +131,12 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                         } else {
                             succ_2 = true;
                             Boolean tmpVal_v_7 = null;
-                            tmpVal_v_7 = new Boolean(b instanceof JavaLangObject);
-                            if (!UTIL.equals(new Boolean(true), tmpVal_v_7))
+                            tmpVal_v_7 = Boolean.valueOf(b instanceof JavaLangObject);
+                            if (!UTIL.equals(Boolean.TRUE, tmpVal_v_7))
                                 succ_2 = false;
                             if (succ_2) {
                                 Boolean cond_9 = null;
-                                cond_9 = new Boolean(b instanceof JavaLangString);
+                                cond_9 = Boolean.valueOf(b instanceof JavaLangString);
                                 if (cond_9.booleanValue()) {
                                     JavaLangString s = (JavaLangString) b;
                                     Boolean cond_19 = null;
@@ -179,19 +179,19 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                     succ_3 = true;
                     Boolean tmpVal_v_7 = null;
                     {
-                        if ((tmpVal_v_7 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_7 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_10 = null;
                             Boolean unArg_11 = null;
                             unArg_11 = j2v_uexception.IsNil();
-                            var2_10 = new Boolean(!unArg_11.booleanValue());
+                            var2_10 = Boolean.valueOf(!unArg_11.booleanValue());
                             tmpVal_v_7 = var2_10;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_7))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_7))
                         succ_3 = false;
                     if (succ_3) {
                         JavaIoIOException x = (JavaIoIOException) j2v_uexception;
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     } else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -233,7 +233,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
 
 // ***** VDMTOOLS START Name=setError KEEP=NO
     protected void setError() throws CGException {
-        trouble = (Boolean) UTIL.clone(new Boolean(true));
+        trouble = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=setError
 
@@ -243,7 +243,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
         Boolean cond_1 = null;
         Boolean unArg_2 = null;
         unArg_2 = out.IsNil();
-        cond_1 = new Boolean(!unArg_2.booleanValue());
+        cond_1 = Boolean.valueOf(!unArg_2.booleanValue());
         if (cond_1.booleanValue())
             flush();
         return trouble;
@@ -265,19 +265,19 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
         textOut.flushBuffer();
         charOut.flushBuffer();
         if (autoFlush.booleanValue()) {
-            Integer i = new Integer(0);
+            Integer i = Integer.valueOf(0);
             while (true) {
                 Boolean whCrtl_8 = null;
                 Integer var2_10 = null;
                 HashSet unArg_11 = new HashSet();
                 unArg_11.clear();
                 unArg_11.addAll(buf.keySet());
-                var2_10 = new Integer(unArg_11.size());
-                whCrtl_8 = new Boolean((i.intValue()) < (var2_10.intValue()));
+                var2_10 = Integer.valueOf(unArg_11.size());
+                whCrtl_8 = Boolean.valueOf((i.intValue()) < (var2_10.intValue()));
                 if (whCrtl_8.booleanValue()) {
-                    if (new Boolean(UTIL.equals((Character) buf.get(i), new Character('\n'))).booleanValue())
+                    if (Boolean.valueOf(UTIL.equals((Character) buf.get(i), new Character('\n'))).booleanValue())
                         out.flush();
-                    i = UTIL.NumberToInt(UTIL.clone(new Integer(i.intValue() + new Integer(1).intValue())));
+                    i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue())));
                 } else
                     break;
             }
@@ -305,7 +305,7 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
                     par_16 = J2VUTIL.toInt(new Character('\n'));
                     var1_10 = UTIL.NumberToInt(s.indexOf(par_16));
                 }
-                var2_9 = new Boolean((var1_10.intValue()) >= (new Integer(0).intValue()));
+                var2_9 = Boolean.valueOf((var1_10.intValue()) >= (Integer.valueOf(0).intValue()));
                 cond_7 = var2_9;
             }
         }
@@ -329,8 +329,8 @@ public class JavaIoPrintStream extends JavaIoFilterOutputStream {
     public JavaIoPrintStream(final JavaIoOutputStream out, final Boolean autoFlush_1) throws CGException {
         super((JavaIoOutputStream) out);
         ((JavaIoPrintStream) this).autoFlush = (Boolean) UTIL.clone(autoFlush_1);
-        ((JavaIoPrintStream) this).trouble = (Boolean) UTIL.clone(new Boolean(false));
-        ((JavaIoPrintStream) this).closing = (Boolean) UTIL.clone(new Boolean(false));
+        ((JavaIoPrintStream) this).trouble = Boolean.FALSE;
+        ((JavaIoPrintStream) this).closing = Boolean.FALSE;
         ((JavaIoPrintStream) this).charOut = (JavaIoOutputStreamWriter) UTIL.clone(new JavaIoOutputStreamWriter(this));
         ((JavaIoPrintStream) this).textOut = (JavaIoBufferedWriter) UTIL.clone(new JavaIoBufferedWriter(((JavaIoPrintStream) this).charOut));
     }

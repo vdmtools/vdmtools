@@ -5,14 +5,14 @@ import jp.vdmtools.VDM.CGException;
 
 public interface JavaSqlResultSet extends Nullable {
 
-    public static final Integer FETCH_uFORWARD = new Integer(1000);
-    public static final Integer FETCH_uREVERSE = new Integer(1001);
-    public static final Integer FETCH_uUNKNOWN = new Integer(1002);
-    public static final Integer TYPE_uFORWARD_uONLY = new Integer(1003);
-    public static final Integer TYPE_uSCROLL_uINSENSITIVE = new Integer(1004);
-    public static final Integer TYPE_uSCROLL_uSENSITIVE = new Integer(1005);
-    public static final Integer CONCUR_uREAD_uONLY = new Integer(1007);
-    public static final Integer CONCUR_uUPDATABLE = new Integer(1008);
+    public static final Integer FETCH_uFORWARD = Integer.valueOf(1000);
+    public static final Integer FETCH_uREVERSE = Integer.valueOf(1001);
+    public static final Integer FETCH_uUNKNOWN = Integer.valueOf(1002);
+    public static final Integer TYPE_uFORWARD_uONLY = Integer.valueOf(1003);
+    public static final Integer TYPE_uSCROLL_uINSENSITIVE = Integer.valueOf(1004);
+    public static final Integer TYPE_uSCROLL_uSENSITIVE = Integer.valueOf(1005);
+    public static final Integer CONCUR_uREAD_uONLY = Integer.valueOf(1007);
+    public static final Integer CONCUR_uUPDATABLE = Integer.valueOf(1008);
 
     abstract public Boolean last() throws CGException;
 

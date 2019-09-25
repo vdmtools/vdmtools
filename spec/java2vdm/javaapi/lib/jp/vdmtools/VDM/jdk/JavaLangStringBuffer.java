@@ -17,7 +17,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
     static {
         CLASS = new JavaLangClass(new String("JavaLangStringBuffer"),
                 new quotes.CLASS(),
-                new Boolean(false));
+                Boolean.FALSE);
     }
 
 
@@ -28,7 +28,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
 
     public JavaLangStringBuffer(final quotes.NIL p) {
         wrappedObject = null;
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 
@@ -57,7 +57,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
             HashMap hm = (HashMap) anything;
             char chars[] = new char[hm.size()];
             for (int i = 0; i < hm.size(); i++)
-                chars[i] = ((Character) hm.get(new Integer(i))).charValue();
+                chars[i] = ((Character) hm.get(Integer.valueOf(i))).charValue();
             wrappedObject.append(chars);
         } 
 	else if (anything instanceof JavaLangString)
@@ -77,7 +77,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
 
 
     public Integer capacity() {
-        return new Integer(wrappedObject.capacity());
+        return Integer.valueOf(wrappedObject.capacity());
     }
 
 
@@ -111,7 +111,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
             HashMap hm = (HashMap) anything;
             char chars[] = new char[hm.size()];
             for (int i = 0; i < hm.size(); i++)
-                chars[i] = ((Character) hm.get(new Integer(i))).charValue();
+                chars[i] = ((Character) hm.get(Integer.valueOf(i))).charValue();
             wrappedObject.insert(offset.intValue(), chars);
         } else
             wrappedObject.insert(offset.intValue(), anything);
@@ -120,7 +120,7 @@ public class JavaLangStringBuffer extends JavaLangObject {
 
 
     public Integer length() {
-        return new Integer(wrappedObject.length());
+        return Integer.valueOf(wrappedObject.length());
     }
 
 

@@ -64,7 +64,7 @@ public abstract class JavaUtilHashSet extends JavaUtilAbstractSet implements Jav
 // ***** VDMTOOLS START Name=JavaUtilHashSet KEEP=NO
     public JavaUtilHashSet(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilHashSet
 

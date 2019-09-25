@@ -45,7 +45,7 @@ public class JavaUtilMissingResourceException extends JavaLangRuntimeException {
 // ***** VDMTOOLS START Name=JavaUtilMissingResourceException KEEP=NO
     public JavaUtilMissingResourceException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilMissingResourceException
 

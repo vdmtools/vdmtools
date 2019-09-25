@@ -43,7 +43,7 @@ public class JavaLangNullPointerException extends JavaLangRuntimeException {
 // ***** VDMTOOLS START Name=JavaLangNullPointerException KEEP=NO
     public JavaLangNullPointerException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaLangNullPointerException
 

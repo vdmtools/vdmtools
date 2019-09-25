@@ -7,10 +7,10 @@ public class JavaAwtImage extends JavaLangObject {
     private static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaAwtImage"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
 
     public JavaAwtImage(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public JavaAwtImage() {

@@ -31,7 +31,7 @@ import java.text.DateFormat;
 public abstract class JavaTextDateFormat extends JavaTextFormat {
 
     private DateFormat wrappedObject;
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextDateFormat"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextDateFormat"), new quotes.CLASS(), Boolean.FALSE);
 
     public JavaLangClass getJClass() throws CGException {
         return (JavaLangClass) CLASS;
@@ -46,6 +46,6 @@ public abstract class JavaTextDateFormat extends JavaTextFormat {
 
     public JavaTextDateFormat(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 }

@@ -23,19 +23,19 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Integer vdm_hashCode()
     {
-	return new Integer(wrappedObject.hashCode());
+	return Integer.valueOf(wrappedObject.hashCode());
     }
 
     public Boolean vdm_equals(final JavaLangObject o) throws CGException
     {
 	if (!(o instanceof JavaUtilVector))
-	    return new Boolean(false);
+	    return Boolean.FALSE;
 
-	return new Boolean(wrappedObject.equals(((JavaUtilVector) o).getWrappedObject()));
+	return Boolean.valueOf(wrappedObject.equals(((JavaUtilVector) o).getWrappedObject()));
     }
 
     public JavaUtilVector(quotes.NIL v){
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public JavaUtilVector(){
@@ -59,19 +59,19 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Boolean add(JavaLangObject o)
     {
-        return new Boolean(wrappedObject.add(o));
+        return Boolean.valueOf(wrappedObject.add(o));
     }
 
     public Boolean addAll(JavaUtilCollection c) throws CGException
     {
         if (c.size().intValue() == 0)
-            return new Boolean(true);
+            return Boolean.TRUE;
 
         JavaUtilIterator it = c.iterator();
         while (it.hasNext().booleanValue())
             add(it.next());
 
-        return new Boolean(true);
+        return Boolean.TRUE;
     }
 
 
@@ -87,9 +87,9 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
             throw new VDMSpecException(new JavaLangArrayIndexOutOfBoundsException());
 
         if (index.intValue() == 0)
-            return new Boolean(true);
+            return Boolean.TRUE;
 
-        return new Boolean(wrappedObject.addAll(index.intValue(), convertCollection(c)));
+        return Boolean.valueOf(wrappedObject.addAll(index.intValue(), convertCollection(c)));
     }
 
     private Collection convertCollection(JavaUtilCollection c) throws CGException
@@ -112,7 +112,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
         if ((pos.intValue() < 0) || (pos.intValue() > size().intValue()))
             throw new VDMSpecException(new JavaLangArrayIndexOutOfBoundsException());
         wrappedObject.add(pos.intValue(), o);
-        return new Boolean(true);
+        return Boolean.TRUE;
     }
 
     public void insertElementAt(JavaLangObject obj, Integer index)
@@ -131,7 +131,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
 	public Boolean IsNil()
 	{
-	    return new Boolean(false);
+	    return Boolean.FALSE;
 	}
 
 	public VectorIterator(Iterator it)
@@ -151,7 +151,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
 	public Boolean hasNext() throws CGException
 	{
-	    return new Boolean(itWrappedObject.hasNext());
+	    return Boolean.valueOf(itWrappedObject.hasNext());
 	}
 	
     }
@@ -182,7 +182,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
         int index = 0;
         Iterator it = wrappedObject.iterator();
         while (it.hasNext()){
-            result.put(new Integer(index), it.next());
+            result.put(Integer.valueOf(index), it.next());
             index++;
         }
         return result;
@@ -190,12 +190,12 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Boolean contains(JavaLangObject elem)
     {
-        return new Boolean(wrappedObject.contains(elem));
+        return Boolean.valueOf(wrappedObject.contains(elem));
     }
 
     public Boolean containsAll(JavaUtilCollection c) throws CGException
     {
-        return new Boolean(wrappedObject.containsAll(convertCollection(c)));
+        return Boolean.valueOf(wrappedObject.containsAll(convertCollection(c)));
     }
 
     public JavaLangObject elementAt(Integer index) throws CGException
@@ -223,18 +223,18 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Boolean isEmpty()
     {
-        return new Boolean(wrappedObject.isEmpty());
+        return Boolean.valueOf(wrappedObject.isEmpty());
     }
 
     public Integer indexOf(JavaLangObject elem)
     {
-        return new Integer(wrappedObject.indexOf(elem));
+        return Integer.valueOf(wrappedObject.indexOf(elem));
     }
 
     public Integer indexOfFrom(JavaLangObject elem, Integer index) throws CGException
     {
         try {
-            return new Integer(wrappedObject.indexOf(elem, index.intValue()));
+            return Integer.valueOf(wrappedObject.indexOf(elem, index.intValue()));
         } catch (IndexOutOfBoundsException e) {
             throw new VDMSpecException(new JavaLangIndexOutOfBoundsException());
         }
@@ -251,7 +251,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Integer lastIndexOf(JavaLangObject elem) throws CGException
     {
-        return new Integer(wrappedObject.lastIndexOf(elem));
+        return Integer.valueOf(wrappedObject.lastIndexOf(elem));
     }
 
     public JavaLangObject remove(Integer index) throws CGException
@@ -265,7 +265,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Boolean remove_q(JavaLangObject o)
     {
-        return new Boolean(wrappedObject.remove(o));
+        return Boolean.valueOf(wrappedObject.remove(o));
     }
 
     public void removeAllElements()
@@ -284,17 +284,17 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Boolean removeElement(JavaLangObject obj)
     {
-        return new Boolean(wrappedObject.removeElement(obj));
+        return Boolean.valueOf(wrappedObject.removeElement(obj));
     }
 
     public Boolean removeAll(JavaUtilCollection c) throws CGException
     {
-        return new Boolean(wrappedObject.removeAll(convertCollection(c)));
+        return Boolean.valueOf(wrappedObject.removeAll(convertCollection(c)));
     }
 
     public Boolean retainAll(JavaUtilCollection c) throws CGException
     {
-        return new Boolean(wrappedObject.retainAll(convertCollection(c)));
+        return Boolean.valueOf(wrappedObject.retainAll(convertCollection(c)));
     }
 
     public JavaLangObject set_u_u(final Integer index, final JavaLangObject element) throws CGException
@@ -324,7 +324,7 @@ public class JavaUtilVector extends JavaLangObject implements JavaUtilList {
 
     public Integer size()
     {
-        return new Integer(wrappedObject.size());
+        return Integer.valueOf(wrappedObject.size());
     }
 
     public JavaUtilList subList(Integer fromIndex, Integer toIndex) throws CGException

@@ -85,7 +85,7 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
             unArg_7 = hm_1.table;
             unArg_6.clear();
             unArg_6.addAll(unArg_7.keySet());
-            rhs_5 = new Integer(unArg_6.size());
+            rhs_5 = Integer.valueOf(unArg_6.size());
             ((HashIterator) this).index = UTIL.NumberToInt(UTIL.clone(rhs_5));
             Integer rhs_9 = null;
             rhs_9 = hm_1.modCount;
@@ -105,10 +105,10 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
             var1_2 = e.IsNil();
             {
                 if ((whCrtl_1 = var1_2).booleanValue())
-                    whCrtl_1 = new Boolean((i.intValue()) > (new Integer(0).intValue()));
+                    whCrtl_1 = Boolean.valueOf((i.intValue()) > (Integer.valueOf(0).intValue()));
             }
             if (whCrtl_1.booleanValue()) {
-                i = UTIL.NumberToInt(UTIL.clone(new Integer(i.intValue() - new Integer(1).intValue())));
+                i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i.intValue() - Integer.valueOf(1).intValue())));
                 HMEntry rhs_9 = null;
                 HashMap tmp_m_10 = new HashMap();
                 tmp_m_10 = hm.table;
@@ -122,7 +122,7 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
         Boolean rexpr_15 = null;
         Boolean unArg_16 = null;
         unArg_16 = e.IsNil();
-        rexpr_15 = new Boolean(!unArg_16.booleanValue());
+        rexpr_15 = Boolean.valueOf(!unArg_16.booleanValue());
         return rexpr_15;
     }
 // ***** VDMTOOLS END Name=hasNext
@@ -138,10 +138,10 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
             var1_2 = et.IsNil();
             {
                 if ((whCrtl_1 = var1_2).booleanValue())
-                    whCrtl_1 = new Boolean((i.intValue()) > (new Integer(0).intValue()));
+                    whCrtl_1 = Boolean.valueOf((i.intValue()) > (Integer.valueOf(0).intValue()));
             }
             if (whCrtl_1.booleanValue()) {
-                i = UTIL.NumberToInt(UTIL.clone(new Integer(i.intValue() - new Integer(1).intValue())));
+                i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i.intValue() - Integer.valueOf(1).intValue())));
                 HMEntry rhs_9 = null;
                 HashMap tmp_m_10 = new HashMap();
                 tmp_m_10 = hm.table;
@@ -155,7 +155,7 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
         Boolean cond_15 = null;
         Boolean unArg_16 = null;
         unArg_16 = et.IsNil();
-        cond_15 = new Boolean(!unArg_16.booleanValue());
+        cond_15 = Boolean.valueOf(!unArg_16.booleanValue());
         if (cond_15.booleanValue()) {
             HMEntry e = null;
             lastReturned = (HMEntry) UTIL.clone(entry);
@@ -164,9 +164,9 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
             rhs_19 = e.next;
             entry = (HMEntry) UTIL.clone(rhs_19);
             Object rexpr_21 = null;
-            if (new Boolean(type.intValue() == JavaUtilHashMap.KEYS.intValue()).booleanValue())
+            if (Boolean.valueOf(type.intValue() == JavaUtilHashMap.KEYS.intValue()).booleanValue())
                 rexpr_21 = e.key;
-            else if (new Boolean(type.intValue() == JavaUtilHashMap.VALUES.intValue()).booleanValue())
+            else if (Boolean.valueOf(type.intValue() == JavaUtilHashMap.VALUES.intValue()).booleanValue())
                 rexpr_21 = e.value_u_u;
             else
                 rexpr_21 = e;
@@ -184,11 +184,11 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
         Boolean cond_3 = null;
         Integer var1_4 = null;
         var1_4 = lastReturned.hash;
-        cond_3 = new Boolean((var1_4.intValue()) < (new Integer(0).intValue()));
+        cond_3 = Boolean.valueOf((var1_4.intValue()) < (Integer.valueOf(0).intValue()));
         if (cond_3.booleanValue()) {
             Integer unArg_8 = null;
             unArg_8 = lastReturned.hash;
-            var1_1 = new Integer(-unArg_8.intValue());
+            var1_1 = Integer.valueOf(-unArg_8.intValue());
         } else
             var1_1 = lastReturned.hash;
         Integer var2_10 = null;
@@ -197,8 +197,8 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
         unArg_12 = hm.table;
         unArg_11.clear();
         unArg_11.addAll(unArg_12.keySet());
-        var2_10 = new Integer(unArg_11.size());
-        idx = new Integer((int) (var1_1.doubleValue() - var2_10.doubleValue() * Math.floor(var1_1.doubleValue() / var2_10.doubleValue())));
+        var2_10 = Integer.valueOf(unArg_11.size());
+        idx = Integer.valueOf((int) (var1_1.doubleValue() - var2_10.doubleValue() * Math.floor(var1_1.doubleValue() / var2_10.doubleValue())));
         HMEntry e = null;
         HashMap tmp_m_14 = new HashMap();
         tmp_m_14 = hm.table;
@@ -208,19 +208,19 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
             Boolean whCrtl_18 = null;
             Boolean unArg_19 = null;
             unArg_19 = e.IsNil();
-            whCrtl_18 = new Boolean(!unArg_19.booleanValue());
+            whCrtl_18 = Boolean.valueOf(!unArg_19.booleanValue());
             if (whCrtl_18.booleanValue()) {
-                if (new Boolean(UTIL.equals(e, lastReturned)).booleanValue()) {
+                if (Boolean.valueOf(UTIL.equals(e, lastReturned)).booleanValue()) {
                     Integer rhs_23 = null;
                     Integer var1_24 = null;
                     var1_24 = hm.modCount;
-                    rhs_23 = new Integer(var1_24.intValue() + new Integer(1).intValue());
+                    rhs_23 = Integer.valueOf(var1_24.intValue() + Integer.valueOf(1).intValue());
                     hm.modCount = UTIL.NumberToInt(rhs_23);
-                    expectedModCount = UTIL.NumberToInt(UTIL.clone(new Integer(expectedModCount.intValue() + new Integer(1).intValue())));
+                    expectedModCount = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(expectedModCount.intValue() + Integer.valueOf(1).intValue())));
                     Boolean cond_31 = null;
                     Boolean unArg_32 = null;
                     unArg_32 = prev.IsNil();
-                    cond_31 = new Boolean(!unArg_32.booleanValue());
+                    cond_31 = Boolean.valueOf(!unArg_32.booleanValue());
                     if (cond_31.booleanValue()) {
                         HMEntry rhs_42 = null;
                         rhs_42 = e.next;
@@ -241,7 +241,7 @@ public class HashIterator extends JavaLangObject implements JavaUtilIterator {
                     Integer rhs_45 = null;
                     Integer var1_46 = null;
                     var1_46 = hm.count;
-                    rhs_45 = new Integer(var1_46.intValue() - new Integer(1).intValue());
+                    rhs_45 = Integer.valueOf(var1_46.intValue() - Integer.valueOf(1).intValue());
                     hm.count = UTIL.NumberToInt(rhs_45);
                     lastReturned = (HMEntry) UTIL.clone(new JavaLangObject(new quotes.NIL()));
                     return;

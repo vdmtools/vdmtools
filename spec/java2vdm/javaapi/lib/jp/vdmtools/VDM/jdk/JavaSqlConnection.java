@@ -6,11 +6,11 @@ import jp.vdmtools.VDM.CGException;
 public interface JavaSqlConnection extends Nullable {
 
 
-    public static final Integer TRANSACTION_uNONE = new Integer(0);
-    public static final Integer TRANSACTION_uREAD_uUNCOMMITTED = new Integer(0);
-    public static final Integer TRANSACTION_uREAD_uCOMMITTED = new Integer(0);
-    public static final Integer TRANSACTION_uREPEATABLE_uREAD = new Integer(0);
-    public static final Integer TRANSACTION_uSERIALIZABLE = new Integer(0);
+    public static final Integer TRANSACTION_uNONE = Integer.valueOf(0);
+    public static final Integer TRANSACTION_uREAD_uUNCOMMITTED = Integer.valueOf(0);
+    public static final Integer TRANSACTION_uREAD_uCOMMITTED = Integer.valueOf(0);
+    public static final Integer TRANSACTION_uREPEATABLE_uREAD = Integer.valueOf(0);
+    public static final Integer TRANSACTION_uSERIALIZABLE = Integer.valueOf(0);
 
 
     abstract public void close() throws CGException ;

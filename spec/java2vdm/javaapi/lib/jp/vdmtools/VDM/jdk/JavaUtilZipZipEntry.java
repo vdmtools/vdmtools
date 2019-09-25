@@ -33,7 +33,7 @@ public class JavaUtilZipZipEntry extends JavaLangObject {
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilZipZipEntry"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilZipZipEntry"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
@@ -53,7 +53,7 @@ public class JavaUtilZipZipEntry extends JavaLangObject {
 // ***** VDMTOOLS START Name=JavaUtilZipZipEntry KEEP=NO
     public JavaUtilZipZipEntry(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilZipZipEntry
 

@@ -43,7 +43,7 @@ public class JavaUtilEmptyStackException extends JavaLangRuntimeException {
 // ***** VDMTOOLS START Name=JavaUtilEmptyStackException KEEP=NO
     public JavaUtilEmptyStackException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilEmptyStackException
 

@@ -33,212 +33,212 @@ public class JavaUtilZipZipConstants {
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=LOCSIG KEEP=NO
-    public static Integer LOCSIG = new Integer(0);
+    public static Integer LOCSIG = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCSIG
 
 // ***** VDMTOOLS START Name=EXTSIG KEEP=NO
-    public static Integer EXTSIG = new Integer(0);
+    public static Integer EXTSIG = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=EXTSIG
 
 // ***** VDMTOOLS START Name=CENSIG KEEP=NO
-    public static Integer CENSIG = new Integer(0);
+    public static Integer CENSIG = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENSIG
 
 // ***** VDMTOOLS START Name=ENDSIG KEEP=NO
-    public static Integer ENDSIG = new Integer(0);
+    public static Integer ENDSIG = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDSIG
 
 // ***** VDMTOOLS START Name=LOCHDR KEEP=NO
-    public static Integer LOCHDR = new Integer(0);
+    public static Integer LOCHDR = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCHDR
 
 // ***** VDMTOOLS START Name=EXTHDR KEEP=NO
-    public static Integer EXTHDR = new Integer(0);
+    public static Integer EXTHDR = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=EXTHDR
 
 // ***** VDMTOOLS START Name=CENHDR KEEP=NO
-    public static Integer CENHDR = new Integer(0);
+    public static Integer CENHDR = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENHDR
 
 // ***** VDMTOOLS START Name=ENDHDR KEEP=NO
-    public static Integer ENDHDR = new Integer(0);
+    public static Integer ENDHDR = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDHDR
 
 // ***** VDMTOOLS START Name=LOCVER KEEP=NO
-    public static Integer LOCVER = new Integer(0);
+    public static Integer LOCVER = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCVER
 
 // ***** VDMTOOLS START Name=LOCFLG KEEP=NO
-    public static Integer LOCFLG = new Integer(0);
+    public static Integer LOCFLG = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCFLG
 
 // ***** VDMTOOLS START Name=LOCHOW KEEP=NO
-    public static Integer LOCHOW = new Integer(0);
+    public static Integer LOCHOW = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCHOW
 
 // ***** VDMTOOLS START Name=LOCTIM KEEP=NO
-    public static Integer LOCTIM = new Integer(0);
+    public static Integer LOCTIM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCTIM
 
 // ***** VDMTOOLS START Name=LOCCRC KEEP=NO
-    public static Integer LOCCRC = new Integer(0);
+    public static Integer LOCCRC = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCCRC
 
 // ***** VDMTOOLS START Name=LOCSIZ KEEP=NO
-    public static Integer LOCSIZ = new Integer(0);
+    public static Integer LOCSIZ = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCSIZ
 
 // ***** VDMTOOLS START Name=LOCLEN KEEP=NO
-    public static Integer LOCLEN = new Integer(0);
+    public static Integer LOCLEN = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCLEN
 
 // ***** VDMTOOLS START Name=LOCNAM KEEP=NO
-    public static Integer LOCNAM = new Integer(0);
+    public static Integer LOCNAM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCNAM
 
 // ***** VDMTOOLS START Name=LOCEXT KEEP=NO
-    public static Integer LOCEXT = new Integer(0);
+    public static Integer LOCEXT = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=LOCEXT
 
 // ***** VDMTOOLS START Name=EXTCRC KEEP=NO
-    public static Integer EXTCRC = new Integer(0);
+    public static Integer EXTCRC = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=EXTCRC
 
 // ***** VDMTOOLS START Name=EXTSIZ KEEP=NO
-    public static Integer EXTSIZ = new Integer(0);
+    public static Integer EXTSIZ = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=EXTSIZ
 
 // ***** VDMTOOLS START Name=EXTLEN KEEP=NO
-    public static Integer EXTLEN = new Integer(0);
+    public static Integer EXTLEN = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=EXTLEN
 
 // ***** VDMTOOLS START Name=CENVEM KEEP=NO
-    public static Integer CENVEM = new Integer(0);
+    public static Integer CENVEM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENVEM
 
 // ***** VDMTOOLS START Name=CENVER KEEP=NO
-    public static Integer CENVER = new Integer(0);
+    public static Integer CENVER = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENVER
 
 // ***** VDMTOOLS START Name=CENFLG KEEP=NO
-    public static Integer CENFLG = new Integer(0);
+    public static Integer CENFLG = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENFLG
 
 // ***** VDMTOOLS START Name=CENHOW KEEP=NO
-    public static Integer CENHOW = new Integer(0);
+    public static Integer CENHOW = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENHOW
 
 // ***** VDMTOOLS START Name=CENTIM KEEP=NO
-    public static Integer CENTIM = new Integer(0);
+    public static Integer CENTIM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENTIM
 
 // ***** VDMTOOLS START Name=CENCRC KEEP=NO
-    public static Integer CENCRC = new Integer(0);
+    public static Integer CENCRC = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENCRC
 
 // ***** VDMTOOLS START Name=CENSIZ KEEP=NO
-    public static Integer CENSIZ = new Integer(0);
+    public static Integer CENSIZ = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENSIZ
 
 // ***** VDMTOOLS START Name=CENLEN KEEP=NO
-    public static Integer CENLEN = new Integer(0);
+    public static Integer CENLEN = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENLEN
 
 // ***** VDMTOOLS START Name=CENNAM KEEP=NO
-    public static Integer CENNAM = new Integer(0);
+    public static Integer CENNAM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENNAM
 
 // ***** VDMTOOLS START Name=CENEXT KEEP=NO
-    public static Integer CENEXT = new Integer(0);
+    public static Integer CENEXT = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENEXT
 
 // ***** VDMTOOLS START Name=CENCOM KEEP=NO
-    public static Integer CENCOM = new Integer(0);
+    public static Integer CENCOM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENCOM
 
 // ***** VDMTOOLS START Name=CENDSK KEEP=NO
-    public static Integer CENDSK = new Integer(0);
+    public static Integer CENDSK = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENDSK
 
 // ***** VDMTOOLS START Name=CENATT KEEP=NO
-    public static Integer CENATT = new Integer(0);
+    public static Integer CENATT = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENATT
 
 // ***** VDMTOOLS START Name=CENATX KEEP=NO
-    public static Integer CENATX = new Integer(0);
+    public static Integer CENATX = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENATX
 
 // ***** VDMTOOLS START Name=CENOFF KEEP=NO
-    public static Integer CENOFF = new Integer(0);
+    public static Integer CENOFF = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=CENOFF
 
 // ***** VDMTOOLS START Name=ENDSUB KEEP=NO
-    public static Integer ENDSUB = new Integer(0);
+    public static Integer ENDSUB = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDSUB
 
 // ***** VDMTOOLS START Name=ENDTOT KEEP=NO
-    public static Integer ENDTOT = new Integer(0);
+    public static Integer ENDTOT = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDTOT
 
 // ***** VDMTOOLS START Name=ENDSIZ KEEP=NO
-    public static Integer ENDSIZ = new Integer(0);
+    public static Integer ENDSIZ = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDSIZ
 
 // ***** VDMTOOLS START Name=ENDOFF KEEP=NO
-    public static Integer ENDOFF = new Integer(0);
+    public static Integer ENDOFF = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDOFF
 
 // ***** VDMTOOLS START Name=ENDCOM KEEP=NO
-    public static Integer ENDCOM = new Integer(0);
+    public static Integer ENDCOM = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=ENDCOM
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilZipZipConstants"), new quotes.INTERFACE(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilZipZipConstants"), new quotes.INTERFACE(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
 // ***** VDMTOOLS START Name=JavaUtilZipZipConstants KEEP=NO
     public JavaUtilZipZipConstants() throws CGException {
-            LOCSIG = new Integer(0);
-            EXTSIG = new Integer(0);
-            CENSIG = new Integer(0);
-            ENDSIG = new Integer(0);
-            LOCHDR = new Integer(0);
-            EXTHDR = new Integer(0);
-            CENHDR = new Integer(0);
-            ENDHDR = new Integer(0);
-            LOCVER = new Integer(0);
-            LOCFLG = new Integer(0);
-            LOCHOW = new Integer(0);
-            LOCTIM = new Integer(0);
-            LOCCRC = new Integer(0);
-            LOCSIZ = new Integer(0);
-            LOCLEN = new Integer(0);
-            LOCNAM = new Integer(0);
-            LOCEXT = new Integer(0);
-            EXTCRC = new Integer(0);
-            EXTSIZ = new Integer(0);
-            EXTLEN = new Integer(0);
-            CENVEM = new Integer(0);
-            CENVER = new Integer(0);
-            CENFLG = new Integer(0);
-            CENHOW = new Integer(0);
-            CENTIM = new Integer(0);
-            CENCRC = new Integer(0);
-            CENSIZ = new Integer(0);
-            CENLEN = new Integer(0);
-            CENNAM = new Integer(0);
-            CENEXT = new Integer(0);
-            CENCOM = new Integer(0);
-            CENDSK = new Integer(0);
-            CENATT = new Integer(0);
-            CENATX = new Integer(0);
-            CENOFF = new Integer(0);
-            ENDSUB = new Integer(0);
-            ENDTOT = new Integer(0);
-            ENDSIZ = new Integer(0);
-            ENDOFF = new Integer(0);
-            ENDCOM = new Integer(0);
+            LOCSIG = Integer.valueOf(0);
+            EXTSIG = Integer.valueOf(0);
+            CENSIG = Integer.valueOf(0);
+            ENDSIG = Integer.valueOf(0);
+            LOCHDR = Integer.valueOf(0);
+            EXTHDR = Integer.valueOf(0);
+            CENHDR = Integer.valueOf(0);
+            ENDHDR = Integer.valueOf(0);
+            LOCVER = Integer.valueOf(0);
+            LOCFLG = Integer.valueOf(0);
+            LOCHOW = Integer.valueOf(0);
+            LOCTIM = Integer.valueOf(0);
+            LOCCRC = Integer.valueOf(0);
+            LOCSIZ = Integer.valueOf(0);
+            LOCLEN = Integer.valueOf(0);
+            LOCNAM = Integer.valueOf(0);
+            LOCEXT = Integer.valueOf(0);
+            EXTCRC = Integer.valueOf(0);
+            EXTSIZ = Integer.valueOf(0);
+            EXTLEN = Integer.valueOf(0);
+            CENVEM = Integer.valueOf(0);
+            CENVER = Integer.valueOf(0);
+            CENFLG = Integer.valueOf(0);
+            CENHOW = Integer.valueOf(0);
+            CENTIM = Integer.valueOf(0);
+            CENCRC = Integer.valueOf(0);
+            CENSIZ = Integer.valueOf(0);
+            CENLEN = Integer.valueOf(0);
+            CENNAM = Integer.valueOf(0);
+            CENEXT = Integer.valueOf(0);
+            CENCOM = Integer.valueOf(0);
+            CENDSK = Integer.valueOf(0);
+            CENATT = Integer.valueOf(0);
+            CENATX = Integer.valueOf(0);
+            CENOFF = Integer.valueOf(0);
+            ENDSUB = Integer.valueOf(0);
+            ENDTOT = Integer.valueOf(0);
+            ENDSIZ = Integer.valueOf(0);
+            ENDOFF = Integer.valueOf(0);
+            ENDCOM = Integer.valueOf(0);
 
     }
 // ***** VDMTOOLS END Name=JavaUtilZipZipConstants

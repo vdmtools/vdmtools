@@ -17,13 +17,13 @@ public class JavaSqlDriverManager extends JavaLangObject {
     static {
         CLASS = new JavaLangClass(new String("JavaSqlDriverManager"),
                 new quotes.CLASS(),
-                new Boolean(false));
+                Boolean.FALSE);
     }
 
 
     private JavaSqlDriverManager(final quotes.NIL v) {
         wrappedObject = null;
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 

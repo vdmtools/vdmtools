@@ -45,7 +45,7 @@ public class JavaLangClassNotFoundException extends JavaLangException {
 
     public JavaLangClassNotFoundException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
     public void printStackTrace(final JavaIoPrintStream ps) throws CGException {

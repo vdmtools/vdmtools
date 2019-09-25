@@ -47,7 +47,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 // ***** VDMTOOLS END Name=pattern
 
 // ***** VDMTOOLS START Name=MAX_uARGUMENTS KEEP=NO
-    private static Integer MAX_uARGUMENTS = new Integer(10);
+    private static Integer MAX_uARGUMENTS = Integer.valueOf(10);
 // ***** VDMTOOLS END Name=MAX_uARGUMENTS
 
 // ***** VDMTOOLS START Name=formats KEEP=NO
@@ -79,7 +79,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 // ***** VDMTOOLS END Name=dateModifierList
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextMessageFormat"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextMessageFormat"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
@@ -88,15 +88,15 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
         try {
             locale = (JavaUtilLocale) new JavaUtilLocale(new quotes.NIL());
             pattern = (JavaLangString) new JavaLangString("");
-            MAX_uARGUMENTS = new Integer(10);
+            MAX_uARGUMENTS = Integer.valueOf(10);
             HashMap res_m_7 = new HashMap();
             {
                 boolean succ_10 = true;
                 HashSet e_set_11 = new HashSet();
                 e_set_11 = new HashSet();
-                int ubi_16 = new Integer(MAX_uARGUMENTS.intValue() - new Integer(1).intValue()).intValue();
-                for (int count_17 = new Integer(0).intValue(); count_17 <= ubi_16; count_17++)
-                    e_set_11.add(new Integer(count_17));
+                int ubi_16 = Integer.valueOf(MAX_uARGUMENTS.intValue() - Integer.valueOf(1).intValue()).intValue();
+                for (int count_17 = Integer.valueOf(0).intValue(); count_17 <= ubi_16; count_17++)
+                    e_set_11.add(Integer.valueOf(count_17));
                 Integer l_u3 = null;
                 {
                     for (Iterator enum_19 = e_set_11.iterator(); enum_19.hasNext();) {
@@ -114,9 +114,9 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                 boolean succ_23 = true;
                 HashSet e_set_24 = new HashSet();
                 e_set_24 = new HashSet();
-                int ubi_29 = new Integer(MAX_uARGUMENTS.intValue() - new Integer(1).intValue()).intValue();
-                for (int count_30 = new Integer(0).intValue(); count_30 <= ubi_29; count_30++)
-                    e_set_24.add(new Integer(count_30));
+                int ubi_29 = Integer.valueOf(MAX_uARGUMENTS.intValue() - Integer.valueOf(1).intValue()).intValue();
+                for (int count_30 = Integer.valueOf(0).intValue(); count_30 <= ubi_29; count_30++)
+                    e_set_24.add(Integer.valueOf(count_30));
                 Integer l_u3 = null;
                 {
                     for (Iterator enum_32 = e_set_24.iterator(); enum_32.hasNext();) {
@@ -124,7 +124,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                         succ_23 = true;
                         l_u3 = elem_31;
                         if (succ_23)
-                            res_m_20.put(l_u3, new Integer(0));
+                            res_m_20.put(l_u3, Integer.valueOf(0));
                     }
                 }
             }
@@ -134,9 +134,9 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                 boolean succ_36 = true;
                 HashSet e_set_37 = new HashSet();
                 e_set_37 = new HashSet();
-                int ubi_42 = new Integer(MAX_uARGUMENTS.intValue() - new Integer(1).intValue()).intValue();
-                for (int count_43 = new Integer(0).intValue(); count_43 <= ubi_42; count_43++)
-                    e_set_37.add(new Integer(count_43));
+                int ubi_42 = Integer.valueOf(MAX_uARGUMENTS.intValue() - Integer.valueOf(1).intValue()).intValue();
+                for (int count_43 = Integer.valueOf(0).intValue(); count_43 <= ubi_42; count_43++)
+                    e_set_37.add(Integer.valueOf(count_43));
                 Integer l_u3 = null;
                 {
                     for (Iterator enum_45 = e_set_37.iterator(); enum_45.hasNext();) {
@@ -144,40 +144,40 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                         succ_36 = true;
                         l_u3 = elem_44;
                         if (succ_36)
-                            res_m_33.put(l_u3, new Integer(0));
+                            res_m_33.put(l_u3, Integer.valueOf(0));
                     }
                 }
             }
             argumentNumbers = res_m_33;
-            maxOffset = new Integer(-new Integer(1).intValue());
+            maxOffset = Integer.valueOf(-Integer.valueOf(1).intValue());
             typeList = new HashMap();
-            typeList.put(new Integer(8), new JavaLangString(new String("choice")));
-            typeList.put(new Integer(7), new JavaLangString(""));
-            typeList.put(new Integer(6), new JavaLangString(new String("time")));
-            typeList.put(new Integer(5), new JavaLangString(""));
-            typeList.put(new Integer(4), new JavaLangString(new String("date")));
-            typeList.put(new Integer(3), new JavaLangString(""));
-            typeList.put(new Integer(2), new JavaLangString(new String("number")));
-            typeList.put(new Integer(1), new JavaLangString(""));
-            typeList.put(new Integer(0), new JavaLangString(""));
+            typeList.put(Integer.valueOf(8), new JavaLangString(new String("choice")));
+            typeList.put(Integer.valueOf(7), new JavaLangString(""));
+            typeList.put(Integer.valueOf(6), new JavaLangString(new String("time")));
+            typeList.put(Integer.valueOf(5), new JavaLangString(""));
+            typeList.put(Integer.valueOf(4), new JavaLangString(new String("date")));
+            typeList.put(Integer.valueOf(3), new JavaLangString(""));
+            typeList.put(Integer.valueOf(2), new JavaLangString(new String("number")));
+            typeList.put(Integer.valueOf(1), new JavaLangString(""));
+            typeList.put(Integer.valueOf(0), new JavaLangString(""));
             modifierList = new HashMap();
-            modifierList.put(new Integer(6), new JavaLangString(new String("integer")));
-            modifierList.put(new Integer(5), new JavaLangString(""));
-            modifierList.put(new Integer(4), new JavaLangString(new String("percent")));
-            modifierList.put(new Integer(3), new JavaLangString(""));
-            modifierList.put(new Integer(2), new JavaLangString(new String("currency")));
-            modifierList.put(new Integer(1), new JavaLangString(""));
-            modifierList.put(new Integer(0), new JavaLangString(""));
+            modifierList.put(Integer.valueOf(6), new JavaLangString(new String("integer")));
+            modifierList.put(Integer.valueOf(5), new JavaLangString(""));
+            modifierList.put(Integer.valueOf(4), new JavaLangString(new String("percent")));
+            modifierList.put(Integer.valueOf(3), new JavaLangString(""));
+            modifierList.put(Integer.valueOf(2), new JavaLangString(new String("currency")));
+            modifierList.put(Integer.valueOf(1), new JavaLangString(""));
+            modifierList.put(Integer.valueOf(0), new JavaLangString(""));
             dateModifierList = new HashMap();
-            dateModifierList.put(new Integer(8), new JavaLangString(new String("full")));
-            dateModifierList.put(new Integer(7), new JavaLangString(""));
-            dateModifierList.put(new Integer(6), new JavaLangString(new String("long")));
-            dateModifierList.put(new Integer(5), new JavaLangString(""));
-            dateModifierList.put(new Integer(4), new JavaLangString(new String("medium")));
-            dateModifierList.put(new Integer(3), new JavaLangString(""));
-            dateModifierList.put(new Integer(2), new JavaLangString(new String("short")));
-            dateModifierList.put(new Integer(1), new JavaLangString(""));
-            dateModifierList.put(new Integer(0), new JavaLangString(""));
+            dateModifierList.put(Integer.valueOf(8), new JavaLangString(new String("full")));
+            dateModifierList.put(Integer.valueOf(7), new JavaLangString(""));
+            dateModifierList.put(Integer.valueOf(6), new JavaLangString(new String("long")));
+            dateModifierList.put(Integer.valueOf(5), new JavaLangString(""));
+            dateModifierList.put(Integer.valueOf(4), new JavaLangString(new String("medium")));
+            dateModifierList.put(Integer.valueOf(3), new JavaLangString(""));
+            dateModifierList.put(Integer.valueOf(2), new JavaLangString(new String("short")));
+            dateModifierList.put(Integer.valueOf(1), new JavaLangString(""));
+            dateModifierList.put(Integer.valueOf(0), new JavaLangString(""));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -197,7 +197,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 // ***** VDMTOOLS START Name=hashCode KEEP=NO
     public Integer jHashCode() throws CGException {
         Integer rexpr_1 = null;
-        rexpr_1 = new Integer(pattern.hashCode());
+        rexpr_1 = Integer.valueOf(pattern.hashCode());
         return rexpr_1;
     }
 // ***** VDMTOOLS END Name=hashCode
@@ -222,7 +222,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 // ***** VDMTOOLS START Name=JavaTextMessageFormat KEEP=NO
     public JavaTextMessageFormat(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaTextMessageFormat
 
@@ -242,9 +242,9 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
             boolean succ_6 = true;
             HashSet e_set_7 = new HashSet();
             e_set_7 = new HashSet();
-            int ubi_12 = new Integer(new Integer(4).intValue() - new Integer(1).intValue()).intValue();
-            for (int count_13 = new Integer(0).intValue(); count_13 <= ubi_12; count_13++)
-                e_set_7.add(new Integer(count_13));
+            int ubi_12 = Integer.valueOf(Integer.valueOf(4).intValue() - Integer.valueOf(1).intValue()).intValue();
+            for (int count_13 = Integer.valueOf(0).intValue(); count_13 <= ubi_12; count_13++)
+                e_set_7.add(Integer.valueOf(count_13));
             Integer l_u3 = null;
             {
                 for (Iterator enum_15 = e_set_7.iterator(); enum_15.hasNext();) {
@@ -258,54 +258,54 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
         }
         segments = res_m_2;
         {
-            Integer i = new Integer(0);
+            Integer i = Integer.valueOf(0);
             while (true) {
                 Boolean whCrtl_16 = null;
                 Integer var2_18 = null;
                 HashSet unArg_19 = new HashSet();
                 unArg_19.clear();
                 unArg_19.addAll(segments.keySet());
-                var2_18 = new Integer(unArg_19.size());
-                whCrtl_16 = new Boolean((i.intValue()) < (var2_18.intValue()));
+                var2_18 = Integer.valueOf(unArg_19.size());
+                whCrtl_16 = Boolean.valueOf((i.intValue()) < (var2_18.intValue()));
                 if (whCrtl_16.booleanValue()) {
                     segments.put(i, new JavaLangStringBuffer());
                     {
                         Integer l_u1 = i;
-                        i = UTIL.NumberToInt(UTIL.clone(new Integer(l_u1.intValue() + new Integer(1).intValue())));
+                        i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u1.intValue() + Integer.valueOf(1).intValue())));
                     }
                 } else
                     break;
             }
         }
         {
-            Integer part = new Integer(0);
-            Integer formatNumber = new Integer(0);
-            Boolean inQuote = new Boolean(false);
-            Integer braceStack = new Integer(0);
-            maxOffset = UTIL.NumberToInt(UTIL.clone(new Integer(-new Integer(1).intValue())));
+            Integer part = Integer.valueOf(0);
+            Integer formatNumber = Integer.valueOf(0);
+            Boolean inQuote = Boolean.FALSE;
+            Integer braceStack = Integer.valueOf(0);
+            maxOffset = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(-Integer.valueOf(1).intValue())));
             {
-                Integer i = new Integer(0);
+                Integer i = Integer.valueOf(0);
                 while (true) {
                     Boolean whCrtl_31 = null;
                     Integer var2_33 = null;
                     var2_33 = newPattern.length();
-                    whCrtl_31 = new Boolean((i.intValue()) < (var2_33.intValue()));
+                    whCrtl_31 = Boolean.valueOf((i.intValue()) < (var2_33.intValue()));
                     if (whCrtl_31.booleanValue()) {
                         Character ch = null;
                         ch = newPattern.charAt(i);
-                        if (new Boolean(part.intValue() == new Integer(0).intValue()).booleanValue()) {
-                            if (new Boolean(UTIL.equals(ch, new Character('\''))).booleanValue()) {
+                        if (Boolean.valueOf(part.intValue() == Integer.valueOf(0).intValue()).booleanValue()) {
+                            if (Boolean.valueOf(UTIL.equals(ch, new Character('\''))).booleanValue()) {
                                 Boolean cond_65 = null;
                                 Boolean var1_66 = null;
                                 Integer var2_70 = null;
                                 var2_70 = newPattern.length();
-                                var1_66 = new Boolean((new Integer(i.intValue() + new Integer(1).intValue()).intValue()) < (var2_70.intValue()));
+                                var1_66 = Boolean.valueOf((Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue()).intValue()) < (var2_70.intValue()));
                                 {
                                     if ((cond_65 = var1_66).booleanValue()) {
                                         Boolean var2_71 = null;
                                         Character var1_72 = null;
-                                        var1_72 = newPattern.charAt(new Integer(i.intValue() + new Integer(1).intValue()));
-                                        var2_71 = new Boolean(UTIL.equals(var1_72, new Character('\'')));
+                                        var1_72 = newPattern.charAt(Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue()));
+                                        var2_71 = Boolean.valueOf(UTIL.equals(var1_72, new Character('\'')));
                                         cond_65 = var2_71;
                                     }
                                 }
@@ -319,18 +319,18 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                                     }
                                     {
                                         Integer l_u1 = i;
-                                        i = UTIL.NumberToInt(UTIL.clone(new Integer(l_u1.intValue() + new Integer(1).intValue())));
+                                        i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u1.intValue() + Integer.valueOf(1).intValue())));
                                     }
                                 } else
-                                    inQuote = (Boolean) UTIL.clone(new Boolean(!inQuote.booleanValue()));
+                                    inQuote = Boolean.valueOf(!inQuote.booleanValue());
                             } else {
                                 Boolean cond_52 = null;
                                 {
-                                    if ((cond_52 = new Boolean(UTIL.equals(ch, new Character('{')))).booleanValue())
-                                        cond_52 = new Boolean(!inQuote.booleanValue());
+                                    if ((cond_52 = Boolean.valueOf(UTIL.equals(ch, new Character('{')))).booleanValue())
+                                        cond_52 = Boolean.valueOf(!inQuote.booleanValue());
                                 }
                                 if (cond_52.booleanValue())
-                                    part = UTIL.NumberToInt(UTIL.clone(new Integer(1)));
+                                    part = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(1)));
                                 else {
                                     JavaLangStringBuffer tmpVal_59 = null;
                                     JavaLangStringBuffer obj_60 = null;
@@ -347,15 +347,15 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                                 tmpVal_40 = (JavaLangStringBuffer) obj_41.append(ch);
                                 ;
                             }
-                            if (new Boolean(UTIL.equals(ch, new Character('\''))).booleanValue())
-                                inQuote = (Boolean) UTIL.clone(new Boolean(false));
+                            if (Boolean.valueOf(UTIL.equals(ch, new Character('\''))).booleanValue())
+                                inQuote = Boolean.FALSE;
                         } else {
                             UTIL.NotSupported("The construct is not supported: Non-type binds in trap statement");
                             return;
                         }
                         {
                             Integer l_u1 = i;
-                            i = UTIL.NumberToInt(UTIL.clone(new Integer(l_u1.intValue() + new Integer(1).intValue())));
+                            i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u1.intValue() + Integer.valueOf(1).intValue())));
                         }
                     } else
                         break;
@@ -363,16 +363,16 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
             }
             Boolean cond_95 = null;
             {
-                if ((cond_95 = new Boolean(braceStack.intValue() == new Integer(0).intValue())).booleanValue())
-                    cond_95 = new Boolean(!(part.intValue() == new Integer(0).intValue()));
+                if ((cond_95 = Boolean.valueOf(braceStack.intValue() == Integer.valueOf(0).intValue())).booleanValue())
+                    cond_95 = Boolean.valueOf(!(part.intValue() == Integer.valueOf(0).intValue()));
             }
             if (cond_95.booleanValue()) {
-                maxOffset = UTIL.NumberToInt(UTIL.clone(new Integer(-new Integer(1).intValue())));
+                maxOffset = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(-Integer.valueOf(1).intValue())));
                 throw new VDMSpecException(new JavaLangIllegalArgumentException(new JavaLangString(new String("Unmatched braces in the pattern."))));
             }
             JavaLangString rhs_107 = null;
             JavaLangStringBuffer obj_108 = null;
-            obj_108 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(new Integer(0));
+            obj_108 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(Integer.valueOf(0));
             rhs_107 = new JavaLangString(obj_108.toString());
             pattern = (JavaLangString) UTIL.clone(rhs_107);
         }
@@ -394,7 +394,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //    static public JavaLangString format(final JavaLangString pattern_1, final HashMap arguments) throws CGException {
 //        JavaTextMessageFormat temp = null;
 //        JavaLangStringBuffer sb = null;
-//        sb = (JavaLangStringBuffer) temp.formatObjects(arguments, (JavaLangStringBuffer) new JavaLangStringBuffer(), (JavaTextFieldPosition) new JavaTextFieldPosition(new Integer(0)));
+//        sb = (JavaLangStringBuffer) temp.formatObjects(arguments, (JavaLangStringBuffer) new JavaLangStringBuffer(), (JavaTextFieldPosition) new JavaTextFieldPosition(Integer.valueOf(0)));
 //        JavaLangString s = null;
 //        s = new JavaLangString(sb.toString());
 //        return (JavaLangString) s;
@@ -421,15 +421,15 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
         rhs_3 = (JavaLangString) obj_4.toLowerCase();
         s = (JavaLangString) UTIL.clone(rhs_3);
         {
-            Integer i = new Integer(0);
+            Integer i = Integer.valueOf(0);
             while (true) {
                 Boolean whCrtl_5 = null;
                 Integer var2_7 = null;
                 HashSet unArg_8 = new HashSet();
                 unArg_8.clear();
                 unArg_8.addAll(list.keySet());
-                var2_7 = new Integer(unArg_8.size());
-                whCrtl_5 = new Boolean((i.intValue()) < (var2_7.intValue()));
+                var2_7 = Integer.valueOf(unArg_8.size());
+                whCrtl_5 = Boolean.valueOf((i.intValue()) < (var2_7.intValue()));
                 if (whCrtl_5.booleanValue()) {
                     Boolean cond_10 = null;
                     cond_10 = s.equals((JavaLangObject) (JavaLangString) list.get(i));
@@ -437,13 +437,13 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                         return i;
                     {
                         Integer l_u1 = i;
-                        i = UTIL.NumberToInt(UTIL.clone(new Integer(l_u1.intValue() + new Integer(1).intValue())));
+                        i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u1.intValue() + Integer.valueOf(1).intValue())));
                     }
                 } else
                     break;
             }
         }
-        return new Integer(-new Integer(1).intValue());
+        return Integer.valueOf(-Integer.valueOf(1).intValue());
     }
 // ***** VDMTOOLS END Name=findKeyword
 
@@ -457,21 +457,21 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
             Integer rhs_16 = null;
             JavaLangString par_17 = null;
             JavaLangStringBuffer obj_18 = null;
-            obj_18 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(new Integer(1));
+            obj_18 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(Integer.valueOf(1));
             par_17 = new JavaLangString(obj_18.toString());
             rhs_16 = JavaLangInteger.parseInt((JavaLangString) par_17);
             argumentNumber = UTIL.NumberToInt(UTIL.clone(rhs_16));
             Boolean cond_21 = null;
             {
-                if (!(cond_21 = new Boolean((argumentNumber.intValue()) < (new Integer(0).intValue()))).booleanValue())
-                    cond_21 = new Boolean((argumentNumber.intValue()) > (new Integer(9).intValue()));
+                if (!(cond_21 = Boolean.valueOf((argumentNumber.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue())
+                    cond_21 = Boolean.valueOf((argumentNumber.intValue()) > (Integer.valueOf(9).intValue()));
             }
             if (cond_21.booleanValue())
                 throw new VDMSpecException(new JavaLangNumberFormatException());
             maxOffset = UTIL.NumberToInt(UTIL.clone(offsetNumber));
             Integer mr_32 = null;
             JavaLangStringBuffer obj_33 = null;
-            obj_33 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(new Integer(0));
+            obj_33 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(Integer.valueOf(0));
             mr_32 = obj_33.length();
             offsets.put(offsetNumber, mr_32);
             argumentNumbers.put(offsetNumber, argumentNumber);
@@ -483,13 +483,13 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                     succ_5 = true;
                     Boolean tmpVal_v_9 = null;
                     {
-                        if (!(tmpVal_v_9 = new Boolean(j2v_uexception instanceof JavaLangException)).booleanValue()) {
+                        if (!(tmpVal_v_9 = Boolean.valueOf(j2v_uexception instanceof JavaLangException)).booleanValue()) {
                             Boolean var2_12 = null;
                             var2_12 = j2v_uexception.IsNil();
                             tmpVal_v_9 = var2_12;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_9))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_9))
                         succ_5 = false;
                     if (succ_5) {
                         JavaLangException e = j2v_uexception;
@@ -507,36 +507,36 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
             Integer selRes_40 = null;
             JavaLangString par_41 = null;
             JavaLangStringBuffer obj_42 = null;
-            obj_42 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(new Integer(2));
+            obj_42 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(Integer.valueOf(2));
             par_41 = new JavaLangString(obj_42.toString());
             selRes_40 = findKeyword((JavaLangString) par_41, typeList);
             boolean succ_39 = true;
             {
                 succ_39 = true;
-                if (!UTIL.equals(selRes_40, new Integer(0)))
+                if (!UTIL.equals(selRes_40, Integer.valueOf(0)))
                     succ_39 = false;
                 if (succ_39)
                     ;
                 else {
                     succ_39 = true;
-                    if (!UTIL.equals(selRes_40, new Integer(2)))
+                    if (!UTIL.equals(selRes_40, Integer.valueOf(2)))
                         succ_39 = false;
                     if (!succ_39) {
                         succ_39 = true;
-                        if (!UTIL.equals(selRes_40, new Integer(1)))
+                        if (!UTIL.equals(selRes_40, Integer.valueOf(1)))
                             succ_39 = false;
                     }
                     if (succ_39) {
                         Integer selRes_54 = null;
                         JavaLangString par_55 = null;
                         JavaLangStringBuffer obj_56 = null;
-                        obj_56 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(new Integer(3));
+                        obj_56 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(Integer.valueOf(3));
                         par_55 = new JavaLangString(obj_56.toString());
                         selRes_54 = findKeyword((JavaLangString) par_55, modifierList);
                         boolean succ_53 = true;
                         {
                             succ_53 = true;
-                            if (!UTIL.equals(selRes_54, new Integer(0)))
+                            if (!UTIL.equals(selRes_54, Integer.valueOf(0)))
                                 succ_53 = false;
                             if (succ_53) {
                                 JavaTextNumberFormat rhs_84 = null;
@@ -550,7 +550,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                                     JavaTextDecimalFormat df = (JavaTextDecimalFormat) newFormat;
                                     JavaLangString par_79 = null;
                                     JavaLangStringBuffer obj_80 = null;
-                                    obj_80 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(new Integer(3));
+                                    obj_80 = (JavaLangStringBuffer) (JavaLangStringBuffer) segments.get(Integer.valueOf(3));
                                     par_79 = new JavaLangString(obj_80.toString());
                                     df.applyPattern((JavaLangString) par_79);
                                 } catch (VDMSpecException exc_63) {
@@ -561,13 +561,13 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                                             succ_64 = true;
                                             Boolean tmpVal_v_68 = null;
                                             {
-                                                if (!(tmpVal_v_68 = new Boolean(j2v_uexception instanceof JavaLangException)).booleanValue()) {
+                                                if (!(tmpVal_v_68 = Boolean.valueOf(j2v_uexception instanceof JavaLangException)).booleanValue()) {
                                                     Boolean var2_71 = null;
                                                     var2_71 = j2v_uexception.IsNil();
                                                     tmpVal_v_68 = var2_71;
                                                 }
                                             }
-                                            if (!UTIL.equals(new Boolean(true), tmpVal_v_68))
+                                            if (!UTIL.equals(Boolean.TRUE, tmpVal_v_68))
                                                 succ_64 = false;
                                             if (succ_64) {
                                                 JavaLangException e = j2v_uexception;
@@ -590,9 +590,9 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
                 }
             }
             formats.put(offsetNumber, newFormat);
-            segments.put(new Integer(1), new JavaLangStringBuffer());
-            segments.put(new Integer(2), new JavaLangStringBuffer());
-            segments.put(new Integer(3), new JavaLangStringBuffer());
+            segments.put(Integer.valueOf(1), new JavaLangStringBuffer());
+            segments.put(Integer.valueOf(2), new JavaLangStringBuffer());
+            segments.put(Integer.valueOf(3), new JavaLangStringBuffer());
             return segments;
         }
     }
@@ -601,7 +601,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 
 //// ***** VDMTOOLS START Name=formatObjects KEEP=NO
 //    public JavaLangStringBuffer formatObjects(final HashMap source, final JavaLangStringBuffer result, final JavaTextFieldPosition ignore) throws CGException {
-//        return (JavaLangStringBuffer) (JavaLangStringBuffer) formatObjects_q(source, (JavaLangStringBuffer) result, (JavaTextFieldPosition) ignore, new Integer(0));
+//        return (JavaLangStringBuffer) (JavaLangStringBuffer) formatObjects_q(source, (JavaLangStringBuffer) result, (JavaTextFieldPosition) ignore, Integer.valueOf(0));
 //    }
 //// ***** VDMTOOLS END Name=formatObjects
 //
@@ -609,10 +609,10 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //// ***** VDMTOOLS START Name=formatObjects_q KEEP=NO
 //    private JavaLangStringBuffer formatObjects_q(final HashMap arguments, final JavaLangStringBuffer result, final JavaTextFieldPosition status, final Integer recursionProtection) throws CGException {
 //        JavaLangString s = null;
-//        Integer lastOffset = new Integer(0);
+//        Integer lastOffset = Integer.valueOf(0);
 //        {
-//            Integer i = new Integer(0);
-//            while (new Boolean((i.intValue()) <= (maxOffset.intValue())).booleanValue()) {
+//            Integer i = Integer.valueOf(0);
+//            while (Boolean.valueOf((i.intValue()) <= (maxOffset.intValue())).booleanValue()) {
 //                JavaLangString rhs_8 = null;
 //                Object tmpGen_9 = null;
 //                UTIL.RunTime("Run-Time Error:The argument could not be applied");
@@ -627,14 +627,14 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                    Integer argumentNumber = UTIL.NumberToInt(argumentNumbers.get(i));
 //                    Boolean cond_20 = null;
 //                    {
-//                        if (!(cond_20 = new Boolean(UTIL.equals(arguments, new HashMap()))).booleanValue()) {
+//                        if (!(cond_20 = Boolean.valueOf(UTIL.equals(arguments, new HashMap()))).booleanValue()) {
 //                            Boolean var2_24 = null;
 //                            Integer var2_26 = null;
 //                            HashSet unArg_27 = new HashSet();
 //                            unArg_27.clear();
 //                            unArg_27.addAll(arguments.keySet());
-//                            var2_26 = new Integer(unArg_27.size());
-//                            var2_24 = new Boolean((argumentNumber.intValue()) >= (var2_26.intValue()));
+//                            var2_26 = Integer.valueOf(unArg_27.size());
+//                            var2_24 = Boolean.valueOf((argumentNumber.intValue()) >= (var2_26.intValue()));
 //                            cond_20 = var2_24;
 //                        }
 //                    }
@@ -654,14 +654,14 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                            ;
 //                        }
 //                    }
-//                    if (new Boolean(false).booleanValue()) {
+//                    if (Boolean.FALSE.booleanValue()) {
 //                        JavaLangStringBuffer tmpVal_88 = null;
 //                        tmpVal_88 = (JavaLangStringBuffer) result.append(new Character('D'));
 //                        ;
 //                    } else {
 //                        JavaLangObject obj = (JavaLangObject) arguments.get(argumentNumber);
 //                        JavaLangString arg = null;
-//                        Boolean tryRecursion = new Boolean(false);
+//                        Boolean tryRecursion = Boolean.FALSE;
 //                        Boolean cond_45 = null;
 //                        cond_45 = obj.IsNil();
 //                        if (cond_45.booleanValue())
@@ -672,18 +672,18 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                            JavaTextFormat obj_48 = null;
 //                            obj_48 = (JavaTextFormat) (JavaTextFormat) formats.get(i);
 //                            unArg_47 = obj_48.IsNil();
-//                            cond_46 = new Boolean(!unArg_47.booleanValue());
+//                            cond_46 = Boolean.valueOf(!unArg_47.booleanValue());
 //                            if (cond_46.booleanValue()) {
 //                                JavaLangString rhs_61 = null;
 //                                JavaTextFormat obj_62 = null;
 //                                obj_62 = (JavaTextFormat) (JavaTextFormat) formats.get(i);
 //                                rhs_61 = (JavaLangString) obj_62.formatObject((JavaLangObject) obj);
 //                                arg = (JavaLangString) UTIL.clone(rhs_61);
-//                            } else if (new Boolean(obj instanceof JavaLangNumber).booleanValue()) {
+//                            } else if (Boolean.valueOf(obj instanceof JavaLangNumber).booleanValue()) {
 //                                JavaLangString rhs_60 = null;
 //                                rhs_60 = (JavaLangString) obj.toString();
 //                                arg = (JavaLangString) UTIL.clone(rhs_60);
-//                            } else if (new Boolean(obj instanceof JavaLangString).booleanValue())
+//                            } else if (Boolean.valueOf(obj instanceof JavaLangString).booleanValue())
 //                                arg = (JavaLangString) UTIL.clone(obj);
 //                            else {
 //                                JavaLangString rhs_55 = null;
@@ -702,7 +702,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                                Integer var1_71 = null;
 //                                Object tmpGen_72 = null;
 //                                var1_71 = UTIL.NumberToInt(arg.indexOf(new Character('{')));
-//                                var2_70 = new Boolean((var1_71.intValue()) >= (new Integer(0).intValue()));
+//                                var2_70 = Boolean.valueOf((var1_71.intValue()) >= (Integer.valueOf(0).intValue()));
 //                                cond_68 = var2_70;
 //                            }
 //                        }
@@ -722,7 +722,7 @@ public abstract class JavaTextMessageFormat extends JavaTextFormat {
 //                }
 //                {
 //                    Integer l_u1 = i;
-//                    i = UTIL.NumberToInt(UTIL.clone(new Integer(l_u1.intValue() + new Integer(1).intValue())));
+//                    i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(l_u1.intValue() + Integer.valueOf(1).intValue())));
 //                }
 //            }
 //        }

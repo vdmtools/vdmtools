@@ -33,7 +33,7 @@ public class JavaUtilLocale extends JavaLangObject implements JavaLangCloneable,
     public static JavaUtilLocale US = null;
     public static JavaUtilLocale CANADA = null;
     public static JavaUtilLocale CANADA_uFRENCH = null;
-    private static Integer serialVersionUID = new Integer(0);
+    private static Integer serialVersionUID = Integer.valueOf(0);
 
     public JavaUtilLocale() throws CGException {
 
@@ -58,7 +58,7 @@ public class JavaUtilLocale extends JavaLangObject implements JavaLangCloneable,
             US = null;
             CANADA = null;
             CANADA_uFRENCH = null;
-            serialVersionUID = new Integer(0);
+            serialVersionUID = Integer.valueOf(0);
 
     }
 
@@ -69,7 +69,7 @@ public class JavaUtilLocale extends JavaLangObject implements JavaLangCloneable,
 
     public JavaUtilLocale(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 

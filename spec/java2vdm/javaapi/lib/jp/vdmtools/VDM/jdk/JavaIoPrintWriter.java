@@ -20,8 +20,8 @@ public class JavaIoPrintWriter extends JavaIoWriter {
 
 
     public JavaIoPrintWriter() throws CGException {
-        autoFlush = new Boolean(false);
-        trouble = new Boolean(false);
+        autoFlush = Boolean.FALSE;
+        trouble = Boolean.FALSE;
     }
 
 
@@ -41,18 +41,18 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     succ_3 = true;
                     Boolean tmpVal_v_7 = null;
                     {
-                        if ((tmpVal_v_7 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_7 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_10 = null;
                             Boolean unArg_11 = null;
                             unArg_11 = j2v_uexception.IsNil();
-                            var2_10 = new Boolean(!unArg_11.booleanValue());
+                            var2_10 = Boolean.valueOf(!unArg_11.booleanValue());
                             tmpVal_v_7 = var2_10;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_7))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_7))
                         succ_3 = false;
                     if (succ_3)
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -76,18 +76,18 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     succ_2 = true;
                     Boolean tmpVal_v_6 = null;
                     {
-                        if ((tmpVal_v_6 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_6 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_9 = null;
                             Boolean unArg_10 = null;
                             unArg_10 = j2v_uexception.IsNil();
-                            var2_9 = new Boolean(!unArg_10.booleanValue());
+                            var2_9 = Boolean.valueOf(!unArg_10.booleanValue());
                             tmpVal_v_6 = var2_9;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_6))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_6))
                         succ_2 = false;
                     if (succ_2)
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -111,18 +111,18 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     succ_3 = true;
                     Boolean tmpVal_v_7 = null;
                     {
-                        if ((tmpVal_v_7 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_7 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_10 = null;
                             Boolean unArg_11 = null;
                             unArg_11 = j2v_uexception.IsNil();
-                            var2_10 = new Boolean(!unArg_11.booleanValue());
+                            var2_10 = Boolean.valueOf(!unArg_11.booleanValue());
                             tmpVal_v_7 = var2_10;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_7))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_7))
                         succ_3 = false;
                     if (succ_3)
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -149,7 +149,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
         boolean succ_2 = true;
         {
             succ_2 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean((b instanceof Boolean))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((b instanceof Boolean))))
                 succ_2 = false;
             if (succ_2) {
                 JavaLangString tmpArg_v_51 = null;
@@ -162,7 +162,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                 write((JavaLangString) tmpArg_v_51);
             } else {
                 succ_2 = true;
-                if (!UTIL.equals(new Boolean(true), new Boolean((b instanceof Character))))
+                if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((b instanceof Character))))
                     succ_2 = false;
                 if (succ_2) {
                     Character c = (Character) b;
@@ -171,7 +171,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     write((JavaLangString) tmpArg_v_43);
                 } else {
                     succ_2 = true;
-                    if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(b))))
+                    if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(b))))
                         succ_2 = false;
                     if (succ_2) {
                         Integer i = UTIL.NumberToInt(b);
@@ -179,7 +179,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                         write((JavaLangString) tmpArg_v_35);
                     } else {
                         succ_2 = true;
-                        if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsReal(b))))
+                        if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsReal(b))))
                             succ_2 = false;
                         if (succ_2) {
                             Double r = UTIL.NumberToReal(b);
@@ -189,12 +189,12 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                         } else {
                             succ_2 = true;
                             Boolean tmpVal_v_7 = null;
-                            tmpVal_v_7 = new Boolean(b instanceof JavaLangObject);
-                            if (!UTIL.equals(new Boolean(true), tmpVal_v_7))
+                            tmpVal_v_7 = Boolean.valueOf(b instanceof JavaLangObject);
+                            if (!UTIL.equals(Boolean.TRUE, tmpVal_v_7))
                                 succ_2 = false;
                             if (succ_2) {
                                 Boolean cond_9 = null;
-                                cond_9 = new Boolean(b instanceof JavaLangString);
+                                cond_9 = Boolean.valueOf(b instanceof JavaLangString);
                                 if (cond_9.booleanValue()) {
                                     JavaLangString s = (JavaLangString) b;
                                     Boolean cond_19 = null;
@@ -224,7 +224,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
 
 
     protected void setError() throws CGException {
-        trouble = (Boolean) UTIL.clone(new Boolean(true));
+        trouble = Boolean.TRUE;
     }
 
 
@@ -232,7 +232,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
         Boolean cond_1 = null;
         Boolean unArg_2 = null;
         unArg_2 = out.IsNil();
-        cond_1 = new Boolean(!unArg_2.booleanValue());
+        cond_1 = Boolean.valueOf(!unArg_2.booleanValue());
         if (cond_1.booleanValue())
             flush();
         return trouble;
@@ -242,7 +242,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
     public void write(final JavaLangString s) throws CGException {
         Integer tmpArg_v_5 = null;
         tmpArg_v_5 = s.length();
-        write((JavaLangString) s, new Integer(0), tmpArg_v_5);
+        write((JavaLangString) s, Integer.valueOf(0), tmpArg_v_5);
     }
 
     public void writeICMIntInt(final HashMap buf, final Integer off, final Integer len_u_u) throws CGException {
@@ -261,18 +261,18 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     succ_5 = true;
                     Boolean tmpVal_v_9 = null;
                     {
-                        if ((tmpVal_v_9 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_9 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_12 = null;
                             Boolean unArg_13 = null;
                             unArg_13 = j2v_uexception.IsNil();
-                            var2_12 = new Boolean(!unArg_13.booleanValue());
+                            var2_12 = Boolean.valueOf(!unArg_13.booleanValue());
                             tmpVal_v_9 = var2_12;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_9))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_9))
                         succ_5 = false;
                     if (succ_5)
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -286,7 +286,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
 
     public JavaIoPrintWriter(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 
@@ -295,7 +295,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
             ensureOpen();
             Integer par_19 = null;
             par_19 = s.length();
-            out.writeStrIntInt((JavaLangString) s, new Integer(0), par_19);
+            out.writeStrIntInt((JavaLangString) s, Integer.valueOf(0), par_19);
         } catch (VDMSpecException exc_4) {
             if (exc_4.getValue() instanceof JavaLangException) {
                 JavaLangException j2v_uexception = (JavaLangException) exc_4.getValue();
@@ -304,18 +304,18 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     succ_5 = true;
                     Boolean tmpVal_v_9 = null;
                     {
-                        if ((tmpVal_v_9 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_9 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_12 = null;
                             Boolean unArg_13 = null;
                             unArg_13 = j2v_uexception.IsNil();
-                            var2_12 = new Boolean(!unArg_13.booleanValue());
+                            var2_12 = Boolean.valueOf(!unArg_13.booleanValue());
                             tmpVal_v_9 = var2_12;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_9))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_9))
                         succ_5 = false;
                     if (succ_5)
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -340,18 +340,18 @@ public class JavaIoPrintWriter extends JavaIoWriter {
                     succ_2 = true;
                     Boolean tmpVal_v_6 = null;
                     {
-                        if ((tmpVal_v_6 = new Boolean(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
+                        if ((tmpVal_v_6 = Boolean.valueOf(j2v_uexception instanceof JavaIoIOException)).booleanValue()) {
                             Boolean var2_9 = null;
                             Boolean unArg_10 = null;
                             unArg_10 = j2v_uexception.IsNil();
-                            var2_9 = new Boolean(!unArg_10.booleanValue());
+                            var2_9 = Boolean.valueOf(!unArg_10.booleanValue());
                             tmpVal_v_6 = var2_9;
                         }
                     }
-                    if (!UTIL.equals(new Boolean(true), tmpVal_v_6))
+                    if (!UTIL.equals(Boolean.TRUE, tmpVal_v_6))
                         succ_2 = false;
                     if (succ_2)
-                        trouble = (Boolean) UTIL.clone(new Boolean(true));
+                        trouble = Boolean.TRUE;
                     else
                         throw new VDMSpecException(j2v_uexception);
                 }
@@ -364,7 +364,7 @@ public class JavaIoPrintWriter extends JavaIoWriter {
 
 
     public JavaIoPrintWriter(final JavaIoStringWriter out_1) throws CGException {
-        this((JavaIoWriter) out_1, new Boolean(false));
+        this((JavaIoWriter) out_1, Boolean.FALSE);
     }
 
 
@@ -377,13 +377,13 @@ public class JavaIoPrintWriter extends JavaIoWriter {
 
 
     public JavaIoPrintWriter(final JavaIoOutputStream out_1) throws CGException {
-        this(out_1, new Boolean(false));
+        this(out_1, Boolean.FALSE);
     }
 
 
     public JavaIoPrintWriter(final JavaIoOutputStream out_1, final Boolean autoFlush_1) throws CGException {
         this(new JavaIoBufferedWriter(new JavaIoOutputStreamWriter(out_1)),
-	     new Boolean(false));
+	     Boolean.FALSE);
     }
 
 

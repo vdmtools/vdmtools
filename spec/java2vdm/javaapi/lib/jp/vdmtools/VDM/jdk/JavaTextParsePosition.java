@@ -9,12 +9,12 @@ public class JavaTextParsePosition extends JavaLangObject {
 
     public Integer index = null;
     public Integer errorIndex = null;
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextParsePosition"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextParsePosition"), new quotes.CLASS(), Boolean.FALSE);
 
     public JavaTextParsePosition() throws CGException {
         try {
-            index = new Integer(0);
-            errorIndex = new Integer(-new Integer(1).intValue());
+            index = Integer.valueOf(0);
+            errorIndex = Integer.valueOf(-Integer.valueOf(1).intValue());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -70,22 +70,22 @@ public class JavaTextParsePosition extends JavaLangObject {
         Boolean cond_2 = null;
         cond_2 = obj.IsNil();
         if (cond_2.booleanValue())
-            return new Boolean(false);
-        if (new Boolean(!new Boolean(obj instanceof JavaTextParsePosition).booleanValue()).booleanValue())
-            return new Boolean(false);
+            return Boolean.FALSE;
+        if (Boolean.valueOf(!Boolean.valueOf(obj instanceof JavaTextParsePosition).booleanValue()).booleanValue())
+            return Boolean.FALSE;
         {
             JavaTextParsePosition other = (JavaTextParsePosition) obj;
             Boolean rexpr_8 = null;
             Boolean var1_9 = null;
             Integer var2_11 = null;
             var2_11 = other.index;
-            var1_9 = new Boolean(index.intValue() == var2_11.intValue());
+            var1_9 = Boolean.valueOf(index.intValue() == var2_11.intValue());
             {
                 if ((rexpr_8 = var1_9).booleanValue()) {
                     Boolean var2_13 = null;
                     Integer var2_15 = null;
                     var2_15 = other.errorIndex;
-                    var2_13 = new Boolean(errorIndex.intValue() == var2_15.intValue());
+                    var2_13 = Boolean.valueOf(errorIndex.intValue() == var2_15.intValue());
                     rexpr_8 = var2_13;
                 }
             }
@@ -99,7 +99,7 @@ public class JavaTextParsePosition extends JavaLangObject {
 
     public JavaTextParsePosition(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 }
 

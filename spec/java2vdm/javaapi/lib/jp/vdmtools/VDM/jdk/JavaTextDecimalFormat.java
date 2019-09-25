@@ -33,23 +33,23 @@ public abstract class JavaTextDecimalFormat extends JavaTextNumberFormat {
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=currentSerialVersion KEEP=NO
-    public static Integer currentSerialVersion = new Integer(2);
+    public static Integer currentSerialVersion = Integer.valueOf(2);
 // ***** VDMTOOLS END Name=currentSerialVersion
 
 // ***** VDMTOOLS START Name=DOUBLE_uINTEGER_uDIGITS KEEP=NO
-    public static Integer DOUBLE_uINTEGER_uDIGITS = new Integer(309);
+    public static Integer DOUBLE_uINTEGER_uDIGITS = Integer.valueOf(309);
 // ***** VDMTOOLS END Name=DOUBLE_uINTEGER_uDIGITS
 
 // ***** VDMTOOLS START Name=DOUBLE_uFRACTION_uDIGITS KEEP=NO
-    public static Integer DOUBLE_uFRACTION_uDIGITS = new Integer(340);
+    public static Integer DOUBLE_uFRACTION_uDIGITS = Integer.valueOf(340);
 // ***** VDMTOOLS END Name=DOUBLE_uFRACTION_uDIGITS
 
 // ***** VDMTOOLS START Name=serialVersionUID KEEP=NO
-    private static Integer serialVersionUID = new Integer(0);
+    private static Integer serialVersionUID = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=serialVersionUID
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextDecimalFormat"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextDecimalFormat"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
@@ -82,7 +82,7 @@ public abstract class JavaTextDecimalFormat extends JavaTextNumberFormat {
 // ***** VDMTOOLS START Name=JavaTextDecimalFormat KEEP=NO
     public JavaTextDecimalFormat(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaTextDecimalFormat
 
@@ -109,15 +109,15 @@ public abstract class JavaTextDecimalFormat extends JavaTextNumberFormat {
         JavaLangStringBuffer rexpr_4 = null;
         {
             Double tmpVal_6 = null;
-            if (new Boolean(UTIL.IsInteger(num)).booleanValue())
+            if (Boolean.valueOf(UTIL.IsInteger(num)).booleanValue())
                 tmpVal_6 = num;
             else {
                 double tmp_11 = ((Number) num).doubleValue();
-                tmpVal_6 = new Double(new Double(Math.floor(tmp_11)).intValue());
+                tmpVal_6 = Double.valueOf(Double.valueOf(Math.floor(tmp_11)).intValue());
             }
             Double n = null;
             n = tmpVal_6;
-            JavaLangString arg_12 = new JavaLangInteger(new Integer(n.intValue())).vdm_toString();
+            JavaLangString arg_12 = new JavaLangInteger(Integer.valueOf(n.intValue())).vdm_toString();
             rexpr_4 = new JavaLangStringBuffer(arg_12);
         }
         return (JavaLangStringBuffer) rexpr_4;

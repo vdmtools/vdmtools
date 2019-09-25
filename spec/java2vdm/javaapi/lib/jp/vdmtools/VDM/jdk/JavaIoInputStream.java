@@ -13,7 +13,7 @@ public abstract class JavaIoInputStream extends JavaLangObject {
     private static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaIoInputStream"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
 
     static UTIL.VDMCompare vdmComp = new UTIL.VDMCompare();
 
@@ -25,7 +25,7 @@ public abstract class JavaIoInputStream extends JavaLangObject {
 
     // This should really be abstract; subclass provide implementations
     public Integer read() throws CGException {
-        return new Integer(0);
+        return Integer.valueOf(0);
     }
 
 
@@ -46,22 +46,22 @@ public abstract class JavaIoInputStream extends JavaLangObject {
 
     public Integer skip_u_u(final Integer n) throws CGException {
         Integer remaining = n;
-        Integer c = new Integer(0);
+        Integer c = Integer.valueOf(0);
         while (true) {
             Boolean whCrtl_2 = null;
             {
-                if ((whCrtl_2 = new Boolean((remaining.intValue()) > (new Integer(0).intValue()))).booleanValue())
-                    whCrtl_2 = new Boolean((c.intValue()) >= (new Integer(0).intValue()));
+                if ((whCrtl_2 = Boolean.valueOf((remaining.intValue()) > (Integer.valueOf(0).intValue()))).booleanValue())
+                    whCrtl_2 = Boolean.valueOf((c.intValue()) >= (Integer.valueOf(0).intValue()));
             }
             if (whCrtl_2.booleanValue()) {
                 Integer c_1 = null;
                 c_1 = UTIL.NumberToInt(UTIL.clone(read()));
-                if (new Boolean((c_1.intValue()) >= (new Integer(0).intValue())).booleanValue())
-                    remaining = UTIL.NumberToInt(UTIL.clone(new Integer(remaining.intValue() - new Integer(1).intValue())));
+                if (Boolean.valueOf((c_1.intValue()) >= (Integer.valueOf(0).intValue())).booleanValue())
+                    remaining = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(remaining.intValue() - Integer.valueOf(1).intValue())));
             } else
                 break;
         }
-        return new Integer(n.intValue() - remaining.intValue());
+        return Integer.valueOf(n.intValue() - remaining.intValue());
     }
 
 
@@ -71,17 +71,17 @@ public abstract class JavaIoInputStream extends JavaLangObject {
 
 
     public Integer available() throws CGException {
-        return new Integer(0);
+        return Integer.valueOf(0);
     }
 
 
     public Integer read(final HashMap b) throws CGException {
-        return readMIIIntInt(b, new Integer(0), new Integer(b.size()));
+        return readMIIIntInt(b, Integer.valueOf(0), Integer.valueOf(b.size()));
     }
 
 
     public Boolean markSupported() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 
 
@@ -89,13 +89,13 @@ public abstract class JavaIoInputStream extends JavaLangObject {
                                  final Integer off,
                                  final Integer len_u_u) throws CGException {
         UTIL.RunTime("Run-Time Error:Can not evaluate an undefined expression");
-        return new Integer(0);
+        return Integer.valueOf(0);
     }
 
 
     public Tuple readMIIIntInt_q(final HashMap b_u, final Integer off, final Integer len_u_u) throws CGException {
         HashMap b = b_u;
-        if (new Boolean(UTIL.equals(b, new HashMap())).booleanValue())
+        if (Boolean.valueOf(UTIL.equals(b, new HashMap())).booleanValue())
             throw new VDMSpecException(new JavaLangNullPointerException());
         else {
             Boolean cond_7 = null;
@@ -103,20 +103,20 @@ public abstract class JavaIoInputStream extends JavaLangObject {
             Boolean var1_9 = null;
             Boolean var1_10 = null;
             {
-                if (!(var1_10 = new Boolean((off.intValue()) < (new Integer(0).intValue()))).booleanValue()) {
+                if (!(var1_10 = Boolean.valueOf((off.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue()) {
                     Boolean var2_14 = null;
                     Integer var2_16 = null;
                     TreeSet unArg_17 = new TreeSet(vdmComp);
                     unArg_17.clear();
                     unArg_17.addAll(b.keySet());
-                    var2_16 = new Integer(unArg_17.size());
-                    var2_14 = new Boolean((off.intValue()) > (var2_16.intValue()));
+                    var2_16 = Integer.valueOf(unArg_17.size());
+                    var2_14 = Boolean.valueOf((off.intValue()) > (var2_16.intValue()));
                     var1_10 = var2_14;
                 }
             }
             {
                 if (!(var1_9 = var1_10).booleanValue())
-                    var1_9 = new Boolean((len_u_u.intValue()) < (new Integer(0).intValue()));
+                    var1_9 = Boolean.valueOf((len_u_u.intValue()) < (Integer.valueOf(0).intValue()));
             }
             {
                 if (!(var1_8 = var1_9).booleanValue()) {
@@ -125,31 +125,31 @@ public abstract class JavaIoInputStream extends JavaLangObject {
                     TreeSet unArg_27 = new TreeSet(vdmComp);
                     unArg_27.clear();
                     unArg_27.addAll(b.keySet());
-                    var2_26 = new Integer(unArg_27.size());
-                    var2_22 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) > (var2_26.intValue()));
+                    var2_26 = Integer.valueOf(unArg_27.size());
+                    var2_22 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) > (var2_26.intValue()));
                     var1_8 = var2_22;
                 }
             }
             {
                 if (!(cond_7 = var1_8).booleanValue())
-                    cond_7 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) < (new Integer(0).intValue()));
+                    cond_7 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) < (Integer.valueOf(0).intValue()));
             }
             if (cond_7.booleanValue())
                 throw new VDMSpecException(new JavaLangIndexOutOfBoundsException());
-            else if (new Boolean(len_u_u.intValue() == new Integer(0).intValue()).booleanValue()) {
+            else if (Boolean.valueOf(len_u_u.intValue() == Integer.valueOf(0).intValue()).booleanValue()) {
                 Tuple rexpr_37 = new Tuple(2);
                 rexpr_37 = new Tuple(2);
-                rexpr_37.SetField(1, new Integer(0));
+                rexpr_37.SetField(1, Integer.valueOf(0));
                 rexpr_37.SetField(2, b);
                 return rexpr_37;
             }
         }
         {
             Integer c = read();
-            if (new Boolean(c.intValue() == new Integer(-new Integer(1).intValue()).intValue()).booleanValue()) {
+            if (Boolean.valueOf(c.intValue() == Integer.valueOf(-Integer.valueOf(1).intValue()).intValue()).booleanValue()) {
                 Tuple rexpr_46 = new Tuple(2);
                 rexpr_46 = new Tuple(2);
-                rexpr_46.SetField(1, new Integer(-new Integer(1).intValue()));
+                rexpr_46.SetField(1, Integer.valueOf(-Integer.valueOf(1).intValue()));
                 rexpr_46.SetField(2, b);
                 return rexpr_46;
             }
@@ -161,13 +161,13 @@ public abstract class JavaIoInputStream extends JavaLangObject {
                     if (c.intValue() == -1)
                         break;
                     if (!b_u.isEmpty())
-                        b.put(new Integer(off.intValue() + i), c);
+                        b.put(Integer.valueOf(off.intValue() + i), c);
                     i++;
                 }
 
                 Tuple rexpr_53 = new Tuple(2);
                 rexpr_53 = new Tuple(2);
-                rexpr_53.SetField(1, new Integer(i));
+                rexpr_53.SetField(1, Integer.valueOf(i));
                 rexpr_53.SetField(2, b);
                 return rexpr_53;
             }
@@ -176,7 +176,7 @@ public abstract class JavaIoInputStream extends JavaLangObject {
 
 
     public JavaIoInputStream(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 }

@@ -31,13 +31,13 @@ import java.util.HashMap;
 
 public class JavaTextNumberFormat extends JavaTextFormat {
 
-    public static Integer INTEGER_uFIELD = new Integer(0);
-    public static Integer FRACTION_uFIELD = new Integer(1);
+    public static Integer INTEGER_uFIELD = Integer.valueOf(0);
+    public static Integer FRACTION_uFIELD = Integer.valueOf(1);
     public static JavaUtilHashtable cachedLocaleData = null;
-    public static Integer NUMBERSTYLE = new Integer(0);
-    public static Integer CURRENCYSTYLE = new Integer(1);
-    public static Integer PERCENTSTYLE = new Integer(2);
-    public static Integer SCIENTIFICSTYLE = new Integer(3);
+    public static Integer NUMBERSTYLE = Integer.valueOf(0);
+    public static Integer CURRENCYSTYLE = Integer.valueOf(1);
+    public static Integer PERCENTSTYLE = Integer.valueOf(2);
+    public static Integer SCIENTIFICSTYLE = Integer.valueOf(3);
     private Boolean groupingUsed = null;
     private Integer maxIntegerDigits = null;
     private Integer minIntegerDigits = null;
@@ -48,33 +48,33 @@ public class JavaTextNumberFormat extends JavaTextFormat {
     private Integer minimumIntegerDigits = null;
     private Integer maximumFractionDigits = null;
     private Integer minimumFractionDigits = null;
-    private static Integer currentSerialVersion = new Integer(1);
+    private static Integer currentSerialVersion = Integer.valueOf(1);
     private Integer serialVersionOnStream = null;
-    private static Integer serialVersionUID = new Integer(-new Integer(0).intValue());
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextNumberFormat"), new quotes.CLASS(), new Boolean(false));
+    private static Integer serialVersionUID = Integer.valueOf(-Integer.valueOf(0).intValue());
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextNumberFormat"), new quotes.CLASS(), Boolean.FALSE);
 
     public JavaTextNumberFormat() throws CGException {
         try {
-            INTEGER_uFIELD = new Integer(0);
-            FRACTION_uFIELD = new Integer(1);
-            cachedLocaleData = (JavaUtilHashtable) new JavaUtilHashtable(new Integer(3));
-            NUMBERSTYLE = new Integer(0);
-            CURRENCYSTYLE = new Integer(1);
-            PERCENTSTYLE = new Integer(2);
-            SCIENTIFICSTYLE = new Integer(3);
-            groupingUsed = new Boolean(true);
-            maxIntegerDigits = new Integer(40);
-            minIntegerDigits = new Integer(1);
-            maxFractionDigits = new Integer(3);
-            minFractionDigits = new Integer(0);
-            parseIntegerOnly = new Boolean(false);
-            maximumIntegerDigits = new Integer(40);
-            minimumIntegerDigits = new Integer(1);
-            maximumFractionDigits = new Integer(3);
-            minimumFractionDigits = new Integer(0);
-            currentSerialVersion = new Integer(1);
+            INTEGER_uFIELD = Integer.valueOf(0);
+            FRACTION_uFIELD = Integer.valueOf(1);
+            cachedLocaleData = (JavaUtilHashtable) new JavaUtilHashtable(Integer.valueOf(3));
+            NUMBERSTYLE = Integer.valueOf(0);
+            CURRENCYSTYLE = Integer.valueOf(1);
+            PERCENTSTYLE = Integer.valueOf(2);
+            SCIENTIFICSTYLE = Integer.valueOf(3);
+            groupingUsed = Boolean.TRUE;
+            maxIntegerDigits = Integer.valueOf(40);
+            minIntegerDigits = Integer.valueOf(1);
+            maxFractionDigits = Integer.valueOf(3);
+            minFractionDigits = Integer.valueOf(0);
+            parseIntegerOnly = Boolean.FALSE;
+            maximumIntegerDigits = Integer.valueOf(40);
+            minimumIntegerDigits = Integer.valueOf(1);
+            maximumFractionDigits = Integer.valueOf(3);
+            minimumFractionDigits = Integer.valueOf(0);
+            currentSerialVersion = Integer.valueOf(1);
             serialVersionOnStream = currentSerialVersion;
-            serialVersionUID = new Integer(-new Integer(0).intValue());
+            serialVersionUID = Integer.valueOf(-Integer.valueOf(0).intValue());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -94,7 +94,7 @@ public class JavaTextNumberFormat extends JavaTextFormat {
     }
 
     public Integer jHashCode() throws CGException {
-        return new Integer(new Integer(maximumIntegerDigits.intValue() * new Integer(37).intValue()).intValue() + maxFractionDigits.intValue());
+        return Integer.valueOf(Integer.valueOf(maximumIntegerDigits.intValue() * Integer.valueOf(37).intValue()).intValue() + maxFractionDigits.intValue());
     }
 
 
@@ -104,15 +104,15 @@ public class JavaTextNumberFormat extends JavaTextFormat {
         Boolean cond_2 = null;
         cond_2 = obj.IsNil();
         if (cond_2.booleanValue())
-            return new Boolean(false);
-        if (new Boolean(UTIL.equals(this, obj)).booleanValue())
-            return new Boolean(true);
+            return Boolean.FALSE;
+        if (Boolean.valueOf(UTIL.equals(this, obj)).booleanValue())
+            return Boolean.TRUE;
         Boolean cond_8 = null;
         JavaLangClass var2_10 = null;
         var2_10 = (JavaLangClass) obj.vdm_getClass();
-        cond_8 = new Boolean(!UTIL.equals(vdm_getClass(), var2_10));
+        cond_8 = Boolean.valueOf(!UTIL.equals(vdm_getClass(), var2_10));
         if (cond_8.booleanValue())
-            return new Boolean(false);
+            return Boolean.FALSE;
         {
             JavaTextNumberFormat other = (JavaTextNumberFormat) obj;
             Boolean rexpr_12 = null;
@@ -123,13 +123,13 @@ public class JavaTextNumberFormat extends JavaTextFormat {
             Boolean var1_17 = null;
             Integer var2_19 = null;
             var2_19 = other.maximumIntegerDigits;
-            var1_17 = new Boolean(maximumIntegerDigits.intValue() == var2_19.intValue());
+            var1_17 = Boolean.valueOf(maximumIntegerDigits.intValue() == var2_19.intValue());
             {
                 if ((var1_16 = var1_17).booleanValue()) {
                     Boolean var2_21 = null;
                     Integer var2_23 = null;
                     var2_23 = other.minimumIntegerDigits;
-                    var2_21 = new Boolean(minimumIntegerDigits.intValue() == var2_23.intValue());
+                    var2_21 = Boolean.valueOf(minimumIntegerDigits.intValue() == var2_23.intValue());
                     var1_16 = var2_21;
                 }
             }
@@ -138,7 +138,7 @@ public class JavaTextNumberFormat extends JavaTextFormat {
                     Boolean var2_25 = null;
                     Integer var2_27 = null;
                     var2_27 = other.maximumFractionDigits;
-                    var2_25 = new Boolean(maximumFractionDigits.intValue() == var2_27.intValue());
+                    var2_25 = Boolean.valueOf(maximumFractionDigits.intValue() == var2_27.intValue());
                     var1_15 = var2_25;
                 }
             }
@@ -147,7 +147,7 @@ public class JavaTextNumberFormat extends JavaTextFormat {
                     Boolean var2_29 = null;
                     Integer var2_31 = null;
                     var2_31 = other.minimumFractionDigits;
-                    var2_29 = new Boolean(minimumFractionDigits.intValue() == var2_31.intValue());
+                    var2_29 = Boolean.valueOf(minimumFractionDigits.intValue() == var2_31.intValue());
                     var1_14 = var2_29;
                 }
             }
@@ -156,7 +156,7 @@ public class JavaTextNumberFormat extends JavaTextFormat {
                     Boolean var2_33 = null;
                     Boolean var2_35 = null;
                     var2_35 = other.groupingUsed;
-                    var2_33 = new Boolean(UTIL.equals(groupingUsed, var2_35));
+                    var2_33 = Boolean.valueOf(UTIL.equals(groupingUsed, var2_35));
                     var1_13 = var2_33;
                 }
             }
@@ -165,7 +165,7 @@ public class JavaTextNumberFormat extends JavaTextFormat {
                     Boolean var2_37 = null;
                     Boolean var2_39 = null;
                     var2_39 = other.parseIntegerOnly;
-                    var2_37 = new Boolean(UTIL.equals(parseIntegerOnly, var2_39));
+                    var2_37 = Boolean.valueOf(UTIL.equals(parseIntegerOnly, var2_39));
                     rexpr_12 = var2_37;
                 }
             }
@@ -183,7 +183,7 @@ public class JavaTextNumberFormat extends JavaTextFormat {
 
     public JavaTextNumberFormat(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
     public Boolean isParseIntegerOnly() throws CGException {
@@ -220,24 +220,24 @@ public class JavaTextNumberFormat extends JavaTextFormat {
 
     public void setMaximumIntegerDigits(final Integer newValue) throws CGException {
         Integer rhs_2 = null;
-        if (new Boolean((newValue.intValue()) > (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((newValue.intValue()) > (Integer.valueOf(0).intValue())).booleanValue())
             rhs_2 = newValue;
         else
-            rhs_2 = new Integer(0);
+            rhs_2 = Integer.valueOf(0);
         maximumIntegerDigits = UTIL.NumberToInt(UTIL.clone(rhs_2));
-        if (new Boolean((minimumIntegerDigits.intValue()) > (maximumIntegerDigits.intValue())).booleanValue())
+        if (Boolean.valueOf((minimumIntegerDigits.intValue()) > (maximumIntegerDigits.intValue())).booleanValue())
             minimumIntegerDigits = UTIL.NumberToInt(UTIL.clone(maximumIntegerDigits));
         ;
     }
 
     public void setMinimumIntegerDigits(final Integer newValue) throws CGException {
         Integer rhs_2 = null;
-        if (new Boolean((newValue.intValue()) > (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((newValue.intValue()) > (Integer.valueOf(0).intValue())).booleanValue())
             rhs_2 = newValue;
         else
-            rhs_2 = new Integer(0);
+            rhs_2 = Integer.valueOf(0);
         minimumIntegerDigits = UTIL.NumberToInt(UTIL.clone(rhs_2));
-        if (new Boolean((minimumIntegerDigits.intValue()) > (maximumIntegerDigits.intValue())).booleanValue())
+        if (Boolean.valueOf((minimumIntegerDigits.intValue()) > (maximumIntegerDigits.intValue())).booleanValue())
             maximumIntegerDigits = UTIL.NumberToInt(UTIL.clone(minimumIntegerDigits));
         ;
     }
@@ -255,12 +255,12 @@ public class JavaTextNumberFormat extends JavaTextFormat {
 // ***** VDMTOOLS START Name=setMaximumFractionDigits KEEP=NO
     public void setMaximumFractionDigits(final Integer newValue) throws CGException {
         Integer rhs_2 = null;
-        if (new Boolean((newValue.intValue()) > (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((newValue.intValue()) > (Integer.valueOf(0).intValue())).booleanValue())
             rhs_2 = newValue;
         else
-            rhs_2 = new Integer(0);
+            rhs_2 = Integer.valueOf(0);
         maximumFractionDigits = UTIL.NumberToInt(UTIL.clone(rhs_2));
-        if (new Boolean((maximumFractionDigits.intValue()) < (minimumFractionDigits.intValue())).booleanValue())
+        if (Boolean.valueOf((maximumFractionDigits.intValue()) < (minimumFractionDigits.intValue())).booleanValue())
             minimumFractionDigits = UTIL.NumberToInt(UTIL.clone(maximumFractionDigits));
         ;
     }
@@ -270,12 +270,12 @@ public class JavaTextNumberFormat extends JavaTextFormat {
 // ***** VDMTOOLS START Name=setMinimumFractionDigits KEEP=NO
     public void setMinimumFractionDigits(final Integer newValue) throws CGException {
         Integer rhs_2 = null;
-        if (new Boolean((newValue.intValue()) > (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((newValue.intValue()) > (Integer.valueOf(0).intValue())).booleanValue())
             rhs_2 = newValue;
         else
-            rhs_2 = new Integer(0);
+            rhs_2 = Integer.valueOf(0);
         minimumFractionDigits = UTIL.NumberToInt(UTIL.clone(rhs_2));
-        if (new Boolean((maximumFractionDigits.intValue()) < (minimumFractionDigits.intValue())).booleanValue())
+        if (Boolean.valueOf((maximumFractionDigits.intValue()) < (minimumFractionDigits.intValue())).booleanValue())
             maximumFractionDigits = UTIL.NumberToInt(UTIL.clone(minimumFractionDigits));
         ;
     }

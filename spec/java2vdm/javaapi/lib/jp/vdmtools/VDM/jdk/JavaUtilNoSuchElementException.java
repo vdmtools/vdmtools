@@ -43,7 +43,7 @@ public class JavaUtilNoSuchElementException extends JavaLangRuntimeException {
 // ***** VDMTOOLS START Name=JavaUtilNoSuchElementException KEEP=NO
     public JavaUtilNoSuchElementException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilNoSuchElementException
 

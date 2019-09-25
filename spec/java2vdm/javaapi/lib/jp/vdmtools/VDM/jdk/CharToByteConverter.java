@@ -42,7 +42,7 @@ public class CharToByteConverter extends JavaLangObject {
 // ***** VDMTOOLS START Name=CharToByteConverter KEEP=NO
     public CharToByteConverter(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=CharToByteConverter
 

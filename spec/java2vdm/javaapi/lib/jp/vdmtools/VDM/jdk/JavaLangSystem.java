@@ -60,7 +60,7 @@ public class JavaLangSystem {
 
 // ***** VDMTOOLS START Name=exit_u_u KEEP=NO
     static public void exit_u_u(final Integer status) throws CGException {
-        new Double(new Integer(1).doubleValue() / new Integer(0).doubleValue());
+        Double.valueOf(Integer.valueOf(1).doubleValue() / Integer.valueOf(0).doubleValue());
         ;
     }
 // ***** VDMTOOLS END Name=exit_u_u
@@ -81,7 +81,7 @@ public class JavaLangSystem {
 
 // ***** VDMTOOLS START Name=currentTimeMillis KEEP=NO
     static public Integer currentTimeMillis() throws CGException {
-        return new Integer(0);
+        return Integer.valueOf(0);
     }
 // ***** VDMTOOLS END Name=currentTimeMillis
 
@@ -145,11 +145,11 @@ public class JavaLangSystem {
         JavaLangString s = null;
         s = (JavaLangString) tmpVal_2;
         JavaIoFileOutputStream tmpVal_4 = null;
-        tmpVal_4 = (JavaIoFileOutputStream) new JavaIoFileOutputStream(s, new Boolean(true));
+        tmpVal_4 = (JavaIoFileOutputStream) new JavaIoFileOutputStream(s, Boolean.TRUE);
         JavaIoFileOutputStream f = null;
         f = (JavaIoFileOutputStream) tmpVal_4;
         JavaIoPrintStream tmpVal_7 = null;
-        tmpVal_7 = (JavaIoPrintStream) new JavaIoPrintStream(f, new Boolean(true));
+        tmpVal_7 = (JavaIoPrintStream) new JavaIoPrintStream(f, Boolean.TRUE);
         JavaIoPrintStream o = null;
         o = (JavaIoPrintStream) tmpVal_7;
         return (JavaIoPrintStream) o;
@@ -164,11 +164,11 @@ public class JavaLangSystem {
         JavaLangString s = null;
         s = (JavaLangString) tmpVal_2;
         JavaIoFileOutputStream tmpVal_4 = null;
-        tmpVal_4 = (JavaIoFileOutputStream) new JavaIoFileOutputStream(s, new Boolean(true));
+        tmpVal_4 = (JavaIoFileOutputStream) new JavaIoFileOutputStream(s, Boolean.TRUE);
         JavaIoFileOutputStream f = null;
         f = (JavaIoFileOutputStream) tmpVal_4;
         JavaIoPrintStream tmpVal_7 = null;
-        tmpVal_7 = (JavaIoPrintStream) new JavaIoPrintStream(f, new Boolean(true));
+        tmpVal_7 = (JavaIoPrintStream) new JavaIoPrintStream(f, Boolean.TRUE);
         JavaIoPrintStream o = null;
         o = (JavaIoPrintStream) tmpVal_7;
         return (JavaIoPrintStream) o;

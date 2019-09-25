@@ -10,7 +10,7 @@ public class JavaTextSimpleDateFormat extends JavaTextDateFormat {
     private static final JavaLangClass CLASS = 
 	new JavaLangClass(new String("JavaTextSimpleDateFormat"), 
 			  new quotes.CLASS(), 
-			  new Boolean(false));
+			  Boolean.FALSE);
 
 
     public JavaTextSimpleDateFormat() throws CGException {
@@ -26,7 +26,7 @@ public class JavaTextSimpleDateFormat extends JavaTextDateFormat {
 	throws CGException 
     {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 

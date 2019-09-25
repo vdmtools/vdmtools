@@ -43,7 +43,7 @@ public class JavaLangInstantiationException extends JavaLangException {
 // ***** VDMTOOLS START Name=JavaLangInstantiationException KEEP=NO
     public JavaLangInstantiationException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaLangInstantiationException
 

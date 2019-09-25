@@ -52,8 +52,8 @@ public abstract class JavaUtilALItr implements JavaUtilIterator {
 // ***** VDMTOOLS START Name=JavaUtilALItr KEEP=NO
     public JavaUtilALItr() throws CGException {
         try {
-            cursor = new Integer(0);
-            lastRet = new Integer(-new Integer(1).intValue());
+            cursor = Integer.valueOf(0);
+            lastRet = Integer.valueOf(-Integer.valueOf(1).intValue());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -79,7 +79,7 @@ public abstract class JavaUtilALItr implements JavaUtilIterator {
         Boolean rexpr_1 = null;
         Integer var2_3 = null;
         var2_3 = al.size();
-        rexpr_1 = new Boolean(!(cursor.intValue() == var2_3.intValue()));
+        rexpr_1 = Boolean.valueOf(!(cursor.intValue() == var2_3.intValue()));
         return rexpr_1;
     }
 // ***** VDMTOOLS END Name=hasNext
@@ -89,7 +89,7 @@ public abstract class JavaUtilALItr implements JavaUtilIterator {
     public JavaLangObject next() throws CGException {
         JavaLangObject o = null;
         o = (JavaLangObject) al.get(cursor);
-        cursor = UTIL.NumberToInt(UTIL.clone(new Integer(cursor.intValue() + new Integer(1).intValue())));
+        cursor = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(cursor.intValue() + Integer.valueOf(1).intValue())));
         return (JavaLangObject) o;
     }
 // ***** VDMTOOLS END Name=next

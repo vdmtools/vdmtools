@@ -15,7 +15,7 @@ public class JavaIoOutputStream extends JavaLangObject {
     private static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaIoOutputStream"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
 
 
     public JavaIoOutputStream() {
@@ -23,7 +23,7 @@ public class JavaIoOutputStream extends JavaLangObject {
 
 
     private JavaIoOutputStream(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 
@@ -41,14 +41,14 @@ public class JavaIoOutputStream extends JavaLangObject {
 
 
     public void write1(final HashMap b) throws CGException {
-        write2(b, new Integer(0), new Integer(b.size()));
+        write2(b, Integer.valueOf(0), Integer.valueOf(b.size()));
     }
 
 
     public void write2(final HashMap b,
                        final Integer off,
                        final Integer len_u_u) throws CGException {
-        if (new Boolean(UTIL.equals(b, new HashMap())).booleanValue())
+        if (Boolean.valueOf(UTIL.equals(b, new HashMap())).booleanValue())
             throw new VDMSpecException(new JavaLangNullPointerException());
         else {
             Boolean cond_7 = null;
@@ -56,20 +56,20 @@ public class JavaIoOutputStream extends JavaLangObject {
             Boolean var1_9 = null;
             Boolean var1_10 = null;
             {
-                if (!(var1_10 = new Boolean((off.intValue()) < (new Integer(0).intValue()))).booleanValue()) {
+                if (!(var1_10 = Boolean.valueOf((off.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue()) {
                     Boolean var2_14 = null;
                     Integer var2_16 = null;
                     TreeSet unArg_17 = new TreeSet(vdmComp);
                     unArg_17.clear();
                     unArg_17.addAll(b.keySet());
-                    var2_16 = new Integer(unArg_17.size());
-                    var2_14 = new Boolean((off.intValue()) > (var2_16.intValue()));
+                    var2_16 = Integer.valueOf(unArg_17.size());
+                    var2_14 = Boolean.valueOf((off.intValue()) > (var2_16.intValue()));
                     var1_10 = var2_14;
                 }
             }
             {
                 if (!(var1_9 = var1_10).booleanValue())
-                    var1_9 = new Boolean((len_u_u.intValue()) < (new Integer(0).intValue()));
+                    var1_9 = Boolean.valueOf((len_u_u.intValue()) < (Integer.valueOf(0).intValue()));
             }
             {
                 if (!(var1_8 = var1_9).booleanValue()) {
@@ -78,25 +78,25 @@ public class JavaIoOutputStream extends JavaLangObject {
                     TreeSet unArg_27 = new TreeSet(vdmComp);
                     unArg_27.clear();
                     unArg_27.addAll(b.keySet());
-                    var2_26 = new Integer(unArg_27.size());
-                    var2_22 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) > (var2_26.intValue()));
+                    var2_26 = Integer.valueOf(unArg_27.size());
+                    var2_22 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) > (var2_26.intValue()));
                     var1_8 = var2_22;
                 }
             }
             {
                 if (!(cond_7 = var1_8).booleanValue())
-                    cond_7 = new Boolean((new Integer(off.intValue() + len_u_u.intValue()).intValue()) < (new Integer(0).intValue()));
+                    cond_7 = Boolean.valueOf((Integer.valueOf(off.intValue() + len_u_u.intValue()).intValue()) < (Integer.valueOf(0).intValue()));
             }
             if (cond_7.booleanValue())
                 throw new VDMSpecException(new JavaLangIndexOutOfBoundsException());
-            else if (new Boolean(len_u_u.intValue() == new Integer(0).intValue()).booleanValue())
+            else if (Boolean.valueOf(len_u_u.intValue() == Integer.valueOf(0).intValue()).booleanValue())
                 return;
         }
         {
-            Integer i = new Integer(0);
-            while (new Boolean((i.intValue()) < (len_u_u.intValue())).booleanValue()) {
-                write(UTIL.NumberToInt(b.get(new Integer(off.intValue() + i.intValue()))));
-                i = UTIL.NumberToInt(UTIL.clone(new Integer(i.intValue() + new Integer(1).intValue())));
+            Integer i = Integer.valueOf(0);
+            while (Boolean.valueOf((i.intValue()) < (len_u_u.intValue())).booleanValue()) {
+                write(UTIL.NumberToInt(b.get(Integer.valueOf(off.intValue() + i.intValue()))));
+                i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue())));
             }
         }
         ;

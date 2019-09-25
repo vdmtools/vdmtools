@@ -44,7 +44,7 @@ public class JavaIoFileReader extends JavaLangObject {
 
     public JavaIoFileReader(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 

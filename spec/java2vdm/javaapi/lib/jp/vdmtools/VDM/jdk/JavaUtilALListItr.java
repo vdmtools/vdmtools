@@ -52,14 +52,14 @@ public abstract class JavaUtilALListItr extends JavaUtilALItr implements JavaUti
 
 // ***** VDMTOOLS START Name=hasPrevious KEEP=NO
     public Boolean hasPrevious() throws CGException {
-        return new Boolean(!(cursor.intValue() == new Integer(0).intValue()));
+        return Boolean.valueOf(!(cursor.intValue() == Integer.valueOf(0).intValue()));
     }
 // ***** VDMTOOLS END Name=hasPrevious
 
 
 // ***** VDMTOOLS START Name=previous KEEP=NO
     public JavaLangObject previous() throws CGException {
-        cursor = UTIL.NumberToInt(UTIL.clone(new Integer(cursor.intValue() - new Integer(1).intValue())));
+        cursor = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(cursor.intValue() - Integer.valueOf(1).intValue())));
         {
             JavaLangObject previous_1 = null;
             previous_1 = (JavaLangObject) al.get(cursor);
@@ -79,14 +79,14 @@ public abstract class JavaUtilALListItr extends JavaUtilALItr implements JavaUti
 
 // ***** VDMTOOLS START Name=previousIndex KEEP=NO
     public Integer previousIndex() throws CGException {
-        return new Integer(cursor.intValue() - new Integer(1).intValue());
+        return Integer.valueOf(cursor.intValue() - Integer.valueOf(1).intValue());
     }
 // ***** VDMTOOLS END Name=previousIndex
 
 
 // ***** VDMTOOLS START Name=set_u_u KEEP=NO
     public void set_u_u(final JavaLangObject o) throws CGException {
-        if (new Boolean(lastRet.intValue() == new Integer(-new Integer(1).intValue()).intValue()).booleanValue())
+        if (Boolean.valueOf(lastRet.intValue() == Integer.valueOf(-Integer.valueOf(1).intValue()).intValue()).booleanValue())
             throw new VDMSpecException(new JavaLangIllegalStateException());
         JavaLangObject tmpObj_8 = null;
         tmpObj_8 = (JavaLangObject) al.set_u_u(lastRet, (JavaLangObject) o);

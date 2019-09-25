@@ -34,11 +34,11 @@ public abstract class JavaUtilStack extends JavaUtilVector {
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=serialVersionUID KEEP=NO
-    private static Integer serialVersionUID = new Integer(0);
+    private static Integer serialVersionUID = Integer.valueOf(0);
 // ***** VDMTOOLS END Name=serialVersionUID
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilStack"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilStack"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
@@ -47,7 +47,7 @@ public abstract class JavaUtilStack extends JavaUtilVector {
         JavaLangObject obj = null;
         Integer len_u_u = size();
         obj = (JavaLangObject) UTIL.clone(peek());
-        removeElementAt(new Integer(len_u_u.intValue() - new Integer(1).intValue()));
+        removeElementAt(Integer.valueOf(len_u_u.intValue() - Integer.valueOf(1).intValue()));
         return (JavaLangObject) obj;
     }
 // ***** VDMTOOLS END Name=pop
@@ -56,9 +56,9 @@ public abstract class JavaUtilStack extends JavaUtilVector {
 // ***** VDMTOOLS START Name=peek KEEP=NO
     public JavaLangObject peek() throws CGException {
         Integer len_u_u = size();
-        if (new Boolean(len_u_u.intValue() == new Integer(0).intValue()).booleanValue())
+        if (Boolean.valueOf(len_u_u.intValue() == Integer.valueOf(0).intValue()).booleanValue())
             throw new VDMSpecException(new JavaUtilEmptyStackException());
-        return (JavaLangObject) (JavaLangObject) elementAt(new Integer(len_u_u.intValue() - new Integer(1).intValue()));
+        return (JavaLangObject) (JavaLangObject) elementAt(Integer.valueOf(len_u_u.intValue() - Integer.valueOf(1).intValue()));
     }
 // ***** VDMTOOLS END Name=peek
 
@@ -72,7 +72,7 @@ public abstract class JavaUtilStack extends JavaUtilVector {
 
 // ***** VDMTOOLS START Name=empty KEEP=NO
     public Boolean empty() throws CGException {
-        return new Boolean(size().intValue() == new Integer(0).intValue());
+        return Boolean.valueOf(size().intValue() == Integer.valueOf(0).intValue());
     }
 // ***** VDMTOOLS END Name=empty
 
@@ -87,7 +87,7 @@ public abstract class JavaUtilStack extends JavaUtilVector {
 // ***** VDMTOOLS START Name=JavaUtilStack KEEP=NO
     public JavaUtilStack(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilStack
 
@@ -103,9 +103,9 @@ public abstract class JavaUtilStack extends JavaUtilVector {
 // ***** VDMTOOLS START Name=search KEEP=NO
     public Integer search(final JavaLangObject o) throws CGException {
         Integer i = lastIndexOf((JavaLangObject) o);
-        if (new Boolean((i.intValue()) >= (new Integer(0).intValue())).booleanValue())
-            return new Integer(size().intValue() - i.intValue());
-        return new Integer(-new Integer(1).intValue());
+        if (Boolean.valueOf((i.intValue()) >= (Integer.valueOf(0).intValue())).booleanValue())
+            return Integer.valueOf(size().intValue() - i.intValue());
+        return Integer.valueOf(-Integer.valueOf(1).intValue());
     }
 // ***** VDMTOOLS END Name=search
 

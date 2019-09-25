@@ -76,7 +76,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
         Boolean cond_1 = null;
         Integer var1_2 = null;
         var1_2 = htable.modCount;
-        cond_1 = new Boolean(!(var1_2.intValue() == expectedModCount.intValue()));
+        cond_1 = Boolean.valueOf(!(var1_2.intValue() == expectedModCount.intValue()));
         if (cond_1.booleanValue())
             throw new VDMSpecException(new JavaUtilConcurrentModificationException());
         return (JavaLangObject) nextElement();
@@ -86,7 +86,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
 
 // ***** VDMTOOLS START Name=remove KEEP=NO
     public void remove() throws CGException {
-        if (new Boolean(!iterator.booleanValue()).booleanValue())
+        if (Boolean.valueOf(!iterator.booleanValue()).booleanValue())
             throw new VDMSpecException(new JavaLangUnsupportedOperationException());
         Boolean cond_4 = null;
         cond_4 = lastReturned.IsNil();
@@ -95,7 +95,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
         Boolean cond_8 = null;
         Integer var1_9 = null;
         var1_9 = htable.modCount;
-        cond_8 = new Boolean(!(var1_9.intValue() == expectedModCount.intValue()));
+        cond_8 = Boolean.valueOf(!(var1_9.intValue() == expectedModCount.intValue()));
         if (cond_8.booleanValue())
             throw new VDMSpecException(new JavaUtilConcurrentModificationException());
         {
@@ -104,8 +104,8 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
             {
                 Integer i = null;
                 i = lastReturned.hash;
-                if (new Boolean((i.intValue()) < (new Integer(0).intValue())).booleanValue())
-                    var1_13 = new Integer(-i.intValue());
+                if (Boolean.valueOf((i.intValue()) < (Integer.valueOf(0).intValue())).booleanValue())
+                    var1_13 = Integer.valueOf(-i.intValue());
                 else
                     var1_13 = i;
             }
@@ -115,8 +115,8 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
             unArg_24 = htable.table;
             unArg_23.clear();
             unArg_23.addAll(unArg_24.keySet());
-            var2_22 = new Integer(unArg_23.size());
-            idx = new Integer((int) (var1_13.doubleValue() - var2_22.doubleValue() * Math.floor(var1_13.doubleValue() / var2_22.doubleValue())));
+            var2_22 = Integer.valueOf(unArg_23.size());
+            idx = Integer.valueOf((int) (var1_13.doubleValue() - var2_22.doubleValue() * Math.floor(var1_13.doubleValue() / var2_22.doubleValue())));
             {
                 JavaUtilHTEntry e = null;
                 HashMap tmp_m_26 = new HashMap();
@@ -127,15 +127,15 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
                     Boolean whCrtl_30 = null;
                     Boolean unArg_31 = null;
                     unArg_31 = e.IsNil();
-                    whCrtl_30 = new Boolean(!unArg_31.booleanValue());
+                    whCrtl_30 = Boolean.valueOf(!unArg_31.booleanValue());
                     if (whCrtl_30.booleanValue()) {
-                        if (new Boolean(UTIL.equals(e, lastReturned)).booleanValue()) {
+                        if (Boolean.valueOf(UTIL.equals(e, lastReturned)).booleanValue()) {
                             Integer rhs_35 = null;
                             Integer var1_36 = null;
                             var1_36 = htable.modCount;
-                            rhs_35 = new Integer(var1_36.intValue() + new Integer(1).intValue());
+                            rhs_35 = Integer.valueOf(var1_36.intValue() + Integer.valueOf(1).intValue());
                             htable.modCount = UTIL.NumberToInt(rhs_35);
-                            expectedModCount = UTIL.NumberToInt(UTIL.clone(new Integer(expectedModCount.intValue() + new Integer(1).intValue())));
+                            expectedModCount = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(expectedModCount.intValue() + Integer.valueOf(1).intValue())));
                             Boolean cond_43 = null;
                             cond_43 = prev.IsNil();
                             if (cond_43.booleanValue()) {
@@ -158,7 +158,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
                             Integer rhs_56 = null;
                             Integer var1_57 = null;
                             var1_57 = htable.count;
-                            rhs_56 = new Integer(var1_57.intValue() - new Integer(1).intValue());
+                            rhs_56 = Integer.valueOf(var1_57.intValue() - Integer.valueOf(1).intValue());
                             htable.count = UTIL.NumberToInt(rhs_56);
                             lastReturned = (JavaUtilHTEntry) UTIL.clone(new JavaUtilHTEntry(new quotes.NIL()));
                             return;
@@ -194,11 +194,11 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
             var1_2 = et.IsNil();
             {
                 if ((whCrtl_1 = var1_2).booleanValue())
-                    whCrtl_1 = new Boolean((i.intValue()) > (new Integer(0).intValue()));
+                    whCrtl_1 = Boolean.valueOf((i.intValue()) > (Integer.valueOf(0).intValue()));
             }
             if (whCrtl_1.booleanValue()) {
                 Integer l_u4 = i;
-                Integer l_u5 = new Integer(l_u4.intValue() - new Integer(1).intValue());
+                Integer l_u5 = Integer.valueOf(l_u4.intValue() - Integer.valueOf(1).intValue());
                 {
                     i = UTIL.NumberToInt(UTIL.clone(l_u5));
                     {
@@ -218,7 +218,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
         Boolean cond_21 = null;
         Boolean unArg_22 = null;
         unArg_22 = et.IsNil();
-        cond_21 = new Boolean(!unArg_22.booleanValue());
+        cond_21 = Boolean.valueOf(!unArg_22.booleanValue());
         if (cond_21.booleanValue()) {
             lastReturned = (JavaUtilHTEntry) UTIL.clone(entry);
             {
@@ -229,9 +229,9 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
                     rhs_26 = e.next;
                     entry = (JavaUtilHTEntry) UTIL.clone(rhs_26);
                     Object rexpr_28 = null;
-                    if (new Boolean(type.intValue() == new Integer(0).intValue()).booleanValue())
+                    if (Boolean.valueOf(type.intValue() == Integer.valueOf(0).intValue()).booleanValue())
                         rexpr_28 = e.key;
-                    else if (new Boolean(type.intValue() == new Integer(1).intValue()).booleanValue())
+                    else if (Boolean.valueOf(type.intValue() == Integer.valueOf(1).intValue()).booleanValue())
                         rexpr_28 = e.value_u_u;
                     else
                         rexpr_28 = e;
@@ -257,7 +257,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
             unArg_9 = htable_1.table;
             unArg_8.clear();
             unArg_8.addAll(unArg_9.keySet());
-            rhs_7 = new Integer(unArg_8.size());
+            rhs_7 = Integer.valueOf(unArg_8.size());
             index = UTIL.NumberToInt(UTIL.clone(rhs_7));
             entry = (JavaUtilHTEntry) UTIL.clone(new JavaUtilHTEntry(new quotes.NIL()));
             lastReturned = (JavaUtilHTEntry) UTIL.clone(new JavaUtilHTEntry(new quotes.NIL()));
@@ -272,7 +272,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
 // ***** VDMTOOLS START Name=JavaUtilEnumerator KEEP=NO
     public JavaUtilEnumerator(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilEnumerator
 
@@ -287,11 +287,11 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
             var1_2 = e.IsNil();
             {
                 if ((whCrtl_1 = var1_2).booleanValue())
-                    whCrtl_1 = new Boolean((i.intValue()) > (new Integer(0).intValue()));
+                    whCrtl_1 = Boolean.valueOf((i.intValue()) > (Integer.valueOf(0).intValue()));
             }
             if (whCrtl_1.booleanValue()) {
                 Integer l_u4 = i;
-                Integer l_u5 = new Integer(l_u4.intValue() - new Integer(1).intValue());
+                Integer l_u5 = Integer.valueOf(l_u4.intValue() - Integer.valueOf(1).intValue());
                 {
                     i = UTIL.NumberToInt(UTIL.clone(l_u5));
                     {
@@ -311,7 +311,7 @@ public class JavaUtilEnumerator extends JavaLangObject implements JavaUtilEnumer
         Boolean rexpr_21 = null;
         Boolean unArg_22 = null;
         unArg_22 = e.IsNil();
-        rexpr_21 = new Boolean(!unArg_22.booleanValue());
+        rexpr_21 = Boolean.valueOf(!unArg_22.booleanValue());
         return rexpr_21;
     }
 // ***** VDMTOOLS END Name=hasMoreElements

@@ -43,7 +43,7 @@ public class JavaUtilConcurrentModificationException extends JavaLangRuntimeExce
 // ***** VDMTOOLS START Name=JavaUtilConcurrentModificationException KEEP=NO
     public JavaUtilConcurrentModificationException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilConcurrentModificationException
 

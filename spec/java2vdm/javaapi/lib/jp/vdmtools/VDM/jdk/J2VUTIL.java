@@ -40,7 +40,7 @@ public abstract class J2VUTIL {
         else
             UTIL.RunTime("J2VUTIL.BitOp: Unknown operator");
 
-        return new Integer(result);
+        return Integer.valueOf(result);
     }
 
 
@@ -60,7 +60,7 @@ public abstract class J2VUTIL {
         boolean succ_3 = true;
         {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Integer l_ui = UTIL.NumberToInt(p_uval);
@@ -69,7 +69,7 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean((p_uval instanceof Character))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((p_uval instanceof Character))))
                 succ_3 = false;
             if (succ_3) {
                 Character l_uc = (Character) p_uval;
@@ -81,8 +81,8 @@ public abstract class J2VUTIL {
         if (!succ_3) {
             succ_3 = true;
             Boolean tmpVal_v_20 = null;
-            tmpVal_v_20 = new Boolean(p_uval instanceof JavaLangObject);
-            if (!UTIL.equals(new Boolean(true), tmpVal_v_20))
+            tmpVal_v_20 = Boolean.valueOf(p_uval instanceof JavaLangObject);
+            if (!UTIL.equals(Boolean.TRUE, tmpVal_v_20))
                 succ_3 = false;
             if (succ_3) {
                 JavaLangObject l_uo = (JavaLangObject) p_uval;
@@ -105,7 +105,7 @@ public abstract class J2VUTIL {
         boolean succ_3 = true;
         {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Integer l_ui = UTIL.NumberToInt(p_uval);
@@ -116,7 +116,7 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean((p_uval instanceof Character))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((p_uval instanceof Character))))
                 succ_3 = false;
             if (succ_3) {
                 Character l_uc = (Character) p_uval;
@@ -125,13 +125,13 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsReal(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsReal(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Double l_uf = UTIL.NumberToReal(p_uval);
                 Integer par_20 = null;
                 double tmp_22 = ((Number) l_uf).doubleValue();
-                par_20 = new Integer(new Double(Math.floor(tmp_22)).intValue());
+                par_20 = Integer.valueOf(Double.valueOf(Math.floor(tmp_22)).intValue());
                 rexpr_2 = toChar(par_20);
             }
         }
@@ -146,7 +146,7 @@ public abstract class J2VUTIL {
         boolean succ_3 = true;
         {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Integer l_ui = UTIL.NumberToInt(p_uval);
@@ -155,7 +155,7 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean((p_uval instanceof Character))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((p_uval instanceof Character))))
                 succ_3 = false;
             if (succ_3) {
                 Character l_uc = (Character) p_uval;
@@ -166,12 +166,12 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsReal(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsReal(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Double l_uf = UTIL.NumberToReal(p_uval);
                 double tmp_21 = ((Number) l_uf).doubleValue();
-                rexpr_2 = new Integer(new Double(Math.floor(tmp_21)).intValue());
+                rexpr_2 = Integer.valueOf(Double.valueOf(Math.floor(tmp_21)).intValue());
             }
         }
         if (!succ_3)
@@ -186,7 +186,7 @@ public abstract class J2VUTIL {
         boolean succ_3 = true;
         {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Integer l_ui = UTIL.NumberToInt(p_uval);
@@ -195,7 +195,7 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean((p_uval instanceof Character))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf((p_uval instanceof Character))))
                 succ_3 = false;
             if (succ_3) {
                 Integer l_uc = UTIL.NumberToInt(p_uval);
@@ -206,7 +206,7 @@ public abstract class J2VUTIL {
         }
         if (!succ_3) {
             succ_3 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsReal(p_uval))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsReal(p_uval))))
                 succ_3 = false;
             if (succ_3) {
                 Double l_uf = UTIL.NumberToReal(p_uval);

@@ -43,7 +43,7 @@ public class JavaIoFileNotFoundException extends JavaIoIOException {
 // ***** VDMTOOLS START Name=JavaIoFileNotFoundException KEEP=NO
     public JavaIoFileNotFoundException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaIoFileNotFoundException
 

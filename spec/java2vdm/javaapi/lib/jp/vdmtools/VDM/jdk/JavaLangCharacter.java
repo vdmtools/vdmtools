@@ -6,8 +6,8 @@ import jp.vdmtools.VDM.VDMSpecException;
 
 public class JavaLangCharacter extends JavaLangObject {
 
-    public static final Integer MIN_uRADIX = new Integer(Character.MIN_RADIX);
-    public static final Integer MAX_uRADIX = new Integer(Character.MAX_RADIX);
+    public static final Integer MIN_uRADIX = Integer.valueOf(Character.MIN_RADIX);
+    public static final Integer MAX_uRADIX = Integer.valueOf(Character.MAX_RADIX);
     public static final Character MIN_uVALUE =
             new Character(Character.MIN_VALUE);
     public static final Character MAX_uVALUE =
@@ -36,7 +36,7 @@ public class JavaLangCharacter extends JavaLangObject {
         if (o.IsNil().booleanValue())
             throw new VDMSpecException(new JavaLangClassCastException());
         else if (o instanceof JavaLangCharacter)
-            return new Integer(wrappedObject.compareTo(
+            return Integer.valueOf(wrappedObject.compareTo(
                     ((JavaLangCharacter) o).getWrappedObject()));
         else
             throw new VDMSpecException(new JavaLangClassCastException());
@@ -44,11 +44,11 @@ public class JavaLangCharacter extends JavaLangObject {
 
 
     public Boolean equals(final JavaLangObject o) throws CGException {
-        return new Boolean(compareTo((JavaLangCharacter) o).intValue() == 0);
+        return Boolean.valueOf(compareTo((JavaLangCharacter) o).intValue() == 0);
     }
 
     public Integer jHashCode() {
-        return new Integer(wrappedObject.hashCode());
+        return Integer.valueOf(wrappedObject.hashCode());
     }
 
     public JavaLangString toJString() throws CGException {
@@ -60,17 +60,17 @@ public class JavaLangCharacter extends JavaLangObject {
     }
 
     static public Integer getType(final Character ch) {
-        return new Integer(Character.getType(ch.charValue()));
+        return Integer.valueOf(Character.getType(ch.charValue()));
     }
 
     static public Boolean isSpace(final Character ch) {
-//        return new Boolean(Character.isSpace(ch.charValue()));
-        return new Boolean(Character.isWhitespace(ch.charValue()));
+//        return Boolean.valueOf(Character.isSpace(ch.charValue()));
+        return Boolean.valueOf(Character.isWhitespace(ch.charValue()));
     }
 
 
     static public Boolean isDefined(final Character ch) {
-        return new Boolean(Character.isDefined(ch.charValue()));
+        return Boolean.valueOf(Character.isDefined(ch.charValue()));
     }
 
 
@@ -82,17 +82,17 @@ public class JavaLangCharacter extends JavaLangObject {
 
 
     static public Boolean isLowerCase(final Character ch) {
-        return new Boolean(Character.isLowerCase(ch.charValue()));
+        return Boolean.valueOf(Character.isLowerCase(ch.charValue()));
     }
 
 
     static public Boolean isTitleCase(final Character ch) {
-        return new Boolean(Character.isTitleCase(ch.charValue()));
+        return Boolean.valueOf(Character.isTitleCase(ch.charValue()));
     }
 
 
     static public Boolean isUpperCase(final Character ch) {
-        return new Boolean(Character.isUpperCase(ch.charValue()));
+        return Boolean.valueOf(Character.isUpperCase(ch.charValue()));
     }
 
 
@@ -112,84 +112,84 @@ public class JavaLangCharacter extends JavaLangObject {
 
 
     static public Boolean isISOControl(final Character ch) {
-        return new Boolean(Character.isISOControl(ch.charValue()));
+        return Boolean.valueOf(Character.isISOControl(ch.charValue()));
     }
 
 
     static public Boolean isJavaLetter(final Character ch) {
-//        return new Boolean(Character.isJavaLetter(ch.charValue()));
-        return new Boolean(Character.isJavaIdentifierStart(ch.charValue()));
+//        return Boolean.valueOf(Character.isJavaLetter(ch.charValue()));
+        return Boolean.valueOf(Character.isJavaIdentifierStart(ch.charValue()));
     }
 
 
     public JavaLangCharacter(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 
     static public Integer getNumericValue(final Character ch) {
-        return new Integer(Character.getNumericValue(ch.charValue()));
+        return Integer.valueOf(Character.getNumericValue(ch.charValue()));
     }
 
 
     static public Boolean isJavaLetterOrDigit(final Character ch) {
-//        return new Boolean(Character.isJavaLetterOrDigit(ch.charValue()));
-        return new Boolean(Character.isJavaIdentifierPart(ch.charValue()));
+//        return Boolean.valueOf(Character.isJavaLetterOrDigit(ch.charValue()));
+        return Boolean.valueOf(Character.isJavaIdentifierPart(ch.charValue()));
     }
 
 
     static public Boolean isJavaIdentifierPart(final Character ch) {
-        return new Boolean(Character.isJavaIdentifierPart(ch.charValue()));
+        return Boolean.valueOf(Character.isJavaIdentifierPart(ch.charValue()));
     }
 
 
     static public Boolean isIdentifierIgnorable(final Character ch) {
-        return new Boolean(Character.isIdentifierIgnorable(ch.charValue()));
+        return Boolean.valueOf(Character.isIdentifierIgnorable(ch.charValue()));
     }
 
 
     static public Boolean isJavaIdentifierStart(final Character ch) {
-        return new Boolean(Character.isJavaIdentifierStart(ch.charValue()));
+        return Boolean.valueOf(Character.isJavaIdentifierStart(ch.charValue()));
     }
 
 
     static public Boolean isUnicodeIdentifierPart(final Character ch) {
-        return new Boolean(Character.isUnicodeIdentifierPart(ch.charValue()));
+        return Boolean.valueOf(Character.isUnicodeIdentifierPart(ch.charValue()));
     }
 
 
     static public Boolean isUnicodeIdentifierStart(final Character ch) {
-        return new Boolean(Character.isUnicodeIdentifierStart(ch.charValue()));
+        return Boolean.valueOf(Character.isUnicodeIdentifierStart(ch.charValue()));
     }
 
 
     static public Integer digit(final Character ch, final Integer radix) {
-        return new Integer(Character.digit(ch.charValue(), radix.intValue()));
+        return Integer.valueOf(Character.digit(ch.charValue(), radix.intValue()));
     }
 
 
     static public Boolean isDigit(final Character ch) {
-        return new Boolean(Character.isDigit(ch.charValue()));
+        return Boolean.valueOf(Character.isDigit(ch.charValue()));
     }
 
 
     static public Boolean isLetter(final Character ch) {
-        return new Boolean(Character.isLetter(ch.charValue()));
+        return Boolean.valueOf(Character.isLetter(ch.charValue()));
     }
 
 
     static public Boolean isLetterOrDigit(final Character ch) {
-        return new Boolean(Character.isLetterOrDigit(ch.charValue()));
+        return Boolean.valueOf(Character.isLetterOrDigit(ch.charValue()));
     }
 
 
     static public Boolean isSpaceChar(final Character ch) {
-        return new Boolean(Character.isSpaceChar(ch.charValue()));
+        return Boolean.valueOf(Character.isSpaceChar(ch.charValue()));
     }
 
 
     static public Boolean isWhitespace(final Character ch) {
-        return new Boolean(Character.isWhitespace(ch.charValue()));
+        return Boolean.valueOf(Character.isWhitespace(ch.charValue()));
     }
 }
 

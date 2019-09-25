@@ -6,12 +6,12 @@ import jp.vdmtools.VDM.VDMSpecException;
 
 public class JavaLangObject implements Nullable {
 
-    protected Boolean isNil = new Boolean(false);
+    protected Boolean isNil = Boolean.FALSE;
 
     public static JavaLangObject NIL = new JavaLangObject(new quotes.NIL());
 
     public JavaLangObject(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public Boolean IsNil() {
@@ -36,7 +36,7 @@ public class JavaLangObject implements Nullable {
 
 
     public Integer vdm_hashCode() throws CGException {
-        return new Integer(super.hashCode());
+        return Integer.valueOf(super.hashCode());
     }
 
     public JavaLangString vdm_toString() throws CGException {
@@ -44,7 +44,7 @@ public class JavaLangObject implements Nullable {
     }
 
     public Boolean vdm_equals(final JavaLangObject obj) throws CGException {
-        return new Boolean(UTIL.equals(this, obj));
+        return Boolean.valueOf(UTIL.equals(this, obj));
     }
 
     protected void vdm_finalize() throws CGException

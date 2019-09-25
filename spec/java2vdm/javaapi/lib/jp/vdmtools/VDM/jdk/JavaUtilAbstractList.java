@@ -23,14 +23,14 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
 // ***** VDMTOOLS END Name=modCount
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilAbstractList"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaUtilAbstractList"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
 // ***** VDMTOOLS START Name=JavaUtilAbstractList KEEP=NO
     public JavaUtilAbstractList() throws CGException {
 
-            modCount = new Integer(0);
+            modCount = Integer.valueOf(0);
 
     }
 // ***** VDMTOOLS END Name=JavaUtilAbstractList
@@ -43,7 +43,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
 
 // ***** VDMTOOLS START Name=clear KEEP=NO
     public void clear() throws CGException {
-        removeRange(new Integer(0), size());
+        removeRange(Integer.valueOf(0), size());
     }
 // ***** VDMTOOLS END Name=clear
 
@@ -57,7 +57,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
 
 // ***** VDMTOOLS START Name=hashCode KEEP=NO
     public Integer jHashCode() throws CGException {
-        Integer hashCode_1 = new Integer(1);
+        Integer hashCode_1 = Integer.valueOf(1);
         JavaUtilIterator i = iterator();
         while (true) {
             Boolean whCrtl_1 = null;
@@ -89,7 +89,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
 // ***** VDMTOOLS START Name=listIterator KEEP=NO
     public JavaUtilListIterator listIterator() throws CGException {
         JavaUtilListIterator rexpr_1 = null;
-        rexpr_1 = (JavaUtilListIterator) listIterator(new Integer(0));
+        rexpr_1 = (JavaUtilListIterator) listIterator(Integer.valueOf(0));
         return (JavaUtilListIterator) rexpr_1;
     }
 // ***** VDMTOOLS END Name=listIterator
@@ -104,8 +104,8 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
         s = (JavaLangString) UTIL.clone(rhs_3);
         Boolean cond_9 = null;
         {
-            if (!(cond_9 = new Boolean((index.intValue()) < (new Integer(0).intValue()))).booleanValue())
-                cond_9 = new Boolean((index.intValue()) > (size().intValue()));
+            if (!(cond_9 = Boolean.valueOf((index.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue())
+                cond_9 = Boolean.valueOf((index.intValue()) > (size().intValue()));
         }
         if (cond_9.booleanValue())
             throw new VDMSpecException(new JavaLangIndexOutOfBoundsException(s));
@@ -116,8 +116,8 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
 
 // ***** VDMTOOLS START Name=equals KEEP=NO
     public Boolean equals(final JavaLangObject o) throws CGException {
-        if (new Boolean(!new Boolean(o instanceof JavaUtilAbstractList).booleanValue()).booleanValue())
-            return new Boolean(false);
+        if (Boolean.valueOf(!Boolean.valueOf(o instanceof JavaUtilAbstractList).booleanValue()).booleanValue())
+            return Boolean.FALSE;
         {
             JavaUtilListIterator e1 = listIterator();
             JavaUtilListIterator e2 = ((JavaUtilAbstractList) o).listIterator();
@@ -137,7 +137,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
                     o1 = (JavaLangObject) e1.next();
                     JavaLangObject o2 = null;
                     o2 = (JavaLangObject) e2.next();
-                    return new Boolean(false);
+                    return Boolean.FALSE;
                 } else
                     break;
             }
@@ -152,7 +152,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
                     unArg_16 = var2_18;
                 }
             }
-            rexpr_15 = new Boolean(!unArg_16.booleanValue());
+            rexpr_15 = Boolean.valueOf(!unArg_16.booleanValue());
             return rexpr_15;
         }
     }
@@ -163,16 +163,16 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
     protected void removeRange(final Integer fromIndex, final Integer toIndex) throws CGException {
         JavaUtilListIterator it = (JavaUtilListIterator) listIterator(fromIndex);
         {
-            Integer i = new Integer(0);
-            Integer n = new Integer(toIndex.intValue() - fromIndex.intValue());
-            while (new Boolean((i.intValue()) < (n.intValue())).booleanValue()) {
+            Integer i = Integer.valueOf(0);
+            Integer n = Integer.valueOf(toIndex.intValue() - fromIndex.intValue());
+            while (Boolean.valueOf((i.intValue()) < (n.intValue())).booleanValue()) {
                 {
                     JavaLangObject tmpVal_10 = null;
                     tmpVal_10 = (JavaLangObject) it.next();
                     ;
                 }
                 it.remove();
-                i = UTIL.NumberToInt(UTIL.clone(new Integer(i.intValue() + new Integer(1).intValue())));
+                i = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i.intValue() + Integer.valueOf(1).intValue())));
             }
         }
         ;
@@ -219,7 +219,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
                 } else
                     break;
             }
-        return new Integer(-new Integer(1).intValue());
+        return Integer.valueOf(-Integer.valueOf(1).intValue());
     }
 // ***** VDMTOOLS END Name=indexOf
 
@@ -234,7 +234,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
 // ***** VDMTOOLS START Name=JavaUtilAbstractList KEEP=NO
     public JavaUtilAbstractList(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilAbstractList
 
@@ -278,7 +278,7 @@ public abstract class JavaUtilAbstractList extends JavaLangObject implements Jav
                 } else
                     break;
             }
-        return new Integer(-new Integer(1).intValue());
+        return Integer.valueOf(-Integer.valueOf(1).intValue());
     }
 // ***** VDMTOOLS END Name=lastIndexOf
 

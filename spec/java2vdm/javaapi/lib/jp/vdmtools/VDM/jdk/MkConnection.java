@@ -41,7 +41,7 @@ public class MkConnection extends JavaLangObject implements JavaSqlConnection {
     }
     public Boolean isClosed() throws CGException {
         try {
-            return new Boolean(wrappedObject.isClosed());
+            return Boolean.valueOf(wrappedObject.isClosed());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -66,7 +66,7 @@ public class MkConnection extends JavaLangObject implements JavaSqlConnection {
 
     public Boolean isReadOnly() throws CGException {
         try {
-            return new Boolean(wrappedObject.isReadOnly());
+            return Boolean.valueOf(wrappedObject.isReadOnly());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -88,7 +88,7 @@ public class MkConnection extends JavaLangObject implements JavaSqlConnection {
     }
     public Boolean getAutoCommit() throws CGException {
         try {
-            return new Boolean(wrappedObject.getAutoCommit());
+            return Boolean.valueOf(wrappedObject.getAutoCommit());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -133,7 +133,7 @@ public class MkConnection extends JavaLangObject implements JavaSqlConnection {
     }
     public Integer getTransactionIsolation() throws CGException {
         try {
-            return new Integer(wrappedObject.getTransactionIsolation());
+            return Integer.valueOf(wrappedObject.getTransactionIsolation());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }

@@ -43,7 +43,7 @@ public class JavaUtilDictionary extends JavaLangObject {
 // ***** VDMTOOLS START Name=JavaUtilDictionary KEEP=NO
     public JavaUtilDictionary(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilDictionary
 

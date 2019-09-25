@@ -43,7 +43,7 @@ public class JavaLangIllegalAccessException extends JavaLangException {
 // ***** VDMTOOLS START Name=JavaLangIllegalAccessException KEEP=NO
     public JavaLangIllegalAccessException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaLangIllegalAccessException
 

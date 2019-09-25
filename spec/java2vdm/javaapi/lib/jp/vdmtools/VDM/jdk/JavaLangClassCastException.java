@@ -10,7 +10,7 @@ public class JavaLangClassCastException extends JavaLangRuntimeException {
 
     public JavaLangClassCastException(final quotes.NIL var_1_1) {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 

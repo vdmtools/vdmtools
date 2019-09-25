@@ -60,7 +60,7 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
 // ***** VDMTOOLS END Name=NEED_uCHAR
 
 // ***** VDMTOOLS START Name=SKIP_uLF KEEP=NO
-    private static Integer SKIP_uLF = new Integer(JavaLangInteger.MAX_uVALUE.intValue() - new Integer(1).intValue());
+    private static Integer SKIP_uLF = Integer.valueOf(JavaLangInteger.MAX_uVALUE.intValue() - Integer.valueOf(1).intValue());
 // ***** VDMTOOLS END Name=SKIP_uLF
 
 // ***** VDMTOOLS START Name=pushedBack KEEP=NO
@@ -92,23 +92,23 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
 // ***** VDMTOOLS END Name=ctype
 
 // ***** VDMTOOLS START Name=CT_uWHITESPACE KEEP=NO
-    private static Integer CT_uWHITESPACE = new Integer(1);
+    private static Integer CT_uWHITESPACE = Integer.valueOf(1);
 // ***** VDMTOOLS END Name=CT_uWHITESPACE
 
 // ***** VDMTOOLS START Name=CT_uDIGIT KEEP=NO
-    private static Integer CT_uDIGIT = new Integer(2);
+    private static Integer CT_uDIGIT = Integer.valueOf(2);
 // ***** VDMTOOLS END Name=CT_uDIGIT
 
 // ***** VDMTOOLS START Name=CT_uALPHA KEEP=NO
-    private static Integer CT_uALPHA = new Integer(4);
+    private static Integer CT_uALPHA = Integer.valueOf(4);
 // ***** VDMTOOLS END Name=CT_uALPHA
 
 // ***** VDMTOOLS START Name=CT_uQUOTE KEEP=NO
-    private static Integer CT_uQUOTE = new Integer(8);
+    private static Integer CT_uQUOTE = Integer.valueOf(8);
 // ***** VDMTOOLS END Name=CT_uQUOTE
 
 // ***** VDMTOOLS START Name=CT_uCOMMENT KEEP=NO
-    private static Integer CT_uCOMMENT = new Integer(16);
+    private static Integer CT_uCOMMENT = Integer.valueOf(16);
 // ***** VDMTOOLS END Name=CT_uCOMMENT
 
 // ***** VDMTOOLS START Name=ttype KEEP=NO
@@ -116,7 +116,7 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
 // ***** VDMTOOLS END Name=ttype
 
 // ***** VDMTOOLS START Name=TT_uEOF KEEP=NO
-    public static Integer TT_uEOF = new Integer(-new Integer(1).intValue());
+    public static Integer TT_uEOF = Integer.valueOf(-Integer.valueOf(1).intValue());
 // ***** VDMTOOLS END Name=TT_uEOF
 
 // ***** VDMTOOLS START Name=TT_uEOL KEEP=NO
@@ -124,15 +124,15 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
 // ***** VDMTOOLS END Name=TT_uEOL
 
 // ***** VDMTOOLS START Name=TT_uNUMBER KEEP=NO
-    public static Integer TT_uNUMBER = new Integer(-new Integer(2).intValue());
+    public static Integer TT_uNUMBER = Integer.valueOf(-Integer.valueOf(2).intValue());
 // ***** VDMTOOLS END Name=TT_uNUMBER
 
 // ***** VDMTOOLS START Name=TT_uWORD KEEP=NO
-    public static Integer TT_uWORD = new Integer(-new Integer(3).intValue());
+    public static Integer TT_uWORD = Integer.valueOf(-Integer.valueOf(3).intValue());
 // ***** VDMTOOLS END Name=TT_uWORD
 
 // ***** VDMTOOLS START Name=TT_uNOTHING KEEP=NO
-    private static Integer TT_uNOTHING = new Integer(-new Integer(4).intValue());
+    private static Integer TT_uNOTHING = Integer.valueOf(-Integer.valueOf(4).intValue());
 // ***** VDMTOOLS END Name=TT_uNOTHING
 
 // ***** VDMTOOLS START Name=sval KEEP=NO
@@ -152,17 +152,17 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
 
     public JavaIoStreamTokenizer(final quotes.NIL v)
     {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public Integer getTtype()
     {
-        return new Integer(wrappedObject.ttype);
+        return Integer.valueOf(wrappedObject.ttype);
     }
 
     public Double getNval()
     {
-        return new Double(wrappedObject.nval);
+        return Double.valueOf(wrappedObject.nval);
     }
 
     public String getSval()
@@ -172,7 +172,7 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
 
     public Integer lineno()
     {
-        return new Integer(wrappedObject.lineno());
+        return Integer.valueOf(wrappedObject.lineno());
     }
 
     public void pushBack()
@@ -193,7 +193,7 @@ public class JavaIoStreamTokenizer extends JavaLangObject {
     public Integer nextToken() throws CGException
     {
         try {
-            return new Integer(wrappedObject.nextToken());
+            return Integer.valueOf(wrappedObject.nextToken());
         }
         catch (IOException e)
         {

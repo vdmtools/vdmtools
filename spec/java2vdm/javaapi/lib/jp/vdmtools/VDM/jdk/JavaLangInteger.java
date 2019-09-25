@@ -7,21 +7,21 @@ public class JavaLangInteger extends JavaLangObject
     implements JavaLangNumber, JavaLangComparable 
 {
 
-    public static Integer MAX_uVALUE = new Integer(Integer.MAX_VALUE);
-    public static final Integer MIN_uVALUE = new Integer(Integer.MIN_VALUE);
+    public static Integer MAX_uVALUE = Integer.valueOf(Integer.MAX_VALUE);
+    public static final Integer MIN_uVALUE = Integer.valueOf(Integer.MIN_VALUE);
 
     public static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaLangInteger"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
     public static final JavaLangClass TYPE =
             new JavaLangClass(new String("int"),
                     new quotes.CLASS(),
-                    new Boolean(true));
+                    Boolean.TRUE);
     private Integer wrappedObject;
 
     public JavaLangInteger() {
-        wrappedObject = new Integer(0);
+        wrappedObject = Integer.valueOf(0);
     }
 
     public Integer getWrappedObject() {
@@ -34,11 +34,11 @@ public class JavaLangInteger extends JavaLangObject
 
 
     public JavaLangInteger(final Character value_u_u) {
-        wrappedObject = new Integer((int) value_u_u.charValue());
+        wrappedObject = Integer.valueOf((int) value_u_u.charValue());
     }
 
     public JavaLangInteger(final JavaLangString s) throws CGException {
-        wrappedObject = new Integer(s.toSeqOfChar());
+        wrappedObject = Integer.valueOf(s.toSeqOfChar());
     }
 
     public JavaLangClass getJClass() {
@@ -49,20 +49,20 @@ public class JavaLangInteger extends JavaLangObject
     public JavaLangClass vdm_getClass() {
 	return new JavaLangClass(new String("JavaLangInteger"),
 				 new quotes.CLASS(),
-				 new Boolean(false));
+				 Boolean.FALSE);
     }
 
 
     public Integer jHashCode() {
-        return new Integer(wrappedObject.hashCode());
+        return Integer.valueOf(wrappedObject.hashCode());
     }
 
     public Integer vdm_HashCode() {
-        return new Integer(wrappedObject.hashCode());
+        return Integer.valueOf(wrappedObject.hashCode());
     }
 
     public Integer intValue() {
-        return new Integer(wrappedObject.intValue());
+        return Integer.valueOf(wrappedObject.intValue());
     }
 
 
@@ -76,12 +76,12 @@ public class JavaLangInteger extends JavaLangObject
 
 
     public Integer byteValue() {
-        return new Integer(wrappedObject.byteValue());
+        return Integer.valueOf(wrappedObject.byteValue());
     }
 
 
     public Integer longValue() {
-        return new Integer((int) wrappedObject.longValue());
+        return Integer.valueOf((int) wrappedObject.longValue());
     }
 
 
@@ -97,12 +97,12 @@ public class JavaLangInteger extends JavaLangObject
 
 
     public Double floatValue() {
-        return new Double((double) wrappedObject.floatValue());
+        return Double.valueOf((double) wrappedObject.floatValue());
     }
 
 
     public Integer shortValue() {
-        return new Integer(wrappedObject.shortValue());
+        return Integer.valueOf(wrappedObject.shortValue());
     }
 
 
@@ -119,7 +119,7 @@ public class JavaLangInteger extends JavaLangObject
 
 
     public JavaLangInteger(final quotes.NIL n) {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 
@@ -138,9 +138,9 @@ public class JavaLangInteger extends JavaLangObject
     public Boolean equals(final JavaLangObject obj) {
         if (obj instanceof JavaLangInteger) {
             JavaLangInteger intObj = (JavaLangInteger) obj;
-            return new Boolean(wrappedObject.equals(intObj.getWrappedObject()));
+            return Boolean.valueOf(wrappedObject.equals(intObj.getWrappedObject()));
         }
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 
 
@@ -158,7 +158,7 @@ public class JavaLangInteger extends JavaLangObject
 
     static public Integer parseInt(final JavaLangString s)
             throws CGException {
-        return parseInt(s, new Integer(10));
+        return parseInt(s, Integer.valueOf(10));
     }
 
 
@@ -171,7 +171,7 @@ public class JavaLangInteger extends JavaLangObject
 
 
     public Integer compareToInt(final JavaLangInteger anotherInteger) {
-        return new Integer(wrappedObject.compareTo(anotherInteger.
+        return Integer.valueOf(wrappedObject.compareTo(anotherInteger.
                 getWrappedObject()));
     }
 
@@ -186,7 +186,7 @@ public class JavaLangInteger extends JavaLangObject
                                    final Integer radix)
             throws CGException {
         try {
-            return new Integer(Integer.parseInt(s.toSeqOfChar(),
+            return Integer.valueOf(Integer.parseInt(s.toSeqOfChar(),
                     radix.intValue()));
         } catch (NumberFormatException e) {
             throw new VDMSpecException(new JavaLangNumberFormatException());

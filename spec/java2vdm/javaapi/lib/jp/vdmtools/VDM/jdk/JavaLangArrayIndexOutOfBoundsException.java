@@ -41,7 +41,7 @@ public class JavaLangArrayIndexOutOfBoundsException extends JavaLangIndexOutOfBo
 
     public JavaLangArrayIndexOutOfBoundsException(final quotes.NIL var_1_1)  {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public JavaLangArrayIndexOutOfBoundsException(final JavaLangString s) throws CGException {

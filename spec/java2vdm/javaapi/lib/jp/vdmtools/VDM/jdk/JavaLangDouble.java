@@ -33,27 +33,27 @@ public class JavaLangDouble extends JavaLangObject implements JavaLangComparable
 // ***** VDMTOOLS END Name=vdmComp
 
 // ***** VDMTOOLS START Name=POSITIVE_uINFINITY KEEP=NO
-    public static Double POSITIVE_uINFINITY = UTIL.NumberToReal(new Double(0));
+    public static Double POSITIVE_uINFINITY = UTIL.NumberToReal(Double.valueOf(0));
 // ***** VDMTOOLS END Name=POSITIVE_uINFINITY
 
 // ***** VDMTOOLS START Name=NEGATIVE_uINFINITY KEEP=NO
-    public static Double NEGATIVE_uINFINITY = UTIL.NumberToReal(new Double(0));
+    public static Double NEGATIVE_uINFINITY = UTIL.NumberToReal(Double.valueOf(0));
 // ***** VDMTOOLS END Name=NEGATIVE_uINFINITY
 
 // ***** VDMTOOLS START Name=NaN KEEP=NO
-    public static Double NaN = UTIL.NumberToReal(new Double(0));
+    public static Double NaN = UTIL.NumberToReal(Double.valueOf(0));
 // ***** VDMTOOLS END Name=NaN
 
 // ***** VDMTOOLS START Name=MAX_uVALUE KEEP=NO
-    public static Double MAX_uVALUE = UTIL.NumberToReal(new Double(Double.MAX_VALUE));
+    public static Double MAX_uVALUE = UTIL.NumberToReal(Double.valueOf(Double.MAX_VALUE));
 // ***** VDMTOOLS END Name=MAX_uVALUE
 
 // ***** VDMTOOLS START Name=MIN_uVALUE KEEP=NO
-    public static Double MIN_uVALUE = UTIL.NumberToReal(new Double(Double.MIN_VALUE));
+    public static Double MIN_uVALUE = UTIL.NumberToReal(Double.valueOf(Double.MIN_VALUE));
 // ***** VDMTOOLS END Name=MIN_uVALUE
 
 // ***** VDMTOOLS START Name=TYPE KEEP=NO
-    public static JavaLangClass TYPE = (JavaLangClass) new JavaLangClass(new String("double"), new quotes.CLASS(), new Boolean(true));
+    public static JavaLangClass TYPE = (JavaLangClass) new JavaLangClass(new String("double"), new quotes.CLASS(), Boolean.TRUE);
 // ***** VDMTOOLS END Name=TYPE
 
     public Integer intValue() throws CGException {
@@ -84,7 +84,7 @@ public class JavaLangDouble extends JavaLangObject implements JavaLangComparable
    }
 
     public JavaLangDouble(final quotes.NIL var_1_1) throws CGException {
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public JavaLangDouble(final JavaLangString s) throws CGException {

@@ -85,7 +85,7 @@ public abstract class HMEntrySet extends JavaUtilAbstractSet {
         JavaLangObject obj_4 = null;
         obj_4 = (JavaLangObject) hm.remove((JavaLangObject) key);
         unArg_3 = obj_4.IsNil();
-        rexpr_2 = new Boolean(!unArg_3.booleanValue());
+        rexpr_2 = Boolean.valueOf(!unArg_3.booleanValue());
         return rexpr_2;
     }
 // ***** VDMTOOLS END Name=remove

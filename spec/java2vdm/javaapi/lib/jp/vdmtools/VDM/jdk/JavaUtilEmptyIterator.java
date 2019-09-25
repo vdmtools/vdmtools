@@ -50,7 +50,7 @@ public class JavaUtilEmptyIterator extends JavaLangObject implements JavaUtilIte
 
 // ***** VDMTOOLS START Name=hasNext KEEP=NO
     public Boolean hasNext() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 // ***** VDMTOOLS END Name=hasNext
 

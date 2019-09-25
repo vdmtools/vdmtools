@@ -74,7 +74,7 @@ public class JavaUtilHTEntry extends JavaLangObject implements JavaUtilEntry {
 //        Boolean cond_3 = null;
 //        cond_3 = value_u_u.IsNil();
 //        if (cond_3.booleanValue())
-//            rexpr_1 = new Integer(0);
+//            rexpr_1 = Integer.valueOf(0);
 //        else
 //            rexpr_1 = value_u_u.hashCode();
 //        return rexpr_1;
@@ -99,15 +99,15 @@ public class JavaUtilHTEntry extends JavaLangObject implements JavaUtilEntry {
 // ***** VDMTOOLS START Name=JavaUtilHTEntry KEEP=NO
     public JavaUtilHTEntry (final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilHTEntry
 
 
 // ***** VDMTOOLS START Name=equals KEEP=NO
     public Boolean equals (final JavaLangObject o) throws CGException {
-        if (new Boolean(!new Boolean(o instanceof JavaUtilHTEntry).booleanValue()).booleanValue())
-            return new Boolean(false);
+        if (Boolean.valueOf(!Boolean.valueOf(o instanceof JavaUtilHTEntry).booleanValue()).booleanValue())
+            return Boolean.FALSE;
         {
             JavaUtilHTEntry e = (JavaUtilHTEntry) o;
             Boolean rexpr_6 = null;

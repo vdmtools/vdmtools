@@ -35,7 +35,7 @@ public class JavaLangThrowable extends JavaLangObject implements JavaIoSerializa
 
     public JavaLangThrowable(final quotes.NIL var_1_1) {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 

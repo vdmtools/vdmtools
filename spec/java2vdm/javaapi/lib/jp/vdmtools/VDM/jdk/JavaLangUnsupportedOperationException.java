@@ -43,7 +43,7 @@ public class JavaLangUnsupportedOperationException extends JavaLangRuntimeExcept
 // ***** VDMTOOLS START Name=JavaLangUnsupportedOperationException KEEP=NO
     public JavaLangUnsupportedOperationException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaLangUnsupportedOperationException
 

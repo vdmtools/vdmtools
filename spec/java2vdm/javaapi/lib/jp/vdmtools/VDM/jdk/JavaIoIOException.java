@@ -43,7 +43,7 @@ public class JavaIoIOException extends JavaLangException {
 // ***** VDMTOOLS START Name=JavaIoIOException KEEP=NO
     public JavaIoIOException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaIoIOException
 

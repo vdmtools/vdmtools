@@ -107,7 +107,7 @@ public class JavaIoStringWriter extends JavaIoWriter {
         char chbuf[] = new char[cbuf.size()];
         for (int i = 0; i < cbuf.size(); i++)
         {
-            chbuf[i] = (char) ((Integer )cbuf.get(new Integer(i))).intValue();
+            chbuf[i] = (char) ((Integer )cbuf.get(Integer.valueOf(i))).intValue();
         }
         wrappedObject.write(chbuf, off.intValue(), len_u_u.intValue());
     }
@@ -117,7 +117,7 @@ public class JavaIoStringWriter extends JavaIoWriter {
 // ***** VDMTOOLS START Name=JavaIoStringWriter KEEP=NO
     public JavaIoStringWriter(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaIoStringWriter
 

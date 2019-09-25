@@ -31,16 +31,16 @@ public class JavaTextFieldPosition extends JavaLangObject {
     private Integer field = null;
     private Integer endIndex = null;
     private Integer beginIndex = null;
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextFieldPosition"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextFieldPosition"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
 // ***** VDMTOOLS START Name=JavaTextFieldPosition KEEP=NO
     public JavaTextFieldPosition() throws CGException {
 
-            field = new Integer(0);
-            endIndex = new Integer(0);
-            beginIndex = new Integer(0);
+            field = Integer.valueOf(0);
+            endIndex = Integer.valueOf(0);
+            beginIndex = Integer.valueOf(0);
     }
 // ***** VDMTOOLS END Name=JavaTextFieldPosition
 
@@ -127,9 +127,9 @@ public class JavaTextFieldPosition extends JavaLangObject {
         Boolean cond_2 = null;
         cond_2 = obj.IsNil();
         if (cond_2.booleanValue())
-            return new Boolean(false);
-        if (new Boolean(!new Boolean(obj instanceof JavaTextFieldPosition).booleanValue()).booleanValue())
-            return new Boolean(false);
+            return Boolean.FALSE;
+        if (Boolean.valueOf(!Boolean.valueOf(obj instanceof JavaTextFieldPosition).booleanValue()).booleanValue())
+            return Boolean.FALSE;
         {
             JavaTextFieldPosition other = (JavaTextFieldPosition) obj;
             Boolean rexpr_8 = null;
@@ -137,13 +137,13 @@ public class JavaTextFieldPosition extends JavaLangObject {
             Boolean var1_10 = null;
             Integer var2_12 = null;
             var2_12 = other.beginIndex;
-            var1_10 = new Boolean(beginIndex.intValue() == var2_12.intValue());
+            var1_10 = Boolean.valueOf(beginIndex.intValue() == var2_12.intValue());
             {
                 if ((var1_9 = var1_10).booleanValue()) {
                     Boolean var2_14 = null;
                     Integer var2_16 = null;
                     var2_16 = other.endIndex;
-                    var2_14 = new Boolean(endIndex.intValue() == var2_16.intValue());
+                    var2_14 = Boolean.valueOf(endIndex.intValue() == var2_16.intValue());
                     var1_9 = var2_14;
                 }
             }
@@ -152,7 +152,7 @@ public class JavaTextFieldPosition extends JavaLangObject {
                     Boolean var2_18 = null;
                     Integer var2_20 = null;
                     var2_20 = other.field;
-                    var2_18 = new Boolean(field.intValue() == var2_20.intValue());
+                    var2_18 = Boolean.valueOf(field.intValue() == var2_20.intValue());
                     rexpr_8 = var2_18;
                 }
             }
@@ -173,7 +173,7 @@ public class JavaTextFieldPosition extends JavaLangObject {
 // ***** VDMTOOLS START Name=JavaTextFieldPosition KEEP=NO
     public JavaTextFieldPosition(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaTextFieldPosition
 

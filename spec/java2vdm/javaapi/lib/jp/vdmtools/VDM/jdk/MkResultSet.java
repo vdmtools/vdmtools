@@ -28,7 +28,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean last() throws CGException {
         try {
-            return new Boolean(wrappedObject.last());
+            return Boolean.valueOf(wrappedObject.last());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -36,7 +36,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean next() throws CGException {
         try {
-            return new Boolean(wrappedObject.next());
+            return Boolean.valueOf(wrappedObject.next());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -52,7 +52,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean first()throws CGException {
         try {
-            return new Boolean(wrappedObject.first());
+            return Boolean.valueOf(wrappedObject.first());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -60,7 +60,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getRow()throws CGException {
         try {
-            return new Integer(wrappedObject.getRow());
+            return Integer.valueOf(wrappedObject.getRow());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -68,7 +68,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean isLast()throws CGException {
         try {
-            return new Boolean(wrappedObject.isLast());
+            return Boolean.valueOf(wrappedObject.isLast());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -76,7 +76,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getInt(final Integer columnIndex)throws CGException {
         try {
-            return new Integer(wrappedObject.getInt(columnIndex.intValue()));
+            return Integer.valueOf(wrappedObject.getInt(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -84,7 +84,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getType()throws CGException {
         try {
-            return new Integer(wrappedObject.getType());
+            return Integer.valueOf(wrappedObject.getType());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -92,7 +92,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean isFirst()throws CGException {
         try {
-            return new Boolean(wrappedObject.isFirst());
+            return Boolean.valueOf(wrappedObject.isFirst());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -100,7 +100,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean wasNull()throws CGException {
         try {
-            return new Boolean(wrappedObject.wasNull());
+            return Boolean.valueOf(wrappedObject.wasNull());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -108,7 +108,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getByte(final Integer columnIndex)throws CGException {
         try {
-            return new Integer(wrappedObject.getByte(columnIndex.intValue()));
+            return Integer.valueOf(wrappedObject.getByte(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -116,7 +116,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getLong(final Integer columnIndex)throws CGException {
         try {
-            return new Integer((int) wrappedObject.getLong(columnIndex.intValue()));
+            return Integer.valueOf((int) wrappedObject.getLong(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -124,7 +124,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean previous()throws CGException {
         try {
-            return new Boolean(wrappedObject.previous());
+            return Boolean.valueOf(wrappedObject.previous());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -132,7 +132,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean absolute(final Integer row)throws CGException {
         try {
-            return new Boolean(wrappedObject.absolute(row.intValue()));
+            return Boolean.valueOf(wrappedObject.absolute(row.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -167,14 +167,14 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
     throws CGException {
         HashMap result = new HashMap();
         for(int i = 0; i < bytes.length; i++){
-            result.put(new Integer(i), new Integer((int) bytes[i]));
+            result.put(Integer.valueOf(i), Integer.valueOf((int) bytes[i]));
         }
         return result;
     }
 
     public Double getFloat(final Integer columnIndex)throws CGException {
         try {
-            return new Double(wrappedObject.getFloat(columnIndex.intValue()));
+            return Double.valueOf(wrappedObject.getFloat(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -182,7 +182,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getShort(final Integer columnIndex)throws CGException {
         try {
-            return new Integer((int) wrappedObject.getShort(columnIndex.intValue()));
+            return Integer.valueOf((int) wrappedObject.getShort(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -198,7 +198,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean relative(final Integer rows)throws CGException {
         try {
-            return new Boolean(wrappedObject.relative(rows.intValue()));
+            return Boolean.valueOf(wrappedObject.relative(rows.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -214,7 +214,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Double getDouble(final Integer columnIndex)throws CGException {
         try {
-            return new Double(wrappedObject.getDouble(columnIndex.intValue()));
+            return Double.valueOf(wrappedObject.getDouble(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -238,7 +238,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean rowDeleted()throws CGException {
         try {
-            return new Boolean (wrappedObject.rowDeleted());
+            return Boolean.valueOf (wrappedObject.rowDeleted());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -246,7 +246,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean rowUpdated()throws CGException {
         try {
-            return new Boolean(wrappedObject.rowUpdated());
+            return Boolean.valueOf(wrappedObject.rowUpdated());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -262,7 +262,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean getBoolean(final Integer columnIndex)throws CGException {
         try {
-            return new Boolean(wrappedObject.getBoolean(columnIndex.intValue()));
+            return Boolean.valueOf(wrappedObject.getBoolean(columnIndex.intValue()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -270,7 +270,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean isAfterLast()throws CGException {
         try {
-            return new Boolean(wrappedObject.isAfterLast());
+            return Boolean.valueOf(wrappedObject.isAfterLast());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -278,7 +278,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean rowInserted()throws CGException {
         try {
-            return new Boolean(wrappedObject.rowInserted());
+            return Boolean.valueOf(wrappedObject.rowInserted());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -294,7 +294,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getFetchSize()throws CGException {
         try {
-            return new Integer(wrappedObject.getFetchSize());
+            return Integer.valueOf(wrappedObject.getFetchSize());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -334,7 +334,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean isBeforeFirst()throws CGException {
         try {
-            return new Boolean(wrappedObject.isBeforeFirst());
+            return Boolean.valueOf(wrappedObject.isBeforeFirst());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -366,7 +366,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getConcurrency()throws CGException {
         try {
-            return new Integer(wrappedObject.getConcurrency());
+            return Integer.valueOf(wrappedObject.getConcurrency());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -374,7 +374,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getInt(final JavaLangString columnName)throws CGException {
         try {
-            return new Integer(wrappedObject.getInt(columnName.toSeqOfChar()));
+            return Integer.valueOf(wrappedObject.getInt(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -398,7 +398,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getByte(final JavaLangString columnName)throws CGException {
         try {
-            return new Integer(wrappedObject.getByte(columnName.toSeqOfChar()));
+            return Integer.valueOf(wrappedObject.getByte(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -406,7 +406,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getLong(final JavaLangString columnName)throws CGException {
         try {
-            return new Integer((int) wrappedObject.getLong(columnName.toSeqOfChar()));
+            return Integer.valueOf((int) wrappedObject.getLong(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -447,7 +447,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Double getFloat(final JavaLangString columnName)throws CGException {
         try {
-            return new Double(wrappedObject.getFloat(columnName.toSeqOfChar()));
+            return Double.valueOf(wrappedObject.getFloat(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -455,7 +455,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getShort(final JavaLangString columnName)throws CGException {
         try {
-            return new Integer((int) wrappedObject.getShort(columnName.toSeqOfChar()));
+            return Integer.valueOf((int) wrappedObject.getShort(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -479,7 +479,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Double getDouble(final JavaLangString columnName)throws CGException {
         try {
-            return new Double(wrappedObject.getDouble(columnName.toSeqOfChar()));
+            return Double.valueOf(wrappedObject.getDouble(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -487,7 +487,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer getFetchDirection()throws CGException {
         try {
-            return new Integer(wrappedObject.getFetchDirection());
+            return Integer.valueOf(wrappedObject.getFetchDirection());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -511,7 +511,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Integer findColumn(final JavaLangString columnName)throws CGException {
         try {
-            return new Integer(wrappedObject.findColumn(columnName.toSeqOfChar()));
+            return Integer.valueOf(wrappedObject.findColumn(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -519,7 +519,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
 
     public Boolean getBoolean(final JavaLangString columnName)throws CGException {
         try {
-            return new Boolean(wrappedObject.getBoolean(columnName.toSeqOfChar()));
+            return Boolean.valueOf(wrappedObject.getBoolean(columnName.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -545,7 +545,7 @@ public class MkResultSet extends JavaLangObject implements JavaSqlResultSet {
         byte[] bytes = new byte[hm.size()];
         for (int i = 0; i < bytes.length; i++)
         {
-            bytes[i] = (byte) ((Integer) hm.get(new Integer(i))).intValue();
+            bytes[i] = (byte) ((Integer) hm.get(Integer.valueOf(i))).intValue();
         }
         return bytes;
     }

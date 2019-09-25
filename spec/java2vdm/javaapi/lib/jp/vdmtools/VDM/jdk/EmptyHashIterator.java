@@ -24,7 +24,7 @@ public class EmptyHashIterator extends JavaLangObject implements JavaUtilIterato
 
 
     public Boolean hasNext() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 
 

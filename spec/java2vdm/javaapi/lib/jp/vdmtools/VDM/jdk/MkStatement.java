@@ -54,7 +54,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getMaxRows() throws CGException {
         try {
-            return new Integer(wrappedObject.getMaxRows());
+            return Integer.valueOf(wrappedObject.getMaxRows());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -73,7 +73,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
             int[] vals = wrappedObject.executeBatch();
             HashMap result = new HashMap();
             for (int i = 0; i < vals.length; i++)
-                result.put(new Integer(i), new Integer(vals[i]));
+                result.put(Integer.valueOf(i), Integer.valueOf(vals[i]));
             return result;
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
@@ -82,7 +82,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getFetchSize() throws CGException {
         try {
-            return new Integer(wrappedObject.getFetchSize());
+            return Integer.valueOf(wrappedObject.getFetchSize());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -122,7 +122,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Boolean getMoreResults() throws CGException {
         try {
-            return new Boolean(wrappedObject.getMoreResults());
+            return Boolean.valueOf(wrappedObject.getMoreResults());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -130,7 +130,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getUpdateCount() throws CGException {
         try {
-            return new Integer(wrappedObject.getUpdateCount());
+            return Integer.valueOf(wrappedObject.getUpdateCount());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -138,7 +138,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Boolean execute(final JavaLangString sql) throws CGException {
         try {
-            return new Boolean(wrappedObject.execute(sql.toSeqOfChar()));
+            return Boolean.valueOf(wrappedObject.execute(sql.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -146,7 +146,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getMaxFieldSize() throws CGException {
         try {
-            return new Integer(wrappedObject.getMaxFieldSize());
+            return Integer.valueOf(wrappedObject.getMaxFieldSize());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -154,7 +154,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getQueryTimeout() throws CGException {
         try {
-            return new Integer(wrappedObject.getQueryTimeout());
+            return Integer.valueOf(wrappedObject.getQueryTimeout());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -170,7 +170,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getResultSetType() throws CGException {
         try {
-            return new Integer(wrappedObject.getResultSetType());
+            return Integer.valueOf(wrappedObject.getResultSetType());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -194,7 +194,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getFetchDirection() throws CGException {
         try {
-            return new Integer(wrappedObject.getFetchDirection());
+            return Integer.valueOf(wrappedObject.getFetchDirection());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -226,7 +226,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer executeUpdate(final JavaLangString sql) throws CGException {
         try {
-            return new Integer(wrappedObject.executeUpdate(sql.toSeqOfChar()));
+            return Integer.valueOf(wrappedObject.executeUpdate(sql.toSeqOfChar()));
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }
@@ -242,7 +242,7 @@ public class MkStatement extends JavaLangObject implements JavaSqlStatement {
 
     public Integer getResultSetConcurrency() throws CGException {
         try {
-            return new Integer(wrappedObject.getResultSetConcurrency());
+            return Integer.valueOf(wrappedObject.getResultSetConcurrency());
         } catch (SQLException e) {
             throw new VDMSpecException(new JavaSqlSQLException(e));
         }

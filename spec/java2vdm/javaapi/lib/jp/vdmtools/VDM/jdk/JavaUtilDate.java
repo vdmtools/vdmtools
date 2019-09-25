@@ -44,36 +44,36 @@ public class JavaUtilDate extends JavaLangObject
     }
 
     public Integer getDay() throws CGException {
-//        return new Integer(wrappedObject.getDay());
-        return new Integer(cl.get(Calendar.DAY_OF_WEEK));
+//        return Integer.valueOf(wrappedObject.getDay());
+        return Integer.valueOf(cl.get(Calendar.DAY_OF_WEEK));
     }
 
     public Integer getDate() throws CGException {
-//        return new Integer(wrappedObject.getDate());
-        return new Integer(cl.get(Calendar.DAY_OF_MONTH));
+//        return Integer.valueOf(wrappedObject.getDate());
+        return Integer.valueOf(cl.get(Calendar.DAY_OF_MONTH));
     }
 
     public Integer getTime() throws CGException {
-        return new Integer((int) wrappedObject.getTime());
+        return Integer.valueOf((int) wrappedObject.getTime());
     }
 
     public Integer getYear() throws CGException {
-//        return new Integer(wrappedObject.getYear());
-        return new Integer(cl.get(Calendar.YEAR));
+//        return Integer.valueOf(wrappedObject.getYear());
+        return Integer.valueOf(cl.get(Calendar.YEAR));
     }
 
     public Integer getHours() throws CGException {
-//        return new Integer(wrappedObject.getHours());
-        return new Integer(cl.get(Calendar.HOUR_OF_DAY));
+//        return Integer.valueOf(wrappedObject.getHours());
+        return Integer.valueOf(cl.get(Calendar.HOUR_OF_DAY));
     }
 
     public Integer getMonth() throws CGException {
-//        return new Integer(wrappedObject.getMonth());
-        return new Integer(cl.get(Calendar.MONTH));
+//        return Integer.valueOf(wrappedObject.getMonth());
+        return Integer.valueOf(cl.get(Calendar.MONTH));
     }
 
     public Integer jHashCode() throws CGException {
-        return  new Integer(wrappedObject.hashCode());
+        return  Integer.valueOf(wrappedObject.hashCode());
     }
 
     public void setDate(final Integer date) throws CGException {
@@ -98,7 +98,7 @@ public class JavaUtilDate extends JavaLangObject
 
     public JavaUtilDate(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     public JavaUtilDate(final Integer year, final Integer month, final Integer date) throws CGException {
@@ -118,17 +118,17 @@ public class JavaUtilDate extends JavaLangObject
     }
 
     public Integer getMinutes() throws CGException {
-//        return new Integer(wrappedObject.getMinutes());
-        return new Integer(cl.get(Calendar.MINUTE));
+//        return Integer.valueOf(wrappedObject.getMinutes());
+        return Integer.valueOf(cl.get(Calendar.MINUTE));
     }
 
     public Integer getSeconds() throws CGException {
-//        return new Integer(wrappedObject.getSeconds());
-        return new Integer(cl.get(Calendar.SECOND));
+//        return Integer.valueOf(wrappedObject.getSeconds());
+        return Integer.valueOf(cl.get(Calendar.SECOND));
     }
 
     public Boolean after(final JavaUtilDate when) throws CGException {
-        return new Boolean(wrappedObject.after(when.getWrappedObject()));
+        return Boolean.valueOf(wrappedObject.after(when.getWrappedObject()));
     }
 
     public void setMinutes(final Integer minutes) throws CGException {
@@ -153,7 +153,7 @@ public class JavaUtilDate extends JavaLangObject
     }
 
     public Boolean before(final JavaUtilDate when) throws CGException {
-        return new Boolean(wrappedObject.before(when.getWrappedObject()));
+        return Boolean.valueOf(wrappedObject.before(when.getWrappedObject()));
     }
 
     public JavaUtilDate(final Integer year, final Integer month, final Integer date, final Integer hrs, final Integer min) throws CGException {
@@ -161,10 +161,10 @@ public class JavaUtilDate extends JavaLangObject
     }
 
     static public Integer parse(final JavaLangString s) throws CGException {
-//        return  new Integer((int) Date.parse(s.toSeqOfChar()));
+//        return  Integer.valueOf((int) Date.parse(s.toSeqOfChar()));
         try
         {
-          return  new Integer((int)(fm.parse(s.toSeqOfChar()).getTime()));
+          return  Integer.valueOf((int)(fm.parse(s.toSeqOfChar()).getTime()));
         }
         catch (Exception e)
         {
@@ -174,20 +174,20 @@ public class JavaUtilDate extends JavaLangObject
 
     static public Integer UTC(final Integer year, final Integer month, final Integer date, final Integer hrs,
                               final Integer min, final Integer sec) throws CGException {
-//        return new Integer((int) Date.UTC(year.intValue(), month.intValue(), date.intValue(),
+//        return Integer.valueOf((int) Date.UTC(year.intValue(), month.intValue(), date.intValue(),
 //                                          hrs.intValue(), min.intValue(), sec.intValue()));
         Calendar utccl = new GregorianCalendar();
         utccl.setTimeZone(TimeZone.getTimeZone("UTC"));
         utccl.set(year.intValue() + 1900, month.intValue(), date.intValue(),
                                           hrs.intValue(), min.intValue(), sec.intValue());
-        return new Integer((int) utccl.getTimeInMillis());
+        return Integer.valueOf((int) utccl.getTimeInMillis());
     }
 
     public Boolean equals(final JavaLangObject obj) throws CGException {
         if (obj instanceof JavaUtilDate)
-            return new Boolean(wrappedObject.equals(((JavaUtilDate) obj).getWrappedObject()));
+            return Boolean.valueOf(wrappedObject.equals(((JavaUtilDate) obj).getWrappedObject()));
         else
-            return new Boolean(false);
+            return Boolean.FALSE;
     }
 
     public JavaLangString toLocaleString() throws CGException {
@@ -201,14 +201,14 @@ public class JavaUtilDate extends JavaLangObject
     }
 
     public Integer compareTo(final JavaLangObject o) throws CGException {
-//        return new Integer(wrappedObject.compareTo(o));
-        return new Integer(wrappedObject.compareTo(((JavaUtilDate) o).getWrappedObject()));
+//        return Integer.valueOf(wrappedObject.compareTo(o));
+        return Integer.valueOf(wrappedObject.compareTo(((JavaUtilDate) o).getWrappedObject()));
     }
 
 
     public Integer getTimezoneOffset() throws CGException {
-//        return new Integer(wrappedObject.getTimezoneOffset());
-        return new Integer(cl.get(Calendar.ZONE_OFFSET) + cl.get(Calendar.DST_OFFSET)/( 60 * 1000 ));
+//        return Integer.valueOf(wrappedObject.getTimezoneOffset());
+        return Integer.valueOf(cl.get(Calendar.ZONE_OFFSET) + cl.get(Calendar.DST_OFFSET)/( 60 * 1000 ));
     }
 }
 

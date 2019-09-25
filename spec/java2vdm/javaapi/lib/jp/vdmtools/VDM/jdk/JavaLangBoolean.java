@@ -37,7 +37,7 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
 // ***** VDMTOOLS END Name=FALSE
 
 // ***** VDMTOOLS START Name=TYPE KEEP=NO
-    public static JavaLangClass TYPE = (JavaLangClass) new JavaLangClass(new String("boolean"), new quotes.CLASS(), new Boolean(true));
+    public static JavaLangClass TYPE = (JavaLangClass) new JavaLangClass(new String("boolean"), new quotes.CLASS(), Boolean.TRUE);
 // ***** VDMTOOLS END Name=TYPE
 
 // ***** VDMTOOLS START Name=value_u_u KEEP=NO
@@ -47,9 +47,9 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
 // ***** VDMTOOLS START Name=JavaLangBoolean KEEP=NO
     public JavaLangBoolean() throws CGException {
         try {
-            TRUE = (JavaLangBoolean) new JavaLangBoolean(new Boolean(true));
-            FALSE = (JavaLangBoolean) new JavaLangBoolean(new Boolean(false));
-            TYPE = (JavaLangClass) new JavaLangClass(new String("boolean"), new quotes.CLASS(), new Boolean(true));
+            TRUE = (JavaLangBoolean) new JavaLangBoolean(Boolean.TRUE);
+            FALSE = (JavaLangBoolean) new JavaLangBoolean(Boolean.FALSE);
+            TYPE = (JavaLangClass) new JavaLangClass(new String("boolean"), new quotes.CLASS(), Boolean.TRUE);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -67,15 +67,15 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
     public JavaLangClass vdm_getClass() {
 	return new JavaLangClass(new String("JavaLangBoolean"),
 				 new quotes.CLASS(),
-				 new Boolean(false));
+				 Boolean.FALSE);
     }
 //// ***** VDMTOOLS START Name=hashCode KEEP=NO
 //    public Integer hashCode() throws CGException {
 //        Integer rexpr_1 = null;
 //        if (value_u_u.booleanValue())
-//            rexpr_1 = new Integer(1231);
+//            rexpr_1 = Integer.valueOf(1231);
 //        else
-//            rexpr_1 = new Integer(1237);
+//            rexpr_1 = Integer.valueOf(1237);
 //        return rexpr_1;
 //    }
 //// ***** VDMTOOLS END Name=hashCode
@@ -98,7 +98,7 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
 // ***** VDMTOOLS START Name=JavaLangBoolean KEEP=NO
     public JavaLangBoolean(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaLangBoolean
 
@@ -113,7 +113,7 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
 // ***** VDMTOOLS START Name=equals KEEP=NO
     public Boolean equals(final JavaLangObject obj) throws CGException {
         Boolean rexpr_2 = null;
-        if (new Boolean(obj instanceof JavaLangBoolean).booleanValue()) {
+        if (Boolean.valueOf(obj instanceof JavaLangBoolean).booleanValue()) {
             Boolean var2_7 = null;
             {
                 JavaLangObject tmpVal_9 = null;
@@ -122,9 +122,9 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
                 b = (JavaLangBoolean) tmpVal_9;
                 var2_7 = b.booleanValue();
             }
-            rexpr_2 = new Boolean(UTIL.equals(value_u_u, var2_7));
+            rexpr_2 = Boolean.valueOf(UTIL.equals(value_u_u, var2_7));
         } else
-            rexpr_2 = new Boolean(false);
+            rexpr_2 = Boolean.FALSE;
         return rexpr_2;
     }
 // ***** VDMTOOLS END Name=equals
@@ -160,7 +160,7 @@ public class JavaLangBoolean extends JavaLangObject implements JavaIoSerializabl
         Boolean var1_3 = null;
         Boolean unArg_4 = null;
         unArg_4 = name.IsNil();
-        var1_3 = new Boolean(!unArg_4.booleanValue());
+        var1_3 = Boolean.valueOf(!unArg_4.booleanValue());
         {
             if ((rexpr_2 = var1_3).booleanValue()) {
                 Boolean var2_5 = null;

@@ -14,7 +14,7 @@ import java.util.Vector;
 
 public abstract class JavaIoReader extends JavaLangObject {
 
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoReader"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoReader"), new quotes.CLASS(), Boolean.FALSE);
 
 
     public abstract Reader getWrappedObject();
@@ -22,11 +22,11 @@ public abstract class JavaIoReader extends JavaLangObject {
     public Integer read() throws CGException {
         HashMap cb = new HashMap();
         cb = new HashMap();
-        cb.put(new Integer(0), new Character(' '));
+        cb.put(Integer.valueOf(0), new Character(' '));
         {
             boolean succ_3;
             Tuple tmpVal_4 = new Tuple(2);
-            tmpVal_4 = readMICIntInt_q(cb, new Integer(0), new Integer(1));
+            tmpVal_4 = readMICIntInt_q(cb, Integer.valueOf(0), Integer.valueOf(1));
             HashMap l_um = new HashMap();
             Integer l_ur = null;
             succ_3 = true;
@@ -41,11 +41,11 @@ public abstract class JavaIoReader extends JavaLangObject {
             }
             if (!succ_3)
                 UTIL.RunTime("Run-Time Error:Pattern match did not succeed in value definition");
-            if (new Boolean(l_ur.intValue() == new Integer(-new Integer(1).intValue()).intValue()).booleanValue())
-                return new Integer(-new Integer(1).intValue());
+            if (Boolean.valueOf(l_ur.intValue() == Integer.valueOf(-Integer.valueOf(1).intValue()).intValue()).booleanValue())
+                return Integer.valueOf(-Integer.valueOf(1).intValue());
             else {
                 Integer rexpr_14 = null;
-                rexpr_14 = J2VUTIL.toInt((Character) l_um.get(new Integer(0)));
+                rexpr_14 = J2VUTIL.toInt((Character) l_um.get(Integer.valueOf(0)));
                 return rexpr_14;
             }
         }
@@ -61,7 +61,7 @@ public abstract class JavaIoReader extends JavaLangObject {
 
 
     public Boolean ready() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 
 
@@ -76,26 +76,26 @@ public abstract class JavaIoReader extends JavaLangObject {
 
 
     public Integer skip_u_u(final Integer n) throws CGException {
-        if (new Boolean((n.intValue()) < (new Integer(0).intValue())).booleanValue())
+        if (Boolean.valueOf((n.intValue()) < (Integer.valueOf(0).intValue())).booleanValue())
             throw new VDMSpecException(new JavaLangIllegalArgumentException(new JavaLangString(new String("skip value is negative"))));
         {
             Integer remaining = n;
-            Integer c = new Integer(0);
+            Integer c = Integer.valueOf(0);
             while (true) {
                 Boolean whCrtl_8 = null;
                 {
-                    if ((whCrtl_8 = new Boolean((remaining.intValue()) > (new Integer(0).intValue()))).booleanValue())
-                        whCrtl_8 = new Boolean((c.intValue()) >= (new Integer(0).intValue()));
+                    if ((whCrtl_8 = Boolean.valueOf((remaining.intValue()) > (Integer.valueOf(0).intValue()))).booleanValue())
+                        whCrtl_8 = Boolean.valueOf((c.intValue()) >= (Integer.valueOf(0).intValue()));
                 }
                 if (whCrtl_8.booleanValue()) {
                     Integer c_1 = null;
                     c_1 = UTIL.NumberToInt(UTIL.clone(read()));
-                    if (new Boolean((c_1.intValue()) >= (new Integer(0).intValue())).booleanValue())
-                        remaining = UTIL.NumberToInt(UTIL.clone(new Integer(remaining.intValue() - new Integer(1).intValue())));
+                    if (Boolean.valueOf((c_1.intValue()) >= (Integer.valueOf(0).intValue())).booleanValue())
+                        remaining = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(remaining.intValue() - Integer.valueOf(1).intValue())));
                 } else
                     break;
             }
-            return new Integer(n.intValue() - remaining.intValue());
+            return Integer.valueOf(n.intValue() - remaining.intValue());
         }
     }
 
@@ -111,20 +111,20 @@ public abstract class JavaIoReader extends JavaLangObject {
         HashSet unArg_6 = new HashSet();
         unArg_6.clear();
         unArg_6.addAll(cbuf.keySet());
-        par_5 = new Integer(unArg_6.size());
-        rexpr_2 = readMICIntInt(cbuf, new Integer(0), par_5);
+        par_5 = Integer.valueOf(unArg_6.size());
+        rexpr_2 = readMICIntInt(cbuf, Integer.valueOf(0), par_5);
         return rexpr_2;
     }
 
 
     public JavaIoReader(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 
     public Boolean markSupported() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 
 

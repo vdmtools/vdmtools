@@ -60,14 +60,14 @@ public class JavaUtilObservable extends JavaLangObject {
 
 // ***** VDMTOOLS START Name=setChanged KEEP=NO
     protected void setChanged() throws CGException {
-        changed = (Boolean) UTIL.clone(new Boolean(true));
+        changed = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=setChanged
 
 
 // ***** VDMTOOLS START Name=clearChanged KEEP=NO
     protected void clearChanged() throws CGException {
-        changed = (Boolean) UTIL.clone(new Boolean(false));
+        changed = Boolean.FALSE;
     }
 // ***** VDMTOOLS END Name=clearChanged
 
@@ -84,7 +84,7 @@ public class JavaUtilObservable extends JavaLangObject {
 // ***** VDMTOOLS START Name=JavaUtilObservable KEEP=NO
     public JavaUtilObservable(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilObservable
 
@@ -108,7 +108,7 @@ public class JavaUtilObservable extends JavaLangObject {
         Boolean cond_2 = null;
         Boolean unArg_3 = null;
         unArg_3 = obs.contains((JavaLangObject) o);
-        cond_2 = new Boolean(!unArg_3.booleanValue());
+        cond_2 = Boolean.valueOf(!unArg_3.booleanValue());
         if (cond_2.booleanValue())
             obs.addElement((JavaLangObject) o);
     }
@@ -118,7 +118,7 @@ public class JavaUtilObservable extends JavaLangObject {
 // ***** VDMTOOLS START Name=notifyObservers KEEP=NO
     public void notifyObservers(final JavaLangObject arg) throws CGException {
         HashMap arrLocal = new HashMap();
-        if (new Boolean(!changed.booleanValue()).booleanValue())
+        if (Boolean.valueOf(!changed.booleanValue()).booleanValue())
             return;
         arrLocal = obs.toArray();
         clearChanged();
@@ -127,13 +127,13 @@ public class JavaUtilObservable extends JavaLangObject {
         HashSet unArg_11 = new HashSet();
         unArg_11.clear();
         unArg_11.addAll(arrLocal.keySet());
-        var1_10 = new Integer(unArg_11.size());
-        lb_9 = new Integer(var1_10.intValue() - new Integer(1).intValue());
-        int iby_16 = new Integer(-new Integer(1).intValue()).intValue();
+        var1_10 = Integer.valueOf(unArg_11.size());
+        lb_9 = Integer.valueOf(var1_10.intValue() - Integer.valueOf(1).intValue());
+        int iby_16 = Integer.valueOf(-Integer.valueOf(1).intValue()).intValue();
         if (iby_16 == 0)
             UTIL.RunTime("Run-Time Error:Step length in indexed for loop was 0");
         for (int ilb_15 = lb_9.intValue(); iby_16 < 0 ? ilb_15 >= 0 : ilb_15 <= 0; ilb_15 += iby_16) {
-            Integer i = new Integer(ilb_15);
+            Integer i = Integer.valueOf(ilb_15);
             {
                 Nullable nullable = (Nullable) (JavaLangObject) arrLocal.get(i);
                 {

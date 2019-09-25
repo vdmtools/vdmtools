@@ -38,7 +38,7 @@ public class JavaUtilStringTokenizer extends JavaLangObject  {
 
 // ***** VDMTOOLS START Name=hasMoreTokens KEEP=NO
     public Boolean hasMoreTokens() throws CGException {
-        return new Boolean(wrappedObject.hasMoreTokens());
+        return Boolean.valueOf(wrappedObject.hasMoreTokens());
     }
 // ***** VDMTOOLS END Name=hasMoreTokens
 
@@ -51,7 +51,7 @@ public class JavaUtilStringTokenizer extends JavaLangObject  {
 // ***** VDMTOOLS START Name=JavaUtilStringTokenizer KEEP=NO
     public JavaUtilStringTokenizer(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilStringTokenizer
 

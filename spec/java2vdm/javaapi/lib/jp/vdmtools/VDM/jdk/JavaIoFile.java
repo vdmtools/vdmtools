@@ -25,7 +25,7 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
     private static final JavaLangClass CLASS =
             new JavaLangClass(new String("JavaIoFile"),
                     new quotes.CLASS(),
-                    new Boolean(false));
+                    Boolean.FALSE);
 
     public JavaIoFile() {
     }
@@ -39,13 +39,13 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
         HashMap result = new HashMap();
         String names[] = wrappedObject.list();
         for (int i = 0; i < names.length; i++)
-            result.put(new Integer(i), new JavaLangString(names[i]));
+            result.put(Integer.valueOf(i), new JavaLangString(names[i]));
         return result;
     }
 
 
     public Boolean mkdir() {
-        return new Boolean(wrappedObject.mkdir());
+        return Boolean.valueOf(wrappedObject.mkdir());
     }
 
 
@@ -55,27 +55,27 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
 
     public Boolean delete() {
-        return new Boolean(wrappedObject.delete());
+        return Boolean.valueOf(wrappedObject.delete());
     }
 
 
     public Boolean isFile() {
-        return new Boolean(wrappedObject.isFile());
+        return Boolean.valueOf(wrappedObject.isFile());
     }
 
 
     public Integer length() {
-        return new Integer((int) wrappedObject.length());
+        return Integer.valueOf((int) wrappedObject.length());
     }
 
 
     public Boolean mkdirs() {
-        return new Boolean(wrappedObject.mkdirs());
+        return Boolean.valueOf(wrappedObject.mkdirs());
     }
 
 
     public Boolean canRead() throws CGException {
-        return new Boolean(wrappedObject.canRead());
+        return Boolean.valueOf(wrappedObject.canRead());
     }
 
 
@@ -90,12 +90,12 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
 
     public Boolean canWrite() throws CGException {
-        return new Boolean(wrappedObject.canWrite());
+        return Boolean.valueOf(wrappedObject.canWrite());
     }
 
 
     public Boolean exists_u_u() throws CGException {
-        return new Boolean(wrappedObject.exists());
+        return Boolean.valueOf(wrappedObject.exists());
     }
 
 
@@ -105,12 +105,12 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
 
     public Integer jHashCode() throws CGException {
-        return new Integer(wrappedObject.hashCode());
+        return Integer.valueOf(wrappedObject.hashCode());
     }
 
 
     public Boolean isHidden() throws CGException {
-        return new Boolean(wrappedObject.isHidden());
+        return Boolean.valueOf(wrappedObject.isHidden());
     }
 
 
@@ -120,7 +120,7 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
     public JavaIoFile(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 
@@ -135,9 +135,9 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
         int n = ss.size();
         HashMap result = new HashMap();
         for (int i = 0; i < n; i++)
-            result.put(new Integer(i),
+            result.put(Integer.valueOf(i),
                     new JavaIoFile(getPath(),
-                            (JavaLangString) ss.get(new Integer(i))));
+                            (JavaLangString) ss.get(Integer.valueOf(i))));
         return result;
     }
 
@@ -147,15 +147,15 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
 
     public Boolean isAbsolute() {
-        return new Boolean(wrappedObject.isAbsolute());
+        return Boolean.valueOf(wrappedObject.isAbsolute());
     }
 
     public Boolean isDirectory() {
-        return new Boolean(wrappedObject.isDirectory());
+        return Boolean.valueOf(wrappedObject.isDirectory());
     }
 
     public Boolean setReadOnly() {
-        return new Boolean(wrappedObject.setReadOnly());
+        return Boolean.valueOf(wrappedObject.setReadOnly());
     }
 
 
@@ -170,12 +170,12 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
 
     public Integer lastModified() {
-        return new Integer((int) wrappedObject.lastModified());
+        return Integer.valueOf((int) wrappedObject.lastModified());
     }
 
     public Boolean createNewFile() throws CGException {
         try {
-            return new Boolean(wrappedObject.createNewFile());
+            return Boolean.valueOf(wrappedObject.createNewFile());
         } catch (java.io.IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -208,14 +208,14 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
     public Boolean equals(final JavaLangObject obj) throws CGException {
         if ((obj == null) || (obj.IsNil().booleanValue())
                 || (!(obj instanceof JavaIoFile)))
-            return new Boolean(false);
+            return Boolean.FALSE;
 
-        return new Boolean(wrappedObject.equals(((JavaIoFile) obj).getWrappedObject()));
+        return Boolean.valueOf(wrappedObject.equals(((JavaIoFile) obj).getWrappedObject()));
     }
 
 
     public Boolean renameTo(final JavaIoFile dest) {
-        return new Boolean(wrappedObject.renameTo(dest.getWrappedObject()));
+        return Boolean.valueOf(wrappedObject.renameTo(dest.getWrappedObject()));
     }
 
     public JavaIoFile getAbsoluteFile() throws CGException {
@@ -241,12 +241,12 @@ public class JavaIoFile extends JavaLangObject implements JavaIoSerializable, Ja
 
 
     public Boolean setLastModified(final Integer time) {
-        return new Boolean(wrappedObject.setLastModified(time.intValue()));
+        return Boolean.valueOf(wrappedObject.setLastModified(time.intValue()));
     }
 
 
     public Integer compareTo(final JavaLangObject pathname) throws CGException {
-        return new Integer(wrappedObject.compareTo(((JavaIoFile) pathname).getWrappedObject()));
+        return Integer.valueOf(wrappedObject.compareTo(((JavaIoFile) pathname).getWrappedObject()));
     }
 
 

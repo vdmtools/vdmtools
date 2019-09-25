@@ -42,18 +42,18 @@ public abstract class JavaUtilAbstractSet extends JavaUtilAbstractCollection imp
 
 // ***** VDMTOOLS START Name=equals KEEP=NO
     public Boolean equals(final JavaLangObject o) throws CGException {
-        if (new Boolean(UTIL.equals(o, this)).booleanValue())
-            return new Boolean(true);
-        if (new Boolean(!new Boolean(o instanceof JavaUtilAbstractSet).booleanValue()).booleanValue())
-            return new Boolean(false);
+        if (Boolean.valueOf(UTIL.equals(o, this)).booleanValue())
+            return Boolean.TRUE;
+        if (Boolean.valueOf(!Boolean.valueOf(o instanceof JavaUtilAbstractSet).booleanValue()).booleanValue())
+            return Boolean.FALSE;
         {
             JavaUtilAbstractSet c = (JavaUtilAbstractSet) o;
             Boolean cond_10 = null;
             Integer var1_11 = null;
             var1_11 = c.size();
-            cond_10 = new Boolean(!(var1_11.intValue() == size().intValue()));
+            cond_10 = Boolean.valueOf(!(var1_11.intValue() == size().intValue()));
             if (cond_10.booleanValue())
-                return new Boolean(false);
+                return Boolean.FALSE;
             return containsAll((JavaUtilCollection) c);
         }
     }
@@ -63,7 +63,7 @@ public abstract class JavaUtilAbstractSet extends JavaUtilAbstractCollection imp
 // ***** VDMTOOLS START Name=JavaUtilAbstractSet KEEP=NO
     public JavaUtilAbstractSet(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaUtilAbstractSet
 

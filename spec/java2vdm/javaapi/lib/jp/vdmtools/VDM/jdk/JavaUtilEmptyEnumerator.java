@@ -50,7 +50,7 @@ public class JavaUtilEmptyEnumerator extends JavaLangObject implements JavaUtilE
 
 // ***** VDMTOOLS START Name=hasMoreElements KEEP=NO
     public Boolean hasMoreElements() throws CGException {
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
 // ***** VDMTOOLS END Name=hasMoreElements
 

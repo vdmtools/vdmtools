@@ -18,12 +18,12 @@ public abstract class JavaIoWriter extends JavaLangObject {
 
     private Integer writeBufferSize = null;
 
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoWriter"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaIoWriter"), new quotes.CLASS(), Boolean.FALSE);
 
 
     public JavaIoWriter(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 
@@ -42,7 +42,7 @@ public abstract class JavaIoWriter extends JavaLangObject {
         boolean succ_2 = true;
         {
             succ_2 = true;
-            if (!UTIL.equals(new Boolean(true), new Boolean(UTIL.IsInteger(a))))
+            if (!UTIL.equals(Boolean.TRUE, Boolean.valueOf(UTIL.IsInteger(a))))
                 succ_2 = false;
             if (succ_2)
                 writeInt(UTIL.NumberToInt(a));
@@ -59,8 +59,8 @@ public abstract class JavaIoWriter extends JavaLangObject {
         obj_6 = (JavaLangInteger) new JavaLangInteger(c);
         tmpVar2_5 = obj_6.charValue();
         tmpArg_v_3 = new HashMap();
-        tmpArg_v_3.put(new Integer(0), tmpVar2_5);
-        writeICMIntInt(tmpArg_v_3, new Integer(0), new Integer(1));
+        tmpArg_v_3.put(Integer.valueOf(0), tmpVar2_5);
+        writeICMIntInt(tmpArg_v_3, Integer.valueOf(0), Integer.valueOf(1));
     }
 
 
@@ -74,8 +74,8 @@ public abstract class JavaIoWriter extends JavaLangObject {
         HashSet unArg_6 = new HashSet();
         unArg_6.clear();
         unArg_6.addAll(cbuf.keySet());
-        tmpArg_v_5 = new Integer(unArg_6.size());
-        writeICMIntInt(cbuf, new Integer(0), tmpArg_v_5);
+        tmpArg_v_5 = Integer.valueOf(unArg_6.size());
+        writeICMIntInt(cbuf, Integer.valueOf(0), tmpArg_v_5);
     }
 
 
@@ -85,7 +85,7 @@ public abstract class JavaIoWriter extends JavaLangObject {
     public void writeStr(final JavaLangString str) throws CGException {
         Integer tmpArg_v_5 = null;
         tmpArg_v_5 = str.length();
-        writeStrIntInt((JavaLangString) str, new Integer(0), tmpArg_v_5);
+        writeStrIntInt((JavaLangString) str, Integer.valueOf(0), tmpArg_v_5);
     }
 
 
@@ -100,11 +100,11 @@ public abstract class JavaIoWriter extends JavaLangObject {
             HashMap cbuf = new HashMap();
             HashMap rhs_4 = new HashMap();
             JavaLangString obj_5 = str.substring(off, 
-						 new Integer(off.intValue() +
+						 Integer.valueOf(off.intValue() +
 							     len_u_u.intValue()));
             rhs_4 = obj_5.toCharArray();
             cbuf = (HashMap) UTIL.clone(rhs_4);
-            writeICMIntInt(cbuf, new Integer(0), len_u_u);
+            writeICMIntInt(cbuf, Integer.valueOf(0), len_u_u);
         }
         ;
     }

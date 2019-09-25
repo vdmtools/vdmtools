@@ -26,7 +26,7 @@ public class JavaIoBufferedReader extends JavaIoReader {
 
     public Integer read() throws CGException {
         try {
-            return new Integer(wrappedObject.read());
+            return Integer.valueOf(wrappedObject.read());
         } catch (IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -53,7 +53,7 @@ public class JavaIoBufferedReader extends JavaIoReader {
 
     public Boolean ready() throws CGException {
         try {
-            return new Boolean(wrappedObject.ready());
+            return Boolean.valueOf(wrappedObject.ready());
         } catch (IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -71,7 +71,7 @@ public class JavaIoBufferedReader extends JavaIoReader {
 
     public Integer skip_u_u(final Integer n) throws CGException {
         try {
-            return new Integer((int) wrappedObject.skip(n.intValue()));
+            return Integer.valueOf((int) wrappedObject.skip(n.intValue()));
         } catch (IOException e) {
             throw new VDMSpecException(new JavaIoIOException());
         }
@@ -88,7 +88,7 @@ public class JavaIoBufferedReader extends JavaIoReader {
 
 
     public Boolean markSupported() throws CGException {
-        return new Boolean(wrappedObject.markSupported());
+        return Boolean.valueOf(wrappedObject.markSupported());
     }
 
 
@@ -124,10 +124,10 @@ public class JavaIoBufferedReader extends JavaIoReader {
             for (i = 0; i < lenVal && value != -1; i++) {
                 value = wrappedObject.read();
                 if (value != -1)
-                    result.put(new Integer(offVal + i), new Integer(value));
+                    result.put(Integer.valueOf(offVal + i), Integer.valueOf(value));
             }
             Tuple restuple = new Tuple(2);
-            restuple.SetField(1, new Integer(i));
+            restuple.SetField(1, Integer.valueOf(i));
             restuple.SetField(2, result);
             return restuple;
         } catch (IOException e) {
@@ -138,7 +138,7 @@ public class JavaIoBufferedReader extends JavaIoReader {
 
     public JavaIoBufferedReader(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
 

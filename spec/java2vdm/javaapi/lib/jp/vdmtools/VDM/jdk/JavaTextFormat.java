@@ -28,7 +28,7 @@ import jp.vdmtools.VDM.UTIL;
 
 public abstract class JavaTextFormat extends JavaLangObject implements JavaIoSerializable, JavaLangCloneable {
 
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextFormat"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextFormat"), new quotes.CLASS(), Boolean.FALSE);
     public JavaTextFormat() throws CGException {
     }
 
@@ -38,11 +38,11 @@ public abstract class JavaTextFormat extends JavaLangObject implements JavaIoSer
 
     public JavaTextFormat(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 //    public JavaLangString formatObject(final JavaLangObject obj) throws CGException {
-//        JavaLangStringBuffer sb = (JavaLangStringBuffer) format_q((JavaLangObject) obj, (JavaLangStringBuffer) new JavaLangStringBuffer(), (JavaTextFieldPosition) new JavaTextFieldPosition(new Integer(0)));
+//        JavaLangStringBuffer sb = (JavaLangStringBuffer) format_q((JavaLangObject) obj, (JavaLangStringBuffer) new JavaLangStringBuffer(), (JavaTextFieldPosition) new JavaTextFieldPosition(Integer.valueOf(0)));
 //        JavaLangString rexpr_6 = null;
 //        rexpr_6 = (JavaLangString) sb.toString();
 //        return (JavaLangString) rexpr_6;

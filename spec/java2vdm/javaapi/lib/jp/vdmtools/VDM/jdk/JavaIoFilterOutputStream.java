@@ -75,8 +75,8 @@ public class JavaIoFilterOutputStream extends JavaIoOutputStream {
         HashSet unArg_6 = new HashSet();
         unArg_6.clear();
         unArg_6.addAll(b.keySet());
-        tmpArg_v_5 = new Integer(unArg_6.size());
-        write2(b, new Integer(0), tmpArg_v_5);
+        tmpArg_v_5 = Integer.valueOf(unArg_6.size());
+        write2(b, Integer.valueOf(0), tmpArg_v_5);
     }
 // ***** VDMTOOLS END Name=write1
 
@@ -87,30 +87,30 @@ public class JavaIoFilterOutputStream extends JavaIoOutputStream {
         HashSet unArg_4 = new HashSet();
         unArg_4.clear();
         unArg_4.addAll(b.keySet());
-        i = new Integer(unArg_4.size());
-        Integer j = new Integer(i.intValue() - (new Integer(len_u_u.intValue() + off.intValue())).intValue());
+        i = Integer.valueOf(unArg_4.size());
+        Integer j = Integer.valueOf(i.intValue() - (Integer.valueOf(len_u_u.intValue() + off.intValue())).intValue());
         Boolean cond_10 = null;
         Boolean var1_11 = null;
         Boolean var1_12 = null;
         {
-            if (!(var1_12 = new Boolean((off.intValue()) < (new Integer(0).intValue()))).booleanValue())
-                var1_12 = new Boolean((off.intValue()) >= (i.intValue()));
+            if (!(var1_12 = Boolean.valueOf((off.intValue()) < (Integer.valueOf(0).intValue()))).booleanValue())
+                var1_12 = Boolean.valueOf((off.intValue()) >= (i.intValue()));
         }
         {
             if (!(var1_11 = var1_12).booleanValue())
-                var1_11 = new Boolean((j.intValue()) < (new Integer(0).intValue()));
+                var1_11 = Boolean.valueOf((j.intValue()) < (Integer.valueOf(0).intValue()));
         }
         {
             if (!(cond_10 = var1_11).booleanValue())
-                cond_10 = new Boolean((j.intValue()) > (i.intValue()));
+                cond_10 = Boolean.valueOf((j.intValue()) > (i.intValue()));
         }
         if (cond_10.booleanValue())
             throw new VDMSpecException(new JavaLangIndexOutOfBoundsException());
         {
-            Integer i_1 = new Integer(0);
-            while (new Boolean((i_1.intValue()) < (len_u_u.intValue())).booleanValue()) {
-                write(UTIL.NumberToInt(b.get(new Integer(off.intValue() + i_1.intValue()))));
-                i_1 = UTIL.NumberToInt(UTIL.clone(new Integer(i_1.intValue() + new Integer(1).intValue())));
+            Integer i_1 = Integer.valueOf(0);
+            while (Boolean.valueOf((i_1.intValue()) < (len_u_u.intValue())).booleanValue()) {
+                write(UTIL.NumberToInt(b.get(Integer.valueOf(off.intValue() + i_1.intValue()))));
+                i_1 = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(i_1.intValue() + Integer.valueOf(1).intValue())));
             }
         }
     }

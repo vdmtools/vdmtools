@@ -43,12 +43,12 @@ public class HMKeySet extends JavaUtilAbstractSet {
 // ***** VDMTOOLS END Name=HMKeySet
 
     public Integer jHashCode(){
-	return new Integer(hashCode());
+	return Integer.valueOf(hashCode());
     }
 
     public Boolean add (JavaLangObject o) {
 	System.err.println("WARNING: HMKeySet.add not defined");
-	return new Boolean(false);
+	return Boolean.FALSE;
     }
 
     public java.util.HashMap toArray(){
@@ -63,22 +63,22 @@ public class HMKeySet extends JavaUtilAbstractSet {
 
     public Boolean containsAll(final JavaUtilCollection c){
 	System.err.println("WARNING: HMKeySet.containsAll not defined");
-	return new Boolean(false);
+	return Boolean.FALSE;
     }
 
     public Boolean retainAll(final JavaUtilCollection c){
 	System.err.println("WARNING: HMKeySet.retainAll not defined");
-	return new Boolean(false);
+	return Boolean.FALSE;
     }
 
     public Boolean removeAll(final JavaUtilCollection c){
 	System.err.println("WARNING: HMKeySet.removeAll not defined");
-	return new Boolean(false);
+	return Boolean.FALSE;
     }
 
     public Boolean addAll(final JavaUtilCollection c){
 	System.err.println("WARNING: HMKeySet.addAll not defined");
-	return new Boolean(false);
+	return Boolean.FALSE;
     }
 
     public JavaLangString toJString(){
@@ -128,7 +128,7 @@ public class HMKeySet extends JavaUtilAbstractSet {
         JavaLangObject obj_4 = null;
         obj_4 = (JavaLangObject) hm.remove((JavaLangObject) key);
         unArg_3 = obj_4.IsNil();
-        rexpr_2 = new Boolean(!unArg_3.booleanValue());
+        rexpr_2 = Boolean.valueOf(!unArg_3.booleanValue());
         return rexpr_2;
     }
 // ***** VDMTOOLS END Name=remove

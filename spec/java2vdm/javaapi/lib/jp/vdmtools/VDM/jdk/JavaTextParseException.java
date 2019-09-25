@@ -37,7 +37,7 @@ public class JavaTextParseException extends JavaLangException {
 // ***** VDMTOOLS END Name=errorOffset
 
 // ***** VDMTOOLS START Name=CLASS KEEP=NO
-    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextParseException"), new quotes.CLASS(), new Boolean(false));
+    private static final JavaLangClass CLASS = (JavaLangClass) new JavaLangClass(new String("JavaTextParseException"), new quotes.CLASS(), Boolean.FALSE);
 // ***** VDMTOOLS END Name=CLASS
 
 
@@ -64,7 +64,7 @@ public class JavaTextParseException extends JavaLangException {
 // ***** VDMTOOLS START Name=JavaTextParseException KEEP=NO
     public JavaTextParseException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 // ***** VDMTOOLS END Name=JavaTextParseException
 

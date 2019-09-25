@@ -13,7 +13,7 @@ public class JavaLangConversionBufferFullException extends JavaLangRuntimeExcept
 
     public JavaLangConversionBufferFullException(final quotes.NIL var_1_1) throws CGException {
         this();
-        isNil = (Boolean) UTIL.clone(new Boolean(true));
+        isNil = Boolean.TRUE;
     }
 
 

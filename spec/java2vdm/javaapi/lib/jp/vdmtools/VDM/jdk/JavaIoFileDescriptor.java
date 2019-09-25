@@ -12,11 +12,11 @@ public class JavaIoFileDescriptor extends JavaLangObject {
 
     private static final JavaLangClass CLASS = new JavaLangClass(new String("JavaIoFileDescriptor"),
             new quotes.CLASS(),
-            new Boolean(false));
+            Boolean.FALSE);
 
 
     public Boolean valid() {
-        return new Boolean(wrappedObject.valid());
+        return Boolean.valueOf(wrappedObject.valid());
     }
 
 
@@ -36,7 +36,7 @@ public class JavaIoFileDescriptor extends JavaLangObject {
 
     public JavaIoFileDescriptor(final quotes.NIL n) {
         this();
-        isNil = new Boolean(true);
+        isNil = Boolean.TRUE;
     }
 
     // Needed by JavaIoFileInputStream
