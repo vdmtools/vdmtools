@@ -25,7 +25,7 @@ public class VDMThread extends Thread {
   public long getId() { return id; }
 
   public static Integer getThreadId() {
-    return new Integer((int)((VDMThread)(Thread.currentThread())).getId());
+    return Integer.valueOf((int)((VDMThread)(Thread.currentThread())).getId());
   }
 }
 

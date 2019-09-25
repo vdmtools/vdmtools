@@ -46,7 +46,7 @@ public class ValueParser
   {
     jp.vdmtools.VDM.Tuple result = new jp.vdmtools.VDM.Tuple(2);
     try {
-      result.SetField(1, new Boolean(false));
+      result.SetField(1, Boolean.FALSE);
       result.SetField(2, null);
     }
     catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
@@ -63,7 +63,7 @@ public class ValueParser
       }
       parser.ReInit(fs);
       value = Value();
-      result.SetField(1, new Boolean(true));
+      result.SetField(1, Boolean.TRUE);
       result.SetField(2, value);
     }
     catch (Exception ex)
@@ -71,7 +71,7 @@ public class ValueParser
       ex.printStackTrace(System.out);
       value = ex.getMessage();
       try {
-        result.SetField(1, new Boolean(false));
+        result.SetField(1, Boolean.FALSE);
         result.SetField(2, value);
       }
       catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
@@ -85,7 +85,7 @@ public class ValueParser
   {
         jp.vdmtools.VDM.Tuple result = new jp.vdmtools.VDM.Tuple(2);
         try {
-          result.SetField(1, new Boolean(false));
+          result.SetField(1, Boolean.FALSE);
           result.SetField(2, null);
         }
         catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
@@ -102,7 +102,7 @@ public class ValueParser
             }
             parser.ReInit(ss);
             value = Value();
-            result.SetField(1, new Boolean(true));
+            result.SetField(1, Boolean.TRUE);
             result.SetField(2, value);
         }
         catch (Exception ex)
@@ -110,7 +110,7 @@ public class ValueParser
             ex.printStackTrace(System.out);
             value = ex.getMessage();
             try {
-              result.SetField(1, new Boolean(false));
+              result.SetField(1, Boolean.FALSE);
               result.SetField(2, value);
             }
             catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
@@ -609,12 +609,12 @@ Number NumericVal():
   {
       n=<NUMERICLITERAL>
       {
-          return new Integer(n.image);
+          return Integer.valueOf(n.image);
       }
     |
       r=<REALLITERAL>
       {
-          return new Double(r.image);
+          return Double.valueOf(r.image);
       }
   }
 
@@ -625,7 +625,7 @@ Character CharVal():
   {
       c=<CHARACTERLITERAL>
       {
-          return new Character(c.image.charAt(1));
+          return Character.valueOf(c.image.charAt(1));
       }
   }
 
@@ -634,12 +634,12 @@ Boolean BoolVal():
   {
       <TRUE>
       {
-          return new Boolean(true);
+          return Boolean.TRUE;
       }
     |
       <FALSE>
       {
-          return new Boolean(false);
+          return Boolean.FALSE;
       }
   }
 
