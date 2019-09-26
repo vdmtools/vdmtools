@@ -44,14 +44,7 @@ public class ValueParser
 
   public static jp.vdmtools.VDM.Tuple ParseVDMValue(String filename) throws ParseError
   {
-    jp.vdmtools.VDM.Tuple result = new jp.vdmtools.VDM.Tuple(2);
-    try {
-      result.SetField(1, Boolean.FALSE);
-      result.SetField(2, null);
-    }
-    catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
-        // Can never be reached
-    }
+    jp.vdmtools.VDM.Tuple result = jp.vdmtools.VDM.Tuple.mk_(Boolean.FALSE, null);
     Object value = null;
     try
     {
@@ -83,14 +76,7 @@ public class ValueParser
 
   public static jp.vdmtools.VDM.Tuple ParseVDMString(String str) throws ParseError
   {
-        jp.vdmtools.VDM.Tuple result = new jp.vdmtools.VDM.Tuple(2);
-        try {
-          result.SetField(1, Boolean.FALSE);
-          result.SetField(2, null);
-        }
-        catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
-            // Can never be reached
-        }
+        jp.vdmtools.VDM.Tuple result = jp.vdmtools.VDM.Tuple.mk_(Boolean.FALSE, null);
         Object value = null;
         try
         {
@@ -355,8 +341,7 @@ jp.vdmtools.VDM.Tuple TupleVal()
       <MK_> "(" s=ValueList()
       {
           t = new jp.vdmtools.VDM.Tuple(s.size());
-          for (int i = 0; i < s.size(); i++)
-          {
+          for (int i = 0; i < s.size(); i++) {
               try {
                 t.SetField(i+1, s.get(i));
               } 
@@ -464,11 +449,7 @@ Set<Object> SetVal()
   {
       "{" vl=ValueList()
       {
-          for (Iterator e = vl.iterator(); e.hasNext(); )
-          {
-              Object v = e.next();
-              s.add(v);
-          }
+          s = new HashSet<Object>(vl);
       }
       "}"
       {
@@ -522,23 +503,19 @@ jp.vdmtools.VDM.Record RecordVal() // end STUB
           Class params[] = null;
           try {
             Class<?> cr = Class.forName(classname);
-            //rv = (jp.vdmtools.VDM.Record) cr.newInstance();
             rv = (jp.vdmtools.VDM.Record) cr.getDeclaredConstructor().newInstance();
             params = new Class[vl.size()];
-            for (int i = 0; i < vl.size(); i++)
-            {
-               //params[i] = vl.get(i).getClass();
-               Class c = vl.get(i).getClass();
-               if ((c.getName() == "java.lang.Integer") || (c.getName() == "java.lang.Double"))
-                 c = Class.forName("java.lang.Number");
-               params[i] = c;
+            for (int i = 0; i < vl.size(); i++) {
+              Object o = vl.get(i);
+              if (o instanceof java.lang.Number) {
+                params[i] = java.lang.Number.class;
+              }
+              else {
+                params[i] = o.getClass();
+              } 
             }
             java.lang.reflect.Constructor<?> constr = cr.getConstructor(params);
-            Object initArgs[] = new Object[vl.size()];
-            for (int i = 0; i < vl.size(); i++){
-                initArgs[i] = vl.get(i);
-            }
-            rv = (jp.vdmtools.VDM.Record) constr.newInstance(initArgs);
+            rv = (jp.vdmtools.VDM.Record) constr.newInstance(vl.toArray());
           } 
           catch (ClassNotFoundException e) {
             throw new ParseError("Class not found: " + e.getMessage());
@@ -558,14 +535,6 @@ jp.vdmtools.VDM.Record RecordVal() // end STUB
           catch (java.lang.reflect.InvocationTargetException e) {
             throw new ParseError("Invocation target error: " + e.getMessage());
           }
-
-
-          // for (int i = 0; i < vl.size(); i++)
-          // {
-          //     rv.SetField(i+1, vl.get(i);
-          // }
-          // STUB
-          //          rv = new RecordValue(cls, rnm, vl); // end STUB
 
           return rv;
       }
@@ -587,7 +556,6 @@ jp.vdmtools.VDM.Token TokenVal()
   {
       jp.vdmtools.VDM.Token token;
       Object o;
-      // RecordValue rv;
   }
   {
       <MK_TOKEN> "(" o=Value()
@@ -595,9 +563,6 @@ jp.vdmtools.VDM.Token TokenVal()
       }
       ")"
       {
-          // Vector v = new Vector();
-          // v.add(o);
-          // rv = new RecordValue("Token", v);
           token = new jp.vdmtools.VDM.Token(o);
           return token;
       }
@@ -664,7 +629,6 @@ Object QuoteVal() throws ParseError:
           Class params[] = {};
           try {
             Class<?> cr = Class.forName(classname);
-            //result =  cr.newInstance();
             result =  cr.getDeclaredConstructor().newInstance();
           } 
           catch (ClassNotFoundException e) {

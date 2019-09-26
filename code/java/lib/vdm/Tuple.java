@@ -144,115 +144,12 @@ public class Tuple extends Object implements Cloneable, Serializable{
     try {
       t.SetField(1, p1);
       t.SetField(2, p2);
-      for (int i = 0; i < args.length; i++ )
+      for (int i = 0; i < args.length; i++ ) {
         t.SetField(3 + i, args[i]);
-    } catch (Exception e) {}
+      }
+    }
+    catch (Exception e) {}
     return t;
   }
-
-/*
-  public static Tuple mk_(Object p1, Object p2) {
-    Tuple t = new Tuple(2);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-    } catch (Exception e) {}
-    return t;
-  }
-
-  public static Tuple mk_(Object p1, Object p2, Object p3) {
-    Tuple t = new Tuple(3);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-      t.SetField(3, p3);
-    } catch (Exception e) {}
-    return t;
-  }
-
-  public static Tuple mk_(Object p1, Object p2, Object p3, Object p4) {
-    Tuple t = new Tuple(4);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-      t.SetField(3, p3);
-      t.SetField(4, p4);
-    } catch (Exception e) {}
-    return t;
-  }
-
-  public static Tuple mk_(Object p1, Object p2, Object p3, Object p4,
-                          Object p5) {
-    Tuple t = new Tuple(5);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-      t.SetField(3, p3);
-      t.SetField(4, p4);
-      t.SetField(5, p5);
-    } catch (Exception e) {}
-    return t;
-  }
-
-  public static Tuple mk_(Object p1, Object p2, Object p3, Object p4,
-                          Object p5, Object p6) {
-    Tuple t = new Tuple(6);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-      t.SetField(3, p3);
-      t.SetField(4, p4);
-      t.SetField(5, p5);
-      t.SetField(6, p6);
-    } catch (Exception e) {}
-    return t;
-  }
-
-  public static Tuple mk_(Object p1, Object p2, Object p3, Object p4,
-                          Object p5, Object p6, Object p7) {
-    Tuple t = new Tuple(7);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-      t.SetField(3, p3);
-      t.SetField(4, p4);
-      t.SetField(5, p5);
-      t.SetField(6, p6);
-      t.SetField(7, p7);
-    } catch (Exception e) {}
-    return t;
-  }
-
-  public static Tuple mk_(Object p1, Object p2, Object p3, Object p4,
-                          Object p5, Object p6, Object p7, Object p8) {
-    Tuple t = new Tuple(8);
-    try {
-      t.SetField(1, p1);
-      t.SetField(2, p2);
-      t.SetField(3, p3);
-      t.SetField(4, p4);
-      t.SetField(5, p5);
-      t.SetField(6, p6);
-      t.SetField(7, p7);
-      t.SetField(8, p8);
-    } catch (Exception e) {}
-    return t;
-  }
-*/
-
-
-//    /**
-//     * returns a string containing an ASCII representation of the VDM value. 
-//     * A newline is written after each pair of the map.
-//     */
-
-//    package String toString2(){
-//      String s = new String();
-//      for (int i=0; i<t.length;i++){
-//        s = s + UTIL.toString(t[i]);
-//        if (i<(t.length-1)) {s=s+", \n";}
-//      }
-//      return s;
-//    }
 }
 
