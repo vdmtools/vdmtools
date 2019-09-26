@@ -923,7 +923,7 @@ public abstract class UTIL {
     }
     if (n instanceof Number) {
       if (((Number) n).intValue() == ((Number) n).doubleValue()) {
-        return new Short(((Number) n).shortValue());
+        return Short.valueOf(((Number) n).shortValue());
       }
       else {
         throw new VDMRunTimeException("<UTIL.NumberToShort>: number is not int " + n.toString());

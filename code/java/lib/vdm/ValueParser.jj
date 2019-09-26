@@ -289,10 +289,10 @@ Object Value()
       }
   }
 
-List ValueList()
+List<Object> ValueList()
     throws ParseError:
   {
-      List s = new ArrayList();
+      List<Object> s = new ArrayList<Object>();
   }
   {
       LOOKAHEAD(NonEmptyValueList())
@@ -307,11 +307,11 @@ List ValueList()
       }
   }
 
-List NonEmptyValueList()
+List<Object> NonEmptyValueList()
     throws ParseError:
   { 
       Object v;
-      List s = new ArrayList();
+      List<Object> s = new ArrayList<Object>();
   }
   {
       LOOKAHEAD(ValueAndNonEmptyValueList())
@@ -327,11 +327,11 @@ List NonEmptyValueList()
       }
   }
 
-List ValueAndNonEmptyValueList()
+List<Object> ValueAndNonEmptyValueList()
     throws ParseError:
   { 
       Object v;
-      List s1, s = new ArrayList();
+      List<Object> s1, s = new ArrayList<Object>();
   }
   {
       v=Value()
@@ -349,7 +349,7 @@ jp.vdmtools.VDM.Tuple TupleVal()
     throws ParseError:
   {
       jp.vdmtools.VDM.Tuple t;
-      List s;
+      List<Object> s;
   }
   {
       <MK_> "(" s=ValueList()
@@ -372,10 +372,10 @@ jp.vdmtools.VDM.Tuple TupleVal()
       }
   }
 
-Map MapVal()
+Map<Object, Object> MapVal()
     throws ParseError:
   {
-      Map m = new HashMap();
+      Map<Object, Object> m = new HashMap<Object, Object>();
   }
   {
       "{" m=MapContents() "}"
@@ -384,10 +384,10 @@ Map MapVal()
       }
   }
 
-Map MapContents()
+Map<Object, Object> MapContents()
     throws ParseError:
   {
-      Map m = new HashMap();
+      Map<Object, Object> m = new HashMap<Object, Object>();
   }
   {
       LOOKAHEAD(ListOfMaplets())
@@ -402,10 +402,10 @@ Map MapContents()
       }
   }
 
-Map ListOfMaplets()
+Map<Object, Object> ListOfMaplets()
     throws ParseError:
   {
-      Map m = new HashMap();
+      Map<Object, Object> m = new HashMap<Object, Object>();
   }
   {
       LOOKAHEAD(MapletAndListOfMaplets())
@@ -420,10 +420,10 @@ Map ListOfMaplets()
       }
   }
 
-Map MapletAndListOfMaplets()
+Map<Object, Object> MapletAndListOfMaplets()
     throws ParseError:
   {
-      Map ml, m = new HashMap();
+      Map<Object, Object> ml, m = new HashMap<Object, Object>();
   }
   {
       ml=Maplet()
@@ -437,11 +437,11 @@ Map MapletAndListOfMaplets()
       }
   }
 
-Map Maplet()
+Map<Object, Object> Maplet()
     throws ParseError:
   {
       Object v1, v2;
-      Map m = new HashMap();
+      Map<Object, Object> m = new HashMap<Object, Object>();
   }
   {
       v1=Value()
@@ -454,12 +454,12 @@ Map Maplet()
       }
   }
 
-Set SetVal()
+Set<Object> SetVal()
     throws ParseError:
   {
       //TreeSet s = new TreeSet(new jp.vdmtools.VDM.UTIL.VDMCompare());
-      Set s = new HashSet();
-      List vl;
+      Set<Object> s = new HashSet<Object>();
+      List<Object> vl;
   }
   {
       "{" vl=ValueList()
@@ -479,7 +479,7 @@ Set SetVal()
 List SequenceVal()
     throws ParseError:
   {
-      List s = new ArrayList();
+      List<Object> s = new ArrayList<Object>();
   }
   {
       "[" s=ValueList() "]"
@@ -498,7 +498,7 @@ jp.vdmtools.VDM.Record RecordVal() // end STUB
       jp.vdmtools.VDM.ValueParser.Token mkcls;
       String cls;
       String rnm;
-      List vl;
+      List<Object> vl;
       // REAL
       jp.vdmtools.VDM.Record rv = null;
       // STUB
@@ -521,8 +521,9 @@ jp.vdmtools.VDM.Record RecordVal() // end STUB
           String classname = cls + "$" + rnm;
           Class params[] = null;
           try {
-            Class cr = Class.forName(classname);
-            rv = (jp.vdmtools.VDM.Record) cr.newInstance();
+            Class<?> cr = Class.forName(classname);
+            //rv = (jp.vdmtools.VDM.Record) cr.newInstance();
+            rv = (jp.vdmtools.VDM.Record) cr.getDeclaredConstructor().newInstance();
             params = new Class[vl.size()];
             for (int i = 0; i < vl.size(); i++)
             {
@@ -532,7 +533,7 @@ jp.vdmtools.VDM.Record RecordVal() // end STUB
                  c = Class.forName("java.lang.Number");
                params[i] = c;
             }
-            java.lang.reflect.Constructor constr = cr.getConstructor(params);
+            java.lang.reflect.Constructor<?> constr = cr.getConstructor(params);
             Object initArgs[] = new Object[vl.size()];
             for (int i = 0; i < vl.size(); i++){
                 initArgs[i] = vl.get(i);
@@ -662,8 +663,9 @@ Object QuoteVal() throws ParseError:
           String classname = "quotes." + qstr;
           Class params[] = {};
           try {
-            Class cr = Class.forName(classname);
-            result =  cr.newInstance();
+            Class<?> cr = Class.forName(classname);
+            //result =  cr.newInstance();
+            result =  cr.getDeclaredConstructor().newInstance();
           } 
           catch (ClassNotFoundException e) {
             throw new ParseError("Class not found: " + e.getMessage());
@@ -674,6 +676,14 @@ Object QuoteVal() throws ParseError:
           }
           catch (IllegalAccessException e) {
             throw new ParseError("Illegal access: " + e.getMessage());
+          }
+          catch (NoSuchMethodException e) {
+            throw new ParseError("No constructor exists for class " +
+                                 classname + " with parameters " + 
+                                 params.toString());
+          }
+          catch (java.lang.reflect.InvocationTargetException e) {
+            throw new ParseError("Invocation target error: " + e.getMessage());
           }
           // REAL:
           // Class cr = Class.forName("quotes." + qstr);
