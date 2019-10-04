@@ -8,10 +8,10 @@ public class MainSort {
   public static void main(String[] args){ 
     try{
       List arr = new ArrayList();
-      arr.add(new Integer(23));
-      arr.add(new Integer(1));
-      arr.add(new Integer(42));
-      arr.add(new Integer(31));
+      arr.add(Integer.valueOf(23));
+      arr.add(Integer.valueOf(1));
+      arr.add(Integer.valueOf(42));
+      arr.add(Integer.valueOf(31));
       DoSort dos = new DoSort();      
       System.out.println("Evaluating Sort("+UTIL.toString(arr)+"):");
       List res = dos.Sort(arr);

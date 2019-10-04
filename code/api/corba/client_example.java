@@ -381,7 +381,7 @@ public class client_example
       // Convert the Generic g into a "real" Java Sequence value
       for (boolean ii = s.First(eholder); ii; ii = s.Next(eholder)) {
         VDMNumeric num = VDMNumericHelper.narrow(eholder.value);
-        sj.add(new Integer( GetNumeric( num ) ));
+        sj.add(Integer.valueOf( GetNumeric( num ) ));
       }
             
       int sum = 0;

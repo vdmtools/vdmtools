@@ -11,17 +11,17 @@ public class SortMain
     {
       java.util.List arr1 = new java.util.ArrayList();
       java.util.List arr2 = new java.util.ArrayList();
-      arr1.add(new Integer(3));
-      arr1.add(new Integer(5));
-      arr1.add(new Integer(2));
-      arr1.add(new Integer(23));
-      arr1.add(new Integer(1));
-      arr1.add(new Integer(42));
-      arr1.add(new Integer(98));
-      arr1.add(new Integer(31));
-      arr2.add(new Integer(3));
-      arr2.add(new Integer(1));
-      arr2.add(new Integer(2));
+      arr1.add(Integer.valueOf(3));
+      arr1.add(Integer.valueOf(5));
+      arr1.add(Integer.valueOf(2));
+      arr1.add(Integer.valueOf(23));
+      arr1.add(Integer.valueOf(1));
+      arr1.add(Integer.valueOf(42));
+      arr1.add(Integer.valueOf(98));
+      arr1.add(Integer.valueOf(31));
+      arr2.add(Integer.valueOf(3));
+      arr2.add(Integer.valueOf(1));
+      arr2.add(Integer.valueOf(2));
 
       java.util.List res = null;
 
