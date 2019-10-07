@@ -105,7 +105,7 @@ public class VDMKLVcomm {
     catch (VDMError err) {
       System.err.println("VDM error: " + err.getMessage());
     }
-    Boolean[] res = { new Boolean(false), new Boolean(false), new Boolean(false) };
+    Boolean[] res = { Boolean.FALSE, Boolean.FALSE, Boolean.FALSE };
     return res;
   }
 
@@ -134,7 +134,7 @@ public class VDMKLVcomm {
     catch (VDMError err) {
       System.err.println("VDM error: " + err.getMessage());
     }
-    Boolean[] res = { new Boolean(false), new Boolean(false), new Boolean(false) };
+    Boolean[] res = { Boolean.FALSE, Boolean.FALSE, Boolean.FALSE };
     return res;
   }
 
@@ -155,7 +155,7 @@ public class VDMKLVcomm {
     catch (VDMError err) {
       System.err.println("VDM error: " + err.getMessage());
     }
-    Boolean[] res = { new Boolean(false), new Boolean(false), new Boolean(false) };
+    Boolean[] res = { Boolean.FALSE, Boolean.FALSE, Boolean.FALSE };
     return res;
   }
 
@@ -173,7 +173,7 @@ public class VDMKLVcomm {
     catch (VDMError err) {
       System.err.println("VDM error: " + err.getMessage());
     }
-    Boolean[] res = { new Boolean(false), new Boolean(false), new Boolean(false) };
+    Boolean[] res = { Boolean.valueOf(false), Boolean.valueOf(false), Boolean.valueOf(false) };
     return 0;
   }
 
@@ -342,19 +342,19 @@ public class VDMKLVcomm {
   private Integer convInteger(Generic g) 
   throws APIError, VDMError {
     Numeric num = NumericHelper.narrow(g);
-    return new Integer((int) Math.round(num.GetValue()));
+    return Integer.valueOf((int) Math.round(num.GetValue()));
   }
 
   private Double convReal(Generic g) 
   throws APIError, VDMError {
     Numeric num = NumericHelper.narrow(g);
-    return new Double(num.GetValue());
+    return Double.valueOf(num.GetValue());
   }
 
   private Boolean convBoolean(Generic g) 
   throws APIError, VDMError {
     Bool bool = BoolHelper.narrow(g);
-    return new Boolean(bool.GetValue());
+    return Boolean.valueOf(bool.GetValue());
   }
 
   private String convString(Generic g) 

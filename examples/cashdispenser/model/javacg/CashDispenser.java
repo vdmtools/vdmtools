@@ -68,7 +68,7 @@ class CashDispenser
     if(event.getSource() == newTillButton)
     {
       TillGUI till = new TillGUI(toolbox,numTills, currentTills);
-      currentTills.add(new Integer(numTills));
+      currentTills.add(Integer.valueOf(numTills));
       numTills++;
       till.pack();
       till.setVisible(true);
@@ -101,7 +101,7 @@ class CashDispenser
       
 	    if (selectedTill instanceof String){
 		toolbox.failTill(Integer.parseInt((String)selectedTill));
-		currentTills.remove(new Integer((String)selectedTill));
+		currentTills.remove(Integer.valueOf((String)selectedTill));
 	    }
 	}
     }

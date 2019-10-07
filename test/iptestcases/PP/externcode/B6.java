@@ -53,7 +53,7 @@ public class B6 implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException{
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -70,7 +70,7 @@ public class B6 implements EvaluatePP {
 // ***** VDMTOOLS END Name=setSentinel
 
 // ***** VDMTOOLS START Name=i KEEP=NO
-  public static final Long i = new Long(0);
+  public static final Long i = Long.valueOf(0);
 // ***** VDMTOOLS END Name=i
 
 // ***** VDMTOOLS START Name=j KEEP=YES

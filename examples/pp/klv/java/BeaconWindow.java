@@ -82,7 +82,7 @@ class BeaconWindow implements ActionListener, WindowListener {
   public void actionPerformed (ActionEvent ev) {
     if (ev.getSource() == tivd) {
       try {
-        int ts = new Integer (targetspeed.getText()).intValue();
+        int ts = Integer.valueOf (targetspeed.getText()).intValue();
         int[] beacon = { TIVD, ts };
         klvgui.addBeacon (beaconKey, beacon);
       } catch (Exception ex) {                    // declivity catch

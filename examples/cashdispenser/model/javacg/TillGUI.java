@@ -34,7 +34,7 @@ class TillGUI
   public TillGUI (ToolboxInterface toolbox, int index, final HashSet s) throws CGException
   {
     this.toolbox = toolbox;
-    vdmTill = this.toolbox.getTill(new Integer(index));
+    vdmTill = this.toolbox.getTill(Integer.valueOf(index));
     setTitle( vdmTill.getName() );
     currentTills = s;
 

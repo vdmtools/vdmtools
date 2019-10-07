@@ -10,17 +10,17 @@ public class J2VUTIL
 
   static String toString(char arg)
   {
-    return "'" + new Character(arg).toString() + "'";
+    return "'" + Character.valueOf(arg).toString() + "'";
   }
 
   static String toString(boolean arg)
   {
-    return new Boolean(arg).toString();
+    return Boolean.valueOf(arg).toString();
   }
 
   static String toString(int arg)
   {
-    return new Integer(arg).toString();
+    return Integer.valueOf(arg).toString();
   }
 
   static String toString(float arg)
@@ -30,7 +30,7 @@ public class J2VUTIL
 
   static String toString(double arg)
   {
-    return new Double(arg).toString();
+    return Double.valueOf(arg).toString();
   }
 
   static String toString(boolean arg[])
@@ -38,7 +38,7 @@ public class J2VUTIL
     String result="{ ";
 
     for(int i=0; i<arg.length; i++) {
-      result += new Integer(i).toString() + " |-> " + new Boolean(arg[i]).toString();
+      result += Integer.valueOf(i).toString() + " |-> " + Boolean.valueOf(arg[i]).toString();
       if( i<arg.length-1 ) result += ",";
     }
 
@@ -50,7 +50,7 @@ public class J2VUTIL
     String result="{ ";
 
     for(int i=0; i<arg.length; i++) {
-      result += new Integer(i).toString() + " |-> " + new Integer(arg[i]).toString();
+      result += Integer.valueOf(i).toString() + " |-> " + Integer.valueOf(arg[i]).toString();
       if( i<arg.length-1 ) result += ",";
     }
 
@@ -63,7 +63,7 @@ public class J2VUTIL
     String ident="  ";
 
     for(int i=0; i<arg.length; i++) {
-      result += (i>0 ? ident : "") + new Integer(i).toString() +
+      result += (i>0 ? ident : "") + Integer.valueOf(i).toString() +
                 " |->\n" + ident + toString(arg[i]);
       if( i<arg.length-1 ) result += ",\n";
     }
@@ -76,7 +76,7 @@ public class J2VUTIL
     String result="{ ";
 
     for(int i=0; i<arg.length; i++) {
-      result += new Integer(i).toString() + " |-> " + "'" + new Character(arg[i]).toString() + "'";
+      result += Integer.valueOf(i).toString() + " |-> " + "'" + Character.valueOf(arg[i]).toString() + "'";
       if( i<arg.length-1 ) result += ",";
     }
 
@@ -89,7 +89,7 @@ public class J2VUTIL
     String ident="  ";
 
     for(int i=0; i<arg.length; i++) {
-      result += (i>0 ? ident : "") + new Integer(i).toString() +
+      result += (i>0 ? ident : "") + Integer.valueOf(i).toString() +
                 " |->\n" + ident + toString(arg[i]);
       if( i<arg.length-1 ) result += ",\n";
     }

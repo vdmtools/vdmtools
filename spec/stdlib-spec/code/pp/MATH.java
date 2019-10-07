@@ -23,7 +23,7 @@ import jp.vdmtools.VDM.RANDOM;
 public class MATH {
 
 // ***** VDMTOOLS START Name=pi KEEP=YES
-  public static final Double pi = new Double(Math.PI);
+  public static final Double pi = Double.valueOf(Math.PI);
   public static final RANDOM rd = new RANDOM();
   public static long rnd_seed = -1;
 // ***** VDMTOOLS END Name=pi
@@ -235,7 +235,7 @@ public class MATH {
 
 // ***** VDMTOOLS START Name=log#1|Number KEEP=YES
   public static Double log (final Number a) throws CGException {
-  //    return new Double(Math.log10(UTIL.NumberToReal(a).doubleValue()));
+  //    return Double.valueOf(Math.log10(UTIL.NumberToReal(a).doubleValue()));
     return Double.valueOf(Math.log(UTIL.NumberToReal(a).doubleValue())/Math.log(10));
   }
 // ***** VDMTOOLS END Name=log#1|Number

@@ -77,7 +77,7 @@ public class LocalResource implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -153,13 +153,13 @@ public class LocalResource implements EvaluatePP {
       {        
         Channel.Response resp = null;
         resp = c.ReceiveResponse();
-        if (new Boolean(UTIL.equals(resp, null)).booleanValue()) 
+        if (Boolean.valueOf(UTIL.equals(resp, null)).booleanValue()) 
           return new quotes.Fail();
         else {          
           Boolean cond_10 = null;          
           Object var1_11 = null;
           var1_11 = (resp).command;
-          cond_10 = new Boolean(!UTIL.equals(var1_11, comm));
+          cond_10 = Boolean.valueOf(!UTIL.equals(var1_11, comm));
           if (cond_10.booleanValue()) 
             return new quotes.Fail();
           else {            

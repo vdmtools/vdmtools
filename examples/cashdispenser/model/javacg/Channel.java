@@ -316,38 +316,38 @@ public class Channel implements EvaluatePP {
     Boolean temp;    switch(fnr) {
     case 0: {
       {
-        if (!(temp = new Boolean((curTime.intValue()) > (timeout.intValue()))).booleanValue()) 
-          temp = new Boolean(!UTIL.equals(resp, null));
+        if (!(temp = Boolean.valueOf((curTime.intValue()) > (timeout.intValue()))).booleanValue()) 
+          temp = Boolean.valueOf(!UTIL.equals(resp, null));
       }
       return temp;
     }    case 2: {      
       Boolean var1_7 = null;
       {
-        if ((var1_7 = AllReceived(UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).ReceiveRequest])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).ReceiveRequest])))).booleanValue()) 
-          var1_7 = AllReceived(UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).ReceiveResponse])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).ReceiveResponse])));
+        if ((var1_7 = AllReceived(UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).ReceiveRequest])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).ReceiveRequest])))).booleanValue()) 
+          var1_7 = AllReceived(UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).ReceiveResponse])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).ReceiveResponse])));
       }
       {
         if ((temp = var1_7).booleanValue()) 
-          temp = new Boolean(UTIL.equals(new Integer(sentinel.act[((ChannelSentinel) sentinel).SendRequest]), new Integer(sentinel.fin[((ChannelSentinel) sentinel).ReceiveResponse])));
+          temp = Boolean.valueOf(UTIL.equals(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).SendRequest]), Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).ReceiveResponse])));
       }
       return temp;
     }    case 3: {      
       Boolean var1_21 = null;
       {
-        if ((var1_21 = AllReceived(UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).ReceiveRequest])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).ReceiveRequest])))).booleanValue()) 
-          var1_21 = AllReceived(UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(new Integer(sentinel.act[((ChannelSentinel) sentinel).ReceiveResponse])), UTIL.NumberToInt(new Integer(sentinel.fin[((ChannelSentinel) sentinel).ReceiveResponse])));
+        if ((var1_21 = AllReceived(UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).SendRequest])), UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).ReceiveRequest])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).ReceiveRequest])))).booleanValue()) 
+          var1_21 = AllReceived(UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).SendResponse])), UTIL.NumberToInt(Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).ReceiveResponse])), UTIL.NumberToInt(Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).ReceiveResponse])));
       }
       {
         if ((temp = var1_21).booleanValue()) 
-          temp = new Boolean(new Integer(((Number) new Integer(sentinel.act[((ChannelSentinel) sentinel).SendRequest])).intValue() - ((Number) new Integer(sentinel.fin[((ChannelSentinel) sentinel).SendResponse])).intValue()).intValue() == new Integer(1).intValue());
+          temp = Boolean.valueOf(Integer.valueOf(((Number) Integer.valueOf(sentinel.act[((ChannelSentinel) sentinel).SendRequest])).intValue() - ((Number) Integer.valueOf(sentinel.fin[((ChannelSentinel) sentinel).SendResponse])).intValue()).intValue() == Integer.valueOf(1).intValue());
       }
       return temp;
     }    case 4: {
-      temp = (Boolean) new Boolean(!UTIL.equals(req, null));
+      temp = (Boolean) Boolean.valueOf(!UTIL.equals(req, null));
       return temp;
     }}
 
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -371,14 +371,14 @@ public class Channel implements EvaluatePP {
 // ***** VDMTOOLS END Name=start
 
 // ***** VDMTOOLS START Name=timeout KEEP=NO
-  private static final Integer timeout = new Integer(1500);
+  private static final Integer timeout = Integer.valueOf(1500);
 // ***** VDMTOOLS END Name=timeout
 
 
 // ***** VDMTOOLS START Name=Channel KEEP=NO
   public Channel () throws CGException {
     try {
-      perThread = new PeriodicThread(new Integer(1000),perThread){
+      perThread = new PeriodicThread(Integer.valueOf(1000),perThread){
 
       public void threadDef () throws CGException {
         CheckTime();
@@ -414,7 +414,7 @@ public class Channel implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=pre_SendRequest KEEP=NO
   public Boolean pre_SendRequest (final Request r) throws CGException {
-    return new Boolean(UTIL.equals(req, null));
+    return Boolean.valueOf(UTIL.equals(req, null));
   }
 // ***** VDMTOOLS END Name=pre_SendRequest
 
@@ -452,7 +452,7 @@ public class Channel implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=pre_SendResponse KEEP=NO
   public Boolean pre_SendResponse (final Response r) throws CGException {
-    return new Boolean(UTIL.equals(resp, null));
+    return Boolean.valueOf(UTIL.equals(resp, null));
   }
 // ***** VDMTOOLS END Name=pre_SendResponse
 
@@ -507,12 +507,12 @@ public class Channel implements EvaluatePP {
     Boolean varRes_5 = null;    
     Boolean var1_6 = null;
     {
-      if ((var1_6 = new Boolean(act_usend.intValue() == fin_usend.intValue())).booleanValue()) 
-        var1_6 = new Boolean(act_urec.intValue() == fin_urec.intValue());
+      if ((var1_6 = Boolean.valueOf(act_usend.intValue() == fin_usend.intValue())).booleanValue()) 
+        var1_6 = Boolean.valueOf(act_urec.intValue() == fin_urec.intValue());
     }
     {
       if ((varRes_5 = var1_6).booleanValue()) 
-        varRes_5 = new Boolean(new Integer(act_usend.intValue() + fin_usend.intValue()).intValue() == new Integer(act_usend.intValue() + fin_usend.intValue()).intValue());
+        varRes_5 = Boolean.valueOf(Integer.valueOf(act_usend.intValue() + fin_usend.intValue()).intValue() == Integer.valueOf(act_usend.intValue() + fin_usend.intValue()).intValue());
     }
     return varRes_5;
   }

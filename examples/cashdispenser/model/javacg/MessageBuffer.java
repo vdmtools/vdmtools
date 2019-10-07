@@ -65,14 +65,14 @@ public class MessageBuffer implements EvaluatePP {
   public Boolean evaluatePP (int fnr) throws CGException {    
     Boolean temp;    switch(fnr) {
     case 0: {
-      temp = new Boolean(UTIL.equals(new Integer(sentinel.active[((MessageBufferSentinel) sentinel).get] + sentinel.active[((MessageBufferSentinel) sentinel).put]), new Integer(0)));
+      temp = Boolean.valueOf(UTIL.equals(Integer.valueOf(sentinel.active[((MessageBufferSentinel) sentinel).get] + sentinel.active[((MessageBufferSentinel) sentinel).put]), Integer.valueOf(0)));
       return temp;
     }    case 1: {
-      temp = new Boolean(UTIL.equals(new Integer(sentinel.active[((MessageBufferSentinel) sentinel).get] + sentinel.active[((MessageBufferSentinel) sentinel).put]), new Integer(0)));
+      temp = Boolean.valueOf(UTIL.equals(Integer.valueOf(sentinel.active[((MessageBufferSentinel) sentinel).get] + sentinel.active[((MessageBufferSentinel) sentinel).put]), Integer.valueOf(0)));
       return temp;
     }}
 
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 

@@ -335,8 +335,8 @@ private
   then "\n" ^ [ ' ' | i in set {1,...,a字下げ} & i <= a字下げ ]
   else " ";
 
-values
-  JCGControl_package = "jp.scsk.masse.common.vdm.dao.base";
+--values
+--  JCGControl_package = "jp.scsk.masse.common.vdm.dao.base";
 
 end SQL
 

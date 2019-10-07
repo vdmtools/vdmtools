@@ -372,7 +372,7 @@ public class client_example
             
       for (int ii=s.First(eholder); ii != 0; ii=s.Next(eholder)) {
         VDMNumeric num = VDMNumericHelper.narrow(eholder.value);
-        sj.add(new Integer( GetNumeric( num ) ));
+        sj.add(Integer.valueOf( GetNumeric( num ) ));
       }
             
       int sum=0;

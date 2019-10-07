@@ -11,7 +11,7 @@ public class external_A {
 
   public Integer impl_g (final Integer var_1_1, final Integer var_2_2, 
                          final Set var_3_3) throws CGException{
-    return new Integer(var_1_1.intValue() + var_2_2.intValue());
+    return Integer.valueOf(var_1_1.intValue() + var_2_2.intValue());
   } 
   public Tuple impl_h (final List var_1_1, final Tuple var_2_2) 
       throws CGException{
@@ -27,7 +27,7 @@ public class external_A {
   
  public Integer impl_f1 () throws CGException{
    UTIL.RunTime("Implicit Function f1 has been called");
-   return new Integer(0);
+   return Integer.valueOf(0);
  } 
   
   public Vector impl_h2 (final Set var_1_1) throws CGException{

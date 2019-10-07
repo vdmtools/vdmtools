@@ -63,7 +63,7 @@ public class Clock implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 

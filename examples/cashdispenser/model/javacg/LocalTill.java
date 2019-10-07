@@ -79,7 +79,7 @@ public class LocalTill implements EvaluatePP , Runnable {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -127,7 +127,7 @@ public class LocalTill implements EvaluatePP , Runnable {
   public LocalTill () throws CGException {
     try {
       setSentinel();
-      enabled = new Boolean(true);
+      enabled = Boolean.TRUE;
     }
     catch (Exception e){
       e.printStackTrace(System.out);
@@ -601,7 +601,7 @@ public class LocalTill implements EvaluatePP , Runnable {
   public void Fail () throws CGException {
     sentinel.entering(((LocalTillSentinel) sentinel).Fail);
     try {
-      enabled = (Boolean) UTIL.clone(new Boolean(false));
+      enabled = (Boolean) UTIL.clone(Boolean.FALSE);
     }
     finally {
       sentinel.leaving(((LocalTillSentinel) sentinel).Fail);
@@ -615,7 +615,7 @@ public class LocalTill implements EvaluatePP , Runnable {
     sentinel.entering(((LocalTillSentinel) sentinel).Repair);
     try {
       c = (Channel) UTIL.clone(nc);
-      enabled = (Boolean) UTIL.clone(new Boolean(true));
+      enabled = (Boolean) UTIL.clone(Boolean.TRUE);
     }
     finally {
       sentinel.leaving(((LocalTillSentinel) sentinel).Repair);

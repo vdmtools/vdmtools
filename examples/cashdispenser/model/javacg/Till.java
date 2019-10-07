@@ -91,7 +91,7 @@ public class Till implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -113,7 +113,7 @@ public class Till implements EvaluatePP {
     try {
       setSentinel();
       curCard = null;
-      cardOk = new Boolean(false);
+      cardOk = Boolean.FALSE;
       retainedCards = new HashSet();
     }
     catch (Exception e){
@@ -153,7 +153,7 @@ public class Till implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=pre_InsertCard KEEP=NO
   public Boolean pre_InsertCard (final Card c) throws CGException {
-    return new Boolean(!CardInside().booleanValue());
+    return Boolean.valueOf(!CardInside().booleanValue());
   }
 // ***** VDMTOOLS END Name=pre_InsertCard
 
@@ -169,9 +169,9 @@ public class Till implements EvaluatePP {
       Boolean codeOk = null;      
       Integer var1_5 = null;
       var1_5 = curCard.GetCode();
-      codeOk = new Boolean(var1_5.intValue() == Encode(pin).intValue());      
+      codeOk = Boolean.valueOf(var1_5.intValue() == Encode(pin).intValue());      
       Object cardLegal = IsLegalCard();
-      if (new Boolean(UTIL.equals(cardLegal, new quotes.Fail())).booleanValue()) 
+      if (Boolean.valueOf(UTIL.equals(cardLegal, new quotes.Fail())).booleanValue()) 
         return new quotes.Fail();
       else {        
         Boolean rhs_12 = null;
@@ -185,7 +185,7 @@ public class Till implements EvaluatePP {
         cardOk = (Boolean) UTIL.clone(rhs_12);        
         Boolean cond_15 = null;
         if ((cardLegal instanceof Boolean)) 
-          cond_15 = new Boolean(!((Boolean) cardLegal).booleanValue());
+          cond_15 = Boolean.valueOf(!((Boolean) cardLegal).booleanValue());
         else 
           UTIL.RunTime("Run-Time Error:A boolean was expected");
         if (cond_15.booleanValue()) {
@@ -198,7 +198,7 @@ public class Till implements EvaluatePP {
             Boolean cond_36 = null;            
             quotes.Fail var1_37 = null;
             var1_37 = resource.ResetNumberOfTries(cardId);
-            cond_36 = new Boolean(UTIL.equals(var1_37, new quotes.Fail()));
+            cond_36 = Boolean.valueOf(UTIL.equals(var1_37, new quotes.Fail()));
             if (cond_36.booleanValue()) 
               return new quotes.Fail();
             else 
@@ -214,13 +214,13 @@ public class Till implements EvaluatePP {
             var2_24 = new HashSet();
             var2_24.add(incTries);
             var2_24.add(numTriesExceeded);
-            cond_22 = new Boolean(var2_24.contains(new quotes.Fail()));
+            cond_22 = Boolean.valueOf(var2_24.contains(new quotes.Fail()));
             if (cond_22.booleanValue()) 
               return new quotes.Fail();
             else 
               if (((Boolean) numTriesExceeded).booleanValue()) {
                 retainedCards.add(curCard);
-                cardOk = (Boolean) UTIL.clone(new Boolean(false));
+                cardOk = (Boolean) UTIL.clone(Boolean.FALSE);
                 curCard = null;
                 return new quotes.Retained();
               }
@@ -242,7 +242,7 @@ public class Till implements EvaluatePP {
     Boolean varRes_2 = null;
     {
       if ((varRes_2 = CardInside()).booleanValue()) 
-        varRes_2 = new Boolean(!cardOk.booleanValue());
+        varRes_2 = Boolean.valueOf(!cardOk.booleanValue());
     }
     return varRes_2;
   }
@@ -253,7 +253,7 @@ public class Till implements EvaluatePP {
   public void ReturnCard () throws CGException {
     sentinel.entering(((TillSentinel) sentinel).ReturnCard);
     try {
-      cardOk = (Boolean) UTIL.clone(new Boolean(false));
+      cardOk = (Boolean) UTIL.clone(Boolean.FALSE);
       curCard = null;
     }
     finally {
@@ -378,7 +378,7 @@ public class Till implements EvaluatePP {
     try {      
       Boolean rexpr_1 = null;
       {
-        if ((rexpr_1 = new Boolean(!UTIL.equals(curCard, null))).booleanValue()) 
+        if ((rexpr_1 = Boolean.valueOf(!UTIL.equals(curCard, null))).booleanValue()) 
           rexpr_1 = cardOk;
       }
       return rexpr_1;
@@ -394,7 +394,7 @@ public class Till implements EvaluatePP {
   public Boolean CardInside () throws CGException {
     sentinel.entering(((TillSentinel) sentinel).CardInside);
     try {
-      return new Boolean(!UTIL.equals(curCard, null));
+      return Boolean.valueOf(!UTIL.equals(curCard, null));
     }
     finally {
       sentinel.leaving(((TillSentinel) sentinel).CardInside);

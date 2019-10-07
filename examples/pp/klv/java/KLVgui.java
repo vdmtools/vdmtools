@@ -228,14 +228,14 @@ class KLVgui implements ActionListener, WindowListener {
   // Operations implementing the events.
 
   private void checkSpeed () {
-    int sp = new Integer (speedinput.getText()).intValue();
+    int sp = Integer.valueOf (speedinput.getText()).intValue();
     Boolean[] res = vdmklv.checkSpeed (sp);
     
     setCabDisplay (res[0].booleanValue(), res[1].booleanValue(), res[2].booleanValue());
   }
 
   private void releaseEmergencyBreak () {
-    int sp = new Integer (speedinput.getText()).intValue();
+    int sp = Integer.valueOf (speedinput.getText()).intValue();
     if (sp != 0) 
       setMessage ("Emergency break cannot be released since speed is not 0");
     else {
@@ -245,13 +245,13 @@ class KLVgui implements ActionListener, WindowListener {
   }
 
   private void setTrainLength () {
-    int tl = new Integer (trainlength.getText()).intValue();
+    int tl = Integer.valueOf (trainlength.getText()).intValue();
     traingui.setTrainLength (tl);
   }
 
   private void stepTrain () {
     trainLocation++;
-    int tl = new Integer (trainlength.getText()).intValue();
+    int tl = Integer.valueOf (trainlength.getText()).intValue();
     if (trainLocation-tl+1 > 0 && trainLocation-tl+1 < TrainGui.noOfFields &&
         beaconState[trainLocation-tl+1][0] != BeaconWindow.NoValue) {
       tailMeetBeacon (beaconState[trainLocation-tl+1]);

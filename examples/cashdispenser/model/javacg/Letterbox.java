@@ -63,7 +63,7 @@ public class Letterbox implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -113,8 +113,8 @@ public class Letterbox implements EvaluatePP {
     sentinel.entering(((LetterboxSentinel) sentinel).GetLastStatement);
     try {      
       Letter rexpr_1 = null;
-      if (1 <= ((Integer) new Integer(statements.size())).intValue() && ((Integer) new Integer(statements.size())).intValue() <= statements.size()) 
-        rexpr_1 = (Letter) statements.get(((Integer) new Integer(statements.size())).intValue() - 1);
+      if (1 <= ((Integer) Integer.valueOf(statements.size())).intValue() && ((Integer) Integer.valueOf(statements.size())).intValue() <= statements.size()) 
+        rexpr_1 = (Letter) statements.get(((Integer) Integer.valueOf(statements.size())).intValue() - 1);
       else 
         UTIL.RunTime("Run-Time Error:Illegal index");
       return (Letter) rexpr_1;
@@ -128,7 +128,7 @@ public class Letterbox implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=pre_GetLastStatement KEEP=NO
   private Boolean pre_GetLastStatement () throws CGException {
-    return new Boolean(!UTIL.equals(statements, new Vector()));
+    return Boolean.valueOf(!UTIL.equals(statements, new Vector()));
   }
 // ***** VDMTOOLS END Name=pre_GetLastStatement
 

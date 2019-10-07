@@ -80,8 +80,8 @@ public class Stmt {
               if (col == 0)
                 return transactions[row].date;
               else if (col == 1)
-                return new Integer(transactions[row].cardId);
-              else return new Integer(transactions[row].amount);
+                return Integer.valueOf(transactions[row].cardId);
+              else return Integer.valueOf(transactions[row].amount);
             }
             public String getColumnName(int col) {
               if (col == 0)
@@ -102,7 +102,7 @@ public class Stmt {
         JScrollPane scrollpane = new JScrollPane(tableView);
         JFrame frame = new JFrame("Statement for Cardholder " + name); 
         scrollpane.setPreferredSize(new java.awt.Dimension(390, 200));
-        JTextArea balText = new JTextArea(new Integer(balance).toString());
+        JTextArea balText = new JTextArea(Integer.valueOf(balance).toString());
         JLabel balLabel = new JLabel("End of Statement Balance: ");
         JPanel balPanel = new JPanel();
         balPanel.add(balLabel);

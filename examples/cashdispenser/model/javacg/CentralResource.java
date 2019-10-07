@@ -95,7 +95,7 @@ public class CentralResource implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -112,7 +112,7 @@ public class CentralResource implements EvaluatePP {
 // ***** VDMTOOLS END Name=setSentinel
 
 // ***** VDMTOOLS START Name=maxNumberOfTries KEEP=NO
-  private static final Integer maxNumberOfTries = new Integer(3);
+  private static final Integer maxNumberOfTries = Integer.valueOf(3);
 // ***** VDMTOOLS END Name=maxNumberOfTries
 
 
@@ -152,7 +152,7 @@ public class CentralResource implements EvaluatePP {
     sentinel.entering(((CentralResourceSentinel) sentinel).GetBalance);
     try {      
       Boolean cond_2 = null;
-      cond_2 = new Boolean(accounts.containsKey(accountId));
+      cond_2 = Boolean.valueOf(accounts.containsKey(accountId));
       if (cond_2.booleanValue()) {        
         Integer tmpObj_7 = null;        
         Account obj_8 = null;
@@ -184,7 +184,7 @@ public class CentralResource implements EvaluatePP {
         return tmpObj_9;
       }
       else 
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
     finally {
       sentinel.leaving(((CentralResourceSentinel) sentinel).Withdrawal);
@@ -205,10 +205,10 @@ public class CentralResource implements EvaluatePP {
         par_13 = clock.GetDate();
         par_8 = (Letter) obj_9.MakeStatement(cardId, par_13);
         letterbox.PostStatement((Letter) par_8);
-        return new Boolean(true);
+        return Boolean.TRUE;
       }
       else 
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
     finally {
       sentinel.leaving(((CentralResourceSentinel) sentinel).PostStatement);
@@ -224,11 +224,11 @@ public class CentralResource implements EvaluatePP {
       Boolean rexpr_3 = null;      
       Boolean var1_4 = null;      
       Boolean var1_5 = null;
-      var1_5 = new Boolean(!illegalCards.contains(cardId));
+      var1_5 = Boolean.valueOf(!illegalCards.contains(cardId));
       {
         if ((var1_4 = var1_5).booleanValue()) {          
           Boolean var2_8 = null;
-          var2_8 = new Boolean(accounts.containsKey(accountId));
+          var2_8 = Boolean.valueOf(accounts.containsKey(accountId));
           var1_4 = var2_8;
         }
       }
@@ -239,7 +239,7 @@ public class CentralResource implements EvaluatePP {
           Account obj_14 = null;
           obj_14 = (Account) (Account) accounts.get(accountId);
           var2_13 = obj_14.GetCardIds();
-          var2_11 = new Boolean(var2_13.contains(cardId));
+          var2_11 = Boolean.valueOf(var2_13.contains(cardId));
           rexpr_3 = var2_11;
         }
       }
@@ -256,7 +256,7 @@ public class CentralResource implements EvaluatePP {
   public Boolean NumberOfTriesExceeded (final Integer cardId) throws CGException {
     sentinel.entering(((CentralResourceSentinel) sentinel).NumberOfTriesExceeded);
     try {
-      return new Boolean((UTIL.NumberToInt(numberOfTries.get(cardId)).intValue()) >= (maxNumberOfTries.intValue()));
+      return Boolean.valueOf((UTIL.NumberToInt(numberOfTries.get(cardId)).intValue()) >= (maxNumberOfTries.intValue()));
     }
     finally {
       sentinel.leaving(((CentralResourceSentinel) sentinel).NumberOfTriesExceeded);
@@ -269,7 +269,7 @@ public class CentralResource implements EvaluatePP {
   public void ResetNumberOfTries (final Integer cardId) throws CGException {
     sentinel.entering(((CentralResourceSentinel) sentinel).ResetNumberOfTries);
     try {
-      numberOfTries.put(cardId, new Integer(0));
+      numberOfTries.put(cardId, Integer.valueOf(0));
     }
     finally {
       sentinel.leaving(((CentralResourceSentinel) sentinel).ResetNumberOfTries);
@@ -282,7 +282,7 @@ public class CentralResource implements EvaluatePP {
   public void IncrNumberOfTries (final Integer cardId) throws CGException {
     sentinel.entering(((CentralResourceSentinel) sentinel).IncrNumberOfTries);
     try {
-      numberOfTries.put(cardId, new Integer(UTIL.NumberToInt(numberOfTries.get(cardId)).intValue() + new Integer(1).intValue()));
+      numberOfTries.put(cardId, Integer.valueOf(UTIL.NumberToInt(numberOfTries.get(cardId)).intValue() + Integer.valueOf(1).intValue()));
     }
     finally {
       sentinel.leaving(((CentralResourceSentinel) sentinel).IncrNumberOfTries);
@@ -309,7 +309,7 @@ public class CentralResource implements EvaluatePP {
             succ_10 = true;
             cId = elem_12;
             if (succ_10) 
-              res_m_7.put(cId, new Integer(0));
+              res_m_7.put(cId, Integer.valueOf(0));
           }
         }
       }
@@ -332,7 +332,7 @@ public class CentralResource implements EvaluatePP {
     HashSet var2_5 = new HashSet();
     var2_5.clear();
     var2_5.addAll(accounts.keySet());
-    varRes_3 = new Boolean(!var2_5.contains(accId));
+    varRes_3 = Boolean.valueOf(!var2_5.contains(accId));
     return varRes_3;
   }
 // ***** VDMTOOLS END Name=pre_AddAccount

@@ -124,7 +124,7 @@ class ToolboxInterface {
 
     public void failTill(int index) throws CGException
     {
-	LocalTill lt = (LocalTill) ltills.get(new Integer(index));
+	LocalTill lt = (LocalTill) ltills.get(Integer.valueOf(index));
 	try {
 	    lt.Fail();
 	}
@@ -138,7 +138,7 @@ class ToolboxInterface {
 
     public void reportIllegalCard(String card)
     {
-	Integer cardId = new Integer(((Integer)cardMap.get(card)).intValue() + 1);
+	Integer cardId = Integer.valueOf(((Integer)cardMap.get(card)).intValue() + 1);
 
 	try {
 	    resource.AddIllegalCard(cardId);
@@ -182,7 +182,7 @@ class ToolboxInterface {
 	Object validRes=null;
 
 	try {
-	    validRes = t.Validate(new Integer(pin));
+	    validRes = t.Validate(Integer.valueOf(pin));
 	}
 	catch (CGException e) {
 	    TillGUI.Message("CGException");
@@ -212,7 +212,7 @@ class ToolboxInterface {
 	  Object wd = null;
 	  Till t = (Till) tills.get(vdmTill.getIndex());
 	  try {
-	      wd =  t.MakeWithdrawal(new Integer(amtNum));
+	      wd =  t.MakeWithdrawal(Integer.valueOf(amtNum));
 	  }
 	  catch (CGException e) {
 	      TillGUI.Message("CGException: makeWithdrawal");
@@ -276,7 +276,7 @@ class ToolboxInterface {
     {
 	Card c = new Card();
 	try {
-	    c.Create(new Integer(code), new Integer(cardId), new Integer(accId));
+	    c.Create(Integer.valueOf(code), Integer.valueOf(cardId), Integer.valueOf(accId));
 	} catch (CGException e) {
 	    TillGUI.Message("CGException");
 	}
@@ -300,7 +300,7 @@ class ToolboxInterface {
     {
       Account acc = new Account();
       try {
-	  acc.Create(m, new Integer(bal));
+	  acc.Create(m, Integer.valueOf(bal));
       } catch (CGException e) {
 	  TillGUI.Message("CGException");
       }
@@ -325,12 +325,12 @@ class ToolboxInterface {
       for (i=0; i<5; i++){
 	  cardHolderMap[i] = new HashMap();
 
-	  cardHolderMap[i].put(new Integer(i+1), cardHolders[i]);
+	  cardHolderMap[i].put(Integer.valueOf(i+1), cardHolders[i]);
       }
 
       // Extra cardholders for cardMap[4]
-      cardHolderMap[4].put(new Integer(6), cardHolders[2]);
-      cardHolderMap[4].put(new Integer(7), cardHolders[0]);
+      cardHolderMap[4].put(Integer.valueOf(6), cardHolders[2]);
+      cardHolderMap[4].put(Integer.valueOf(7), cardHolders[0]);
       Account[] accounts = new Account[5];
 
       status.setText("Creating Accounts");
@@ -345,7 +345,7 @@ class ToolboxInterface {
       for (i = 0; i<5; i++)
       {
 	  try {
-	      resource.AddAccount(new Integer(i+1), accounts[i]);
+	      resource.AddAccount(Integer.valueOf(i+1), accounts[i]);
 	  } catch (CGException e) {
 	      TillGUI.Message("CGException");
 	  }
@@ -368,7 +368,7 @@ class ToolboxInterface {
 
 	// create map from card strings to corresponding indices
 	for (int i = 0; i < 7; i++){
-	    cardMap.put(CashDispenser.CARDS[i], new Integer(i));
+	    cardMap.put(CashDispenser.CARDS[i], Integer.valueOf(i));
 	}
 
 

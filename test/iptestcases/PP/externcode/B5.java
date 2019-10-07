@@ -65,7 +65,7 @@ public class B5 implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException{
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -87,7 +87,7 @@ public class B5 implements EvaluatePP {
     try{
       setSentinel();
       System.out.println("B5 constructor");
-      i = new Integer(0);
+      i = Integer.valueOf(0);
       j = UTIL.ConvertToString(new String());
     }
     catch (Throwable e) {

@@ -20,71 +20,71 @@ public class Calculator extends Stack {
 			int lex = lx.getLex();
 			switch(lex) {
 				case Lex.ARG: 
-					push(new Double(t));
+					push(Double.valueOf(t));
 				break;
 				case Lex.e: 
-					push(new Double(Math.E));
+					push(Double.valueOf(Math.E));
 				break;
 				case Lex.pi: 
-					push(new Double(Math.PI));
+					push(Double.valueOf(Math.PI));
 				break;
 				case Lex.ABS: 
-					push(new Double(Math.abs(Pop())));
+					push(Double.valueOf(Math.abs(Pop())));
 				break;
 				case Lex.ACOS: 
-					push(new Double(Math.acos(Pop())));
+					push(Double.valueOf(Math.acos(Pop())));
 				break;
 				case Lex.ASIN: 
-					push(new Double(Math.asin(Pop())));
+					push(Double.valueOf(Math.asin(Pop())));
 				break;
 				case Lex.ATAN: 
-					push(new Double(Math.atan(Pop())));
+					push(Double.valueOf(Math.atan(Pop())));
 				break;
 				case Lex.CEIL: 
-					push(new Double(Math.ceil(Pop())));
+					push(Double.valueOf(Math.ceil(Pop())));
 				break;
 				case Lex.COS: 
-					push(new Double(Math.cos(Pop())));
+					push(Double.valueOf(Math.cos(Pop())));
 				break;
 				case Lex.EXP: 
-					push(new Double(Math.exp(Pop())));
+					push(Double.valueOf(Math.exp(Pop())));
 				break;
 				case Lex.FLOOR: 
-					push(new Double(Math.floor(Pop())));
+					push(Double.valueOf(Math.floor(Pop())));
 				break;
 				case Lex.LOG: 
-					push(new Double(Math.log(Pop())));
+					push(Double.valueOf(Math.log(Pop())));
 				break;
 				case Lex.SIN: 
-					push(new Double(Math.sin(Pop())));
+					push(Double.valueOf(Math.sin(Pop())));
 				break;
 				case Lex.SQRT: 
-					push(new Double(Math.sqrt(Pop())));
+					push(Double.valueOf(Math.sqrt(Pop())));
 				break;
 				case Lex.TAN: 
-					push(new Double(Math.tan(Pop())));
+					push(Double.valueOf(Math.tan(Pop())));
 				break;
 				case Lex.NUM:
-					push(new Double(lx.number));
+					push(Double.valueOf(lx.number));
 				break;
 				case Lex.PLUS: 
-					push(new Double(Pop()+Pop()));
+					push(Double.valueOf(Pop()+Pop()));
 				break;
 				case Lex.MINUS: 
-					push(new Double(-Pop()+Pop()));
+					push(Double.valueOf(-Pop()+Pop()));
 				break;
 				case Lex.MUL: 
-					push(new Double(Pop()*Pop()));
+					push(Double.valueOf(Pop()*Pop()));
 				break;
 				case Lex.DIV: 
-					push(new Double((1./Pop())*Pop()));
+					push(Double.valueOf((1./Pop())*Pop()));
 				break;
 				case Lex.POW:
 					double pwr = Pop(); 
-					push(new Double(Math.pow(Pop(),pwr)));
+					push(Double.valueOf(Math.pow(Pop(),pwr)));
 				break;
 				case Lex.UMINUS:
-					push(new Double(-Pop()));
+					push(Double.valueOf(-Pop()));
 				break;
 				case Lex.EOL:
 					cont = false;

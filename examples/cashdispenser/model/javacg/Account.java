@@ -128,7 +128,7 @@ public class Account implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -145,7 +145,7 @@ public class Account implements EvaluatePP {
 // ***** VDMTOOLS END Name=setSentinel
 
 // ***** VDMTOOLS START Name=dailyLimit KEEP=NO
-  private static final Integer dailyLimit = new Integer(2000);
+  private static final Integer dailyLimit = Integer.valueOf(2000);
 // ***** VDMTOOLS END Name=dailyLimit
 
 
@@ -199,7 +199,7 @@ public class Account implements EvaluatePP {
       transaction = new Transaction(date,cardId,amount);      
       Boolean cond_9 = null;
       {
-        if ((cond_9 = new Boolean((new Integer(balance.intValue() - amount.intValue()).intValue()) >= (new Integer(0).intValue()))).booleanValue()) {          
+        if ((cond_9 = Boolean.valueOf((Integer.valueOf(balance.intValue() - amount.intValue()).intValue()) >= (Integer.valueOf(0).intValue()))).booleanValue()) {          
           Boolean var2_15 = null;          
           Integer var1_16 = null;          
           Vector par_18 = null;          
@@ -209,17 +209,17 @@ public class Account implements EvaluatePP {
           par_18 = (Vector) transactions.clone();
           par_18.addAll(var2_20);
           var1_16 = DateTotal(date, par_18);
-          var2_15 = new Boolean((var1_16.intValue()) <= (dailyLimit.intValue()));
+          var2_15 = Boolean.valueOf((var1_16.intValue()) <= (dailyLimit.intValue()));
           cond_9 = var2_15;
         }
       }
       if (cond_9.booleanValue()) {
-        balance = UTIL.NumberToInt(UTIL.clone(new Integer(balance.intValue() - amount.intValue())));
+        balance = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(balance.intValue() - amount.intValue())));
         transactions.add(transaction);
-        return new Boolean(true);
+        return Boolean.TRUE;
       }
       else 
-        return new Boolean(false);
+        return Boolean.FALSE;
     }
     finally {
       sentinel.leaving(((AccountSentinel) sentinel).Withdrawal);
@@ -231,7 +231,7 @@ public class Account implements EvaluatePP {
 // ***** VDMTOOLS START Name=pre_Withdrawal KEEP=NO
   public Boolean pre_Withdrawal (final Integer cardId, final Integer amount, final String date) throws CGException {    
     Boolean varRes_4 = null;
-    varRes_4 = new Boolean(cards.containsKey(cardId));
+    varRes_4 = Boolean.valueOf(cards.containsKey(cardId));
     return varRes_4;
   }
 // ***** VDMTOOLS END Name=pre_Withdrawal
@@ -270,7 +270,7 @@ public class Account implements EvaluatePP {
 // ***** VDMTOOLS START Name=pre_MakeStatement KEEP=NO
   public Boolean pre_MakeStatement (final Integer cardId, final String date) throws CGException {    
     Boolean varRes_3 = null;
-    varRes_3 = new Boolean(cards.containsKey(cardId));
+    varRes_3 = Boolean.valueOf(cards.containsKey(cardId));
     return varRes_3;
   }
 // ***** VDMTOOLS END Name=pre_MakeStatement
@@ -332,7 +332,7 @@ public class Account implements EvaluatePP {
     HashSet var2_5 = new HashSet();
     var2_5.clear();
     var2_5.addAll(cards.keySet());
-    varRes_3 = new Boolean(!var2_5.contains(cId));
+    varRes_3 = Boolean.valueOf(!var2_5.contains(cId));
     return varRes_3;
   }
 // ***** VDMTOOLS END Name=pre_AddCard
@@ -351,7 +351,7 @@ public class Account implements EvaluatePP {
         HashSet riseq_19 = new HashSet();        
         int max_20 = ts.size();
         for (int i_21 = 1; i_21 <= max_20; i_21++) 
-          riseq_19.add(new Integer(i_21));
+          riseq_19.add(Integer.valueOf(i_21));
         e_set_17 = riseq_19;        
         Integer i = null;
         {
@@ -380,14 +380,14 @@ public class Account implements EvaluatePP {
           succ_9 = true;
           date = elem_24;
           if (succ_9) {
-            if (new Boolean((DateTotal(date, ts).intValue()) <= (dailyLimit.intValue())).booleanValue()) {}
+            if (Boolean.valueOf((DateTotal(date, ts).intValue()) <= (dailyLimit.intValue())).booleanValue()) {}
             else 
               tmpQuant_3 = false;
           }
         }
       }
     }
-    varRes_2 = new Boolean(tmpQuant_3);
+    varRes_2 = Boolean.valueOf(tmpQuant_3);
     return varRes_2;
   }
 // ***** VDMTOOLS END Name=TransactionsInvariant
@@ -403,7 +403,7 @@ public class Account implements EvaluatePP {
       HashSet riseq_11 = new HashSet();      
       int max_12 = ts.size();
       for (int i_13 = 1; i_13 <= max_12; i_13++) 
-        riseq_11.add(new Integer(i_13));
+        riseq_11.add(Integer.valueOf(i_13));
       resBind_s_7 = riseq_11;      
       Vector bind_l_6 = null;
       bind_l_6 = UTIL.Sort(resBind_s_7);      
@@ -421,7 +421,7 @@ public class Account implements EvaluatePP {
           else 
             UTIL.RunTime("Run-Time Error:Illegal index");
           var1_19 = (tmpRec_20).date;
-          pred_18 = new Boolean(UTIL.equals(var1_19, date));
+          pred_18 = Boolean.valueOf(UTIL.equals(var1_19, date));
           if (pred_18.booleanValue()) {            
             Integer reselem_14 = null;            
             Transaction tmpRec_15 = null;
@@ -445,10 +445,10 @@ public class Account implements EvaluatePP {
 // ***** VDMTOOLS START Name=Sum KEEP=NO
   private Double Sum (final Vector rs) throws CGException {    
     Double varRes_2 = null;
-    if (new Boolean(UTIL.equals(rs, new Vector())).booleanValue()) 
-      varRes_2 = UTIL.NumberToReal(new Double(0));
+    if (Boolean.valueOf(UTIL.equals(rs, new Vector())).booleanValue()) 
+      varRes_2 = UTIL.NumberToReal(Double.valueOf(0));
     else 
-      varRes_2 = new Double(UTIL.NumberToReal(rs.get(0)).doubleValue() + Sum(new Vector(rs.subList(1, rs.size()))).doubleValue());
+      varRes_2 = Double.valueOf(UTIL.NumberToReal(rs.get(0)).doubleValue() + Sum(new Vector(rs.subList(1, rs.size()))).doubleValue());
     return varRes_2;
   }
 // ***** VDMTOOLS END Name=Sum

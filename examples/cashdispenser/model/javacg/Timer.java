@@ -75,7 +75,7 @@ public class Timer implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException {
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -102,7 +102,7 @@ public class Timer implements EvaluatePP {
 // ***** VDMTOOLS START Name=Timer KEEP=NO
   public Timer () throws CGException {
     try {
-      perThread = new PeriodicThread(new Integer(1000),perThread){
+      perThread = new PeriodicThread(Integer.valueOf(1000),perThread){
 
       public void threadDef () throws CGException {
         IncTime();
@@ -110,8 +110,8 @@ public class Timer implements EvaluatePP {
 
 };
       setSentinel();
-      curTime = new Integer(0);
-      active = new Boolean(false);
+      curTime = Integer.valueOf(0);
+      active = Boolean.FALSE;
     }
     catch (Exception e){
       e.printStackTrace(System.out);
@@ -125,8 +125,8 @@ public class Timer implements EvaluatePP {
   public void Start () throws CGException {
     sentinel.entering(((TimerSentinel) sentinel).Start);
     try {
-      active = (Boolean) UTIL.clone(new Boolean(true));
-      curTime = UTIL.NumberToInt(UTIL.clone(new Integer(0)));
+      active = (Boolean) UTIL.clone(Boolean.TRUE);
+      curTime = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(0)));
     }
     finally {
       sentinel.leaving(((TimerSentinel) sentinel).Start);
@@ -139,7 +139,7 @@ public class Timer implements EvaluatePP {
   public void Stop () throws CGException {
     sentinel.entering(((TimerSentinel) sentinel).Stop);
     try {
-      active = (Boolean) UTIL.clone(new Boolean(false));
+      active = (Boolean) UTIL.clone(Boolean.FALSE);
     }
     finally {
       sentinel.leaving(((TimerSentinel) sentinel).Stop);
@@ -166,7 +166,7 @@ public class Timer implements EvaluatePP {
     sentinel.entering(((TimerSentinel) sentinel).IncTime);
     try {
       if (active.booleanValue()) 
-        curTime = UTIL.NumberToInt(UTIL.clone(new Integer(curTime.intValue() + new Integer(100).intValue())));
+        curTime = UTIL.NumberToInt(UTIL.clone(Integer.valueOf(curTime.intValue() + Integer.valueOf(100).intValue())));
     }
     finally {
       sentinel.leaving(((TimerSentinel) sentinel).IncTime);

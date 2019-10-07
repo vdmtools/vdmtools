@@ -53,7 +53,7 @@ public class B4 implements EvaluatePP {
 
 // ***** VDMTOOLS START Name=evaluatePP KEEP=NO
   public Boolean evaluatePP (int fnr) throws CGException{
-    return new Boolean(true);
+    return Boolean.TRUE;
   }
 // ***** VDMTOOLS END Name=evaluatePP
 
@@ -85,14 +85,14 @@ public class B4 implements EvaluatePP {
 // ***** VDMTOOLS START Name=f#1|Integer KEEP=YES
   public Integer f (final Integer n) throws CGException{
     System.out.println("argument is " + n);
-    return new Integer(n.intValue() + new Integer(1).intValue());
+    return Integer.valueOf(n.intValue() + Integer.valueOf(1).intValue());
   }
 // ***** VDMTOOLS END Name=f#1|Integer
 
 // ***** VDMTOOLS START Name=f#1|Long KEEP=YES
   public Long f (final Long n) throws CGException{
     System.out.println("argument is " + n);
-    return new Long(n.longValue() + new Long(1).longValue());
+    return Long.valueOf(n.longValue() + Long.valueOf(1).longValue());
   }
 // ***** VDMTOOLS END Name=f#1|Long
 
