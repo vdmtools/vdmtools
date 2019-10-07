@@ -29,7 +29,7 @@ public class external_BigInt {
 // ***** VDMTOOLS END Name=parent
 
 // ***** VDMTOOLS START Name=value KEEP=YES
-  BigInteger value = new BigInteger("0");
+  BigInteger value = BigInteger.ZERO;
 // ***** VDMTOOLS END Name=value
 
 // ***** VDMTOOLS START Name=external_BigInt#1|BigInt KEEP=NO
