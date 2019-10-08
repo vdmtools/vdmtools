@@ -2523,11 +2523,16 @@ TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
       rb.ImpAppend( vdm_BC_GenIfStmt(succ_v, stmt, elseStmt) );
     }
     DeletePid_m();
-    if (1 == rb.Length()) {
-      return rb[1];
+    if ( 1 == rb.Length() ) {
+      if (rb[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+        return rb[1];
+      }
+      else {
+        return vdm_BC_GenBlock (rb);
+      }
     }
     else {
-      return vdm_BC_GenBlock(rb);
+      return vdm_BC_GenBlock (rb);
     }
   }
   else {
@@ -2818,7 +2823,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAlwaysStmt(const TYPE_AS_AlwaysStmt & p_as, bool p_i
         handlerStmt.ImpAppend(stmt);
       }
       else {
-        handlerStmt.ImpAppend(vdm_BC_GenIfStmt(l_retCalledNm, stmt, nil));
+        handlerStmt.ImpAppend(vdm_BC_GenIfStmt(l_retCalledNm, vdm_BC_GenBlock(SEQ<TYPE_CPP_Stmt>().ImpAppend(stmt)), nil));
       }
     }
 

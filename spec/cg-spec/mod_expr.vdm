@@ -654,7 +654,9 @@ CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
   CGAUX`PopEnv();
   FD`PopEnv();
   cases rb:
-    [stmt] -> return stmt,
+    [stmt] -> if is_CPP`CompoundStmt(stmt)
+              then return stmt
+              else return BC`GenBlock(rb),
     others -> return BC`GenBlock(rb)
   end;
  );
@@ -3524,20 +3526,19 @@ CGObjRef (fexpr,par_l, vt) ==
                     then CGAUX`RunTime("Cannot apply or invoke operation")
                     else CGAUX`RunTime("Cannot invoke operation in a VDM value")
           in
-          ( dcl body1 : [CPP`Stmt] := if card ti_s <> card nm_s
-                                      then BC`GenBlock([CGAUX`RunTime("No member method " ^ mthd'.id)])
+          ( dcl body1 : [seq of CPP`Stmt] := if card ti_s <> card nm_s
+                                      then [CGAUX`RunTime("No member method " ^ mthd'.id)]
                                       else if ti_s <> t_s'
-                                           then BC`GenBlock([err])
+                                           then [err]
                                            else nil;
             for idx = len alts_l to 1 by -1 do
-              let mk_(cond,stmts) = alts_l(idx),
-                  stmt = BC`GenBlock(stmts)
+              let mk_(cond,stmts) = alts_l(idx)
               in
                 if idx = len alts_l and body1 = nil
-                then body1 := stmt
-                else body1 := BC`GenIfStmt(cond,stmt,body1);
+                then body1 := stmts
+                else body1 := [BC`GenIfStmt(cond,BC`GenBlock(stmts),BC`GenBlock(body1))];
 
-            body := [body1]
+            body := body1
           );
       );
       return pdecl_l ^ rv_d ^ body;
@@ -5025,7 +5026,8 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
           if CPP`isCPP()
           then
             if not is_REP`OverTypeRep(ti)
-            then rb := rb ^ [BC`GenIfStmt(DS`GenIsClass (tmpRec), CGAUX`NotSupported("Function value"),nil)]
+            then rb := rb ^ [BC`GenIfStmt(DS`GenIsClass (tmpRec),
+                                           BC`GenBlock([CGAUX`NotSupported("Function value")]),nil)]
             else skip
           else
             def mk_REP`UnionTypeRep(t_s) = tmpRecType;
@@ -5033,7 +5035,7 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
                 nm_s = { CGAUX`UnQClassType(objnm).nm | objnm in set ti_s &
                                           ENV`LookUpOpOrFnName(CGAUX`UnQClassType(objnm).nm,nm) <> nil }
             in rb := rb ^ [BC`GenIfStmt(DS`GenIsClasses (nm_s,tmpRec),
-                                        CGAUX`NotSupported("Function value"),nil)]
+                                         BC`GenBlock([CGAUX`NotSupported("Function value")]),nil)]
         else skip;
 #endif VDMPP
      return rb;

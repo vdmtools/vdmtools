@@ -43,10 +43,12 @@ public class Token {
 
 // ***** VDMTOOLS START Name=equals KEEP=NO
   public boolean equals (final Object obj) {
-    if (!(obj instanceof jp.vdmtools.VDM.Token)) 
-      return false;
-    else 
+    if (obj instanceof jp.vdmtools.VDM.Token) {
       return UTIL.equals(this.vdmValue, ((jp.vdmtools.VDM.Token) obj).vdmValue);
+    }
+    else {
+      return false;
+    }
   }
 // ***** VDMTOOLS END Name=equals
 

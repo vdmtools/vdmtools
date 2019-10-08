@@ -2228,7 +2228,9 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
          );
       DS`DeletePid_m();
       cases rb:
-        [stmt] -> return stmt,
+        [stmt] -> if is_CPP`CompoundStmt(stmt) 
+                  then return stmt
+                  else return BC`GenBlock(rb),
         others -> return BC`GenBlock(rb)
       end;
      )

@@ -716,7 +716,12 @@ TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
   PopEnv_CGAUX();
 
   if ( 1 == rb.Length() ) {
-    return rb[1];
+    if (rb[1].Is(TAG_TYPE_CPP_CompoundStmt)) {
+      return rb[1];
+    }
+    else {
+      return vdm_BC_GenBlock (rb);
+    }
   }
   else {
     return vdm_BC_GenBlock (rb);
@@ -4150,17 +4155,17 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
     TYPE_CPP_Stmt err (IsPosCompositeType (oti) ? RunTime(L"Cannot apply or invoke operation")
                                                 : RunTime(L"Cannot invoke operation in a VDM value"));
 
-    Generic body1 = nil;
+    Generic body1 = nil; // [seq of CPP`Stmt]
     if (t_s_q.Card() != card) {
-      body1 = vdm_BC_GenBlock(mk_sequence(err));
+      body1 = mk_sequence(err);
     }
     if (card != nm_s.Card()) {
       wstring m (ASTAUX::Id2String(GiveLastName(mthd)));
       if (vdm_CPP_isCPP()) {
-        body1 = vdm_BC_GenBlock(mk_sequence(RunTime(L"No member method vdm_" + m)));
+        body1 = mk_sequence(RunTime(L"No member method vdm_" + m));
       }
       else {
-        body1 = vdm_BC_GenBlock(mk_sequence(RunTime(L"No member method " + m)));
+        body1 = mk_sequence(RunTime(L"No member method " + m));
       }
     }
     size_t len_alts_l = alts_l.Length();
@@ -4169,15 +4174,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenUnionInvoke(const TYPE_CGMAIN_VT & vt,
       const TYPE_CPP_Expr & cond (alts.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmts (alts.GetSequence(2));
 
-      TYPE_CPP_Stmt stmt (vdm_BC_GenBlock (stmts));
       if ((idx == len_alts_l) && body1.IsNil()) {
-        body1 = stmt;
+        body1 = stmts;
       }
       else {
-        body1 = vdm_BC_GenIfStmt(cond, stmt, body1);
+        body1 = SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenIfStmt(cond,
+                  vdm_BC_GenBlock (stmts), vdm_BC_GenBlock (body1)));
       }
     }
-    body = SEQ<TYPE_CPP_Stmt>().ImpAppend(body1);
+    body = body1;
   }
   pdecl_l.ImpConc(rv_d);
   pdecl_l.ImpConc(body);
@@ -5467,7 +5472,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGFieldSelectExpr (const TYPE_AS_FieldSelectExpr & rc1
   if (IsUnionFunctionType (ti)) {
     if (vdm_CPP_isCPP()) {
       if (!ti.Is(TAG_TYPE_REP_OverTypeRep)) {
-        rb.ImpAppend (vdm_BC_GenIfStmt (GenIsClass (tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
+        rb.ImpAppend (vdm_BC_GenIfStmt (GenIsClass (tmpRec_v),
+                        vdm_BC_GenBlock(SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported (L"Function value", rc1))), Nil ()));
       }
     }
     else { // java
@@ -5487,7 +5493,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGFieldSelectExpr (const TYPE_AS_FieldSelectExpr & rc1
           }
         }
       }
-      rb.ImpAppend(vdm_BC_GenIfStmt (GenIsClasses (nm_s,tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
+      rb.ImpAppend(vdm_BC_GenIfStmt (GenIsClasses (nm_s,tmpRec_v),
+                     vdm_BC_GenBlock(SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported (L"Function value", rc1))), Nil ()));
     }
   }
 #endif // VDMPP

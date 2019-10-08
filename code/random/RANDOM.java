@@ -29,18 +29,22 @@ public class RANDOM {
 
   public RANDOM(long initial_seed)
   {
-    if (initial_seed == 0)
+    if (initial_seed == 0) {
       this.seed = 89482311;
-    else
+    }
+    else {
       this.seed = initial_seed;
+    }
   }
 
   public void set_seed(long seed)
   {
-    if (seed == 0)
+    if (seed == 0) {
       this.seed = 89482311;
-    else
+    }
+    else {
       this.seed = seed;
+    }
   }
 
   public long vdm_rand() 
@@ -49,11 +53,12 @@ public class RANDOM {
     int lo = (int)(this.seed%q);
     int test = (int)(a * lo - r * hi);
 
-    if (test > 0)
+    if (test > 0) {
       this.seed = test;
-    else
+    }
+    else {
       this.seed = test + m;
-
+    }
     return this.seed;
   }
 

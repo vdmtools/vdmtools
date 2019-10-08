@@ -97,16 +97,14 @@ public class ToolboxClient
       IORFilter filter = new IORFilter(fileName);
       File dir = new File(location);
       File[] files = dir.listFiles(filter);
-      if (files.length > 0)
-      {
+      if (files.length > 0) {
         System.out.println("refFile: " + files[0]);
         FileInputStream file = new FileInputStream(files[0]);
         BufferedReader in = new BufferedReader(new InputStreamReader(file));
         ref = in.readLine();
         file.close();
       }
-      else
-      {
+      else {
         throw new RuntimeException();
       }
     }
@@ -129,11 +127,12 @@ public class ToolboxClient
 
       org.omg.CosNaming.NameComponent nc = null;
 
-      if (toolType == ToolType.SL_TOOLBOX)
+      if (toolType == ToolType.SL_TOOLBOX) {
         nc = new org.omg.CosNaming.NameComponent ("SL_TOOLBOX", "VDMApplication");
-      else
+      }
+      else {
         nc = new org.omg.CosNaming.NameComponent ("PP_TOOLBOX", "VDMApplication");
-
+      }
       org.omg.CosNaming.NameComponent[] name = {ct, nc};
 
       return ctx.resolve (name);
@@ -192,8 +191,7 @@ public class ToolboxClient
 
     org.omg.CORBA.Object obj = null;
 
-    if (useNs)
-    {
+    if (useNs) {
       try {
         obj = resolveVDMApplication (orb, toolType);
       }
@@ -202,26 +200,29 @@ public class ToolboxClient
       }
     }
 
-    if (obj == null)
-    {
+    if (obj == null) {
       String ref = null;
 
-      if (toolType == ToolType.SL_TOOLBOX)
+      if (toolType == ToolType.SL_TOOLBOX) {
         ref = readRefFile ("vdmref.ior");
-      else
+      }
+      else {
         ref = readRefFile ("vppref.ior");
-
+      }
       obj = orb.string_to_object(ref);
 
-      if(obj == null)
+      if(obj == null) {
         throw new CouldNotResolveObjectException ("Could not resolve VDM Application object");
+      }
     }
 
     VDMApplication app = VDMApplicationHelper.narrow(obj);
-    if(app == null)
+    if(app == null) {
       throw new RuntimeException();
-    else
+    }
+    else {
       return app;
+    }
   }
 
   public void runExample (String args[])
@@ -236,8 +237,9 @@ public class ToolboxClient
       //
       try {
         VDMInterpreter ip = app.GetInterpreter();
-        if(ip == null)
+        if(ip == null) {
           throw new RuntimeException();
+        }
         ip.Verbose(true);
 
         app.PushTag(client);
