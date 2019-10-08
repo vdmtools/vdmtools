@@ -332,10 +332,12 @@ int MetaivVal::CompareMetaivType(MetaivVal * m) const
 {
   MetaivVal::metaivType t1 (this->type);
   MetaivVal::metaivType t2 (m->type);
-  if (t1 == t2)
+  if (t1 == t2) {
     return 0;
-  else
+  }
+  else {
     return ((t1 < t2) ? -1 : 1);
+  }
 }
 //////////////////////////////////////////////////////////////////////
 

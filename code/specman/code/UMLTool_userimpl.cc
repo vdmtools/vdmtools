@@ -127,8 +127,9 @@ type_cL vdm_UMLTool::vdm_GetConflictMsg()
 Bool vdm_UMLTool::vdm_InitUMLMapper ()
 {
 #ifdef VDMPP
-  if (UML == NULL)
+  if (UML == NULL) {
     UML = new UMLMapper();
+  }
   return Bool(UML != NULL);
 #else
   return Bool(false);
@@ -139,7 +140,9 @@ Bool vdm_UMLTool::vdm_InitUMLMapper ()
 void vdm_UMLTool::vdm_TerminateUMLMapper ()
 {
 #ifdef VDMPP
-  if (UML != NULL) delete UML;
+  if (UML != NULL) {
+    delete UML;
+  }
 #endif // VDMPP
 }
 
@@ -147,7 +150,9 @@ void vdm_UMLTool::vdm_TerminateUMLMapper ()
 void vdm_UMLTool::vdm_SetRTFTemplate (const type_cL & t)
 {
 #ifdef VDMPP
-  if (UML == NULL) vdm_InitUMLMapper ();
+  if (UML == NULL) {
+    vdm_InitUMLMapper ();
+  }
   UML->SetRTFTemplate(t.GetString());
 #endif // VDMPP
 }
@@ -156,7 +161,9 @@ void vdm_UMLTool::vdm_SetRTFTemplate (const type_cL & t)
 void vdm_UMLTool::vdm_SetCharSet (const type_cL & cs)
 {
 #ifdef VDMPP
-  if (UML == NULL) vdm_InitUMLMapper ();
+  if (UML == NULL) {
+    vdm_InitUMLMapper ();
+  }
   UML->SetCharset(cs.GetString());
 #endif // VDMPP
 }
@@ -165,7 +172,9 @@ void vdm_UMLTool::vdm_SetCharSet (const type_cL & cs)
 void vdm_UMLTool::vdm_SetToolInterface (const Int & n)
 {
 #ifdef VDMPP
-  if (UML == NULL) vdm_InitUMLMapper ();
+  if (UML == NULL) {
+    vdm_InitUMLMapper ();
+  }
   UML->SetToolInterface(n.GetValue());
 #endif // VDMPP
 }
@@ -174,7 +183,9 @@ void vdm_UMLTool::vdm_SetToolInterface (const Int & n)
 void vdm_UMLTool::vdm_SetNewFileType (const Int & n)
 {
 #ifdef VDMPP
-  if (UML == NULL) vdm_InitUMLMapper ();
+  if (UML == NULL) {
+    vdm_InitUMLMapper ();
+  }
   UML->SetNewFileType(n.GetValue());
 #endif // VDMPP
 }

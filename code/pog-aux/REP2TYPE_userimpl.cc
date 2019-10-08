@@ -60,8 +60,7 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
       const SEQ<TYPE_REP_FieldRep> & fields (tyrep.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_AS_Field> fld;
       size_t len_fields = fields.Length();
-      for (size_t index = 1; index <= len_fields; index++)
-      {
+      for (size_t index = 1; index <= len_fields; index++) {
         const TYPE_REP_FieldRep & fr (fields[index]);
         fld.ImpAppend(TYPE_AS_Field().Init(fr.GetField(pos_REP_FieldRep_sel),
                                            TypeRepToType(fr.GetRecord(pos_REP_FieldRep_tp), cid),
@@ -76,8 +75,7 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
       bool emptyseq_exists = false;
       bool nil_exists = false;
       Generic g;
-      for (bool bb = type_set.First(g); bb; bb = type_set.Next(g))
-      {
+      for (bool bb = type_set.First(g); bb; bb = type_set.Next(g)) {
         TYPE_REP_TypeRep ty (g);
         switch(ty.GetTag()) {
           case TAG_TYPE_REP_EmptySeqTypeRep: {
@@ -98,19 +96,16 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
         }
       }
       SET<TYPE_AS_Type> argset;
-      for (bool cc = tyset.First(g); cc; cc = tyset.Next(g))
-      {
+      for (bool cc = tyset.First(g); cc; cc = tyset.Next(g)) {
         TYPE_REP_TypeRep ty (g);
         switch(ty.GetTag()) {
           case TAG_TYPE_REP_SeqTypeRep: {
-            if (emptyseq_exists)
-            {
+            if (emptyseq_exists) {
               argset.Insert(TYPE_AS_Seq0Type().Init(
                               TypeRepToType(ty.GetRecord(pos_REP_SeqTypeRep_elemtp), cid),
                               cid));
             }
-            else
-            {
+            else {
               argset.Insert(TypeRepToType(ty, cid));
             }
             break;
@@ -123,22 +118,24 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
       }
       SEQ<TYPE_AS_Type> tyseq (REP2TYPE::SetToSeq(argset));
       TYPE_AS_Type as_tp;
-      if (tyseq.Length() == 1)
+      if (tyseq.Length() == 1) {
         as_tp = tyseq[1];
-      else
+      }
+      else {
         as_tp = TYPE_AS_UnionType().Init(tyseq, cid);
-
-      if (nil_exists)
+      }
+      if (nil_exists) {
         return TYPE_AS_OptionalType().Init(as_tp, cid);
-      else
+      }
+      else {
         return as_tp;
+      }
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tylist (tyrep.GetSequence(pos_REP_ProductTypeRep_tps));
       size_t len_tylist = tylist.Length();
       SEQ<TYPE_AS_Type> tps;
-      for (size_t index = 1; index <= len_tylist; index++)
-      {
+      for (size_t index = 1; index <= len_tylist; index++) {
         tps.ImpAppend(TypeRepToType(tylist[index], cid));
       }
       return TYPE_AS_ProductType().Init(tps, cid);
@@ -170,8 +167,9 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
       const TYPE_REP_TypeRep & fnrng (tyrep.GetRecord(pos_REP_PartialFnTypeRep_fnrng));
       SEQ<TYPE_AS_Type> tp_l;
       size_t len_fndom = fndom.Length();
-      for (size_t index = 1; index <= len_fndom; index++)
+      for (size_t index = 1; index <= len_fndom; index++) {
         tp_l.ImpAppend(TypeRepToType(fndom[index], cid));
+      }
       return TYPE_AS_PartialFnType().Init(tp_l, TypeRepToType(fnrng, cid), cid);
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
@@ -179,8 +177,9 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
       const TYPE_REP_TypeRep & fnrng (tyrep.GetRecord(pos_REP_TotalFnTypeRep_fnrng));
       SEQ<TYPE_AS_Type> tp_l;
       size_t len_fndom = fndom.Length();
-      for (size_t index = 1; index <= len_fndom; index++)
+      for (size_t index = 1; index <= len_fndom; index++) {
         tp_l.ImpAppend(TypeRepToType(fndom[index], cid));
+      }
       return TYPE_AS_TotalFnType().Init(tp_l, TypeRepToType(fnrng, cid), cid);
     }
     case TAG_TYPE_REP_OpTypeRep: {
@@ -188,8 +187,9 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
       const TYPE_REP_TypeRep & oprng (tyrep.GetRecord(pos_REP_OpTypeRep_Rng));
       SEQ<TYPE_AS_Type> tp_l;
       size_t len_opdom = opdom.Length();
-      for (size_t index = 1; index <= len_opdom; index++)
+      for (size_t index = 1; index <= len_opdom; index++) {
         tp_l.ImpAppend(TypeRepToType(opdom[index], cid));
+      }
       return TYPE_AS_OpType().Init(tp_l, TypeRepToType(oprng, cid), cid);
     }
 #ifdef VICE
@@ -226,11 +226,9 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
     case TAG_TYPE_REP_TypeVarRep: {
       return TYPE_AS_TypeVar().Init(tyrep.GetRecord(pos_REP_TypeVarRep_nm), cid);
     }
-// 20090610 ->
     case TAG_TYPE_REP_PolyTypeRep: {
       return TypeRepToType(tyrep.GetRecord(pos_REP_PolyTypeRep_tp), cid);
     }
-// <- 20090610
     default: {
       wcout << L"Unsupported type(REP2TYPE::TypeRepToType)" << endl;
       wcout << tyrep << endl;
@@ -244,14 +242,13 @@ TYPE_AS_Type REP2TYPE::TypeRepToType (const TYPE_REP_TypeRep & tyrep,
 // -> seq of AS`Type
 SEQ<TYPE_AS_Type> REP2TYPE::SetToSeq (const SET<TYPE_AS_Type> & s_)
 {
-  if (s_.IsEmpty()) return type_typevariableL();
-
+  if (s_.IsEmpty()) {
+    return type_typevariableL();
+  }
   SET<TYPE_AS_Type> s (s_);
-//  return (Generic)vdm_REP2TYPE_s.ToSequence().Reverse();
   Set bt, tn, seqt, sett, mapt, ft, ot;
   Generic g;
-  for (bool bb = s.First(g); bb; bb = s.Next(g))
-  {
+  for (bool bb = s.First(g); bb; bb = s.Next(g)) {
     switch(Record(g).GetTag()) {
       case TAG_TYPE_AS_TypeName: {
         tn.Insert(g);

@@ -69,11 +69,11 @@ TYPE_AS_Name MANGLE::Mangle(const TYPE_AS_Name & p_nm, const SEQ<TYPE_AS_Type> &
 
 
 // MangleString
-wstring MANGLE::MangleString(const wstring & p_nm, const SEQ<TYPE_AS_Type> & p_tps) 
+wstring MANGLE::MangleString(const wstring & p_nm, const SEQ<TYPE_AS_Type> & p_tps)
 {
   TYPE_AS_Name asNm (ASTAUX::MkNameFromId(ASTAUX::MkId(p_nm), NilContextId));
   TYPE_AS_Name mangledName (Mangle(asNm, p_tps));
-  return ASTAUX::Id2String(ASTAUX::GetFirstId(mangledName));  
+  return ASTAUX::Id2String(ASTAUX::GetFirstId(mangledName));
 }
 
 // UnMangle
@@ -88,12 +88,10 @@ Tuple MANGLE::UnMangle(const TYPE_AS_Name& p_nm)
   l_mangledId.GetString(l_nm);
   string::size_type l_hashIdx = l_nm.find('#');
   string::size_type l_barIdx = l_nm.find('|',l_hashIdx); // bar must occur after hash
-  if (l_hashIdx == wstring::npos || l_barIdx == wstring::npos) // Should never happen
-  {
+  if (l_hashIdx == wstring::npos || l_barIdx == wstring::npos) { // Should never happen
     return mk_(Nil(), Nil(), Nil());
   }
-  else
-  {
+  else {
     Tuple infer (UnMangleTypeSeq(l_nm));
 
     TYPE_AS_Name l_resName (p_nm);
@@ -114,11 +112,7 @@ Tuple MANGLE::UnMangleTypeSeq(const wstring & p_str)
   string::size_type l_baridx = p_str.find('|',l_idx); // bar must occur after hash
   int l_arity = atoi(TBWSTR::wstring2string(p_str.substr(l_idx + 1, l_baridx - 1)).c_str());
   wstring l_tpString (p_str.substr(l_baridx + 1, p_str.length()));
-
-  //SEQ<TYPE_AS_Type> l_tps (UNMANGLE::unmangle_main(l_tpString)); // if fail then leak memory
-
   SEQ<TYPE_AS_Type> l_tps (unstringifyTypeSeq(SEQ<Char>(l_tpString)));
-
   TYPE_AS_Id id (SEQ<Char>(p_str.substr(0, l_idx)));
   return mk_(id, Int(l_arity), l_tps);
 }
@@ -130,7 +124,6 @@ bool MANGLE::IsMangled(const TYPE_AS_Name & p_nm)
 {
   const TYPE_AS_Ids & ids (p_nm.GetSequence(pos_AS_Name_ids));
   int l_idx = ids.Length();
-//  return ids[l_idx].Elems().InSet(Char(L'#'));
   wstring nm (ids[l_idx].GetString());
   return (nm.find('#') != wstring::npos);
 }
@@ -140,7 +133,6 @@ bool MANGLE::IsMangled(const TYPE_AS_Name & p_nm)
 // -> bool
 bool MANGLE::IsMangled(const wstring & p_nm)
 {
-//  return Sequence(p_nm).Elems().InSet(Char(L'#'));
   return (p_nm.find('#') != wstring::npos);
 }
 
@@ -157,12 +149,10 @@ TYPE_AS_Name MANGLE::GetUnmangledName(const TYPE_AS_Name & p_nm)
   l_mangledId.GetString(l_nm);
   string::size_type l_hashIdx = l_nm.find('#');
 
-  if (l_hashIdx == wstring::npos) // Should never happen
-  {
+  if (l_hashIdx == wstring::npos) { // Should never happen
     return ASTAUX::MkNameFromVoid();
   }
-  else
-  {
+  else {
     TYPE_AS_Id l_newId (ASTAUX::MkId(l_nm.substr(0, l_hashIdx)));
     TYPE_AS_Ids l_newIds (ids);
     l_newIds.ImpModify(l_idx, l_newId);
@@ -193,22 +183,25 @@ SEQ<TYPE_AS_Type> MANGLE::MethType2Seq (const Generic & p_tp)
   if (p_tp.IsRecord()) {
     TYPE_AS_Type tp (p_tp);
     switch(tp.GetTag()) {
-      case TAG_TYPE_AS_OpType:
+      case TAG_TYPE_AS_OpType: {
         return tp.GetSequence(pos_AS_OpType_opdom);
-      case TAG_TYPE_AS_PartialFnType:
+      }
+      case TAG_TYPE_AS_PartialFnType: {
         return tp.GetSequence(pos_AS_PartialFnType_fndom);
-      case TAG_TYPE_AS_TotalFnType:
+      }
+      case TAG_TYPE_AS_TotalFnType: {
         return tp.GetSequence(pos_AS_TotalFnType_fndom);
-      default:
+      }
+      default: {
         return SEQ<TYPE_AS_Type>(); // dummy
+      }
     }
   }
   else {
     SEQ<TYPE_AS_PatTypePair> p_tpSeq (p_tp);
     SEQ<TYPE_AS_Type> result;
     size_t len_p_tpSeq = p_tpSeq.Length();
-    for (size_t idx = 1; idx <= len_p_tpSeq; idx++)
-    {
+    for (size_t idx = 1; idx <= len_p_tpSeq; idx++) {
       const TYPE_AS_PatTypePair & ptr (p_tpSeq[idx]);
       result.ImpAppend(ptr.GetRecord(pos_AS_PatTypePair_tp));
     }
@@ -342,11 +335,12 @@ SEQ<Char> MANGLE::stringifyNumericType (const TYPE_AS_NumericType & p_tp)
 {
   const Generic & bt (p_tp.GetField(pos_AS_NumericType_qtp));
   Int btI;
-  if (bt.IsInt())
+  if (bt.IsInt()) {
     btI = bt;
-  else
+  }
+  else {
     btI = INT2Q::Quote2Integer(bt);
-
+  }
   switch (btI.GetValue()) {
     case NATONE:     { return SEQ<Char>(L"M"); }
     case NAT:        { return SEQ<Char>(L"N"); }
@@ -389,7 +383,7 @@ SEQ<Char> MANGLE::stringifyFnType (const SEQ<TYPE_AS_Type> & p_fd, const TYPE_AS
         .ImpConc(stringifyProductType(p_fd))
         .ImpAppend(sepalator)
         .ImpConc(stringify(p_fr));
-  return result; 
+  return result;
 }
 
 // nm2string
@@ -422,10 +416,10 @@ SEQ<Char> MANGLE::stringifyTypeSeq (const SEQ<TYPE_AS_Type> & p_tps, const Char 
 {
   SEQ<Char> result;
   size_t len_p_tps = p_tps.Length();
-  for (size_t idx = 1; idx <= len_p_tps; idx++)
-  {
-    if (idx > 1)
+  for (size_t idx = 1; idx <= len_p_tps; idx++) {
+    if (idx > 1) {
       result.ImpAppend(p_sep);
+    }
     result.ImpConc(stringify(p_tps[idx]));
   }
   return result;
@@ -445,27 +439,24 @@ SEQ<TYPE_AS_Type> MANGLE::unstringifyTypeSeq (const SEQ<Char> & p_str)
 // ==> seq of MangleToken
 SEQ<TYPE_MANGLE_MangleToken> MANGLE::LexMangle(const SEQ<Char> & p_str)
 {
-  if (p_str.IsEmpty())
+  if (p_str.IsEmpty()) {
     return SEQ<TYPE_MANGLE_MangleToken>();
-
+  }
   bool found = false;
   size_t len_p_str = p_str.Length();
   size_t index = 1;
   SEQ<TYPE_MANGLE_MangleToken> sep;
   for (size_t i = 1; (i <= len_p_str) && !found; i++) {
-    if (p_str[i] == Char(L'-'))
-    {
+    if (p_str[i] == Char(L'-')) {
       index = i;
       found = true;
     }
-    else if (p_str[i] == Char(L'('))
-    {
+    else if (p_str[i] == Char(L'(')) {
       sep.ImpAppend(TYPE_MANGLE_LeftBracket());
       index = i;
       found = true;
     }
-    else if (p_str[i] == Char(L')'))
-    {
+    else if (p_str[i] == Char(L')')) {
       sep.ImpAppend(TYPE_MANGLE_RightBracket());
       index = i;
       found = true;
@@ -474,15 +465,18 @@ SEQ<TYPE_MANGLE_MangleToken> MANGLE::LexMangle(const SEQ<Char> & p_str)
 
   SEQ<TYPE_MANGLE_MangleToken> res;
   if (found) {
-    if (index > 1)
+    if (index > 1) {
       res.ImpConc(LexMangle(p_str.SubSequence(1, index - 1)));
+    }
     res.ImpConc(sep);
-    if (index < len_p_str)
+    if (index < len_p_str) {
       res.ImpConc(LexMangle(p_str.SubSequence(index + 1, len_p_str)));
+    }
     return res;
   }
-  else
+  else {
     res.ImpAppend(p_str);
+  }
   return res;
 }
 
@@ -491,15 +485,14 @@ SEQ<TYPE_MANGLE_MangleToken> MANGLE::LexMangle(const SEQ<Char> & p_str)
 // ==> seq of AS`Type
 SEQ<TYPE_AS_Type> MANGLE::ParseMangle(const SEQ<TYPE_MANGLE_MangleToken> & p_mantokL)
 {
-  if (p_mantokL.IsEmpty())
+  if (p_mantokL.IsEmpty()) {
     return SEQ<TYPE_AS_Type>();
-  
+  }
   Generic l_mangle (p_mantokL.Hd());
   SEQ<TYPE_MANGLE_MangleToken> l_rest (p_mantokL.Tl());
 
-  if (l_mangle.IsSequence() && (Sequence(l_mangle).Length() == 1))
-  {
-    
+  if (l_mangle.IsSequence() && (Sequence(l_mangle).Length() == 1)) {
+
     Char c (Sequence(l_mangle).Hd());
     switch (c.GetValue()) {
       case L'B': {
@@ -598,26 +591,25 @@ SEQ<TYPE_AS_Type> MANGLE::ParseMangle(const SEQ<TYPE_MANGLE_MangleToken> & p_man
 // +> seq of MangleToken * seq of MangleToken
 Tuple MANGLE::ExtractParameterList(const SEQ<TYPE_MANGLE_MangleToken> p_tokL, int p_start)
 {
-  if (p_tokL.IsEmpty())
+  if (p_tokL.IsEmpty()) {
     return mk_(SEQ<TYPE_MANGLE_MangleToken>(), SEQ<TYPE_MANGLE_MangleToken>()); // error
-
+  }
   TYPE_MANGLE_MangleToken l_tok (p_tokL.Hd());
   SEQ<TYPE_MANGLE_MangleToken> l_rest (p_tokL.Tl());
 
-  if (l_tok.IsRecord() && Record(l_tok).Is(TAG_TYPE_MANGLE_RightBracket))
-  {
-    if (p_start == 0)
+  if (l_tok.IsRecord() && Record(l_tok).Is(TAG_TYPE_MANGLE_RightBracket)) {
+    if (p_start == 0) {
       return mk_(SEQ<TYPE_MANGLE_MangleToken>(), l_rest);
-    else
+    }
+    else {
       return mk_(mk_sequence(l_tok), l_rest);
+    }
   }
-  else if (l_tok.IsRecord() && Record(l_tok).Is(TAG_TYPE_MANGLE_LeftBracket))
-  {
+  else if (l_tok.IsRecord() && Record(l_tok).Is(TAG_TYPE_MANGLE_LeftBracket)) {
     Tuple epl (ExtractParameterList(l_rest, p_start + 1));
     return mk_(mk_sequence(l_tok).ImpConc(epl.GetSequence(1)), epl.GetSequence(2));
   }
-  else
-  {
+  else {
     Tuple epl (ExtractParameterList(l_rest, p_start));
     return mk_(mk_sequence(l_tok).ImpConc(epl.GetSequence(1)), epl.GetSequence(2));
   }
@@ -628,14 +620,13 @@ Tuple MANGLE::ExtractParameterList(const SEQ<TYPE_MANGLE_MangleToken> p_tokL, in
 // +> seq of MangleToken * seq of MangleToken
 Tuple MANGLE::ExtractType(const SEQ<TYPE_MANGLE_MangleToken> p_tokL)
 {
-  if (p_tokL.IsEmpty())
+  if (p_tokL.IsEmpty()) {
     return mk_(SEQ<TYPE_MANGLE_MangleToken>(), SEQ<TYPE_MANGLE_MangleToken>()); // error
-  
+  }
   TYPE_MANGLE_MangleToken l_tok (p_tokL.Hd());
   SEQ<TYPE_MANGLE_MangleToken> l_rest (p_tokL.Tl());
 
-  if (l_tok.IsSequence() && (Sequence(l_tok).Length() == 1))
-  {
+  if (l_tok.IsSequence() && (Sequence(l_tok).Length() == 1)) {
     Char c (Sequence(l_tok).Hd());
     switch (c.GetValue()) {
       case L'B':

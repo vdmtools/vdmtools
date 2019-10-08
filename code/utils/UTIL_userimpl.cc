@@ -49,17 +49,19 @@ Sequence UTIL::set2seq(const Set & s)
 Real UTIL::minset(const SET<Real> & p_s)
 {
   Real l_v (p_s.GetElem());
-  if( p_s.Card() == 1 )
+  if( p_s.Card() == 1 ) {
     return l_v;
-  else
-  {
+  }
+  else {
     Set new_p_s( p_s );
     new_p_s.RemElem( l_v );
     Real l_minrest (minset( new_p_s ));
-    if( l_v > l_minrest )
+    if( l_v > l_minrest ) {
       return l_minrest;
-    else
+    }
+    else {
       return l_v;
+    }
   }
 }
 
@@ -83,8 +85,7 @@ SEQ<Char> UTIL::ReplacePercent(const SEQ<Char> & err, const SEQ< SEQ<Char> > & T
 
   SEQ<Char> res;
   size_t len_err = err.Length();
-  for (size_t idx = 1; idx <= len_err; idx++)
-  {
+  for (size_t idx = 1; idx <= len_err; idx++) {
     const Char & ch (err[idx]);
     switch (ch.GetValue()) {
 
@@ -125,8 +126,9 @@ SEQ<Char> UTIL::ReplacePercent(const SEQ<Char> & err, const SEQ< SEQ<Char> > & T
             throw TB_Exception(ERR_IP);
           }
           percent = false;
-          if (num > max)
+          if (num > max) {
             max = num;
+          }
           res.ImpConc(Txts[num]);
         }
         else {

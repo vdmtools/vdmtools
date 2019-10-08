@@ -237,8 +237,7 @@ Tuple TBDEBUG::DebugStep (TBDEBUG::StepType t, wostream & wos)
       res = mk_(EvaluationStateToEvalState(evalstate), res_lv);
       UpdateGui(!aie.GetBool(1), wos);
     }
-    else
-    {
+    else {
       res = mk_(Quote (L"ERROR"), Nil());
     }
   }
@@ -349,8 +348,7 @@ int TBDEBUG::EvalBreakOnPos(const wstring & filename, const wstring & lineStr, c
     return -1;
   }
 
-  if (theStackMachine().ExistsBreakpointForPos(SEQ<Char>(filename), Int(line), Int(col)))
-  {
+  if (theStackMachine().ExistsBreakpointForPos(SEQ<Char>(filename), Int(line), Int(col))) {
     wos << L"Breakpoint already exists for file " << filename << L" line " << line;
     if (col != 1) {
       wos << L" column " << col;
@@ -527,9 +525,9 @@ bool TBDEBUG::ExtractBreakNames (const wstring & str,
 
   if (sigmamo.get_explfns().DomExists (Funop_Name) ||
       sigmamo.get_explops().DomExists (Funop_Name) ||
-      sigmamo.get_explpolys().DomExists (Funop_Name))
+      sigmamo.get_explpolys().DomExists (Funop_Name)) {
     return true;
-
+  }
 #endif //VDMSL
 
 #ifdef VDMPP
@@ -592,13 +590,11 @@ bool TBDEBUG::ExtractBreakNames (const wstring & str,
 
 void TBDEBUG::EvalCondition(const wstring & args, wostream & wos)
 {
-  if (args.empty())
-  {
+  if (args.empty()) {
     // show all condition
     theStackMachine().PrintConditions(wos);
   }
-  else
-  {
+  else {
     // set all condition
     Tuple t (TOOLS::ParseExprsString(TBWSTR::ConvertToHexquad(args)));
     if (!t.GetBoolValue(1)) {
@@ -606,32 +602,30 @@ void TBDEBUG::EvalCondition(const wstring & args, wostream & wos)
     }
     SEQ<TYPE_AS_Expr> exprs (t.GetSequence(2));
 
-    if (exprs.IsEmpty())
+    if (exprs.IsEmpty()) {
       return;
-
+    }
     TYPE_AS_Expr e (exprs.Hd());
     //if (e.Is(TAG_TYPE_AS_RealLit))
-    if (e.Is(TAG_TYPE_AS_NumLit))
-    {
+    if (e.Is(TAG_TYPE_AS_NumLit)) {
       //Int num ((int)e.GetReal(pos_AS_RealLit_val).GetValue());
       Int num (e.GetInt(pos_AS_NumLit_val));
       exprs.ImpTl();
-      if (exprs.IsEmpty())
-      {
+      if (exprs.IsEmpty()) {
         Tuple res (theStackMachine().RemoveCondition(num));
-        if (!res.GetBoolValue(1))
+        if (!res.GetBoolValue(1)) {
           wos << res.GetSequence(2).GetString() << endl;
+        }
       }
-      else
-      {
+      else {
         TYPE_AS_Expr c (exprs.Hd());
         Tuple res (theStackMachine().AddCondition(num, c));
-        if (!res.GetBoolValue(1))
+        if (!res.GetBoolValue(1)) {
           wos << res.GetSequence(2).GetString() << endl;
+        }
       }
     }
-    else
-    {
+    else {
       wos << L"Specify breakpoint number to add/remove condition" << endl << flush;
     }
   }
@@ -665,13 +659,13 @@ void TBDEBUG::EvalCreate(const string & args, wostream & wos)
     TOOLS::set_dobjs_init(true);  // warning is now printed
 
     SET<TYPE_ProjectTypes_FileName> files(ToolMediator::Repos()->vdm_Files());
-    if (!files.IsEmpty())
+    if (!files.IsEmpty()) {
       InitCurrentDefinition (false, wos);
+    }
   }
-
-  if (!TOOLS::IsInScript())
+  if (!TOOLS::IsInScript()) {
     ToolMediator::ExprErrs()->vdm_ClearAll();
-
+  }
   Tuple t (TOOLS::ParseAssignStmt(args));
 
   if (!t.GetBoolValue(1)) {
@@ -697,17 +691,18 @@ void TBDEBUG::EvalCreate(const string & args, wostream & wos)
       }
     }
   }
-  if (!TOOLS::IsInScript())
+  if (!TOOLS::IsInScript()) {
     ToolMediator::ExprErrs()->vdm_AllDone();
+  }
 }
 
 void TBDEBUG::EvalDestroy (const string & args, wostream & wos)
 {
   // static objects
-  if (args.find("-d") != string::npos)
-  {
-    if ( theStackMachine().EvalStackLevel() == 0 )
+  if (args.find("-d") != string::npos) {
+    if ( theStackMachine().EvalStackLevel() == 0 ) {
       theState().DestroyDanglingObjects();
+    }
     return;
   }
 
@@ -726,8 +721,7 @@ void TBDEBUG::EvalDestroy (const string & args, wostream & wos)
     return;
   }
 
-  if( !theState().DestroyObject( obj_nm ) )
-  {
+  if( !theState().DestroyObject( obj_nm ) ) {
     wos << L"\"" << ASTAUX::ASName2String(obj_nm) << L" is not an object" << endl
         <<L"The created objects are:" << endl << flush;
     EvalObjects(L"", wos);
@@ -761,42 +755,46 @@ bool TBDEBUG::ExtractClassName(const TYPE_AS_Name & break_nm, TYPE_AS_Name & mod
 void TBDEBUG::EvalCurMod (wostream & wos)
 {
   TYPE_AS_Name curmod (theStackMachine().CurrentModule ());
-  if (!curmod.get_ids().IsEmpty())
+  if (!curmod.get_ids().IsEmpty()) {
     wos << L"Current module is now: " << ASTAUX::ASName2String (curmod) << endl;
-  else
+  }
+  else {
     wos << L"No module is pushed onto the stack" << endl;
+  }
 }
 
 type_bU2P TBDEBUG::GetCurrentModule ()
 {
   TYPE_AS_Name curmod (theStackMachine().CurrentModule ());
-  if (!curmod.get_ids().IsEmpty())
+  if (!curmod.get_ids().IsEmpty()) {
     return Generic(mk_(Bool(true), PTAUX::ASName2ModuleName(curmod)));
-  else
+  }
+  else {
     return Generic(mk_(Bool(false), Nil()));
+  }
 }
 
 Bool TBDEBUG::EvalPopModule (wostream & wos)
 {
   if (ToolMediator::Repos()->vdm_IsSession (struct_session)) {
-    if (theStackMachine().IsInitialized())
-    {
+    if (theStackMachine().IsInitialized()) {
       theStackMachine().PopModule ();
       EvalCurMod (wos);
       return Bool(true);
     }
-    else
+    else {
       wos << L"No modules are pushed onto the stack" << endl;
+    }
   }
-  else
+  else {
     wos << L"No modules to pop for definitions" << endl;
+  }
   return Bool(false);
 }
 
 Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & mod, wostream & wos)
 {
-  if (ToolMediator::Repos()->vdm_IsSession (struct_session))
-  {
+  if (ToolMediator::Repos()->vdm_IsSession (struct_session)) {
     TYPE_AS_Name mod_name (PTAUX::ModuleName2ASName(mod));
 
     try {
@@ -832,9 +830,9 @@ Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & mod, wostream
       return Bool(false);
     }
   }
-  else
+  else {
     wos << L"No modules to push for definitions" << endl;
-
+  }
   return Bool(false);
 }
 #endif //VDMSL
@@ -842,63 +840,63 @@ Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & mod, wostream
 #ifdef VDMPP
 void TBDEBUG::EvalCurCls (wostream & wos)
 {
-  if (theStackMachine().HasCurCl())
-  {
+  if (theStackMachine().HasCurCl()) {
     TYPE_GLOBAL_OrigCl cl (theStackMachine().GetCurCl());
-    if (!cl.Is(TAG_TYPE_GLOBAL_Start))
-    {
+    if (!cl.Is(TAG_TYPE_GLOBAL_Start)) {
       wos << L"Current class is now: "
           << ASTAUX::ASName2String (cl) << endl;
     }
-    else
+    else {
       wos << L"No class is pushed onto the stack" << endl;
+    }
   }
-  else
+  else {
     wos << L"No class is pushed onto the stack" << endl;
+  }
 }
 
 type_bU2P TBDEBUG::GetCurrentModule ()
 {
-  if (theStackMachine().HasCurCl())
-  {
+  if (theStackMachine().HasCurCl()) {
     TYPE_GLOBAL_OrigCl cl (theStackMachine().GetCurCl());
-    if (cl.Is(TAG_TYPE_AS_Name))
+    if (cl.Is(TAG_TYPE_AS_Name)) {
       return Generic(mk_(Bool(true), PTAUX::ASName2ModuleName(cl)));
+    }
   }
   return Generic(mk_(Bool(false), Nil()));
 }
 
 Bool TBDEBUG::EvalPopModule (wostream & wos)
 {
-  if (ToolMediator::Repos()->vdm_IsSession (struct_session))
-  {
-    if (theStackMachine().HasCurCl())
-    {
+  if (ToolMediator::Repos()->vdm_IsSession (struct_session)) {
+    if (theStackMachine().HasCurCl()) {
       theStackMachine().PopCurObj();
       theState().GC(true, !theStackMachine().UsesThreads());
       TYPE_GLOBAL_OrigCl cl (theStackMachine().GetCurCl());
-      if (!cl.Is(TAG_TYPE_GLOBAL_Start))
+      if (!cl.Is(TAG_TYPE_GLOBAL_Start)) {
         wos << L"Current class is now: " << ASTAUX::ASName2String (cl) << endl;
-      else
+      }
+      else {
         wos << L"No class is pushed onto the stack" << endl;
+      }
       return Bool(true);
     }
-    else
+    else {
       wos << L"No classes are pushed onto the stack" << endl;
+    }
   }
-  else
+  else {
     wos << L"No classes to pop for definitions" << endl;
+  }
   return Bool(false);
 }
 
 Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & cls, wostream & wos)
 {
-  if (ToolMediator::Repos()->vdm_IsSession (struct_session))
-  {
+  if (ToolMediator::Repos()->vdm_IsSession (struct_session)) {
     TYPE_AS_Name cls_name (PTAUX::ModuleName2ASName(cls));
 
-    if (theState().IsAClass(cls_name))
-    {
+    if (theState().IsAClass(cls_name)) {
       try {
         TYPE_AS_NewExpr ne;
         ne.Init(cls_name, SEQ<TYPE_AS_Expr>(), NilContextId);
@@ -912,8 +910,7 @@ Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & cls, wostream
           wos << L"Current class is now: " << ASTAUX::ASName2String (cls_name) << endl;
           return Bool(true);
         }
-        else
-        {
+        else {
           wos << L"Create object is failed: " << ASTAUX::ASName2String (cls_name)<< endl;
           return Bool(false);
         }
@@ -938,9 +935,9 @@ Bool TBDEBUG::EvalPushModule (const TYPE_ProjectTypes_ModuleName & cls, wostream
       return Bool(false);
     }
   }
-  else
+  else {
     wos << L"No class to push for definitions" << endl;
-
+  }
   return Bool(false);
 }
 #endif // VDMPP
@@ -968,20 +965,18 @@ Bool TBDEBUG::InitCurrentDefinition (bool force_init, wostream & wos)
   ToolMediator::Interf()->vdm_CallBack (PTAUX::mk_ClearDebugWindow());
 
   SEQ<Record> ast_l (ToolMediator::GetVDMASTs ());
-  if (!ast_l.IsEmpty ())
-  {
-    if (Settings.Profile())
+  if (!ast_l.IsEmpty ()) {
+    if (Settings.Profile()) {
       theStackMachine().ClearProfile();
-
-    if (!TOOLS::IsInScript())
+    }
+    if (!TOOLS::IsInScript()) {
       ToolMediator::Errs()->vdm_ClearAll();
-
+    }
     bool res = true;
     try {
-//
-      if (TOOLS::isBatchMode())
+      if (TOOLS::isBatchMode()) {
         theStackMachine().SetUsesOldName(false);
-//
+      }
       User_Init(ast_l, (force_init ? true : TOOLS::get_ast_is_new()), wos);
 #ifdef VDMSL
       if (theState().IsEmptyMods()) {
@@ -990,8 +985,7 @@ Bool TBDEBUG::InitCurrentDefinition (bool force_init, wostream & wos)
         TOOLS::set_spec_init(false);
         res = false;
       }
-      else
-      {
+      else {
         TOOLS::set_spec_init(true);
       }
 #endif //VDMSL
@@ -1001,41 +995,47 @@ Bool TBDEBUG::InitCurrentDefinition (bool force_init, wostream & wos)
       if (InitDObjs(wos)) {
         TOOLS::set_dobjs_init(true);
         wstring priorityfilename (TOOLS::GetPriorityFile());
-        if(priorityfilename != L"")
+        if(priorityfilename != L"") {
           EvalPriorityfile(priorityfilename, wos);
+        }
 #ifdef VICE
         wstring timefilename (TOOLS::GetTimeFile());
-        if(timefilename != L"")
+        if(timefilename != L"") {
           TOOLS::EvalTimefile(timefilename);
+        }
         wstring logfilename (TOOLS::GetLogFile());
-        if(logfilename != L"")
+        if(logfilename != L"") {
           TIMETRACE::SetLogFile(logfilename);
+        }
 #endif //VICE
       }
-      else
-      {
+      else {
         res = false;
       }
 #endif // VDMPP
     }
     catch (TB_Exception &e) {
       switch (e.GetExType()) {
-      case ERR_IP:
-        ProcessRuntimeError(wos);
-        break;
-      default:
-        // It must not happen
-        vdm_err << L"Internal Error" << endl;
-        break;
+        case ERR_IP: {
+          ProcessRuntimeError(wos);
+          break;
+        }
+        default: {
+          // It must not happen
+          vdm_err << L"Internal Error" << endl;
+          break;
+        }
       }
       theStackMachine().ResetEnvlInError();
       TOOLS::set_spec_init(false);
       res = false;
     }
-    if (!TOOLS::IsInScript())
+    if (!TOOLS::IsInScript()) {
       ToolMediator::Errs()->vdm_AllDone();
-    if (Settings.Profile())
+    }
+    if (Settings.Profile()) {
       theStackMachine().PrintProfile();
+    }
     return Bool(res);
   }
   else {
@@ -1053,10 +1053,12 @@ void TBDEBUG::EvalPriorityfile(const wstring & args, wostream & wos)
   int nos = STR_split (args, files, 20, STR_RXwhite_and_comma);
   if (nos == 0) {
     MAP<TYPE_AS_Id,Int> classPriorityMap (theScheduler().GetPriorityMap());
-    if (classPriorityMap.IsEmpty())
+    if (classPriorityMap.IsEmpty()) {
       wos << L"No priority file loaded" << endl << flush;
-    else
+    }
+    else {
       wos << classPriorityMap.ascii() << endl << flush;
+    }
       //OutputTimemap(vdm_log, timemap);
     return;
   }
@@ -1113,68 +1115,37 @@ wstring TBDEBUG::BinaryExpr2Str (const Record & BinaryE)
 wstring TBDEBUG::ExprOrStmt2Str (const Record & Expr)
 {
   switch(Expr.GetTag()) {
-    case TAG_TYPE_AS_PrefixExpr:
-      return (PrefixExpr2Str (Expr));
-    case TAG_TYPE_AS_BinaryExpr:
-      return (BinaryExpr2Str (Expr));
-    case TAG_TYPE_AS_DefExpr:
-      return L"DefExpr";
-    case TAG_TYPE_AS_LetExpr:
-      return L"LetExpr";
-    case TAG_TYPE_AS_LetBeSTExpr:
-      return L"LetBeSTExpr";
-    case TAG_TYPE_AS_IfExpr:
-      return L"IfExpr";
-    case TAG_TYPE_AS_CasesExpr:
-      return L"CasesExpr";
-    case TAG_TYPE_AS_AllOrExistsExpr:
-      return L"AllOrExistsExpr";
-    case TAG_TYPE_AS_ExistsUniqueExpr:
-      return L"ExistsUniqueExpr";
-    case TAG_TYPE_AS_IotaExpr:
-      return L"IotaExpr";
-    case TAG_TYPE_AS_SetEnumerationExpr:
-      return L"SetEnumerationExpr";
-    case TAG_TYPE_AS_SetComprehensionExpr:
-      return L"SetComprehensionExpr";
-    case TAG_TYPE_AS_SetRangeExpr:
-      return L"SetRangeExpr";
-    case TAG_TYPE_AS_SeqEnumerationExpr:
-      return L"SeqEnumerationExpr";
-    case TAG_TYPE_AS_SeqComprehensionExpr:
-      return L"SeqComprehensionExpr";
-    case TAG_TYPE_AS_SubSequenceExpr:
-      return L"SubSequenceExpr";
-    case TAG_TYPE_AS_SeqModifyMapOverrideExpr:
-      return L"SeqModifyMapOverrideExpr";
-    case TAG_TYPE_AS_MapEnumerationExpr:
-      return L"MapEnumerationExpr";
-    case TAG_TYPE_AS_MapComprehensionExpr:
-      return L"MapComprehensionExpr";
-    case TAG_TYPE_AS_TupleConstructorExpr:
-      return L"TupleConstructorExpr";
-    case TAG_TYPE_AS_RecordConstructorExpr:
-      return L"RecordConstructorExpr";
-    case TAG_TYPE_AS_RecordModifierExpr:
-      return L"RecordModifierExpr";
-    case TAG_TYPE_AS_TokenConstructorExpr:
-      return L"TokenConstructorExpr";
-    case TAG_TYPE_AS_ApplyExpr:
-      return L"ApplyExpr";
-    case TAG_TYPE_AS_FieldSelectExpr:
-      return L"FieldSelectExpr";
-    case TAG_TYPE_AS_IsExpr:
-      return L"IsExpr";
-    case TAG_TYPE_AS_NarrowExpr:
-      return L"NarrowExpr";
-    case TAG_TYPE_AS_BoolLit:
-      return L"Literal  " + Expr.GetBool(pos_AS_BoolLit_val).ascii();
-    case TAG_TYPE_AS_CharLit:
-      return L"Literal  " + Expr.GetChar(pos_AS_CharLit_val).ascii();
-    case TAG_TYPE_AS_TextLit:
-      return L"Literal  " + Expr.GetSequence(pos_AS_TextLit_val).ascii();
-    case TAG_TYPE_AS_RealLit:
-      return L"Literal  " + Expr.GetReal(pos_AS_RealLit_val).ascii();
+    case TAG_TYPE_AS_PrefixExpr: { return (PrefixExpr2Str (Expr)); }
+    case TAG_TYPE_AS_BinaryExpr: { return (BinaryExpr2Str (Expr)); }
+    case TAG_TYPE_AS_DefExpr: { return L"DefExpr"; }
+    case TAG_TYPE_AS_LetExpr: { return L"LetExpr"; }
+    case TAG_TYPE_AS_LetBeSTExpr: { return L"LetBeSTExpr"; }
+    case TAG_TYPE_AS_IfExpr: { return L"IfExpr"; }
+    case TAG_TYPE_AS_CasesExpr: { return L"CasesExpr"; }
+    case TAG_TYPE_AS_AllOrExistsExpr: { return L"AllOrExistsExpr"; }
+    case TAG_TYPE_AS_ExistsUniqueExpr: { return L"ExistsUniqueExpr"; }
+    case TAG_TYPE_AS_IotaExpr: { return L"IotaExpr"; }
+    case TAG_TYPE_AS_SetEnumerationExpr: { return L"SetEnumerationExpr"; }
+    case TAG_TYPE_AS_SetComprehensionExpr: { return L"SetComprehensionExpr"; }
+    case TAG_TYPE_AS_SetRangeExpr: { return L"SetRangeExpr"; }
+    case TAG_TYPE_AS_SeqEnumerationExpr: { return L"SeqEnumerationExpr"; }
+    case TAG_TYPE_AS_SeqComprehensionExpr: { return L"SeqComprehensionExpr"; }
+    case TAG_TYPE_AS_SubSequenceExpr: { return L"SubSequenceExpr"; }
+    case TAG_TYPE_AS_SeqModifyMapOverrideExpr: { return L"SeqModifyMapOverrideExpr"; }
+    case TAG_TYPE_AS_MapEnumerationExpr: { return L"MapEnumerationExpr"; }
+    case TAG_TYPE_AS_MapComprehensionExpr: { return L"MapComprehensionExpr"; }
+    case TAG_TYPE_AS_TupleConstructorExpr: { return L"TupleConstructorExpr"; }
+    case TAG_TYPE_AS_RecordConstructorExpr: { return L"RecordConstructorExpr"; }
+    case TAG_TYPE_AS_RecordModifierExpr: { return L"RecordModifierExpr"; }
+    case TAG_TYPE_AS_TokenConstructorExpr: { return L"TokenConstructorExpr"; }
+    case TAG_TYPE_AS_ApplyExpr: { return L"ApplyExpr"; }
+    case TAG_TYPE_AS_FieldSelectExpr: { return L"FieldSelectExpr"; }
+    case TAG_TYPE_AS_IsExpr: { return L"IsExpr"; }
+    case TAG_TYPE_AS_NarrowExpr: { return L"NarrowExpr"; }
+    case TAG_TYPE_AS_BoolLit: { return L"Literal  " + Expr.GetBool(pos_AS_BoolLit_val).ascii(); }
+    case TAG_TYPE_AS_CharLit: { return L"Literal  " + Expr.GetChar(pos_AS_CharLit_val).ascii(); }
+    case TAG_TYPE_AS_TextLit: { return L"Literal  " + Expr.GetSequence(pos_AS_TextLit_val).ascii(); }
+    case TAG_TYPE_AS_RealLit: { return L"Literal  " + Expr.GetReal(pos_AS_RealLit_val).ascii(); }
     case TAG_TYPE_AS_QuoteLit: {
       wstring str = L"Literal  <";
       SEQ<Char> tk (Expr.GetSequence(pos_AS_QuoteLit_val)); 
@@ -1188,101 +1159,59 @@ wstring TBDEBUG::ExprOrStmt2Str (const Record & Expr)
       str += L">";
       return str;
     }
-    case TAG_TYPE_AS_NilLit:
-      return L"Literal  nil";
-    case TAG_TYPE_AS_Name:
-      return L"Name '" + ASTAUX::ASName2String (Expr) + L"'";
+    case TAG_TYPE_AS_NilLit: { return L"Literal  nil"; }
+    case TAG_TYPE_AS_Name: { return L"Name '" + ASTAUX::ASName2String (Expr) + L"'"; }
     case TAG_TYPE_AS_OldName: {
       TYPE_AS_Name nm;
       nm.Init(Expr.GetSequence(pos_AS_OldName_ids), Expr.GetInt(pos_AS_OldName_cid));
       return L"OldName '" + ASTAUX::ASName2String (nm) + L"'";
     }
-    case TAG_TYPE_AS_LambdaExpr:
-      return L"LambdaExpr";
-    case TAG_TYPE_AS_FctTypeInstExpr:
-      return L"FctTypeInstExpr";
-    case TAG_TYPE_AS_BracketedExpr:
-      return L"BracketedExpr";
-    case TAG_TYPE_AS_UndefinedExpr:
-      return L"UndefinedExpr";
-    case TAG_TYPE_AS_DefStmt:
-      return L"DefStmt";
-    case TAG_TYPE_AS_LetStmt:
-      return L"LetStmt";
-    case TAG_TYPE_AS_LetBeSTStmt:
-      return L"LetBeSTStmt";
-    case TAG_TYPE_AS_AssignStmt:
-      return L"AssignStmt";
-    case TAG_TYPE_AS_SeqForLoopStmt:
-      return L"SeqForLoopStmt";
-    case TAG_TYPE_AS_SetForLoopStmt:
-      return L"SetForLoopStmt";
-    case TAG_TYPE_AS_IndexForLoopStmt:
-      return L"IndexForLoopStmt";
-    case TAG_TYPE_AS_WhileLoopStmt:
-      return L"WhileLoopStmt";
-    case TAG_TYPE_AS_CallStmt:
-      return L"CallStmt";
-    case TAG_TYPE_AS_ReturnStmt:
-      return L"ReturnStmt";
-    case TAG_TYPE_AS_IfStmt:
-      return L"IfStmt";
-    case TAG_TYPE_AS_CasesStmt:
-      return L"CasesStmt";
-    case TAG_TYPE_AS_ErrorStmt:
-      return L"ErrorStmt";
-    case TAG_TYPE_AS_ExitStmt:
-      return L"ExitStmt";
-    case TAG_TYPE_AS_AlwaysStmt:
-      return L"AlwaysStmt";
-    case TAG_TYPE_AS_AssertStmt:
-      return L"AssertStmt";
-    case TAG_TYPE_AS_TrapStmt:
-      return L"TrapStmt";
-    case TAG_TYPE_AS_RecTrapStmt:
-      return L"RecTrapStmt";
-    case TAG_TYPE_AS_BlockStmt:
-      return L"BlockStmt";
-    case TAG_TYPE_AS_NonDetStmt:
-      return L"NonDetStmt";
-    case TAG_TYPE_AS_IdentStmt:
-      return L"IdentStmt";
-    case TAG_TYPE_AS_SpecificationStmt:
-      return L"SpecificationStmt";
+    case TAG_TYPE_AS_LambdaExpr: { return L"LambdaExpr"; }
+    case TAG_TYPE_AS_FctTypeInstExpr: { return L"FctTypeInstExpr"; }
+    case TAG_TYPE_AS_BracketedExpr: { return L"BracketedExpr"; }
+    case TAG_TYPE_AS_UndefinedExpr: { return L"UndefinedExpr"; }
+    case TAG_TYPE_AS_DefStmt: { return L"DefStmt"; }
+    case TAG_TYPE_AS_LetStmt: { return L"LetStmt"; }
+    case TAG_TYPE_AS_LetBeSTStmt: { return L"LetBeSTStmt"; }
+    case TAG_TYPE_AS_AssignStmt: { return L"AssignStmt"; }
+    case TAG_TYPE_AS_SeqForLoopStmt: { return L"SeqForLoopStmt"; }
+    case TAG_TYPE_AS_SetForLoopStmt: { return L"SetForLoopStmt"; }
+    case TAG_TYPE_AS_IndexForLoopStmt: { return L"IndexForLoopStmt"; }
+    case TAG_TYPE_AS_WhileLoopStmt: { return L"WhileLoopStmt"; }
+    case TAG_TYPE_AS_CallStmt: { return L"CallStmt"; }
+    case TAG_TYPE_AS_ReturnStmt: { return L"ReturnStmt"; }
+    case TAG_TYPE_AS_IfStmt: { return L"IfStmt"; }
+    case TAG_TYPE_AS_CasesStmt: { return L"CasesStmt"; }
+    case TAG_TYPE_AS_ErrorStmt: { return L"ErrorStmt"; }
+    case TAG_TYPE_AS_ExitStmt: { return L"ExitStmt"; }
+    case TAG_TYPE_AS_AlwaysStmt: { return L"AlwaysStmt"; }
+    case TAG_TYPE_AS_AssertStmt: { return L"AssertStmt"; }
+    case TAG_TYPE_AS_TrapStmt: { return L"TrapStmt"; }
+    case TAG_TYPE_AS_RecTrapStmt: { return L"RecTrapStmt"; }
+    case TAG_TYPE_AS_BlockStmt: { return L"BlockStmt"; }
+    case TAG_TYPE_AS_NonDetStmt: { return L"NonDetStmt"; }
+    case TAG_TYPE_AS_IdentStmt: { return L"IdentStmt"; }
+    case TAG_TYPE_AS_SpecificationStmt: { return L"SpecificationStmt"; }
 #ifdef VDMPP
-    case TAG_TYPE_AS_StartStmt:
-      return L"StartStmt";
-    case TAG_TYPE_AS_StartListStmt:
-      return L"StartListStmt";
-    case TAG_TYPE_AS_StopStmt:
-      return L"StopStmt";
-    case TAG_TYPE_AS_StopListStmt:
-      return L"StopListStmt";
-    case TAG_TYPE_AS_SelfExpr:
-      return L"SelfExpr";
-    case TAG_TYPE_AS_NewExpr:
-      return L"NewExpr";
-    case TAG_TYPE_AS_IsOfClassExpr:
-      return L"IsOfClasExpr";
-    case TAG_TYPE_AS_IsOfBaseClassExpr:
-      return L"IsOfBaseClassExpr";
-    case TAG_TYPE_AS_SameBaseClassExpr:
-      return L"SameBaseClassExpr";
-    case TAG_TYPE_AS_SameClassExpr:
-      return L"SameClassExpr";
-    case TAG_TYPE_AS_ActExpr:
-      return L"ActExpr";
-    case TAG_TYPE_AS_FinExpr:
-      return L"FinExpr";
-    case TAG_TYPE_AS_ActiveExpr:
-      return L"ActiveExpr";
-    case TAG_TYPE_AS_WaitingExpr:
-      return L"WaitingExpr";
-    case TAG_TYPE_AS_ReqExpr:
-      return L"ReqExpr";
+    case TAG_TYPE_AS_StartStmt: { return L"StartStmt"; }
+    case TAG_TYPE_AS_StartListStmt: { return L"StartListStmt"; }
+    case TAG_TYPE_AS_StopStmt: { return L"StopStmt"; }
+    case TAG_TYPE_AS_StopListStmt: { return L"StopListStmt"; }
+    case TAG_TYPE_AS_SelfExpr: { return L"SelfExpr"; }
+    case TAG_TYPE_AS_NewExpr: { return L"NewExpr"; }
+    case TAG_TYPE_AS_IsOfClassExpr: { return L"IsOfClasExpr"; }
+    case TAG_TYPE_AS_IsOfBaseClassExpr: { return L"IsOfBaseClassExpr"; }
+    case TAG_TYPE_AS_SameBaseClassExpr: { return L"SameBaseClassExpr"; }
+    case TAG_TYPE_AS_SameClassExpr: { return L"SameClassExpr"; }
+    case TAG_TYPE_AS_ActExpr: { return L"ActExpr"; }
+    case TAG_TYPE_AS_FinExpr: { return L"FinExpr"; }
+    case TAG_TYPE_AS_ActiveExpr: { return L"ActiveExpr"; }
+    case TAG_TYPE_AS_WaitingExpr: { return L"WaitingExpr"; }
+    case TAG_TYPE_AS_ReqExpr: { return L"ReqExpr"; }
 #endif //VDMPP
-    default:
+    default: {
       return L"UNKOWN";
+    }
   }
 }
 
@@ -1345,8 +1274,9 @@ bool TBDEBUG::GetSupersOfClass(const wstring & args, Set& cl_s, wstring kind,
   STR_split (args, params, 20, STR_RXwhite_and_comma);
   
   TYPE_AS_Name nm;
-  if (params[0].length() > 0)
+  if (params[0].length() > 0) {
     nm = ASTAUX::MkName(params[0]);
+  }
   else {
     wos << L"Please, specify a class name." << endl << flush;
     return false;
@@ -1403,17 +1333,14 @@ void TBDEBUG::EvalFunctions(const wstring & args, wostream & wos)
   Map func (FindClassFunctions(nm));
   Set dom_func (func.Dom());
   Generic clnm;
-  for (bool bb = dom_func.First(clnm); bb; bb = dom_func.Next(clnm) )
-  {
+  for (bool bb = dom_func.First(clnm); bb; bb = dom_func.Next(clnm) ) {
     wos << L"Functions in Class " << ASTAUX::ASName2String(clnm) << endl;
     Set already;
     Set fnm_s (func[clnm]);
     Generic fnm;
-    for (bool cc = fnm_s.First(fnm); cc; cc = fnm_s.Next(fnm)) 
-    {
+    for (bool cc = fnm_s.First(fnm); cc; cc = fnm_s.Next(fnm)) {
       TYPE_AS_Name nm (MANGLE::IsMangled(fnm) ? MANGLE::UnMangle(fnm).GetField(1) : fnm);
-      if (!already.InSet(nm))
-      {
+      if (!already.InSet(nm)) {
         wos << ASTAUX::ASName2String(nm) << L" ";
         already.Insert(nm);
       }
@@ -1427,25 +1354,22 @@ void TBDEBUG::EvalFunctions(const wstring & args, wostream & wos)
 void TBDEBUG::EvalOperations(const wstring & args, wostream & wos)
 {
   Set cl_s;
-  if (! GetSupersOfClass(args, cl_s, L"Operations", wos))
+  if (! GetSupersOfClass(args, cl_s, L"Operations", wos)) {
     return;
-
+  }
   Generic g;
-  for (bool bb = cl_s.First(g); bb; bb = cl_s.Next(g))
-  {
+  for (bool bb = cl_s.First(g); bb; bb = cl_s.Next(g)) {
     wos << L"Operations in class " << ASTAUX::ASName2String(g) << endl;
     Map ops (theState().GetAllOps(g));
     Set opnm_s (ops.Dom());
 
     Set already;
     Generic opnm;
-    for (bool cc = opnm_s.First(opnm); cc; cc = opnm_s.Next(opnm))
-    {
+    for (bool cc = opnm_s.First(opnm); cc; cc = opnm_s.Next(opnm)) {
       TYPE_AS_Name nm (MANGLE::IsMangled(opnm) ? MANGLE::UnMangle(opnm).GetField(1) : opnm);
       TYPE_SEM_ExplOP eop (ops[nm]);
 
-      if (!already.InSet(nm) && !eop.GetBoolValue(pos_SEM_ExplOP_implicit))
-      {
+      if (!already.InSet(nm) && !eop.GetBoolValue(pos_SEM_ExplOP_implicit)) {
         wos << ASTAUX::ASName2String(nm) << L" ";
         already.Insert(nm);
       }
@@ -1531,8 +1455,9 @@ void TBDEBUG::EvalTypes (wostream & wos)
 
   Map m (sigmamo.get_tps());
   Generic nm;
-  for (bool bb = m.First(nm); bb; bb = m.Next(nm)) 
+  for (bool bb = m.First(nm); bb; bb = m.Next(nm)) {
     wos << ASTAUX::ASName2String(nm) << L"  ";
+  }
   wos << endl << flush;
 }
 #endif //VDMSL
@@ -1552,8 +1477,9 @@ void TBDEBUG::FindTypes(const TYPE_AS_Name & clnm, wostream & wos)
     wos << L"Types in class " << ASTAUX::ASName2String(g) << endl;
     Set tps(theState().GetLocalTps(g).Dom());
     Generic type_g;
-    for (bool cc = tps.First(type_g); cc; cc = tps.Next(type_g))
+    for (bool cc = tps.First(type_g); cc; cc = tps.Next(type_g)) {
       wos << ASTAUX::ASName2String(type_g) << L" ";
+    }
     wos << endl << flush;
   }
 }
@@ -1591,8 +1517,9 @@ void TBDEBUG::EvalValues (wostream & wos)
   Map m (sigmamo.get_gv());
 
   Generic bp;
-  for (bool j = m.First(bp); j; j = m.Next(bp))
+  for (bool j = m.First(bp); j; j = m.Next(bp)) {
     wos << ASTAUX::ASName2String (bp) << L"  ";
+  }
   wos << endl << flush;
 }
 #endif //VDMSL
@@ -1631,8 +1558,9 @@ void TBDEBUG::EvalValues(const wstring & args, wostream & wos)
     wos << L"Values in class " << ASTAUX::ASName2String(g) << endl;
     Set vls(theState().GetVlsInit(g).Dom());
     Generic type_g;
-    for (bool cc = vls.First(type_g); cc; cc = vls.Next(type_g))
+    for (bool cc = vls.First(type_g); cc; cc = vls.Next(type_g)) {
       wos << ASTAUX::ASName2String(type_g) << L" ";
+    }
     wos << endl << flush;
   }
 }
@@ -1646,8 +1574,9 @@ void TBDEBUG::EvalStates (wostream & wos)
 
   Map mod_gs (theState().GetCurrentState (curmod));
   Generic bp;
-  for (bool bb = mod_gs.First(bp); bb; bb = mod_gs.Next(bp))
+  for (bool bb = mod_gs.First(bp); bb; bb = mod_gs.Next(bp)) {
     wos << ASTAUX::ASName2String (bp) << L"  ";
+  }
   wos << endl << flush;
 }
 
@@ -1659,15 +1588,15 @@ void TBDEBUG::EvalModStack (wostream & wos)
   EvaluatorStatusCt es (theStackMachine().GetEvaluatorState());
   Sequence cur_mod (es.get_const_ref().cur_mod);
   Generic g;
-  for (bool bb = cur_mod.First(g); bb; bb = cur_mod.Next(g))
+  for (bool bb = cur_mod.First(g); bb; bb = cur_mod.Next(g)) {
     wos << L" " << ASTAUX::ASName2String (g)<< endl;
+  }
 }
 #endif //VDMSL
 
 void TBDEBUG::EvalUnitList (wostream & wos)
 {
-  if (!ToolMediator::Repos()->vdm_IsSession (none_session))
-  {
+  if (!ToolMediator::Repos()->vdm_IsSession (none_session)) {
 #ifdef VDMSL
     wos << L"The following modules are defined:" << endl;
 #endif // VDMSL
@@ -1696,8 +1625,9 @@ void TBDEBUG::EvalUnitList (wostream & wos)
       wos << nm << endl << flush;
     }
   }
-  else
+  else {
     wos << L"No specification present" << endl;
+  }
 }
 
 #ifdef VDMPP
@@ -1715,8 +1645,7 @@ void TBDEBUG::DisplayThreads(wostream & wos)
   // Traverse existing threads. 
   Set dom_threadmap (threadmap.Dom());
   Generic threadid;
-  for (bool bb = dom_threadmap.First(threadid); bb; bb = dom_threadmap.Next(threadid) )
-  {
+  for (bool bb = dom_threadmap.First(threadid); bb; bb = dom_threadmap.Next(threadid) ) {
     const TYPE_SCHDTP_ThreadInfo & threadinfo (threadmap[threadid]);
     Generic objref (threadinfo.get_obj());
  
@@ -1842,7 +1771,8 @@ void TBDEBUG::ExeSelThread(const wstring & args, wostream & wos)
   theStackMachine().EvalSelThread(TYPE_SCHDTP_ThreadId(threadid));
   if (theStackMachine().GetCurCid() != NilContextId) {
     UpdateGui(true, wos);
-  } else {
+  }
+  else {
     // Reset back trace window
     ToolMediator::Interf()->vdm_CallBack (PTAUX::mk_BackTrace(Sequence ()));
     // Reset Display window:
@@ -2166,30 +2096,12 @@ void TBDEBUG::User_Init(const TYPE_AS_Document & ast, bool ast_is_new, wostream 
 Tuple TBDEBUG::DebugStep (StepType t)
 {
   switch (t) {
-    case STEPIN: {
-      return theStackMachine().EvalStepIn ();
-      break;
-    }
-    case SINGLESTEP: {
-      return theStackMachine().EvalSingleStep ();
-      break;
-    }
-    case CONTINUE: {
-      return theStackMachine().EvalContinue ();
-      break;
-    }
-    case FINISH: {
-      return theStackMachine().EvalFinish ();
-      break;
-    }
-    case STEP: {
-      return theStackMachine().EvalStep ();
-      break;
-    }
-    default: {
-      return theStackMachine().EvalStep ();
-      break;
-    }
+    case STEPIN:     { return theStackMachine().EvalStepIn (); break; }
+    case SINGLESTEP: { return theStackMachine().EvalSingleStep (); break; }
+    case CONTINUE:   { return theStackMachine().EvalContinue (); break; }
+    case FINISH:     { return theStackMachine().EvalFinish (); break; }
+    case STEP:       { return theStackMachine().EvalStep (); break; }
+    default:         { return theStackMachine().EvalStep (); break; }
   }
 }
 
@@ -2673,12 +2585,24 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
     return;
   }
 
-  if(SavedSetting_DTC) Settings.DtcOn();
-  if(SavedSetting_PRE) Settings.PreOn();
-  if(SavedSetting_POST) Settings.PostOn();
-  if(SavedSetting_INV) Settings.InvOn();
-  if(SavedSetting_Assertion) Settings.AssertOn();
-  if(SavedSetting_RTEE) Settings.RTErrExceptionOn();
+  if(SavedSetting_DTC) {
+    Settings.DtcOn();
+  }
+  if(SavedSetting_PRE) {
+    Settings.PreOn();
+  }
+  if(SavedSetting_POST) {
+    Settings.PostOn();
+  }
+  if(SavedSetting_INV) {
+    Settings.InvOn();
+  }
+  if(SavedSetting_Assertion) {
+    Settings.AssertOn();
+  }
+  if(SavedSetting_RTEE) {
+    Settings.RTErrExceptionOn();
+  }
   theStackMachine().SetUsesOldName(SavedSetting_UsesOldName);
 
   if (m.IsEmpty()) {

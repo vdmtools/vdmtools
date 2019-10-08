@@ -317,8 +317,9 @@ TYPE_AS_Type vdm_DEP_Rep2As(const TYPE_REP_TypeRep &vdm_DEP_rep)
         res.set_cid(NilContextId);
         return res;
       }
-      else
+      else {
         return astp.Hd();
+      }
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       TYPE_REP_ProductTypeRep rep (vdm_DEP_rep);

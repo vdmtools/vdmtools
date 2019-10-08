@@ -51,8 +51,9 @@ Generic StateStoreAux::GetHeadItem()
     ProjectStore.ImpTl();
     return e;
   }
-  else
+  else {
     return Nil();
+  }
 }
 
 void StateStoreAux::ClearItems()
@@ -103,17 +104,20 @@ int StateStoreAux::ExtractVersion(const Generic & project, int current_version)
     Generic num = l[2];
     if (id.IsQuote() && (id == project_id) && num.IsInt()) {
       int v = Int(num).GetValue();
-      if (v > 1 && v <= current_version)
+      if (v > 1 && v <= current_version) {
         return v;
+      }
     }
   }
-  else if (project.IsTuple () && Tuple (project).Length () == 2) {
-    Generic version = Tuple (project).GetField (1);
-    Generic ast = Tuple (project).GetField (2);
-    if (version == Int (2) && ast.IsSequence ())
-      return 1; // project version 1 identified
+  else {
+    if (project.IsTuple () && Tuple (project).Length () == 2) {
+      Generic version = Tuple (project).GetField (1);
+      Generic ast = Tuple (project).GetField (2);
+      if (version == Int (2) && ast.IsSequence ()) {
+        return 1; // project version 1 identified
+      }
+    }
   }
-
   return 0; // invalid project
 }
 
@@ -127,41 +131,42 @@ Sequence StateStoreAux::ConvertProject (int version, Generic project, int cur_ve
       new_project.ImpAppend(Quote(L"ProjectFile"));
       new_project.ImpAppend(Int(2));
 
-      if (old_project.Length() > 0)
+      if (old_project.Length() > 0) {
         old_project.ImpTl(); // Remove version number
-    
+      }
       // Remove the module environment map
       size_t len_old_project = old_project.Length();
-      for (size_t idx = 1; idx <= len_old_project; idx++)
-      {
+      for (size_t idx = 1; idx <= len_old_project; idx++) {
         const Generic & e (old_project[idx]);
-        if (e.IsMap()) 
+        if (e.IsMap()) {
           continue; // don't include the module environment map
-        else if (e.IsRecord())
+        }
+        else if (e.IsRecord()) {
           // potential problem with ast version
           new_project.ImpAppend(StateStoreAux::WriteAST(e));
-        else
+        }
+        else {
           new_project.ImpAppend(e);
+        }
       }
       return new_project;
     }
-    case 2: { 
+    case 2: {
       // Version before AST restructuring.
       // Will remove AST, keep list of files in project.
       // Find files in version 2 project
       Sequence ConvProj;
       Sequence proj = project;
       size_t len_proj = proj.Length();
-      for (size_t idx = 1; idx <= len_proj; idx++)
-      {
+      for (size_t idx = 1; idx <= len_proj; idx++) {
         const Generic & e (proj[idx]);
-        if (e.IsTuple() && Tuple(e).Length () == 2)
-        {
+        if (e.IsTuple() && Tuple(e).Length () == 2) {
           Tuple val (e);
           if (val.GetField (1).IsToken()) {
             Token tp = val.GetField (1);
-            if (tp == Token(L"file"))
+            if (tp == Token(L"file")) {
               ConvProj.ImpAppend (val);
+            }
           }
         }
       }
@@ -174,7 +179,7 @@ Sequence StateStoreAux::ConvertProject (int version, Generic project, int cur_ve
       return ConvProj;
     }
     default: {
-      return Sequence(); // unknown version 
+      return Sequence(); // unknown version
     }
   }
 }
@@ -186,20 +191,14 @@ Sequence StateStoreAux::AbsToRelPath(const Sequence & store, const std::wstring 
   ret.ImpAppend( store[2] ); // version
   ret.ImpAppend( store[3] ); // number of files
   int n = (Int)store[3];
-  for( int i = 0; i < n; i++ )
-  {
+  for( int i = 0; i < n; i++ ) {
     Tuple t (store[ i + 4 ]);
-    if (Token(L"file") == t.GetField(1))
-    {
+    if (Token(L"file") == t.GetField(1)) {
       Token s (t.GetField(2));
-      std::wstring afile (s.GetString()); // 20100616
+      std::wstring afile (s.GetString());
       std::wstring rfile (TBUTILS::GetRelativePath( afile, pname ));
-//      Tuple nt(2);
-//      nt.SetField( 1, t.GetField(1) ); 
-//      nt.SetField( 2, Token( rfile ) );
       t.SetField( 2, Token( rfile ) );
     }
-//    ret.ImpAppend( nt );
     ret.ImpAppend( t );
   }
   return ret;
@@ -216,20 +215,14 @@ Sequence StateStoreAux::RelToAbsPath(const Sequence & store, const std::wstring 
   ret.ImpAppend( store[2] ); // version
   ret.ImpAppend( store[3] ); // number of files
   int n = (Int)store[3];
-  for( int i = 0; i < n; i++ )
-  {
+  for( int i = 0; i < n; i++ ) {
     Tuple t (store[ i + 4 ]);
-    if (Token(L"file") == t.GetField(1))
-    {
+    if (Token(L"file") == t.GetField(1)) {
       Token s (t.GetField(2));
-      std::wstring rfile (s.GetString()); // 20100616
+      std::wstring rfile (s.GetString());
       std::wstring afile (TBUTILS::GetAbsolutePath( rfile, pname ));
-//      Tuple nt(2);
-//      nt.SetField( 1, t.GetField(1) ); 
-//      nt.SetField( 2, Token( afile ) );
       t.SetField( 2, Token( afile ) );
     }
-//    ret.ImpAppend( nt );
     ret.ImpAppend( t );
   }
   return ret;
@@ -271,7 +264,7 @@ Generic StateStoreAux::WriteAST (const Generic & AST)
 //   the global variable TestSuiteFile is updated with the name of the
 //   file from which the AST was read.
 bool TBUTILS::ReadAST (Sequence& AST, const std::wstring& fnm)
-{ 
+{
   ifstream istr (wstring2fsstr(fnm).c_str());
   if (istr) {
     Generic astrep = ReadVal (istr);
@@ -301,14 +294,14 @@ bool TBUTILS::ReadAST (Sequence& AST, const std::wstring& fnm)
 
 Generic StateStoreAux::ReadAST (const Generic & store)
 {
-  if (!store.IsTuple () || Tuple (store).Length () != 2)
+  if (!store.IsTuple () || Tuple (store).Length () != 2) {
     return Nil();
-
+  }
   Generic version = Tuple (store).GetField (1);
   Generic ast = Tuple (store).GetField (2);
-  if (! (version == Int (current_ast_version)) || !ast.IsRecord ())
+  if (! (version == Int (current_ast_version)) || !ast.IsRecord ()) {
     return Nil();
-
+  }
   // We (possible) have a valid AST!
   return ast;
 }
@@ -325,11 +318,12 @@ Bool vdm_StateStore::vdm_Open(const TYPE_ProjectTypes_FileName &fnm, const Gener
 // FIX : 20050928
 // if the projectfile exists and is read only
     std::ifstream istr (TBWSTR::wstring2fsstr(file).c_str());
-    if( istr )
-    {
+    if( istr ) {
       istr.close();
       std::ofstream ostr (TBWSTR::wstring2fsstr(file).c_str(), ios_base::app);
-      if( !ostr ) return Bool (false);
+      if( !ostr ) {
+        return Bool (false);
+      }
     }
     StateStoreAux::ClearItems();
     StateStoreAux::SetWriteMode();
@@ -355,9 +349,9 @@ Bool vdm_StateStore::vdm_Open(const TYPE_ProjectTypes_FileName &fnm, const Gener
         vdm_log << L"Updating project to version " << vdm_version << std::endl;
         ss = StateStoreAux::ConvertProject(version, astrep, vdm_version);
       }
-      else 
+      else {
         ss = astrep;
-
+      }
       // hack for rerative path 2005/11/16
       Sequence s (StateStoreAux::RelToAbsPath( ss, file ));
       Sequence s2 (s.ImpTl()); // remove id
@@ -369,8 +363,9 @@ Bool vdm_StateStore::vdm_Open(const TYPE_ProjectTypes_FileName &fnm, const Gener
 
       return Bool (true);
     }
-    else
+    else {
       return Bool(false);
+    }
   }
 }
 
@@ -378,13 +373,13 @@ Bool vdm_StateStore::vdm_Open(const TYPE_ProjectTypes_FileName &fnm, const Gener
 // ==> ()
 void vdm_StateStore::vdm_Close()
 {
-  if (StateStoreAux::IsWriteMode())
-  {
+  if (StateStoreAux::IsWriteMode()) {
     std::wstring projectfile (StateStoreAux::GetProjectFilename());
     ofstream ostr;
     ostr.open(TBWSTR::wstring2fsstr(projectfile).c_str());
-    if (!ostr.good ()) 
+    if (!ostr.good ()) {
       vdm_log << L"Couldn't open file '" << projectfile << std::endl;
+    }
     else {
 
       Sequence ss (StateStoreAux::GetItems());
@@ -402,10 +397,12 @@ void vdm_StateStore::vdm_Close()
 // ==> bool
 Bool vdm_StateStore::vdm_WriteASTVal(const Generic & val)
 {
-  if (val.IsRecord())
+  if (val.IsRecord()) {
     StateStoreAux::AppendItem(StateStoreAux::WriteAST(PTAUX::ExtractAstVal(val)));
-  else
+  }
+  else {
     StateStoreAux::AppendItem(val);
+  }
   return Bool (true);
 }
 
@@ -446,7 +443,7 @@ Bool vdm_StateStore::vdm_WriteSession(const TYPE_ProjectTypes_SessionType & sess
 Bool vdm_StateStore::vdm_WriteVal(const Generic &val)
 {
   StateStoreAux::AppendItem(val);
-  return Bool (true);  
+  return Bool (true);
 }
 
 // WriteStatus
@@ -455,7 +452,7 @@ Bool vdm_StateStore::vdm_WriteVal(const Generic &val)
 Bool vdm_StateStore::vdm_WriteStatus(const TYPE_ProjectTypes_Status & status)
 {
   StateStoreAux::AppendItem(status);
-  return Bool (true);    
+  return Bool (true);
 }
 
 // WriteDep
@@ -480,10 +477,12 @@ Bool vdm_StateStore::vdm_WriteTCEnv (const TYPE_ProjectTypes_TCEnv & e)
 Generic vdm_StateStore::vdm_ReadTCEnv ()
 {
   Generic e (StateStoreAux::GetHeadItem());
-  if (e.Is(TAG_TYPE_ProjectTypes_TCEnv))
+  if (e.Is(TAG_TYPE_ProjectTypes_TCEnv)) {
     return e;
-  else 
+  }
+  else {
     return Nil();
+  }
 }
 
 // ReadDep
@@ -491,10 +490,12 @@ Generic vdm_StateStore::vdm_ReadTCEnv ()
 Generic vdm_StateStore::vdm_ReadDep ()
 {
   Generic d (StateStoreAux::GetHeadItem());
-  if (d.Is(TAG_TYPE_ProjectTypes_DepGraph))
+  if (d.Is(TAG_TYPE_ProjectTypes_DepGraph)) {
     return d;
-  else
+  }
+  else {
     return Nil();
+  }
 }
 
 // ReadASTVal
@@ -502,14 +503,15 @@ Generic vdm_StateStore::vdm_ReadDep ()
 Generic vdm_StateStore::vdm_ReadASTVal()
 {
   Generic val (StateStoreAux::GetHeadItem());
-  if (!val.IsNil())
-  {
-    if (val == Quote(L"NONE"))
+  if (!val.IsNil()) {
+    if (val == Quote(L"NONE")) {
       return val;
+    }
     else {
       Generic ast (StateStoreAux::ReadAST(val));
-      if (ast.IsRecord()) 
+      if (ast.IsRecord()) {
         return PTAUX::mk_AstVal(ast);
+      }
     }
   }
   return Nil();
@@ -520,17 +522,18 @@ Generic vdm_StateStore::vdm_ReadASTVal()
 Generic vdm_StateStore::vdm_ReadName()
 {
   Generic g (StateStoreAux::GetHeadItem());
-  if (g.IsTuple() && Tuple(g).Length () == 2)
-  {
+  if (g.IsTuple() && Tuple(g).Length () == 2) {
     Tuple val (g);
     Token tp (val.GetField (1));
     Token nm (val.GetField (2));
-    if (tp == Token(L"module"))
-      return PTAUX::mk_ModuleName (nm.GetString()); // 20100616
-    else if (tp == Token(L"file"))
-      return PTAUX::mk_FileName (nm.GetString()); // 20100616
+    if (tp == Token(L"module")) {
+      return PTAUX::mk_ModuleName (nm.GetString());
+    }
+    else if (tp == Token(L"file")) {
+      return PTAUX::mk_FileName (nm.GetString());
+    }
   }
-  return Nil();  
+  return Nil();
 }
 
 // ReadSession
@@ -538,10 +541,12 @@ Generic vdm_StateStore::vdm_ReadName()
 Generic vdm_StateStore::vdm_ReadSession()
 {
   Generic g (StateStoreAux::GetHeadItem());
-  if (g == none_session || g == flat_session || g == struct_session)
+  if (g == none_session || g == flat_session || g == struct_session) {
     return g;
-  else 
+  }
+  else {
     return Nil ();
+  }
 }
 
 // ReadVal
@@ -549,10 +554,12 @@ Generic vdm_StateStore::vdm_ReadSession()
 Generic vdm_StateStore::vdm_ReadVal()
 {
   Generic g (StateStoreAux::GetHeadItem());
-  if (g.IsInt() || g.IsBool ())
+  if (g.IsInt() || g.IsBool ()) {
     return g;
-  else
+  }
+  else {
     return Nil ();
+  }
 }
 
 // ReadStatus
@@ -560,8 +567,10 @@ Generic vdm_StateStore::vdm_ReadVal()
 Generic vdm_StateStore::vdm_ReadStatus()
 {
   Generic g (StateStoreAux::GetHeadItem());
-  if (g.IsQuote()) 
+  if (g.IsQuote()) {
     return g;
-  else 
+  }
+  else {
     return Nil ();
+  }
 }

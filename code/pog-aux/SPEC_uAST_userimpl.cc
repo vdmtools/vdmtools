@@ -175,35 +175,29 @@ Generic SPECAST::GetModuleName ()
 // ==> seq of AS`Definitions
 SEQ<TYPE_AS_Definitions> SPECAST::GetDefs (const Generic & nm)
 {
-  if (vdm_SPEC_uAST_defs.DomExists(nm))
-  {
+  if (vdm_SPEC_uAST_defs.DomExists(nm)) {
     return vdm_SPEC_uAST_defs[nm];
   }
-  else
-  {
+  else {
     SEQ<TYPE_AS_Definitions> l_defs;
     Sequence l_asts (GetASTs());
 #ifdef VDMSL
-    if ((l_asts.Length () == 1) &&
-        (Record (l_asts.Hd ()).Is (TAG_TYPE_AS_Definitions)))
-    {
+    if ((l_asts.Length () == 1) && (Record (l_asts.Hd ()).Is (TAG_TYPE_AS_Definitions))) {
       l_defs.ImpConc(l_asts); 
     }
-    else
-    {
+    else {
       Generic l_mod (GetModule(nm, l_asts));
-      if (!l_mod.IsNil())
-      {
+      if (!l_mod.IsNil()) {
         Generic defs (Record(l_mod).GetField(pos_AS_Module_defs));
-        if (!defs.IsNil())
+        if (!defs.IsNil()) {
           l_defs.ImpAppend(defs);
+        }
       }
     }
 #endif // VDMSL
 #ifdef VDMPP
     Generic l_cls_g (GetModule(nm, l_asts));
-    if (!l_cls_g.IsNil())
-    {
+    if (!l_cls_g.IsNil()) {
       TYPE_AS_Class l_cls (l_cls_g);
       const SEQ<TYPE_AS_Name> & supercls (l_cls.GetSequence(pos_AS_Class_supercls)); 
       Map typem;
@@ -212,11 +206,9 @@ SEQ<TYPE_AS_Definitions> SPECAST::GetDefs (const Generic & nm)
       Map opm;
       Sequence instvars;
       int len_supercls = supercls.Length();
-      for (int index = 1; index <= len_supercls; index++)
-      {
+      for (int index = 1; index <= len_supercls; index++) {
         SEQ<TYPE_AS_Definitions> lldefs (GetDefs(supercls[index]));
-        if (!lldefs.IsEmpty())
-        {
+        if (!lldefs.IsEmpty()) {
           const TYPE_AS_Definitions & ldefs (lldefs[1]);
           typem.ImpOverride(ldefs.GetMap(pos_AS_Definitions_typem));
           valuem.ImpConc(ldefs.GetSequence(pos_AS_Definitions_valuem));
@@ -226,8 +218,7 @@ SEQ<TYPE_AS_Definitions> SPECAST::GetDefs (const Generic & nm)
         }
       }
       const Generic & l_cls_defs_g (l_cls.GetField(pos_AS_Class_defs));
-      if (!l_cls_defs_g.IsNil())
-      {
+      if (!l_cls_defs_g.IsNil()) {
         TYPE_AS_Definitions l_cls_defs (l_cls_defs_g);
         typem.ImpOverride(l_cls_defs.GetMap(pos_AS_Definitions_typem));
         valuem.ImpConc(l_cls_defs.GetSequence(pos_AS_Definitions_valuem));
@@ -264,8 +255,7 @@ MAP<TYPE_AS_Name, TYPE_AS_TypeDef> SPECAST::GetTypeDefMap_q (const TYPE_AS_Name 
   SEQ<TYPE_AS_Definitions> defs (GetDefs(mnm));
   int len_defs = defs.Length();
   Map typem;
-  for (int index = 1; index <= len_defs; index++)
-  {
+  for (int index = 1; index <= len_defs; index++) {
     const TYPE_AS_Definitions & ldefs (defs[index]);
     typem.ImpOverride(ldefs.GetMap(pos_AS_Definitions_typem));
   }
@@ -290,19 +280,19 @@ TYPE_AS_TypeDef SPECAST::GetTypeDef (const TYPE_AS_Name & nm)
   const TYPE_AS_Name & l_tnm (t.GetRecord(2));
 
   int len_l_defs_q = l_defs_q.Length();
-  for (int index = 1; index <= len_l_defs_q; index++)
-  {
+  for (int index = 1; index <= len_l_defs_q; index++) {
     const TYPE_AS_Definitions & ldefs (l_defs_q[index]);
     const Map & typem (ldefs.GetMap(pos_AS_Definitions_typem));
-    if (typem.DomExists(l_tnm))
+    if (typem.DomExists(l_tnm)) {
       return typem[l_tnm];
+    }
   }
 #ifdef VDMSL
-  if (!l_defs_q.IsEmpty())
-  {
+  if (!l_defs_q.IsEmpty()) {
     Generic state (l_defs_q[1].GetField(pos_AS_Definitions_State));
-    if (!state.IsNil())
+    if (!state.IsNil()) {
       return state;
+    }
   }
 #endif // VDMSL
   wcout << L"TypeDef is't found" << endl;
@@ -323,8 +313,7 @@ Generic SPECAST::GetStateDef ()
 Generic SPECAST::GetStateDef_q (const TYPE_AS_Name & mnm)
 {
   SEQ<TYPE_AS_Definitions> l_defs (GetDefs (mnm));
-  if (!l_defs.IsEmpty())
-  {
+  if (!l_defs.IsEmpty()) {
     return l_defs[1].GetField(pos_AS_Definitions_State);
   }
   return Nil();
@@ -339,8 +328,7 @@ MAP<TYPE_AS_Name, TYPE_AS_FnDef> SPECAST::GetFnDefMap (const TYPE_AS_Name & modn
   SEQ<TYPE_AS_Definitions> l_defs (GetDefs (modnm));
   MAP<TYPE_AS_Name, TYPE_AS_FnDef> res;
   int len_l_defs = l_defs.Length();
-  for (int index = 1; index <= len_l_defs; index++)
-  {
+  for (int index = 1; index <= len_l_defs; index++) {
     res.ImpOverride(l_defs[index].GetMap(pos_AS_Definitions_fnm));
   }
   return res;
@@ -356,12 +344,12 @@ TYPE_AS_FnDef SPECAST::GetFnDef (const TYPE_AS_Name & nm)
   const TYPE_AS_Name & l_tnm (t.GetRecord(2));
   
   int len_defs = defs.Length();
-  for (int index = 1; index <= len_defs; index++)
-  {
+  for (int index = 1; index <= len_defs; index++) {
     const TYPE_AS_Definitions & ldefs (defs[index]);
     const Map & fnm (ldefs.GetMap(pos_AS_Definitions_fnm));
-    if (fnm.DomExists(l_tnm))
+    if (fnm.DomExists(l_tnm)) {
       return fnm[l_tnm];
+    }
   }
   wcout << L"fndef is't found" << endl;
   return TYPE_AS_FnDef();
@@ -375,8 +363,7 @@ MAP<TYPE_AS_Name, TYPE_AS_OpDef> SPECAST::GetOpDefMap (const TYPE_AS_Name & modn
   SEQ<TYPE_AS_Definitions> l_defs (GetDefs (modnm));
   MAP<TYPE_AS_Name, TYPE_AS_OpDef> res;
   int len_l_defs = l_defs.Length();
-  for (int index = 1; index <= len_l_defs; index++)
-  {
+  for (int index = 1; index <= len_l_defs; index++) {
     res.ImpOverride(l_defs[index].GetMap(pos_AS_Definitions_opm));
   }
   return res;
@@ -392,12 +379,12 @@ TYPE_AS_OpDef SPECAST::GetOpDef (const TYPE_AS_Name & nm)
   const TYPE_AS_Name & l_tnm (t.GetRecord(2));
   
   int len_defs = defs.Length();
-  for (int index = 1; index <= len_defs; index++)
-  {
+  for (int index = 1; index <= len_defs; index++) {
     const TYPE_AS_Definitions & ldefs (defs[index]);
     const Map & opm (ldefs.GetMap(pos_AS_Definitions_opm));
-    if (opm.DomExists(l_tnm))
+    if (opm.DomExists(l_tnm)) {
       return opm[l_tnm];
+    }
   }
   wcout << L"opdef is't found" << endl;
   return TYPE_AS_OpDef();
@@ -410,8 +397,7 @@ SEQ<TYPE_AS_ValueDef> SPECAST::GetValueDefSeq ()
   SEQ<TYPE_AS_Definitions> l_defs (GetDefs (vdm_SPEC_uAST_currModName));
   SEQ<TYPE_AS_ValueDef> res;
   int len_l_defs = l_defs.Length();
-  for (int index = 1; index <= len_l_defs; index++)
-  {
+  for (int index = 1; index <= len_l_defs; index++) {
     const TYPE_AS_Definitions & ldefs (l_defs[index]);
     res.ImpConc(ldefs.GetSequence(pos_AS_Definitions_valuem));
   }
@@ -426,7 +412,8 @@ SEQ<TYPE_AS_Name> SPECAST::GetTypeDefNames(const Generic & mnm)
   Generic l_umnm;
   if (mnm.IsNil()) {
     l_umnm = vdm_SPEC_uAST_currModName;
-  } else {
+  }
+  else {
     l_umnm = mnm;
   }
   return MapToSeq(vdm_SPEC_uAST_GetTypeDefMap_q(l_umnm));
@@ -440,7 +427,8 @@ SEQ<TYPE_AS_Name> SPECAST::GetFnDefNames(const Generic & mnm)
   Generic l_umnm;
   if (mnm.IsNil()) {
     l_umnm = vdm_SPEC_uAST_currModName;
-  } else {
+  }
+  else {
     l_umnm = mnm;
   }
   return MapToSeq(vdm_SPEC_uAST_GetFnDefMap(l_umnm));
@@ -455,8 +443,7 @@ SEQ<TYPE_AS_InstanceVarDef> SPECAST::GetInstVars (const TYPE_AS_Name & modnm)
   SEQ<TYPE_AS_Definitions> l_defs (GetDefs (modnm));
   SEQ<TYPE_AS_InstanceVarDef> res;
   int len_l_defs = l_defs.Length();
-  for (int index = 1; index <= len_l_defs; index++)
-  {
+  for (int index = 1; index <= len_l_defs; index++) {
     const TYPE_AS_Definitions & ldefs (l_defs[index]);
     res.ImpConc(ldefs.GetSequence(pos_AS_Definitions_instvars));
   }
@@ -469,21 +456,21 @@ SEQ<TYPE_AS_InstanceVarDef> SPECAST::GetInstVars (const TYPE_AS_Name & modnm)
 // ==> [AS`Name] * AS`Name
 Tuple SPECAST::SplitName (const TYPE_AS_Name & nm)
 {
-  if (nm.GetSequence(pos_AS_Name_ids).Length() > 1)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() > 1) {
     return mk_(ASTAUX::GetFirstName(nm), ASTAUX::GetSecondName(nm)); 
   }
-  else
-  {
+  else {
 #ifdef VDMSL
     return mk_(vdm_SPEC_uAST_currModName, nm);
 #endif // VDMSL
 #ifdef VDMPP
     Generic defcls (GetStatSem().LookUpDefClass());
-    if (defcls.IsNil())
+    if (defcls.IsNil()) {
       return mk_(vdm_SPEC_uAST_currModName, nm);
-    else
+    }
+    else {
       return mk_(defcls, nm);
+    }
 #endif // VDMPP
   }
 }
@@ -497,8 +484,7 @@ Tuple SPECAST::SplitName (const TYPE_AS_Name & nm)
 // ==> AS`Document | AS`Expr
 Generic SPECAST::GetASTs ()
 {
-  if(vdm_SPEC_uAST_ast.IsNil())
-  {
+  if(vdm_SPEC_uAST_ast.IsNil()) {
     SEQ<Record> ast_l (INT2Q::h2gAS(ToolMediator::GetVDMASTs ()));
 #ifdef VICE
     ast_l.ImpAppend(INT2Q::h2gAS(GetCPUClassDef()));
@@ -519,20 +505,21 @@ Sequence SPECAST::MapToSeq (const Map & m)
 Generic SPECAST::GetModule (const TYPE_AS_Name & nm, const Sequence & mods)
 {
   int len_mods = mods.Length();
-  for (int index = 1; index <= len_mods; index++)
-  {
+  for (int index = 1; index <= len_mods; index++) {
     const Record & r (mods[index]);
     switch(r.GetTag()) {
 #ifdef VDMSL
       case TAG_TYPE_AS_Module: {
-        if (r.GetRecord(pos_AS_Module_nm) == nm)
+        if (r.GetRecord(pos_AS_Module_nm) == nm) {
           return r;
+        }
       }
 #endif // VDMSL
 #ifdef VDMPP
       case TAG_TYPE_AS_Class: {
-        if (r.GetRecord(pos_AS_Class_nm) == nm)
+        if (r.GetRecord(pos_AS_Class_nm) == nm) {
           return r;
+        }
       }
 #endif // VDMPP
     }

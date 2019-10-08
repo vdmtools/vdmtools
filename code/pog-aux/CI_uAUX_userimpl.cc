@@ -198,11 +198,9 @@ TYPE_AS_Type CIAUX::GetASType (const TYPE_CI_ContextId & cid)
   TYPE_REP_TypeRep tp_rep_q (INT2Q::h2gAS(GetCI().GetTypeInfo(cid))); // [REP`TypeRep]
   TYPE_REP_TypeRep tp_rep = tp_rep_q;
 #ifdef VDMPP
-  if (tp_rep_q.Is(TAG_TYPE_REP_TypeNameRep))
-  {
+  if (tp_rep_q.Is(TAG_TYPE_REP_TypeNameRep)) {
     const TYPE_AS_Name & nm (tp_rep_q.GetRecord(pos_REP_TypeNameRep_nm));
-    if (GetStatSem().IsClassName(StripClassName(nm)))
-    {
+    if (GetStatSem().IsClassName(StripClassName(nm))) {
       tp_rep = TYPE_REP_TypeNameRep().Init(nm);
     }
   }
@@ -216,10 +214,12 @@ TYPE_AS_Type CIAUX::GetASType (const TYPE_CI_ContextId & cid)
 TYPE_REP_TypeRep CIAUX::GetGroundTypeRepInfo (const TYPE_CI_ContextId & cid)
 {
   TYPE_REP_TypeRep tp (INT2Q::h2gAS(GetCI().GetTypeInfo(cid))); // [REP`TypeRep]
-  if (tp.Is(TAG_TYPE_REP_TypeNameRep))
+  if (tp.Is(TAG_TYPE_REP_TypeNameRep)) {
     return LookUpGroundTypeRep(tp.GetRecord(pos_REP_TypeNameRep_nm));
-  else
+  }
+  else {
     return tp;
+  }
 }
 
 // HasInvariant
@@ -233,28 +233,28 @@ bool CIAUX::HasInvariant (const TYPE_AS_Type & type)
 #ifdef VDMSL
       Record td (SPECAST::GetTypeDef(name));
       switch(td.GetTag()) {
-        case TAG_TYPE_AS_TypeDef:
+        case TAG_TYPE_AS_TypeDef: {
           return !td.GetField(pos_AS_TypeDef_Inv).IsNil();
-        case TAG_TYPE_AS_StateDef:
+        }
+        case TAG_TYPE_AS_StateDef: {
           return !td.GetField(pos_AS_StateDef_Inv).IsNil();
-        default:
+        }
+        default: {
           return false;
+        }
       }
 #endif // VDMSL
 #ifdef VDMPP
-      if (GetStatSem().IsClassName(name))
-      {
+      if (GetStatSem().IsClassName(name)) {
         SEQ<TYPE_AS_InstanceVarDef> vars (SPECAST::GetInstVars(name));
         bool exists = false;
         int len_vars = vars.Length();
-        for (int index = 1; (index <= len_vars) && !exists; index++)
-        {
+        for (int index = 1; (index <= len_vars) && !exists; index++) {
           exists = vars[index].Is(TAG_TYPE_AS_InstanceInv);
         }
         return exists;
       }
-      else
-      {
+      else {
         TYPE_AS_TypeDef td (SPECAST::GetTypeDef(name));
         return !td.GetField(pos_AS_TypeDef_Inv).IsNil();
       }
@@ -491,12 +491,13 @@ bool CIAUX::isValueName (const type_cL & name)
 //nm : AS`Name -> AS`Name
 TYPE_AS_Name CIAUX::StripClassName (const TYPE_AS_Name & nm)
 {
-  if (nm.GetSequence(pos_AS_Name_ids).Length() < 2)
+  if (nm.GetSequence(pos_AS_Name_ids).Length() < 2) {
     return nm;
-
+  }
   TYPE_AS_Name nm_q (ASTAUX::GetSecondName(nm));   
-  if (GetStatSem().IsClassName(nm_q))
+  if (GetStatSem().IsClassName(nm_q)) {
     return nm_q;
+  }
   return nm;
 }
 #endif // VDMPP

@@ -1180,8 +1180,9 @@ Tuple VdmStdLib::EvalStdLibVDMByteUtil (const TYPE_AS_Name & fnname, const SEQ<T
     }
     return mk_(Bool(false), Nil());
   }
-  else
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 // CreateMaskByte

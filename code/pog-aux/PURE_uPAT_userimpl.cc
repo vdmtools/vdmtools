@@ -29,13 +29,13 @@ type_d7AS_NameCS7AS_NameCS3P vdm_PURE_uPAT_Bind2PureBind (const TYPE_AS_Bind & b
 // -> seq of AS`Pattern * Identifiers * Identifiers
 Tuple PUREPAT::Pattern2PurePatternSeq (const SEQ<TYPE_AS_Pattern> & pats, const SET<TYPE_AS_Name> & ids)
 {
-  if (pats.IsEmpty())
+  if (pats.IsEmpty()) {
     return mk_(SEQ<TYPE_AS_Pattern>(), ids, SET<TYPE_AS_Name>());
-  else
-  {
+  }
+  else {
     Tuple th (Pattern2PurePattern(pats.Hd(), ids));
     Tuple tt (Pattern2PurePatternSeq(pats.Tl(), th.GetSet(3)));
-    
+
     return mk_(SEQ<TYPE_AS_Pattern>().ImpAppend(th.GetRecord(1)).ImpConc(tt.GetSequence(1)),
                tt.GetSet(2),
                SET<TYPE_AS_Name>().ImpUnion(th.GetSet(3)).ImpUnion(tt.GetSet(3)));
@@ -78,8 +78,7 @@ Tuple PUREPAT::Pattern2PurePattern (const TYPE_AS_Pattern & pat, const SET<TYPE_
 Tuple PUREPAT::PatternName2PurePattern (const TYPE_AS_PatternName & pat, const SET<TYPE_AS_Name> & ids)
 {
   const Generic & nm (pat.GetField(pos_AS_PatternName_nm));
-  if (nm.IsNil())
-  {
+  if (nm.IsNil()) {
     TYPE_AS_Name new_nm (FRESH::GetName(SEQ<Char>(L"xx"),ids));
     TYPE_AS_PatternName new_pat (pat);
     new_pat.SetField(pos_AS_PatternName_nm, new_nm);
@@ -87,8 +86,9 @@ Tuple PUREPAT::PatternName2PurePattern (const TYPE_AS_PatternName & pat, const S
                SET<TYPE_AS_Name>(ids).Insert(new_nm),
                SET<TYPE_AS_Name>().Insert(new_nm));
   }
-  else
+  else {
     return mk_(pat, ids, SET<TYPE_AS_Name>().Insert(nm));
+  }
 }
 
 // MatchVal2PurePattern
@@ -252,10 +252,12 @@ Tuple PUREPAT::FieldPattern2PurePattern (const TYPE_AS_FieldPattern & pat, const
 Tuple PUREPAT::Bind2PureBind (const TYPE_AS_Bind & bind, const SET<TYPE_AS_Name> & ids)
 {
   switch(bind.GetTag()) {
-    case TAG_TYPE_AS_SetBind:
+    case TAG_TYPE_AS_SetBind: {
       return SetBind2PureSetBind(bind, ids);
-    case TAG_TYPE_AS_TypeBind:
+    }
+    case TAG_TYPE_AS_TypeBind: {
       return TypeBind2PureTypeBind(bind, ids);
+    }
     default: {
       wcout << L"unknown bind" << endl;
       return mk_(bind, ids, SET<TYPE_AS_Name>());
@@ -297,10 +299,10 @@ Tuple PUREPAT::TypeBind2PureTypeBind (const TYPE_AS_TypeBind & bind, const SET<T
 // -> AS`BindList * Identifiers * Identifiers
 Tuple PUREPAT::BindList2PureBindList (const TYPE_AS_BindList & binds, const SET<TYPE_AS_Name> & ids)
 {
-  if (binds.IsEmpty())
+  if (binds.IsEmpty()) {
     return mk_(SEQ<TYPE_AS_MultBind>(), ids, SET<TYPE_AS_Name>());
-  else
-  {
+  }
+  else {
     Tuple th (MultBind2PureMultBind(binds.Hd(), ids));
     Tuple tt (BindList2PureBindList(binds.Tl(), th.GetSet(2)));
     return mk_(SEQ<TYPE_AS_MultBind>().ImpAppend(th.GetRecord(1)).ImpConc(tt.GetSequence(1)),
@@ -316,10 +318,12 @@ Tuple PUREPAT::BindList2PureBindList (const TYPE_AS_BindList & binds, const SET<
 Tuple PUREPAT::MultBind2PureMultBind (const TYPE_AS_MultBind & mbinds, const SET<TYPE_AS_Name> & ids)
 {
   switch(mbinds.GetTag()) {
-    case TAG_TYPE_AS_MultSetBind:
+    case TAG_TYPE_AS_MultSetBind: {
       return MultSetBind2PureMultSetBind(mbinds, ids);
-    case TAG_TYPE_AS_MultTypeBind:
+    }
+    case TAG_TYPE_AS_MultTypeBind: {
       return MultTypeBind2PureMultTypeBind(mbinds, ids);
+    }
     default: {
       wcout << L"unknown multi bind" << endl;
       return mk_(mbinds, ids, SET<TYPE_AS_Name>());
