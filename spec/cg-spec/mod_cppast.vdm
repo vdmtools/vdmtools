@@ -1015,8 +1015,8 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
 
  IfStmt ::
     expr : Expr
-    alt1 : Stmt
-    alt2 : [ Stmt ]
+    alt1 : CompoundStmt -- Stmt
+    alt2 : [ CompoundStmt ] --[ Stmt ]
     CNTXT;
 
  WhileStmt ::

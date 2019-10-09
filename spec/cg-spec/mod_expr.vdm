@@ -610,7 +610,8 @@ map from the identifiers in the pattern alternatives to a set of types
 which they could be bound to.
 
 \begin{vdm_al}
-CGAltn: AS`CaseAltn * CGMAIN`VT * CGMAIN`VT * CPP`Name ==> CPP`Stmt
+--CGAltn: AS`CaseAltn * CGMAIN`VT * CGMAIN`VT * CPP`Name ==> CPP`Stmt
+CGAltn: AS`CaseAltn * CGMAIN`VT * CGMAIN`VT * CPP`Name ==> CPP`CompoundStmt
 CGAltn(mk_AS`CaseAltn(p_l, e, cid), selRes_v, resVar_v, succ_v) ==
  (dcl rb : seq of CPP`Stmt := [];
   FD`PushEnv();
@@ -4727,7 +4728,7 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
         def seq_len = DS`GenLen_int(s_v);
             cond = BC`GenLogOr(BC`GenGt(e_int, seq_len), BC`GenLt(e_int, BC`GenIntegerLit(1)));
             rre = BC`GenBlock([CGAUX`RunTime( "Illegal index in sequence modifier")]);
-        in if_body := BC`GenIfStmt(cond, rre, alt2);
+        in if_body := BC`GenIfStmt(cond, rre, BC`GenBlock([alt2]));
 #endif VDMPP
       def body = let stmts = isint_part ^ [if_body]
               in BC`GenBlock(stmts);
@@ -5483,7 +5484,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                           stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenObjectMemberAccess(cast,BC`Rename2(nm)),
                                                         DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];
                          );
-                      ifs := BC`GenIfStmt(isRecord, BC`GenBlock(stmt_l), ifs);
+                      ifs := BC`GenIfStmt(isRecord, BC`GenBlock(stmt_l), BC`GenBlock([ifs]));
                      );
                   return [ifs];
                  )
@@ -5820,21 +5821,12 @@ CGIsExpr( mk_AS`IsExpr( type, arg, - ), mk_CGMAIN`VT( resVar_v, - ) ) ==
 #ifdef VDMPP
        if CPP`isJAVA()
        then
-        (dcl argTmpCast : CPP`Expr := argTmp_v;
-         if not CGAUX`IsCompositeType(argTmpType)
-         then argTmpCast := BC`GenCastExpr(BC`GenTypeSpecifier(BC`GenIdentifier("Object")), argTmp_v);
-         if CGAUX`IsCompositeType(argTmpType)
-         then
-           rb := rb ^ [ BC`GenAsgnStmt( resVar_v, DS`GenBoolExpr(DS`GenEqTag( type, argTmpCast )))]
-         else
-           rb := rb ^ [ BC`GenIfStmt( DS`GenIsRecord( argTmpCast ), -- behoever man vel ikke
-                    BC`GenAsgnStmt( resVar_v, DS`GenBoolExpr(DS`GenEqTag( type, argTmpCast ))),
-                    BC`GenAsgnStmt( resVar_v, DS`GenBoolExpr(BC`GenBoolLit(false))) ) ];
-        )
+         def argTmpCast = BC`GenCastExpr(BC`GenTypeSpecifier(BC`GenIdentifier("Object")), argTmp_v);
+         in rb := rb ^ [ BC`GenAsgnStmt( resVar_v, DS`GenBoolExpr(DS`GenEqTag( type, argTmpCast )))]
        else
 #endif VDMPP
          def expr_c = DS`GenAuxType(argTmp_v, CGAUX`LOT(mk_REP`TypeNameRep(type)))
-         in rb := rb ^ [ BC`GenAsgnStmt( resVar_v, BC`GenCastExpr(DS`GenBoolType(), expr_c)) ];
+         in rb := rb ^ [ BC`GenAsgnStmt( resVar_v, DS`GenBoolExpr(expr_c)) ];
      return rb);
 \end{vdm_al}
 

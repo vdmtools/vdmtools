@@ -775,7 +775,7 @@ CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
           --then return mk_([stmt], false)
           then return mk_([stmt], inner <> nil and nonstop)
           else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsSeq(varExpr_v))),
-                                  stmt, nil)], false)
+                                  BC`GenBlock([stmt]), nil)], false)
          )
        )
       else
@@ -816,16 +816,17 @@ CGMatchSeqEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
                   if CGAUX`IsPosCharType(etp)
                   then return mk_([BC`GenIfStmt(DS`GenIsString(varExpr_v),
                                             BC`GenBlock(stringstmt),
-                                            BC`GenIfStmt(DS`GenIsSeq(varExpr_v), BC`GenBlock(seqstmt), nil))], true)
+                                            BC`GenBlock([BC`GenIfStmt(DS`GenIsSeq(varExpr_v), 
+                                                                      BC`GenBlock(seqstmt), nil)]))], true)
                   else return mk_([BC`GenIfStmt(DS`GenIsSeq(varExpr_v), BC`GenBlock(seqstmt), nil)], true)
                 else
                   if CGAUX`IsPosCharType(etp)
                   then return mk_([BC`GenIfStmt(DS`GenIsString(varExpr_v),
                                               BC`GenBlock(stringstmt),
-                                              BC`GenIfStmt(BC`GenAsgnExpr(succ_v,
+                                              BC`GenBlock([BC`GenIfStmt(BC`GenAsgnExpr(succ_v,
                                                                    BC`GenBracketedExpr(DS`GenIsSeq(varExpr_v))),
                                                            BC`GenBlock(seqstmt),
-                                                           nil))], false)
+                                                           nil)]))], false)
                   else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(DS`GenIsSeq(varExpr_v))),
                                    BC`GenBlock(seqstmt), nil)], false);
            )

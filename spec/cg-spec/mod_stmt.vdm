@@ -2178,7 +2178,8 @@ a map from the identifiers in the pattern alternatives to a sequence
 of types which they could be bound to.
 
 \begin{vdm_al}
-CGAltnStmt: AS`CasesStmtAltn * CGMAIN`VT * CPP`Name * [CPP`Stmt] * bool ==> CPP`Stmt
+--CGAltnStmt: AS`CasesStmtAltn * CGMAIN`VT * CPP`Name * [CPP`Stmt] * bool ==> CPP`Stmt
+CGAltnStmt: AS`CasesStmtAltn * CGMAIN`VT * CPP`Name * [CPP`CompoundStmt] * bool ==> CPP`CompoundStmt
 CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast) ==
   def mk_(samepatternIds, pid_m) = CGEXPR`SamePatternIds( p_l )
   in
@@ -2235,7 +2236,8 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
       end;
      )
     else
-     (dcl elseStmt1 : [CPP`Stmt] := elseStmt;
+--     (dcl elseStmt1 : [CPP`Stmt] := elseStmt;
+     (dcl elseStmt1 : [CPP`CompoundStmt] := elseStmt;
        for i = 0 to len p_l -1 do
          (if (i > 0) then CGAUX`PushEnv();
           let c_stmt = mk_AS`CasesStmtAltn([p_l(len p_l - i)], s, cid)

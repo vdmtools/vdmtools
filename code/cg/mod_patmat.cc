@@ -821,7 +821,7 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
     else {
       SEQ<TYPE_CPP_Stmt> rb;
       rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(GenIsSeq(varExpr_v))),
-                                    stmt, nil));
+                                    vdm_BC_GenBlock(mk_sequence(stmt)), nil));
       return mk_(rb, Bool(false)); 
     }
   }
@@ -873,7 +873,7 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
             SEQ<TYPE_CPP_Stmt> rb;
             rb.ImpAppend(vdm_BC_GenIfStmt (GenIsString (varExpr_v),
                                            vdm_BC_GenBlock (stringstmt),
-                                           vdm_BC_GenIfStmt (GenIsSeq (varExpr_v), vdm_BC_GenBlock (seqstmt), nil)));
+                                           vdm_BC_GenBlock(mk_sequence(vdm_BC_GenIfStmt (GenIsSeq (varExpr_v), vdm_BC_GenBlock (seqstmt), nil)))));
             return mk_(rb, Bool(true));
           }
           else {
@@ -887,9 +887,9 @@ Tuple vdmcg::CGMatchSeqEnumPattern (const TYPE_AS_SeqEnumPattern & pat,
             SEQ<TYPE_CPP_Stmt> rb;
             rb.ImpAppend(vdm_BC_GenIfStmt (GenIsString (varExpr_v),
                                            vdm_BC_GenBlock (stringstmt),
-                                           vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v,
+                                           vdm_BC_GenBlock(mk_sequence(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v,
                                                                    vdm_BC_GenBracketedExpr(GenIsSeq(varExpr_v))),
-                                                                                  vdm_BC_GenBlock (seqstmt), nil)));
+                                                                                  vdm_BC_GenBlock (seqstmt), nil)))));
             return mk_(rb, Bool(false));
           }
           else {

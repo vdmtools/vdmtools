@@ -3297,7 +3297,7 @@ domain/range restrict to/by expressions.
                  end;
     in
      (CGAUX`SetException(true);
-      return BC`GenIfStmt(cond, stmt, nil));
+      return BC`GenIfStmt(cond, BC`GenBlock([stmt]), nil));
 #endif VDMPP
 \end{vdm_al}
 

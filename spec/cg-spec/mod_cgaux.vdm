@@ -3784,7 +3784,7 @@ GenQuoteConstructor(ch_l) ==
   def iftest = BC`GenEq(BC`GenIdentifier("hc"), BC`GenIntegerLit(0)) ;
       returnstmt = BC`GenAsgnStmt(BC`GenIdentifier("hc"),
                                      BC`GenFctCallObjMemAcc(DS`GenSuper(), "hashCode", []));
-      ifstmt = BC`GenIfStmt(iftest, returnstmt, nil)
+      ifstmt = BC`GenIfStmt(iftest, BC`GenBlock([returnstmt]), nil)
   in return BC`GenJavaFctDef([], [BC`GenModifier(<PUBLIC>)],
                              [],
                              BC`GenFctDecl(BC`GenIdentifier(ch_l),[]),

@@ -5196,7 +5196,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
     TYPE_CPP_Expr seq_len (GenLen_int(s_v));
     TYPE_CPP_Expr cond (vdm_BC_GenLogOr(vdm_BC_GenGt(e_int, seq_len), vdm_BC_GenLt(e_int, vdm_BC_GenIntegerLit(1))));
     TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"Illegal index in sequence modifier"))));
-    if_body = vdm_BC_GenIfStmt(cond, rre, alt2);
+    if_body = vdm_BC_GenIfStmt(cond, rre, vdm_BC_GenBlock(mk_sequence(alt2)));
   }
   else
 #endif // VDMPP
@@ -5998,7 +5998,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
             stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenObjectMemberAccess(cast, vdm_BC_Rename2(nm)),
                                                 GenExplicitCast(type, val, FindType(newval))));
           }
-          ifs = vdm_BC_GenIfStmt(isRecord, vdm_BC_GenBlock(stmt_l), ifs);
+          ifs = vdm_BC_GenIfStmt(isRecord, vdm_BC_GenBlock(stmt_l), vdm_BC_GenBlock(mk_sequence(ifs)));
         }
         return SEQ<TYPE_CPP_Stmt>().ImpAppend(ifs);
       }
@@ -6364,30 +6364,16 @@ Generic vdmcg::CGIsExpr (const TYPE_AS_IsExpr & rc1, const TYPE_CGMAIN_VT & vt)
   { // type : AS`Name
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
-      TYPE_CPP_Expr argTmpCast (IsCompositeType(argTmpType)
-                                   ? argTmp_v
-                                   : vdm_BC_GenCastExpr(
-                                       vdm_BC_GenTypeSpecifier(
-                                         vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"))), argTmp_v));
-
-      if (IsCompositeType(argTmpType))
-      {
-        rb.ImpAppend (vdm_BC_GenAsgnStmt (resVar_v, GenBoolExpr(GenEqTag((const TYPE_AS_Name &)type, argTmpCast))));
-      }
-      else
-      {
-        rb.ImpAppend (
-          vdm_BC_GenIfStmt (
-            GenIsRecord (argTmpCast),
-            vdm_BC_GenAsgnStmt (resVar_v, GenBoolExpr(GenEqTag((const TYPE_AS_Name &)type, argTmpCast))),
-            vdm_BC_GenAsgnStmt (resVar_v, GenBoolExpr(vdm_BC_GenBoolLit(false)))));
-      }
+      TYPE_CPP_Expr argTmpCast (vdm_BC_GenCastExpr(
+                                   vdm_BC_GenTypeSpecifier(
+                                     vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object"))), argTmp_v));
+      rb.ImpAppend (vdm_BC_GenAsgnStmt (resVar_v, GenBoolExpr(GenEqTag((const TYPE_AS_Name &)type, argTmpCast))));
     }
     else
 #endif // VDMPP
     {
       TYPE_CPP_Expr expr_c (GenAuxType(argTmp_v, LOT(TYPE_REP_TypeNameRep().Init(type))));
-      rb.ImpAppend (vdm_BC_GenAsgnStmt (resVar_v, vdm_BC_GenCastExpr(GenBoolType(), expr_c)));
+      rb.ImpAppend (vdm_BC_GenAsgnStmt (resVar_v, GenBoolExpr(expr_c)));
     }
     return rb;
   }

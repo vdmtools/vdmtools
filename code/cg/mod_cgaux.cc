@@ -6721,7 +6721,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenQuoteConstructor(const TYPE_AS_Id & ch_l)
                               vdm_BC_GenIdentifier(ASTAUX::MkId(L"hc")),
                               vdm_BC_GenFctCallObjMemAcc(GenSuper(), ASTAUX::MkId(L"hashCode"), SEQ<TYPE_CPP_Expr>())));
 
-  TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(iftest, returnstmt, Nil()));
+  TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(iftest, vdm_BC_GenBlock(mk_sequence(returnstmt)), Nil()));
 
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
            SEQ<TYPE_CPP_Modifier>().ImpAppend(vdm_BC_GenModifier(quote_PUBLIC)),

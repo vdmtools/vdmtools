@@ -4904,7 +4904,7 @@ TYPE_CPP_Stmt vdmcg::GenMapRestrictStmt(const TYPE_CPP_Expr & s,
     case MAPRNGRESTBY: { cond = vdm_BC_GenNot(fcall2); break; }
   }
   SetException(true);
-  return vdm_BC_GenIfStmt(cond, stmt, Nil());
+  return vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(mk_sequence(stmt)), Nil());
 }
 #endif // VDMPP
 
