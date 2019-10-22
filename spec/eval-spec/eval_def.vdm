@@ -123,7 +123,7 @@ ReadClasses(mk_AS`Class(nm, -, supercls, defs, -, -))== -- VDMRT
         for i = len instinv to 1 by -1 do
           def cond = CEXPR`E2I(instinv(i).expr)
           in
-            code := if i = 1
+            code := if i = len instinv
                     then cond
                     else CEXPR`ConcIfThenElse(cond, code, [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
         sigmacl.inst_inv := mk_(instinv, code);
