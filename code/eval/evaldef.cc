@@ -151,7 +151,6 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_SigmaClass> DEF::ReadClasses(const TYPE_AS_Class & 
     size_t len_instinv = instinv.Length();
     for (size_t i = len_instinv; i >= 1; i--) {
       TYPE_STKM_SubProgram cond (theCompiler().E2I(instinv[i].GetRecord(pos_AS_InstanceInv_expr)));
-      //code = (i == 1 ? cond :
       code = (i == len_instinv ? cond :
                        theCompiler().ConcIfThenElse(cond, code,
                                TYPE_STKM_SubProgram().ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_false)))); 
