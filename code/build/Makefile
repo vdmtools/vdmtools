@@ -826,7 +826,7 @@ READLINE_LIB += -lreadline
 FLEXROOT?=/usr
 FLEXINC?=$(FLEXROOT)/include
 CPUTYPE = $(shell uname -p)
-DISTARCH    = FreeBSD-$(OSV_MAJOR)-$(CPUTYPE)
+DISTARCH = FreeBSD-$(OSV_MAJOR)-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 STRIP = /usr/bin/strip -g
 
@@ -879,7 +879,11 @@ ifndef NOOPT
 OPTIMIZE +=-O3
 endif
 
-DISTARCH = Linux-$(CPUTYPE)
+ID=$(shell grep -e '^ID=' /etc/os-release | awk -F '=' '{print $$2}' | sed -e 's:"::g')
+VERSION=$(shell grep -e '^VERSION_ID=' /etc/os-release | awk -F '=' '{print $$2}' | sed -e 's:"::g')
+
+#DISTARCH = Linux-$(CPUTYPE)
+DISTARCH = Linux-$(CPUTYPE)-$(ID)-$(VERSION)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 
 STRIP = strip -g #otherwise all symbols are removed.
