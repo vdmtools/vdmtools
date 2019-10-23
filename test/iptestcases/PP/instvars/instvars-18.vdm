@@ -1,0 +1,21 @@
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  def x = new B();
+  in return 1;
+
+end A
+
+
+class B
+instance variables
+private
+x : nat := 5;
+
+inv x > 3;
+inv x < 5;
+
+end B
