@@ -879,11 +879,15 @@ ifndef NOOPT
 OPTIMIZE +=-O3
 endif
 
+#DISTARCH = Linux-$(CPUTYPE)
+ifneq ("$(wildcard /etc/os-release)","")
 ID=$(shell grep -e '^ID=' /etc/os-release | awk -F '=' '{print $$2}' | sed -e 's:"::g')
 VERSION=$(shell grep -e '^VERSION_ID=' /etc/os-release | awk -F '=' '{print $$2}' | sed -e 's:"::g')
-
-#DISTARCH = Linux-$(CPUTYPE)
 DISTARCH = Linux-$(CPUTYPE)-$(ID)-$(VERSION)
+else
+DISTARCH = Linux-$(CPUTYPE)
+endif
+
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 
 STRIP = strip -g #otherwise all symbols are removed.
