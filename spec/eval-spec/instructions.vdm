@@ -173,19 +173,13 @@ ExeNOBODY(err,modname,name,parms) ==
     for mk_AS`PatternName(nm,-,-) in parms do
       if nm = nil
       then arg_lv := arg_lv ^ [mk_SEM`NIL()]
-#ifdef VDMSL
-      --else arg_lv := arg_lv ^ [STATE`LookUp(nm)];
       else arg_lv := arg_lv ^ [def mk_SEM`ValTp(val,-) = STATE`LookUp(nm) in val];
-#endif VDMSL
-#ifdef VDMPP
-      --else arg_lv := arg_lv ^ [STATE`LookUp(nm)];
-      else arg_lv := arg_lv ^ [def mk_SEM`ValTp(val,-) = STATE`LookUp(nm) in val];
-#endif VDMPP
     def mk_(ok, val) = IsVdmStdLib(modname,name,arg_lv)
     in
       if ok
       then STKM`Push(val)
-      else RTERR`Error(err, nil, nil, []))
+      else RTERR`Error(err, nil, nil, [])
+   )
   else RTERR`Error(err, nil, nil, []);
 
 -- This function needs to test if the given function is in the VDM-LIB.

@@ -117,12 +117,6 @@ size_t TokenList::Add(const TokenInfo & t )
 { 
   this->tokens.push_back(t);
   return static_cast<size_t>(tokens.size()); 
-
-/*
-  TokenInfoCt tkc (t);
-  this->token_l.ImpAppend(tkc);
-  return this->token_l.Length();
-*/
 };
 
 const TokenInfo & TokenList::Get(int64_t i) const
@@ -131,10 +125,6 @@ const TokenInfo & TokenList::Get(int64_t i) const
     M4LibError::ReportError(-1, L"Wrong index in TokenInfo::Get."); 
   }
   return this->tokens[i-1];  
-
-/*
-  return this->token_l[i].get_const_ref();
-*/
 };
 
 TokenInfo & TokenList::GetForModify(int64_t i)
@@ -143,15 +133,11 @@ TokenInfo & TokenList::GetForModify(int64_t i)
     M4LibError::ReportError(-1, L"Wrong index in TokenInfo::Get."); 
   }
   return this->tokens[i-1];  
-/*
-  return this->token_l.refIndex(i).get_shared_ref();
-*/
 };
 
 // Mark the token as being an index element
 void TokenList::set_index_element(const TYPE_CI_TokenSpan & pos, TokenInfo::IndexElementType ind_tp )
 {
-//  int i = pos.get_token_ust().GetValue();
   int64_t i = pos.GetIntValue(pos_CI_TokenSpan_token_ust);
   this->tokens[i-1].set_index_element(ind_tp);
 }
@@ -163,18 +149,17 @@ void TokenList::set_test_coverage(const TYPE_CI_TokenSpan & pos, int64_t cov)
   // returned from ContextInfo::GetPos called with a NilContextId 
   int64_t from = pos.GetIntValue(pos_CI_TokenSpan_token_ust);
   int64_t to = pos.GetIntValue(pos_CI_TokenSpan_token_uend);
-//wcout << from << L" - " << to << L" : " << cov << endl;
   if (from >= 1 && to >= 1) {
-    for (int64_t index = from - 1; index < to; index++) 
+    for (int64_t index = from - 1; index < to; index++) {
       this->tokens[index].set_test_coverage(cov);
+    }
   }
 }
 
 // Mark all the tokens as being covered
 void TokenList::set_test_coverage_all(int64_t cov)
 {
-  if (this->tokens.size() > 0)
-  {
+  if (this->tokens.size() > 0) {
     TYPE_CI_TokenSpan pos;
     pos.Init(Int(1), Int(1), Int(tokens.size()));
     this->set_test_coverage(pos, cov);
@@ -188,7 +173,9 @@ size_t TokenList::GetSectionIndex(int64_t sec) const
 {
   size_t len_tl = this->Length();
   for (size_t index = 0 ; index < len_tl; index++ ) {
-    if (this->tokens[index].get_sec_st() == sec ) return (index + 1);
+    if (this->tokens[index].get_sec_st() == sec ) {
+      return (index + 1);
+    }
   }
   return 0;  
 };
@@ -196,17 +183,18 @@ size_t TokenList::GetSectionIndex(int64_t sec) const
 void TokenList::pp(ostream &f) const
 {
   f << "["; 
-  if (!tokens.empty())
+  if (!tokens.empty()) {
     f << endl << " ";
-
-  for (tokens_t::const_iterator itr = tokens.begin(); itr != tokens.end(); ++itr)
-  {
-    if (itr != tokens.begin())
+  }
+  for (tokens_t::const_iterator itr = tokens.begin(); itr != tokens.end(); ++itr) {
+    if (itr != tokens.begin()) {
       f << "," << endl << " "; 
+    }
     (*itr).pp(f); 
   }
-  if (!tokens.empty())
+  if (!tokens.empty()) {
     f << endl;
+  }
   f << "]"; 
 }
 
@@ -216,19 +204,16 @@ void TokenList::AdjustPosInfoForMultibyteText()
   TYPE_CI_Line last_sec_line (-1);
   size_t length = this->Length();
   int offset = 0;
-  for( size_t index = 1; index <= length; index++ )
-  {
+  for( size_t index = 1; index <= length; index++ ) {
     TokenInfo & ti = this->GetForModify(index);
     const TYPE_CI_TokenPos & pos_st = ti.get_pos_st();
     const TYPE_CI_TokenPos & pos_end = ti.get_pos_end();
 
-    if( last_sec != pos_st.GetInt(pos_CI_TokenPos_section) )
-    {
+    if( last_sec != pos_st.GetInt(pos_CI_TokenPos_section) ) {
       last_sec = pos_st.GetInt(pos_CI_TokenPos_section);
       last_sec_line = Int(-1);
     }
-    if( last_sec_line != pos_st.GetInt(pos_CI_TokenPos_sec_uline) )
-    {
+    if( last_sec_line != pos_st.GetInt(pos_CI_TokenPos_sec_uline) ) {
       last_sec_line = pos_st.GetInt(pos_CI_TokenPos_sec_uline);
       offset = 0;
     }
@@ -238,26 +223,24 @@ void TokenList::AdjustPosInfoForMultibyteText()
 
     // calculate new offset value
     int textlen = ti.get_text().length();
-    if( textlen > 0 )
-    {
+    if( textlen > 0 ) {
       int diff = pos_end.GetIntValue(pos_CI_TokenPos_column) - pos_st.GetIntValue(pos_CI_TokenPos_column);
       offset = offset + ( diff - textlen );
     }
 
-    // if no changes then do nothing
-    if (offset == 0) continue;
+    if (offset > 0) {
+      // calculate new end column value
+      Int new_column_end (pos_end.GetIntValue(pos_CI_TokenPos_column) - offset);
 
-    // calculate new end column value
-    Int new_column_end (pos_end.GetIntValue(pos_CI_TokenPos_column) - offset);
-
-    // construct new TokenInfo
-    TYPE_CI_TokenPos new_pos_st (pos_st);
-    new_pos_st.SetField(pos_CI_TokenPos_column, new_column_st);
+      // construct new TokenInfo
+      TYPE_CI_TokenPos new_pos_st (pos_st);
+      new_pos_st.SetField(pos_CI_TokenPos_column, new_column_st);
     
-    TYPE_CI_TokenPos new_pos_end (pos_end);
-    new_pos_end.SetField(pos_CI_TokenPos_column, new_column_end);
+      TYPE_CI_TokenPos new_pos_end (pos_end);
+      new_pos_end.SetField(pos_CI_TokenPos_column, new_column_end);
 
-    ti.Init( ti.get_id(), ti.get_text(), new_pos_st, new_pos_end );
+      ti.Init( ti.get_id(), ti.get_text(), new_pos_st, new_pos_end );
+    }
   }
 }
 
@@ -265,16 +248,15 @@ void TokenList::dump( wostream & wos ) const
 {
   size_t length = this->Length();
   int lastline = -1;
-  for( size_t i = 1; i <= length; i++ )
-  {
+  for( size_t i = 1; i <= length; i++ ) {
     const TokenInfo & ti = Get(i);
-    if( lastline != ti.get_abs_line_st())
-    {
+    if( lastline != ti.get_abs_line_st()) {
       wos << L"-";
       lastline = ti.get_abs_line_st();
     }
-    else
+    else {
       wos << L" ";
+    }
     ti.dump( wos );
   }
 }
@@ -283,8 +265,7 @@ Sequence TokenList::getGUIInfo(const SEQ<TYPE_CI_TokenSpan> & ts_l) const
 {
   Set end_s;
   size_t len_ts_l = ts_l.Length();
-  for (size_t index = 1; index <= len_ts_l; index++)
-  {
+  for (size_t index = 1; index <= len_ts_l; index++) {
     const TYPE_CI_TokenSpan & ts (ts_l[index]);
     const TokenInfo & etk = Get(ts.get_token_uend().GetValue());
     const TYPE_CI_TokenPos & pos_st = etk.get_pos_st();
@@ -293,8 +274,7 @@ Sequence TokenList::getGUIInfo(const SEQ<TYPE_CI_TokenSpan> & ts_l) const
 
   Sequence ret;
   size_t length = this->Length();
-  for( size_t i = 1; i <= length; i++ )
-  {
+  for( size_t i = 1; i <= length; i++ ) {
     const TokenInfo & ti = Get(i);
     const TYPE_CI_TokenPos & pos_st = ti.get_pos_st();
     const TYPE_CI_TokenPos & pos_end = ti.get_pos_end();

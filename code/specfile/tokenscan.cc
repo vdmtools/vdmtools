@@ -79,43 +79,57 @@ void TSScanInit (wchar_t *p)
 {
   curPos = p;
   emptyToken = 0;
-  if (curScan.scanInit != (InitScannerFctPtr) NULL)
+  if (curScan.scanInit != (InitScannerFctPtr) NULL) {
     (*curScan.scanInit) (p);
+  }
 }
 
 
 void TSSetScanner (TSScanner *p)
 {
-  if (p == (TSScanner *) NULL || p->scanInit == (InitScannerFctPtr) NULL)
+  if (p == (TSScanner *) NULL || p->scanInit == (InitScannerFctPtr) NULL) {
     curScan.scanInit = defScan.scanInit;
-  else
+  }
+  else {
     curScan.scanInit = p->scanInit;
-  if (p == (TSScanner *) NULL || p->scanScan == (ScannerFctPtr) NULL)
+  }
+  if (p == (TSScanner *) NULL || p->scanScan == (ScannerFctPtr) NULL) {
     curScan.scanScan = defScan.scanScan;
-  else
+  }
+  else {
     curScan.scanScan = p->scanScan;
-
-  if (p == (TSScanner *) NULL || p->scanDelim == (wchar_t *) NULL)
+  }
+  if (p == (TSScanner *) NULL || p->scanDelim == (wchar_t *) NULL) {
     curScan.scanDelim = defScan.scanDelim;
-  else
+  }
+  else {
     curScan.scanDelim = p->scanDelim;
-  if (p == (TSScanner *) NULL || p->scanQuote == (wchar_t *) NULL)
+  }
+  if (p == (TSScanner *) NULL || p->scanQuote == (wchar_t *) NULL) {
     curScan.scanQuote = defScan.scanQuote;
-  else
+  }
+  else {
     curScan.scanQuote = p->scanQuote;
-  if (p == (TSScanner *) NULL || p->scanEscape == (wchar_t *) NULL)
+  }
+  if (p == (TSScanner *) NULL || p->scanEscape == (wchar_t *) NULL) {
     curScan.scanEscape = defScan.scanEscape;
-  else
+  }
+  else {
     curScan.scanEscape = p->scanEscape;
-  if (p == (TSScanner *) NULL || p->scanEos == (wchar_t *) NULL)
+  }
+  if (p == (TSScanner *) NULL || p->scanEos == (wchar_t *) NULL) {
     curScan.scanEos = defScan.scanEos;
-  else
+  }
+  else {
     curScan.scanEos = p->scanEos;
+  }
 
-  if (p == (TSScanner *) NULL || p->scanFlags == 0)
+  if (p == (TSScanner *) NULL || p->scanFlags == 0) {
     curScan.scanFlags = defScan.scanFlags;
-  else
+  }
+  else {
     curScan.scanFlags = p->scanFlags;
+  }
 }
 
 
@@ -153,12 +167,11 @@ static int Search (const wchar_t *s, wchar_t  c)
 {
   char  c2;
 
-  if (s != (wchar_t *) NULL)
-  {
-    while ((c2 = *s++) != '\0')
-    {
-      if (c == c2)
+  if (s != (wchar_t *) NULL) {
+    while ((c2 = *s++) != '\0') {
+      if (c == c2) {
         return (1);
+      }
     }
   }
   return (0);
@@ -185,8 +198,9 @@ int TSIsScanEscape (wchar_t c)
 
 int TSIsScanEos (wchar_t c)
 {
-  if (c == '\0')    /* null character ALWAYS terminates wstring */
+  if (c == '\0') {  /* null character ALWAYS terminates wstring */
     return (1);
+  }
   return (Search (curScan.scanEos, c));
 }
 
@@ -208,47 +222,44 @@ static const wchar_t * CanonScan ()
 wchar_t  *pos, *start, *p, c, quote = 0;
 int  escape = 0, haveToken = 0;
 
-  if (emptyToken)    /* fix to point into buffer */
-  {
+  if (emptyToken) {  /* fix to point into buffer */
     emptyToken = 0;
     return (L"");
   }
   pos = TSGetScanPos ();
 
-  if (!TSTestScanFlags (tsNoConcatDelims))
-  {
-    while (TSIsScanDelim (*pos))    /* skip delimiters */
+  if (!TSTestScanFlags (tsNoConcatDelims)) {
+    while (TSIsScanDelim (*pos)) {  /* skip delimiters */
       ++pos;
+    }
   }
   start = p = pos;      /* start of token */
-  while (!TSIsScanEos (c = *pos))    /* eos terminates any token */
-  {
+  while (!TSIsScanEos (c = *pos)) {  /* eos terminates any token */
     haveToken = 1;
-    if (escape)      /* previous wchar_t was escape; */
-    {        /* pass this one literally */
+    if (escape) {    /* previous wchar_t was escape; */
+      /* pass this one literally */
       *p++ = *pos++;
       escape = 0;
     }
-    else if (TSIsScanEscape (c))  /* this wchar_t is escape; */
-    {        /* pass next one literally */
+    else if (TSIsScanEscape (c)) { /* this wchar_t is escape; */
+      /* pass next one literally */
       ++pos;
       escape = 1;
     }
-    else if (quote)      /* in quote mode */
-    {
-      if (c == quote)    /* end quote mode */
+    else if (quote) {    /* in quote mode */
+      if (c == quote) {  /* end quote mode */
         quote = 0;
-      else      /* no end quote yet */
+      }
+      else {    /* no end quote yet */
         *p++ = *pos;  /* add wchar_t */
+      }
       ++pos;      /* skip to next wchar_t */
     }
-    else if (TSIsScanQuote (c))  /* begin quote mode */
-    {
+    else if (TSIsScanQuote (c)) { /* begin quote mode */
       ++pos;
       quote = c;
     }
-    else if (TSIsScanDelim (c))  /* end of token */
-    {
+    else if (TSIsScanDelim (c)) { /* end of token */
       ++pos;      /* skip past delimiter */
       /*
        * If also end of wstring and all delims are significant,
@@ -256,13 +267,14 @@ int  escape = 0, haveToken = 0;
        * able to tell that from looking at the wstring itself,
        * so set a flag for next call.
        */
-      if (TSIsScanEos (*pos)
-        && TSTestScanFlags (tsNoConcatDelims))
+      if (TSIsScanEos (*pos) && TSTestScanFlags (tsNoConcatDelims)) {
         ++emptyToken;
+      }
       break;
     }
-    else
+    else {
       *p++ = *pos++;
+    }
   }
   *p = '\0';
   TSSetScanPos (pos);

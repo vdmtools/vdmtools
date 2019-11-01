@@ -49,16 +49,17 @@ private:
   {
     vdm_ToolMediator * med = ObjGet_vdm_ToolMediator (vdm_mediator);
     Generic file = med->vdm_GetFileName (fileid);
-    if (file.IsRecord () && Record(file).Is(vdm_FileName))
+    if (file.IsRecord () && Record(file).Is(vdm_FileName)) {
       return PTAUX::ExtractFileName(file);
-    else
+    }
+    else {
       return L"";
+    }
   }
   
 public:
 
-  AsciiErrors ()
-    : run_time(true)
+  AsciiErrors () : run_time(true)
   {
     char *_emacs; 
     emacs = ((_emacs=getenv("EMACS")) && strcmp(_emacs, "t")==0);
@@ -73,15 +74,16 @@ public:
     wstring file = GetFileName (fileid);
 
     if (file != L"") {
-      if (emacs)
+      if (emacs) {
 	vdm_err << L"\032\032" << file << ":" << lineid << ":1\n";
-
-      if (run_time)
-	vdm_err << L"In " << file << ", l." << lineid
-		<< L", c." << columnid << "\n";
+      }
+      if (run_time) {
+	vdm_err << L"In " << file << ", l." << lineid << L", c." << columnid << "\n";
+      }
     }
-    else if (fileid != 0)
+    else if (fileid != 0) {
       vdm_err << L"c." << columnid << " in the command-line\n";
+    }
   }
 
   virtual void vdm_ShowMsg() {
@@ -96,17 +98,17 @@ public:
   virtual void vdm_MakeStatus(const Int &NoErr, const Int &NoWarn)
   {
     wstring msg;
-    if (NoErr > 0)
+    if (NoErr > 0) {
       msg = L"Errors: " + NoErr.ascii();
-
-    if (NoWarn > 0)
-    {
-      if (NoErr > 0) msg += L" ";
+    }
+    if (NoWarn > 0) {
+      if (NoErr > 0) {
+        msg += L" ";
+      }
       msg += L"Warnings: " + NoWarn.ascii();
     }
 
-    if ((NoErr > 0) || (NoWarn > 0))
-    {
+    if ((NoErr > 0) || (NoWarn > 0)) {
       vdm_err << msg << endl << flush;
     }
   }
@@ -125,8 +127,9 @@ bool ParseAnExprFromStream(Sequence & exprs, ContextInfo & ci, istream & in)
     if (parse_error) {
       vdm_err <<  L"Some error occured during parsing of the expression" << endl;
     }
-    else
+    else {
       return parse_error;
+    }
   }
   catch (TB_Exception & e) {
     vdm_log << L"Internal error" << endl;
@@ -147,8 +150,9 @@ bool ParseAnExprFromString(Sequence & exprs, ContextInfo & ci, string & str)
     if (parse_error) {
       vdm_err <<  L"Some error occured during parsing of the expression" << endl;
     }
-    else
+    else {
       return parse_error;
+    }
   }
   catch (TB_Exception & e) {
     vdm_log << L"Internal error" << endl;
@@ -164,8 +168,7 @@ bool ParseAnExpr(Sequence& exprs, ContextInfo& ci)
   std::string st;
   char ch;
   ch = std::cin.get ();
-  while (ch != (char)EOF)
-  {
+  while (ch != (char)EOF) {
     st += ch;
     ch = std::cin.get ();
   }
