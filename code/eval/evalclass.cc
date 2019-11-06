@@ -570,8 +570,6 @@ void CLASS::TransSyncsForOneClass(const TYPE_AS_Name & clnm, const Generic & def
   const SEQ<TYPE_AS_SyncDef> & syncs (defs.GetSequence(pos_AS_Definitions_syncs));
   const Generic & thread (defs.GetField(pos_AS_Definitions_threaddef));
 
-//  SET<TYPE_AS_Name> superops (theState().GetAllOpsNmsSupers(clnm));
-//  superops.ImpDiff(theState().GetAllOps(clnm).Dom());
   SET<TYPE_AS_Name> superops (theState().GetAllOpsNmsSupers(clnm).ImpDiff(theState().GetAllOps(clnm).Dom()));
 
   TransThreadDef(clnm, thread);
@@ -810,10 +808,9 @@ void CLASS::TransMutex(const TYPE_AS_Name & clnm, const TYPE_AS_Mutex & mutex, c
 
   SET<TYPE_AS_Name> all_ops;
   if (gops.IsNil()) {
-    all_ops = theState().GetAllOpsNmsSupers(clnm);
+    all_ops.ImpUnion(theState().GetAllOpsNmsSupers(clnm));
   }
   else {
-//    all_ops = (Generic)((Sequence) gops).Elems();
     all_ops.ImpUnion(Sequence(gops).Elems());
   }
 // TODO: mutex with multiple operation names
@@ -883,14 +880,11 @@ Map CLASS::TransStaticRef(const MAP<TYPE_AS_Name, TYPE_GLOBAL_SigmaClass> & clas
     size_t len_instvars = instvars.Length();
     for (size_t j = 1; j <= len_instvars; j++) {
       const TYPE_AS_InstAssignDef & iad (instvars[j]);
-//      if (iad.GetBoolValue(pos_AS_InstAssignDef_stat))
-//      {
-        const TYPE_AS_AssignDef & ad (iad.GetRecord(pos_AS_InstAssignDef_ad));
-        const Generic & dclinit (ad.GetField(pos_AS_AssignDef_dclinit)); // [AS`Expr]
-        if (!dclinit.IsNil()) {
-          clsnms.ImpUnion(AUX::ClModNmInExpr(dclinit)); 
-        }
-//      }
+      const TYPE_AS_AssignDef & ad (iad.GetRecord(pos_AS_InstAssignDef_ad));
+      const Generic & dclinit (ad.GetField(pos_AS_AssignDef_dclinit)); // [AS`Expr]
+      if (!dclinit.IsNil()) {
+        clsnms.ImpUnion(AUX::ClModNmInExpr(dclinit)); 
+      }
     }
 
     const SEQ<TYPE_AS_InstanceInv> & invs (classes[name].GetTuple(pos_GLOBAL_SigmaClass_inst_uinv).GetSequence(1));
