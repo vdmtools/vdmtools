@@ -144,9 +144,9 @@ public:
 
   static QString mf( const QString & );
 
-  void createTimer(bool use_corba);
-  void startTimer();
-  void stopTimer();
+  void createCorbaTimer(bool use_corba);
+  void startCorbaTimer();
+  void stopCorbaTimer();
 
   void setLastDir(const QString & file);
   QString getLastDir();

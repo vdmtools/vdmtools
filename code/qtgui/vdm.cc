@@ -396,7 +396,7 @@ int main (int argc, char * argv[])
       mainw->loadProject(file);
   }
 
-  mainw->createTimer(uses_corba);
+  mainw->createCorbaTimer(uses_corba);
 
   // Show the main window
   mainw->show();
@@ -411,7 +411,7 @@ int main (int argc, char * argv[])
   quiting = true;
 
   // Exiting: clean up after ourselves
-  mainw->stopTimer();
+  mainw->stopCorbaTimer();
 
   Qt2TB::TerminateCorbaApiI();
 

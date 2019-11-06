@@ -1066,7 +1066,7 @@ toolOptionsDialog * mainW::createToolOptionsDialog(QWidget * parent)
 
 void mainW::disableGUI()
 {
-  this->stopTimer();
+  this->stopCorbaTimer();
   if( NULL != this->browserw ) {
     this->browserw->setBusy(true);
   }
@@ -1188,7 +1188,7 @@ void mainW::enableGUI()
 #endif // QT_VERSION >= 0x040000
   this->toolRunning = false;
 
-  this->startTimer();
+  this->startCorbaTimer();
 }
 
 //
@@ -4711,12 +4711,12 @@ void mainW::searchId(QString str, bool partial, bool defOnly)
   }
 }
 
-void mainW::createTimer(bool use_corba)
+void mainW::createCorbaTimer(bool use_corba)
 {
   this->timer = new QTimer(this);
   QObject::connect( this->timer, SIGNAL(timeout()), this, SLOT(apiPeriodic()));
   this->useCorba = use_corba;
-  this->startTimer();
+  this->startCorbaTimer();
 
 #ifdef _MSC_VER
   this->gtimer = new QTimer(this);
@@ -4730,7 +4730,7 @@ void mainW::createTimer(bool use_corba)
 #endif // _MSC_VER
 }
 
-void mainW::startTimer()
+void mainW::startCorbaTimer()
 {
   if ((this->timer != NULL) && !this->timer->isActive() && this->useCorba) {
 #if QT_VERSION >= 0x040000
@@ -4742,7 +4742,7 @@ void mainW::startTimer()
   }
 }
 
-void mainW::stopTimer()
+void mainW::stopCorbaTimer()
 {
   if ((this->timer != NULL) && this->timer->isActive() && this->useCorba) {
     this->timer->stop();
