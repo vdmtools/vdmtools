@@ -42,7 +42,9 @@ browserW::browserW( QWidget* parent,  const char* name, WFlags fl )
   this->setWhatsThis( tr( "The Project Browser allows the user to easily mantain and execute every project related action" ) );
   this->setContextMenuPolicy(Qt::DefaultContextMenu);
 #else
-  if ( !name ) setName( "browserW" );
+  if ( !name ) {
+    setName( "browserW" );
+  }
   this->setCaption( tr( "Manager" ) );
   this->setFocusPolicy(QWidget::StrongFocus);
   this->setIconText( tr( "" ) );
@@ -549,8 +551,9 @@ QStringList browserW::getSelectedFilesOfVDM(bool abs)
 #if QT_VERSION >= 0x040000
   QList<QTreeWidgetItem *> items (this->classLV->selectedItems());
   for (QList<QTreeWidgetItem *>::const_iterator itr = items.begin(); itr != items.end(); itr++) {
-    if (list.indexOf((*itr)->text(8)) == -1)
+    if (list.indexOf((*itr)->text(8)) == -1) {
       list.append((*itr)->text(8));
+    }
   } 
 #else
   QListViewItemIterator itL(this->classLV);
@@ -1807,9 +1810,9 @@ void browserW::selectAll()
     lv = this->javaLV;
   }
 #endif // VDMPP
-  else
+  else {
     lv = this->classLV;
-
+  }
   this->selectAllNodes(lv, true);
 }
 

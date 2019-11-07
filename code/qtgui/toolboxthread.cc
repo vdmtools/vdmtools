@@ -162,8 +162,9 @@ void ToolboxThread::runCommand(const ToolboxCMD & command)
       //const Sequence & comSeq (command.GetSequence(1));
       //wstring cmd (comSeq.GetString());
       QString cmd (((const ExecuteCommandCMD &)(command)).cmd());
-      if (cmd != "init")
+      if (cmd != "init") {
         enableStop();
+      }
       disableGUI();
       executeCommand((const ExecuteCommandCMD &)command);
       enableGUI();

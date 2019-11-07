@@ -59,8 +59,7 @@ QString Qt2TB::wstring2qstring(const wstring & ws)
 {
   size_t len_ws = ws.size();
   QString result;
-  for (size_t idx = 0; idx < len_ws; idx++)
-  {
+  for (size_t idx = 0; idx < len_ws; idx++) {
     QChar c = (ushort) ws[idx];
     result.append(c);
   }
@@ -70,8 +69,7 @@ QString Qt2TB::wstring2qstring(const wstring & ws)
 std::wstring Qt2TB::qstring2wstring(const QString & qs)
 {
   std::wstring result;
-  for (int i = 0; i < (int)qs.length(); i++)
-  {
+  for (int i = 0; i < (int)qs.length(); i++) {
     wchar_t c = (qs[i]).unicode();
     result.append(1, c);
   }
@@ -226,16 +224,13 @@ int Qt2TB::getModulesOfPackage(const QString & packageName,
   TYPE_ProjectTypes_FileName packageFileName (PTAUX::mk_FileName(qstring2wstring(packageName)));
   // map ProjectTypes`FileName to set of (ProjectTypes`FileName * ProjectTypes`FileName)
   Map packages (ToolMediator::GetFilesAndPackages(Char('/')));
-  if (packages.DomExists(packageFileName))
-  {
+  if (packages.DomExists(packageFileName)) {
     Set pairs (packages[packageFileName]); // set of (ProjectTypes`FileName * ProjectTypes`FileName)
     Generic g;
-    for (bool bb = pairs.First(g); bb; bb = pairs.Next(g))
-    {
+    for (bool bb = pairs.First(g); bb; bb = pairs.Next(g)) {
       Tuple pair (g); // (ProjectTypes`FileName * ProjectTypes`FileName)
       QString fileNm (wstring2qstring(PTAUX::ExtractFileName(pair.GetRecord(1))));
-      if ((isJava && isJavaFile(fileNm)) || (!isJava && !isJavaFile(fileNm)))
-      {
+      if ((isJava && isJavaFile(fileNm)) || (!isJava && !isJavaFile(fileNm))) {
         moduleStrings.append(fileNm);
         QString absFileNm (wstring2qstring(PTAUX::ExtractFileName(pair.GetRecord(2))));
         absStrings.append(absFileNm);
@@ -261,8 +256,7 @@ QStringList Qt2TB::getProjectFilesI()
   SET<TYPE_ProjectTypes_FileName> files (ToolMediator::Files());
   QStringList qsl;
   Generic fn;
-  for (bool bb = files.First(fn); bb; bb = files.Next(fn))
-  {
+  for (bool bb = files.First(fn); bb; bb = files.Next(fn)) {
     qsl.append(wstring2qstring(PTAUX::ExtractFileName(fn)));
   }
   return qsl;
@@ -274,8 +268,7 @@ QStringList Qt2TB::getFilesOfModule(const QString & mnm)
   SET<TYPE_ProjectTypes_FileName> files (ToolMediator::FileOfModule(mname));
   QStringList qsl;
   Generic fn;
-  for (bool bb = files.First(fn); bb; bb = files.Next(fn))
-  {
+  for (bool bb = files.First(fn); bb; bb = files.Next(fn)) {
     qsl.append(wstring2qstring(PTAUX::ExtractFileName(fn)));
   }
   return qsl;
@@ -286,16 +279,15 @@ QStringList Qt2TB::getFilesOfModules(bool vdm)
   SET<TYPE_ProjectTypes_ModuleName> modules (ToolMediator::AllModules());
   QStringList qsl;
   Generic mn;
-  for (bool bb = modules.First(mn); bb; bb = modules.Next(mn))
-  {
+  for (bool bb = modules.First(mn); bb; bb = modules.Next(mn)) {
     SET<TYPE_ProjectTypes_FileName> files (ToolMediator::FileOfModule(mn));
     Generic fn;
-    for (bool cc = files.First(fn); cc;  cc = files.Next(fn))
-    {
+    for (bool cc = files.First(fn); cc;  cc = files.Next(fn)) {
       QString filenm (wstring2qstring(PTAUX::ExtractFileName(fn)));
       if (!qsl.contains(filenm) &&
-          ((vdm && !isJavaFile(filenm)) || (!vdm && isJavaFile(filenm))))
+          ((vdm && !isJavaFile(filenm)) || (!vdm && isJavaFile(filenm)))) {
         qsl.append(filenm);
+      }
     }
   }
   return qsl;
@@ -323,8 +315,7 @@ QString Qt2TB::GetDefaultModName()
 void Qt2TB::GetModulePosInfoI(const QString & modnm, int * line, int * col, int * len)
 {
   Tuple t (ToolMediator::GetModulePosInfo(PTAUX::mk_ModuleName(qstring2wstring(modnm))));
-  if (t.GetBoolValue(1))
-  {
+  if (t.GetBoolValue(1)) {
     *line = t.GetIntValue(2);
     *col = t.GetIntValue(3);
     *len = t.GetIntValue(4);
@@ -334,8 +325,7 @@ void Qt2TB::GetModulePosInfoI(const QString & modnm, int * line, int * col, int 
 void Qt2TB::GetFnOpPosInfoI(const QString & modnm, int * line, int * col, int * len)
 {
   Tuple t (ToolMediator::GetFnOpPosInfo(qstring2wstring(modnm)));
-  if (t.GetBoolValue(1))
-  {
+  if (t.GetBoolValue(1)) {
     *line = t.GetIntValue(2);
     *col = t.GetIntValue(3);
     *len = t.GetIntValue(4);
@@ -349,8 +339,7 @@ QStringList Qt2TB::getModulesI(const QString & filename)
   SET<TYPE_ProjectTypes_ModuleName> mnm_s (ToolMediator::ModulesInFile(fname));
   QStringList modules;
   Generic mnm;
-  for (bool bb = mnm_s.First(mnm); bb; bb = mnm_s.Next(mnm))
-  {
+  for (bool bb = mnm_s.First(mnm); bb; bb = mnm_s.Next(mnm)) {
     modules.append(wstring2qstring(PTAUX::ExtractModuleName(mnm)));
   }
   return modules;
@@ -362,12 +351,10 @@ int Qt2TB::getOperationsI(const QString & clsnm, QStringList & ops)
   ops.clear();
   wstring classnameI (qstring2wstring(clsnm));
   Tuple t (TOOLS::GetOperations(classnameI)); // bool * seq of seq of char
-  if (t.GetBoolValue(1))
-  {
+  if (t.GetBoolValue(1)) {
     Sequence nm_l (t.GetSequence(2));
     size_t len_nm_l = nm_l.Length();
-    for (size_t idx = 1; idx <= len_nm_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_nm_l; idx++) {
       Sequence s (nm_l[idx]);
       ops.append(wstring2qstring(s.GetString()));
     }
@@ -623,17 +610,21 @@ bool Qt2TB::MapUMLI(QLIST<UMLClassState> & settings)
         break;
       }
       case ACTION_VDM2UML: {
-        if(settings[i].vdmStatus == STATUS_DELETED)
+        if(settings[i].vdmStatus == STATUS_DELETED) {
           guiSettings.Insert(className, mk_(Bool(false), Bool(false)));
-        else
+        }
+        else {
           guiSettings.Insert(className, mk_(Bool(true), Bool(false)));
+        }
         break;
       }
       case ACTION_UML2VDM: {
-        if(settings[i].umlStatus == STATUS_DELETED)
+        if(settings[i].umlStatus == STATUS_DELETED) {
           guiSettings.Insert(className, mk_(Bool(false), Bool(false)));
-        else
+        }
+        else {
           guiSettings.Insert(className, mk_(Bool(false), Bool(true)));
+        }
         break;
       }
       case ACTION_DELETE: {
@@ -730,8 +721,7 @@ void Qt2TB::ResetMapper()
 void Qt2TB::UMLDiff(const QStringList & classes)
 {
   type_cLS classesSet;
-  for (QStringList::const_iterator it = classes.begin(); it != classes.end(); ++it)
-  {
+  for (QStringList::const_iterator it = classes.begin(); it != classes.end(); ++it) {
     classesSet.Insert(SEQ<Char>(Qt2TB::qstring2wstring(*it)));
   }
   ToolMediator::UMLT()->vdm_Diff(classesSet);
@@ -757,8 +747,7 @@ QStringList Qt2TB::getPossibleInterfacesI()
   SET<TYPE_ProjectTypes_ModuleName> possibleInterfaces (ToolMediator::BTools()->vdm_GetPossibleInterfaces());
   QStringList qsl;
   Generic mn;
-  for (bool bb = possibleInterfaces.First(mn); bb; bb = possibleInterfaces.Next(mn))
-  {
+  for (bool bb = possibleInterfaces.First(mn); bb; bb = possibleInterfaces.Next(mn)) {
     qsl.append(wstring2qstring(PTAUX::ExtractModuleName(mn)));
   }
   return qsl;
@@ -770,24 +759,25 @@ QStringList Qt2TB::getSelectedInterfacesI(const QStringList & posSet)
   SET<TYPE_ProjectTypes_ModuleName> obs;
   QStringList qsl;
   Generic mn;
-  for (bool bb = actualInterfaces.First(mn); bb; bb = actualInterfaces.Next(mn))
-  {
+  for (bool bb = actualInterfaces.First(mn); bb; bb = actualInterfaces.Next(mn)) {
     QString mnm (wstring2qstring(PTAUX::ExtractModuleName(mn)));
-    if (posSet.contains(mnm))
+    if (posSet.contains(mnm)) {
       qsl.append(mnm);
-    else
+    }
+    else {
       obs.Insert(mn);
+    }
   }
-  if (!obs.IsEmpty())
+  if (!obs.IsEmpty()) {
     Settings.SetJCGInterfaces(actualInterfaces.Diff(obs));
+  }
   return qsl;
 }
 
 void Qt2TB::setSelectedInterfacesI(const QStringList & interfaces)
 {
   SET<TYPE_ProjectTypes_ModuleName> newSelectedSet;
-  for (QStringList::const_iterator it = interfaces.begin(); it != interfaces.end(); ++it)
-  {
+  for (QStringList::const_iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
     newSelectedSet.Insert(PTAUX::mk_ModuleName(qstring2wstring(*it)));
   }
   Settings.SetJCGInterfaces(newSelectedSet);
@@ -796,8 +786,7 @@ void Qt2TB::setSelectedInterfacesI(const QStringList & interfaces)
 QStringList Qt2TB::getActivatedInterfacesI(const QStringList & newSelectedInterfaces)
 {
   SET<TYPE_ProjectTypes_ModuleName> newSelectedSet;
-  for (QStringList::const_iterator it = newSelectedInterfaces.begin(); it != newSelectedInterfaces.end(); ++it)
-  {
+  for (QStringList::const_iterator it = newSelectedInterfaces.begin(); it != newSelectedInterfaces.end(); ++it) {
     newSelectedSet.Insert(PTAUX::mk_ModuleName(qstring2wstring(*it)));
   }
   SET<TYPE_ProjectTypes_ModuleName> origSetting_JCG_INTERFACES (Settings.GetJCGInterfaces());
@@ -809,12 +798,10 @@ QStringList Qt2TB::getActivatedInterfacesI(const QStringList & newSelectedInterf
 
 void Qt2TB::setExpression(const QString & expr)
 {
-  if(expr.isEmpty())
-  {
+  if(expr.isEmpty()) {
     Settings.SetExpression(Nil());
   }
-  else
-  {
+  else {
     Settings.SetExpression(Sequence(Qt2TB::qstring2wstring(expr)));
   }
 }
@@ -822,8 +809,7 @@ void Qt2TB::setExpression(const QString & expr)
 QString Qt2TB::getExpression()
 {
   QString expr;
-  if (!Settings.GetExpression().IsNil())
-  {
+  if (!Settings.GetExpression().IsNil()) {
     Sequence exprSeq (Settings.GetExpression());
     expr = Qt2TB::wstring2qstring(exprSeq.GetString());
   }
@@ -832,12 +818,10 @@ QString Qt2TB::getExpression()
 
 void Qt2TB::setJavaCGPackage(const QString & package)
 {
-  if(package.isEmpty())
-  {
+  if(package.isEmpty()) {
     Settings.SetJCGPackage(Nil());
   }
-  else
-  {
+  else {
     Settings.SetJCGPackage(Sequence(Qt2TB::qstring2wstring(package)));
   }
 }
@@ -845,8 +829,7 @@ void Qt2TB::setJavaCGPackage(const QString & package)
 QString Qt2TB::getJavaCGPackage()
 {
   QString package;
-  if (!Settings.GetJCGPackage().IsNil())
-  {
+  if (!Settings.GetJCGPackage().IsNil()) {
     Sequence packageSeq (Settings.GetJCGPackage());
     package = Qt2TB::wstring2qstring(packageSeq.GetString());
   }
@@ -861,13 +844,11 @@ bool Qt2TB::CallLog()
 void Qt2TB::ToggleCallLog()
 {
   bool calllog = Settings.CallLog();
-  if (calllog)
-  {
+  if (calllog) {
     Settings.CallLogOff();
     TOOLS::CloseCallLog();
   }
-  else
-  {
+  else {
     Settings.CallLogOn();
     TOOLS::OpenCallLog();
   }
@@ -1284,10 +1265,11 @@ bool Qt2TB::isFileModifiedI(const QString& name)
 bool Qt2TB::stateIsSavedI()
 {
   QStringList list (getProjectFilesI());
-  if( list.empty() ) return true;
-
-  Bool b (ToolMediator::StateIsSaved());
-  return b.GetValue();
+  if( !list.empty() ) {
+    Bool b (ToolMediator::StateIsSaved());
+    return b.GetValue();
+  }
+  return true;
 }
 
 void Qt2TB::SetSavedFileState(bool b)
@@ -1566,14 +1548,15 @@ std::wstring Qt2TB::GetFileNameI(int fileid)
 
 std::wstring Qt2TB::GetSrcFileI(const wstring & file)
 {
-  if (!file.empty())
-  {
+  if (!file.empty()) {
     TYPE_ProjectTypes_FileName tfn (ToolMediator::GetVDMTempFileName (PTAUX::mk_FileName (file)));
     std::wstring src (PTAUX::ExtractFileName (tfn));
-    if (src.empty())
+    if (src.empty()) {
       return file;
-    else
+    }
+    else {
       return src;
+    }
   }
   return std::wstring(L"");
 }

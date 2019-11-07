@@ -36,7 +36,9 @@ searchW::searchW( QWidget* parent,  const char* name, WFlags fl )
 #if QT_VERSION >= 0x040000
   this->setWindowTitle( tr( "Search Identifier" ) );
 #else
-  if ( !name ) setName( "searchW" );
+  if ( !name ) {
+    setName( "searchW" );
+  }
   this->setCaption( tr( "Search Identifier" ) );
 #endif // QT_VERSION >= 0x040000
 
@@ -53,15 +55,14 @@ bool searchW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
 #ifdef __APPLE_CC__
-  if (e->type() == QEvent::Paint)
-  {
-    if (this->pcount < 2)
-    {
+  if (e->type() == QEvent::Paint) {
+    if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
     }
-    else
+    else {
       this->pcount = 0;
+    }
   }
 #endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
@@ -181,11 +182,12 @@ void searchW::addOccurence(int occnum,
   OccurenceInfo oi (filename, tempFilename, line, col, length, occnum, def); 
 
   QString numStr;
-  if (oi.isDef())
+  if (oi.isDef()) {
     numStr.sprintf("+(%d): ", occnum);
-  else
+  }
+  else {
     numStr.sprintf(" (%d): ", occnum);
-
+  }
   QString tmpStr;
   tmpStr.sprintf(" Line %d, Column %d", line, col);
 
@@ -203,8 +205,7 @@ void searchW::addOccurence(int occnum,
 
 void searchW::occurenceSelected(int selectedIndex)
 {
-  if ((selectedIndex >= 0) && (selectedIndex < (int)(this->occurences.count())))
-  {
+  if ((selectedIndex >= 0) && (selectedIndex < (int)(this->occurences.count()))) {
     this->currentIndex = selectedIndex;
     this->showOccurence(this->currentIndex);
   }
@@ -212,14 +213,15 @@ void searchW::occurenceSelected(int selectedIndex)
 
 void searchW::showOccurence( int index )
 {
-  if ((index >= 0) && (index < (int)(this->occurenceList->count())))
-  {
+  if ((index >= 0) && (index < (int)(this->occurenceList->count()))) {
 #if QT_VERSION >= 0x040000
-    if (index != this->occurenceList->currentRow())
+    if (index != this->occurenceList->currentRow()) {
       this->occurenceList->setCurrentRow(index);
+    }
 #else
-    if (index != this->occurenceList->currentItem())
+    if (index != this->occurenceList->currentItem()) {
       this->occurenceList->setCurrentItem(index);
+    }
 #endif // QT_VERSION >= 0x040000
 
     OccurenceInfo oi = this->occurences[index];
@@ -292,8 +294,7 @@ void searchW::lastOccurence()
 void searchW::setCaption(const QString & msg)
 {
   QString caption;
-  if (this->numOccurences != 0)
-  {
+  if (this->numOccurences != 0) {
     QString fm1 (QString( ": %1 ") + (this->numOccurences == 1 ? "Occurence" : "Occurences"));
 
 #if QT_VERSION >= 0x040000
@@ -339,10 +340,12 @@ OccurenceInfo::OccurenceInfo(const QString & fname,
                              bool def)
 {
   this->title = fname;
-  if (!tempFilename.isEmpty())
+  if (!tempFilename.isEmpty()) {
     this->filename = tempFilename;
-  else
+  }
+  else {
     this->filename = fname;
+  }
   this->mLine = line;
   this->mCol = col;
   this->mLength = length;
@@ -356,8 +359,7 @@ void searchW::search()
   bool defOnly = this->if_definitionOnly->isChecked();
   QString str = this->if_searchId->text();
 
-  if (!str.isEmpty())
-  {
+  if (!str.isEmpty()) {
     this->clearAllOccurences();
     emit searchId(str, partial, defOnly);
   }

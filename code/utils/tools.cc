@@ -274,10 +274,12 @@ SEQ<Record> ToolMediator::GetAllASTs ()
 wstring ToolMediator::GetFileName(int fileid)
 {
   Generic file (ToolMediator::mediator->vdm_GetFileName (fileid));
-  if (file.IsRecord () && PTAUX::is_FileName(file))
+  if (file.IsRecord () && PTAUX::is_FileName(file)) {
     return PTAUX::ExtractFileName(file);
-  else
+  }
+  else {
     return L"";
+  }
 }
 // end of ToolMediator
 
@@ -301,13 +303,14 @@ Map TOOLS::abbrev;
 int TOOLS::CheckAbbrev (const Text & fullname, const Set & abbreviations)
 {
   int whatswrong = 0;
-  if (!abbreviations.InSet (fullname))
+  if (!abbreviations.InSet (fullname)) {
     whatswrong += 1;
-
+  }
   Set ab_dom (abbrev.Dom ());
   ab_dom.ImpIntersect (abbreviations);
-  if (!ab_dom.IsEmpty())
+  if (!ab_dom.IsEmpty()) {
     whatswrong += 2;
+  }
   // whatswrong == 0 <=> OK
   // whatswrong == 1 <=> fullname not a legal abbreviation
   // whatswrong == 2 <=> some abbreviation already defined
@@ -334,8 +337,9 @@ void TOOLS::AddCommand (const wchar_t * forms_)
 
   Generic a;
   Text fn (allforms[0]);
-  for (bool bb = abb.First (a); bb; bb = abb.Next (a))
+  for (bool bb = abb.First (a); bb; bb = abb.Next (a)) {
     TOOLS::abbrev.Insert (a, fn);
+  }
 }
 
 void TOOLS::InitDebugCommands ()
@@ -481,9 +485,9 @@ void TOOLS::InitDebugCommands ()
 void TOOLS::UpdateSS(const Record & mod)
 {
 #ifdef VDMSL
-  if (!TOOLS::isBatchMode())
+  if (!TOOLS::isBatchMode()) {
     GetStatSem().ResetErrors();
-
+  }
   GetStatSem().UpdateModuleEnv (mod);
 
 #endif //VDMSL
@@ -499,12 +503,10 @@ void TOOLS::UpdateSS(const Record & mod)
 void TOOLS::UpdateToolbox ()
 {
 #ifdef VDMSL
-  if (ToolMediator::Repos()->vdm_IsSession (struct_session))
-  {
+  if (ToolMediator::Repos()->vdm_IsSession (struct_session)) {
     SEQ<Record> ast_l (ToolMediator::GetVDMASTs ());
     int len_ast_l = ast_l.Length();
-    for (int idx = 1; idx <= len_ast_l; idx++)
-    {
+    for (int idx = 1; idx <= len_ast_l; idx++) {
       UpdateSS(ast_l[idx]);
     }
   }
@@ -602,16 +604,17 @@ enum { C_flag_NONE = 0,
 
 void TOOLS::PrintConsistencyStatus()
 {
-  if (Settings.GetCFlag() == 0)
-  return;
-
-  wofstream of("vdmrun.debug", ios::app);
-  if (! of)
+  if (Settings.GetCFlag() == 0) {
     return;
-
+  }
+  wofstream of("vdmrun.debug", ios::app);
+  if (! of) {
+    return;
+  }
   of << L"Start " << TBUTILS::GetDateString( "%Y%m%d %H:%M:%S" ) << L" flag=" << Settings.GetCFlag() << endl;
-  if (Settings.GetCFlag() & C_flag_Interpreter)
+  if (Settings.GetCFlag() & C_flag_Interpreter) {
     TBDEBUG::PrintEvaluatorStatus(of, true);
+  }
   of << L"End" << endl;
   of.close();
 }
@@ -640,8 +643,9 @@ void TOOLS::CleanUp()
   }
 
 #ifdef CORBA_API
-if (!TOOLS::isBatchMode())
-  TOOLS::TerminateCorbaApi();
+  if (!TOOLS::isBatchMode()) {
+    TOOLS::TerminateCorbaApi();
+  }
 #endif //CORBA_API
 }
 
@@ -658,7 +662,9 @@ wstring TOOLS::ExpandCommand (wstring & what_the_user_wrote)
 {
   int Max = what_the_user_wrote.length();
   int start = 0;
-  while (start < Max && iswspace(what_the_user_wrote[start])) start++;
+  while (start < Max && iswspace(what_the_user_wrote[start])) {
+    start++;
+  }
   int end = start;
 
   if (what_the_user_wrote[start] == '!') {
@@ -712,8 +718,9 @@ bool TOOLS::ReadScriptFile (const wstring & short_name)
     while ((sp.peek () != EOF) && (sp.peek () != '\x0a') && (sp.peek () != '\x0d')) {
       input += (char) sp.get (); // without cast OS/2 appends ascii: A->L"65"
     }
-    if (input.empty()) break;
-
+    if (input.empty()) {
+      break;
+    }
     wstring inputw (TBWSTR::mbstr2wstring(input));
     wstring cmd (inputw);
     wstring command (TOOLS::ExpandCommand (inputw));
@@ -1197,22 +1204,10 @@ void TOOLS::EvalBreak(const wstring & args, wostream & wos)
   int nos = STR_split (args, bpkts, 20, STR_RXwhite_and_comma);
 
   switch(nos) {
-    case 0: {
-      TBDEBUG::PrintBreakpoints(wos);
-      break;
-    }
-    case 1: {
-      TBDEBUG::EvalBreakOnName(bpkts[0], wos);
-      break;
-    }
-    case 2: {
-      TBDEBUG::EvalBreakOnPos(bpkts[0], bpkts[1], wstring(L"1"), wos);
-      break;
-    }
-    case 3: {
-      TBDEBUG::EvalBreakOnPos(bpkts[0], bpkts[1], bpkts[2], wos);
-      break;
-    }
+    case 0: { TBDEBUG::PrintBreakpoints(wos); break; }
+    case 1: { TBDEBUG::EvalBreakOnName(bpkts[0], wos); break; }
+    case 2: { TBDEBUG::EvalBreakOnPos(bpkts[0], bpkts[1], wstring(L"1"), wos); break; }
+    case 3: { TBDEBUG::EvalBreakOnPos(bpkts[0], bpkts[1], bpkts[2], wos); break; }
     default: {
       vdm_iplog << L"Invalid use of break!" << endl;
       TBDEBUG::PrintBreakSyntax(wos);
@@ -3176,15 +3171,16 @@ void TOOLS::EvalInfo (wostream & wos)
   double d = N / InfoCol;
   int n;                        // Column height
   n = (int) floor(d);
-  if (i % InfoCol)
+  if (i % InfoCol) {
     n++;
-
+  }
   for (i=0; i < n; i++) {
     int k=0;
     for (int j=i; j < N; j=j+n) {
       len = wstring (shown_infos[j].str).length ();
-      if (len > maxlen[k])
+      if (len > maxlen[k]) {
         maxlen[k] = len;
+      }
       k++;
     }
   }

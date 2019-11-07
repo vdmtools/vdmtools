@@ -30,7 +30,9 @@ logW::logW( QWidget* parent,  const char* name, WFlags fl )
 #if QT_VERSION >= 0x040000
   this->setWindowTitle( tr( "Log Window" ) );
 #else
-  if ( !name ) this->setName( "logW" );
+  if ( !name ) {
+    this->setName( "logW" );
+  }
   this->setCaption( tr( "Log Window" ) );
 #endif // QT_VERSION >= 0x040000
 
@@ -48,15 +50,14 @@ bool logW::event (QEvent * e)
 {
 #if QT_VERSION >= 0x040800
 #ifdef __APPLE_CC__
-  if (e->type() == QEvent::Paint)
-  {
-    if (this->pcount < 2)
-    {
+  if (e->type() == QEvent::Paint) {
+    if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
     }
-    else
+    else {
       this->pcount = 0;
+    }
   }
 #endif // __APPLE_CC__
 #endif // QT_VERSION >= 0x040000
@@ -93,30 +94,29 @@ logW::~logW()
 
 void logW::write( const QString& msg )
 {
-  if( this->logML == NULL ) return;
+  if( NULL != this->logML ) {
 
-  QString prompt (">>> ");
+    QString prompt (">>> ");
 
-  QString nhe(msg);
-  if (nhe.right(1) == "\n")
-    nhe.remove(nhe.length()-1, 1);
-
-#if QT_VERSION >= 0x040000
-  this->logML->append(prompt + nhe);
-#else
-  if (this->maxlines > 0)
-  {
-    this->logML->setUpdatesEnabled(FALSE);
-    while (this->maxlines < this->logML->paragraphs())
-    {
-      this->logML->removeParagraph(0);
+    QString nhe(msg);
+    if (nhe.right(1) == "\n") {
+      nhe.remove(nhe.length()-1, 1);
     }
-    this->logML->moveCursor(QTextEdit::MoveEnd, false);
-    this->logML->setUpdatesEnabled(TRUE);
-  }
-  this->logML->append(prompt + nhe);
-  this->logML->repaint();
+#if QT_VERSION >= 0x040000
+    this->logML->append(prompt + nhe);
+#else
+    if (this->maxlines > 0) {
+      this->logML->setUpdatesEnabled(FALSE);
+      while (this->maxlines < this->logML->paragraphs()) {
+        this->logML->removeParagraph(0);
+      }
+      this->logML->moveCursor(QTextEdit::MoveEnd, false);
+      this->logML->setUpdatesEnabled(TRUE);
+    }
+    this->logML->append(prompt + nhe);
+    this->logML->repaint();
 #endif // QT_VERSION >= 0x040000
+  }
 }
 
 void logW::setBusy(bool busy)

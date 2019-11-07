@@ -134,7 +134,9 @@ QString getApplicationPath( QApplication& app )
     }
   }
   char* cwd = getcwd( NULL, 0 );   
-  if( cwd == NULL ) return QString( "./" );
+  if( cwd == NULL ) {
+    return QString( "./" );
+  }
   QString cdir( cwd );
   free( cwd );
 
@@ -277,8 +279,7 @@ int main (int argc, char * argv[])
 #ifndef __linux__
   QString pdirnm (QCoreApplication::applicationDirPath () + QString("/plugins"));
   QDir pdir (pdirnm);
-  if (pdir.exists())
-  {
+  if (pdir.exists()) {
     // remove default (hard coded) plugin directory path and
     // add local plugin directory path
     QStringList paths;
@@ -368,8 +369,9 @@ int main (int argc, char * argv[])
   QObject::connect( &app, SIGNAL(lastWindowClosed()), &app, SLOT(quit()) );
 
   // Check that the env vars etc could be read ok
-  if (!mainw->initOk()) Qt2TB::ExitToolboxI(-1);
-
+  if (!mainw->initOk()) {
+    Qt2TB::ExitToolboxI(-1);
+  }
   bool uses_corba = false;
   wstring err;
   if(!Qt2TB::InitCorbaApiI(argc, argv, err)) {
@@ -378,22 +380,21 @@ int main (int argc, char * argv[])
     QMessageBox::critical(mainw, "Toolbox", errmsg); 
     Qt2TB::ExitToolboxI(0);
   }
-  else
-  {
+  else {
     uses_corba = true;
   }
 
   // Load Recent Project
   mainw->loadProjectHistory();
 
-  if (argc > 1)
-  {
+  if (argc > 1) {
     QString file (Qt2TB::wstring2qstring(TBWSTR::fsstr2wstring(argv[1])));
 #ifdef _MSC_VER
     file.replace("\\", "/");
 #endif // _MSC_VER
-    if (QFile(file).exists())
+    if (QFile(file).exists()) {
       mainw->loadProject(file);
+    }
   }
 
   mainw->createApiTimer(uses_corba);

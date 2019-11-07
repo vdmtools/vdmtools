@@ -623,8 +623,7 @@ QLayout* toolOptionsDialog::createStyleLayout( QWidget* parent )
 #endif // QT_VERSION >= 0x040000
 
   QStringList list = QStyleFactory::keys();
-  for ( QStringList::Iterator it = list.begin(); it != list.end(); ++it )
-  {
+  for ( QStringList::Iterator it = list.begin(); it != list.end(); ++it ) {
 #if QT_VERSION >= 0x040000
     cbox->addItem( *it );
 #else
@@ -687,7 +686,6 @@ QWidget* toolOptionsDialog::createMaxLogLinesGroupBox( QWidget* parent )
   gbox->setTitle( tr("Log Lines") );
   QLayout* layout = gbox->layout();
 
-//  QHBoxLayout* hlayout = new QHBoxLayout();
   QHBoxLayout* hlayout = this->createHBoxLayout( NULL );
 
   hlayout->addItem( this->createMaxLogLinesLayout( gbox ) );
@@ -993,12 +991,10 @@ bool toolOptionsDialog::loadOptions()
   QString tmp = initStream.readLine();
   initFile.close();
 
-  if( tmp == "FormatVersion:2" )
-  {
+  if( tmp == "FormatVersion:2" ) {
     return this->loadOptionsV2();
   }
-  else
-  {
+  else {
     return this->loadOptionsV1();
   }
 }

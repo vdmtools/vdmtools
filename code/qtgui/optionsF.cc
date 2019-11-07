@@ -44,7 +44,9 @@ optionsW::optionsW( QWidget* parent, const char* name, bool modal, WFlags fl )
   this->setModal(modal);
   this->setWindowTitle( tr( "Project Options" ) );
 #else
-  if ( !name ) this->setName( "optionsW" );
+  if ( !name ) {
+    this->setName( "optionsW" );
+  }
   this->setCaption( tr( "Project Options" ) );
 #endif // QT_VERSION >= 0x040000
   this->setSizeGripEnabled( true );
@@ -729,8 +731,6 @@ QWidget* optionsW::createTypeCheckerButtonGroup( QWidget* parent )
   layout->addWidget(radio1);
   layout->addWidget(radio2);
   bg->setLayout(layout);
-
-//  bg->setSizePolicy(QSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum));
 #else
   QVButtonGroup* bg = new QVButtonGroup(tr("Type Check Mode"), parent, "tcButtons");
 
@@ -741,9 +741,6 @@ QWidget* optionsW::createTypeCheckerButtonGroup( QWidget* parent )
   QRadioButton* radio2 = new QRadioButton(bg, "tcDef");
   radio2->setText( tr( "\"def\" type check" ) );
   this->tc_defTc = radio2;
-
-//  bg->setFixedSize( bg->sizeHint() );
-//  bg->setSizePolicy(QSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum));
 #endif // QT_VERSION >= 0x040000
 
   return bg;
@@ -997,12 +994,9 @@ QWidget* optionsW::createJavaCodeGeneratorFrame( QWidget* parent )
   this->jcg_needBackup->setText( tr( "Create backup file (*.bak)" ) );
   vlayout2->addWidget( this->jcg_needBackup);
 
-//  vlayout2->addWidget( new QLabel( frame)); // dummy
-
   hlayout->addLayout(vlayout1);
   hlayout->addLayout(vlayout2);
   layout->addLayout(hlayout);
-//  layout->addItem( this->createSpacer() );
 
   layout->addWidget( this->createJavaInterfacesButton( frame ) );
   layout->addLayout( this->createJavaPackageLayout( frame ) );
@@ -1077,7 +1071,6 @@ QLayout* optionsW::createVICELayout2( QWidget* parent )
   QVBoxLayout* layout = this->createVBoxLayout( NULL ); 
 
   layout->addWidget( this->createTraceLogGroupBox( parent ) );
-//  layout->addItem( this->createSpacer() );
 
   return layout;
 }
@@ -1767,7 +1760,6 @@ void optionsW::logArgsAllEnabled()
 {
 #ifdef VICE
   if(this->ip_logArgsAllCheck->isChecked()) {
-//    this->ip_opsSelectButton->setEnabled(false);
     this->ip_selectedOpsList->setEnabled(false);
     this->ip_classNameLabel->setEnabled(false);
     this->ip_className->setEnabled(false);
@@ -1777,7 +1769,6 @@ void optionsW::logArgsAllEnabled()
     this->ip_opDelButton->setEnabled(false);
   }
   else {
-//    this->ip_opsSelectButton->setEnabled(true);
     this->ip_selectedOpsList->setEnabled(true);
     this->ip_classNameLabel->setEnabled(true);
     this->ip_className->setEnabled(true);

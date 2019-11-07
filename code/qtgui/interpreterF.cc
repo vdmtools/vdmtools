@@ -188,7 +188,9 @@ interpreterW::interpreterW(QWidget* parent, const char* name, WFlags fl)
 #if QT_VERSION >= 0x040000
   this->setWindowTitle( tr( "Interpreter Window" ) );
 #else
-  if ( !name ) setName( "interpreterW" );
+  if ( !name ) {
+    setName( "interpreterW" );
+  }
   this->setCaption( tr( "Interpreter Window" ) );
 #endif // QT_VERSION >= 0x040000
 

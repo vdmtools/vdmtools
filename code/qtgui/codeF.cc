@@ -52,7 +52,9 @@ codeW::codeW( QWidget* parent,  const char* name, WFlags fl )
 #if QT_VERSION >= 0x040000
   this->setWindowTitle( tr( "Source Window" ) );
 #else
-  if ( !name ) setName( "codeW" );
+  if ( !name ) {
+    setName( "codeW" );
+  }
   this->setCaption( tr( "Source Window" ) );
 #endif // QT_VERSION >= 0x040000
 
@@ -494,8 +496,7 @@ void codeW::openIn(const QString & title, const QString & filenameI_,
     this->editMap[title]->setCursorPosition(0, 0);
 #endif // QT_VERSION >= 0x040000
   }
-  else
-  {
+  else {
     int para = lineI - 1;
 #if QT_VERSION >= 0x040000
     QTextCursor tc (this->editMap[title]->textCursor());
@@ -940,11 +941,10 @@ int codeW::pages()
 void codeW::selectAll()
 {
   QString title (getCurrentTitle());
-  if (!title.isEmpty())
-  {
-    if (!this->tabMap.contains(title)) 
+  if (!title.isEmpty()) {
+    if (!this->tabMap.contains(title)) {
       return ; //file not open
-
+    }
 #if QT_VERSION >= 0x040000
     this->editMap[title]->selectAll();
 #else
@@ -955,9 +955,9 @@ void codeW::selectAll()
 
 QString codeW::getCurrentTitle()
 {
-  if (this->tabMap.isEmpty())
+  if (this->tabMap.isEmpty()) {
     return QString("");
-
+  }
 #ifdef __linux__
 #if QT_VERSION >= 0x040000
   for (QMap<QString, QWidget*>::const_iterator it = this->tabMap.constBegin();
@@ -1005,8 +1005,7 @@ void MyTextEdit::contextMenuEvent ( QContextMenuEvent * event )
   menu->addSeparator();
   menu->addAction(tr("Set Breakpoint"));
   QString sel (this->textCursor().selectedText());
-  if (!sel.isEmpty())
-  {
+  if (!sel.isEmpty()) {
     CMENU_PRINTX = tr("Print %1").arg(sel);
     menu->addSeparator();
     //menu->addAction(QString("Print ") + sel);
@@ -1022,21 +1021,24 @@ void MyTextEdit::contextMenuEvent ( QContextMenuEvent * event )
 void MyTextEdit::contextMenuTriggered(QAction * a)
 {
 #if QT_VERSION >= 0x040000
-  if (a->text() == tr("Initialize"))
+  if (a->text() == tr("Initialize")) {
     emit ip_init();
-  else if (a->text() == tr("Continue"))
-    emit ip_cont();
-  else if (a->text() == tr("Step"))
-    emit ip_step();
-  else if (a->text() == tr("External Editor"))
-    emit cd_editor();
-  else if (a->text() == tr("Set Breakpoint"))
-  {
-    if (this->textCursor().hasSelection())
-      emit setBreakPoint();
   }
-  else if (a->text() == CMENU_PRINTX)
-  {
+  else if (a->text() == tr("Continue")) {
+    emit ip_cont();
+  }
+  else if (a->text() == tr("Step")) {
+    emit ip_step();
+  }
+  else if (a->text() == tr("External Editor")) {
+    emit cd_editor();
+  }
+  else if (a->text() == tr("Set Breakpoint")) {
+    if (this->textCursor().hasSelection()) {
+      emit setBreakPoint();
+    }
+  }
+  else if (a->text() == CMENU_PRINTX) {
     QString cmd (QString("print %1").arg(this->textCursor().selectedText()));
     emit runCommand( cmd );
   }
@@ -1053,10 +1055,8 @@ void codeW::changeEvent(QEvent * e)
 
   QWidget::changeEvent(e);
 
-  if ((this->oldState == Qt::WindowMinimized) && (newState == Qt::WindowNoState))
-  {
-    if (this->openAtMinimized)
-    {
+  if ((this->oldState == Qt::WindowMinimized) && (newState == Qt::WindowNoState)) {
+    if (this->openAtMinimized) {
       emit resetFilePosition( this->oldTitle, this->oldFilename, this->oldLine, this->oldCol, this->oldLength );
     }
   }
@@ -1074,8 +1074,9 @@ QString codeW::ConvertToShortPathName(const QString path)
   wchar_t *buffer = NULL;
 
   length = GetShortPathNameW(pathstr.c_str(), NULL, 0);
-  if (length == 0) return path;
-
+  if (length == 0) {
+    return path;
+  }
   length += 2;
   buffer = new wchar_t[length];
   length = GetShortPathNameW(pathstr.c_str(), buffer, length);
