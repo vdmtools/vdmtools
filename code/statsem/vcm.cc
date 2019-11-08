@@ -1223,15 +1223,13 @@ Map StatSem::ExportPolyFns (const Generic & modid, const MAP<TYPE_AS_Name, TYPE_
 
         fns.Insert (SetName (modid, nm), MakePolyRng (mk_REP_PolyTypeRep(r_l, fntp), accs, stat));
 
-        if (!prefn.IsNil ())
-        {
+        if (!prefn.IsNil ()) {
           Tuple infer (MakePolyPreType(r_l, fntp));
           TYPE_REP_PolyTypeRep ptr (mk_REP_PolyTypeRep(infer.GetSequence(1), infer.GetRecord(2)));
           fns.Insert (SetName (modid, Pre (nm)), MakePolyRng (ptr, accs, stat));
         }
 
-        if (!postfn.IsNil ())
-        {
+        if (!postfn.IsNil ()) {
           Tuple infer (MakePolyPostType(r_l, fntp));
           TYPE_REP_PolyTypeRep ptr (mk_REP_PolyTypeRep(infer.GetSequence(1), infer.GetRecord(2)));
           fns.Insert (SetName(modid, Post(nm)), MakePolyRng(ptr, accs, stat));
@@ -1457,8 +1455,7 @@ Tuple StatSem::ExportSomeTypes (const Generic & modid,
         }
       }
     }
-    else
-    {
+    else {
       TYPE_AS_TypeDef td (typem[nm]);
       TYPE_AS_Type tp (td.GetRecord(pos_AS_TypeDef_shape));
       if (modid.IsNil ()) {

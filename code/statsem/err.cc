@@ -395,10 +395,12 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
       bool first = true;
       Generic g;
       for(bool bb = tp_s.First(g); bb; bb = tp_s.Next(g)) {
-        if (!first)
+        if (!first) {
           str += L" | ";
-        else
+        }
+        else {
           first = false;
+        }
         str += Type2Ascii (g, newlevel);
       }
       str += L" )";
@@ -483,8 +485,7 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
         else if (tp_l.Length () == 1) {
           str += Type2Ascii (tp_l.Hd (), newlevel);
         }
-        else
-        {
+        else {
           TYPE_REP_ProductTypeRep rc;
           rc.SetField (pos_REP_ProductTypeRep_tps, tp_l);
           str += Type2Ascii (rc, newlevel);
@@ -560,10 +561,12 @@ wstring StatSem::Type2Ascii (const TYPE_REP_TypeRep & tp, int level) const
       return L"{}";
     }
     case TAG_TYPE_REP_EmptySeqTypeRep: {
-      if (tp.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) == btp_char)
+      if (tp.GetRecord(pos_REP_EmptySeqTypeRep_elemtp) == btp_char) {
         return L"\"\"";
-      else
+      }
+      else {
         return L"[]";
+      }
     }
     case TAG_TYPE_REP_EmptyMapTypeRep: {
       return L"{|->}";

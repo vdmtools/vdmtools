@@ -49,17 +49,16 @@ Map SSREC::disting_recMap(const Map & fnm, const Map & recmap)
   Map res;
   Set nm_l (fnm.Dom());
   Generic x;
-  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x))
-  {
+  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x)) {
     TYPE_SSENV_FunctionInfo fi (recmap[x]);
     Set s (fnm[x]);
     SET<TYPE_AS_Name> newrec;
     Generic y_;
-    for (bool cc = s.First(y_); cc; cc = s.Next(y_))
-    {
+    for (bool cc = s.First(y_); cc; cc = s.Next(y_)) {
       Sequence y (y_);
-      if (y[y.Length()] == x)
+      if (y[y.Length()] == x) {
         newrec.Insert(y.Hd());
+      }
     }
     fi.set_rec(newrec);
     res.ImpModify(x, fi);
@@ -76,16 +75,13 @@ Map SSREC::createRecMap(const Map & icm, const Map & recmap)
   Map res;
   Set nm_l (recmap.Dom());
   Generic x;
-  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x))
-  {
+  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x)) {
     TYPE_SSENV_FunctionInfo fi (recmap[x]);
     Set s (fi.get_rec());
     SET<TYPE_AS_Name> newrec;
     Generic y;
-    for (bool cc = s.First(y); cc; cc = s.Next(y))
-    {
-      if ((x == y) || Set(icm[y]).InSet(x))
-      {
+    for (bool cc = s.First(y); cc; cc = s.Next(y)) {
+      if ((x == y) || Set(icm[y]).InSet(x)) {
         newrec.Insert(y);
       }
     }
@@ -103,14 +99,12 @@ Map SSREC::recMapSet2Seq(const Map & fnm)
   Map res;
   Set nm_l (fnm.Dom());
   Generic x;
-  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x))
-  {
+  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x)) {
     TYPE_SSENV_FunctionInfo fi (fnm[x]);
     SET<TYPE_AS_Name> rec (fi.get_rec());
     Set s;
     Generic y;
-    for (bool cc = rec.First(y); cc; cc = rec.Next(y))
-    {
+    for (bool cc = rec.First(y); cc; cc = rec.Next(y)) {
       Sequence l;
       l.ImpAppend(y);
       s.Insert(l);
@@ -128,8 +122,7 @@ Map SSREC::createDirectCallMap(const Map & fnm)
   Map res;
   Set nm_s (fnm.Dom());
   Generic nm;
-  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
-  {
+  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
     TYPE_SSENV_FunctionInfo fi (fnm[nm]);
     SET<TYPE_AS_Name> rec (fi.get_rec());
     res.ImpModify(nm, rec);
@@ -145,8 +138,7 @@ Map SSREC::createIndirectCallMap(const Map & dcm)
   Map res;
   Set nm_s (dcm.Dom());
   Generic nm;
-  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm))
-  {
+  for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
     Set s (dcm[nm]);
     Set tmp_s (createIndirectCallMapAux(s, dcm));
     res.ImpModify(nm, tmp_s);
@@ -163,14 +155,15 @@ Set SSREC::createIndirectCallMapAux(const Set & s, const Map & dcm)
   Set nm_s (s);
   Set res (s);
   Generic nm;
-  for (bool cc = nm_s.First(nm); cc; cc = nm_s.Next(nm))
-  {
+  for (bool cc = nm_s.First(nm); cc; cc = nm_s.Next(nm)) {
     res.ImpUnion(dcm[nm]);
   }
-  if (s.Card() == res.Card())
+  if (s.Card() == res.Card()) {
     return res;
-  else
+  }
+  else {
     return createIndirectCallMapAux(res, dcm);
+  }
 }
 
 // trans_RecMap
@@ -179,10 +172,12 @@ Set SSREC::createIndirectCallMapAux(const Set & s, const Map & dcm)
 Map SSREC::trans_RecMap(const Map & recm)
 {
   Map recm_q (compose_RecMap(recm, recm));
-  if (recm == recm_q)
+  if (recm == recm_q) {
     return recm;
-  else
+  }
+  else {
     return trans_RecMap(recm_q);
+  }
 }
 
 // compose_RecMap
@@ -194,8 +189,7 @@ Map SSREC::compose_RecMap(const Map & m, const Map & n)
   Map res;
   Set nm_l (m.Dom());
   Generic x;
-  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x))
-  {
+  for (bool bb = nm_l.First(x); bb; bb = nm_l.Next(x)) {
     res.ImpModify(x, compose_auxRecMap(m[x], n));
   }
   return res;
@@ -210,8 +204,7 @@ Set SSREC::compose_auxRecMap(const Set & trac, const Map & fnm)
   Set trac_q (trac);
   Set res;
   Generic g;
-  for (bool bb = trac_q.First(g); bb; bb = trac_q.Next(g))
-  {
+  for (bool bb = trac_q.First(g); bb; bb = trac_q.Next(g)) {
     res.ImpUnion(compose_aux2RecMap(g, fnm));
   }
   return res;
@@ -224,25 +217,23 @@ Set SSREC::compose_auxRecMap(const Set & trac, const Map & fnm)
 Set SSREC::compose_aux2RecMap(const SEQ<TYPE_AS_Name> & trace, const Map & fnm)
 {
   TYPE_AS_Name key (trace[trace.Length()]);
-  if (fnm.DomExists(key))
-  {
+  if (fnm.DomExists(key)) {
     Set s (fnm[key]);
 
     Set res;
     Generic x_;
-    for (bool bb = s.First(x_); bb; bb = s.Next(x_))
-    {
+    for (bool bb = s.First(x_); bb; bb = s.Next(x_)) {
       SEQ<TYPE_AS_Name> x (x_);
       TYPE_AS_Name nm (x.Hd());
       SEQ<TYPE_AS_Name> newtrace (trace);
-      if (!trace.Elems().InSet(nm))
+      if (!trace.Elems().InSet(nm)) {
         newtrace.ImpAppend(nm);
+      }
       res.Insert(newtrace);
     }
     return res;
   }
-  else
-  {
+  else {
     Set res;
     res.Insert(trace);
     return res;
@@ -256,12 +247,15 @@ Set SSREC::compose_aux2RecMap(const SEQ<TYPE_AS_Name> & trace, const Map & fnm)
 SET<TYPE_AS_Name> SSREC::getFuncAppFnDef(const TYPE_AS_FnDef & fnd, const SET<TYPE_AS_Name> & sn)
 {
   switch(fnd.GetTag()) {
-    case TAG_TYPE_AS_ExplFnDef:
+    case TAG_TYPE_AS_ExplFnDef: {
       return getFuncAppFnBody(fnd.GetRecord(pos_AS_ExplFnDef_body), sn);
-    case TAG_TYPE_AS_ExtExplFnDef:
+    }
+    case TAG_TYPE_AS_ExtExplFnDef: {
       return getFuncAppFnBody(fnd.GetRecord(pos_AS_ExtExplFnDef_body), sn);
-    default:
+    }
+    default: {
       return eset;
+    }
   }
 }
 
@@ -272,14 +266,17 @@ SET<TYPE_AS_Name> SSREC::getFuncAppFnDef(const TYPE_AS_FnDef & fnd, const SET<TY
 SET<TYPE_AS_Name> SSREC::getFuncAppFnBody(const TYPE_AS_FnBody & fn, const SET<TYPE_AS_Name> & sn)
 {
   Generic body (fn.GetField(pos_AS_FnBody_body));
-  if (body == Int(NOTYETSPEC))
+  if (body == Int(NOTYETSPEC)) {
     return eset;
+  }
 #ifdef VDMPP
-  else if (body == Int(SUBRESP))
+  else if (body == Int(SUBRESP)) {
     return eset;
+  }
 #endif // VDMPP
-  else
+  else {
     return getFuncAppExpr(body, sn);
+  }
 }
 
 // getFuncAppExpr
@@ -390,8 +387,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const SEQ<TYPE_AS_Maplet> & els_l (expr.GetSequence(pos_AS_MapEnumerationExpr_els));
       SET<TYPE_AS_Name> res;
       size_t len_els_l = els_l.Length();
-      for (size_t idx = 1; idx <= len_els_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_els_l; idx++) {
         res.ImpUnion(getFuncAppMaplet(els_l[idx], sn));
       }
       return res;
@@ -416,8 +412,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
 
       SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_PreConditionApplyExpr_fct), sn));
       size_t len_arg = arg.Length();
-      for (size_t idx = 1; idx <= len_arg; idx++)
-      {
+      for (size_t idx = 1; idx <= len_arg; idx++) {
         res.ImpUnion(getFuncAppExpr(arg[idx], sn));
       }
       return res;
@@ -429,8 +424,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const SEQ<TYPE_AS_Expr> & fields_le (expr.GetSequence(pos_AS_RecordConstructorExpr_fields));
       SET<TYPE_AS_Name> res;
       size_t len_fields_le = fields_le.Length();
-      for (size_t idx = 1; idx <= len_fields_le;idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields_le;idx++) {
         res.ImpUnion(getFuncAppExpr(fields_le[idx], sn));
       }
       return res;
@@ -439,8 +433,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const SEQ<TYPE_AS_RecordModification> & modifiers (expr.GetSequence(pos_AS_RecordModifierExpr_modifiers));
       SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_RecordModifierExpr_rec), sn));
       size_t len_modifiers = modifiers.Length();
-      for (size_t idx = 1; idx <= len_modifiers; idx++)
-      {
+      for (size_t idx = 1; idx <= len_modifiers; idx++) {
         res.ImpUnion(getFuncAppRecordModification(modifiers[idx], sn));
       }
       return res;
@@ -455,8 +448,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_LambdaExpr_body), sn));
       const SEQ<TYPE_AS_TypeBind> & tb_l (expr.GetSequence(pos_AS_LambdaExpr_parm));
       size_t len_tb_l = tb_l.Length();
-      for (size_t idx = 1; idx <= len_tb_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_tb_l; idx++) {
         res.ImpUnion(getFuncAppBind(tb_l[idx], sn));
       }
       return res;
@@ -475,8 +467,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
     }
     case TAG_TYPE_AS_Name: {
       SET<TYPE_AS_Name> res;
-      if (!sn.InSet(expr))
+      if (!sn.InSet(expr)) {
         res.Insert(expr);
+      }
       return res;
     }
     case TAG_TYPE_AS_UndefinedExpr: {
@@ -507,8 +500,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppExpr(const TYPE_AS_Expr & expr, const SET<TYP
       const SEQ<TYPE_AS_Expr> & arg_l (expr.GetSequence(pos_AS_NewExpr_args));
       SET<TYPE_AS_Name> res;
       size_t len_arg_l = arg_l.Length();
-      for (size_t idx = 1; idx <= len_arg_l; idx++)
-      {
+      for (size_t idx = 1; idx <= len_arg_l; idx++) {
         res.ImpUnion(getFuncAppExpr(arg_l[idx], sn));
       }
       return res;
@@ -553,8 +545,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppDefExpr(const TYPE_AS_DefExpr & expr, const S
   SET<TYPE_AS_Name> ids;
   SET<TYPE_AS_Name> remids (sn);
   Generic elm;
-  for (bool bb = def_l.First(elm); bb; bb = def_l.Next(elm))
-  {
+  for (bool bb = def_l.First(elm); bb; bb = def_l.Next(elm)) {
     Tuple t (elm); // (PatternBind * Expr)
     SET<TYPE_AS_Name> expids (getFuncAppExpr(t.GetRecord(2), remids));
     SET<TYPE_AS_Name> patids (getFuncAppPatternBind(t.GetRecord(1)));
@@ -606,8 +597,7 @@ Tuple SSREC::getFuncAppLocalDef(const SEQ<TYPE_AS_LocalDef> & vd, const SET<TYPE
   SET<TYPE_AS_Name> ids;
   SET<TYPE_AS_Name> remids (sn);
   size_t len_vd = vd.Length();
-  for (size_t idx = 1; idx <= len_vd; idx++)
-  {
+  for (size_t idx = 1; idx <= len_vd; idx++) {
     const TYPE_AS_LocalDef & ldef (vd[idx]);
     switch(ldef.GetTag()) {
       case TAG_TYPE_AS_ValueDef: {
@@ -639,8 +629,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppApplyExpr(const TYPE_AS_ApplyExpr & expr, con
 
   SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_ApplyExpr_fct), sn));
   size_t len_arg_l = arg_l.Length();
-  for (size_t idx = 1; idx <= len_arg_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_arg_l; idx++) {
     res.ImpUnion(getFuncAppExpr(arg_l[idx], sn));
   }
   return res;
@@ -657,8 +646,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppIfExpr(const TYPE_AS_IfExpr & expr, const SET
   SET<TYPE_AS_Name> res (getFuncAppExpr(expr.GetRecord(pos_AS_IfExpr_test), sn));
   res.ImpUnion(getFuncAppExpr(expr.GetRecord(pos_AS_IfExpr_cons), sn));
   size_t len_elif_l = elif_l.Length();
-  for (size_t idx = 1; idx <= len_elif_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_elif_l; idx++) {
     res.ImpUnion(getFuncAppElseifExpr(elif_l[idx], sn));
   }
   res.ImpUnion(getFuncAppExpr(expr.GetRecord(pos_AS_IfExpr_altn), sn));
@@ -698,8 +686,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppTupleConstructorExpr(const TYPE_AS_TupleConst
 
   SET<TYPE_AS_Name> res;
   size_t len_fields_le = fields_le.Length();
-  for (size_t idx = 1; idx <= len_fields_le; idx++)
-  {
+  for (size_t idx = 1; idx <= len_fields_le; idx++) {
     res.ImpUnion(getFuncAppExpr(fields_le[idx], sn));
   }
   return res;
@@ -726,12 +713,12 @@ SET<TYPE_AS_Name> SSREC::getFuncAppCasesExpr(const TYPE_AS_CasesExpr & expr, con
 
   SET<TYPE_AS_Name> res (getFuncAppExpr(sel_e, sn));
   size_t len_altns_l = altns_l.Length();
-  for (size_t idx = 1; idx <= len_altns_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_altns_l; idx++) {
     res.ImpUnion(getFuncAppCaseAltn(altns_l[idx], sn));
   }
-  if (!others_e.IsNil())
+  if (!others_e.IsNil()) {
     res.ImpUnion(getFuncAppExpr(others_e, sn));
+  }
   return res;
 }
 
@@ -746,8 +733,7 @@ SET<TYPE_AS_Name> SSREC::getFuncAppCaseAltn(const TYPE_AS_CaseAltn & expr, const
 
   SET<TYPE_AS_Name> res;
   size_t len_pat_l = pat_l.Length();
-  for (size_t idx = 1; idx <= len_pat_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_pat_l; idx++) {
     res.ImpUnion(getFuncAppPattern(pat_l[idx], sn));
   }
   res.ImpUnion(getFuncAppExpr(body_e, sn));
@@ -768,12 +754,12 @@ SET<TYPE_AS_Name> SSREC::getFuncAppLetBeSTExpr(const TYPE_AS_LetBeSTExpr & expr,
   //SET<TYPE_AS_Name> res (getFuncAppBind(lhs, sn));
   SET<TYPE_AS_Name> res;
   size_t len_lhs = lhs.Length();
-  for (size_t idx = 1; idx <= len_lhs; idx++)
-  {
+  for (size_t idx = 1; idx <= len_lhs; idx++) {
     res.ImpUnion(getFuncAppMultBind(lhs[idx], sn));
   }
-  if (!st_e.IsNil())
+  if (!st_e.IsNil()) {
     res.ImpUnion(getFuncAppExpr(st_e, sn));
+  }
   res.ImpUnion(getFuncAppExpr(in_e, sn));
   return res;
 }
@@ -802,12 +788,12 @@ SET<TYPE_AS_Name> SSREC::getFuncAppMapCampExpr(const TYPE_AS_MapComprehensionExp
 
   SET<TYPE_AS_Name> res (getFuncAppMaplet(elem_e, sn));
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; idx <= len_bind_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_bind_l; idx++) {
     res.ImpUnion(getFuncAppMultBind(bind_l[idx], sn));
   }
-  if (!pred_e.IsNil())
+  if (!pred_e.IsNil()) {
     res.ImpUnion(getFuncAppExpr(pred_e, sn));
+  }
   return res;
 }
 
@@ -877,8 +863,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppMultBind(const TYPE_AS_MultBind & bind, const
       SET<TYPE_AS_Name> res;
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSetBind_pat));
       size_t len = pat_l.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         res.ImpUnion (getFuncAppPattern(pat_l[i], sn));
+      }
       res.ImpUnion(getFuncAppExpr(bind.GetRecord(pos_AS_MultSetBind_Set), sn));
       return res;
     }
@@ -886,8 +873,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppMultBind(const TYPE_AS_MultBind & bind, const
       SET<TYPE_AS_Name> res;
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultSeqBind_pat));
       size_t len = pat_l.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         res.ImpUnion (getFuncAppPattern(pat_l[i], sn));
+      }
       res.ImpUnion(getFuncAppExpr(bind.GetRecord(pos_AS_MultSeqBind_Seq), sn));
       return res;
     }
@@ -895,8 +883,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppMultBind(const TYPE_AS_MultBind & bind, const
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultTypeBind_pat));
       SET<TYPE_AS_Name> res;
       size_t len = pat_l.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         res.ImpUnion (getFuncAppPattern(pat_l[i], sn));
+      }
       return res;
     }
     default: {
@@ -922,8 +911,9 @@ SET<TYPE_AS_Name> SSREC::getFuncAppPattern(const TYPE_AS_Pattern & pat, const SE
       const SEQ<TYPE_AS_Pattern> & elems (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       SET<TYPE_AS_Name> res;
       size_t len = elems.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         res.ImpUnion (getFuncAppPattern(elems[i], sn));
+      }
       return res;
     }
     case TAG_TYPE_AS_SetUnionPattern: {
@@ -1002,15 +992,17 @@ SET<TYPE_AS_Name> SSREC::getFuncAppPattern(const TYPE_AS_Pattern & pat, const SE
 // -> bool
 bool SSREC::OtherClassApp(const TYPE_AS_Name & clnm, const TYPE_AS_Name & fnm)
 {
-  if (fnm.GetSequence(pos_AS_Name_ids).Length() > 1)
-  {
-    if (fnm.GetSequence(pos_AS_Name_ids)[1] == clnm.GetSequence(pos_AS_Name_ids)[1])
+  if (fnm.GetSequence(pos_AS_Name_ids).Length() > 1) {
+    if (fnm.GetSequence(pos_AS_Name_ids)[1] == clnm.GetSequence(pos_AS_Name_ids)[1]) {
       return false;
-    else
+    }
+    else {
       return true;
+    }
   }
-  else
+  else {
     return false;
+  }
 }
 
 // removeNonRec
@@ -1021,32 +1013,33 @@ Map SSREC::removeNonRec(const Map & recmap)
   Generic x;
   Set dom_recmap (recmap.Dom());
   Map recmap_q;
-  for (bool bb = dom_recmap.First(x); bb; bb = dom_recmap.Next(x))
-  {
+  for (bool bb = dom_recmap.First(x); bb; bb = dom_recmap.Next(x)) {
     TYPE_SSENV_FunctionInfo fi (recmap[x]);
-    if (!fi.get_rec().IsEmpty())
+    if (!fi.get_rec().IsEmpty()) {
       recmap_q.ImpModify(x, fi);
+    }
   }
   Map recmap_qq;
-  for (bool cc = recmap_q.First(x); cc; cc = recmap_q.Next(x))
-  {
+  for (bool cc = recmap_q.First(x); cc; cc = recmap_q.Next(x)) {
     TYPE_SSENV_FunctionInfo fi (recmap[x]);
     SET<TYPE_AS_Name> rec (fi.get_rec());
     SET<TYPE_AS_Name> newrec;
     Generic y;
-    for (bool dd = rec.First(y); dd; dd = rec.Next(y))
-    {
-      if (recmap_q.DomExists(y))
+    for (bool dd = rec.First(y); dd; dd = rec.Next(y)) {
+      if (recmap_q.DomExists(y)) {
         newrec.Insert(y);
+      }
     }
     fi.set_rec(newrec);
     recmap_qq.ImpModify(x, fi);
   }
 
-  if (recmap_qq == recmap)
+  if (recmap_qq == recmap) {
     return recmap;
-  else
+  }
+  else {
     return removeNonRec(recmap_qq);
+  }
 }
 
 // BuildRecMap
@@ -1059,8 +1052,6 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
   Set nm_s (fnm.Dom());
   Generic nm;
   for (bool bb = nm_s.First(nm); bb; bb = nm_s.Next(nm)) {
-//wcout << L"clnm: " << clnm << endl;
-//wcout << L"nm: " << nm << endl;
     SET<TYPE_AS_Name> allfns_q;
 #ifdef VDMSL
     SET<TYPE_SSENV_ExpSigRep> esr_s (GetStatSem().GetModuleEnv().Rng());
@@ -1068,7 +1059,7 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
     for (bool cc = esr_s.First(g); cc; cc = esr_s.Next(g)) {
       TYPE_SSENV_ExpSigRep esr (g);
       allfns_q.ImpUnion(esr.get_fcts().Dom());
-      allfns_q.ImpUnion(esr.get_polys().Dom()); // 20080827
+      allfns_q.ImpUnion(esr.get_polys().Dom());
     }
 #endif // VDMSL
 #ifdef VDMPP
@@ -1076,9 +1067,8 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
     Generic g;
     for (bool cc = pti_s.First(g); cc; cc = pti_s.Next(g)) {
       TYPE_SSENV_ParseTypeInfo pti (g);
-      //allfns_q.ImpUnion(pti.get_fndefs().Dom());
       allfns_q.ImpUnion(pti.get_fcts().Dom());
-      allfns_q.ImpUnion(pti.get_polys().Dom()); // 20080827
+      allfns_q.ImpUnion(pti.get_polys().Dom());
     }
 #endif // VDMPP
     SET<TYPE_AS_Name> allapps_q (getFuncAppFnDef(fnm[nm], eset));
@@ -1093,21 +1083,14 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
     for (bool dd = allapps_q.First(x); dd; dd = allapps_q.Next(x)) {
       allapps.Insert(DestroyCid(x));
     }
-
-//wcout << L"allfns: " << allfns << endl;
-//wcout << L"allapps: " << allapps << endl;
-
     SET<TYPE_AS_Name> normout;
     for (bool ee = allapps.First(x); ee; ee = allapps.Next(x)) {
       if (OtherClassApp(clnm, x) && allfns.InSet(x)) {
         normout.Insert(x);
       }
     }
-
     SET<TYPE_AS_Name> inapps (allapps);
     inapps.ImpDiff(normout);
-
-//wcout << L"inapps: " << inapps << endl;
 
     SET<TYPE_AS_Name> normin;
     for (bool ff = inapps.First(x); ff; ff = inapps.Next(x)) {
@@ -1117,25 +1100,7 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
       else if (allfns.InSet(NormalizeName(clnm, x))) {
         normin.Insert(NormalizeName(clnm, x));
       }
-/*
-      else
-      {
-        TYPE_AS_Name nm (x);
-        if (nm.get_ids().Length() == 2)
-        {
-          TYPE_AS_Name classnm (ASTAUX::GetFirstName(nm));
-          TYPE_AS_Name funcnnm (ASTAUX::GetSecondName(nm));
-          if ((ASTAUX::GetFirstName(nm) == clnm) &&
-               allfns.InSet(ASTAUX::GetSecondName(nm)))
-            normin.Insert(nm);
-        }
-      }
-*/
     }
-
-//wcout << L"normin: " << normin << endl;
-//wcout << L"normout: " << normout << endl;
-
     SET<TYPE_AS_Name> norm (normin);
     norm.ImpUnion(normout);
     recMap.ImpModify(GetStatSem().ExtName(clnm, nm),
@@ -1143,9 +1108,6 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
                                             ASTAUX::GetFnMeasu(fnm[nm]),
                                             Bool(false)));
   }
-
-//wcout << L"recMap: " << recMap << endl;
-
   SET<TYPE_AS_Name> toVisit;
   SET<TYPE_SSENV_FunctionInfo> fi_s (recMap.Rng());
   Generic x;
@@ -1155,8 +1117,6 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
   }
   SET<TYPE_AS_Name> visited (recMap.Dom());
   toVisit.ImpDiff(visited);
-
-//wcout << L"toVisit: " << toVisit << endl;
 
   Map recMap2 (recConstructMap(toVisit, visited, recMap));
   Map recMap3 (removeNonRec(recMap2));
@@ -1173,12 +1133,11 @@ Map SSREC::BuildRecMap(const TYPE_AS_Name & clnm, const Map & fnm)
 // ==> map AS`Name to ENV`FunctionInfo
 Map SSREC::recConstructMap(const SET<TYPE_AS_Name> & toVisit, const SET<TYPE_AS_Name> & visited, const Map & recMap)
 {
-  if (toVisit.IsEmpty())
+  if (toVisit.IsEmpty()) {
     return recMap;
-
+  }
   TYPE_AS_Name x (toVisit.GetElem());
   Tuple xapps (GetAppsFn(x));
-//wcout << L"xapps: " << xapps << endl;
   SET<TYPE_AS_Name> newvis (visited);
   newvis.Insert(x);
   SET<TYPE_AS_Name> newtov (toVisit);
@@ -1186,7 +1145,6 @@ Map SSREC::recConstructMap(const SET<TYPE_AS_Name> & toVisit, const SET<TYPE_AS_
   newtov.ImpDiff(newvis);
   Map newrm (recMap);
   newrm.ImpModify(x, TYPE_SSENV_FunctionInfo().Init(xapps.GetSet(1), xapps.GetField(2), Bool(false)));
-//wcout << L"newtov: " << newtov << endl;
   return recConstructMap(newtov, newvis, newrm);
 }
 
@@ -1215,9 +1173,10 @@ TYPE_AS_Name SSREC::DestroyCid(const TYPE_AS_Name & nm)
 Tuple SSREC::GetAppsFn(const TYPE_AS_Name & nm)
 {
   Generic f (GetStatSem().GetFuncDefWOCtxt(nm));
-//wcout << L"f: " << f << endl;
-  if (!f.IsNil() && f.Is(TAG_TYPE_AS_ExplFnDef))
+  if (!f.IsNil() && f.Is(TAG_TYPE_AS_ExplFnDef)) {
     return mk_(getFuncAppFnDef(f, eset), ASTAUX::GetFnMeasu(f));
-  else
+  }
+  else {
     return mk_(eset, nil);
+  }
 }

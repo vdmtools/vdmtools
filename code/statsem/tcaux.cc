@@ -20,10 +20,12 @@ Generic StatSem::TcauxLookUpTypeName (const TYPE_AS_Name & nm)
 {
 #ifdef VDMPP
   Generic lok (LookUpTypeName (nm, true));
-  if (IsAccessType (lok))
+  if (IsAccessType (lok)) {
     return StripAccessType (lok);
-  else
+  }
+  else {
     return lok;
+  }
 #endif // VDMPP
 #ifdef VDMSL
   Generic lok (LookUpTypeName (nm));
@@ -36,16 +38,21 @@ Generic StatSem::TcauxLookUpTypeName (const TYPE_AS_Name & nm)
 // -> set of REP`TypeRep
 SET<TYPE_REP_TypeRep> StatSem::MergeNumericTypes (const SET<TYPE_REP_TypeRep> & sttp) const
 {
-  if (sttp.InSet(btp_real))
+  if (sttp.InSet(btp_real)) {
     return sttp.Diff(this->realSubTypeSet);
-  else if (sttp.InSet(btp_rat))
+  }
+  else if (sttp.InSet(btp_rat)) {
     return sttp.Diff(this->ratSubTypeSet);
-  else if (sttp.InSet(btp_int))
+  }
+  else if (sttp.InSet(btp_int)) {
     return sttp.Diff(this->intSubTypeSet);
-  else if (sttp.InSet(btp_nat))
+  }
+  else if (sttp.InSet(btp_nat)) {
     return sttp.Diff(this->natSubTypeSet);
-  else
+  }
+  else {
     return sttp;
+  }
 }
 
 // ExpandNumericTypes
@@ -53,16 +60,21 @@ SET<TYPE_REP_TypeRep> StatSem::MergeNumericTypes (const SET<TYPE_REP_TypeRep> & 
 // -> set of REP`TypeRep
 SET<TYPE_REP_TypeRep> StatSem::ExpandNumericTypes (const SET<TYPE_REP_TypeRep> & sttp)
 {
-  if (sttp.InSet(btp_real))
+  if (sttp.InSet(btp_real)) {
     return sttp.Union(this->realSubTypeSet);
-  else if (sttp.InSet(btp_rat))
+  }
+  else if (sttp.InSet(btp_rat)) {
     return sttp.Union(this->ratSubTypeSet);
-  else if (sttp.InSet(btp_int))
+  }
+  else if (sttp.InSet(btp_int)) {
     return sttp.Union(this->intSubTypeSet);
-  else if (sttp.InSet(btp_nat))
+  }
+  else if (sttp.InSet(btp_nat)) {
     return sttp.Union(this->natSubTypeSet);
-  else
+  }
+  else {
     return sttp;
+  }
 }
 
 // MostGeneralNumericType
@@ -70,8 +82,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExpandNumericTypes (const SET<TYPE_REP_TypeRep> &
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::MostGeneralNumericType (const SET<TYPE_REP_TypeRep> & ntp)
 {
-  if (ntp.Card () == 1)
+  if (ntp.Card () == 1) {
     return ntp.GetElem ();
+  }
   else {
     SET<TYPE_REP_TypeRep> cases (MergeNumericTypes(ntp.Diff(mk_set(rep_alltp))));
     return cases.GetElem();
@@ -84,18 +97,19 @@ TYPE_REP_TypeRep StatSem::MostGeneralNumericType (const SET<TYPE_REP_TypeRep> & 
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::MergeTypes (const Generic & gl, const Generic & gr) const
 {
-  if (gr.IsSet())
-  {
-    if (gl.IsSet())
+  if (gr.IsSet()) {
+    if (gl.IsSet()) {
       return MergeTypes(Set(gl).Union(gr), Nil ());
-    else
+    }
+    else {
       return MergeTypes(gr, gl);
+    }
   }
 
-  if (gl.IsSet())
-  {
-    if (Set(gl).IsEmpty())
+  if (gl.IsSet()) {
+    if (Set(gl).IsEmpty()) {
       return MergeTypes(Nil (), gr);
+    }
     else {
       Generic tp (Set(gl).GetElem());
       return MergeTypes(Set(gl).Diff(mk_set(tp)), MergeTypes(tp, gr));
@@ -106,130 +120,222 @@ TYPE_REP_TypeRep StatSem::MergeTypes (const Generic & gl, const Generic & gr) co
   SET<TYPE_REP_TypeRep> r1tp;
 
   if (gl.IsNil ()) {
-    if (gr.IsNil ())
+    if (gr.IsNil ()) {
       r1tp.Insert (rep_unittp);
-    else
+    }
+    else {
       r1tp.Insert (gr);
-  } else {
-    if (gr.IsNil ())
+    }
+  }
+  else {
+    if (gr.IsNil ()) {
       r1tp.Insert (gl);
-    else 
-    {
+    }
+    else {
       TYPE_REP_TypeRep l (gl);
       TYPE_REP_TypeRep r (gr);
 
       switch (l.GetTag()) {
         case TAG_TYPE_REP_SetTypeRep: {
-          if (r.Is(TAG_TYPE_REP_SetTypeRep))
-            r1tp.Insert(mk_REP_SetTypeRep(MergeTypes(l.GetRecord(pos_REP_SetTypeRep_elemtp),
-                                                     r.GetRecord(pos_REP_SetTypeRep_elemtp))));
-          else if (r.Is(TAG_TYPE_REP_EmptySetTypeRep))
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_SetTypeRep: {
+              r1tp.Insert(mk_REP_SetTypeRep(MergeTypes(l.GetRecord(pos_REP_SetTypeRep_elemtp),
+                                                       r.GetRecord(pos_REP_SetTypeRep_elemtp))));
+              break;
+            }
+            case TAG_TYPE_REP_EmptySetTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_EmptySetTypeRep: {
-          if (r.Is(TAG_TYPE_REP_SetTypeRep))
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_SetTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_SeqTypeRep: {
-          if (r.Is(TAG_TYPE_REP_SeqTypeRep))
-            r1tp.Insert(mk_REP_SeqTypeRep(MergeTypes(l.GetRecord(pos_REP_SeqTypeRep_elemtp), 
-                                                     r.GetRecord(pos_REP_SeqTypeRep_elemtp))));
-          else if (r.Is(TAG_TYPE_REP_EmptySeqTypeRep))
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_SeqTypeRep: {
+              r1tp.Insert(mk_REP_SeqTypeRep(MergeTypes(l.GetRecord(pos_REP_SeqTypeRep_elemtp), 
+                                                       r.GetRecord(pos_REP_SeqTypeRep_elemtp))));
+              break;
+            }
+            case TAG_TYPE_REP_EmptySeqTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default : {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_EmptySeqTypeRep: {
-          if (r.Is(TAG_TYPE_REP_SeqTypeRep))
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_SeqTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_GeneralMapTypeRep: {
-          if (r.Is(TAG_TYPE_REP_GeneralMapTypeRep))
-            r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_mapdom),
-                                                            r.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)),
-                                                 MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_maprng),
-                                                            r.GetRecord(pos_REP_GeneralMapTypeRep_maprng))));
-          else if (r.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) 
-            r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_mapdom),
-                                                            r.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)),
-                                                 MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_maprng),
-                                                            r.GetRecord(pos_REP_InjectiveMapTypeRep_maprng))));
-          else if (r.Is(TAG_TYPE_REP_EmptyMapTypeRep)) 
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_GeneralMapTypeRep: {
+              r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_mapdom),
+                                                              r.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)),
+                                                   MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_maprng),
+                                                              r.GetRecord(pos_REP_GeneralMapTypeRep_maprng))));
+              break;
+            }
+            case TAG_TYPE_REP_InjectiveMapTypeRep: {
+              r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_mapdom),
+                                                              r.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)),
+                                                   MergeTypes(l.GetRecord(pos_REP_GeneralMapTypeRep_maprng),
+                                                              r.GetRecord(pos_REP_InjectiveMapTypeRep_maprng))));
+              break;
+            }
+            case TAG_TYPE_REP_EmptyMapTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_InjectiveMapTypeRep: {
-          if (r.Is(TAG_TYPE_REP_GeneralMapTypeRep))
-            r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom),
-                                                            r.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)),
-                                                 MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_maprng),
-                                                            r.GetRecord(pos_REP_GeneralMapTypeRep_maprng))));
-          else if (r.Is(TAG_TYPE_REP_InjectiveMapTypeRep))
-            r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom),
-                                                            r.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)),
-                                                 MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_maprng),
-                                                            r.GetRecord(pos_REP_InjectiveMapTypeRep_maprng))));
-          else if (r.Is(TAG_TYPE_REP_EmptyMapTypeRep)) 
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_GeneralMapTypeRep: {
+              r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom),
+                                                              r.GetRecord(pos_REP_GeneralMapTypeRep_mapdom)),
+                                                   MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_maprng),
+                                                              r.GetRecord(pos_REP_GeneralMapTypeRep_maprng))));
+              break;
+            }
+            case TAG_TYPE_REP_InjectiveMapTypeRep: {
+              r1tp.Insert(mk_REP_GeneralMapTypeRep(MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom),
+                                                              r.GetRecord(pos_REP_InjectiveMapTypeRep_mapdom)),
+                                                   MergeTypes(l.GetRecord(pos_REP_InjectiveMapTypeRep_maprng),
+                                                              r.GetRecord(pos_REP_InjectiveMapTypeRep_maprng))));
+              break;
+            }
+            case TAG_TYPE_REP_EmptyMapTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_EmptyMapTypeRep: {
-          if (r.Is(TAG_TYPE_REP_GeneralMapTypeRep) || r.Is(TAG_TYPE_REP_InjectiveMapTypeRep))
-            r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_GeneralMapTypeRep:
+            case TAG_TYPE_REP_InjectiveMapTypeRep: {
+              r1tp.Insert(mk_REP_UnionTypeRep(mk_set(l, r)));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_UnionTypeRep: {
-          if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(l.GetSet(pos_REP_UnionTypeRep_tps)).ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps));
-          else
-            r1tp.ImpUnion(l.GetSet(pos_REP_UnionTypeRep_tps)).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(l.GetSet(pos_REP_UnionTypeRep_tps)).ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps));
+              break;
+            }
+            default: {
+              r1tp.ImpUnion(l.GetSet(pos_REP_UnionTypeRep_tps)).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         case TAG_TYPE_REP_ExitTypeRep: {
-          if (r.Is(TAG_TYPE_REP_ExitTypeRep))
-            r1tp.Insert (mk_REP_ExitTypeRep(MergeTypes (l.GetRecord(pos_REP_ExitTypeRep_tp),
-                                                        r.GetRecord(pos_REP_ExitTypeRep_tp))));
-          else if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_ExitTypeRep: {
+              r1tp.Insert (mk_REP_ExitTypeRep(MergeTypes (l.GetRecord(pos_REP_ExitTypeRep_tp),
+                                                          r.GetRecord(pos_REP_ExitTypeRep_tp))));
+              break;
+            }
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
         default: {
-          if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-            r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
-          else
-            r1tp.Insert(l).Insert(r);
+          switch (r.GetTag()) {
+            case TAG_TYPE_REP_UnionTypeRep: {
+              r1tp.ImpUnion(r.GetSet(pos_REP_UnionTypeRep_tps)).Insert(l);
+              break;
+            }
+            default: {
+              r1tp.Insert(l).Insert(r);
+              break;
+            }
+          }
           break; 
         }
       }
@@ -246,10 +352,12 @@ TYPE_REP_TypeRep StatSem::MergeTypes (const Generic & gl, const Generic & gr) co
       return restp.GetElem();
     }
     default: {
-      if (restp.InSet(rep_alltp))
+      if (restp.InSet(rep_alltp)) {
         return rep_alltp;
-      else
+      }
+      else {
         return mk_REP_UnionTypeRep(restp);
+      }
     }
   }
 }
@@ -264,13 +372,7 @@ Generic StatSem::RemoveUnitType (const TYPE_REP_TypeRep & tp)
       SET<TYPE_REP_TypeRep> tp_s (tp.GetSet(pos_REP_UnionTypeRep_tps));
       Set st;
       Generic t;
-      for (bool bb = tp_s.First(t); bb; bb = tp_s.Next(t))
-      {
-//// 20060308
-//        if (!g.Is(TAG_TYPE_REP_UnitTypeRep))
-//          st.Insert (g);
-////        Generic tp_q = RemoveUnitType(g);
-////        if( !tp_q.IsNil() ) st.Insert(tp_q);
+      for (bool bb = tp_s.First(t); bb; bb = tp_s.Next(t)) {
         st.Insert(RemoveUnitType(t));
       }
       return mk_REP_UnionTypeRep(st.Diff(mk_set(Nil())));
@@ -289,17 +391,19 @@ Generic StatSem::RemoveUnitType (const TYPE_REP_TypeRep & tp)
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::RemoveEmptySetType(const TYPE_REP_TypeRep & tp)
 {
-  if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
-  {
+  if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
     SET<TYPE_REP_TypeRep> tp_s (tp.GetSet(pos_REP_UnionTypeRep_tps).Diff(mk_set(mk_REP_EmptySetTypeRep(rep_alltp))));
 
-    if (tp_s.Card() == 1)
+    if (tp_s.Card() == 1) {
       return tp_s.GetElem();
-    else
+    }
+    else {
       return mk_REP_UnionTypeRep(tp_s);
+    }
   }
-  else
+  else {
     return tp;
+  }
 }
 
 // RemoveEmptySeqType
@@ -307,17 +411,19 @@ TYPE_REP_TypeRep StatSem::RemoveEmptySetType(const TYPE_REP_TypeRep & tp)
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::RemoveEmptySeqType(const TYPE_REP_TypeRep & tp)
 {
-  if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
-  {
+  if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
     SET<TYPE_REP_TypeRep> tp_s (tp.GetSet(pos_REP_UnionTypeRep_tps).Diff(mk_set(mk_REP_EmptySeqTypeRep(rep_alltp))));
 
-    if (tp_s.Card() == 1)
+    if (tp_s.Card() == 1) {
       return tp_s.GetElem();
-    else
+    }
+    else {
       return mk_REP_UnionTypeRep(tp_s);
+    }
   }
-  else
+  else {
     return tp;
+  }
 }
 
 // RemoveEmptyMapType
@@ -325,17 +431,19 @@ TYPE_REP_TypeRep StatSem::RemoveEmptySeqType(const TYPE_REP_TypeRep & tp)
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::RemoveEmptyMapType(const TYPE_REP_TypeRep & tp)
 {
-  if (tp.Is(TAG_TYPE_REP_UnionTypeRep))
-  {
+  if (tp.Is(TAG_TYPE_REP_UnionTypeRep)) {
     SET<TYPE_REP_TypeRep> tp_s (tp.GetSet(pos_REP_UnionTypeRep_tps).Diff(mk_set(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))));
 
-    if (tp_s.Card() == 1)
+    if (tp_s.Card() == 1) {
       return tp_s.GetElem();
-    else
+    }
+    else {
       return mk_REP_UnionTypeRep(tp_s);
+    }
   }
-  else
+  else {
     return tp;
+  }
 }
 
 // IntersectTypes
@@ -348,14 +456,12 @@ Generic StatSem::IntersectTypes (const TYPE_REP_TypeRep & l, const TYPE_REP_Type
   switch (l.GetTag()) {
     case TAG_TYPE_REP_AllTypeRep: { r1tp.Insert(r); break; }
     case TAG_TYPE_REP_UnionTypeRep: {
-      if (r.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      if (r.Is(TAG_TYPE_REP_UnionTypeRep)) {
         const SET<TYPE_REP_TypeRep> & usl (l.GetSet(pos_REP_UnionTypeRep_tps));
         const SET<TYPE_REP_TypeRep> & usr (r.GetSet(pos_REP_UnionTypeRep_tps));
         r1tp = ExpandNumericTypes (FlatternTypes (usl)).ImpIntersect(ExpandNumericTypes (FlatternTypes (usr)));
       }
-      else
-      {
+      else {
         const SET<TYPE_REP_TypeRep> & usl (l.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> usr (mk_set(r));
         r1tp = ExpandNumericTypes (FlatternTypes (usl)).ImpIntersect(ExpandNumericTypes (FlatternTypes (usr)));
@@ -418,18 +524,21 @@ TYPE_REP_TypeRep StatSem::IntersectTypeReps (const TYPE_REP_TypeRep & l, const T
 
   SET<TYPE_REP_TypeRep> restps;
   if (ltp.IsEmpty()) {
-    if (rtp.IsEmpty())
+    if (rtp.IsEmpty()) {
       restps.Insert(rep_alltp);
-    else
+    }
+    else {
       restps = rtp;
-  } else {
-    if (rtp.IsEmpty())
+    }
+  }
+  else {
+    if (rtp.IsEmpty()) {
       restps = ltp;
+    }
     else {
       Set intertp;
       Generic tp1;
-      for (bool bb1 = ltp.First(tp1); bb1; bb1 = ltp.Next(tp1))
-      {
+      for (bool bb1 = ltp.First(tp1); bb1; bb1 = ltp.Next(tp1)) {
         Generic tp2;
         for (bool bb2 = rtp.First(tp2); bb2; bb2 = rtp.Next(tp2)) {
           intertp.Insert(IntersectTypeRepInner(tp1, tp2));
@@ -447,12 +556,9 @@ TYPE_REP_TypeRep StatSem::IntersectTypeReps (const TYPE_REP_TypeRep & l, const T
 
   SET<TYPE_REP_TypeRep> restp (MergeNumericTypes(restps));
   switch(restp.Card()) {
-    case 0:
-      return l;
-    case 1:
-      return restp.GetElem();
-    default:
-      return mk_REP_UnionTypeRep(restp);
+    case 0:  { return l; }
+    case 1:  { return restp.GetElem(); }
+    default: { return mk_REP_UnionTypeRep(restp); }
   }
 }
 
@@ -462,37 +568,39 @@ TYPE_REP_TypeRep StatSem::IntersectTypeReps (const TYPE_REP_TypeRep & l, const T
 // -> set of REP`TypeRep
 SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & TpR1, const TYPE_REP_TypeRep & TpR2)
 {
-  if (TpR1 == TpR2)
+  if (TpR1 == TpR2) {
     return mk_set(TpR1);
-
+  }
   switch (TpR1.GetTag()) {
     case TAG_TYPE_REP_AllTypeRep: { return mk_set(TpR2); }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (TpR2.Is(TAG_TYPE_REP_TypeNameRep))
-      {
-        if (IsUnionRecursive(TpR1) || IsUnionRecursive(TpR2))
+      if (TpR2.Is(TAG_TYPE_REP_TypeNameRep)) {
+        if (IsUnionRecursive(TpR1) || IsUnionRecursive(TpR2)) {
           return SET<TYPE_REP_TypeRep>();
-        else
-        {
+        }
+        else {
           Generic newtp1 (TcauxLookUpTypeName(TpR1.GetRecord(pos_REP_TypeNameRep_nm)));
           Generic newtp2 (TcauxLookUpTypeName(TpR2.GetRecord(pos_REP_TypeNameRep_nm)));
-          if (newtp1.IsNil() || newtp2.IsNil())
+          if (newtp1.IsNil() || newtp2.IsNil()) {
             return SET<TYPE_REP_TypeRep>();
-          else
+          }
+          else {
             return mk_set(IntersectTypeReps(newtp1, newtp2));
+          }
         }
       }
-      else
-      {
-        if (IsUnionRecursive(TpR1))
+      else {
+        if (IsUnionRecursive(TpR1)) {
           return SET<TYPE_REP_TypeRep>();
-        else
-        {
+        }
+        else {
           Generic newtp (TcauxLookUpTypeName(TpR1.GetRecord(pos_REP_TypeNameRep_nm)));
-          if (newtp.IsNil())
+          if (newtp.IsNil()) {
             return SET<TYPE_REP_TypeRep>();
-          else
+          }
+          else {
             return mk_set(IntersectTypeReps(newtp,TpR2));
+          }
         }
       }
     }
@@ -503,9 +611,9 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
       SET<TYPE_REP_TypeRep> Lhs (TpR1.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> unioninnerset;
       Generic tp;
-      for (bool bb = Lhs.First(tp); bb; bb = Lhs.Next(tp))
+      for (bool bb = Lhs.First(tp); bb; bb = Lhs.Next(tp)) {
         unioninnerset.Insert(IntersectTypeReps(tp,TpR2));
-
+      }
       //return mk_set(mk_REP_UnionTypeRep(unioninnerset));
       return unioninnerset;
     }
@@ -514,24 +622,26 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
   switch (TpR2.GetTag()) {
     case TAG_TYPE_REP_AllTypeRep: { return mk_set(TpR1); }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive(TpR2))
+      if (IsUnionRecursive(TpR2)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic newtp (TcauxLookUpTypeName(TpR2.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (newtp.IsNil())
+        if (newtp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return mk_set(IntersectTypeReps(TpR1,newtp));
+        }
       }
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> Rhs (TpR2.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> unioninnerset;
       Generic tp;
-      for (bool bb = Rhs.First(tp); bb; bb = Rhs.Next(tp))
+      for (bool bb = Rhs.First(tp); bb; bb = Rhs.Next(tp)) {
         unioninnerset.Insert(IntersectTypeReps(TpR1,tp));
-
+      }
       //return mk_set(mk_REP_UnionTypeRep(unioninnerset));
       return unioninnerset;
     }
@@ -542,8 +652,9 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         NumTp1.ImpIntersect(NumTp2);
         return NumTp1;
       }
-      else
+      else {
         return SET<TYPE_REP_TypeRep>();
+      }
     }
     case TAG_TYPE_REP_SetTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_SetTypeRep)) {
@@ -551,8 +662,9 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         const TYPE_REP_TypeRep & STp2 (TpR2.GetRecord(pos_REP_SetTypeRep_elemtp));
         return mk_set(mk_REP_SetTypeRep(IntersectTypeReps(STp1,STp2)));
       }
-      else
+      else {
         return SET<TYPE_REP_TypeRep>();
+      }
     }
     case TAG_TYPE_REP_SeqTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_SeqTypeRep)) {
@@ -560,25 +672,23 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         const TYPE_REP_TypeRep & STp2 (TpR2.GetRecord(pos_REP_SeqTypeRep_elemtp));
         return mk_set(mk_REP_SeqTypeRep(IntersectTypeReps(STp1,STp2)));
       }
-      else
+      else {
         return SET<TYPE_REP_TypeRep>();
+      }
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_ProductTypeRep)) {
         const SEQ<TYPE_REP_TypeRep> & PTp1 (TpR1.GetSequence(pos_REP_ProductTypeRep_tps));
         const SEQ<TYPE_REP_TypeRep> & PTp2 (TpR2.GetSequence(pos_REP_ProductTypeRep_tps));
-        if (PTp1.Length() == PTp2.Length())
-        {
+        if (PTp1.Length() == PTp2.Length()) {
           bool forall = true;
           size_t len_PTp1 = PTp1.Length();
-          for (size_t i = 1; i <= len_PTp1 && forall; i++)
+          for (size_t i = 1; i <= len_PTp1 && forall; i++) {
             forall = IsCompatible(POS, PTp1[i], PTp2[i]);
-
-          if (forall)
-          {
+          }
+          if (forall) {
             SEQ<TYPE_REP_TypeRep> intertps;
-            for (size_t i = 1; i <= len_PTp1; i++)
-            {
+            for (size_t i = 1; i <= len_PTp1; i++) {
               intertps.ImpAppend(IntersectTypeReps(PTp1[i], PTp2[i]));
             }
             return mk_set(mk_REP_ProductTypeRep(intertps));
@@ -594,12 +704,10 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         const SEQ<TYPE_REP_FieldRep> & LhsFields (TpR1.GetSequence(pos_REP_CompositeTypeRep_fields));
         const SEQ<TYPE_REP_FieldRep> & RhsFields (TpR2.GetSequence(pos_REP_CompositeTypeRep_fields));
 
-        if ((LhsName == RhsName) && (LhsFields.Length() == RhsFields.Length()))
-        {
+        if ((LhsName == RhsName) && (LhsFields.Length() == RhsFields.Length())) {
           SEQ<TYPE_REP_FieldRep> compseq;
           size_t len_LhsFields = LhsFields.Length();
-          for (size_t i = 1; i <= len_LhsFields; i++)
-          {
+          for (size_t i = 1; i <= len_LhsFields; i++) {
             const TYPE_REP_FieldRep & lhs_fr = LhsFields[i];
             const TYPE_REP_FieldRep & rhs_fr = RhsFields[i];
             TYPE_REP_TypeRep intertp (IntersectTypeReps (lhs_fr.GetRecord(pos_REP_FieldRep_tp),
@@ -620,27 +728,31 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         Generic fndomtp;
 
         if (LhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp =  rep_alltp;
-          else
+          }
+          else {
             fndomtp = RhsDom;
-        } else {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          }
+        }
+        else {
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = LhsDom;
-          else
-          {
+          }
+          else {
             SEQ<TYPE_REP_TypeRep> LhsDomS (LhsDom);
             SEQ<TYPE_REP_TypeRep> RhsDomS (RhsDom);
-            if (LhsDomS.Length() == RhsDomS.Length())
-            {
+            if (LhsDomS.Length() == RhsDomS.Length()) {
               SEQ<TYPE_REP_TypeRep> domseq;
               size_t len_LhsDomS = LhsDomS.Length();
-              for (size_t i = 1; i <= len_LhsDomS; i++)
+              for (size_t i = 1; i <= len_LhsDomS; i++) {
                 domseq.ImpAppend(IntersectTypeReps(LhsDomS[i], RhsDomS[i]));
+              }
               fndomtp = domseq;
             }
-            else
+            else {
               fndomtp = rep_alltp;
+            }
           }
         }
         return mk_set(mk_REP_PartialFnTypeRep(fndomtp,
@@ -691,27 +803,31 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         const Generic & RhsDom (TpR2.GetField(pos_REP_TotalFnTypeRep_fndom)); // It was 2 before!!!
         Generic fndomtp;
         if (LhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = rep_alltp;
-          else
+          }
+          else {
             fndomtp = RhsDom;
-        } else {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          }
+        }
+        else {
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = LhsDom;
-          else
-          {
+          }
+          else {
             SEQ<TYPE_REP_TypeRep> LhsDomS(LhsDom);
             SEQ<TYPE_REP_TypeRep> RhsDomS(RhsDom);
-            if (LhsDomS.Length() == RhsDomS.Length())
-            {
+            if (LhsDomS.Length() == RhsDomS.Length()) {
               SEQ<TYPE_REP_TypeRep> domseq;
               size_t len_LhsDomS = LhsDomS.Length();
-              for (size_t i = 1; i <= len_LhsDomS; i++)
+              for (size_t i = 1; i <= len_LhsDomS; i++) {
                 domseq.ImpAppend(IntersectTypeReps(LhsDomS[i], RhsDomS[i]));
+              }
               fndomtp = domseq;
             }
-            else
+            else {
               fndomtp = rep_alltp;
+            }
           }
         }
         return mk_set(mk_REP_PartialFnTypeRep(fndomtp,
@@ -723,26 +839,30 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
         const Generic & RhsDom (TpR2.GetField(pos_REP_TotalFnTypeRep_fndom)); // It was 2 before!!!
         Generic fndomtp;
         if (LhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = rep_alltp;
-          else
+          }
+          else {
             fndomtp = RhsDom;
-        } else {
-          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep))
+          }
+        }
+        else {
+          if (RhsDom.Is(TAG_TYPE_REP_AllTypeRep)) {
             fndomtp = LhsDom;
-          else
-          {
+          }
+          else {
             SEQ<TYPE_REP_TypeRep> LhsDomS(LhsDom), RhsDomS(RhsDom);
-            if (LhsDomS.Length() == RhsDomS.Length())
-            {
+            if (LhsDomS.Length() == RhsDomS.Length()) {
               SEQ<TYPE_REP_TypeRep> domseq;
               size_t len_LhsDomS = LhsDomS.Length();
-              for (size_t i = 1; i <= len_LhsDomS; i++)
+              for (size_t i = 1; i <= len_LhsDomS; i++) {
                 domseq.ImpAppend(IntersectTypeReps(LhsDomS[i], RhsDomS[i]));
+              }
               fndomtp = domseq;
             }
-            else
+            else {
               fndomtp = rep_alltp;
+            }
           }
         }
         return mk_set(mk_REP_TotalFnTypeRep(fndomtp,
@@ -764,8 +884,9 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
                                                  IntersectTypeReps(TpR1.GetRecord(pos_REP_InjectiveMapTypeRep_maprng),
                                                                    TpR2.GetRecord(pos_REP_GeneralMapTypeRep_maprng))));
       }
-      else
+      else {
         return SET<TYPE_REP_TypeRep>();
+      }
     }
     case TAG_TYPE_REP_InjectiveMapTypeRep: {
       if (TpR1.Is(TAG_TYPE_REP_GeneralMapTypeRep)) {
@@ -780,8 +901,9 @@ SET<TYPE_REP_TypeRep> StatSem::IntersectTypeRepInner (const TYPE_REP_TypeRep & T
                                                  IntersectTypeReps(TpR1.GetRecord(pos_REP_InjectiveMapTypeRep_maprng),
                                                                    TpR2.GetRecord(pos_REP_InjectiveMapTypeRep_maprng))));
       }
-      else
+      else {
         return SET<TYPE_REP_TypeRep>();
+      }
     }
     default: { return SET<TYPE_REP_TypeRep>(); }
   }
@@ -796,24 +918,23 @@ SET<TYPE_REP_TypeRep> StatSem::FlatternTypes (const SET<TYPE_REP_TypeRep> & tps_
   SET<TYPE_REP_TypeRep> tps (tps_);
   SET<TYPE_REP_TypeRep> res_s;
   Generic tp;
-  for (bool bb = tps.First (tp); bb; bb = tps.Next (tp))
-  {
-    if (tp.Is (TAG_TYPE_REP_TypeNameRep))
-    {
-      if (! IsUnionRecursive (tp))
-      {
+  for (bool bb = tps.First (tp); bb; bb = tps.Next (tp)) {
+    if (tp.Is (TAG_TYPE_REP_TypeNameRep)) {
+      if (! IsUnionRecursive (tp)) {
         Generic newtp (TcauxLookUpTypeName(Record(tp).GetRecord(pos_REP_TypeNameRep_nm)));
-        if (!newtp.IsNil ())
-        {
-          if (newtp.Is (TAG_TYPE_REP_UnionTypeRep))
+        if (!newtp.IsNil ()) {
+          if (newtp.Is (TAG_TYPE_REP_UnionTypeRep)) {
             res_s.ImpUnion (FlatternTypes (Record(newtp).GetSet(pos_REP_UnionTypeRep_tps)));
-          else
+          }
+          else {
             res_s.Insert (newtp);
+          }
         }
       }
     }
-    else
+    else {
       res_s.Insert (tp);
+    }
   }
   return res_s;
 }
@@ -826,18 +947,19 @@ TYPE_REP_TypeRep StatSem::ExtractIntNumType (const TYPE_REP_TypeRep & numtp)
   if (numtp.Is(TAG_TYPE_REP_AllTypeRep)) {
     return btp_int;
   }
-  else
-  {
+  else {
     SET<TYPE_REP_TypeRep> r1tp (ExtractNumericTypeInner(numtp));
     switch(r1tp.Card()) {
       case 1: {
         TYPE_REP_TypeRep EINT (r1tp.GetElem());
         if (EINT.Is (TAG_TYPE_REP_NumericTypeRep) &&
             ((EINT.GetIntValue(pos_REP_NumericTypeRep_qtp) == REAL) ||
-             (EINT.GetIntValue(pos_REP_NumericTypeRep_qtp) == RAT)))
+             (EINT.GetIntValue(pos_REP_NumericTypeRep_qtp) == RAT))) {
           return btp_int;
-        else
+        }
+        else {
           return EINT;
+        }
       }
       default: {
         InternalError (L"ExtractIntNumType");
@@ -852,8 +974,9 @@ TYPE_REP_TypeRep StatSem::ExtractIntNumType (const TYPE_REP_TypeRep & numtp)
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::ExtractNumericType (const TYPE_REP_TypeRep & numtp)
 {
-  if (numtp.Is(TAG_TYPE_REP_AllTypeRep))
+  if (numtp.Is(TAG_TYPE_REP_AllTypeRep)) {
     return btp_real;
+  }
   else {
     SET<TYPE_REP_TypeRep> r1tp (ExtractNumericTypeInner(numtp));
     switch (r1tp.Card()) {
@@ -881,23 +1004,26 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractNumericTypeInner (const TYPE_REP_TypeRep &
       return mk_set(numtp);
     }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (numtp))
+      if (IsUnionRecursive (numtp)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic tp (TcauxLookUpTypeName (numtp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractNumericTypeInner (tp);
+        }
       }
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> Utp (numtp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> r1tp;
       Generic g;
-      for (bool bb = Utp.First(g); bb ; bb = Utp.Next(g))
+      for (bool bb = Utp.First(g); bb ; bb = Utp.Next(g)) {
         r1tp.ImpUnion (ExtractNumericTypeInner(g));
+      }
       return MergeNumericTypes (r1tp);
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -927,21 +1053,15 @@ Generic StatSem::UnmaskSetType(const Int & i, const TYPE_REP_TypeRep & tp) const
       Set t_s;
 
       Generic utp;
-      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp))
+      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp)) {
         t_s.Insert (UnmaskSetType (i, utp));
-
+      }
       t_s.ImpDiff(mk_set(Nil()));
 
       switch(t_s.Card()) {
-        case 0: {
-          return Nil();
-        }
-        case 1: {
-          return t_s.GetElem();
-        }
-        default: {
-          return mk_REP_UnionTypeRep(t_s);
-        }
+        case 0:  { return Nil(); }
+        case 1:  { return t_s.GetElem(); }
+        default: { return mk_REP_UnionTypeRep(t_s); }
       }
     }
     case TAG_TYPE_REP_AllTypeRep: {
@@ -972,21 +1092,15 @@ Generic StatSem::UnmaskSetTypeForLoop(const Int & i, const TYPE_REP_TypeRep & tp
       Set t_s;
 
       Generic utp;
-      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp))
+      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp)) {
         t_s.Insert (UnmaskSetType (i, utp));
-
+      }
       t_s.ImpDiff(mk_set(Nil()));
 
       switch(t_s.Card()) {
-        case 0: {
-          return Nil();
-        }
-        case 1: {
-          return t_s.GetElem();
-        }
-        default: {
-          return mk_REP_UnionTypeRep(t_s);
-        }
+        case 0:  { return Nil(); }
+        case 1:  { return t_s.GetElem(); }
+        default: { return mk_REP_UnionTypeRep(t_s); }
       }
     }
     default: {
@@ -1022,15 +1136,17 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractSetTypeInner (const TYPE_REP_TypeRep & stt
 {
   switch (sttp.GetTag()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sttp))
+      if (IsUnionRecursive (sttp)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic tp (TcauxLookUpTypeName (sttp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractSetTypeInner (tp);
+        }
       }
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -1050,8 +1166,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractSetTypeInner (const TYPE_REP_TypeRep & stt
       SET<TYPE_REP_TypeRep> Utp (sttp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic i;
-      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i))
+      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i)) {
         res.ImpUnion (ExtractSetTypeInner(i));
+      }
       return res;
     }
     default: {
@@ -1080,41 +1197,36 @@ TYPE_REP_TypeRep StatSem::SetTypeUnion (const SET<TYPE_REP_TypeRep> & stp_s)
       TYPE_REP_TypeRep ust (mk_REP_SetTypeRep(rep_alltp));
       TYPE_REP_TypeRep newtp;
   
-      if ((St1 == ust) || (St2 == ust))
+      if ((St1 == ust) || (St2 == ust)) {
         return ust;
-      else if (St1.Is(TAG_TYPE_REP_EmptySetTypeRep))
-      {
+      }
+      else if (St1.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
         return mk_REP_UnionTypeRep(mk_set(St1, SetTypeUnion (St.Union(mk_set(St2)))));
       }
-      else if (St2.Is(TAG_TYPE_REP_EmptySetTypeRep))
-      {
+      else if (St2.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
         return mk_REP_UnionTypeRep(mk_set(St2, SetTypeUnion (St.Union(mk_set(St1)))));
       }
-      else if (St1.Is(TAG_TYPE_REP_SetTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_SetTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep)) {
         newtp = mk_REP_SetTypeRep(MergeTypes(St1.GetRecord(pos_REP_SetTypeRep_elemtp),
                                              St2.GetRecord(pos_REP_SetTypeRep_elemtp)));
       }
-      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep)) {
         newtp = SetTypeUnion (St1.GetSet(pos_REP_UnionTypeRep_tps).Union(mk_set(St2)));
       }
-      else if (St2.Is(TAG_TYPE_REP_UnionTypeRep) && St1.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      else if (St2.Is(TAG_TYPE_REP_UnionTypeRep) && St1.Is(TAG_TYPE_REP_SetTypeRep)) {
         newtp = SetTypeUnion (St2.GetSet(pos_REP_UnionTypeRep_tps).Union(mk_set(St1)));
       }
-      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep)) {
         newtp = SetTypeUnion (St1.GetSet(pos_REP_UnionTypeRep_tps).Union(St2.GetSet(pos_REP_UnionTypeRep_tps)));
       }
-      else
-      {
+      else {
         InternalError (L"SetTypeUnion");
         newtp = ust;
       }
   
-      if (St.IsEmpty())
+      if (St.IsEmpty()) {
         return newtp;
+      }
       else {
         St.Insert (newtp);
         return SetTypeUnion (St);
@@ -1143,26 +1255,29 @@ TYPE_REP_TypeRep StatSem::SetTypeInter (const SET<TYPE_REP_TypeRep> & stp_s)
       TYPE_REP_TypeRep ust (mk_REP_SetTypeRep(rep_alltp));
       TYPE_REP_TypeRep newtp;
   
-      if (St1.Is(TAG_TYPE_REP_EmptySetTypeRep) || St2.Is(TAG_TYPE_REP_EmptySetTypeRep))
+      if (St1.Is(TAG_TYPE_REP_EmptySetTypeRep) || St2.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
         newtp = mk_REP_EmptySetTypeRep(rep_alltp);
-      else if (St1 == ust)
+      }
+      else if (St1 == ust) {
         newtp = St2;
-      else if (St2 == ust)
+      }
+      else if (St2 == ust) {
         newtp = St1;
-      else if (St1.Is(TAG_TYPE_REP_SetTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      }
+      else if (St1.Is(TAG_TYPE_REP_SetTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep)) {
         const TYPE_REP_TypeRep & sl (St1.GetRecord(pos_REP_SetTypeRep_elemtp));
         const TYPE_REP_TypeRep & sr (St2.GetRecord(pos_REP_SetTypeRep_elemtp));
   
         Generic tp (IntersectTypes (sl, sr));
   
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           newtp = mk_REP_EmptySetTypeRep(rep_alltp);
-        else
+        }
+        else {
           newtp = mk_REP_SetTypeRep(tp);
+        }
       }
-      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_SetTypeRep)) {
         SET<TYPE_REP_TypeRep> utps (St1.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> s;
         Generic utp;
@@ -1177,13 +1292,11 @@ TYPE_REP_TypeRep StatSem::SetTypeInter (const SET<TYPE_REP_TypeRep> & stp_s)
           default: { newtp = mk_REP_UnionTypeRep(s); break; }
         }
       }
-      else if (St1.Is(TAG_TYPE_REP_SetTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_SetTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep)) {
         SET<TYPE_REP_TypeRep> utps (St2.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> s;
         Generic utp;
-        for (bool bb = utps.First (utp); bb; bb = utps.Next (utp))
-        {
+        for (bool bb = utps.First (utp); bb; bb = utps.Next (utp)) {
           s.Insert (SetTypeInter (mk_set(St1, utp)));
         }
         s.ImpDiff(mk_set(mk_REP_EmptySetTypeRep(rep_alltp)));
@@ -1214,16 +1327,15 @@ TYPE_REP_TypeRep StatSem::SetTypeInter (const SET<TYPE_REP_TypeRep> & stp_s)
           default: { newtp = mk_REP_UnionTypeRep(s); break; }
         }
       }
-      else
-      {
+      else {
         InternalError (L"SetTypeInter");
         newtp = mk_REP_EmptySetTypeRep(rep_alltp);
       }
   
-      if (St.IsEmpty())
+      if (St.IsEmpty()) {
         return newtp;
-      else
-      {
+      }
+      else {
         St.Insert (newtp);
         return  SetTypeInter (St);
       }
@@ -1238,8 +1350,7 @@ TYPE_REP_TypeRep StatSem::SetTypeInter (const SET<TYPE_REP_TypeRep> & stp_s)
 Generic StatSem::SetTypeMinus (const TYPE_REP_TypeRep & St1, const TYPE_REP_TypeRep & St2)
 {
   Set assume;
-  if (IsOverlapping(St1, St2, assume))
-  {
+  if (IsOverlapping(St1, St2, assume)) {
     switch(St1.GetTag()) {
       case TAG_TYPE_REP_EmptySetTypeRep: {
         return mk_REP_EmptySetTypeRep(rep_alltp);
@@ -1256,8 +1367,9 @@ Generic StatSem::SetTypeMinus (const TYPE_REP_TypeRep & St1, const TYPE_REP_Type
       }
     }
   }
-  else
+  else {
     return Nil();
+  }
 }
 
 // UnmaskSeqType
@@ -1284,19 +1396,10 @@ Generic StatSem::UnmaskSeqType(const Int & i, const TYPE_REP_TypeRep & tp)
       Set t_s;
 
       Generic utp;
-      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp))
+      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp)) {
         t_s.Insert (UnmaskSeqType (i, utp));
-
-// 20130108 -->
-//      if (t_s.InSet(Nil()))
-//      {
-//        if (i == POS)
-//          t_s.RemElem (Nil());
-//        else
-//          return Nil();
-//      }
+      }
       t_s.ImpDiff(mk_set(Nil()));
-// <-- 20130108
 
       switch(t_s.Card()) {
         case 0:  { return Nil(); }
@@ -1328,9 +1431,9 @@ Generic StatSem::UnmaskSeqTypeForLoop(const Int & i, const TYPE_REP_TypeRep & tp
       SET<TYPE_REP_TypeRep> utps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       Set t_s;
       Generic utp;
-      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp))
+      for(bool bb = utps.First (utp); bb; bb = utps.Next (utp)) {
         t_s.Insert (UnmaskSeqType (i, utp));
-
+      }
       t_s.ImpDiff(mk_set(Nil()));
 
       switch(t_s.Card()) {
@@ -1366,15 +1469,17 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractSeqTypeInner (const TYPE_REP_TypeRep & sqt
 {
   switch(sqtp.GetTag()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sqtp))
+      if (IsUnionRecursive (sqtp)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic tp (TcauxLookUpTypeName (sqtp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractSeqTypeInner (tp);
+        }
       }
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -1394,8 +1499,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractSeqTypeInner (const TYPE_REP_TypeRep & sqt
       SET<TYPE_REP_TypeRep> Utp (sqtp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic i;
-      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i))
+      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i)) {
         res.ImpUnion (ExtractSeqTypeInner(i));
+      }
       return res;
     }
     default: {
@@ -1433,35 +1539,30 @@ TYPE_REP_TypeRep StatSem::SeqTypeConc (const SET<TYPE_REP_TypeRep> & stp_s)
       else if (St2.Is(TAG_TYPE_REP_EmptySeqTypeRep)) {
         return SeqTypeConc (St.Union(mk_set(St1)));
       }
-      else if (St1.Is(TAG_TYPE_REP_SeqTypeRep) && St2.Is(TAG_TYPE_REP_SeqTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_SeqTypeRep) && St2.Is(TAG_TYPE_REP_SeqTypeRep)) {
         newtp = mk_REP_SeqTypeRep(MergeTypes(St1.GetRecord(pos_REP_SeqTypeRep_elemtp),
                                              St2.GetRecord(pos_REP_SeqTypeRep_elemtp)));
       }
       else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) &&
-               (St2.Is(TAG_TYPE_REP_SeqTypeRep) || St2.Is(TAG_TYPE_REP_EmptySeqTypeRep)))
-      {
+               (St2.Is(TAG_TYPE_REP_SeqTypeRep) || St2.Is(TAG_TYPE_REP_EmptySeqTypeRep))) {
         newtp = SeqTypeConc (St1.GetSet(pos_REP_UnionTypeRep_tps).Union(mk_set(St2)));
       }
       else if (St2.Is(TAG_TYPE_REP_UnionTypeRep) &&
-               (St1.Is(TAG_TYPE_REP_SeqTypeRep) || St1.Is(TAG_TYPE_REP_EmptySeqTypeRep)))
-      {
+               (St1.Is(TAG_TYPE_REP_SeqTypeRep) || St1.Is(TAG_TYPE_REP_EmptySeqTypeRep))) {
         newtp = SeqTypeConc (St2.GetSet(pos_REP_UnionTypeRep_tps).Union(mk_set(St1)));
       }
-      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep)) {
         newtp = SeqTypeConc (St1.GetSet(pos_REP_UnionTypeRep_tps).Union(St2.GetSet(pos_REP_UnionTypeRep_tps)));
       }
-      else
-      {
+      else {
         InternalError (L"SeqTypeConc");
         newtp = ust;
       }
   
-      if (St.IsEmpty())
+      if (St.IsEmpty()) {
         return newtp;
-      else
-      {
+      }
+      else {
         St.Insert (newtp);
         return SeqTypeConc (St);
       }
@@ -1492,8 +1593,7 @@ TYPE_REP_TypeRep StatSem::SeqMapTypeModify (const TYPE_REP_TypeRep & seqtp,
       SET<TYPE_REP_TypeRep> utps (modtp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> u1tp;
       Generic g;
-      for (bool bb = utps.First(g); bb; bb = utps.Next(g))
-      {
+      for (bool bb = utps.First(g); bb; bb = utps.Next(g)) {
         TYPE_REP_TypeRep tp (g);
         switch(tp.GetTag()) {
           case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -1545,8 +1645,7 @@ bool StatSem::RngSubTypeDom(const SET<TYPE_REP_TypeRep> & tps_)
   SET<TYPE_REP_TypeRep> tps (tps_);
   bool forall = true;
   Generic g;
-  for (bool bb = tps.First(g); bb && forall; bb = tps.Next(g))
-  {
+  for (bool bb = tps.First(g); bb && forall; bb = tps.Next(g)) {
     TYPE_REP_TypeRep tp (g);
     switch (tp.GetTag ()) {
       case TAG_TYPE_REP_TypeNameRep: {
@@ -1604,7 +1703,6 @@ bool StatSem::RngSubTypeDom(const SET<TYPE_REP_TypeRep> & tps_)
       }
     }
   }
-  //return true;
   return forall;
 }
 
@@ -1649,15 +1747,17 @@ Tuple StatSem::ExtractComposeType(const Int & i, const TYPE_REP_TypeRep & lhstp,
   bool fcomp = (frng2.IsNil() || (!fdom1.IsNil() && IsCompatible(i, frng2, fdom1)));
 
   Generic mtp;
-  if (mdom2.IsNil () || mrng1.IsNil ())
+  if (mdom2.IsNil () || mrng1.IsNil ()) {
     mtp = Nil ();
+  }
   else {
     mtp = mk_REP_GeneralMapTypeRep(mdom2, mrng1);
   }
 
   Generic ftp;
-  if (fdom2.IsNil () || frng1.IsNil ())
+  if (fdom2.IsNil () || frng1.IsNil ()) {
     ftp = Nil ();
+  }
   else {
     ftp = mk_REP_PartialFnTypeRep(mk_sequence(fdom2), frng1);
   }
@@ -1677,8 +1777,9 @@ Tuple StatSem::ExtractComposeType(const Int & i, const TYPE_REP_TypeRep & lhstp,
   TYPE_REP_TypeRep restp;
   switch (s.Card ()) {
     case 0: {
-      if (maptp1.Is (TAG_TYPE_REP_EmptyMapTypeRep))
+      if (maptp1.Is (TAG_TYPE_REP_EmptyMapTypeRep)) {
         restp = maptp1;
+      }
       else {
         SEQ<TYPE_REP_TypeRep> Sq (mk_sequence(rep_alltp));
         restp = mk_REP_UnionTypeRep(mk_set(mk_REP_GeneralMapTypeRep(rep_alltp, rep_alltp),
@@ -1708,16 +1809,13 @@ Tuple StatSem::ExtractComposeType(const Int & i, const TYPE_REP_TypeRep & lhstp,
 // -> [REP`TypeRep] * [REP`TypeRep]
 Tuple StatSem::SplitMapType(const Generic & mtp) const
 {
-  if (mtp.IsNil ())
+  if (mtp.IsNil ()) {
     return mk_(Nil(), Nil());
-
+  }
   TYPE_REP_TypeRep tp (mtp);
   switch (tp.GetTag ()) {
     case TAG_TYPE_REP_EmptyMapTypeRep: {
-// 20111213 -->
-      //return mk_(Nil(), Nil());
       return mk_(tp.GetRecord(pos_REP_EmptyMapTypeRep_mapdom), tp.GetRecord(pos_REP_EmptyMapTypeRep_maprng));
-// <-- 20111213
     }
     case TAG_TYPE_REP_GeneralMapTypeRep: {
       return mk_(tp.GetRecord(pos_REP_GeneralMapTypeRep_mapdom), tp.GetRecord(pos_REP_GeneralMapTypeRep_maprng));
@@ -1792,9 +1890,9 @@ Tuple StatSem::SplitMapType(const Generic & mtp) const
 Tuple StatSem::SplitFunType(const Generic & mtp) const
 {
   Nil nil;
-  if (mtp.IsNil ())
+  if (mtp.IsNil ()) {
     return mk_(Nil(), Nil(), Bool(true));
-
+  }
   TYPE_REP_TypeRep tp (mtp);
   switch (tp.GetTag ()) {
     case TAG_TYPE_REP_TotalFnTypeRep: {
@@ -1851,10 +1949,12 @@ Tuple StatSem::SplitFunType(const Generic & mtp) const
       bool allok = true;
       for (bool cc = d1tp.First (g); cc; cc = d1tp.Next (g)) {
         SEQ<TYPE_REP_TypeRep> tp_l (g);
-        if (tp_l.Length () == 1)
+        if (tp_l.Length () == 1) {
           d1tp_.Insert (tp_l.Hd ());
-        else
+        }
+        else {
           allok = false;
+        }
       }
       SET<TYPE_REP_TypeRep> d2tp (MergeNumericTypes(d1tp_));
       SET<TYPE_REP_TypeRep> r2tp (MergeNumericTypes(r1tp));
@@ -1924,14 +2024,17 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractFunTypeInner (const TYPE_REP_TypeRep & stt
 {
   switch (sttp.GetTag ()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sttp))
+      if (IsUnionRecursive (sttp)) {
         return SET<TYPE_REP_TypeRep>();
+      }
       else {
         Generic tp (TcauxLookUpTypeName (sttp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractFunTypeInner (tp);
+        }
       }
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -1958,8 +2061,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractFunTypeInner (const TYPE_REP_TypeRep & stt
       SET<TYPE_REP_TypeRep> Utp (sttp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic i;
-      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i))
+      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i)) {
         res.ImpUnion (ExtractFunTypeInner(i));
+      }
       return res;
     }
     default: {
@@ -1976,10 +2080,7 @@ Generic StatSem::UnmaskMapDomType(const Int & i, const TYPE_REP_TypeRep & tp)
 {
   switch (tp.GetTag()) {
     case TAG_TYPE_REP_EmptyMapTypeRep: {
-// 20130108 -->
-      //return tp.GetRecord(pos_REP_EmptyMapTypeRep_mapdom);
       return Nil();
-// <-- 20130108
     }
     case TAG_TYPE_REP_GeneralMapTypeRep: {
       return tp.GetRecord(pos_REP_GeneralMapTypeRep_mapdom);
@@ -1991,11 +2092,11 @@ Generic StatSem::UnmaskMapDomType(const Int & i, const TYPE_REP_TypeRep & tp)
       SET<TYPE_REP_TypeRep> tps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> mdtps;
       Generic t;
-      for (bool bb = tps.First(t); bb; bb = tps.Next(t))
-      {
+      for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
         Generic gtp (UnmaskMapDomType(i, t));
-        if (!gtp.IsNil())
+        if (!gtp.IsNil()) {
           mdtps.Insert(gtp);
+        }
       }
       switch (mdtps.Card()) {
         case 0: { return Nil(); }
@@ -2020,10 +2121,7 @@ Generic StatSem::UnmaskMapRngType(const Int & i, const TYPE_REP_TypeRep & tp)
 {
   switch (tp.GetTag()) {
     case TAG_TYPE_REP_EmptyMapTypeRep: {
-// 20130108 -->
-      //return tp.GetRecord(pos_REP_EmptyMapTypeRep_maprng);
       return Nil();
-// <-- 20130108
     }
     case TAG_TYPE_REP_GeneralMapTypeRep: {
       return tp.GetRecord(pos_REP_GeneralMapTypeRep_maprng);
@@ -2035,11 +2133,11 @@ Generic StatSem::UnmaskMapRngType(const Int & i, const TYPE_REP_TypeRep & tp)
       SET<TYPE_REP_TypeRep> tps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> mrtps;
       Generic t;
-      for (bool bb = tps.First(t); bb; bb = tps.Next(t))
-      {
+      for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
         Generic gtp (UnmaskMapRngType(i, t));
-        if (!gtp.IsNil())
+        if (!gtp.IsNil()) {
           mrtps.Insert(gtp);
+        }
       }
       switch (mrtps.Card()) {
         case 0: { return Nil(); }
@@ -2082,14 +2180,17 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractMapTypeInner (const TYPE_REP_TypeRep & stt
 {
   switch (sttp.GetTag ()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sttp))
+      if (IsUnionRecursive (sttp)) {
         return SET<TYPE_REP_TypeRep>();
+      }
       else {
         Generic tp (TcauxLookUpTypeName (sttp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractMapTypeInner (tp);
+        }
       }
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -2114,8 +2215,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractMapTypeInner (const TYPE_REP_TypeRep & stt
       SET<TYPE_REP_TypeRep> Utp (sttp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic tp;
-      for (bool bb = Utp.First(tp); bb ; bb = Utp.Next(tp))
+      for (bool bb = Utp.First(tp); bb ; bb = Utp.Next(tp)) {
         res.ImpUnion (ExtractMapTypeInner(tp));
+      }
       return res;
     }
     default: {
@@ -2135,10 +2237,12 @@ TYPE_REP_TypeRep StatSem::MapTypeMerge (const SET<TYPE_REP_TypeRep> & St)
     }
     case 1: {
       Generic tp (St.GetElem());
-      if (tp.IsNil ())
+      if (tp.IsNil ()) {
         return mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp);
-      else
+      }
+      else {
         return tp;
+      }
     }
     default: { // St.Card () > 1
       SET<TYPE_REP_TypeRep> St_q (St);
@@ -2148,23 +2252,17 @@ TYPE_REP_TypeRep StatSem::MapTypeMerge (const SET<TYPE_REP_TypeRep> & St)
       TYPE_REP_TypeRep ust (mk_REP_GeneralMapTypeRep(rep_alltp,rep_alltp));
       TYPE_REP_TypeRep newtp;
   
-      if ((St1 == ust) || (St2 == ust))
+      if ((St1 == ust) || (St2 == ust)) {
         newtp = ust;
-      else if (St1.Is(TAG_TYPE_REP_EmptyMapTypeRep))
+      }
+      else if (St1.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
         newtp = St2;
-      else if (St2.Is(TAG_TYPE_REP_EmptyMapTypeRep))
+      }
+      else if (St2.Is(TAG_TYPE_REP_EmptyMapTypeRep)) {
         newtp = St1;
-//      else if ((St1.Is(TAG_TYPE_REP_GeneralMapTypeRep) &&
-//                St2.Is(TAG_TYPE_REP_GeneralMapTypeRep)) ||
-//               (St1.Is(TAG_TYPE_REP_GeneralMapTypeRep) &&
-//                St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) ||
-//               (St1.Is(TAG_TYPE_REP_InjectiveMapTypeRep) &&
-//                St2.Is(TAG_TYPE_REP_GeneralMapTypeRep)) ||
-//               (St1.Is(TAG_TYPE_REP_InjectiveMapTypeRep) &&
-//                St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep)))
+      }
       else if ((St1.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St1.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) &&
-               (St2.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep)))
-      {
+               (St2.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep))) {
         const TYPE_REP_TypeRep & d1 (St1.GetRecord (1));
         const TYPE_REP_TypeRep & r1 (St1.GetRecord (2));
         const TYPE_REP_TypeRep & d2 (St2.GetRecord (1));
@@ -2172,57 +2270,41 @@ TYPE_REP_TypeRep StatSem::MapTypeMerge (const SET<TYPE_REP_TypeRep> & St)
   
         newtp = mk_REP_GeneralMapTypeRep(MergeTypes(d1, d2), MergeTypes(r1, r2));
       }
-//      else if ((St1.Is(TAG_TYPE_REP_UnionTypeRep) &&
-//                St2.Is(TAG_TYPE_REP_GeneralMapTypeRep)) ||
-//               (St1.Is(TAG_TYPE_REP_UnionTypeRep) &&
-//                St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep)))
       else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) &&
-               (St2.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep)))
-      {
+               (St2.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St2.Is(TAG_TYPE_REP_InjectiveMapTypeRep))) {
         SET<TYPE_REP_TypeRep> utps (St1.GetSet(pos_REP_UnionTypeRep_tps));
         utps.Insert (St2);
         newtp = MapTypeMerge (utps);
       }
-//      else if ((St2.Is(TAG_TYPE_REP_UnionTypeRep) &&
-//                St1.Is(TAG_TYPE_REP_GeneralMapTypeRep)) ||
-//               (St2.Is(TAG_TYPE_REP_UnionTypeRep) &&
-//                St1.Is(TAG_TYPE_REP_InjectiveMapTypeRep)))
       else if (St2.Is(TAG_TYPE_REP_UnionTypeRep) &&
-               (St1.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St1.Is(TAG_TYPE_REP_InjectiveMapTypeRep)))
-      {
+               (St1.Is(TAG_TYPE_REP_GeneralMapTypeRep) || St1.Is(TAG_TYPE_REP_InjectiveMapTypeRep))) {
         SET<TYPE_REP_TypeRep> utps (St2.GetSet(pos_REP_UnionTypeRep_tps));
         utps.Insert (St1);
         newtp = MapTypeMerge (utps);
       }
-      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      else if (St1.Is(TAG_TYPE_REP_UnionTypeRep) && St2.Is(TAG_TYPE_REP_UnionTypeRep)) {
         SET<TYPE_REP_TypeRep> ul (St1.GetSet(pos_REP_UnionTypeRep_tps));
         const SET<TYPE_REP_TypeRep> & ur (St2.GetSet(pos_REP_UnionTypeRep_tps));
         ul.ImpUnion (ur);
         newtp = MapTypeMerge (ul);
       }
-      else
-      {
+      else {
         InternalError (L"MapTypeMerge");
         newtp = ust;
       }
   
-      if (St.IsEmpty())
-      {
+      if (St.IsEmpty()) {
         if (IsCompatible(POS, newtp, mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))) {
           return newtp;
         }
-        else
-        {
-          if (newtp.Is(TAG_TYPE_REP_UnionTypeRep))
-          {
+        else {
+          if (newtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
             SET<TYPE_REP_TypeRep> uts (newtp.GetSet(pos_REP_UnionTypeRep_tps));
             uts.Insert(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
             newtp.SetField(1, uts);
             return newtp;
           }
-          else
-          {
+          else {
             SET<TYPE_REP_TypeRep> uts;
             uts.Insert(newtp)
                .Insert(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
@@ -2230,8 +2312,7 @@ TYPE_REP_TypeRep StatSem::MapTypeMerge (const SET<TYPE_REP_TypeRep> & St)
           }
         }
       }
-      else
-      {
+      else {
         St_q.Insert (newtp);
         return MapTypeMerge (St_q);
       }
@@ -2259,11 +2340,11 @@ Tuple StatSem::MapTypeDomRestrict (const TYPE_REP_TypeRep & St, const Generic & 
       SET<TYPE_REP_TypeRep> utps (St.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> u1tp;
       Generic u;
-      for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u))
-      {
+      for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u)) {
         TYPE_REP_TypeRep tp (u);
-        if (tp.Is(TAG_TYPE_REP_SetTypeRep))
+        if (tp.Is(TAG_TYPE_REP_SetTypeRep)) {
           u1tp.Insert(tp.GetRecord(pos_REP_SetTypeRep_elemtp));
+        }
       }
 
       SET<TYPE_REP_TypeRep> u2tp (MergeNumericTypes(u1tp));
@@ -2291,8 +2372,9 @@ Tuple StatSem::MapTypeDomRestrict (const TYPE_REP_TypeRep & St, const Generic & 
 
   Generic m1tp;
   TYPE_REP_TypeRep Mt;
-  if (mt.IsNil ())
+  if (mt.IsNil ()) {
     m1tp = Nil();
+  }
   else {
     Mt = mt;
     switch(Mt.GetTag()) {
@@ -2311,8 +2393,7 @@ Tuple StatSem::MapTypeDomRestrict (const TYPE_REP_TypeRep & St, const Generic & 
       case TAG_TYPE_REP_UnionTypeRep: {
         SET<TYPE_REP_TypeRep> utps (Mt.GetSet(pos_REP_UnionTypeRep_tps)), u1tp;
         Generic u;
-        for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u))
-        {
+        for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u)) {
           TYPE_REP_TypeRep tp (u);
           switch(tp.GetTag()) {
             case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -2352,26 +2433,25 @@ Tuple StatSem::MapTypeDomRestrict (const TYPE_REP_TypeRep & St, const Generic & 
     }
   }
 
-  if (m1tp.IsNil())
+  if (m1tp.IsNil()) {
     return mk_(mt, (Int)EMPTYMAP);
-  else if (s1tp.IsNil() || IsOverlapping (s1tp, m1tp, Set()))
-  {
-    if (Mt.Is(TAG_TYPE_REP_UnionTypeRep))
-    {
+  }
+  else if (s1tp.IsNil() || IsOverlapping (s1tp, m1tp, Set())) {
+    if (Mt.Is(TAG_TYPE_REP_UnionTypeRep)) {
       SET<TYPE_REP_TypeRep> u (Mt.GetSet(pos_REP_UnionTypeRep_tps));
       u.Insert(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
       return mk_(mk_REP_UnionTypeRep(u), (Int)OK);
     }
-    else
-    {
+    else {
       SET<TYPE_REP_TypeRep> tmp2;
       tmp2.Insert(Mt);
       tmp2.Insert(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
       return mk_(mk_REP_UnionTypeRep(tmp2), (Int)OK);
     }
   }
-  else
+  else {
     return mk_(Mt, (Int)NOTOVERLAP);
+  }
 }
 
 // MapTypeRngRestrict
@@ -2394,11 +2474,11 @@ Tuple StatSem::MapTypeRngRestrict (const Generic & mt, const TYPE_REP_TypeRep & 
       SET<TYPE_REP_TypeRep> utps (St.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> u1tp;
       Generic u;
-      for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u))
-      {
+      for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u)) {
         TYPE_REP_TypeRep tp (u);
-        if (tp.Is(TAG_TYPE_REP_SetTypeRep))
+        if (tp.Is(TAG_TYPE_REP_SetTypeRep)) {
           u1tp.Insert(tp.GetRecord(pos_REP_SetTypeRep_elemtp));
+        }
       }
 
       SET<TYPE_REP_TypeRep> u2tp (MergeNumericTypes(u1tp));
@@ -2426,8 +2506,9 @@ Tuple StatSem::MapTypeRngRestrict (const Generic & mt, const TYPE_REP_TypeRep & 
 
   Generic m1tp;
   TYPE_REP_TypeRep Mt;
-  if (mt.IsNil ())
+  if (mt.IsNil ()) {
     m1tp = Nil ();
+  }
   else {
     Mt = mt;
     switch(Mt.GetTag()) {
@@ -2447,8 +2528,7 @@ Tuple StatSem::MapTypeRngRestrict (const Generic & mt, const TYPE_REP_TypeRep & 
         SET<TYPE_REP_TypeRep> utps (Mt.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> u1tp;
         Generic u;
-        for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u))
-        {
+        for (bool bb = utps.First(u) ; bb ; bb = utps.Next(u)) {
           TYPE_REP_TypeRep tp (u);
           switch(tp.GetTag()) {
             case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -2488,23 +2568,22 @@ Tuple StatSem::MapTypeRngRestrict (const Generic & mt, const TYPE_REP_TypeRep & 
     }
   }
 
-  if (m1tp.IsNil())
+  if (m1tp.IsNil()) {
     return mk_(mt, (Int)EMPTYMAP);
-  else if (s1tp.IsNil() || IsOverlapping (s1tp, m1tp, Set()))
-  {
-    if (Mt.Is(TAG_TYPE_REP_UnionTypeRep))
-    {
+  }
+  else if (s1tp.IsNil() || IsOverlapping (s1tp, m1tp, Set())) {
+    if (Mt.Is(TAG_TYPE_REP_UnionTypeRep)) {
       SET<TYPE_REP_TypeRep> u (Mt.GetSet(pos_REP_UnionTypeRep_tps));
       u.Insert(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
       return mk_(mk_REP_UnionTypeRep(u), (Int)OK);
     }
-    else
-    {
+    else {
       return mk_(mk_REP_UnionTypeRep(mk_set(Mt, mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))), (Int)OK);
     }
   }
-  else
+  else {
     return mk_(Mt, (Int)NOTOVERLAP);
+  }
 }
 
 // InverseMapType
@@ -2512,9 +2591,9 @@ Tuple StatSem::MapTypeRngRestrict (const Generic & mt, const TYPE_REP_TypeRep & 
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::InverseMapType (const Generic & Tp) const
 {
-  if (Tp.IsNil ())
+  if (Tp.IsNil ()) {
     return mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp);
-
+  }
   TYPE_REP_TypeRep tp (Tp);
   switch (tp.GetTag()) {
     case TAG_TYPE_REP_EmptyMapTypeRep: {
@@ -2532,10 +2611,10 @@ TYPE_REP_TypeRep StatSem::InverseMapType (const Generic & Tp) const
       SET<TYPE_REP_TypeRep> utps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> st;
       Generic g;
-      for (bool bb = utps.First(g); bb; bb = utps.Next(g))
-      {
-        if (g.Is(TAG_TYPE_REP_GeneralMapTypeRep) || g.Is(TAG_TYPE_REP_InjectiveMapTypeRep))
-        st.Insert (InverseMapType(g));
+      for (bool bb = utps.First(g); bb; bb = utps.Next(g)) {
+        if (g.Is(TAG_TYPE_REP_GeneralMapTypeRep) || g.Is(TAG_TYPE_REP_InjectiveMapTypeRep)) {
+          st.Insert (InverseMapType(g));
+        }
       }
       return mk_REP_UnionTypeRep(st);
     }
@@ -2556,15 +2635,9 @@ Generic StatSem::ExtractCompositeType (const TYPE_REP_TypeRep & sttp)
 {
   SET<TYPE_REP_TypeRep> r1tp (ExtractCompositeTypeInner(sttp));
   switch(r1tp.Card()) {
-    case 0: {
-      return Nil();
-    }
-    case 1: {
-      return r1tp.GetElem();
-    }
-    default: {
-      return mk_REP_UnionTypeRep(r1tp);
-    }
+    case 0:  { return Nil(); }
+    case 1:  { return r1tp.GetElem(); }
+    default: { return mk_REP_UnionTypeRep(r1tp); }
   }
 }
 
@@ -2575,13 +2648,14 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractCompositeTypeInner (const TYPE_REP_TypeRep
 {
   switch(sttp.GetTag()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sttp))
+      if (IsUnionRecursive (sttp)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic tp (TcauxLookUpTypeName (sttp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
+        }
         else {
           return ExtractCompositeTypeInner (tp);
         }
@@ -2604,12 +2678,14 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractCompositeTypeInner (const TYPE_REP_TypeRep
       SET<TYPE_REP_TypeRep> Utp (sttp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic i;
-      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i))
+      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i)) {
         res.ImpUnion (ExtractCompositeTypeInner(i));
+      }
       return res;
     }
-    default:
+    default: {
       return SET<TYPE_REP_TypeRep>();
+    }
   }
 }
 
@@ -2618,12 +2694,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractCompositeTypeInner (const TYPE_REP_TypeRep
 bool StatSem::CompareProductLength (int s, int n, int op) const
 {
   switch(op) {
-    case EQ:
-      return (s == n);
-    case NUMGE:
-      return true; // was s >= n;
-    default:
-      return false;
+    case EQ:    { return (s == n); }
+    case NUMGE: { return true;  } // was s >= n;
+    default:    { return false; }
   }
 }
 
@@ -2637,16 +2710,9 @@ Generic StatSem::ExtractProductType (const TYPE_REP_TypeRep & sttp, int n, int o
 {
   Set r1tp (ExtractProductTypeInner(sttp,n,op));
   switch(r1tp.Card()) {
-    case 0: {
-      //return TYPE_REP_ProductTypeRep().Init(SEQ<TYPE_REP_TypeRep>());
-      return Nil();
-    }
-    case 1: {
-      return r1tp.GetElem();
-    }
-    default: {
-      return TYPE_REP_ProductTypeRep().Init(MakeOneProductTypeRep (r1tp));
-    }
+    case 0:  { return Nil(); }
+    case 1:  { return r1tp.GetElem(); }
+    default: { return TYPE_REP_ProductTypeRep().Init(MakeOneProductTypeRep (r1tp)); }
   }
 }
 
@@ -2659,15 +2725,17 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractProductTypeInner (const TYPE_REP_TypeRep &
 {
   switch (sttp.GetTag()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sttp))
+      if (IsUnionRecursive (sttp)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic tp (TcauxLookUpTypeName (sttp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractProductTypeInner (tp, n, op);
+        }
       }
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -2675,9 +2743,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractProductTypeInner (const TYPE_REP_TypeRep &
     }
     case TAG_TYPE_REP_AllTypeRep: {
       SEQ<TYPE_REP_TypeRep> sq;
-      for (int j = 1; j <= n; j++)
+      for (int j = 1; j <= n; j++) {
         sq.ImpAppend (rep_alltp);
-
+      }
       SET<TYPE_REP_TypeRep> res;
       res.Insert(mk_REP_ProductTypeRep(sq));
       return res;
@@ -2685,22 +2753,25 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractProductTypeInner (const TYPE_REP_TypeRep &
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & s (sttp.GetSequence(pos_REP_ProductTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
-      if (CompareProductLength (s.Length (), n, op))
+      if (CompareProductLength (s.Length (), n, op)) {
       //      if (s.Length() == n)
       //      if (s.Length() >= n)
         res.Insert(sttp);
+      }
       return res;
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> Utp (sttp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic i;
-      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i))
+      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i)) {
         res.ImpUnion (ExtractProductTypeInner(i, n, op));
+      }
       return res;
     }
-    default:
+    default: {
       return SET<TYPE_REP_TypeRep>();
+    }
   }
 }
 
@@ -2719,22 +2790,18 @@ Generic StatSem::ExtractSetObjRefType (const TYPE_REP_TypeRep & stp)
       SET<TYPE_REP_TypeRep> utps (sstp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> utps2;
       Generic g;
-      for (bool bb = utps.First(g); bb; bb = utps.Next(g))
-      {
+      for (bool bb = utps.First(g); bb; bb = utps.Next(g)) {
         TYPE_REP_TypeRep tp (g);
         if (tp.Is(TAG_TYPE_REP_SetTypeRep)) {
           Generic tp_g (ExtractObjRefType(tp.GetRecord(pos_REP_SetTypeRep_elemtp)));
-          if (!tp_g.IsNil())
+          if (!tp_g.IsNil()) {
             utps2.Insert(tp_g);
+          }
         }
       }
       switch (utps2.Card()) {
-        case 0: {
-          return Nil();
-        }
-        case 1: {
-          return utps2.GetElem();
-        }
+        case 0:  { return Nil(); }
+        case 1:  { return utps2.GetElem(); }
         default: {
           sstp.SetField(1,utps2);
           return sstp;
@@ -2754,15 +2821,9 @@ Generic StatSem::ExtractObjRefType (const TYPE_REP_TypeRep & sttp)
 {
   SET<TYPE_REP_TypeRep> r1tp (ExtractObjectTypeInner(sttp));
   switch(r1tp.Card()) {
-    case 0: {
-      return Nil();
-    }
-    case 1: {
-      return r1tp.GetElem();
-    }
-    default: {
-      return mk_REP_UnionTypeRep(r1tp);
-    }
+    case 0:  { return Nil(); }
+    case 1:  { return r1tp.GetElem(); }
+    default: { return mk_REP_UnionTypeRep(r1tp); }
   }
 }
 
@@ -2773,15 +2834,17 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractObjectTypeInner (const TYPE_REP_TypeRep & 
 {
   switch (sttp.GetTag()) {
     case TAG_TYPE_REP_TypeNameRep: {
-      if (IsUnionRecursive (sttp))
+      if (IsUnionRecursive (sttp)) {
         return SET<TYPE_REP_TypeRep>();
-      else
-      {
+      }
+      else {
         Generic tp (TcauxLookUpTypeName (sttp.GetRecord(pos_REP_TypeNameRep_nm)));
-        if (tp.IsNil())
+        if (tp.IsNil()) {
           return SET<TYPE_REP_TypeRep>();
-        else
+        }
+        else {
           return ExtractObjectTypeInner (tp);
+        }
       }
     }
     case TAG_TYPE_REP_InvTypeRep: {
@@ -2796,8 +2859,9 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractObjectTypeInner (const TYPE_REP_TypeRep & 
       SET<TYPE_REP_TypeRep> Utp (sttp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic i;
-      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i))
+      for (bool bb = Utp.First(i); bb ; bb = Utp.Next(i)) {
         res.ImpUnion (ExtractObjectTypeInner(i));
+      }
       return res;
     }
     default: {
@@ -2813,29 +2877,29 @@ SET<TYPE_REP_TypeRep> StatSem::ExtractObjectTypeInner (const TYPE_REP_TypeRep & 
 SEQ<TYPE_REP_TypeRep> StatSem::MakeOneProductTypeRep (const SET<TYPE_REP_ProductTypeRep> & prod_s)
 {
 
-  if (prod_s.Card () == 1)
-  {
+  if (prod_s.Card () == 1) {
     TYPE_REP_ProductTypeRep ptp (prod_s.GetElem());
     return ptp.GetSequence(pos_REP_ProductTypeRep_tps);
   }
-  else
-  {
+  else {
     TYPE_REP_ProductTypeRep ptp (prod_s.GetElem());
     SEQ<TYPE_REP_TypeRep> restseq (MakeOneProductTypeRep (prod_s.Diff(mk_set(ptp))));
     const SEQ<TYPE_REP_TypeRep> & seq (ptp.GetSequence(pos_REP_ProductTypeRep_tps));
     size_t mx = restseq.Length ();
-    if (mx < (size_t)(seq.Length ()))
+    if (mx < (size_t)(seq.Length ())) {
       mx = seq.Length ();
-
+    }
     SEQ<TYPE_REP_TypeRep> res;
-    for (size_t j = 1; j <= mx; j++)
-    {
-      if (j > (size_t)(seq.Length ()))
+    for (size_t j = 1; j <= mx; j++) {
+      if (j > (size_t)(seq.Length ())) {
         res.ImpAppend (restseq[j]);
-      else if (j > (size_t)(restseq.Length ()))
+      }
+      else if (j > (size_t)(restseq.Length ())) {
         res.ImpAppend (seq[j]);
-      else
+      }
+      else {
         res.ImpAppend (MergeTypes (seq[j], restseq[j]));
+      }
     }
     return res;
   }
@@ -2868,31 +2932,36 @@ TYPE_REP_TypeRep StatSem::InstFn (const Int & kind,
     }
     case TAG_TYPE_REP_TypeNameRep: {
       const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
-      if (((kind == REN) || (kind == PAR)) && (bind.DomExists (nm)))
+      if (((kind == REN) || (kind == PAR)) && (bind.DomExists (nm))) {
         return bind[nm];
-      else
+      }
+      else {
         return tp;
+      }
     }
     case TAG_TYPE_REP_TypeVarRep: {
       const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeVarRep_nm));
-      if ((kind == VAR) && (bind.DomExists (nm)))
+      if ((kind == VAR) && (bind.DomExists (nm))) {
         return bind[nm];
-      else
+      }
+      else {
         return tp;
+      }
     }
     case TAG_TYPE_REP_TypeParRep: {
       const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeParRep_nm));
-      if ((kind == PAR) && (bind.DomExists (nm)))
+      if ((kind == PAR) && (bind.DomExists (nm))) {
         return bind[nm];
-      else
+      }
+      else {
         return tp;
+      }
     }
     case TAG_TYPE_REP_CompositeTypeRep: {
       const SEQ<TYPE_REP_FieldRep> & fields (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> res;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_REP_FieldRep & field (fields[idx]);
         res.ImpAppend (TYPE_REP_FieldRep().Init(field.GetField(pos_REP_FieldRep_sel),
                                                 InstFn (kind, field.GetRecord(pos_REP_FieldRep_tp), bind),
@@ -2904,16 +2973,18 @@ TYPE_REP_TypeRep StatSem::InstFn (const Int & kind,
       SET<TYPE_REP_TypeRep> utps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> res;
       Generic utp;
-      for (bool bb = utps.First(utp); bb; bb = utps.Next(utp))
+      for (bool bb = utps.First(utp); bb; bb = utps.Next(utp)) {
         res.Insert (InstFn (kind, utp, bind));
+      }
       return mk_REP_UnionTypeRep(res);
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tps (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       SEQ<TYPE_REP_TypeRep> res;
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; idx <= len_tps; idx++)
+      for (size_t idx = 1; idx <= len_tps; idx++) {
         res.ImpAppend (InstFn (kind, tps[idx], bind));
+      }
       return mk_REP_ProductTypeRep(res);
     }
     case TAG_TYPE_REP_SetTypeRep: {
@@ -2947,24 +3018,27 @@ TYPE_REP_TypeRep StatSem::InstFn (const Int & kind,
       const SEQ<TYPE_REP_TypeRep> & fndom (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
       SEQ<TYPE_REP_TypeRep> res;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         res.ImpAppend (InstFn (kind, fndom[idx], bind));
+      }
       return mk_REP_PartialFnTypeRep(res, InstFn (kind, tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), bind));
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & fndom (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
       SEQ<TYPE_REP_TypeRep> res;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         res.ImpAppend (InstFn (kind, fndom[idx], bind));
+      }
       return mk_REP_TotalFnTypeRep(res, InstFn (kind, tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), bind));
     }
     case TAG_TYPE_REP_OpTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & Dom (tp.GetSequence(pos_REP_OpTypeRep_Dom));
       SEQ<TYPE_REP_TypeRep> res;
       size_t len_Dom = Dom.Length();
-      for (size_t idx = 1; idx <= len_Dom; idx++)
+      for (size_t idx = 1; idx <= len_Dom; idx++) {
         res.ImpAppend (InstFn (kind, Dom[idx], bind));
+      }
       return mk_REP_OpTypeRep(res, InstFn (kind, tp.GetRecord(pos_REP_OpTypeRep_Rng), bind));
     }
     case TAG_TYPE_REP_PolyTypeRep: {
@@ -3002,17 +3076,18 @@ Record StatSem::InstFnAS (const Record & tp, const MAP<TYPE_AS_Name,TYPE_AS_Type
     }
     case TAG_TYPE_AS_TypeName: {
       const TYPE_AS_Name & nm (tp.GetRecord(pos_AS_TypeName_name));
-      if (bind.DomExists (nm))
+      if (bind.DomExists (nm)) {
         return bind[nm];
-      else
+      }
+      else {
         return tp;
+      }
     }
     case TAG_TYPE_AS_CompositeType: {
       const SEQ<TYPE_AS_Field> & fields (tp.GetSequence(pos_AS_CompositeType_fields));
       SEQ<TYPE_AS_Field> new_fields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         TYPE_AS_Field fld (fields[idx]);
         fld.SetField(pos_AS_Field_type, InstFnAS (fld.GetRecord(pos_AS_Field_type), bind));
         new_fields.ImpAppend (fld);
@@ -3025,9 +3100,9 @@ Record StatSem::InstFnAS (const Record & tp, const MAP<TYPE_AS_Name,TYPE_AS_Type
       const SEQ<TYPE_AS_Type> & utps (tp.GetSequence(pos_AS_UnionType_tps));
       SEQ<TYPE_AS_Type> new_utps;
       size_t len_utps = utps.Length();
-      for (size_t idx = 1; idx <= len_utps; idx++)
+      for (size_t idx = 1; idx <= len_utps; idx++) {
         new_utps.ImpAppend (InstFnAS (utps[idx], bind));
-
+      }
       TYPE_AS_UnionType res (tp);
       res.SetField(pos_AS_UnionType_tps, new_utps);
       return res;
@@ -3036,9 +3111,9 @@ Record StatSem::InstFnAS (const Record & tp, const MAP<TYPE_AS_Name,TYPE_AS_Type
       const SEQ<TYPE_AS_Type> & fields (tp.GetSequence(pos_AS_ProductType_tps));
       SEQ<TYPE_AS_Type> new_fields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         new_fields.ImpAppend (InstFnAS (fields[idx], bind));
-
+      }
       TYPE_AS_ProductType res (tp);
       res.SetField(pos_AS_ProductType_tps, new_fields);
       return res;
@@ -3101,9 +3176,9 @@ Record StatSem::InstFnAS (const Record & tp, const MAP<TYPE_AS_Name,TYPE_AS_Type
       const SEQ<TYPE_AS_Type> & opdom (tp.GetSequence(pos_AS_OpType_opdom));
       SEQ<TYPE_AS_Type> new_opdom;
       size_t len_opdom = opdom.Length();
-      for (size_t idx = 1; idx <= len_opdom; idx++)
+      for (size_t idx = 1; idx <= len_opdom; idx++) {
         new_opdom.ImpAppend (InstFnAS (opdom[idx], bind));
-
+      }
       TYPE_AS_OpType res (tp);
       res.SetField(pos_AS_OpType_opdom, new_opdom);
       res.SetField(pos_AS_OpType_oprng, InstFnAS (tp.GetRecord(pos_AS_OpType_oprng), bind));
@@ -3113,9 +3188,9 @@ Record StatSem::InstFnAS (const Record & tp, const MAP<TYPE_AS_Name,TYPE_AS_Type
       const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(pos_AS_PartialFnType_fndom));
       SEQ<TYPE_AS_Type> new_fndom;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         new_fndom.ImpAppend (InstFnAS (fndom[idx], bind));
-
+      }
       TYPE_AS_PartialFnType res (tp);
       res.SetField(pos_AS_PartialFnType_fndom, new_fndom);
       res.SetField(pos_AS_PartialFnType_fnrng, InstFnAS (tp.GetRecord(pos_AS_PartialFnType_fnrng), bind));
@@ -3125,9 +3200,9 @@ Record StatSem::InstFnAS (const Record & tp, const MAP<TYPE_AS_Name,TYPE_AS_Type
       const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(pos_AS_TotalFnType_fndom));
       SEQ<TYPE_AS_Type> new_fndom;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         new_fndom.ImpAppend (InstFnAS (fndom[idx], bind));
-
+      }
       TYPE_AS_TotalFnType res (tp);
       res.SetField(pos_AS_TotalFnType_fndom, new_fndom);
       res.SetField(pos_AS_TotalFnType_fnrng, InstFnAS (tp.GetRecord(pos_AS_TotalFnType_fnrng), bind));
@@ -3164,8 +3239,7 @@ TYPE_REP_TypeRep StatSem::QualifyTypeNames(const TYPE_REP_TypeRep & tp, const TY
       const SEQ<TYPE_REP_FieldRep> & fields (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> newfields;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_REP_FieldRep & field (fields[idx]);
         newfields.ImpAppend(TYPE_REP_FieldRep().Init(field.GetField(pos_REP_FieldRep_sel),
                                                      QualifyTypeNames(field.GetRecord(pos_REP_FieldRep_tp),nm),
@@ -3177,16 +3251,18 @@ TYPE_REP_TypeRep StatSem::QualifyTypeNames(const TYPE_REP_TypeRep & tp, const TY
       SET<TYPE_REP_TypeRep> tps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> ntps;
       Generic gtp;
-      for (bool bb = tps.First(gtp); bb; bb = tps.Next(gtp))
+      for (bool bb = tps.First(gtp); bb; bb = tps.Next(gtp)) {
         ntps.Insert(QualifyTypeNames(gtp, nm));
+      }
       return mk_REP_UnionTypeRep(ntps);
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tps (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       SEQ<TYPE_REP_TypeRep> ntps;
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; idx <= len_tps; idx++)
+      for (size_t idx = 1; idx <= len_tps; idx++) {
         ntps.ImpAppend(QualifyTypeNames(tps[idx], nm));
+      }
       return mk_REP_ProductTypeRep(ntps);
     }
     case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -3208,41 +3284,45 @@ TYPE_REP_TypeRep StatSem::QualifyTypeNames(const TYPE_REP_TypeRep & tp, const TY
       if (gfndom.IsSequence()) {
         SEQ<TYPE_REP_TypeRep> fndom(gfndom), newfndom;
         size_t len_fndom = fndom.Length(); 
-        for (size_t idx = 1; idx <= len_fndom; idx++)
+        for (size_t idx = 1; idx <= len_fndom; idx++) {
           newfndom.ImpAppend(QualifyTypeNames(fndom[idx], nm));
+        }
         return mk_REP_PartialFnTypeRep(newfndom, QualifyTypeNames(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), nm));
       }
-      else
+      else {
        return mk_REP_PartialFnTypeRep(gfndom, QualifyTypeNames(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), nm));
+      }
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
       const Generic & gfndom (tp.GetField(pos_REP_TotalFnTypeRep_fndom));
       if (gfndom.IsSequence()) {
         SEQ<TYPE_REP_TypeRep> fndom (gfndom), newfndom;
         size_t len_fndom = fndom.Length();
-        for (size_t idx = 1; idx <= len_fndom; idx++)
+        for (size_t idx = 1; idx <= len_fndom; idx++) {
           newfndom.ImpAppend(QualifyTypeNames(fndom[idx], nm));
+        }
         return mk_REP_TotalFnTypeRep(newfndom, QualifyTypeNames(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), nm));
       }
-      else
+      else {
        return mk_REP_TotalFnTypeRep(gfndom, QualifyTypeNames(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), nm));
+      }
     }
-// 20070830 ->
     case TAG_TYPE_REP_OpTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & opdom (tp.GetSequence(pos_REP_OpTypeRep_Dom));
       SEQ<TYPE_REP_TypeRep> newdom;
       size_t len_opdom = opdom.Length();
-      for (size_t idx = 1; idx <= len_opdom; idx++)
+      for (size_t idx = 1; idx <= len_opdom; idx++) {
         newdom.ImpAppend(QualifyTypeNames(opdom[idx], nm));
+      }
       return mk_REP_TotalFnTypeRep(newdom, QualifyTypeNames(tp.GetRecord(pos_REP_OpTypeRep_Rng), nm));
     }
-// <-
     case TAG_TYPE_REP_PolyTypeRep: {
       SEQ<TYPE_REP_TypeVarRep> fndom (tp.GetSequence(pos_REP_PolyTypeRep_vars));
       SEQ<TYPE_REP_TypeVarRep> newfndom;
       size_t len_fndom = fndom.Length();
-      for (size_t idx = 1; idx <= len_fndom; idx++)
+      for (size_t idx = 1; idx <= len_fndom; idx++) {
         newfndom.ImpAppend(QualifyTypeNames(fndom[idx], nm));
+      }
       return mk_REP_PolyTypeRep(newfndom, QualifyTypeNames(tp.GetRecord(pos_REP_PolyTypeRep_tp), nm));
     }
     default:
@@ -3282,31 +3362,34 @@ TYPE_REP_TypeRep StatSem::RenameTag (const TYPE_REP_TypeRep & tp,
       const SEQ<TYPE_REP_FieldRep> & fields (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SEQ<TYPE_REP_FieldRep> f_l;
       size_t len_fields = fields.Length();
-      for (size_t index = 1; index <= len_fields; index++)
-      {
+      for (size_t index = 1; index <= len_fields; index++) {
         const TYPE_REP_FieldRep & field (fields[index]);
         f_l.ImpAppend (TYPE_REP_FieldRep().Init(field.GetField(pos_REP_FieldRep_sel),
                                    RenameTag (field.GetRecord(pos_REP_FieldRep_tp), bind),
                                    field.GetBool(pos_REP_FieldRep_dc)));
       }
-      if (bind.DomExists (tag))
+      if (bind.DomExists (tag)) {
         return mk_REP_CompositeTypeRep(bind[tag], f_l);
-      else
+      }
+      else {
         return mk_REP_CompositeTypeRep(tag, f_l);
+      }
     }
     case TAG_TYPE_REP_UnionTypeRep: {
       SET<TYPE_REP_TypeRep> utps (tp.GetSet(pos_REP_UnionTypeRep_tps)), res;
       Generic g;
-      for (bool bb = utps.First(g); bb; bb = utps.Next(g))
+      for (bool bb = utps.First(g); bb; bb = utps.Next(g)) {
         res.Insert (RenameTag (g, bind));
+      }
       return mk_REP_UnionTypeRep(res);
     }
     case TAG_TYPE_REP_ProductTypeRep: {
       const SEQ<TYPE_REP_TypeRep> & tp_l (tp.GetSequence(pos_REP_ProductTypeRep_tps));
       SEQ<TYPE_REP_TypeRep> l;
       size_t len_tp_l = tp_l.Length();
-      for (size_t index = 1; index <= len_tp_l; index++)
+      for (size_t index = 1; index <= len_tp_l; index++) {
         l.ImpAppend (RenameTag (tp_l[index], bind));
+      }
       return mk_REP_ProductTypeRep(l);
     }
     case TAG_TYPE_REP_SetTypeRep: {
@@ -3328,30 +3411,32 @@ TYPE_REP_TypeRep StatSem::RenameTag (const TYPE_REP_TypeRep & tp,
     case TAG_TYPE_REP_PartialFnTypeRep: {
       const Generic & tp_l_g (tp.GetField(pos_REP_PartialFnTypeRep_fndom));
 
-      if (tp_l_g.Is(TAG_TYPE_REP_AllTypeRep))
+      if (tp_l_g.Is(TAG_TYPE_REP_AllTypeRep)) {
         return rep_alltp;
-      else
-      {
+      }
+      else {
         SEQ<TYPE_REP_TypeRep> tp_l (tp_l_g);
         SEQ<TYPE_REP_TypeRep> l;
         size_t len_tp_l = tp_l.Length();
-        for (size_t index = 1; index <= len_tp_l; index++)
+        for (size_t index = 1; index <= len_tp_l; index++) {
           l.ImpAppend (RenameTag (tp_l[index], bind));
+        }
         return mk_REP_PartialFnTypeRep(l, RenameTag (tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), bind));
       }
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
       const Generic & tp_l_g (tp.GetField(pos_REP_TotalFnTypeRep_fndom));
 
-      if (tp_l_g.Is(TAG_TYPE_REP_AllTypeRep))
+      if (tp_l_g.Is(TAG_TYPE_REP_AllTypeRep)) {
         return rep_alltp;
-      else
-      {
+      }
+      else {
         SEQ<TYPE_REP_TypeRep> tp_l (tp_l_g);
         SEQ<TYPE_REP_TypeRep> l;
         size_t len_tp_l = tp_l.Length();
-        for (size_t index = 1; index <= len_tp_l; index++)
+        for (size_t index = 1; index <= len_tp_l; index++) {
           l.ImpAppend (RenameTag (tp_l[index], bind));
+        }
         return mk_REP_TotalFnTypeRep(l, RenameTag (tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), bind));
       }
     }
@@ -3415,8 +3500,9 @@ bool StatSem::ImplicitlyRec(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp
       const SEQ<TYPE_REP_FieldRep> & fields (tp.GetSequence(pos_REP_CompositeTypeRep_fields));
       SET<TYPE_REP_TypeRep> t_s;
       size_t len_fields = fields.Length();
-      for (size_t index = 1; index <= len_fields; index++)
+      for (size_t index = 1; index <= len_fields; index++) {
         t_s.Insert(fields[index].GetRecord(pos_REP_FieldRep_tp));
+      }
       return TypeUsedImplicitly(nm, t_s);
     }
     case TAG_TYPE_REP_UnionTypeRep: {
@@ -3436,35 +3522,19 @@ bool StatSem::ImplicitlyRec(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp
     }
     case TAG_TYPE_REP_PartialFnTypeRep : {
       const Generic & tp_l (tp.GetField(pos_REP_PartialFnTypeRep_fndom));
-// 20130830 -->
-/*
-      if (tp_l.Is(TAG_TYPE_REP_AllTypeRep)) {
-        return false;
-      }
-      else
-        return TypeUsedImplicitly(nm, ((Sequence) tp_l).Elems());
-*/
       SET<TYPE_REP_TypeRep> tp_s (mk_set(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng)));
-      if (!tp_l.Is(TAG_TYPE_REP_AllTypeRep))
+      if (!tp_l.Is(TAG_TYPE_REP_AllTypeRep)) {
         tp_s.ImpUnion(((Sequence) tp_l).Elems());
+      }
       return TypeUsedImplicitly(nm, tp_s);
-// <-- 20130830
     }
     case TAG_TYPE_REP_TotalFnTypeRep : {
       const Generic & tp_l (tp.GetField(pos_REP_TotalFnTypeRep_fndom));
-// 20130830 -->
-/*
-      if (tp_l.Is(TAG_TYPE_REP_AllTypeRep)) {
-        return false;
-      }
-      else
-        return TypeUsedImplicitly(nm, ((Sequence) tp_l).Elems());
-*/
       SET<TYPE_REP_TypeRep> tp_s (mk_set(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng)));
-      if (!tp_l.Is(TAG_TYPE_REP_AllTypeRep))
+      if (!tp_l.Is(TAG_TYPE_REP_AllTypeRep)) {
         tp_s.ImpUnion(((Sequence) tp_l).Elems());
+      }
       return TypeUsedImplicitly(nm, tp_s);
-// <-- 20130830
     }
     default: {
       InternalError(L"ImplicitlyRec");
@@ -3472,8 +3542,6 @@ bool StatSem::ImplicitlyRec(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp
   }
   return false; // Dummy
 }
-
-
 #endif // VDMSL
 
 // AlwaysType
@@ -3483,13 +3551,16 @@ bool StatSem::ImplicitlyRec(const TYPE_AS_Name & nm, const TYPE_REP_TypeRep & tp
 TYPE_REP_TypeRep StatSem::AlwaysType(const TYPE_REP_TypeRep & tppost, const TYPE_REP_TypeRep & tpstmt) const
 {
   Generic etp (ExtractExitTypeRep(tppost));
-  if (etp.IsNil ())
+  if (etp.IsNil ()) {
     return tpstmt;
+  }
   else if (tppost.Is (TAG_TYPE_REP_ExitTypeRep) &&
-           (tppost.GetRecord(pos_REP_ExitTypeRep_tp) == etp))
+           (tppost.GetRecord(pos_REP_ExitTypeRep_tp) == etp)) {
     return tppost;
-  else
+  }
+  else {
     return MergeTypes( tpstmt, mk_REP_ExitTypeRep( etp ) );
+  }
 }
 
 // ExtractExitTypeRep
@@ -3505,20 +3576,16 @@ Generic StatSem::ExtractExitTypeRep (const TYPE_REP_TypeRep & tp) const
       SET<TYPE_REP_TypeRep> Utp (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> s;
       Generic g;
-      for (bool bb = Utp.First (g); bb; bb = Utp.Next (g))
-      {
+      for (bool bb = Utp.First (g); bb; bb = Utp.Next (g)) {
         TYPE_REP_TypeRep t (g);
-        if (t.Is (TAG_TYPE_REP_ExitTypeRep))
+        if (t.Is (TAG_TYPE_REP_ExitTypeRep)) {
           s.Insert (t.GetRecord(pos_REP_ExitTypeRep_tp));
+        }
       }
       switch (s.Card ()) {
-        case 0:
-          return Nil ();
-        case 1:
-          return s.GetElem ();
-        default: {
-          return TYPE_REP_UnionTypeRep().Init(s);
-        }
+        case 0:  { return Nil (); }
+        case 1:  { return s.GetElem (); }
+        default: { return TYPE_REP_UnionTypeRep().Init(s); }
       }
     }
     default:
@@ -3531,10 +3598,10 @@ Generic StatSem::ExtractExitTypeRep (const TYPE_REP_TypeRep & tp) const
 // -> bool * [REP`TypeRep]
 Tuple StatSem::CanBeApplied (const Generic & tpi)
 {
-  if (tpi.IsNil())
+  if (tpi.IsNil()) {
     return mk_(Bool(false), Nil());
-  else
-  {
+  }
+  else {
     TYPE_REP_TypeRep tp (tpi);
     switch (tp.GetTag()) {
       case TAG_TYPE_REP_SeqTypeRep:
@@ -3548,26 +3615,25 @@ Tuple StatSem::CanBeApplied (const Generic & tpi)
         SET<TYPE_REP_TypeRep> utps (tp.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> st;
         Generic t;
-        for (bool bb = utps.First(t); bb; bb = utps.Next(t))
-        {
+        for (bool bb = utps.First(t); bb; bb = utps.Next(t)) {
           Tuple infer (CanBeApplied (t));
-          if (infer.GetBoolValue (1))
+          if (infer.GetBoolValue (1)) {
             st.Insert (infer.GetRecord (2));
+          }
         }
         switch(st.Card ()) {
-          case 0:
-            return mk_(Bool(false), Nil());
-          case 1:
-            return mk_(Bool(true), st.GetElem ());
-          default:
-            return mk_(Bool(true), mk_REP_UnionTypeRep(st));
+          case 0:  { return mk_(Bool(false), Nil()); }
+          case 1:  { return mk_(Bool(true), st.GetElem ()); }
+          default: { return mk_(Bool(true), mk_REP_UnionTypeRep(st)); }
         }
       }
       case TAG_TYPE_REP_TypeNameRep: {
-        if (!IsUnionRecursive (tp))
+        if (!IsUnionRecursive (tp)) {
           return CanBeApplied (TcauxLookUpTypeName (tp.GetRecord(pos_REP_TypeNameRep_nm)));
-        else
+        }
+        else {
           return mk_(Bool(false), Nil());
+        }
       }
       case TAG_TYPE_REP_InvTypeRep: {
         return CanBeApplied (tp.GetRecord(pos_REP_InvTypeRep_shape));
@@ -3725,8 +3791,9 @@ TYPE_REP_TypeRep StatSem::MakeOpPreType (const Generic & modid,
   SEQ<TYPE_REP_TypeRep> domtp (optp.GetSequence(pos_REP_OpTypeRep_Dom));
 
 #ifdef VDMSL
-  if (!stdef.IsNil ())
+  if (!stdef.IsNil ()) {
     domtp.ImpAppend (TransStateType (modid, stdef));
+  }
 #endif // VDMSL
 
   return mk_REP_TotalFnTypeRep( domtp, btp_bool );
@@ -3744,12 +3811,11 @@ TYPE_REP_TypeRep StatSem::MakeOpPostType (const Generic & modid,
   SEQ<TYPE_REP_TypeRep> domtp (optp.GetSequence(pos_REP_OpTypeRep_Dom));
   const TYPE_REP_TypeRep & rngtp (optp.GetRecord(pos_REP_OpTypeRep_Rng));
 
-  if (!rngtp.Is(TAG_TYPE_REP_UnitTypeRep))
+  if (!rngtp.Is(TAG_TYPE_REP_UnitTypeRep)) {
     domtp.ImpAppend (rngtp);
-
+  }
 #ifdef VDMSL
-  if (!stdef.IsNil ())
-  {
+  if (!stdef.IsNil ()) {
     TYPE_REP_TypeRep sttp (TransStateType (modid, stdef));
     domtp.ImpAppend (sttp).ImpAppend (sttp);
   }
@@ -3778,8 +3844,7 @@ bool StatSem::IsPrePostFn(const TYPE_AS_Name & nm) const
 TYPE_AS_Name StatSem::ExtName (const TYPE_AS_Name & mod, const TYPE_AS_Name & nm) const
 {
   TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
-  if (ids.Length () <= 1)
-  {
+  if (ids.Length () <= 1) {
     ids.ImpPrepend (mod.GetSequence(pos_AS_Name_ids).Hd());
   }
   return TYPE_AS_Name().Init(ids, nm.GetInt(pos_AS_Name_cid));

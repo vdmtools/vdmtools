@@ -43,19 +43,21 @@
 // ==> SEM`VAL
 TYPE_SEM_VAL EXPR::EvalSetRangeExpr (const TYPE_SEM_VAL & lb_v, const TYPE_SEM_VAL & ub_v)
 {
-  if (lb_v.Is(TAG_TYPE_SEM_NUM) && ub_v.Is(TAG_TYPE_SEM_NUM))
-  {
+  if (lb_v.Is(TAG_TYPE_SEM_NUM) && ub_v.Is(TAG_TYPE_SEM_NUM)) {
     int64_t lb = lb_v.GetReal(pos_SEM_NUM_v).Ceil().GetIntValue();
     int64_t ub = ub_v.GetReal(pos_SEM_NUM_v).Floor().GetIntValue();
     SET<TYPE_SEM_VAL> res_sv;
-    for (int64_t d = lb; d <= ub; d++)
+    for (int64_t d = lb; d <= ub; d++) {
       res_sv.Insert (mk_SEM_NUM(Real(d)));
+    }
     return mk_SEM_SET(res_sv);
   }
-  else if (!lb_v.Is(TAG_TYPE_SEM_NUM))
+  else if (!lb_v.Is(TAG_TYPE_SEM_NUM)) {
     return RTERR::ErrorVal(L"EvalSetRangeExpr", RTERR_LOWER_BOUND_NOT_A_NUMBER, lb_v, Nil(), Sequence());
-  else
+  }
+  else {
     return RTERR::ErrorVal(L"EvalSetRangeExpr", RTERR_UPPER_BOUND_NOT_A_NUMBER, ub_v, Nil(), Sequence());
+  }
 }
 
 /** Sequence Expressions part ***********************************************/
@@ -886,8 +888,9 @@ TYPE_AS_Type EXPR::SubstType (const TYPE_AS_Type & tp,
       const TYPE_AS_Name & id (tp.GetRecord(pos_AS_TypeVar_name));
       size_t len_tv_l = tv_l.Length ();
       for (size_t idx = 1; idx <= len_tv_l; idx++) {
-        if (id == tv_l[idx].GetRecord(pos_AS_TypeVar_name))
+        if (id == tv_l[idx].GetRecord(pos_AS_TypeVar_name)) {
           return tp_l[idx];
+        }
       }
       TYPE_SEM_VAL seq (EvalState::M42Sem(AUX::SingleNameToString(id), NULL));
       RTERR::Error (L"SubstType", RTERR_TYPE_UNKNOWN, seq, Nil(), Sequence());
@@ -1011,8 +1014,9 @@ TYPE_SEM_VAL EXPR::EvalLogUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v)
 {
   if (op_v.Is(TAG_TYPE_SEM_BOOL)) {
     switch (opr) {
-      case NOT:
+      case NOT: {
         return (op_v.GetBoolValue(pos_SEM_BOOL_v) ? sem_false : sem_true);
+      }
       default: {
         return RTERR::ErrorVal (L"EvalLogUnaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
       }
@@ -1638,15 +1642,13 @@ TYPE_SEM_VAL EXPR::EvalNumBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & op
       case NUMLT:
       case NUMLE:
       case NUMGT:
-      case NUMGE:
-        return EvalNumBinOp (op1_v, opr, op2_v);
-      case NUMMOD:
-        return EvalNumMod (op1_v, op2_v);
-      case NUMREM:
-        return EvalNumRem (op1_v, op2_v);
-      case INTDIV:
-        return EvalIntDiv (op1_v, op2_v);
-      default: { return RTERR::ErrorVal (L"EvalNumBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
+      case NUMGE:  { return EvalNumBinOp (op1_v, opr, op2_v); }
+      case NUMMOD: { return EvalNumMod (op1_v, op2_v); }
+      case NUMREM: { return EvalNumRem (op1_v, op2_v); }
+      case INTDIV: { return EvalIntDiv (op1_v, op2_v); }
+      default: {
+        return RTERR::ErrorVal (L"EvalNumBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence());
+      }
     }
   }
   else if (!op1_v.Is(TAG_TYPE_SEM_NUM)) {
@@ -1719,8 +1721,9 @@ TYPE_SEM_VAL EXPR::EvalIntDiv (const TYPE_SEM_VAL & VAL1, const TYPE_SEM_VAL & V
       return mk_SEM_NUM(VAL1.GetReal(pos_SEM_NUM_v).IntDiv(n2));
     }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalIntDiv", RTERR_TWO_INT_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalNumRem
@@ -1741,8 +1744,9 @@ TYPE_SEM_VAL EXPR::EvalNumRem (const TYPE_SEM_VAL & op1_v, const TYPE_SEM_VAL & 
       return mk_SEM_NUM(op1_v.GetReal(pos_SEM_NUM_v).Rem(n2));
     }
   }
-  else
+  else {
     return RTERR::ErrorVal (L"EvalNumRem", RTERR_TWO_INT_EXPECTED, Nil(), Nil(), Sequence());
+  }
 }
 
 // EvalNumMod

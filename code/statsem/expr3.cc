@@ -30,8 +30,7 @@ Tuple StatSem::wf_SEQTAIL (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     TYPE_REP_TypeRep restp (ExtractSeqType(argtp));
     switch(restp.GetTag()) {
       case TAG_TYPE_REP_EmptySeqTypeRep: {
@@ -50,11 +49,10 @@ Tuple StatSem::wf_SEQTAIL (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
         SET<TYPE_REP_TypeRep> utps (restp.GetSet(pos_REP_UnionTypeRep_tps));
         bool exists = false; 
         Generic t;
-        for (bool bb = utps.First(t); bb && !exists; bb = utps.Next(t))
+        for (bool bb = utps.First(t); bb && !exists; bb = utps.Next(t)) {
           exists = (t.Is(TAG_TYPE_REP_SeqTypeRep) || t.Is(TAG_TYPE_REP_EmptySeqTypeRep));
-
-        if (exists && (i == DEF) && (Settings.ErrorLevel() >= ERR2))
-        {
+        }
+        if (exists && (i == DEF) && (Settings.ErrorLevel() >= ERR2)) {
           //------------------------------------------
           // Error message #143
           // Argument of 'tl' can be an empty sequence
@@ -63,18 +61,17 @@ Tuple StatSem::wf_SEQTAIL (const Int & i, const TYPE_AS_PrefixExpr & unexpr, con
           utps.Insert(mk_REP_EmptySeqTypeRep(rep_alltp));
           return mk_(Bool(false), mk_REP_UnionTypeRep(utps));
         }
-        else
-        {
+        else {
           utps.Insert(mk_REP_EmptySeqTypeRep(rep_alltp));
           return mk_(wf_arg, mk_REP_UnionTypeRep(utps));
         }
       }
-      default:
+      default: {
         return Tuple(); //This is only to avoid warnings from the compiler
+      }
     }
   }
-  else
-  {
+  else {
     //----------------------------------------
     // Error message #144
     // Argument of 'tl' is not a sequence type
@@ -101,12 +98,10 @@ Tuple StatSem::wf_SEQREVERSE (const Int & i, const TYPE_AS_PrefixExpr & unexpr, 
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     return mk_(wf_arg, ExtractSeqType(argtp));
   }
-  else
-  {
+  else {
     //----------------------------------------
     // Error message #437
     // Argument of 'reverse' is not a sequence type
@@ -126,10 +121,12 @@ Tuple StatSem::wf_MAPDOM (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
   const TYPE_AS_Expr & rhs (unexpr.GetRecord(pos_AS_PrefixExpr_arg));
 
   TYPE_REP_TypeRep domtp;
-  if (IsCompatible (i, exptp, set_alltp))
+  if (IsCompatible (i, exptp, set_alltp)) {
     domtp = UnmaskSetType(i, ExtractSetType(exptp));
-  else
+  }
+  else {
     domtp = rep_alltp;
+  }
 
   TYPE_REP_TypeRep ExpectedType (mk_REP_UnionTypeRep(mk_set(mk_REP_EmptyMapTypeRep(domtp, rep_alltp),
                                                             mk_REP_GeneralMapTypeRep(domtp, rep_alltp))));
@@ -141,12 +138,11 @@ Tuple StatSem::wf_MAPDOM (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     Generic r (ExtractMapType(argtp)); // [REP`TypeRep]
-    if (r.IsNil ())
+    if (r.IsNil ()) {
       return mk_(wf_arg, mk_REP_EmptySetTypeRep(rep_alltp));
-
+    }
     TYPE_REP_TypeRep r1tp (r);
     switch(r1tp.GetTag()) {
       case TAG_TYPE_REP_EmptyMapTypeRep: {
@@ -162,8 +158,7 @@ Tuple StatSem::wf_MAPDOM (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
         SET<TYPE_REP_TypeRep> utps (r1tp.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> r2tp;
         Generic gutp;
-        for (bool bb = utps.First(gutp); bb ; bb = utps.Next(gutp))
-        {
+        for (bool bb = utps.First(gutp); bb ; bb = utps.Next(gutp)) {
           TYPE_REP_TypeRep utp (gutp);
           switch(utp.GetTag()) {
             case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -180,24 +175,27 @@ Tuple StatSem::wf_MAPDOM (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
         switch (r3tp.Card()) {
           case 1: {
             TYPE_REP_TypeRep tp (r3tp.GetElem());
-            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)))
+            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))) {
               return mk_(wf_arg, mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySetTypeRep(tp), mk_REP_SetTypeRep(tp))));
-            else
+            }
+            else {
               return mk_(wf_arg, mk_REP_SetTypeRep(tp));
+            }
           }
           default: {
             TYPE_REP_TypeRep tp (mk_REP_UnionTypeRep(r3tp));
-            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)))
+            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))) {
               return mk_(wf_arg, mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySetTypeRep(tp), mk_REP_SetTypeRep(tp))));
-            else
+            }
+            else {
               return mk_(wf_arg, mk_REP_SetTypeRep(tp));
+            }
           }
         }
       }
     }
   }
-  else
-  {
+  else {
     //------------------------------------
     // Error message #145
     // Argument of 'dom' is not a map type
@@ -218,11 +216,12 @@ Tuple StatSem::wf_MAPRNG (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
   const TYPE_AS_Expr & rhs (unexpr.GetRecord(pos_AS_PrefixExpr_arg));
 
   TYPE_REP_TypeRep rngtp;
-  if (IsCompatible (i, exptp, set_alltp))
+  if (IsCompatible (i, exptp, set_alltp)) {
     rngtp = UnmaskSetType(i, ExtractSetType(exptp));
-  else
+  }
+  else {
     rngtp = rep_alltp;
-
+  }
   TYPE_REP_TypeRep ExpectedType (mk_REP_UnionTypeRep(mk_set(mk_REP_EmptyMapTypeRep(rep_alltp, rngtp),
                                                             mk_REP_GeneralMapTypeRep(rep_alltp, rngtp))));
   TYPE_REP_UnionTypeRep ExpectedRhsType (mk_REP_UnionTypeRep(mk_set(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp),
@@ -233,12 +232,11 @@ Tuple StatSem::wf_MAPRNG (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     Generic r (ExtractMapType(argtp));
-    if (r.IsNil ())
+    if (r.IsNil ()) {
       return mk_(wf_arg, mk_REP_EmptySetTypeRep(rep_alltp));
-
+    }
     TYPE_REP_TypeRep r1tp (r);
     switch(r1tp.GetTag()) {
       case TAG_TYPE_REP_EmptyMapTypeRep: {
@@ -254,8 +252,7 @@ Tuple StatSem::wf_MAPRNG (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
         SET<TYPE_REP_TypeRep> utps (r1tp.GetSet(pos_REP_UnionTypeRep_tps));
         SET<TYPE_REP_TypeRep> r2tp;
         Generic gutp;
-        for (bool bb = utps.First(gutp); bb ; bb = utps.Next(gutp))
-        {
+        for (bool bb = utps.First(gutp); bb ; bb = utps.Next(gutp)) {
           TYPE_REP_TypeRep utp (gutp);
           switch(utp.GetTag()) {
             case TAG_TYPE_REP_GeneralMapTypeRep: {
@@ -272,24 +269,27 @@ Tuple StatSem::wf_MAPRNG (const Int & i, const TYPE_AS_PrefixExpr & unexpr, cons
         switch (r3tp.Card()) {
           case 1: {
             TYPE_REP_TypeRep tp (r3tp.GetElem());
-            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)))
+            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))) {
               return mk_(wf_arg, mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySetTypeRep(tp), mk_REP_SetTypeRep(tp))));
-            else
+            }
+            else {
               return mk_(wf_arg, mk_REP_SetTypeRep(tp));
+            }
           }
           default: {
             TYPE_REP_TypeRep tp (mk_REP_UnionTypeRep(r3tp));
-            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp)))
+            if (utps.InSet(mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp))) {
               return mk_(wf_arg, mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySetTypeRep(tp), mk_REP_SetTypeRep(tp))));
-            else
+            }
+            else {
               return mk_(wf_arg, mk_REP_SetTypeRep(tp));
+            }
           }
         }
       }
     }
   }
-  else
-  {
+  else {
     //------------------------------------
     // Error message #146
     // Argument of 'rng' is not a map type
@@ -310,11 +310,12 @@ Tuple StatSem::wf_MAPDISTRMERGE (const Int & i, const TYPE_AS_PrefixExpr & unexp
   const TYPE_AS_Expr & rhs (unexpr.GetRecord(pos_AS_PrefixExpr_arg));
 
   TYPE_REP_TypeRep maptp;
-  if (IsCompatible (i, exptp, map_alltp))
+  if (IsCompatible (i, exptp, map_alltp)) {
     maptp = ExtractMapType(exptp);
-  else
+  }
+  else {
     maptp = map_alltp;
-
+  }
   TYPE_REP_TypeRep ExpectedType (mk_REP_SetTypeRep(maptp));
   TYPE_REP_UnionTypeRep ExpectedRhsType (mk_REP_UnionTypeRep(mk_set(mk_REP_EmptySetTypeRep(rep_alltp),
                                                                     mk_REP_SetTypeRep(map_alltp))));
@@ -324,12 +325,10 @@ Tuple StatSem::wf_MAPDISTRMERGE (const Int & i, const TYPE_AS_PrefixExpr & unexp
   const Bool & wf_arg (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & argtp (inferrhs.GetRecord(2));
 
-  if (IsCompatible (i, argtp, ExpectedRhsType))
-  {
+  if (IsCompatible (i, argtp, ExpectedRhsType)) {
     Generic elmtp (UnmaskSetType (i, ExtractSetType (argtp)));
 
-    if (elmtp.IsNil() || argtp.Is(TAG_TYPE_REP_EmptySetTypeRep))
-    {
+    if (elmtp.IsNil() || argtp.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
       //--------------------------------------
       // Error message #147
       // 'merge' will always give an empty map
@@ -337,22 +336,21 @@ Tuple StatSem::wf_MAPDISTRMERGE (const Int & i, const TYPE_AS_PrefixExpr & unexp
       GenErr (unexpr, ERR, 147, Sequence());
       return mk_(Bool (false), mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
     }
-    else
-    {
+    else {
       elmtp = ExtractMapType (elmtp);
-      if (elmtp.IsNil ())
+      if (elmtp.IsNil ()) {
         return mk_(wf_arg, mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp));
-      else if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep))
-      {
+      }
+      else if (elmtp.Is(TAG_TYPE_REP_UnionTypeRep)) {
         SET<TYPE_REP_TypeRep> tps (Record (elmtp).GetSet (pos_REP_UnionTypeRep_tps));
         return mk_(wf_arg, MapTypeMerge (tps));
       }
-      else
+      else {
         return mk_(wf_arg, elmtp);
+      }
     }
   }
-  else
-  {
+  else {
     //-----------------------------------------
     // Error message #148
     // Argument of 'merge' is not a set of maps
@@ -380,20 +378,19 @@ Tuple StatSem::wf_MAPINVERSE (const Int & i, const TYPE_AS_PrefixExpr & unexpr, 
   const Bool & wf_arg (infer.GetBool (1));
   const TYPE_REP_TypeRep & tp (infer.GetRecord (2));
 
-  if (IsCompatible(i, tp, ExpectedType))
-  {
+  if (IsCompatible(i, tp, ExpectedType)) {
     Generic mtp (ExtractMapType (tp));
     TYPE_REP_TypeRep restp;
-    if (mtp.IsNil ())
+    if (mtp.IsNil ()) {
       restp = mk_REP_EmptyMapTypeRep(rep_alltp, rep_alltp);
-    else
+    }
+    else {
       restp = InverseMapType (mtp);
-
+    }
     GetCI().SetTypeInfo (cid, restp);
     return mk_(wf_arg, restp);
   }
-  else
-  {
+  else {
     //-----------------------------------------------------
     // Error message #149
     // Argument to Map-Inverse-Expr is not an injective map
@@ -416,106 +413,43 @@ Tuple StatSem::wf_BinaryExpr (const Int & i, const TYPE_AS_BinaryExpr & binexpr,
 
   Tuple tpl;
   switch(op.GetValue ()) {
-    case NUMPLUS:
-      tpl = wf_NUMPLUS(i, binexpr, exptp);
-      break;
-    case NUMMINUS:
-      tpl = wf_NUMMINUS(i, binexpr, exptp);
-      break;
-    case NUMMULT:
-      tpl = wf_NUMMULT(i, binexpr, exptp);
-      break;
-    case NUMDIV:
-      tpl = wf_NUMDIV(i, binexpr, exptp);
-      break;
-    case NUMREM:
-      tpl = wf_NUMREM(i, binexpr, exptp);
-      break;
-    case NUMMOD:
-      tpl = wf_NUMMOD(i, binexpr, exptp);
-      break;
-    case INTDIV:
-      tpl = wf_INTDIV(i, binexpr, exptp);
-      break;
-    case NUMEXP:
-      tpl = wf_NUMEXP(i, binexpr, exptp);
-      break;
-    case NUMLT:
-      tpl = wf_NUMLT(i, binexpr, exptp);
-      break;
-    case NUMLE:
-      tpl = wf_NUMLE(i, binexpr, exptp);
-      break;
-    case NUMGT:
-      tpl = wf_NUMGT(i, binexpr, exptp);
-      break;
-    case NUMGE:
-      tpl = wf_NUMGE(i, binexpr, exptp);
-      break;
-    case AND:
-      tpl = wf_AND(i, binexpr, exptp);
-      break;
-    case OR:
-      tpl = wf_OR(i, binexpr, exptp);
-      break;
-    case IMPLY:
-      tpl = wf_IMPLY(i, binexpr, exptp);
-      break;
-    case EQUIV:
-      tpl = wf_EQUIV(i, binexpr, exptp);
-      break;
-    case EQ:
-      tpl = wf_EQ(i, binexpr, exptp);
-      break;
-    case NE:
-      tpl = wf_NE(i, binexpr, exptp);
-      break;
-    case SETUNION:
-      tpl = wf_SETUNION (i, binexpr, exptp);
-      break;
-    case SETINTERSECT:
-      tpl = wf_SETINTERSECT (i, binexpr, exptp);
-      break;
-    case SETMINUS:
-      tpl = wf_SETMINUS (i, binexpr, exptp);
-      break;
-    case SUBSET:
-      tpl = wf_SUBSET (i, binexpr, exptp);
-      break;
-    case PROPERSUBSET:
-      tpl = wf_PROPERSUBSET (i, binexpr, exptp);
-      break;
-    case INSET:
-      tpl = wf_INSET (i, binexpr, exptp);
-      break;
-    case NOTINSET:
-      tpl = wf_NOTINSET (i, binexpr, exptp);
-      break;
-    case SEQCONC:
-      tpl = wf_SEQCONC (i, binexpr, exptp);
-      break;
-    case MAPMERGE:
-      tpl = wf_MAPMERGE (i, binexpr, exptp);
-      break;
-    case MAPDOMRESTTO:
-      tpl = wf_MAPDOMRESTTO (i, binexpr, exptp);
-      break;
-    case MAPDOMRESTBY:
-      tpl = wf_MAPDOMRESTBY (i, binexpr, exptp);
-      break;
-    case MAPRNGRESTTO:
-      tpl = wf_MAPRNGRESTTO (i, binexpr, exptp);
-      break;
-    case MAPRNGRESTBY:
-      tpl = wf_MAPRNGRESTBY (i, binexpr, exptp);
-      break;
-    case COMPOSE:
-      tpl =  wf_COMPOSE (i, binexpr, exptp);
-      break;
-    default:
+    case NUMPLUS:      { tpl = wf_NUMPLUS(i, binexpr, exptp); break; }
+    case NUMMINUS:     { tpl = wf_NUMMINUS(i, binexpr, exptp); break; }
+    case NUMMULT:      { tpl = wf_NUMMULT(i, binexpr, exptp); break; }
+    case NUMDIV:       { tpl = wf_NUMDIV(i, binexpr, exptp); break; }
+    case NUMREM:       { tpl = wf_NUMREM(i, binexpr, exptp); break; }
+    case NUMMOD:       { tpl = wf_NUMMOD(i, binexpr, exptp); break; }
+    case INTDIV:       { tpl = wf_INTDIV(i, binexpr, exptp); break; }
+    case NUMEXP:       { tpl = wf_NUMEXP(i, binexpr, exptp); break; }
+    case NUMLT:        { tpl = wf_NUMLT(i, binexpr, exptp); break; }
+    case NUMLE:        { tpl = wf_NUMLE(i, binexpr, exptp); break; }
+    case NUMGT:        { tpl = wf_NUMGT(i, binexpr, exptp); break; }
+    case NUMGE:        { tpl = wf_NUMGE(i, binexpr, exptp); break; }
+    case AND:          { tpl = wf_AND(i, binexpr, exptp); break; }
+    case OR:           { tpl = wf_OR(i, binexpr, exptp); break; }
+    case IMPLY:        { tpl = wf_IMPLY(i, binexpr, exptp); break; }
+    case EQUIV:        { tpl = wf_EQUIV(i, binexpr, exptp); break; }
+    case EQ:           { tpl = wf_EQ(i, binexpr, exptp); break; }
+    case NE:           { tpl = wf_NE(i, binexpr, exptp); break; }
+    case SETUNION:     { tpl = wf_SETUNION (i, binexpr, exptp); break; }
+    case SETINTERSECT: { tpl = wf_SETINTERSECT (i, binexpr, exptp); break; }
+    case SETMINUS:     { tpl = wf_SETMINUS (i, binexpr, exptp); break; }
+    case SUBSET:       { tpl = wf_SUBSET (i, binexpr, exptp); break; }
+    case PROPERSUBSET: { tpl = wf_PROPERSUBSET (i, binexpr, exptp); break; }
+    case INSET:        { tpl = wf_INSET (i, binexpr, exptp); break; }
+    case NOTINSET:     { tpl = wf_NOTINSET (i, binexpr, exptp); break; }
+    case SEQCONC:      { tpl = wf_SEQCONC (i, binexpr, exptp); break; }
+    case MAPMERGE:     { tpl = wf_MAPMERGE (i, binexpr, exptp); break; }
+    case MAPDOMRESTTO: { tpl = wf_MAPDOMRESTTO (i, binexpr, exptp); break; }
+    case MAPDOMRESTBY: { tpl = wf_MAPDOMRESTBY (i, binexpr, exptp); break; }
+    case MAPRNGRESTTO: { tpl = wf_MAPRNGRESTTO (i, binexpr, exptp); break; }
+    case MAPRNGRESTBY: { tpl = wf_MAPRNGRESTBY (i, binexpr, exptp); break; }
+    case COMPOSE:      { tpl =  wf_COMPOSE (i, binexpr, exptp); break; }
+    default: {
       InternalError(L"wf_BinaryExpr");
       tpl = mk_(Bool(false), rep_alltp);
       break;
+    }
   }
 
   GetCI().SetTypeInfo (cid, tpl.GetRecord(2));
@@ -547,8 +481,7 @@ Tuple StatSem::wf_NUMPLUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #150
     // Lhs of '+' is not a numeric type
@@ -556,8 +489,7 @@ Tuple StatSem::wf_NUMPLUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (binexpr, ERR, 150, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #151
     // Rhs of '+' is not a numeric type
@@ -565,20 +497,22 @@ Tuple StatSem::wf_NUMPLUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (binexpr, ERR, 151, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractNumericType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractNumericType (rhstp));
 
     TYPE_REP_TypeRep newtp (MostGeneralNumericType (mk_set(lhsrestp, rhsrestp)));
 
-    if ((newtp == btp_nat) && ((lhsrestp == btp_natone) || (rhsrestp == btp_natone)))
+    if ((newtp == btp_nat) && ((lhsrestp == btp_natone) || (rhsrestp == btp_natone))) {
       return mk_(wf_lhs && wf_rhs, btp_natone);
-    else
+    }
+    else {
       return mk_(wf_lhs && wf_rhs, newtp);
+    }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_NUMMINUS
@@ -605,8 +539,7 @@ Tuple StatSem::wf_NUMMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #152
     // Lhs of '-' is not a numeric type
@@ -614,8 +547,7 @@ Tuple StatSem::wf_NUMMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 152, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #153
     // Rhs of '-' is not a numeric type
@@ -623,8 +555,7 @@ Tuple StatSem::wf_NUMMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 153, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractNumericType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractNumericType (rhstp));
 
@@ -632,8 +563,9 @@ Tuple StatSem::wf_NUMMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
                                                                rhsrestp,
                                                                btp_int)));
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_NUMMULT
@@ -661,8 +593,7 @@ Tuple StatSem::wf_NUMMULT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #154
     // Lhs of '*' is not a numeric type
@@ -670,8 +601,7 @@ Tuple StatSem::wf_NUMMULT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (binexpr, ERR, 154, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #155
     // Rhs of '*' is not a numeric type
@@ -679,15 +609,15 @@ Tuple StatSem::wf_NUMMULT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (binexpr, ERR, 155, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractNumericType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractNumericType (rhstp));
 
     return mk_(wf_lhs && wf_rhs, MostGeneralNumericType(mk_set(lhsrestp, rhsrestp)));
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_NUMDIV
@@ -714,8 +644,7 @@ Tuple StatSem::wf_NUMDIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #156
     // Lhs of '/' is not a numeric type
@@ -723,16 +652,14 @@ Tuple StatSem::wf_NUMDIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, ERR, 156, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #157
     // Rhs of '/' is not a numeric type
     //---------------------------------
     GenErrTp (binexpr, ERR, 157, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
-  else if ((rhstp != btp_natone) && (i == DEF) && (Settings.ErrorLevel() >= PRF))
-  {
+  else if ((rhstp != btp_natone) && (i == DEF) && (Settings.ErrorLevel() >= PRF)) {
     //----------------------------
     // Error message #158
     // Rhs of '/' must be non zero
@@ -740,12 +667,15 @@ Tuple StatSem::wf_NUMDIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, PRF, 158, rhstp, btp_natone, Sequence());
   }
 
-  if (lhscomp && rhscomp && (i == POS))
+  if (lhscomp && rhscomp && (i == POS)) {
     return mk_(wf_lhs && wf_rhs, ExpectedLhsAndRhsType);
-  else if (rhstp != btp_natone)
+  }
+  else if (rhstp != btp_natone) {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
-  else
+  }
+  else {
     return mk_(wf_lhs && wf_rhs && lhscomp && rhscomp, ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_NUMREM
@@ -773,8 +703,7 @@ Tuple StatSem::wf_NUMREM (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //------------------------------------
     // Error message #159
     // Lhs of 'rem' is not an integer type
@@ -782,16 +711,14 @@ Tuple StatSem::wf_NUMREM (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, ERR, 159, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //------------------------------------
     // Error message #160
     // Rhs of 'rem' is not an integer type
     //------------------------------------
     GenErrTp (binexpr, ERR, 160, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
-  else if ((rhstp != btp_natone) && (i == DEF) )
-  {
+  else if ((rhstp != btp_natone) && (i == DEF) ) {
     //------------------------------
     // Error message #161
     // Rhs of 'rem' must be non zero
@@ -799,15 +726,15 @@ Tuple StatSem::wf_NUMREM (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, PRF, 161, rhstp, btp_natone, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractIntNumType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractIntNumType (rhstp));
 
     return mk_(wf_lhs && wf_rhs, MostGeneralNumericType(mk_set(lhsrestp, rhsrestp)));
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_NUMMOD
@@ -835,8 +762,7 @@ Tuple StatSem::wf_NUMMOD (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //------------------------------------------
     // Error message #162
     // Lhs of 'mod' is not an integer number type
@@ -844,16 +770,14 @@ Tuple StatSem::wf_NUMMOD (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp ( binexpr, ERR, 162, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //------------------------------------------
     // Error message #163
     // Rhs of 'mod' is not an integer number type
     //------------------------------------------
     GenErrTp ( binexpr, ERR, 163, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
-  else if ((rhstp != btp_natone) && i == DEF)
-  {
+  else if ((rhstp != btp_natone) && i == DEF) {
     //------------------------------
     // Error message #164
     // Rhs of 'mod' must be non zero
@@ -861,10 +785,12 @@ Tuple StatSem::wf_NUMMOD (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, PRF, 164, rhstp, btp_natone, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, ExpectedLhsAndRhsType);
-  else
+  }
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_INTDIV
@@ -892,8 +818,7 @@ Tuple StatSem::wf_INTDIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //------------------------------------
     // Error message #165
     // Lhs of 'div' is not an integer type
@@ -901,16 +826,14 @@ Tuple StatSem::wf_INTDIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, ERR, 165, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //------------------------------------
     // Error message #166
     // Rhs of 'div' is not an integer type
     //------------------------------------
     GenErrTp (binexpr, ERR, 166, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
-  else if ((rhstp != btp_natone) && (i == DEF) && (Settings.ErrorLevel() >= PRF))
-  {
+  else if ((rhstp != btp_natone) && (i == DEF) && (Settings.ErrorLevel() >= PRF)) {
     //------------------------------
     // Error message #167
     // Rhs of 'div' must be non zero
@@ -918,26 +841,23 @@ Tuple StatSem::wf_INTDIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, PRF, 167, rhstp, btp_natone, Sequence());
   }
 
-  if (lhscomp && rhscomp && (i == POS))
-  {
+  if (lhscomp && rhscomp && (i == POS)) {
     TYPE_REP_TypeRep lhsrestp (ExtractIntNumType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractIntNumType (rhstp));
 
     return mk_(wf_lhs && wf_rhs, MostGeneralNumericType(mk_set(lhsrestp, rhsrestp)));
   }
-  else
-  {
-    if (!(rhstp == btp_natone))
+  else {
+    if (!(rhstp == btp_natone)) {
       return mk_(Bool(false), ExpectedLhsAndRhsType);
-    else
-    {
-// 20140726 -->
+    }
+    else {
       if (lhscomp) {
         TYPE_REP_TypeRep lhsrestp (ExtractIntNumType (lhstp));
-        if ((lhsrestp == btp_natone) || (lhsrestp == btp_nat))
+        if ((lhsrestp == btp_natone) || (lhsrestp == btp_nat)) {
           return mk_(wf_lhs && wf_rhs && lhscomp && rhscomp, btp_nat);
+        }
       }
-// <-- 20140726
       return mk_(wf_lhs && wf_rhs && lhscomp && rhscomp, ExpectedLhsAndRhsType);
     }
   }
@@ -962,10 +882,10 @@ Tuple StatSem::wf_NUMEXP (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   const Bool & wf_lhs (inferlhs.GetBool(1));
   const TYPE_REP_TypeRep & lhstp (inferlhs.GetRecord(2));
 
-// 20150620 -->
-  if (!IsCompatible (POS, btp_real, lhstp))
+
+  if (!IsCompatible (POS, btp_real, lhstp)) {
     ExpectedRhsType = btp_nat;
-// <-- 20150620
+  }
 
   Tuple inferrhs (wf_Expr(i, rhs, ExpectedRhsType));
   const Bool & wf_rhs (inferrhs.GetBool(1));
@@ -974,8 +894,7 @@ Tuple StatSem::wf_NUMEXP (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-----------------------------------------------------------------
     // Error message #168
     // Lhs of '**' is neither a numeric type, map type or function type
@@ -983,8 +902,7 @@ Tuple StatSem::wf_NUMEXP (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (lhs, ERR, 168, lhstp, ExpectedLhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #169
     // Rhs of '**' is not a numeric type
@@ -1012,8 +930,7 @@ Tuple StatSem::EXPType(const Int & i,
                             const Bool & lhswf,
                             const TYPE_AS_Expr & rhs)
 {
-  if (lhswf)
-  {
+  if (lhswf) {
     Generic maptp (ExtractMapType(lhstp));
     Generic fntp (ExtractFunType(lhstp));
     TYPE_REP_TypeRep numtp (ExtractNumericType(lhstp));
@@ -1021,11 +938,9 @@ Tuple StatSem::EXPType(const Int & i,
     Set ress (mk_set(maptp, fntp, numtp).Diff(mk_set(Nil(), rep_alltp)));
 
     Bool reswf (true);
-    if (numtp.Is (TAG_TYPE_REP_AllTypeRep))
-    {
+    if (numtp.Is (TAG_TYPE_REP_AllTypeRep)) {
       reswf = IsCompatible(i, rhstp, btp_nat);
-      if (!reswf)
-      {
+      if (!reswf) {
         //-------------------------------------
         // Error message #170
         // Rhs of L"%1" must be a natural number
@@ -1033,8 +948,7 @@ Tuple StatSem::EXPType(const Int & i,
         GenErrTp(rhs, ERR, 170, rhstp, btp_nat, mk_sequence(SEQ<Char>(L"function and map iteration")));
       }
 
-      if ((i == DEF) && !RngSubTypeDom(ress))
-      {
+      if ((i == DEF) && !RngSubTypeDom(ress)) {
         //-----------------------------------------------------------------
         // Error message #171
         // If Rhs of L"%1" is larger than 2 range must be a subset of domain
@@ -1043,14 +957,13 @@ Tuple StatSem::EXPType(const Int & i,
         reswf = Bool (false);
       }
     }
-    else if ( rhstp.Is(TAG_TYPE_REP_AllTypeRep) )
+    else if ( rhstp.Is(TAG_TYPE_REP_AllTypeRep) ) {
       return mk_(Bool (false), ExpectedNUMEXPType());
-    else
-    {
+    }
+    else {
       ress.Insert(rhstp);
       ress = MergeNumericTypes(ress);
-      if ((i == DEF) && (!maptp.IsNil () || !fntp.IsNil ()) && !RngSubTypeDom(ress))
-      {
+      if ((i == DEF) && (!maptp.IsNil () || !fntp.IsNil ()) && !RngSubTypeDom(ress)) {
         //-----------------------------------------------------------------
         // Error message #171
         // If Rhs of L"%1" is larger than 2 range must be a subset of domain
@@ -1060,8 +973,9 @@ Tuple StatSem::EXPType(const Int & i,
       }
     }
     switch (ress.Card ()) {
-      case 1:
+      case 1: {
         return mk_(reswf, ress.GetElem ());
+      }
       case 2: {
         Generic t1 (ress.GetElem ());
         ress.RemElem (t1);
@@ -1081,16 +995,16 @@ Tuple StatSem::EXPType(const Int & i,
       }
     }
   }
-  else
+  else {
     return mk_(Bool (false), ExpectedNUMEXPType());
+  }
 }
 
 // ExpectedNUMEXPType
 // -> REP`TypeRep
 TYPE_REP_TypeRep StatSem::ExpectedNUMEXPType ()
 {
-  if (!this->exp_defined)
-  {
+  if (!this->exp_defined) {
     this->exp_defined = true;
 
     SEQ<TYPE_REP_TypeRep> atr_l;
@@ -1541,8 +1455,7 @@ Tuple StatSem::wf_NE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const T
 
   bool iscomp = IsCompatible (Int(POS), tp_lhs, tp_rhs);
 
-  if (!iscomp)
-  {
+  if (!iscomp) {
     //------------------------------------
     // Error message #189
     // This inequality will always be true
@@ -1577,8 +1490,7 @@ Tuple StatSem::wf_SETUNION (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #190
     // Lhs of 'union' is not a set type
@@ -1586,8 +1498,7 @@ Tuple StatSem::wf_SETUNION (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 190, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #191
     // Rhs of 'union' is not a set type
@@ -1595,28 +1506,22 @@ Tuple StatSem::wf_SETUNION (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 191, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractSetType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractSetType (rhstp));
 
-// 20101013 -->
-    if (i == POS)
-    {
+    if (i == POS) {
       if (!IsCompatible(i, lhsrestp, rhsrestp) &&
-          IsCompatible(i, SetTypeUnion(mk_set(lhsrestp, rhsrestp)), intertp))
-      {
+          IsCompatible(i, SetTypeUnion(mk_set(lhsrestp, rhsrestp)), intertp)) {
 
-        if (!lhsrestp.Is(TAG_TYPE_REP_EmptySetTypeRep) && !IsCompatible(i, lhsrestp, intertp))
-        {
+        if (!lhsrestp.Is(TAG_TYPE_REP_EmptySetTypeRep) && !IsCompatible(i, lhsrestp, intertp)) {
           //----------------------------------
           // Error message #443
           // Lhs of 'union' is not a correct type
           //----------------------------------
           GenErrTp (lhs, ERR, 443, lhstp, exptp, Sequence());
         }
-        if (!rhsrestp.Is(TAG_TYPE_REP_EmptySetTypeRep) && !IsCompatible(i, rhsrestp, intertp))
-        {
+        if (!rhsrestp.Is(TAG_TYPE_REP_EmptySetTypeRep) && !IsCompatible(i, rhsrestp, intertp)) {
           //----------------------------------
           // Error message #444
           // Rhs of 'union' is not a correct type
@@ -1625,11 +1530,11 @@ Tuple StatSem::wf_SETUNION (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
         }
       }
     }
-// <-- 20101013
     return mk_(wf_lhs && wf_rhs, SetTypeUnion(mk_set(lhsrestp, rhsrestp)));
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_SETINTERSECT
@@ -1656,8 +1561,7 @@ Tuple StatSem::wf_SETINTERSECT (const Int & i, const TYPE_AS_BinaryExpr & binexp
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #192
     // Lhs of 'inter' is not a set type
@@ -1665,8 +1569,7 @@ Tuple StatSem::wf_SETINTERSECT (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 192, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #193
     // Rhs of 'inter' is not a set type
@@ -1674,8 +1577,7 @@ Tuple StatSem::wf_SETINTERSECT (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 193, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!IsCompatible (POS, lhstp, rhstp))
-  {
+  if (!IsCompatible (POS, lhstp, rhstp)) {
     //-----------------------------------------------------------
     // Error message #194
     // This set intersection will always be equal to an empty set
@@ -1684,13 +1586,11 @@ Tuple StatSem::wf_SETINTERSECT (const Int & i, const TYPE_AS_BinaryExpr & binexp
     return mk_(Bool(false), mk_REP_EmptySetTypeRep(rep_alltp));
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractSetType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractSetType (rhstp));
     TYPE_REP_TypeRep tp (SetTypeInter(mk_set(lhsrestp, rhsrestp)));
-    if (tp.Is(TAG_TYPE_REP_EmptySetTypeRep))
-    {
+    if (tp.Is(TAG_TYPE_REP_EmptySetTypeRep)) {
       //-----------------------------------------------------------
       // Error message #194
       // This set intersection will always be equal to an empty set
@@ -1712,8 +1612,9 @@ Tuple StatSem::wf_SETINTERSECT (const Int & i, const TYPE_AS_BinaryExpr & binexp
       }
     }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_SETMINUS
@@ -1741,8 +1642,7 @@ Tuple StatSem::wf_SETMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-------------------------------------
     // Error message #195
     // Lhs of 'set minus' is not a set type
@@ -1750,8 +1650,7 @@ Tuple StatSem::wf_SETMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 195, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //-------------------------------------
     // Error message #196
     // Rhs of 'set minus' is not a set type
@@ -1759,33 +1658,36 @@ Tuple StatSem::wf_SETMINUS (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 196, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!IsCompatible (POS, lhstp, rhstp))
-  {
+  if (!IsCompatible (POS, lhstp, rhstp)) {
     //----------------------------------------
     // Error message #197
     // Set minus operation removes no elements
     //----------------------------------------
     GenErrTp (binexpr, ERR, 197 ,lhstp, rhstp, Sequence());
 
-    if (lhscomp)
+    if (lhscomp) {
       return mk_(wf_lhs && wf_rhs && lhscomp && rhscomp, lhstp);
-    else
+    }
+    else {
       return mk_(wf_lhs && wf_rhs && lhscomp && rhscomp, ExpectedLhsAndRhsType);
+    }
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractSetType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractSetType (rhstp));
 
     Generic tp (SetTypeMinus(lhsrestp, rhsrestp));
-    if (tp.IsNil())
+    if (tp.IsNil()) {
       return mk_(wf_lhs && wf_rhs, lhsrestp);
-    else
+    }
+    else {
       return mk_(wf_lhs && wf_rhs, tp);
+    }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_SUBSET
@@ -1816,8 +1718,7 @@ Tuple StatSem::wf_SUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
   //bool combine = lhstp.Is(TAG_TYPE_REP_EmptySetTypeRep) || IsCompatible(POS, RemoveEmptySetType(lhstp), rhstp);
   bool combine = lhstp.Is(TAG_TYPE_REP_EmptySetTypeRep) || IsCompatible(POS, lhstp, rhstp);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #198
     // Lhs of 'subset' is not a set type
@@ -1825,8 +1726,7 @@ Tuple StatSem::wf_SUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, ERR, 198, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #199
     // Rhs of 'subset' is not a set type
@@ -1834,8 +1734,7 @@ Tuple StatSem::wf_SUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, ERR, 199, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp && !combine)
-  {
+  if (lhscomp && rhscomp && !combine) {
     //---------------------------------------------------
     //-- Error message #392
     //-- subset will only be true if the Lhs set is empty
@@ -1843,10 +1742,12 @@ Tuple StatSem::wf_SUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, con
     GenErrTp (binexpr, ERR, 392, lhstp, rhstp, Sequence());
   }
 
-  if (lhscomp && rhscomp && combine)
+  if (lhscomp && rhscomp && combine) {
     return mk_(wf_lhs && wf_rhs, btp_bool);
-  else
+  }
+  else {
     return mk_(Bool(false), btp_bool);
+  }
 }
 
 // wf_PROPERSUBSET
@@ -1878,8 +1779,7 @@ Tuple StatSem::wf_PROPERSUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexp
 //  bool combine = lhstp.Is(TAG_TYPE_REP_EmptySetTypeRep) || IsCompatible(POS, RemoveEmptySetType(lhstp), rhstp);
   bool combine = lhstp.Is(TAG_TYPE_REP_EmptySetTypeRep) || IsCompatible(POS, lhstp, rhstp);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-----------------------------------
     // Error message #200
     // Lhs of 'psubset' is not a set type
@@ -1887,8 +1787,7 @@ Tuple StatSem::wf_PROPERSUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 200, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //------------------------------------
     // Error message #201
     // Rhs of 'psubset' is not a set type
@@ -1896,8 +1795,7 @@ Tuple StatSem::wf_PROPERSUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 201, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp && !combine)
-  {
+  if (lhscomp && rhscomp && !combine) {
     //---------------------------------------------------
     //-- Error message #392
     //-- subset will only be true if the Lhs set is empty
@@ -1905,10 +1803,12 @@ Tuple StatSem::wf_PROPERSUBSET (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 392, lhstp, rhstp, Sequence());
   }
 
-  if (lhscomp && rhscomp && combine)
+  if (lhscomp && rhscomp && combine) {
     return mk_(wf_lhs && wf_rhs, btp_bool);
-  else
+  }
+  else {
     return mk_(Bool(false), btp_bool);
+  }
 }
 
 // wf_INSET
@@ -1934,8 +1834,7 @@ Tuple StatSem::wf_INSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
 
   bool rhscomp = IsCompatible (i, rhstp, ExpectedRhsType);
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #202
     // Rhs of 'in set' is not a set type
@@ -1943,14 +1842,12 @@ Tuple StatSem::wf_INSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 202, rhstp, ExpectedRhsType, Sequence());
     return mk_(Bool(false), btp_bool);
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep lhstp_s (mk_REP_SetTypeRep(lhstp));
     bool iscomp = (rhstp.Is(TAG_TYPE_REP_EmptySetTypeRep) ? false :
                                                           IsCompatible (POS, lhstp_s, RemoveEmptySetType(rhstp)));
 
-    if(!iscomp)
-    {
+    if(!iscomp) {
       //----------------------------------------------
       // Error message #203
       // This membership check will always yield false
@@ -1985,8 +1882,7 @@ Tuple StatSem::wf_NOTINSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
 
   bool rhscomp = IsCompatible (i, rhstp, ExpectedRhsType);
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //--------------------------------------
     // Error message #204
     // Rhs of 'not in set' is not a set type
@@ -1994,19 +1890,18 @@ Tuple StatSem::wf_NOTINSET (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 204, rhstp, ExpectedRhsType, Sequence());
     return mk_(Bool(false), btp_bool);
   }
-  else
-  {
+  else {
     TYPE_REP_TypeRep lhstp_s (mk_REP_SetTypeRep( lhstp ));
     bool iscomp = (rhstp.Is(TAG_TYPE_REP_EmptySetTypeRep) ? false
                                                           : IsCompatible (POS, lhstp_s, RemoveEmptySetType(rhstp)));
 
-    if (!(iscomp))
+    if (!(iscomp)) {
       //-------------------------------------------------
       // Error message #205
       // This not-membership check will always yield true
       //-------------------------------------------------
       GenErrTp (binexpr, ERR, 205, lhstp_s, rhstp, Sequence());
-
+    }
     return mk_(wf_lhs && wf_rhs && iscomp, btp_bool);
   }
 }
@@ -2035,8 +1930,7 @@ Tuple StatSem::wf_SEQCONC (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #206
     // Lhs of '^' is not a sequence type
@@ -2044,8 +1938,7 @@ Tuple StatSem::wf_SEQCONC (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (binexpr, ERR, 206, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #207
     // Rhs of '^' is not a sequence type
@@ -2053,26 +1946,20 @@ Tuple StatSem::wf_SEQCONC (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (binexpr, ERR, 207, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractSeqType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractSeqType (rhstp));
-// 20101013 -->
-    if (i == POS)
-    {
+    if (i == POS) {
       if (!IsCompatible(i, lhsrestp, rhsrestp) &&
-          IsCompatible(i, SeqTypeConc(mk_set(lhsrestp, rhsrestp)), intertp))
-      {
-        if (!lhsrestp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && !IsCompatible(i, lhsrestp, intertp))
-        {
+          IsCompatible(i, SeqTypeConc(mk_set(lhsrestp, rhsrestp)), intertp)) {
+        if (!lhsrestp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && !IsCompatible(i, lhsrestp, intertp)) {
           //----------------------------------
           // Error message #441
           // Lhs of '^' is not a correct type
           //----------------------------------
           GenErrTp (lhs, ERR, 441, lhstp, exptp, Sequence());
         }
-        if (!rhsrestp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && !IsCompatible(i, rhsrestp, intertp)) 
-        {
+        if (!rhsrestp.Is(TAG_TYPE_REP_EmptySeqTypeRep) && !IsCompatible(i, rhsrestp, intertp)) {
           //----------------------------------
           // Error message #442
           // Rhs of '^' is not a correct type
@@ -2081,11 +1968,11 @@ Tuple StatSem::wf_SEQCONC (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
         }
       }
     }
-// <-- 20101013
     return mk_(wf_lhs && wf_rhs, SeqTypeConc( mk_set(lhsrestp, rhsrestp) ));
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_MAPMERGE
@@ -2114,8 +2001,7 @@ Tuple StatSem::wf_MAPMERGE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #208
     // Lhs of 'munion' is not a map type
@@ -2123,8 +2009,7 @@ Tuple StatSem::wf_MAPMERGE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 208, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #209
     // Rhs of 'munion' is not a map type
@@ -2132,15 +2017,15 @@ Tuple StatSem::wf_MAPMERGE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, c
     GenErrTp (binexpr, ERR, 209, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractMapType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractMapType (rhstp));
 
     return mk_(wf_lhs && wf_rhs, MapTypeMerge(mk_set(lhsrestp, lhsrestp)));
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_MAPDOMRESTTO
@@ -2158,8 +2043,7 @@ Tuple StatSem::wf_MAPDOMRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
   TYPE_REP_TypeRep ExpectedLhsType (set_alltp);
 
   Generic expdomtp (rep_alltp);
-  if (IsCompatible(i, ExpectedRhsType, exptp))
-  {
+  if (IsCompatible(i, ExpectedRhsType, exptp)) {
     Tuple tmp (SplitMapType(ExtractMapType(exptp)));
     expdomtp = tmp.GetField(1);
   }
@@ -2178,8 +2062,7 @@ Tuple StatSem::wf_MAPDOMRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //------------------------------
     // Error message #210
     // Lhs of '<:' is not a set type
@@ -2187,8 +2070,7 @@ Tuple StatSem::wf_MAPDOMRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 210, lhstp, ExpectedLhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //------------------------------
     // Error message #211
     // Rhs of '<:' is not a map type
@@ -2196,8 +2078,7 @@ Tuple StatSem::wf_MAPDOMRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 211, rhstp, ExpectedRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractSetType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractMapType (rhstp));
 
@@ -2227,8 +2108,9 @@ Tuple StatSem::wf_MAPDOMRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
       }
     }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedRhsType);
+  }
 }
 
 // wf_MAPDOMRESTBY
@@ -2246,8 +2128,7 @@ Tuple StatSem::wf_MAPDOMRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
   TYPE_REP_TypeRep ExpectedLhsType (set_alltp);
 
   Generic expdomtp (rep_alltp);
-  if (IsCompatible(i, ExpectedRhsType, exptp))
-  {
+  if (IsCompatible(i, ExpectedRhsType, exptp)) {
     Tuple tmp (SplitMapType(ExtractMapType(exptp)));
     expdomtp = tmp.GetField(1);
   }
@@ -2266,8 +2147,7 @@ Tuple StatSem::wf_MAPDOMRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-------------------------------
     // Error message #214
     // Lhs of '<-:' is not a set type
@@ -2275,8 +2155,7 @@ Tuple StatSem::wf_MAPDOMRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 214, lhstp, ExpectedLhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //-------------------------------
     // Error message #215
     // Rhs of '<-:' is not a map type
@@ -2284,8 +2163,7 @@ Tuple StatSem::wf_MAPDOMRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 215, rhstp, ExpectedRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractSetType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractMapType (rhstp));
 
@@ -2315,8 +2193,9 @@ Tuple StatSem::wf_MAPDOMRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
       }
     }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedRhsType);
+  }
 }
 
 // wf_MAPRNGRESTTO
@@ -2334,8 +2213,7 @@ Tuple StatSem::wf_MAPRNGRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
   TYPE_REP_TypeRep ExpectedRhsType (set_alltp);
 
   Generic exprngtp(rep_alltp);
-  if (IsCompatible(i, ExpectedLhsType, exptp))
-  {
+  if (IsCompatible(i, ExpectedLhsType, exptp)) {
     Tuple tmp(SplitMapType(ExtractMapType(exptp)));
     exprngtp = tmp.GetField(2);
   }
@@ -2354,8 +2232,7 @@ Tuple StatSem::wf_MAPRNGRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
   bool lhscomp = (IsCompatible (i, lhstp, ExpectedLhsType));
   bool rhscomp = (IsCompatible (i, rhstp, ExpectedRhsType));
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //------------------------------
     // Error message #218
     // Lhs of ':>' is not a map type
@@ -2363,8 +2240,7 @@ Tuple StatSem::wf_MAPRNGRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 218, lhstp, ExpectedLhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //------------------------------
     // Error message #219
     // Rhs of ':>' is not a set type
@@ -2372,8 +2248,7 @@ Tuple StatSem::wf_MAPRNGRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 219, rhstp, ExpectedRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractMapType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractSetType (rhstp));
 
@@ -2403,8 +2278,9 @@ Tuple StatSem::wf_MAPRNGRESTTO (const Int & i, const TYPE_AS_BinaryExpr & binexp
       }
     }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsType);
+  }
 }
 
 // wf_MAPRNGRESTBY
@@ -2422,8 +2298,7 @@ Tuple StatSem::wf_MAPRNGRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
   TYPE_REP_TypeRep ExpectedRhsType (set_alltp);
 
   Generic exprngtp (rep_alltp);
-  if (IsCompatible(i, ExpectedLhsType, exptp))
-  {
+  if (IsCompatible(i, ExpectedLhsType, exptp)) {
     Tuple tmp (SplitMapType(ExtractMapType(exptp)));
     exprngtp = tmp.GetField(2);
   }
@@ -2441,8 +2316,7 @@ Tuple StatSem::wf_MAPRNGRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
   bool lhscomp = (IsCompatible (i, lhstp, ExpectedLhsType));
   bool rhscomp = (IsCompatible (i, rhstp, ExpectedRhsType));
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-------------------------------
     // Error message #222
     // Lhs of ':->' is not a map type
@@ -2450,8 +2324,7 @@ Tuple StatSem::wf_MAPRNGRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 222, lhstp, ExpectedLhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //-------------------------------
     // Error message #223
     // Rhs of ':->' is not a set type
@@ -2459,8 +2332,7 @@ Tuple StatSem::wf_MAPRNGRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
     GenErrTp (binexpr, ERR, 223, rhstp, ExpectedRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
-  {
+  if (lhscomp && rhscomp) {
     TYPE_REP_TypeRep lhsrestp (ExtractMapType (lhstp));
     TYPE_REP_TypeRep rhsrestp (ExtractSetType (rhstp));
 
@@ -2490,8 +2362,9 @@ Tuple StatSem::wf_MAPRNGRESTBY (const Int & i, const TYPE_AS_BinaryExpr & binexp
       }
     }
   }
-  else
+  else {
     return mk_(Bool(false), ExpectedLhsType);
+  }
 }
 
 // wf_COMPOSE
@@ -2526,8 +2399,7 @@ Tuple StatSem::wf_COMPOSE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
   bool lhscomp = (IsCompatible(i, tplhs, ExpectedType));
   bool rhscomp = (IsCompatible(i, tprhs, ExpectedType));
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //--------------------------------------------------------
     // Error message #226
     // Lhs of 'comp' is neither a map type nor a function type
@@ -2535,8 +2407,7 @@ Tuple StatSem::wf_COMPOSE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
     GenErrTp (lhs, ERR, 226, tplhs, ExpectedType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //--------------------------------------------------------
     // Error message #227
     // Rhs of 'comp' is neither a map type nor a function type
@@ -2548,8 +2419,7 @@ Tuple StatSem::wf_COMPOSE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, co
   const Bool & wf_comp (infer3.GetBool (1));
   const TYPE_REP_TypeRep & restp (infer3.GetRecord (2));
 
-  if (!wf_comp && lhscomp && rhscomp)
-  {
+  if (!wf_comp && lhscomp && rhscomp) {
     //--------------------------------------------------------------------------
     // Error message #228
     // Rhs range type is not compatible with lhs domain type in composition
@@ -2571,14 +2441,16 @@ Tuple StatSem::wf_Macro (const Int & i, const TYPE_AS_Macro & vMacro, const TYPE
     case MACRO_CLMOD:
     case MACRO_FNOP: {
       TYPE_REP_TypeRep restp (mk_REP_SeqTypeRep(btp_char));
-      if (cid != NilContextId)
+      if (cid != NilContextId) {
         GetCI().SetTypeInfo (cid, restp);
+      }
       return mk_(Bool(true), restp);
     }
     case MACRO_LINE:
     case MACRO_COLUMN: {
-      if (cid != NilContextId)
+      if (cid != NilContextId) {
         GetCI().SetTypeInfo (cid, btp_int);
+      }
       return mk_(Bool(true), btp_int);
     }
   }
