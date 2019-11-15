@@ -41,17 +41,16 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
                    bool         cov_on    // allow covering - true if in Stmt or Expression
                       )
 {
-  if (g.IsSequence())
-  {
+  if (g.IsSequence()) {
     // SEQUENCE CASE
     Sequence Sq (g);
     int len_Sq = Sq.Length();
-    for (int i = 1; i<= len_Sq; i++)
+    for (int i = 1; i<= len_Sq; i++) {
       extr_pp_info (Sq[i], c, t, cov_on);
+    }
     return;
   }
-  else if (g.IsTuple())
-  { 
+  else if (g.IsTuple()) { 
     // TUPLE
     Tuple Tp(g);
     int Length = Tp.Length();
@@ -60,17 +59,16 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
     }
     return;
   }
-  else if (g.IsSet())
-  {
+  else if (g.IsSet()) {
     // SET CASE
     Set St(g);
     Generic Element;
-    for (bool bb = St.First (Element); bb; bb = St.Next (Element))
+    for (bool bb = St.First (Element); bb; bb = St.Next (Element)) {
       extr_pp_info (Element, c, t, cov_on);
+    }
     return;
   }
-  else if (g.IsMap())
-  {
+  else if (g.IsMap()) {
     // MAP CASE
     Map Mp(g);
     Set dom_Mp(Mp.Dom());
@@ -81,8 +79,7 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
     }
     return;
   }
-  else if (g.IsRecord())
-  {
+  else if (g.IsRecord()) {
     // RECORD CASE 
     Generic dummy = g;
     Record Rc(dummy);
@@ -178,9 +175,9 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
 #endif // VDMPP
         {
           TYPE_CI_ContextId ci = Rc.GetField(Rc.Length()); // get ci field
-          if (ci == NilContextId) 
+          if (ci == NilContextId) {
             break;
-
+          }
           TYPE_CI_TokenSpan pos (c.GetPos(ci)); // get position for tokens
 
           // handle quote decl inside type decl
@@ -191,7 +188,8 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           if ( (TAG_TYPE_AS_QuoteLit == Tag) && ! cov_on ) {  
 #endif // VDMPP
             t.set_test_coverage(pos, 1);
-          } else {
+          }
+          else {
             t.set_test_coverage(pos, c.GetTestCoverageInfo(ci));
           }
           cov_on = true;  // allow covering
@@ -200,14 +198,11 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
         // Special cases compared to Expr
         // Names must reside inside an Expr or a Stmt
 
-        case TAG_TYPE_AS_Name:
-        {
+        case TAG_TYPE_AS_Name: {
           if (cov_on) {
            TYPE_CI_ContextId ci = Rc.GetInt(pos_AS_Name_cid); // get ci field
-            if (ci != NilContextId)
-            {
-              if(c.HasTestCoverage(ci))
-              {
+            if (ci != NilContextId) {
+              if(c.HasTestCoverage(ci)) {
                 TYPE_CI_TokenSpan pos (c.GetPos(ci)); // get position for tokens
                 t.set_test_coverage(pos, c.GetTestCoverageInfo(ci));
               }
@@ -216,14 +211,11 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           return;
           break;
         }
-        case TAG_TYPE_AS_OldName: 
-        {
+        case TAG_TYPE_AS_OldName: {
           if (cov_on) {
             TYPE_CI_ContextId ci = Rc.GetInt(pos_AS_OldName_cid); // get ci field
-            if (ci != NilContextId)
-            {
-              if(c.HasTestCoverage(ci))
-              {
+            if (ci != NilContextId) {
+              if(c.HasTestCoverage(ci)) {
                 TYPE_CI_TokenSpan pos (c.GetPos(ci)); // get position for tokens
                 t.set_test_coverage(pos, c.GetTestCoverageInfo(ci));
               }
@@ -232,51 +224,47 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           return;
           break;
         }
-// 20060602
-        case TAG_TYPE_AS_BlockStmt:
-        {
+        case TAG_TYPE_AS_BlockStmt: {
           TYPE_AS_BlockStmt bs (g);
           SEQ<TYPE_AS_AssignDef> dcls (bs.get_dcls());
           SEQ<TYPE_AS_Stmt> stmts (bs.get_stmts());
           Generic dcl;
-          for (bool bb = dcls.First(dcl); bb; bb = dcls.Next(dcl))
+          for (bool bb = dcls.First(dcl); bb; bb = dcls.Next(dcl)) {
             extr_pp_info (dcl, c, t, cov_on);
+          }
           Generic stmt;
-          for (bool cc = stmts.First(stmt); cc; cc = stmts.Next(stmt))
+          for (bool cc = stmts.First(stmt); cc; cc = stmts.Next(stmt)) {
             extr_pp_info (stmt, c, t, cov_on);
+          }
           return;
           break;
         }
-        case TAG_TYPE_AS_CasesStmt:
-        {
+        case TAG_TYPE_AS_CasesStmt: {
           TYPE_AS_CasesStmt cs (g);
           TYPE_AS_Expr sel (cs.get_sel());
           SEQ<TYPE_AS_CasesStmtAltn> altns (cs.get_altns());
           Generic others (cs.get_Others());
           extr_pp_info (sel, c, t, cov_on);
           Generic altn;
-          for (bool bb = altns.First(altn); bb; bb = altns.Next(altn))
+          for (bool bb = altns.First(altn); bb; bb = altns.Next(altn)) {
             extr_pp_info (altn, c, t, cov_on);
-          if (!others.IsNil())
+          }
+          if (!others.IsNil()) {
             extr_pp_info (others, c, t, cov_on);
+          }
           return;
           break;
         }
-        case TAG_TYPE_AS_CasesStmtAltn:
-        {
+        case TAG_TYPE_AS_CasesStmtAltn: {
           TYPE_AS_CasesStmtAltn altn (g);
           SEQ<TYPE_AS_Pattern> m (altn.get_match ());
           Generic pat;
-          for (bool bb = m.First(pat); bb; bb = m.Next(pat))
-          {
+          for (bool bb = m.First(pat); bb; bb = m.Next(pat)) {
             //extr_pp_info (pat, c, t, cov_on);
             TYPE_CI_ContextId ci = ASTAUX::GetCid(pat);
-            if (ci != NilContextId) 
-            {
-              if (c.HasTestCoverage(ci))
-              {
-                if (c.GetTestCoverageInfo(ci) == 0)
-                {
+            if (ci != NilContextId) {
+              if (c.HasTestCoverage(ci)) {
+                if (c.GetTestCoverageInfo(ci) == 0) {
                   TYPE_CI_TokenSpan pos (c.GetPos(ci)); // get position for tokens
                   t.set_test_coverage(pos, 0);
                 } 
@@ -289,43 +277,37 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           return;
           break;
         }
-        case TAG_TYPE_AS_CasesExpr:
-        {
+        case TAG_TYPE_AS_CasesExpr: {
           TYPE_AS_CasesExpr cs (g);
           const TYPE_AS_Expr & sel (cs.GetRecord(pos_AS_CasesExpr_sel));
           const SEQ<TYPE_AS_CaseAltn> & altns (cs.GetSequence(pos_AS_CasesExpr_altns));
           const Generic & others (cs.GetField(pos_AS_CasesExpr_Others));
           extr_pp_info (sel,c,t,cov_on);
           size_t len_altns = altns.Length();
-          for (size_t idx = 1; idx <= len_altns; idx++)
+          for (size_t idx = 1; idx <= len_altns; idx++) {
             extr_pp_info (altns[idx], c, t, cov_on);
-          if (!others.IsNil())
+          }
+          if (!others.IsNil()) {
             extr_pp_info (others, c, t, cov_on);
+          }
           return;
           break;
         }
-        case TAG_TYPE_AS_CaseAltn:
-        {
+        case TAG_TYPE_AS_CaseAltn: {
           TYPE_AS_CaseAltn altn (g);
           SEQ<TYPE_AS_Pattern> m (altn.get_match ());
           Generic pat;
-          for (bool bb = m.First(pat); bb; bb = m.Next(pat))
-          {
-// 20130610 -->
+          for (bool bb = m.First(pat); bb; bb = m.Next(pat)) {
             //extr_pp_info (pat, c, t, cov_on);
             TYPE_CI_ContextId ci = ASTAUX::GetCid(pat);
-            if (ci != NilContextId) 
-            {
-              if (c.HasTestCoverage(ci))
-              {
-                if (c.GetTestCoverageInfo(ci) == 0)
-                {
+            if (ci != NilContextId) {
+              if (c.HasTestCoverage(ci)) {
+                if (c.GetTestCoverageInfo(ci) == 0) {
                   TYPE_CI_TokenSpan pos (c.GetPos(ci)); // get position for tokens
                   t.set_test_coverage(pos, 0);
                 } 
               } 
             }
-// <-- 20130610
           }
           TYPE_AS_Expr expr (altn.get_body ());
           //extr_pp_info (expr, c, t, cov_on);
@@ -333,35 +315,28 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           return;
           break;
         }
-        case TAG_TYPE_AS_PatternName:
-        {
-// 20130610 -->
+        case TAG_TYPE_AS_PatternName: {
 //          TYPE_AS_PatternName pn (g);
 //          Generic nm (pn.get_nm());
 //          extr_pp_info (nm, c, t, cov_on);
-// <-- 20130610
           break;
         }
-        case TAG_TYPE_AS_MatchVal:
-        {
-// 20130610 -->
+        case TAG_TYPE_AS_MatchVal: {
           TYPE_AS_MatchVal mv (g);
           TYPE_AS_Expr expr (mv.get_val());
           extr_pp_info (expr, c, t, cov_on);
-// <-- 20130610
           break;
         }
-        case TAG_TYPE_AS_SetEnumPattern:
-        {
+        case TAG_TYPE_AS_SetEnumPattern: {
           TYPE_AS_SetEnumPattern sep (g);
           SEQ<TYPE_AS_Pattern> m (sep.get_Elems());
           Generic pat;
-          for (bool bb = m.First(pat); bb; bb = m.Next(pat))
+          for (bool bb = m.First(pat); bb; bb = m.Next(pat)) {
             extr_pp_info (pat, c, t, cov_on);
+          }
           break;
         }
-        case TAG_TYPE_AS_SetUnionPattern:
-        {
+        case TAG_TYPE_AS_SetUnionPattern: {
           TYPE_AS_SetUnionPattern sup (g);
           TYPE_AS_Pattern lp (sup.get_lp());
           TYPE_AS_Pattern rp (sup.get_rp());
@@ -369,17 +344,16 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           extr_pp_info (rp, c, t, cov_on);
           break;
         }
-        case TAG_TYPE_AS_SeqEnumPattern:
-        {
+        case TAG_TYPE_AS_SeqEnumPattern: {
           TYPE_AS_SeqEnumPattern sep (g);
           SEQ<TYPE_AS_Pattern> m (sep.get_els());
           Generic pat;
-          for (bool bb = m.First(pat); bb; bb = m.Next(pat))
+          for (bool bb = m.First(pat); bb; bb = m.Next(pat)) {
             extr_pp_info (pat, c, t, cov_on);
+          }
           break;
         }
-        case TAG_TYPE_AS_SeqConcPattern:
-        {
+        case TAG_TYPE_AS_SeqConcPattern: {
           TYPE_AS_SeqConcPattern sup (g);
           TYPE_AS_Pattern lp (sup.get_lp());
           TYPE_AS_Pattern rp (sup.get_rp());
@@ -387,45 +361,40 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
           extr_pp_info (rp, c, t, cov_on);
           break;
         }
-        case TAG_TYPE_AS_TuplePattern:
-        {
+        case TAG_TYPE_AS_TuplePattern: {
           TYPE_AS_TuplePattern tp (g);
           SEQ<TYPE_AS_Pattern> m (tp.get_fields()); 
           Generic pat;
-          for (bool bb = m.First(pat); bb; bb = m.Next(pat))
+          for (bool bb = m.First(pat); bb; bb = m.Next(pat)) {
             extr_pp_info (pat, c, t, cov_on);
+          }
           break;
         }
-        case TAG_TYPE_AS_RecordPattern:
-        {
+        case TAG_TYPE_AS_RecordPattern: {
           TYPE_AS_RecordPattern tp (g);
           SEQ<TYPE_AS_Pattern> m (tp.get_fields()); 
           Generic pat;
-          for (bool bb = m.First(pat); bb; bb = m.Next(pat))
+          for (bool bb = m.First(pat); bb; bb = m.Next(pat)) {
             extr_pp_info (pat, c, t, cov_on);
+          }
           break;
         }
-// 20060720
-        case TAG_TYPE_AS_AtomicAssignStmt:
-        {
+        case TAG_TYPE_AS_AtomicAssignStmt: {
           TYPE_AS_AtomicAssignStmt aas (g);
           SEQ<TYPE_AS_AssignStmt> atm (aas.get_atm ());
           Generic stmt_g;
-          for( bool bb = atm.First(stmt_g); bb; bb = atm.Next(stmt_g))
-          {
+          for( bool bb = atm.First(stmt_g); bb; bb = atm.Next(stmt_g)) {
             TYPE_AS_AssignStmt stmt (stmt_g);
             extr_pp_info (stmt, c, t, cov_on);
           }
           break;
         }
-        case TAG_TYPE_AS_RecordConstructorExpr:
-        {
+        case TAG_TYPE_AS_RecordConstructorExpr: {
           TYPE_AS_RecordConstructorExpr rce (g);
           Sequence fields (rce.get_fields ());
           extr_pp_info (fields, c, t, cov_on);
           break;
         }
-
         default : {
           cov_on = false;  // do not allwo covering
         }
@@ -522,13 +491,14 @@ void extr_pp_info (const Generic& g,      // the AS tree to extr pp info from
     // ITERATE THROUGH THE RECORD FIELDS
 
     int Length;
-    if (!ASTAUX::IsASTRec(Rc))
+    if (!ASTAUX::IsASTRec(Rc)) {
       Length = Rc.Length();
-    else
+    }
+    else {
       // In this case the last entry is the record is an context identifier
       // and it should not be transformed.
       Length = Rc.Length() -1;
-
+    }
     for(int i = 1; i <= Length; i++) {
       extr_pp_info(Rc.GetField(i), c, t, cov_on);
     }

@@ -39,9 +39,9 @@ bool CLIOptions::ExpectNumericOptArg(const wchar_t *arg, wchar_t opt, int &value
   wstring errmsg = L"\nOption ";
   errmsg += opt;
   errmsg += L" requires an integer value - ignored.";
-  //return TBUTILS::ExpectNumericArg(arg, errmsg, value);
-  if (TBUTILS::ExpectNumericArg(arg, value))
+  if (TBUTILS::ExpectNumericArg(arg, value)) {
     return true;
+  }
   vdm_err << errmsg << endl; 
   return false;
 }
@@ -79,13 +79,13 @@ bool CLIOptions::ProcessOptions(int argc, char** argv)
       }
       case 'C': {
         int l;
-        if (ExpectNumericOptArg(TBWSTR::string2wstring(optarg).c_str(), 'C', l))
-        {
+        if (ExpectNumericOptArg(TBWSTR::string2wstring(optarg).c_str(), 'C', l)) {
           int c_flag = Settings.GetCFlag();
           Settings.SetCFlag(c_flag + 1);
         }
-        else
+        else {
           TOOLS::ExitToolbox(1);
+        }
         break;
       }
       case 'g': {
@@ -275,31 +275,41 @@ bool CLIOptions::ProcessOptions(int argc, char** argv)
         wstring encoding (TBWSTR::cinstr2wstring(optarg));
 #ifdef _MSC_VER
         wstring enc;
-        for( std::string::size_type i = 0; i < encoding.size(); i++ )
-          if ((encoding[i] != L'-') && (encoding[i] != L'_') && (encoding[i] != L' '))
+        for( std::string::size_type i = 0; i < encoding.size(); i++ ) {
+          if ((encoding[i] != L'-') && (encoding[i] != L'_') && (encoding[i] != L' ')) {
             enc += towlower(encoding[i]);
-
-        if (enc == wstring(L"utf8"))
+          }
+        }
+        if (enc == wstring(L"utf8")) {
           encoding = wstring (L"65001");
-        else if (enc == wstring(L"iso885915"))
+        }
+        else if (enc == wstring(L"iso885915")) {
           encoding = wstring (L"28605");
-        else if ((enc == wstring(L"sjis")) || (enc == wstring(L"shiftjis")))
+        }
+        else if ((enc == wstring(L"sjis")) || (enc == wstring(L"shiftjis"))) {
           encoding = wstring (L"932");
-        else if (enc == wstring(L"eucjp"))
+        }
+        else if (enc == wstring(L"eucjp")) {
           encoding = wstring (L"51932");
-        else if (enc == wstring(L"big5"))
+        }
+        else if (enc == wstring(L"big5")) {
           encoding = wstring (L"950");
-        else if (enc == wstring(L"euckr"))
+        }
+        else if (enc == wstring(L"euckr")) {
           encoding = wstring (L"51949");
-        else if (enc == wstring(L"gbk"))
+        }
+        else if (enc == wstring(L"gbk")) {
           encoding = wstring (L"936");
-        else if (enc == wstring(L"koi8r"))
+        }
+        else if (enc == wstring(L"koi8r")) {
           encoding = wstring (L"20866");
-        else if (enc == wstring(L"iso88598"))
+        }
+        else if (enc == wstring(L"iso88598")) {
           encoding = wstring (L"28598");
-        else if (enc == wstring(L"tscii0"))
-        //  encoding = wstring (L"");
+        }
+        else if (enc == wstring(L"tscii0")) {
           encoding = wstring (L"65001");
+        }
 #endif // _MSC_VER
 
         TBWSTR::setIOCharSetEnv(encoding);
@@ -339,8 +349,7 @@ bool CLIOptions::ProcessOptions(int argc, char** argv)
 #ifdef VICE
       case 'T': {
         int taskswitch = 0;
-        if(ExpectNumericOptArg(TBWSTR::string2wstring(optarg).c_str(), 'T', taskswitch))
-        {
+        if(ExpectNumericOptArg(TBWSTR::string2wstring(optarg).c_str(), 'T', taskswitch)) {
           Settings.SetTaskSwitch(taskswitch);
         }
         break;
@@ -352,8 +361,7 @@ bool CLIOptions::ProcessOptions(int argc, char** argv)
       }
       case 'X': {
         int timefactor = 0;
-        if(ExpectNumericOptArg(TBWSTR::string2wstring(optarg).c_str(), 'X', timefactor))
-        {
+        if(ExpectNumericOptArg(TBWSTR::string2wstring(optarg).c_str(), 'X', timefactor)) {
           Settings.SetTimeFactor(timefactor);
         }
         break;
@@ -363,50 +371,52 @@ bool CLIOptions::ProcessOptions(int argc, char** argv)
     }
   }
 
-  if (iflg && (nflg||fflg||dflg||gflg||cflg||jflg||Gflg))
+  if (iflg && (nflg||fflg||dflg||gflg||cflg||jflg||Gflg)) {
     Usage();
-
+  }
   if (pflg && (Settings.DTC()||Settings.INV()||
                Settings.PreCheck()||Settings.PostCheck()||
-               fflg||nflg||dflg||cflg||jflg||gflg||Gflg))
+               fflg||nflg||dflg||cflg||jflg||gflg||Gflg)) {
     Usage();
-
+  }
   if (lflg && (Settings.DTC()||Settings.INV()||
                Settings.PreCheck()||Settings.PostCheck()||
-               wflg||fflg||dflg||cflg||jflg||gflg||Gflg))
+               wflg||fflg||dflg||cflg||jflg||gflg||Gflg)) {
     Usage();
-
+  }
   if (tflg && (Settings.DTC()||Settings.INV()||
                Settings.PreCheck()||Settings.PostCheck()||
-               wflg||nflg||cflg||jflg||gflg||Gflg))
+               wflg||nflg||cflg||jflg||gflg||Gflg)) {
     Usage();
-
-  if (cflg)
+  }
+  if (cflg) {
     if (Settings.DTC()||Settings.INV()||Settings.PostCheck()||
-        wflg||nflg||fflg||dflg||tflg||gflg||jflg||Gflg)
+        wflg||nflg||fflg||dflg||tflg||gflg||jflg||Gflg) {
       Usage();
-
-  if (jflg)
+    }
+  }
+  if (jflg) {
     if (Settings.DTC()||Settings.INV()||Settings.PostCheck()||
-        wflg||nflg||fflg||dflg||tflg||gflg||cflg||Gflg)
+        wflg||nflg||fflg||dflg||tflg||gflg||cflg||Gflg) {
       Usage();
-
+    }
+  }
   // Check if the primary option is missing
 
   if ((primary == 0) &&
       (Settings.DTC()||Settings.INV()||
        Settings.PreCheck()||Settings.PostCheck()||
-       nflg||fflg||dflg||gflg||aflg ||Oflg||wflg||Gflg))
+       nflg||fflg||dflg||gflg||aflg ||Oflg||wflg||Gflg)) {
     Usage ();
-
+  }
   optionsIndex = optind + opt_args;
 
-  if (primary > 1) // We only allow for exactly one of p,i,t,c,j,b,l or no option
+  if (primary > 1) { // We only allow for exactly one of p,i,t,c,j,b,l or no option
     Usage ();
-
-  if ( primary && !CheckNumberOfArguments(argc, opt_args))
+  }
+  if ( primary && !CheckNumberOfArguments(argc, opt_args)) {
     Usage();
-
+  }
   if (optind < argc) {
     wstring basedir ( TBUTILS::tb_getbasedir( TBWSTR::cinstr2wstring( argv[optind] ) ) );
     TBUTILS::SetDefaultPath ( basedir );

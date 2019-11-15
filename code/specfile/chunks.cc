@@ -35,16 +35,20 @@ bool VDMChunk::write_chunk() {
 
   buf += tmpbuf;
 
-    if (! first_chunk) buf += L"\n";
-    if (reset_paragraph) buf += L"\\pard\\plain ";  
+  if (! first_chunk) {
+    buf += L"\n";
+  }
+  if (reset_paragraph) {
+    buf += L"\\pard\\plain ";  
+  }
+  if ( !first_chunk ) {
+    chunk += this_style;
+    chunk += chunk_buffer;
+  }
+  else {
+    chunk += chunk_buffer;
+  }
 
-    if ( !first_chunk ) {
-      chunk += this_style;
-      chunk += chunk_buffer;
-    } else {
-      chunk += chunk_buffer;
-    }
-
-    chunks->ImpAppend((Token)chunk);
+  chunks->ImpAppend((Token)chunk);
 
 }

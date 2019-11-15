@@ -270,8 +270,9 @@ std::wstring TBWSTR::mbstr2wstring(const std::string& s)
 
 std::wstring TBWSTR::cinstr2wstring(const std::string& s)
 {
-  if( s.size() == 0 ) return std::wstring( L"" );
-
+  if( s.size() == 0 ) {
+    return std::wstring( L"" );
+  }
 #ifdef _MSC_VER
   return mbstr2wstr( s, false );
 #else

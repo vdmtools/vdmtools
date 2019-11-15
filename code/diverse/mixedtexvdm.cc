@@ -21,35 +21,34 @@
 #include "tb_wstring.h"
 #include "tbutils.h"
 
-//static string MatchMergeStr ("##!!#!");
-//static int MatchMergeLen = 6;
 std::string MIXEDTEXT::MatchMergeStr ("##!!#!");
 int MIXEDTEXT::MatchMergeLen = 6;
 
 bool MIXEDTEXT::MatchMerge (int & pm, char ch, std::ostream & ostr, bool code)
 {
-  if (MatchMergeStr[pm] == ch)
-  {
-    if (pm == (MatchMergeLen - 1))
-    {
-      if (code)
+  if (MatchMergeStr[pm] == ch) {
+    if (pm == (MatchMergeLen - 1)) {
+      if (code) {
         ostr << "\\begin{vdm}";
-      else
+      }
+      else {
         ostr << "\\end{vdm}";
+      }
       pm = 0;
       return true;
     }
-    else
+    else {
       pm++;
+    }
   }
-  else if (pm)
-  {
+  else if (pm) {
     ostr << MatchMergeStr.substr(0, pm);
     pm = 0;
   }
 
-  if (!pm)
+  if (!pm) {
     ostr.put(ch);
+  }
   return false;
 }
                     
@@ -81,16 +80,17 @@ bool MIXEDTEXT::vdmmerge (const std::wstring & f1,
   int pm = 0;
   bool match = false;
                 
-  while (!match && istr1.get (ch))
+  while (!match && istr1.get (ch)) {
     match = MatchMerge  (pm, ch, ostr, true);
-
-  while (!istr1.eof ())
-  {
+  }
+  while (!istr1.eof ()) {
     match = false;
-    while (!match && istr2.get (ch))
+    while (!match && istr2.get (ch)) {
       match = MatchMerge  (pm, ch, ostr, false);
-    if (istr2.eof ())
+    }
+    if (istr2.eof ()) {
       ostr << "\\end{vdm}";
+    }
     match = false;
     while (!match && istr1.get (ch))
       match = MatchMerge  (pm, ch, ostr, true);

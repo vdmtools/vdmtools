@@ -100,14 +100,18 @@ SpecFileHandler::~SpecFileHandler()
 
 SpecFileHandler * SpecFileHandler::get_parser(SpecFile & sf)
 {
-  if (latex_sfh.is_it_your_format(sf))
+  if (latex_sfh.is_it_your_format(sf)) {
     return latex_sfh.dup();
-  else if (rtf_sfh.is_it_your_format(sf))
+  }
+  else if (rtf_sfh.is_it_your_format(sf)) {
     return rtf_sfh.dup();
-  else if (pt_sfh.is_it_your_format(sf))
+  }
+  else if (pt_sfh.is_it_your_format(sf)) {
     return pt_sfh.dup();
-  else
+  }
+  else {
     return (SpecFileHandler *)NULL;
+  }
 }
 
 #ifdef VDMPP
@@ -130,20 +134,21 @@ Map SpecFileHandler::create_token_map(TokenList & tokl, int64_t from, int64_t to
   // constructs introduced in UML are to be inserted.
 {
   Map m;
-  for(size_t i = from; (i <= (size_t)to) && (i <= tokl.Length()); i++)
-  {
+  for(size_t i = from; (i <= (size_t)to) && (i <= tokl.Length()); i++) {
     switch(tokl.Get(i).get_id()) {
       case LEX_INSTANCE: {
         if(!m.Dom().InSet(Int(TAG_TYPE_AS_InstAssignDef))
            && (i < tokl.Length())
            && (i < (size_t)to)
-           && (tokl.Get(i+1).get_id() == LEX_VARIABLES))
+           && (tokl.Get(i+1).get_id() == LEX_VARIABLES)) {
           m.Insert(Int(TAG_TYPE_AS_InstAssignDef), Int(i+2));
+        }
         break;
       }
       case LEX_VALUES: {
-        if(!m.Dom().InSet(Int(TAG_TYPE_AS_ValueDef)))
+        if(!m.Dom().InSet(Int(TAG_TYPE_AS_ValueDef))) {
           m.Insert(Int(TAG_TYPE_AS_ValueDef), Int(i+1));
+        }
         break;
       }
       case LEX_FUNCTIONS: {
@@ -216,16 +221,19 @@ Action * SpecFileHandler::block_specifier_action(int ins_pos,
     i--;
   }
   Action * act;
-  if(!found)
+  if(!found) {
     // TBD: Report some error!!!!!!
     act = NULL;
-  else{
-    if(tokl.Get(i+1).get_id() == LEX_INSTANCE)
+  }
+  else {
+    if(tokl.Get(i+1).get_id() == LEX_INSTANCE) {
       // Insert two tokens:
       act = new Action(ins_pos, i+1, i+2);
-    else
+    }
+    else {
       // Insert only one token:
       act = new Action(ins_pos, i+1, i+1);
+    }
   }
   return act;
 }
@@ -247,10 +255,12 @@ int SpecFileHandler::get_replace_end_pos(const TYPE_ASTMERGE_AST_uNode & ast_nod
       int64_t endtoken = pos.get_token_uend().GetValue();
       // Take the semi-colon as well - if it exists.
       if(endtoken < (int64_t)tokl.Length() &&
-         tokl.Get(endtoken + 1).get_id() == ';')
+         tokl.Get(endtoken + 1).get_id() == ';') {
         return endtoken + 1;
-      else
+      }
+      else {
         return endtoken;
+      }
     }
     // functions:
     case TAG_TYPE_AS_ExplFnDef: {
@@ -261,11 +271,13 @@ int SpecFileHandler::get_replace_end_pos(const TYPE_ASTMERGE_AST_uNode & ast_nod
     }
     case TAG_TYPE_AS_ImplFnDef: {
       TYPE_AS_ImplFnDef temp(ast_node);
-      if(temp.get_fnpre().IsNil())
+      if(temp.get_fnpre().IsNil()) {
         // No pre condition specified - use start of post condition
         pos = start_and_end(temp.get_fnpost(), ci);
-      else
+      }
+      else {
         pos = start_and_end(temp.get_fnpre(), ci);
+      }
       return pos.get_token_ust().GetValue() - 2;
     }
     case TAG_TYPE_AS_ExtExplFnDef: {
@@ -289,10 +301,12 @@ int SpecFileHandler::get_replace_end_pos(const TYPE_ASTMERGE_AST_uNode & ast_nod
        TYPE_AS_ImplOpDef temp(ast_node);
        // If implicit operation, post condition must be
        // present, so replace up to end of current post cond
-       if (!temp.get_oppre().IsNil())
+       if (!temp.get_oppre().IsNil()) {
          pos = start_and_end(temp.get_oppre(), ci);
-       else
+       }
+       else {
          pos = start_and_end(temp.get_oppost(), ci);
+       }
       return pos.get_token_ust().GetValue() - 2;
     }
     case TAG_TYPE_AS_ExtExplOpDef: {
@@ -311,14 +325,14 @@ int SpecFileHandler::get_replace_end_pos(const TYPE_ASTMERGE_AST_uNode & ast_nod
       // relations have changed:
       TYPE_AS_Class temp(ast_node);
       type_7AS_NameCL super_l(temp.get_supercls());
-      if(!super_l.Length()){
+      if(!super_l.Length()) {
         // No super classes specified for this class. Return the end pos
         // of the class name:
         TYPE_AS_Name cl_nm(temp.get_nm());
         pos = start_and_end(cl_nm, ci);
         return pos.get_token_uend();
       }
-      else{
+      else {
         // There are super classes. Return the end position of the last
         // name of the list
         TYPE_AS_Name last_nm = super_l.Index(super_l.Length());
@@ -333,100 +347,89 @@ int SpecFileHandler::get_replace_end_pos(const TYPE_ASTMERGE_AST_uNode & ast_nod
 Int SpecFileHandler::get_acc (const TYPE_ASTMERGE_AST_uNode& node)
 {
   switch (node.GetTag()) {
-    case TAG_TYPE_AS_ValueDef:
-      return node.GetInt(pos_AS_ValueDef_access);
-    case TAG_TYPE_AS_InstAssignDef:
-      return node.GetInt(pos_AS_InstAssignDef_access);
-    case TAG_TYPE_AS_ExplFnDef:
-      return node.GetInt(pos_AS_ExplFnDef_access);
-    case TAG_TYPE_AS_ImplFnDef:
-      return node.GetInt(pos_AS_ImplFnDef_access);
-    case TAG_TYPE_AS_ExtExplFnDef:
-      return node.GetInt(pos_AS_ExtExplFnDef_access);
-    case TAG_TYPE_AS_ExplOpDef:
-      return node.GetInt(pos_AS_ExplOpDef_access);
-    case TAG_TYPE_AS_ImplOpDef:
-      return node.GetInt(pos_AS_ImplOpDef_access);
-    case TAG_TYPE_AS_ExtExplOpDef:
-      return node.GetInt(pos_AS_ExtExplOpDef_access);
-    default:
-      return Int(DEFAULT_AS);
+    case TAG_TYPE_AS_ValueDef:      { return node.GetInt(pos_AS_ValueDef_access); }
+    case TAG_TYPE_AS_InstAssignDef: { return node.GetInt(pos_AS_InstAssignDef_access); }
+    case TAG_TYPE_AS_ExplFnDef:     { return node.GetInt(pos_AS_ExplFnDef_access); }
+    case TAG_TYPE_AS_ImplFnDef:     { return node.GetInt(pos_AS_ImplFnDef_access); }
+    case TAG_TYPE_AS_ExtExplFnDef:  { return node.GetInt(pos_AS_ExtExplFnDef_access); }
+    case TAG_TYPE_AS_ExplOpDef:     { return node.GetInt(pos_AS_ExplOpDef_access); }
+    case TAG_TYPE_AS_ImplOpDef:     { return node.GetInt(pos_AS_ImplOpDef_access); }
+    case TAG_TYPE_AS_ExtExplOpDef:  { return node.GetInt(pos_AS_ExtExplOpDef_access); }
+    default:                        { return Int(DEFAULT_AS); }
   }
 }
 
 Bool SpecFileHandler::get_stat (const TYPE_ASTMERGE_AST_uNode& node)
 {
   switch (node.GetTag()) {
-    case TAG_TYPE_AS_ValueDef:
-      return node.GetBool(pos_AS_ValueDef_stat);
-    case TAG_TYPE_AS_InstAssignDef:
-      return node.GetBool(pos_AS_InstAssignDef_stat);
-    case TAG_TYPE_AS_ExplFnDef:
-      return node.GetBool(pos_AS_ExplFnDef_stat);
-    case TAG_TYPE_AS_ImplFnDef:
-      return node.GetBool(pos_AS_ImplFnDef_stat);
-    case TAG_TYPE_AS_ExtExplFnDef:
-      return node.GetBool(pos_AS_ExtExplFnDef_stat);
-    case TAG_TYPE_AS_ExplOpDef:
-      return node.GetBool(pos_AS_ExplOpDef_stat);
-    case TAG_TYPE_AS_ImplOpDef:
-      return node.GetBool(pos_AS_ImplOpDef_stat);
-    case TAG_TYPE_AS_ExtExplOpDef:
-      return node.GetBool(pos_AS_ExtExplOpDef_stat);
-    default:
-      return Bool(false);
+    case TAG_TYPE_AS_ValueDef:      { return node.GetBool(pos_AS_ValueDef_stat); }
+    case TAG_TYPE_AS_InstAssignDef: { return node.GetBool(pos_AS_InstAssignDef_stat); }
+    case TAG_TYPE_AS_ExplFnDef:     { return node.GetBool(pos_AS_ExplFnDef_stat); }
+    case TAG_TYPE_AS_ImplFnDef:     { return node.GetBool(pos_AS_ImplFnDef_stat); }
+    case TAG_TYPE_AS_ExtExplFnDef:  { return node.GetBool(pos_AS_ExtExplFnDef_stat); }
+    case TAG_TYPE_AS_ExplOpDef:     { return node.GetBool(pos_AS_ExplOpDef_stat); }
+    case TAG_TYPE_AS_ImplOpDef:     { return node.GetBool(pos_AS_ImplOpDef_stat); }
+    case TAG_TYPE_AS_ExtExplOpDef:  { return node.GetBool(pos_AS_ExtExplOpDef_stat); }
+    default:                        { return Bool(false); }
   }
 }
 
 int SpecFileHandler::get_increment(const TYPE_ASTMERGE_AST_uNode& node)
 {
   int increment = 0;
-  if (get_acc(node).GetValue() != DEFAULT_AS)
+  if (get_acc(node).GetValue() != DEFAULT_AS) {
     increment++;
-
-  if (get_stat(node).GetValue())
+  }
+  if (get_stat(node).GetValue()) {
     increment++;
-
+  }
   return increment;
 }
 
 // Function for returning precondition from an arbitrary parent method
 Generic SpecFileHandler::get_parent_pre (TYPE_ASTMERGE_AST_uNode parent)
 {
-  Generic precond;
+  //Generic precond;
   switch (parent.GetTag()) {
     case vdm_AS_ImplFnDef:{
-      TYPE_AS_ImplFnDef fn(parent);
-      precond = fn.get_fnpre();
-      break;
+      //TYPE_AS_ImplFnDef fn(parent);
+      //precond = fn.get_fnpre();
+      return Record(parent).GetField(pos_AS_ImplFnDef_fnpre);
+      //break;
     }
     case vdm_AS_ExplFnDef:{
-      TYPE_AS_ExplFnDef fn(parent);
-      precond = fn.get_fnpre();
-      break;
+      //TYPE_AS_ExplFnDef fn(parent);
+      //precond = fn.get_fnpre();
+      return Record(parent).GetField(pos_AS_ExplFnDef_fnpre);
+      //break;
     }
     case vdm_AS_ExtExplFnDef:{
-      TYPE_AS_ExtExplFnDef fn(parent);
-      precond = fn.get_fnpre();
-      break;
+      //TYPE_AS_ExtExplFnDef fn(parent);
+      //precond = fn.get_fnpre();
+      return Record(parent).GetField(pos_AS_ExtExplFnDef_fnpre);
+      //break;
     }
     case vdm_AS_ImplOpDef:{
-      TYPE_AS_ImplOpDef op(parent);
-      precond = op.get_oppre();
-      break;
+      //TYPE_AS_ImplOpDef op(parent);
+      //precond = op.get_oppre();
+      return Record(parent).GetField(pos_AS_ImplOpDef_oppre);
+      //break;
     }
     case vdm_AS_ExplOpDef:{
-      TYPE_AS_ExplOpDef op(parent);
-      precond = op.get_oppre();
-      break;
+      //TYPE_AS_ExplOpDef op(parent);
+      //precond = op.get_oppre();
+      return Record(parent).GetField(pos_AS_ExtExplOpDef_oppre);
+      //break;
     }
     case vdm_AS_ExtExplOpDef:{
-      TYPE_AS_ExtExplOpDef op(parent);
-      precond = op.get_oppre();
-      break;
+      //TYPE_AS_ExtExplOpDef op(parent);
+      //precond = op.get_oppre();
+      return Record(parent).GetField(pos_AS_ExtExplOpDef_oppre);
+      //break;
     }
   }
-  return precond;
+  //return precond;
+  return Nil();
 }
 
 bool SpecFileHandler::extract_token_pos(ActionList & act_l,
@@ -464,19 +467,16 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
 
         // We treat the case of a Condition node differently, as it is
         // not a first class definition (c.f. operations, functions etc)
-        if( ast_node.GetTag() == vdm_ASTMERGE_Condition)
-        {
+        if( ast_node.GetTag() == vdm_ASTMERGE_Condition) {
           TYPE_ASTMERGE_Condition cond(ast_node);
           TYPE_ASTMERGE_AST_uNode parent(cond.get_parent());
 
           // Decide whether start pos should be after body or after precond
           TYPE_CI_TokenSpan start_pos;
-          if ((cond.get_kind() == Quote(L"pre")) || (get_parent_pre(parent).IsNil()))
-          {
+          if ((cond.get_kind() == Quote(L"pre")) || (get_parent_pre(parent).IsNil())) {
             start_pos = start_and_end(parent, old_ci);
           }
-          else
-          {
+          else {
             start_pos = start_and_end(get_parent_pre(parent), old_ci);
           }
 
@@ -504,10 +504,12 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
           // First we find the start- and end-pos of the class it self:
           TYPE_CI_TokenSpan class_pos;
           Generic as_g (ToolMediator::GetAST(PTAUX::ASName2ModuleName(where_node)));
-          if(!as_g.IsNil())
+          if(!as_g.IsNil()) {
             class_pos = start_and_end(PTAUX::ExtractAstVal(as_g), old_ci);
-          else
+          }
+          else {
             return false;
+          }
           Map local_m;
           if(!block_positions.Dom().InSet(where_node)) {
             // The class name in where_node is not in the map. Create
@@ -519,16 +521,18 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
                                                class_pos.get_token_ust().GetValue(),
                                                class_pos.get_token_uend().GetValue()));
           }
-          else
+          else {
             local_m = block_positions[where_node];
+          }
           // The map local_m is now a mapping from AS tag values to
           // token positions. The map is used to locate existing blocks
           // like 'instance variables', 'values', etc. in the _old_
           // token list.
-          if(local_m.Dom().InSet(Int(ast_node.GetTag())) )
+          if(local_m.Dom().InSet(Int(ast_node.GetTag())) ) {
             // The class already has a block for the new entity:
             ins_pos = Int(local_m[Int(ast_node.GetTag())]).GetValue();
-          else{
+          }
+          else {
             // No block exists. The insertion position is then 'right
             // after' the class header
             TYPE_CI_TokenSpan class_nm_pos (start_and_end(where_node, old_ci));
@@ -537,8 +541,9 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
             // after this, otherwise, the insertion point is after the
             // class name
             TYPE_AS_Class as_class (PTAUX::ExtractAstVal(as_g));
-            if (as_class.get_supercls().IsEmpty())
+            if (as_class.get_supercls().IsEmpty()) {
               ins_pos = class_nm_pos.get_token_uend().GetValue() + 1;
+            }
             else {
               Sequence as_superclasses = as_class.get_supercls();
               TYPE_CI_TokenSpan last_supercls_pos (start_and_end(
@@ -553,15 +558,16 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
             // be inserted once, which is why we keep a mapping from
             // class names to sets of tag values:
             Set block_set;
-            if(blocks_created.Dom().InSet(where_node))
+            if(blocks_created.Dom().InSet(where_node)) {
               block_set = blocks_created[where_node];
-            else
+            }
+            else {
               block_set = Set();
-            if( !block_set.InSet(Int(ast_node.GetTag())) )
-
+            }
+            if( !block_set.InSet(Int(ast_node.GetTag())) ) {
               // No block specifier inserted yet. Insert it:
               act_l.insert(block_specifier_action(ins_pos, ast_node, new_ci));
-
+            }
             block_set.Insert(Int(ast_node.GetTag()));
             // Insert the new block set in the mapping:
             blocks_created.ImpModify(where_node, block_set);
@@ -587,19 +593,21 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
 
         // Treat Condition actions separately as they are not first class definitions
 
-        if (temp.get_ast_unode().Is(vdm_ASTMERGE_Condition))
+        if (temp.get_ast_unode().Is(vdm_ASTMERGE_Condition)) {
           startpos = pos.get_token_ust().GetValue() - 1;
-        else
+        }
+        else {
           startpos = pos.get_token_ust().GetValue() - get_increment(temp.get_ast_unode());
-
+        }
         int64_t endtoken = pos.get_token_uend().GetValue();
         if(endtoken < (int64_t)old_tokl.Length() &&
-           old_tokl.Get(endtoken + 1).get_id() == ';')
+           old_tokl.Get(endtoken + 1).get_id() == ';') {
           // Ok, this ugly, but how the hell do I remove semicolons in another manner?
           endpos = endtoken + 1;
-        else
+        }
+        else {
           endpos = endtoken;
-
+        }
         act_l.insert(new Action(startpos, endpos));
         break;
       }
@@ -623,10 +631,12 @@ bool SpecFileHandler::extract_token_pos(ActionList & act_l,
         act_l.insert(new Action(old_start, pos.get_token_ust().GetValue() - get_increment(ast_node), end_pos));
         break;                                      // to
       }
-      case vdm_ASTMERGE_UnknownAction:
+      case vdm_ASTMERGE_UnknownAction: {
         return false;
-      default:
+      }
+      default: {
         return false;
+      }
     }
   }
   return true;
@@ -643,8 +653,7 @@ bool SpecFileHandler::create_action_list(SpecFile & sf, const Sequence & old_ast
 
   // Next we construct asts and context info for the classes of this module:
 
-  if( !parse_classes(sf.get_merged_classes(), new_ci, new_asts, VPPUML_DUMMY_FILE_ID) )
-  {
+  if( !parse_classes(sf.get_merged_classes(), new_ci, new_asts, VPPUML_DUMMY_FILE_ID) ) {
     err = L"Merged model is syntactically incorrect.";
     return false;
   }
@@ -655,9 +664,9 @@ bool SpecFileHandler::create_action_list(SpecFile & sf, const Sequence & old_ast
   // action list, act_l, is generated from token position information of the
   // AST nodes of the sequence.
 
-  if(!extract_token_pos(act_l, acts, new_ci, old_ci, old_tokl))
+  if(!extract_token_pos(act_l, acts, new_ci, old_ci, old_tokl)) {
     return false;
-
+  }
   // Sort the action list according to the token position in the original token list:
   act_l.sort_list();
   return true;
@@ -706,9 +715,9 @@ bool PlainTextSpecFileHandler::parse_vdm(SpecFile & sf, Sequence & asts, Context
   sf.rewind();
 
   ostringstream unichar;
-  if(!sf.convertToUniChar(sf.get_input_stream(), unichar))
+  if(!sf.convertToUniChar(sf.get_input_stream(), unichar)) {
     return false;
-
+  }
   return parse_vdm_file(sf, unichar.str(), asts, ci);
 }
 
@@ -768,8 +777,7 @@ bool PlainTextSpecFileHandler::file_update(SpecFile &sf, wstring & err)
 
   ofstream pp_out;
   pp_out.open(TBWSTR::wstring2fsstr(sf.get_fname()).c_str(),ios::out);
-  if (!pp_out.good())
-  {
+  if (!pp_out.good()) {
     err = L"Could not open the file for writing.";
     return false;
   }
@@ -782,8 +790,7 @@ bool PlainTextSpecFileHandler::file_create(SpecFile &sf, wstring & err)
 {
   ofstream pp_out;
   pp_out.open(TBWSTR::wstring2fsstr(sf.get_fname()).c_str(),ios::out);
-  if (!pp_out.good())
-  {
+  if (!pp_out.good()) {
     err = L"Could not open the file for writing.";
     return false;
   }
@@ -809,8 +816,7 @@ bool PlainTextSpecFileHandler::is_it_your_format(SpecFile & )
 
 bool SpecFile::get_parser()
 {
-  if (this->parser == NULL)
-  {
+  if (this->parser == NULL) {
     SpecFileHandler sfp;
     this->parser = sfp.get_parser(*this);
   }
@@ -847,8 +853,7 @@ SpecFile::SpecFile(const wstring & path, const wstring & nm, const wstring & df,
   this->default_file = df;
   this->charset = cs;
 
-  if(nm.rfind(L".rtf") != wstring::npos)
-  {
+  if(nm.rfind(L".rtf") != wstring::npos) {
     // This is an rtf file:
     // Copy the file L"NewClass.rtf" to the file indicated by path and nm.
     FILE *out;
@@ -857,30 +862,27 @@ SpecFile::SpecFile(const wstring & path, const wstring & nm, const wstring & df,
       fclose(out);
       this->file_success = TBUTILS::file_copy(this->fname, this->default_file);
     }
-    else
-    {
+    else {
       vdm_log << L"Could't open file '" << this->default_file << L"'." << endl << flush;
       if( (out = fopen(TBWSTR::wstring2fsstr(this->fname).c_str(), "r")) != NULL ) {
         fclose(out);
         this->file_success = false;
       }
-      else
-      {
+      else {
         ofstream o;
         o.open(TBWSTR::wstring2fsstr(this->fname).c_str(), ios::out);
-        if (o.good())
-        {
+        if (o.good()) {
           rtfnewclass(o);
           o.close();
           this->file_success = true;
         }
-        else
+        else {
           this->file_success = false;
+        }
       }
     }
   }
-  else if (nm.rfind(L".tex") != wstring::npos)
-  {
+  else if (nm.rfind(L".tex") != wstring::npos) {
     // Tex text is assumed. Create a dummy file so that
     // Search_and_OpenFile will be able to find this file.
     FILE *out;
@@ -932,34 +934,39 @@ SpecFile::SpecFile(const TYPE_ProjectTypes_FileName & fn, ContextInfo& ci)
 
 SpecFile::~SpecFile()
 {
-  if (this->parser != NULL) delete this->parser;
+  if (this->parser != NULL) {
+    delete this->parser;
+  }
   close();
 };
 
 bool SpecFile::read()
 {
-  if (this->parser != NULL)
+  if (this->parser != NULL) {
     return this->parser->read(*this);
-  else
+  }
+  else {
     return false;
+  }
 };
 
 // parse the vdm part of a spec file
 bool SpecFile::parse_vdm(Sequence & asts)
 {
-  if (this->parser != NULL)
+  if (this->parser != NULL) {
     return (this->parser->read(*this) &&
             this->parser->split(*this, true) &&
             this->parser->parse_vdm(*this, asts, *(this->contextinfo)));
-  else
+  }
+  else {
     return false;
+  }
 };
 
 // pretty print the spec file to pf
 bool SpecFile::pp()
 {
-  if (this->parser != NULL)
-  {
+  if (this->parser != NULL) {
     Sequence asts;
     ContextInfo ci;
     return (this->parser->read(*this) &&
@@ -967,8 +974,9 @@ bool SpecFile::pp()
             this->parser->parse_vdm(*this, asts, ci) &&
             this->parser->pp(*this, asts, ci));
   }
-  else
+  else {
     return false;
+  }
 };
 
 #ifdef VDMPP
@@ -995,10 +1003,12 @@ bool SpecFile::file_create(wstring & err)
 
 wstring SpecFile::give_old_name()
 {
-  if(this->parser != NULL)
+  if(this->parser != NULL) {
     return this->parser->give_old_name(*this);
-  else
+  }
+  else {
     return L"";
+  }
 }
 #endif // VDMPP
 
@@ -1013,18 +1023,22 @@ bool SpecFile::split(bool vdm_only)
 
 const wchar_t * SpecFile::pp_output_file_suffix()
 {
-  if ( this->parser == NULL )
+  if ( this->parser == NULL ) {
     return L"unknown";
-  else
+  }
+  else {
     return this->parser->pp_output_file_suffix();
+  }
 };
 
 const wchar_t * SpecFile::get_format_name()
 {// get the name of the format of the spec file
-  if ( this->parser == NULL )
+  if ( this->parser == NULL ) {
     return L"UNKNOWN";
-  else
+  }
+  else {
     return this->parser->get_format_name();
+  }
 };
 
 // open the spec file
@@ -1039,23 +1053,26 @@ bool SpecFile::init()
   int not_found;
   // find a parser for the file
   TBUTILS::Search_and_OpenFile(this->fname, this->fname, this->sp, not_found);
-  if (not_found) return false;
-
+  if (not_found) {
+    return false;
+  }
   this->parser = SpecFileHandler::get_parser(*this);
 
-  if (this->parser == NULL) return false;
-
+  if (this->parser == NULL) {
+    return false;
+  }
   // Get unique file id
 
 #ifdef VDMPP
-  if( this->file_created )
+  if( this->file_created ) {
     this->file_id = TYPE_CI_FileId(VPPUML_DUMMY_FILE_ID);
+  }
   else
 #endif // VDMPP
     this->file_id = ToolMediator::GetFileId(filename);
 
-  if (this->file_id.GetValue() == 0)
-  {  // file not found in repository
+  if (this->file_id.GetValue() == 0) {
+    // file not found in repository
     SET<TYPE_ProjectTypes_FileName> s;
     s.Insert (filename);
     ToolMediator::AddFiles (s);
@@ -1113,14 +1130,12 @@ bool SpecFile::look_for(const char * tl[])
   // read the file until all tokens are found or eof
 
   string line;
-  while (!this->sp.eof())
-  {
+  while (!this->sp.eof()) {
     getline(this->sp,line);
 
     // check if any of the missing tokens are in the buffer
 
-    for (i = 0; i < len; i++)
-    {
+    for (i = 0; i < len; i++) {
       if (elems[i]) {
         if (::strstr(line.c_str(), (const char*) elems[i])) {
           elems[i] = NULL;  // token found
@@ -1129,7 +1144,9 @@ bool SpecFile::look_for(const char * tl[])
       }
     }
 
-    if (left == 0) break;
+    if (left == 0) {
+      break;
+    }
   }
   return (left == 0);
 }
@@ -1138,21 +1155,18 @@ bool SpecFile::look_for(const char * tl[])
 bool SpecFile::convertToUniChar(ifstream & inp, ostringstream & unichar)
 {
   bool res = true;
-  while ( !inp.eof() )
-  {
+  while ( !inp.eof() ) {
     string line;
     getline(inp, line);
 
     line = TBWSTR::convertCrToNl(line);
     line += '\n';
 
-    try
-    {
+    try {
       string converted (TBWSTR::ConvertToHexquad(TBWSTR::mbstr2wstring(line)));
       unichar.write(converted.c_str(), converted.length());
     }
-    catch (...)
-    {
+    catch (...) {
       vdm_log << L"Invalid multibyte string encounted: "
               << TBWSTR::string2wstring(line)
               << L"abandoning parse"
@@ -1184,8 +1198,7 @@ Sequence SpecFileHandler::ExtractDefinedFunctionNames (const Set & mds)
   Sequence res;
 
   Record rc (mds.GetElem ());
-  if (rc.Is (TAG_TYPE_AS_Definitions))
-  {
+  if (rc.Is (TAG_TYPE_AS_Definitions)) {
     ////////////////////////
     // mds is sequence of definitions - not seq of modules
     ////////////////////////
@@ -1196,18 +1209,15 @@ Sequence SpecFileHandler::ExtractDefinedFunctionNames (const Set & mds)
     def_fcts.ImpUnion (defs.get_opm().Dom ()); //operations
     res.ImpAppend (def_fcts);
   }
-  else // mds.IsSequence()
-  {
+  else { // mds.IsSequence()
     /////////////////////////////
     // for all modules in the AS
     /////////////////////////////
 
     Set mds_q (mds);
     Generic mod_g;
-    for (bool b = mds_q.First(mod_g); b; b = mds_q.Next(mod_g))
-    {
-      if (mod_g.Is(TAG_TYPE_AS_Module))
-      {
+    for (bool b = mds_q.First(mod_g); b; b = mds_q.Next(mod_g)) {
+      if (mod_g.Is(TAG_TYPE_AS_Module)) {
         TYPE_AS_Module mod (mod_g);
         TYPE_AS_Interface intf (mod.get_intf());
         Set imp_fcts;
@@ -1218,10 +1228,8 @@ Sequence SpecFileHandler::ExtractDefinedFunctionNames (const Set & mds)
         /////////////////////////////
 
         Generic gg, gisig;
-        for (bool bb = imp.First(gg, gisig); bb; bb = imp.Next(gg, gisig))
-        {
-          if (gisig.IsRecord ()) //not import all
-          {
+        for (bool bb = imp.First(gg, gisig); bb; bb = imp.Next(gg, gisig)) {
+          if (gisig.IsRecord ()) { //not import all
             ////////////////////////////
             // Create mapping from orig name to new name
             // (inverse ImportSig.ren mapping)
@@ -1231,22 +1239,21 @@ Sequence SpecFileHandler::ExtractDefinedFunctionNames (const Set & mds)
             Map ren (isig.get_ren()); // map Name to Name
             Map inv_ren;              // map Name to Name
             Generic old_nm, new_nm;
-            for (bool cc = ren.First(old_nm, new_nm); cc; cc = ren.Next(old_nm, new_nm))
+            for (bool cc = ren.First(old_nm, new_nm); cc; cc = ren.Next(old_nm, new_nm)) {
               inv_ren.Insert (new_nm, old_nm);
-
+            }
             /////////////////////////////
             //for all imported functions
             /////////////////////////////
 
             Map fns (isig.get_fns());
             Generic fnnm;
-            for (bool dd = fns.First(fnnm); dd; dd = fns.Next(fnnm))
-            {
-              if (inv_ren.DomExists (fnnm))
+            for (bool dd = fns.First(fnnm); dd; dd = fns.Next(fnnm)) {
+              if (inv_ren.DomExists (fnnm)) {
                 //if renamed use the new name
                 imp_fcts.Insert (inv_ren[fnnm]);
-              else
-              {
+              }
+              else {
                 TYPE_AS_Name nm (fnnm);
                 TYPE_AS_Name nm2 (gg);
                 TYPE_AS_Ids ids (nm.get_ids());
@@ -1263,13 +1270,12 @@ Sequence SpecFileHandler::ExtractDefinedFunctionNames (const Set & mds)
 
             Map ops (isig.get_ops());
             Generic opnm;
-            for (bool ee = ops.First(opnm); ee; ee = ops.Next(opnm))
-            {
-              if (inv_ren.DomExists (opnm))
+            for (bool ee = ops.First(opnm); ee; ee = ops.Next(opnm)) {
+              if (inv_ren.DomExists (opnm)) {
                 //if renamed use the new name
                 imp_fcts.Insert (inv_ren[opnm]);
-              else
-              {
+              }
+              else {
                 TYPE_AS_Name nm (opnm);
                 TYPE_AS_Name nm2(gg);
 
@@ -1295,10 +1301,12 @@ Sequence SpecFileHandler::ExtractDefinedFunctionNames (const Set & mds)
         def_fcts.ImpUnion (def.get_opm().Dom ()); //operations
         res.ImpAppend (def_fcts);
       }
-      else if (mod_g.IsRecord() && Record (mod_g).Is(TAG_TYPE_AS_DLModule))
+      else if (mod_g.IsRecord() && Record (mod_g).Is(TAG_TYPE_AS_DLModule)) {
         res.ImpAppend (Set());
-      else
+      }
+      else {
         res.ImpAppend (Set());
+      }
     }
   }
   return res;
