@@ -60,7 +60,8 @@ Tuple XmiReader::ReadXMIDocument(const wstring & filename)
       return mk_(Bool(false), Nil(), Nil(), Nil(), Sequence(filename + L" : failed to parse"));
     }
     return mk_(Bool(true), ret, this->idm, encoding, Sequence());
-  } else {
+  }
+  else {
     return mk_(Bool(false), Nil(), Nil(), Nil(), Sequence(L"Unable to open " + filename));
   }
 }
@@ -70,15 +71,15 @@ int XmiReader::ReadNextLine(xmlTextReaderPtr reader)
   int ret = xmlTextReaderRead(reader);
 
 #ifdef _MSC_VER
-  while(ret != 1)
-  {
+  while(ret != 1) {
     ret = xmlTextReaderRead(reader);
   }
 #endif // _MSC_VER
 
 #ifdef DEBUG_DUMP
-  if (ret == 1)
+  if (ret == 1) {
     DumpNodeInfo(reader);
+  }
 #endif // DEBUG_DUMP
 
   return ret;
@@ -133,8 +134,9 @@ Record XmiReader::SetElement(const Record & e, const Generic & element)
     case TAG_TYPE_XMI_MaxModelVersion:
     case TAG_TYPE_XMI_CurrentModelProducer: {
       Record res (e);
-      if (element.IsSequence())
+      if (element.IsSequence()) {
         res.SetField(2, element);
+      }
       return res;
       break;
     }
@@ -245,8 +247,7 @@ Record XmiReader::SetElement(const Record & e, const Generic & element)
 TYPE_XMI_Exporter XmiReader::SetXMIExporter(const TYPE_XMI_Exporter & e,
                                             const Generic & element)
 {
-  if (element.IsSequence())
-  {
+  if (element.IsSequence()) {
     TYPE_XMI_Exporter res (e);
     res.set_text(element);
     CheckExporter(element);
@@ -260,8 +261,7 @@ TYPE_XMI_ExporterVersion XmiReader::SetXMIExporterVersion(
                                        const TYPE_XMI_ExporterVersion & e,
                                        const Generic & element)
 {
-  if (element.IsSequence())
-  {
+  if (element.IsSequence()) {
     TYPE_XMI_ExporterVersion res (e);
     res.set_text(element);
     CheckExporterVersion(element);
@@ -278,8 +278,7 @@ TYPE_XMI_ExporterVersion XmiReader::SetXMIExporterVersion(
 TYPE_XMI_Document XmiReader::SetXMIDocument(const TYPE_XMI_Document & e,
                                             const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_Document res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_Header: {
@@ -308,8 +307,7 @@ TYPE_XMI_Document XmiReader::SetXMIDocument(const TYPE_XMI_Document & e,
 TYPE_XMI_Header XmiReader::SetXMIHeader(const TYPE_XMI_Header & e,
                                         const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_Header res (e); 
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_Documentation: {
@@ -342,8 +340,7 @@ TYPE_XMI_Header XmiReader::SetXMIHeader(const TYPE_XMI_Header & e,
 TYPE_XMI_Content XmiReader::SetXMIContent(const TYPE_XMI_Content & e,
                                           const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_Content res (e); 
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_Extension: {
@@ -377,8 +374,7 @@ TYPE_XMI_Documentation XmiReader::SetXMIDocumentation(
                                      const TYPE_XMI_Documentation & e,
                                      const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_Documentation res (e); 
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_Exporter: {
@@ -416,8 +412,7 @@ TYPE_XMI_SortedVersionHistories XmiReader::SetXMISortedVersionHistories(
                                               const TYPE_XMI_SortedVersionHistories & e,
                                               const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_SortedVersionHistories res (e);
     Sequence versionEntry (res.get_versionEntry());
     versionEntry.ImpAppend(element);
@@ -431,8 +426,7 @@ TYPE_XMI_SortedVersionHistories XmiReader::SetXMISortedVersionHistories(
 TYPE_XMI_Field XmiReader::SetXMIField(const TYPE_XMI_Field & e,
                                       const Generic & element)
 {
-  if (element.IsSequence())
-  {
+  if (element.IsSequence()) {
     TYPE_XMI_Field res (e);
     res.set_field(element);
     return res;
@@ -446,8 +440,7 @@ TYPE_XMI_UMLModelElement XmiReader::SetUMLModelElement (
                                        const TYPE_XMI_UMLModelElement & e,
                                        const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLModelElement res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLNamespace: {
@@ -480,34 +473,28 @@ TYPE_XMI_UMLModelElement XmiReader::SetUMLModelElement (
       }
       case TAG_TYPE_XMI_UMLModelElement: {
         TYPE_XMI_UMLModelElement me (element);
-        if (!me.get_namespace().IsEmpty())
-        {
+        if (!me.get_namespace().IsEmpty()) {
           Sequence nspace (res.get_namespace());
           nspace.ImpConc(me.get_namespace());
           res.set_namespace(nspace);
         }
-        if (!me.get_visibility().IsNil())
-        {
+        if (!me.get_visibility().IsNil()) {
           res.set_visibility(me.get_visibility());
         }
-        if (!me.get_definition().IsNil())
-        {
+        if (!me.get_definition().IsNil()) {
           res.set_definition(me.get_definition());
         }
-        if (!me.get_stereotype().IsEmpty())
-        {
+        if (!me.get_stereotype().IsEmpty()) {
           Sequence stereotype (res.get_stereotype());
           stereotype.ImpConc(me.get_stereotype());
           res.set_stereotype(stereotype);
         }
-        if (!me.get_taggedValue().IsEmpty())
-        {
+        if (!me.get_taggedValue().IsEmpty()) {
           Sequence taggedValue (res.get_taggedValue());
           taggedValue.ImpConc(me.get_taggedValue());
           res.set_taggedValue(taggedValue);
         }
-        if (!me.get_constraint().IsEmpty())
-        {
+        if (!me.get_constraint().IsEmpty()) {
           Sequence constraint (res.get_constraint());
           constraint.ImpConc(me.get_constraint());
           res.set_constraint(constraint);
@@ -524,8 +511,7 @@ TYPE_XMI_UMLModelElement XmiReader::SetUMLModelElement (
 TYPE_XMI_UMLNamespace XmiReader::SetUMLNamespace(const TYPE_XMI_UMLNamespace & e,
                                                  const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLNamespace res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLStereotype:
@@ -544,8 +530,7 @@ TYPE_XMI_UMLNamespace XmiReader::SetUMLNamespace(const TYPE_XMI_UMLNamespace & e
       }
       case TAG_TYPE_XMI_UMLNamespace: {
         TYPE_XMI_UMLNamespace ns (element);
-        if (!ns.get_ownedElement().IsEmpty())
-        {
+        if (!ns.get_ownedElement().IsEmpty()) {
           Sequence ownedElement (res.get_ownedElement());
           ownedElement.ImpConc(ns.get_ownedElement());
           res.set_ownedElement(ownedElement);
@@ -563,8 +548,7 @@ TYPE_XMI_UMLNamespace XmiReader::SetUMLNamespace(const TYPE_XMI_UMLNamespace & e
 TYPE_XMI_UMLModel XmiReader::SetUMLModel (const TYPE_XMI_UMLModel & e,
                                           const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLModel res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -585,8 +569,7 @@ TYPE_XMI_UMLModel XmiReader::SetUMLModel (const TYPE_XMI_UMLModel & e,
 TYPE_XMI_UMLTaggedValue XmiReader::SetUMLTaggedValue(const TYPE_XMI_UMLTaggedValue & e,
                                                      const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLTaggedValue res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -607,8 +590,7 @@ TYPE_XMI_UMLTaggedValue XmiReader::SetUMLTaggedValue(const TYPE_XMI_UMLTaggedVal
 TYPE_XMI_UMLClass XmiReader::SetUMLClass(const TYPE_XMI_UMLClass & e,
                                          const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLClass res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -616,17 +598,21 @@ TYPE_XMI_UMLClass XmiReader::SetUMLClass(const TYPE_XMI_UMLClass & e,
         break;
       }
       case TAG_TYPE_XMI_UMLNamespace: {
-        if (res.get_namespace().IsNil())
+        if (res.get_namespace().IsNil()) {
           res.set_namespace(element);
-        else
+        }
+        else {
           res.set_namespace(SetElement(res.get_namespace(), element));
+        }
         break;
       }
       case TAG_TYPE_XMI_UMLGeneralizableElement: {
-        if (res.get_generalizableElement().IsNil())
+        if (res.get_generalizableElement().IsNil()) {
           res.set_generalizableElement(element);
-        else
+        }
+        else {
           res.set_generalizableElement(SetElement(res.get_generalizableElement(), element));
+        }
         break;
       }
       case TAG_TYPE_XMI_UMLClassifier: {
@@ -643,8 +629,7 @@ TYPE_XMI_UMLClass XmiReader::SetUMLClass(const TYPE_XMI_UMLClass & e,
 TYPE_XMI_UMLPackage XmiReader::SetUMLPackage(const TYPE_XMI_UMLPackage & e,
                                              const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLPackage res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -665,8 +650,7 @@ TYPE_XMI_UMLPackage XmiReader::SetUMLPackage(const TYPE_XMI_UMLPackage & e,
 TYPE_XMI_UMLInterface XmiReader::SetUMLInterface(const TYPE_XMI_UMLInterface & e,
                                                  const Generic & element)
 {
-  if (element.IsRecord())
-  { 
+  if (element.IsRecord()) { 
     TYPE_XMI_UMLInterface res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -683,8 +667,7 @@ TYPE_XMI_UMLInterface XmiReader::SetUMLInterface(const TYPE_XMI_UMLInterface & e
 TYPE_XMI_UMLStereotype XmiReader::SetUMLStereotype(const TYPE_XMI_UMLStereotype & e,
                                                     const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLStereotype res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -695,10 +678,10 @@ TYPE_XMI_UMLStereotype XmiReader::SetUMLStereotype(const TYPE_XMI_UMLStereotype 
       }
       case TAG_TYPE_XMI_UMLStereotype: {
         TYPE_XMI_UMLStereotype st (element);
-        if (!st.get_baseClass().IsEmpty())
+        if (!st.get_baseClass().IsEmpty()) {
           res.set_baseClass(st.get_baseClass());
-        if (!st.get_extendedElement().IsEmpty())
-        {
+        }
+        if (!st.get_extendedElement().IsEmpty()) {
           Sequence extendedElement (res.get_extendedElement());
           extendedElement.ImpConc(st.get_extendedElement());
           res.set_extendedElement(extendedElement);
@@ -708,8 +691,7 @@ TYPE_XMI_UMLStereotype XmiReader::SetUMLStereotype(const TYPE_XMI_UMLStereotype 
     }
     return res;
   }
-  else if (element.IsSequence())
-  {
+  else if (element.IsSequence()) {
     TYPE_XMI_UMLStereotype res (e);
     res.set_baseClass(element); 
     return res;
@@ -721,8 +703,7 @@ TYPE_XMI_UMLStereotype XmiReader::SetUMLStereotype(const TYPE_XMI_UMLStereotype 
 TYPE_XMI_UMLClassifier XmiReader::SetUMLClassifier(const TYPE_XMI_UMLClassifier & e,
                                                    const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLClassifier res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLAttribute:
@@ -741,8 +722,7 @@ TYPE_XMI_UMLClassifier XmiReader::SetUMLClassifier(const TYPE_XMI_UMLClassifier 
 TYPE_XMI_UMLFeature XmiReader::SetUMLFeature(const TYPE_XMI_UMLFeature & e,
                                              const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLFeature res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLClassifier: {
@@ -751,12 +731,12 @@ TYPE_XMI_UMLFeature XmiReader::SetUMLFeature(const TYPE_XMI_UMLFeature & e,
       }
       case TAG_TYPE_XMI_UMLFeature: {
         TYPE_XMI_UMLFeature fe (element);
-        if (!fe.get_owner().IsNil())
-        {
+        if (!fe.get_owner().IsNil()) {
           res.set_owner(fe.get_owner());
         }
-        if (!fe.get_visibility().IsNil())
+        if (!fe.get_visibility().IsNil()) {
           res.set_visibility(fe.get_visibility());
+        }
         break;
       }
     }
@@ -769,8 +749,7 @@ TYPE_XMI_UMLFeature XmiReader::SetUMLFeature(const TYPE_XMI_UMLFeature & e,
 TYPE_XMI_UMLOperation XmiReader::SetUMLOperation(const TYPE_XMI_UMLOperation & e,
                                                  const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLOperation res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -796,8 +775,7 @@ TYPE_XMI_UMLBehavioralFeature XmiReader::SetUMLBehavioralFeature(
                                             const TYPE_XMI_UMLBehavioralFeature & e,
                                             const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLBehavioralFeature res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLParameter: {
@@ -826,8 +804,7 @@ TYPE_XMI_UMLBehavioralFeature XmiReader::SetUMLBehavioralFeature(
 TYPE_XMI_UMLParameter XmiReader::SetUMLParameter(const TYPE_XMI_UMLParameter & e,
                                                  const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLParameter res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -850,16 +827,13 @@ TYPE_XMI_UMLParameter XmiReader::SetUMLParameter(const TYPE_XMI_UMLParameter & e
         TYPE_XMI_UMLParameter pa (element);
         res.set_modelElement(SetElement(res.get_modelElement(),
                                         pa.get_modelElement()));
-        if (!pa.get_behavioralFeature().IsNil())
-        {
+        if (!pa.get_behavioralFeature().IsNil()) {
           res.set_behavioralFeature(pa.get_behavioralFeature());
         } 
-        if (!pa.get_type().IsNil())
-        {
+        if (!pa.get_type().IsNil()) {
           res.set_type(pa.get_type());
         }
-        if (!pa.get_defaultValue().IsNil())
-        {
+        if (!pa.get_defaultValue().IsNil()) {
           res.set_defaultValue(pa.get_defaultValue());
         }
         break;
@@ -875,8 +849,7 @@ TYPE_XMI_UMLGeneralizableElement XmiReader::SetUMLGeneralizableElement(
                                                const TYPE_XMI_UMLGeneralizableElement & e,
                                                const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLGeneralizableElement res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLGeneralization: {
@@ -904,8 +877,7 @@ TYPE_XMI_UMLGeneralizableElement XmiReader::SetUMLGeneralizableElement(
 TYPE_XMI_UMLGeneralization XmiReader::SetUMLGeneralization(const TYPE_XMI_UMLGeneralization & e,
                                                            const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLGeneralization res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -916,23 +888,19 @@ TYPE_XMI_UMLGeneralization XmiReader::SetUMLGeneralization(const TYPE_XMI_UMLGen
         TYPE_XMI_UMLGeneralization ge (element);
         res.set_modelElement(SetElement(res.get_modelElement(),
                                         ge.get_modelElement()));
-        if (!ge.get_child().IsNil())
-        {
+        if (!ge.get_child().IsNil()) {
           res.set_child(ge.get_child());
         }
-        if (!ge.get_parent().IsNil())
-        {
+        if (!ge.get_parent().IsNil()) {
           res.set_parent(ge.get_parent());
         }
         break;
       }
       case TAG_TYPE_XMI_UMLGeneralizableElement: {
-        if (res.get_flag() == Bool(true))
-        {
+        if (res.get_flag() == Bool(true)) {
           res.set_child(element);
         }
-        else if (res.get_flag() == Bool(false))
-        {
+        else if (res.get_flag() == Bool(false)) {
           res.set_parent(element);
         }
         break;
@@ -947,8 +915,7 @@ TYPE_XMI_UMLGeneralization XmiReader::SetUMLGeneralization(const TYPE_XMI_UMLGen
 TYPE_XMI_UMLAssociation XmiReader::SetUMLAssociation(const TYPE_XMI_UMLAssociation & e,
                                                      const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLAssociation res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -965,8 +932,7 @@ TYPE_XMI_UMLAssociation XmiReader::SetUMLAssociation(const TYPE_XMI_UMLAssociati
         TYPE_XMI_UMLAssociation as (element);
         res.set_modelElement(SetElement(res.get_modelElement(),
                                         as.get_modelElement()));
-        if (!as.get_connection().IsEmpty())
-        {
+        if (!as.get_connection().IsEmpty()) {
           Sequence connection (res.get_connection());
           connection.ImpConc(as.get_connection());
           res.set_connection(connection);
@@ -983,8 +949,7 @@ TYPE_XMI_UMLAssociation XmiReader::SetUMLAssociation(const TYPE_XMI_UMLAssociati
 TYPE_XMI_UMLAssociationEnd XmiReader::SetUMLAssociationEnd(const TYPE_XMI_UMLAssociationEnd & e,
                                                            const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLAssociationEnd res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -1023,24 +988,19 @@ TYPE_XMI_UMLAssociationEnd XmiReader::SetUMLAssociationEnd(const TYPE_XMI_UMLAss
                                    ae.get_feature()));
         res.set_structuralFeature(SetElement(res.get_structuralFeature(),
                                              ae.get_structuralFeature()));
-        if (!ae.get_participant().IsNil())
-        {
+        if (!ae.get_participant().IsNil()) {
           res.set_participant(ae.get_participant());
         }
-        if (!ae.get_initialValue().IsNil())
-        {
+        if (!ae.get_initialValue().IsNil()) {
           res.set_initialValue(ae.get_initialValue());
         }
-        if (!ae.get_association().IsNil())
-        {
+        if (!ae.get_association().IsNil()) {
           res.set_association(ae.get_association());
         }
-        if (!ae.get_visibility().IsNil())
-        {
+        if (!ae.get_visibility().IsNil()) {
           res.set_visibility(ae.get_visibility());
         }
-        if (!ae.get_qualifier().IsNil())
-        {
+        if (!ae.get_qualifier().IsNil()) {
           res.set_qualifier(ae.get_qualifier());
         }
         break;
@@ -1055,8 +1015,7 @@ TYPE_XMI_UMLAssociationEnd XmiReader::SetUMLAssociationEnd(const TYPE_XMI_UMLAss
 TYPE_XMI_UMLAttribute XmiReader::SetUMLAttribute(const TYPE_XMI_UMLAttribute & e,
                                                  const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLAttribute res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -1081,23 +1040,19 @@ TYPE_XMI_UMLAttribute XmiReader::SetUMLAttribute(const TYPE_XMI_UMLAttribute & e
       }
       case TAG_TYPE_XMI_UMLAttribute: {
         TYPE_XMI_UMLAttribute at (element);
-//
-        if (!at.get_attrs().IsEmpty())
+        if (!at.get_attrs().IsEmpty()) {
           res.set_attrs(at.get_attrs());
-//
+        }
         res.set_modelElement(SetElement(res.get_modelElement(),
                                         at.get_modelElement()));
         res.set_feature(SetElement(res.get_feature(),
                                    at.get_feature()));
         res.set_structuralFeature(SetElement(res.get_structuralFeature(),
                                              at.get_structuralFeature()));
-        if (!at.get_initialValue().IsNil())
-        {
+        if (!at.get_initialValue().IsNil()) {
           res.set_initialValue(at.get_initialValue());
         }
-
-        if (!at.get_associationEnd().IsNil())
-        {
+        if (!at.get_associationEnd().IsNil()) {
           res.set_associationEnd(at.get_associationEnd());
         }
         break;
@@ -1113,8 +1068,7 @@ TYPE_XMI_UMLStructuralFeature XmiReader::SetUMLStructuralFeature(
                                    const TYPE_XMI_UMLStructuralFeature & e,
                                    const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLStructuralFeature res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLMultiplicity: {
@@ -1127,12 +1081,10 @@ TYPE_XMI_UMLStructuralFeature XmiReader::SetUMLStructuralFeature(
       }
       case TAG_TYPE_XMI_UMLStructuralFeature: {
         TYPE_XMI_UMLStructuralFeature sf (element);
-        if (!sf.get_multiplicity().IsNil())
-        {
+        if (!sf.get_multiplicity().IsNil()) {
           res.set_multiplicity(sf.get_multiplicity());
         }
-        if (!sf.get_type().IsNil())
-        {
+        if (!sf.get_type().IsNil()) {
           res.set_type(sf.get_type());
         }
         break;
@@ -1147,8 +1099,7 @@ TYPE_XMI_UMLStructuralFeature XmiReader::SetUMLStructuralFeature(
 TYPE_XMI_UMLMultiplicity XmiReader::SetUMLMultiplicity(const TYPE_XMI_UMLMultiplicity & e,
                                                        const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLMultiplicity res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLMultiplicityRange: {
@@ -1173,8 +1124,7 @@ TYPE_XMI_UMLMultiplicity XmiReader::SetUMLMultiplicity(const TYPE_XMI_UMLMultipl
 TYPE_XMI_UMLExpression XmiReader::SetUMLExpression(const TYPE_XMI_UMLExpression & e,
                                                    const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLExpression res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLExpression: {
@@ -1186,8 +1136,7 @@ TYPE_XMI_UMLExpression XmiReader::SetUMLExpression(const TYPE_XMI_UMLExpression 
     }
     return res;
   }
-  else if (element.IsSequence())
-  { 
+  else if (element.IsSequence()) { 
     TYPE_XMI_UMLExpression res (e);
     res.set_body(element);
     return res;
@@ -1200,14 +1149,14 @@ TYPE_XMI_UMLBooleanExpression XmiReader::SetUMLBooleanExpression(
                                             const TYPE_XMI_UMLBooleanExpression & e,
                                             const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLBooleanExpression res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLExpression: {
         TYPE_XMI_UMLExpression ex (element);
-        if (!ex.get_body().IsNil())
+        if (!ex.get_body().IsNil()) {
           res.set_body(ex.get_body());
+        }
         break;
       }
     }
@@ -1220,8 +1169,7 @@ TYPE_XMI_UMLBooleanExpression XmiReader::SetUMLBooleanExpression(
 TYPE_XMI_UMLConstraint XmiReader::SetUMLConstraint(const TYPE_XMI_UMLConstraint & e,
                                                    const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLConstraint res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -1232,10 +1180,12 @@ TYPE_XMI_UMLConstraint XmiReader::SetUMLConstraint(const TYPE_XMI_UMLConstraint 
         TYPE_XMI_UMLConstraint ct (element);
         res.set_modelElement(SetElement(res.get_modelElement(),
                                         ct.get_modelElement()));
-        if (!ct.get_body().IsNil())
+        if (!ct.get_body().IsNil()) {
           res.set_body(ct.get_body());
-        if (!ct.get_constrainedElement().IsNil())
+        }
+        if (!ct.get_constrainedElement().IsNil()) {
           res.set_constrainedElement(ct.get_constrainedElement());
+        }
         break;
       }
       case TAG_TYPE_XMI_UMLBooleanExpression: {
@@ -1252,8 +1202,7 @@ TYPE_XMI_UMLConstraint XmiReader::SetUMLConstraint(const TYPE_XMI_UMLConstraint 
 TYPE_XMI_UMLDiagram XmiReader::SetUMLDiagram(const TYPE_XMI_UMLDiagram & e,
                                              const Generic & element)
 {
-  if (element.IsRecord())
-  {
+  if (element.IsRecord()) {
     TYPE_XMI_UMLDiagram res (e);
     switch(Record(element).GetTag()) {
       case TAG_TYPE_XMI_UMLModelElement: {
@@ -1264,8 +1213,7 @@ TYPE_XMI_UMLDiagram XmiReader::SetUMLDiagram(const TYPE_XMI_UMLDiagram & e,
         TYPE_XMI_UMLDiagram dm (element);
         res.set_modelElement(SetElement(res.get_modelElement(),
                                         dm.get_modelElement()));
-        if (!dm.get_element().IsEmpty())
-        {
+        if (!dm.get_element().IsEmpty()) {
           Sequence delement (res.get_element());
           delement.ImpConc(dm.get_element());
           res.set_element(delement);
@@ -1301,225 +1249,257 @@ Record XmiReader::CreateNewElement(xmlTextReaderPtr reader)
 {
   Map attrs (GetAttribute(reader));
   const xmlChar *name = xmlTextReaderConstName(reader);
-  if (name == NULL)
-  {
+  if (name == NULL) {
     vdm_log << L"error " << endl;
     return Record();
   }
 
   wstring nm (TBWSTR::utf8str2wstring((const char *)name).c_str());
 
-  if (nm == L"XMI")
+  if (nm == L"XMI") {
     return TYPE_XMI_Document().Init(attrs, 
                                     TYPE_XMI_Header().Init(Map(), Nil(), Nil(), Nil(), Nil(), Nil()),
                                     TYPE_XMI_Content().Init(Map(), Nil(), Sequence(), Sequence(), Nil()),
                                     Nil(),
                                     Nil());
-  else if (nm == L"XMI.header")
+  }
+  else if (nm == L"XMI.header") {
     return TYPE_XMI_Header().Init(attrs, Nil(), Nil(), Nil(), Nil(), Nil());
-  else if (nm == L"XMI.content")
+  }
+  else if (nm == L"XMI.content") {
     return TYPE_XMI_Content().Init(attrs, Nil(), Sequence(), Sequence(), Nil());
-  else if (nm == L"XMI.difference")
+  }
+  else if (nm == L"XMI.difference") {
     return TYPE_XMI_Difference().Init(attrs);
-  else if (nm == L"XMI.extensions")
+  }
+  else if (nm == L"XMI.extensions") {
     return TYPE_XMI_Extensions().Init(attrs);
-  else if (nm == L"XMI.documentation")
+  }
+  else if (nm == L"XMI.documentation") {
     return TYPE_XMI_Documentation().Init(attrs, Nil(), Nil(), Nil(), Nil(), Nil(), Nil());
-  else if (nm == L"XMI.exporter")
+  }
+  else if (nm == L"XMI.exporter") {
     return TYPE_XMI_Exporter().Init(attrs, Nil());
-  else if (nm == L"XMI.exporterVersion")
+  }
+  else if (nm == L"XMI.exporterVersion") {
     return TYPE_XMI_ExporterVersion().Init(attrs, Nil());
-  else if (nm == L"XMI.currentModelVersion")
+  }
+  else if (nm == L"XMI.currentModelVersion") {
     return TYPE_XMI_CurrentModelVersion().Init(attrs, Nil());
-  else if (nm == L"XMI.maxModelVersion")
+  }
+  else if (nm == L"XMI.maxModelVersion") {
     return TYPE_XMI_MaxModelVersion().Init(attrs, Nil());
-  else if (nm == L"XMI.currentModelProducer")
+  }
+  else if (nm == L"XMI.currentModelProducer") {
     return TYPE_XMI_CurrentModelProducer().Init(attrs, Nil());
-  else if (nm == L"XMI.sortedVersionHistories")
+  }
+  else if (nm == L"XMI.sortedVersionHistories") {
     return TYPE_XMI_SortedVersionHistories().Init(attrs, Sequence());
-  else if (nm == L"XMI.import")
+  }
+  else if (nm == L"XMI.import") {
     return TYPE_XMI_Import().Init(attrs, Nil());
-  else if (nm == L"XMI.metametamodel")
+  }
+  else if (nm == L"XMI.metametamodel") {
     return TYPE_XMI_Metametamodel().Init(attrs);
-  else if (nm == L"XMI.metamodel")
+  }
+  else if (nm == L"XMI.metamodel") {
     return TYPE_XMI_Metamodel().Init(attrs);
-  else if (nm == L"XMI.model")
+  }
+  else if (nm == L"XMI.model") {
     return TYPE_XMI_Model().Init(attrs);
-  else if (nm == L"XMI.versionEntry")
+  }
+  else if (nm == L"XMI.versionEntry") {
     return TYPE_XMI_VersionEntry().Init(attrs);
-  else if (nm == L"XMI.field")
+  }
+  else if (nm == L"XMI.field") {
     return TYPE_XMI_Field().Init(attrs, Nil());
-  else if (nm == L"XMI.extension")
+  }
+  else if (nm == L"XMI.extension") {
     return TYPE_XMI_Extension().Init(attrs, Sequence());
-  else if (nm == L"UML:Model")
+  }
+  else if (nm == L"UML:Model") {
     return TYPE_XMI_UMLModel().Init(attrs,
                                     XmiAux::mk_UMLModelElement(),
                                     XmiAux::mk_UMLNamespace());
-  else if (nm == L"UML:Package")
+  }
+  else if (nm == L"UML:Package") {
     return TYPE_XMI_UMLPackage().Init(attrs, 
                                       XmiAux::mk_UMLModelElement(),
                                       XmiAux::mk_UMLNamespace());
-  else if (nm == L"UML:Interface")
+  }
+  else if (nm == L"UML:Interface") {
     return TYPE_XMI_UMLInterface().Init(attrs, XmiAux::mk_UMLModelElement());
-  else if (nm == L"UML:Class")
+  }
+  else if (nm == L"UML:Class") {
     return TYPE_XMI_UMLClass().Init(attrs,
                                     XmiAux::mk_UMLModelElement(),
                                     XmiAux::mk_UMLNamespace(),
                                     TYPE_XMI_UMLGeneralizableElement().Init(Map(), Sequence()),
                                     Nil());
-
+  }
   else if ((nm == L"UML:TaggedValue") ||
-           (nm == L"UML:TaggedValue.modelElement"))
+           (nm == L"UML:TaggedValue.modelElement")) {
     return TYPE_XMI_UMLTaggedValue().Init(attrs, XmiAux::mk_UMLModelElement());
+  }
   else if ((nm == L"UML:Stereotype") ||
            (nm == L"UML:Stereotype.baseClass") ||
-           (nm == L"UML:Stereotype.extendedElement"))
+           (nm == L"UML:Stereotype.extendedElement")) {
     return TYPE_XMI_UMLStereotype().Init(attrs, Sequence(), Sequence());
+  }
   else if ((nm == L"UML:Namespace") ||
-           (nm == L"UML:Namespace.ownedElement"))
+           (nm == L"UML:Namespace.ownedElement")) {
     return XmiAux::mk_UMLNamespace(attrs);
+  }
   else if ((nm == L"UML:ModelElement") ||
            (nm == L"UML:ModelElement.taggedValue") ||
            (nm == L"UML:ModelElement.namespace") ||
            (nm == L"UML:ModelElement.constraint") ||
-           (nm == L"UML:ModelElement.stereotype"))
+           (nm == L"UML:ModelElement.stereotype")) {
     return XmiAux::mk_UMLModelElement(attrs, Map(), TAG_XMI_public);
-  else if (nm == L"UML:ModelElement.visibility") 
-  {
+  }
+  else if (nm == L"UML:ModelElement.visibility") {
     TYPE_XMI_UMLModelElement res (XmiAux::mk_UMLModelElement());
-    if (attrs.DomExists(Sequence(L"xmi.value")))
+    if (attrs.DomExists(Sequence(L"xmi.value"))) {
       res.set_visibility(attrs[Sequence(L"xmi.value")]);
+    }
     return res;
   }
-  else if (nm == L"UML:ModelElement.definition") 
-  {
+  else if (nm == L"UML:ModelElement.definition") {
     TYPE_XMI_UMLModelElement res (XmiAux::mk_UMLModelElement());
-    if (attrs.DomExists(Sequence(L"xmi.value")))
+    if (attrs.DomExists(Sequence(L"xmi.value"))) {
       res.set_definition(attrs[Sequence(L"xmi.value")]);
+    }
     return res;
   }
   else if ((nm == L"UML:Classifier") ||
-           (nm == L"UML:Classifier.feature"))
+           (nm == L"UML:Classifier.feature")) {
     return TYPE_XMI_UMLClassifier().Init(attrs, Sequence());
-  else if (nm == L"UML:Primitive")
+  }
+  else if (nm == L"UML:Primitive") {
     return TYPE_XMI_UMLPrimitive().Init(attrs, Sequence());
+  }
   else if ((nm == L"UML:Parameter") ||
            (nm == L"UML:Parameter.behavioralFeature") ||
            (nm == L"UML:Parameter.type") ||
-           (nm == L"UML:Parameter.defaultValue"))
+           (nm == L"UML:Parameter.defaultValue")) {
     return TYPE_XMI_UMLParameter().Init(attrs,
                                         XmiAux::mk_UMLModelElement(),
                                         Nil(), Nil(), Nil());
+  }
   else if ((nm == L"UML:BehavioralFeature") ||
-           (nm == L"UML:BehavioralFeature.parameter"))
+           (nm == L"UML:BehavioralFeature.parameter")) {
     return TYPE_XMI_UMLBehavioralFeature().Init(attrs, Sequence());
+  }
   else if ((nm == L"UML:Feature") ||
-           (nm == L"UML:Feature.owner"))
+           (nm == L"UML:Feature.owner")) {
     return XmiAux::mk_UMLFeature(attrs, Nil());
-  else if (nm == L"UML:Feature.visibility")
-  {
+  }
+  else if (nm == L"UML:Feature.visibility") {
     TYPE_XMI_UMLFeature res (XmiAux::mk_UMLFeature());
-    if (attrs.DomExists(Sequence(L"xmi.value")))
+    if (attrs.DomExists(Sequence(L"xmi.value"))) {
       res.set_visibility(attrs[Sequence(L"xmi.value")]);
+    }
     return res;
   }
-  else if (nm == L"UML:Operation")
+  else if (nm == L"UML:Operation") {
     return TYPE_XMI_UMLOperation().Init(attrs,
                                         XmiAux::mk_UMLModelElement(),
                                         XmiAux::mk_UMLFeature(),
                                         TYPE_XMI_UMLBehavioralFeature().Init(Map(), Sequence()));
-                                     
+  }
   else if  ((nm == L"UML:Generalization") ||
             (nm == L"UML:Generalization.child") ||
-            (nm == L"UML:Generalization.parent"))
-  { 
+            (nm == L"UML:Generalization.parent")) { 
     TYPE_XMI_UMLGeneralization res;
     res.Init(attrs, XmiAux::mk_UMLModelElement(), Nil(), Nil(), Nil());
-    if (nm == L"UML:Generalization.child")
+    if (nm == L"UML:Generalization.child") {
       res.set_flag(Bool(true));
-    else if (nm == L"UML:Generalization.parent")
+    }
+    else if (nm == L"UML:Generalization.parent") {
       res.set_flag(Bool(false));
+    }
     return res;
   }
   else if ((nm == L"UML:GeneralizableElement") ||
-           (nm == L"UML:GeneralizableElement.generalization"))
+           (nm == L"UML:GeneralizableElement.generalization")) {
     return TYPE_XMI_UMLGeneralizableElement().Init(attrs, Sequence());
+  }
   else if ((nm == L"UML:Association") ||
-           (nm == L"UML:Association.connection"))
+           (nm == L"UML:Association.connection")) {
     return TYPE_XMI_UMLAssociation().Init(attrs,
                                           XmiAux::mk_UMLModelElement(),
                                           Sequence());
+  }
   else if ((nm == L"UML:AssociationEnd") ||
            (nm == L"UML:AssociationEnd.association") ||
-           (nm == L"UML:AssociationEnd.participant"))
+           (nm == L"UML:AssociationEnd.participant")) {
     return XmiAux::mk_UMLAssociationEnd(attrs);
-  else if (nm == L"UML:AssociationEnd.initialValue") 
-  {
+  }
+  else if (nm == L"UML:AssociationEnd.initialValue") {
     return TYPE_XMI_UMLExpression().Init(attrs, Nil());
   }
-  else if (nm == L"UML:AssociationEnd.visibility") 
-  {
+  else if (nm == L"UML:AssociationEnd.visibility") {
     TYPE_XMI_UMLAssociationEnd res (XmiAux::mk_UMLAssociationEnd());
-    if (attrs.DomExists(Sequence(L"xmi.value")))
+    if (attrs.DomExists(Sequence(L"xmi.value"))) {
       res.set_visibility(attrs[Sequence(L"xmi.value")]);
+    }
     return res;
   }
-  else if (nm == L"UML:AssociationEnd.qualifier") 
-  {
+  else if (nm == L"UML:AssociationEnd.qualifier") {
     return XmiAux::mk_UMLAttribute(attrs);
   }
   else if ((nm == L"UML:StructuralFeature") ||
            (nm == L"UML:StructuralFeature.type") ||
-           (nm == L"UML:StructuralFeature.multiplicity"))
+           (nm == L"UML:StructuralFeature.multiplicity")) {
     return XmiAux::mk_UMLStructuralFeature(attrs);
+  }
   else if ((nm == L"UML:Multiplicity") ||
-           (nm == L"UML:Multiplicity.range"))
+           (nm == L"UML:Multiplicity.range")) {
     return TYPE_XMI_UMLMultiplicity().Init(attrs, Nil());
-  else if (nm == L"UML:MultiplicityRange")
+  }
+  else if (nm == L"UML:MultiplicityRange") {
     return TYPE_XMI_UMLMultiplicityRange().Init(attrs);
+  }
   else if ((nm == L"UML:Attribute") ||
-           (nm == L"UML:Attribute.initialValue"))
-  {
-//    return TYPE_XMI_UMLAttribute().Init(attrs,
-//                                        XmiAux::mk_UMLModelElement(),
-//                                        XmiAux::mk_UMLFeature(),
-//                                        XmiAux::mk_UMLStructuralFeature(),
-//                                        Nil(), Nil());
+           (nm == L"UML:Attribute.initialValue")) {
     return XmiAux::mk_UMLAttribute(attrs);
   }
-  else if (nm == L"UML:Attribute.associationEnd")
-//    return TYPE_XMI_UMLAssociationEnd().Init(Map(),
-//                                             XmiAux::mk_UMLModelElement(),
-//                                             XmiAux::mk_UMLFeature(),
-//                                             XmiAux::mk_UMLStructuralFeature(),
-//                                             Nil(), Nil(), Nil(), Nil());
+  else if (nm == L"UML:Attribute.associationEnd") {
     return XmiAux::mk_UMLAssociationEnd();
+  }
   else if ((nm == L"UML:Constraint") ||
            (nm == L"UML:Constraint.body") ||
-           (nm == L"UML:Constraint.constrainedElement"))
+           (nm == L"UML:Constraint.constrainedElement")) {
     return TYPE_XMI_UMLConstraint().Init(attrs, XmiAux::mk_UMLModelElement(), Nil(), Nil());
+  }
   else if ((nm == L"UML:Expression") ||
-           (nm == L"UML:Expression.body"))
+           (nm == L"UML:Expression.body")) {
     return TYPE_XMI_UMLExpression().Init(attrs, Nil());
-  else if (nm == L"UML:BooleanExpression")
+  }
+  else if (nm == L"UML:BooleanExpression") {
     return TYPE_XMI_UMLBooleanExpression().Init(attrs, Nil());
-  else if (nm == L"UML:DataType")
+  }
+  else if (nm == L"UML:DataType") {
     return TYPE_XMI_UMLDataType().Init(attrs);
+  }
   else if ((nm == L"UML:Diagram") ||
-           (nm == L"UML:Diagram.element"))
+           (nm == L"UML:Diagram.element")) {
     return TYPE_XMI_UMLDiagram().Init(attrs, XmiAux::mk_UMLModelElement(), Sequence());
-  else if (nm == L"UML:DiagramElement")
+  }
+  else if (nm == L"UML:DiagramElement") {
     return TYPE_XMI_UMLDiagramElement().Init(attrs);
+  }
   else if (nm == L"EAStub") {
     return TYPE_XMI_EAStub().Init(attrs);
   }
-  else
-  {
+  else {
     Sequence n (nm);
-    if (n.SubSequence(1, 5) == Sequence(L"JUDE:"))
+    if (n.SubSequence(1, 5) == Sequence(L"JUDE:")) {
       yet_astah.Insert(n);
-    else
+    }
+    else {
       yet.Insert(n);
+    }
   }
   return Record();
 }
@@ -1529,12 +1509,10 @@ Generic XmiReader::ReadElement(xmlTextReaderPtr reader)
   Map attrs (GetAttribute(reader));
   Record e (CreateNewElement(reader));
 
-  if (xmlTextReaderIsEmptyElement(reader) != 1)
-  {
+  if (xmlTextReaderIsEmptyElement(reader) != 1) {
     int depth = xmlTextReaderDepth(reader);
     Generic element = ReadDocument(reader);
-    while(depth + 1 == xmlTextReaderDepth(reader)) 
-    {
+    while(depth + 1 == xmlTextReaderDepth(reader)) {
       e = SetElement(e, element);
       element = ReadDocument(reader);
     }
@@ -1552,20 +1530,20 @@ Generic XmiReader::ReadElement(xmlTextReaderPtr reader)
 Generic XmiReader::ReadText(xmlTextReaderPtr reader)
 {
   const xmlChar * value = xmlTextReaderConstValue(reader);
-  if (value != NULL)
+  if (value != NULL) {
     return Sequence(TBWSTR::utf8str2wstring((const char *)value));
-  else
+  }
+  else {
     return Nil();
+  }
 }
 
 Generic XmiReader::ReadDocument(xmlTextReaderPtr reader)
 {
   int ret = ReadNextLine(reader);
-  while (ret == 1)
-  {
+  while (ret == 1) {
     string name ((const char *)xmlTextReaderConstName(reader));
-    switch (xmlTextReaderNodeType(reader))
-    {
+    switch (xmlTextReaderNodeType(reader)) {
       case XML_READER_TYPE_ELEMENT: {
         return ReadElement(reader);
         break;
@@ -1584,7 +1562,6 @@ Generic XmiReader::ReadDocument(xmlTextReaderPtr reader)
       case XML_READER_TYPE_COMMENT: {
         break;
       }
-
       case XML_READER_TYPE_NONE:
       case XML_READER_TYPE_ATTRIBUTE:
       case XML_READER_TYPE_CDATA:
@@ -1611,9 +1588,9 @@ Generic XmiReader::ReadDocument(xmlTextReaderPtr reader)
 void XmiReader::DumpNodeInfo(xmlTextReaderPtr reader)
 {
   const xmlChar * name = xmlTextReaderConstName(reader);
-  if (name == NULL)
+  if (name == NULL) {
     name = BAD_CAST "--";
-
+  }
   vdm_log << xmlTextReaderDepth(reader) << L" "
           << TypeNoToStr(xmlTextReaderNodeType(reader)) << L" "
           << TBWSTR::string2wstring((const char *)name) << L" "
@@ -1623,13 +1600,10 @@ void XmiReader::DumpNodeInfo(xmlTextReaderPtr reader)
 
   const xmlChar * value = xmlTextReaderConstValue(reader);
 
-  if (value == NULL)
+  if (value == NULL) {
     vdm_log << endl;
+  }
   else {
-//    if (xmlStrlen(value) > 40)
-//        printf(" %.40s...\n", value);
-//    else
-//      printf(" %s\n", value);
     vdm_log << L" " << TBWSTR::string2wstring((const char *)value) << endl;
   }
 }
@@ -1637,44 +1611,25 @@ void XmiReader::DumpNodeInfo(xmlTextReaderPtr reader)
 wstring XmiReader::TypeNoToStr(int i)
 {
   switch(i) {
-    case XML_READER_TYPE_NONE:
-      return L"NONE";
-    case XML_READER_TYPE_ELEMENT:
-      return L"ELEMENT";
-    case XML_READER_TYPE_ATTRIBUTE:
-      return L"ATTRIBUTE";
-    case XML_READER_TYPE_TEXT:
-      return L"TEXT";
-    case XML_READER_TYPE_CDATA:
-      return L"CDATA";
-    case XML_READER_TYPE_ENTITY_REFERENCE:
-      return L"REFERENCE";
-    case XML_READER_TYPE_ENTITY:
-      return L"ENTITY";
-    case XML_READER_TYPE_PROCESSING_INSTRUCTION:
-      return L"INSTRUCTION";
-    case XML_READER_TYPE_COMMENT:
-      return L"COMMENT";
-    case XML_READER_TYPE_DOCUMENT:
-      return L"DOCUMENT";
-    case XML_READER_TYPE_DOCUMENT_TYPE:
-      return L"DOCUMENT_TYPE";
-    case XML_READER_TYPE_DOCUMENT_FRAGMENT:
-      return L"DOCUMENT_FRAGMENT";
-    case XML_READER_TYPE_NOTATION:
-      return L"NOTATION";
-    case XML_READER_TYPE_WHITESPACE:
-      return L"WHITESPACE";
-    case XML_READER_TYPE_SIGNIFICANT_WHITESPACE:
-      return L"SIGNIFICANT_WHITESPACE";
-    case XML_READER_TYPE_END_ELEMENT:
-      return L"END_ELEMENT";
-    case XML_READER_TYPE_END_ENTITY:
-      return L"END_ENTITY";
-    case XML_READER_TYPE_XML_DECLARATION:
-      return L"XML_DECLARATION";
-    default:
-      return L"UNDEF";
+    case XML_READER_TYPE_NONE:                   { return L"NONE"; }
+    case XML_READER_TYPE_ELEMENT:                { return L"ELEMENT"; }
+    case XML_READER_TYPE_ATTRIBUTE:              { return L"ATTRIBUTE"; }
+    case XML_READER_TYPE_TEXT:                   { return L"TEXT"; }
+    case XML_READER_TYPE_CDATA:                  { return L"CDATA"; }
+    case XML_READER_TYPE_ENTITY_REFERENCE:       { return L"REFERENCE"; }
+    case XML_READER_TYPE_ENTITY:                 { return L"ENTITY"; }
+    case XML_READER_TYPE_PROCESSING_INSTRUCTION: { return L"INSTRUCTION"; }
+    case XML_READER_TYPE_COMMENT:                { return L"COMMENT"; }
+    case XML_READER_TYPE_DOCUMENT:               { return L"DOCUMENT"; }
+    case XML_READER_TYPE_DOCUMENT_TYPE:          { return L"DOCUMENT_TYPE"; }
+    case XML_READER_TYPE_DOCUMENT_FRAGMENT:      { return L"DOCUMENT_FRAGMENT"; }
+    case XML_READER_TYPE_NOTATION:               { return L"NOTATION"; }
+    case XML_READER_TYPE_WHITESPACE:             { return L"WHITESPACE"; }
+    case XML_READER_TYPE_SIGNIFICANT_WHITESPACE: { return L"SIGNIFICANT_WHITESPACE"; }
+    case XML_READER_TYPE_END_ELEMENT:            { return L"END_ELEMENT"; }
+    case XML_READER_TYPE_END_ENTITY:             { return L"END_ENTITY"; }
+    case XML_READER_TYPE_XML_DECLARATION:        { return L"XML_DECLARATION"; }
+    default:                                     { return L"UNDEF"; }
   }
 }
 
@@ -1682,18 +1637,14 @@ Map XmiReader::GetAttribute(xmlTextReaderPtr reader)
 {
   Map res;
   int ac = xmlTextReaderAttributeCount(reader);
-  if (ac > 0)
-  {
-    for (int i = 0; i < ac; i++)
-    {
+  if (ac > 0) {
+    for (int i = 0; i < ac; i++) {
       xmlTextReaderMoveToAttributeNo(reader, i);
       const xmlChar * anm = xmlTextReaderName(reader);
-      if (anm != NULL)
-      {
+      if (anm != NULL) {
         xmlTextReaderMoveToElement(reader);
         const xmlChar * avl = xmlTextReaderGetAttributeNo(reader, i);
-        if (avl != NULL)
-        {
+        if (avl != NULL) {
           string anms ((const char *)anm);
           string avls ((const char *)avl);
           res.ImpModify(Sequence(TBWSTR::utf8str2wstring(anms)),
@@ -1708,24 +1659,20 @@ Map XmiReader::GetAttribute(xmlTextReaderPtr reader)
 string XmiReader::xmistr2str(const string & str, bool sjis)
 {
   string res (str);
-  if (IsASTAH())
+  if (IsASTAH()) {
     res = astahstr2str(str);
-
-  if (sjis && !res.empty())
-  {
+  }
+  if (sjis && !res.empty()) {
     // for SHIFT-JIS 
     int len = res.length();
     int index = 0;
     string ns;
-    while(index < len)
-    {
+    while(index < len) {
       char c (res[index]);
       switch (c) {
         case '\xc2': {
-          if (index < len - 1) 
-          {
-            if ('\xa5' == res[index + 1])
-            {
+          if (index < len - 1) {
+            if ('\xa5' == res[index + 1]) {
               // 0xc2, 0xa5 : yen sign
               ns += '\x5c'; // back slash
               index += 1;
@@ -1736,10 +1683,8 @@ string XmiReader::xmistr2str(const string & str, bool sjis)
           break;
         }
         case '\xe2': {
-          if (index < len - 2) 
-          {
-            if (('\x80' == res[index + 1]) && ('\xbe' == res[index + 2]))
-            {
+          if (index < len - 2) {
+            if (('\x80' == res[index + 1]) && ('\xbe' == res[index + 2])) {
               // 0xe2, 0x80, 0xbe : overline
               ns += '\x7e'; // tilde
               index += 2;
@@ -1774,15 +1719,13 @@ string XmiReader::astahstr2str(const string & str)
         break;
       }
       case '%': {
-        if (index < str_len - 2)
-        {
+        if (index < str_len - 2) {
           unsigned int x = hexchar2int(str[index + 1]) * 16 +
                            hexchar2int(str[index + 2]);
           res += x;
           index += 2; 
         }
-        else
-        {
+        else {
           // err
           res += ' ';
         }
@@ -1800,15 +1743,15 @@ string XmiReader::astahstr2str(const string & str)
 
 int XmiReader::hexchar2int(const char c)
 {
-  if (('0' <= c) && ('9' >= c))
+  if (('0' <= c) && ('9' >= c)) {
     return c - '0';
-
-  if (('a' <= c) && ('f' >= c))
+  }
+  if (('a' <= c) && ('f' >= c)) {
     return c - 'a' + 10;
-
-  if (('A' <= c) && ('F' >= c))
+  }
+  if (('A' <= c) && ('F' >= c)) {
     return c - 'A' + 10;
-
+  }
 // error
   return 0;
 }
@@ -1816,8 +1759,7 @@ int XmiReader::hexchar2int(const char c)
 bool XmiReader::IsShiftJIS(xmlTextReaderPtr reader)
 {
   const xmlChar * e = xmlTextReaderConstEncoding(reader);
-  if (e != NULL)
-  {
+  if (e != NULL) {
     string estr ((const char *)e);
     return (estr == "SHIFT_JIS");
   }
@@ -1828,8 +1770,7 @@ wstring XmiReader::GetEncoding(xmlTextReaderPtr reader)
 {
   wstring encoding;
   const xmlChar * e = xmlTextReaderConstEncoding(reader);
-  if (e != NULL)
-  {
+  if (e != NULL) {
     string estr ((const char *)e);
     encoding = TBWSTR::string2wstring(estr);
   }
@@ -1845,12 +1786,10 @@ void XmiReader::CheckExporter(const Sequence & ep)
 {
 // Jomt XMI writer
 // Enterprise Architect
-  if (ep.SubSequence(1, 15) == Sequence(L"Jomt XMI writer"))
-  {
+  if (ep.SubSequence(1, 15) == Sequence(L"Jomt XMI writer")) {
     this->SetMode(MODE_ASTAH);
   }
-  else if (ep == Sequence(L"Enterprise Architect"))
-  {
+  else if (ep == Sequence(L"Enterprise Architect")) {
     this->SetMode(MODE_EnterpriseArchitect);
   }
 }

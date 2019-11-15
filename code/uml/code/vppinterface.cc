@@ -39,8 +39,7 @@ TYPE_AUML_InstanceVars VppInterface::Assoc2Instvars(const SEQ<Char> & nm, const 
   Set dom_ass_m (ass_m.Dom());
   TYPE_AUML_InstanceVars m;
   Generic gc;
-  for (bool bb = dom_ass_m.First(gc); bb; bb = dom_ass_m.Next(gc))
-  {
+  for (bool bb = dom_ass_m.First(gc); bb; bb = dom_ass_m.Next(gc)) {
     TYPE_AUML_Role rl (ass_m[gc]);
     TYPE_AUML_ValDef val;
     val.set_tp(vdm_BUILD_RoleToAs(rl));
@@ -80,21 +79,26 @@ wstring VppInterface::GetTypeString(int type, int plur)
 {
   wstring s;
   switch(type) {
-    case pos_AUML_Class_inst:
+    case pos_AUML_Class_inst: {
       s = L"instance variable";
       break;
-//    case pos_AUML_Class_time:
+    }
+//    case pos_AUML_Class_time: {
 //      s = L"time variable";
 //      break;
-    case pos_AUML_Class_val:
+//    }
+    case pos_AUML_Class_val: {
       s = L"value";
       break;
-    case pos_AUML_Class_meth:
+    }
+    case pos_AUML_Class_meth: {
       s = L"method";
       break;
-    case pos_AUML_Class_func:
+    }
+    case pos_AUML_Class_func: {
       s = L"function";
       break;
+    }
   }
   s += plur > 1 ? L"s" : L"";
   return s;
@@ -106,20 +110,13 @@ wstring VppInterface::GetTypeString(int type, int plur)
 wstring VppInterface::ent_type2wstring(int difftype)
 {
   switch(difftype) {
-    case pos_AUML_Class_inst:
-      return L"instance variables";
-//    case pos_AUML_Class_time:
-//      return L"time variables";
-    case pos_AUML_Class_val:
-      return L"values";
-    case pos_AUML_Class_meth:
-      return L"operations";
-    case pos_AUML_Class_func:
-      return L"functions";
-    case UML_assiciation_type:
-      return L"associations defined in this class";
-    case UML_inheritance_type:
-      return L"super classes";
+    case pos_AUML_Class_inst:  { return L"instance variables"; }
+//    case pos_AUML_Class_time:  { return L"time variables"; }
+    case pos_AUML_Class_val:   { return L"values"; }
+    case pos_AUML_Class_meth:  { return L"operations"; }
+    case pos_AUML_Class_func:  { return L"functions"; }
+    case UML_assiciation_type: { return L"associations defined in this class"; }
+    case UML_inheritance_type: { return L"super classes"; }
   }
   return wstring();
 }
@@ -134,12 +131,14 @@ wstring VppInterface::ent_type2wstring(int difftype)
 wstring VppInterface::PPConditions(int type, const Generic & dom, const Generic & rng, const wstring & indent)
 {
   wstring out;
-  if(type == pos_AUML_Class_meth || type == pos_AUML_Class_func){
+  if(type == pos_AUML_Class_meth || type == pos_AUML_Class_func) {
     TYPE_AUML_Signature sign(rng);
-    if (!sign.get_precond().IsNil())
+    if (!sign.get_precond().IsNil()) {
       out+= L"\n" + indent + L"pre " + MPP::MiniPP(sign.get_precond());
-    if (!sign.get_postcond().IsNil())
+    }
+    if (!sign.get_postcond().IsNil()) {
       out+= L"\n" + indent + L"post " + MPP::MiniPP(sign.get_postcond());
+    }
   }
   return out;
 }
@@ -162,27 +161,30 @@ wstring VppInterface::PPBody(int type, const Generic & dom, const Generic & rng,
   wstring out;
   if(type == pos_AUML_Class_meth || type == pos_AUML_Class_func) {
     TYPE_AUML_Signature sign(rng);
-    if(sign.get_kind() != Quote(L"IMPL"))
-    {
+    if(sign.get_kind() != Quote(L"IMPL")) {
       out += L" ==\n" + indent + L"  is not yet specified";
     }
     out += PPConditions(type, dom, rng, indent);
   }
   out +=L";\n";
-  if(type == pos_AUML_Class_meth || type == pos_AUML_Class_func)
+  if(type == pos_AUML_Class_meth || type == pos_AUML_Class_func) {
     out += L"\n";
+  }
   return out;
 }
 
 // PPAccess
 wstring VppInterface::PPAccess(const Quote & acc)
 {
-  if (acc == Quote(L"PUBLIC"))
+  if (acc == Quote(L"PUBLIC")) {
     return L"public ";
-  if (acc == Quote(L"PRIVATE"))
+  }
+  else if (acc == Quote(L"PRIVATE")) {
     return L"private ";
-  if (acc == Quote(L"PROTECTED"))
+  }
+  else if (acc == Quote(L"PROTECTED")) {
     return L"protected ";
+  }
   return L"";
 }
 
@@ -192,8 +194,9 @@ wstring VppInterface::DoImplSign(const wstring & nm,
                                  const wstring & indent)
 {
   wstring s = PPAccess(sign.get_acc());
-  if (sign.get_stat().GetValue())
+  if (sign.get_stat().GetValue()) {
     s += wstring(L"static ");
+  }
   s += nm + L"(";
 
   SEQ<TYPE_AUML_PatType> pt_l (sign.get_param());
@@ -203,8 +206,9 @@ wstring VppInterface::DoImplSign(const wstring & nm,
     s += MPP::MiniPP(TYPE_AUML_PatType(gc).get_pat());
     s += L" : " + MPP::MiniPP(TYPE_AUML_PatType(gc).get_tp());
     bb = pt_l.Next(gc);
-    if(bb)
+    if(bb) {
       s += L", ";
+    }
   }
   s += L") ";
   s += L"RESULT";
@@ -220,15 +224,17 @@ wstring VppInterface::DoExplSign(const wstring & nm,
                                  const wstring & indent)
 {
   wstring s = PPAccess(sign.get_acc());
-  if (sign.get_stat().GetValue())
+  if (sign.get_stat().GetValue()) {
     s += wstring(L"static ");
+  }
   s += nm + L" : ";
 
   SEQ<TYPE_AUML_PatType> pt_l (sign.get_param());
   Generic gc;
   bool bb = pt_l.First(gc);
-  if(!bb)
+  if(!bb) {
     s += L"()";
+  }
   while(bb) { // Traverse the sequence of parameter types:
     s += MPP::MiniPP(TYPE_AUML_PatType(gc).get_tp());
     bb = pt_l.Next(gc);
@@ -245,8 +251,9 @@ wstring VppInterface::DoExplSign(const wstring & nm,
   while(bb) { // The parameter names:
     s += MPP::MiniPP(TYPE_AUML_PatType(gc).get_pat());
     bb = pt_l.Next(gc);
-    if(bb)
+    if(bb) {
       s += L", ";
+    }
   }
   s += L")";
   return s;
@@ -279,8 +286,9 @@ wstring VppInterface::PPEntity(int ent_type, const Generic & dom, const Generic 
       Sequence(dom).GetString(temp);
       TYPE_AUML_ValDef val(rng);
       s += PPAccess(val.get_acc());
-      if (val.get_stat().GetValue())
+      if (val.get_stat().GetValue()) {
         s += L" static ";
+      }
       s += temp + L" : " + MPP::MiniPP(val.get_tp());
       s += val.get_expr().IsNil() ? L"" : L" := " + MPP::MiniPP(val.get_expr());
       break;
@@ -296,8 +304,9 @@ wstring VppInterface::PPEntity(int ent_type, const Generic & dom, const Generic 
     case pos_AUML_Class_val: {
       TYPE_AUML_ValDef val(rng);
       s += PPAccess(val.get_acc());
-      if (val.get_stat().GetValue())
+      if (val.get_stat().GetValue()) {
         s += wstring(L"static ");
+      }
       s += MPP::MiniPP(dom); // The pattern,
       s += val.get_tp().IsNil() ? L" = " : L" : " + MPP::MiniPP(val.get_tp()) + L" = ";
       s += MPP::MiniPP(val.get_expr());
@@ -309,10 +318,12 @@ wstring VppInterface::PPEntity(int ent_type, const Generic & dom, const Generic 
       Sequence(dom).GetString(nm);
       wstring unmangledNm (MANGLE::unmangleStem(nm));
       TYPE_AUML_Signature sign(rng);
-      if(sign.get_kind() == Quote(L"EXPL"))
+      if(sign.get_kind() == Quote(L"EXPL")) {
         s+= DoExplSign(unmangledNm, sign,ent_type, indent);
-      else
+      }
+      else {
         s+= DoImplSign(unmangledNm, sign,ent_type, indent);
+      }
       break;
     }
     case UML_assiciation_type: {
@@ -358,9 +369,10 @@ wstring VppInterface::ClassToString(const SEQ<Char> & nm,
 
   nm.GetString(nm_str);
   s = L"class " + nm_str;
-  if(!super.IsEmpty())
+  if(!super.IsEmpty()) {
     s+= L" is subclass of " + MPP::ListSetOfSeq(super);
-  s  += L"\n\n";
+  }
+  s += L"\n\n";
 
   // First L"merge" the associations and the instance variables into the same mapping:
   TYPE_AUML_InstanceVars m(cl.get_inst()); // map Name to ValDef
@@ -386,8 +398,7 @@ wstring VppInterface::ClassesToString(const TYPE_ProjectTypes_FileName & file_r,
   SET<TYPE_ProjectTypes_ModuleName> nm_s (ToolMediator::ModulesInFile(file_r));
   Set str_nm_s;
   Generic gc;
-  for (bool bb = nm_s.First(gc); bb; bb = nm_s.Next(gc))
-  {
+  for (bool bb = nm_s.First(gc); bb; bb = nm_s.Next(gc)) {
     // construct a set of names that is compatible with the names used
     // in the UML representation:
     str_nm_s.Insert(SEQ<Char>(PTAUX::ExtractModuleName(gc)));
@@ -427,8 +438,7 @@ wstring VppInterface::ClassesToString(const Set & cl_s, const TYPE_AUML_Model & 
   n_cl_s.ImpIntersect(c_m.Dom());
 
   Generic gc;
-  for (bool bb = n_cl_s.First(gc); bb; bb = n_cl_s.Next(gc))
-  {
+  for (bool bb = n_cl_s.First(gc); bb; bb = n_cl_s.Next(gc)) {
     SEQ<Char> nm(gc);
     s += ClassToString(nm, c_m[nm], i_m[nm], a_m[nm]) + L"\n\n";
   }
@@ -469,8 +479,9 @@ Set VppInterface::NeedsUpdate(const SET<TYPE_ProjectTypes_FileName> & file_s,
   SET<TYPE_ProjectTypes_FileName> update;
   Generic gc;
   for (bool bb = file_s_q.First(gc); bb; bb = file_s_q.Next(gc)) {
-    if(NeedFileUpdate(gc, new_mdl, old_mdl))
+    if(NeedFileUpdate(gc, new_mdl, old_mdl)) {
       update.Insert(gc);
+    }
   }
   return update;
 }
@@ -490,8 +501,7 @@ void VppInterface::RemoveObsoleteFiles(const Set & obsolete_classes_)
   Generic gc;
 
   // Collect files corresponding to obsolete classes
-  for(bool bb = obsolete_classes.First(gc); bb; bb = obsolete_classes.Next(gc))
-  {
+  for(bool bb = obsolete_classes.First(gc); bb; bb = obsolete_classes.Next(gc)) {
     TYPE_ProjectTypes_ModuleName modnm;
     modnm.set_nm(gc);
 
@@ -505,22 +515,20 @@ void VppInterface::RemoveObsoleteFiles(const Set & obsolete_classes_)
   // Go through file with an obsolete class, and check whether
   // file contains any non-obsolete classes
   SET<TYPE_ProjectTypes_FileName> obsolete_files;
-  for(bool cc = files_of_obsolete_classes.First(gc); cc; cc = files_of_obsolete_classes.Next(gc))
-  {
+  for(bool cc = files_of_obsolete_classes.First(gc); cc; cc = files_of_obsolete_classes.Next(gc)) {
     TYPE_ProjectTypes_FileName flnm(gc);
 
     // If modules for this file are all obsolete, add to set
-    if (ToolMediator::ModulesInFile(flnm).SubSet(obsolete_modules))
+    if (ToolMediator::ModulesInFile(flnm).SubSet(obsolete_modules)) {
       obsolete_files.Insert(flnm);
+    }
   }
 
   // Check that some files may be deleted, as calls to
   // ToolMediator::RemoveFiles with an empty set cause the
   // project modified flag to be set
-  if(!obsolete_files.IsEmpty())
-  {
-    for(bool dd = obsolete_files.First(gc); dd; dd = obsolete_files.Next(gc))
-    {
+  if(!obsolete_files.IsEmpty()) {
+    for(bool dd = obsolete_files.First(gc); dd; dd = obsolete_files.Next(gc)) {
       wstring fnmstr (PTAUX::ExtractFileName(gc));
       wstring mesg = L"  Removing Following File From Project: " + fnmstr;
       vdm_log << mesg << endl << flush;
@@ -531,8 +539,7 @@ void VppInterface::RemoveObsoleteFiles(const Set & obsolete_classes_)
     // e.g. doesn't work if current project hasn't been saved etc
     // ***** Should be replaced before final release
     Generic gprojfile (ToolMediator::GetProjectName());
-    if(!gprojfile.IsNil())
-    {
+    if(!gprojfile.IsNil()) {
         wstring projfilestr (PTAUX::ExtractFileName(gprojfile));
         wstring oldprojfilestr = projfilestr + L"_old.prj";
         vdm_log << L"Backing up project to " + oldprojfilestr
@@ -562,8 +569,9 @@ bool VppInterface::LockedFiles(const TYPE_AUML_Model & merged_mdl, const TYPE_AU
     // Unable to lock one or more files:
     vdm_log << L"Error: The following files are locked and can not be updated:" << endl;
     Generic gc;
-    for (bool bb = locked.First(gc); bb; bb = locked.Next(gc))
+    for (bool bb = locked.First(gc); bb; bb = locked.Next(gc)) {
       vdm_log << L"  " << PTAUX::ExtractFileName (gc).c_str() << endl;
+    }
     vdm_log << L"Check if they are being used by another application." << endl << flush;
     return true;
   }
@@ -637,11 +645,11 @@ bool VppInterface::MapModelToFiles(const TYPE_AUML_Model & merged_mdl,
       Set ast_s (ToolMediator::GetAstsOfFileName(gc));
       Sequence ast_l;
       Generic g;
-      for (bool cc = ast_s.First(g); cc; cc = ast_s.Next(g) )
+      for (bool cc = ast_s.First(g); cc; cc = ast_s.Next(g) ) {
         ast_l.ImpAppend(g);
-
+      }
       wstring err;
-      if(!sf.file_update(err, ast_l)){
+      if(!sf.file_update(err, ast_l)) {
         vdm_log << L"  Unable to update file \""
                 << sf.get_short_name()
                 << L"\". " << err << endl << flush;
@@ -668,9 +676,9 @@ bool VppInterface::MapModelToFiles(const TYPE_AUML_Model & merged_mdl,
 
   SEQ<TYPE_ProjectTypes_FileName> new_files;
 
-  if(!new_s.IsEmpty())
+  if(!new_s.IsEmpty()) {
     vdm_log << L"  Working directory is: " << path << endl << flush;
-
+  }
   for (bool dd = new_s.First(gc); dd; dd = new_s.Next(gc)) {
     wstring nm_str;
     SEQ<Char>(gc).GetString(nm_str);
@@ -708,8 +716,7 @@ bool VppInterface::MapModelToFiles(const TYPE_AUML_Model & merged_mdl,
 
   // Add all new files. Only do this if there are files to add, since
   // otherwise the L"project modified" flag is set
-  if (!new_files.IsEmpty())
-  {
+  if (!new_files.IsEmpty()) {
     // They are already added!!!    ToolMediator::AddFiles((Generic) new_files.Elems());
     to_be_parsed.ImpConc(new_files); // The sequence of files to be parsed
   }

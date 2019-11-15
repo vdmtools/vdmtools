@@ -28,14 +28,12 @@ bool XmiWriter::SaveAs(const std::wstring & fname, const TYPE_XMI_Document & doc
 {
   std::ofstream out;
   out.open(TBWSTR::wstring2fsstr(fname).c_str(), ios::out);
-  if (out.good())
-  {
+  if (out.good()) {
     WriteFile(out, doc);
     out.close();
     return true;
   }
-  else
-  {
+  else {
     return false;
   }
 }
@@ -249,12 +247,12 @@ void XmiWriter::WriteXMIHeader(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.header>" << endl;
 
-  if (!documentation.IsNil())
+  if (!documentation.IsNil()) {
     WriteElement(o, indent + 1, documentation);
-    
-  if (!metamodel.IsNil())
+  }
+  if (!metamodel.IsNil()) {
     WriteElement(o, indent + 1, metamodel);
-    
+  }
   o << IND(indent) << "</XMI.header>" << endl << flush;
 }
 
@@ -270,12 +268,12 @@ void XmiWriter::WriteXMIDocumentation(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.documentation>" << endl;
 
-  if (!exporter.IsNil())
+  if (!exporter.IsNil()) {
     WriteElement(o, indent + 1, exporter);
-    
-  if (!exporterVersion.IsNil())
+  }
+  if (!exporterVersion.IsNil()) {
     WriteElement(o, indent + 1, exporterVersion);
-    
+  }
   o << IND(indent) << "</XMI.documentation>" << endl << flush;
 }
 
@@ -286,9 +284,9 @@ void XmiWriter::WriteXMIExporter(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.exporter>";
   
-  if (!text.IsNil())
+  if (!text.IsNil()) {
     o << seq2mbstr(text);
-
+  }
   o << "</XMI.exporter>" << endl << flush;
 }
 
@@ -299,9 +297,9 @@ void XmiWriter::WriteXMIExporterVersion(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.exporterVersion>";
   
-  if (!text.IsNil())
+  if (!text.IsNil()) {
     o << seq2mbstr(text);
-
+  }
   o << "</XMI.exporterVersion>" << endl << flush;
 }
 
@@ -312,9 +310,9 @@ void XmiWriter::WriteXMICurrentModelVersion(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.currentModelVersion>";
   
-  if (!text.IsNil())
+  if (!text.IsNil()) {
     o << seq2mbstr(text);
-
+  }
   o << "</XMI.currentModelVersion>" << endl << flush;
 }
 
@@ -325,9 +323,9 @@ void XmiWriter::WriteXMIMaxModelVersion(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.maxModelVersion>";
   
-  if (!text.IsNil())
+  if (!text.IsNil()) {
     o << seq2mbstr(text);
-
+  }
   o << "</XMI.maxModelVersion>" << endl << flush;
 }
 
@@ -338,9 +336,9 @@ void XmiWriter::WriteXMICurrentModelProducer(ofstream & o, int indent,
 
   o << IND(indent) << "<XMI.currentModelProducer>";
       
-  if (!text.IsNil())
+  if (!text.IsNil()) {
     o << seq2mbstr(text);
-
+  }
   o << "</XMI.currentModelProducer>" << endl << flush;
 }
 
@@ -427,14 +425,12 @@ void XmiWriter::WriteUMLModelElement(ofstream & o, int indent,
                                      const TYPE_XMI_UMLModelElement & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLModelElement_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:ModelElement";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     Sequence nspace (elm.GetSequence(pos_XMI_UMLModelElement_namespace));
     Generic visibility (elm.GetField(pos_XMI_UMLModelElement_visibility));
     Generic definition (elm.GetField(pos_XMI_UMLModelElement_definition));
@@ -442,43 +438,32 @@ void XmiWriter::WriteUMLModelElement(ofstream & o, int indent,
     Sequence taggedValue (elm.GetSequence(pos_XMI_UMLModelElement_taggedValue));
     Sequence constraint (elm.GetSequence(pos_XMI_UMLModelElement_constraint));
         
-    if (!nspace.IsEmpty())
-    {
+    if (!nspace.IsEmpty()) {
       o << IND(indent) << "<UML:ModelElement.namespace>" << endl << flush;
       WriteElementSeq(o, indent + 1, nspace);
       o << IND(indent) << "</UML:ModelElement.namespace>" << endl << flush;
     }
-
-    if (!visibility.IsNil())
-    {
+    if (!visibility.IsNil()) {
       o << IND(indent) << "<UML:ModelElement.visibility";
       o << " xmi.value=\"" << seq2mbstr(visibility);
       o << "\"/>" << endl;
     }
-
-    if (!definition.IsNil())
-    {
+    if (!definition.IsNil()) {
       o << IND(indent) << "<UML:ModelElement.definition";
       o << " xmi.value=\"" << str2xmistr(seq2mbstr(definition));
       o << "\"/>" << endl;
     }
-
-    if (!taggedValue.IsEmpty())
-    {
+    if (!taggedValue.IsEmpty()) {
       o << IND(indent) << "<UML:ModelElement.taggedValue>" << endl << flush;
       WriteElementSeq(o, indent + 1, taggedValue);
       o << IND(indent) << "</UML:ModelElement.taggedValue>" << endl << flush;
     }
-
-    if (!constraint.IsEmpty())
-    {
+    if (!constraint.IsEmpty()) {
       o << IND(indent) << "<UML:ModelElement.constraint>" << endl << flush;
       WriteElementSeq(o, indent + 1, constraint);
       o << IND(indent) << "</UML:ModelElement.constraint>" << endl << flush;
     }
-
-    if (!stereotype.IsEmpty())
-    {
+    if (!stereotype.IsEmpty()) {
       o << IND(indent) << "<UML:ModelElement.stereotype>" << endl << flush;
       WriteElementSeq(o, indent + 1, stereotype);
       o << IND(indent) << "</UML:ModelElement.stereotype>" << endl << flush;
@@ -490,18 +475,15 @@ void XmiWriter::WriteUMLNamespace(ofstream & o, int indent,
                                   const TYPE_XMI_UMLNamespace & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLNamespace_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:Namespace";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     Sequence ownedElement (elm.GetSequence(pos_XMI_UMLNamespace_ownedElement));
   
-    if (!ownedElement.IsEmpty()) 
-    {
+    if (!ownedElement.IsEmpty()) {
       o << IND(indent) << "<UML:Namespace.ownedElement>" << endl << flush;
       WriteElementSeq(o, indent + 1, ownedElement);
       o << IND(indent) << "</UML:Namespace.ownedElement>" << endl << flush;
@@ -514,14 +496,12 @@ void XmiWriter::WriteUMLFeature(ofstream & o, int indent,
 {
   Generic owner (elm.GetField(pos_XMI_UMLFeature_owner));
   Generic visibility (elm.GetField(pos_XMI_UMLFeature_visibility));
-  if (!owner.IsNil())
-  {
+  if (!owner.IsNil()) {
     o << IND(indent) << "<UML:Feature.owner>" << endl << flush;
     WriteElement(o, indent + 1, owner);
     o << IND(indent) << "</UML:Feature.owner>" << endl << flush;
   }
-  if (!visibility.IsNil())
-  {
+  if (!visibility.IsNil()) {
     o << IND(indent) << "<UML:Feature.visibility";
     o << " xmi.value=\"" << seq2mbstr(visibility);
     o << "\"/>" << endl;
@@ -588,8 +568,7 @@ void XmiWriter::WriteUMLClass(ofstream & o, int indent,
 
   WriteElement(o, indent + 1, ge);
 
-  if (!cf.IsNil())
-  {
+  if (!cf.IsNil()) {
     WriteElement(o, indent + 1, cf);
   }
       
@@ -600,14 +579,12 @@ void XmiWriter::WriteUMLAssociation(ofstream & o, int indent,
                                     const TYPE_XMI_UMLAssociation & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLAssociation_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:Association";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     TYPE_XMI_UMLModelElement me (elm.GetRecord(pos_XMI_UMLAssociation_modelElement));
     Sequence co (elm.GetSequence(pos_XMI_UMLAssociation_connection));
 
@@ -620,8 +597,7 @@ void XmiWriter::WriteUMLAssociation(ofstream & o, int indent,
 
     WriteElement(o, indent + 1, me);
 
-    if (!co.IsEmpty())
-    {
+    if (!co.IsEmpty()) {
       o << IND(indent + 1) << "<UML:Association.connection>" << endl << flush;
       WriteElementSeq(o, indent + 2, co);
       o << IND(indent + 1) << "</UML:Association.connection>" << endl << flush;
@@ -635,14 +611,12 @@ void XmiWriter::WriteUMLAssociationEnd(ofstream & o, int indent,
                                        const TYPE_XMI_UMLAssociationEnd & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLAssociationEnd_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:AssociationEnd";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     TYPE_XMI_UMLModelElement me (elm.GetRecord(pos_XMI_UMLAssociationEnd_modelElement));
     TYPE_XMI_UMLFeature fe (elm.GetRecord(pos_XMI_UMLAssociationEnd_feature));
     TYPE_XMI_UMLStructuralFeature sf (elm.GetRecord(pos_XMI_UMLAssociationEnd_structuralFeature));
@@ -652,13 +626,12 @@ void XmiWriter::WriteUMLAssociationEnd(ofstream & o, int indent,
     Generic visibility (elm.GetField(pos_XMI_UMLAssociationEnd_visibility));
     Generic qualifier (elm.GetField(pos_XMI_UMLAssociationEnd_qualifier));
  
-    if (IsEA())
-    {
-      if (attrs.DomExists(TAG_XMI_name))
-      {
+    if (IsEA()) {
+      if (attrs.DomExists(TAG_XMI_name)) {
         Sequence nm (attrs[TAG_XMI_name]);
-        if (nm.IsEmpty())
+        if (nm.IsEmpty()) {
           attrs.RemElem(TAG_XMI_name);
+        }
       }
     }
 
@@ -683,36 +656,28 @@ void XmiWriter::WriteUMLAssociationEnd(ofstream & o, int indent,
     WriteElement(o, indent + 1, fe);
     WriteElement(o, indent + 1, sf);
 
-    if (!pa.IsNil())
-    {
+    if (!pa.IsNil()) {
       o << IND(indent + 1) << "<UML:AssociationEnd.participant>" << endl << flush;
       WriteElement(o, indent + 2, pa);
       o << IND(indent + 1) << "</UML:AssociationEnd.participant>" << endl << flush;
     }
 
-    if (!iv.IsNil())
-    {
+    if (!iv.IsNil()) {
       o << IND(indent + 1) << "<UML:AssociationEnd.initialValue>" << endl << flush;
       WriteElement(o, indent + 2, iv);
       o << IND(indent + 1) << "</UML:AssociationEnd.initialValue>" << endl << flush;
     }
-
-    if (!as.IsNil())
-    {
+    if (!as.IsNil()) {
       o << IND(indent + 1) << "<UML:AssociationEnd.association>" << endl << flush;
       WriteElement(o, indent + 2, as);
       o << IND(indent + 1) << "</UML:AssociationEnd.association>" << endl << flush;
     }
-
-    if (!visibility.IsNil())
-    {
+    if (!visibility.IsNil()) {
       o << IND(indent + 1) << "<UML:AssociationEnd.visibility";
       o << " xmi.value=\"" << seq2mbstr(visibility);
       o << "\"/>" << endl;
     }
-
-    if (!qualifier.IsNil())
-    {
+    if (!qualifier.IsNil()) {
       o << IND(indent + 1) << "<UML:AssociationEnd.qualifier>" << endl << flush;
       WriteElement(o, indent + 2, qualifier);
       o << IND(indent + 1) << "</UML:AssociationEnd.qualifier>" << endl << flush;
@@ -726,14 +691,12 @@ void XmiWriter::WriteUMLGeneralization(ofstream & o, int indent,
                                        const TYPE_XMI_UMLGeneralization & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLGeneralization_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:Generalization";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     o << IND(indent) << "<UML:Generalization";
     o << attributeStr(attrs, TAG_XMI_id);
     o << attributeStr(attrs, TAG_XMI_name);
@@ -747,15 +710,12 @@ void XmiWriter::WriteUMLGeneralization(ofstream & o, int indent,
 
     WriteElement(o, indent + 1, me);
 
-    if (!child.IsNil())
-    {
+    if (!child.IsNil()) {
       o << IND(indent + 1) << "<UML:Generalization.child>" << endl << flush;
       WriteElement(o, indent + 2, child);
       o << IND(indent + 1) << "</UML:Generalization.child>" << endl << flush;
     }
-
-    if (!parent.IsNil())
-    {
+    if (!parent.IsNil()) {
       o << IND(indent + 1) << "<UML:Generalization.parent>" << endl << flush;
       WriteElement(o, indent + 2, parent);
       o << IND(indent + 1) << "</UML:Generalization.parent>" << endl << flush;
@@ -769,14 +729,12 @@ void XmiWriter::WriteUMLStereotype(ofstream & o, int indent,
                                    const TYPE_XMI_UMLStereotype & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLStereotype_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:Stereotype";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     o << IND(indent) << "<UML:Stereotype";
     o << attributeStr(attrs, TAG_XMI_id);
     o << attributeStr(attrs, TAG_XMI_name);
@@ -824,14 +782,12 @@ void XmiWriter::WriteUMLClassifier(ofstream & o, int indent,
                                    const TYPE_XMI_UMLClassifier & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLClassifier_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:Classifier";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     o << IND(indent) << "<UML:Classifier.feature>" << endl << flush;
     Sequence f_l (elm.GetSequence(pos_XMI_UMLClassifier_feature));
     WriteElementSeq(o, indent + 1, f_l);
@@ -864,15 +820,12 @@ void XmiWriter::WriteUMLAttribute(ofstream & o, int indent,
   WriteElement(o, indent + 1, fe);
   WriteElement(o, indent + 1, sf);
 
-  if (!iv.IsNil())
-  {
+  if (!iv.IsNil()) {
     o << IND(indent + 1) << "<UML:Attribute.initialValue>" << endl << flush;
     WriteElement(o, indent + 2, iv);
     o << IND(indent + 1) << "</UML:Attribute.initialValue>" << endl << flush;
   }
-
-  if (!ae.IsNil())
-  {
+  if (!ae.IsNil()) {
     o << IND(indent + 1) << "<UML:Attribute.associationEnd>" << endl << flush;
     WriteElement(o, indent + 2, ae);
     o << IND(indent + 1) << "</UML:Attribute.associationEnd>" << endl << flush;
@@ -885,14 +838,12 @@ void XmiWriter::WriteUMLStructuralFeature(ofstream & o, int indent,
 {
   Generic multiplicity (elm.GetField(pos_XMI_UMLStructuralFeature_multiplicity));
   Generic type (elm.GetField(pos_XMI_UMLStructuralFeature_type));
-  if (!multiplicity.IsNil())
-  {
+  if (!multiplicity.IsNil()) {
     o << IND(indent) << "<UML:StructuralFeature.multiplicity>" << endl << flush;
     WriteElement(o, indent + 1, multiplicity);
     o << IND(indent) << "</UML:StructuralFeature.multiplicity>" << endl << flush;
   }
-  if (!type.IsNil())
-  {
+  if (!type.IsNil()) {
     o << IND(indent) << "<UML:StructuralFeature.type>" << endl << flush;
     WriteElement(o, indent + 1, type);
     o << IND(indent) << "</UML:StructuralFeature.type>" << endl << flush;
@@ -904,8 +855,7 @@ void XmiWriter::WriteUMLExpression(ofstream & o, int indent,
 {
   Map attrs (elm.GetMap(pos_XMI_UMLExpression_attrs));
   Generic body (elm.GetField(pos_XMI_UMLExpression_body));
-  if (!body.IsNil())
-  {
+  if (!body.IsNil()) {
     o << IND(indent) << "<UML:Expression";
     o << attributeStr(attrs, TAG_XMI_id);
     o << ">" << endl;
@@ -923,8 +873,7 @@ void XmiWriter::WriteUMLBooleanExpression(ofstream & o, int indent,
 {
   Map attrs (elm.GetMap(pos_XMI_UMLBooleanExpression_attrs));
   Generic body (elm.GetField(pos_XMI_UMLBooleanExpression_body));
-  if (!body.IsNil())
-  {
+  if (!body.IsNil()) {
     o << IND(indent) << "<UML:BooleanExpression";
     o << attributeStr(attrs, TAG_XMI_id);
     o << ">" << endl;
@@ -970,14 +919,12 @@ void XmiWriter::WriteUMLBehavioralFeature(ofstream & o, int indent,
                                           const TYPE_XMI_UMLBehavioralFeature & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLBehavioralFeature_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:BehavioralFeature";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     Sequence p_l (elm.GetSequence(pos_XMI_UMLBehavioralFeature_parameter));
     o << IND(indent) << "<UML:BehavioralFeature.parameter>" << endl << flush;
     WriteElementSeq(o, indent + 1, p_l);
@@ -1004,22 +951,17 @@ void XmiWriter::WriteUMLParameter(ofstream & o, int indent,
 
   WriteElement(o, indent + 1, me);
 
-  if (!bf.IsNil())
-  {
+  if (!bf.IsNil()) {
     o << IND(indent + 1) << "<UML:Parameter.behavioralFeature>" << endl << flush;
     WriteElement(o, indent + 2, bf);
     o << IND(indent + 1) << "</UML:Parameter.behavioralFeature>" << endl << flush;
   }
-
-  if (!tp.IsNil())
-  {
+  if (!tp.IsNil()) {
     o << IND(indent + 1) << "<UML:Parameter.type>" << endl << flush;
     WriteElement(o, indent + 2, tp);
     o << IND(indent + 1) << "</UML:Parameter.type>" << endl << flush;
   }
-
-  if (!dv.IsNil())
-  {
+  if (!dv.IsNil()) {
     o << IND(indent + 1) << "<UML:Parameter.defaultValue>" << endl << flush;
     WriteElement(o, indent + 2, dv);
     o << IND(indent + 1) << "</UML:Parameter.defaultValue>" << endl << flush;
@@ -1032,17 +974,14 @@ void XmiWriter::WriteUMLGeneralizableElement(ofstream & o, int indent,
                                              const TYPE_XMI_UMLGeneralizableElement & elm)
 {
   Map attrs (elm.GetMap(pos_XMI_UMLGeneralizableElement_attrs));
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:GeneralizableElement";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     Sequence g_l (elm.GetSequence(pos_XMI_UMLGeneralizableElement_generalization));
-    if (!g_l.IsEmpty())
-    {
+    if (!g_l.IsEmpty()) {
       o << IND(indent) << "<UML:GeneralizableElement.generalization>" << endl << flush;
       WriteElementSeq(o, indent + 1, g_l);
       o << IND(indent) << "</UML:GeneralizableElement.generalization>" << endl << flush;
@@ -1060,8 +999,7 @@ void XmiWriter::WriteUMLMultiplicity(ofstream & o, int indent,
   o << attributeStr(attrs, TAG_XMI_id);
   o << ">" << endl;
 
-  if (!rg.IsNil())
-  {
+  if (!rg.IsNil()) {
     o << IND(indent + 1) << "<UML:Multiplicity.range>" << endl << flush;
     WriteElement(o, indent + 2, rg);
     o << IND(indent + 1) << "</UML:Multiplicity.range>" << endl << flush;
@@ -1088,8 +1026,7 @@ void XmiWriter::WriteUMLTaggedValue(ofstream & o, int indent,
   Map attrs (elm.GetMap(pos_XMI_UMLTaggedValue_attrs));
   TYPE_XMI_UMLModelElement me (elm.GetRecord(pos_XMI_UMLTaggedValue_modelElement));
 
-  if (IsASTAH())
-  {
+  if (IsASTAH()) {
     o << IND(indent) << "<UML:TaggedValue";
     o << attributeStr(attrs, TAG_XMI_id);
     o << attributeStr(attrs, TAG_XMI_version);
@@ -1103,8 +1040,7 @@ void XmiWriter::WriteUMLTaggedValue(ofstream & o, int indent,
 
     o << IND(indent) << "</UML:TaggedValue>" << endl << flush;
   }
-  if (IsEA())
-  {
+  if (IsEA()) {
     o << IND(indent) << "<UML:TaggedValue";
     o << attributeStr(attrs, TAG_XMI_tag);
     o << attributeStr(attrs, TAG_XMI_value);
@@ -1120,14 +1056,12 @@ void XmiWriter::WriteUMLConstraint(ofstream & o, int indent,
   Generic body (elm.GetField(pos_XMI_UMLConstraint_body));
   Generic ce (elm.GetField(pos_XMI_UMLConstraint_constrainedElement));
 
-  if (attrs.DomExists(TAG_XMI_idref))
-  {
+  if (attrs.DomExists(TAG_XMI_idref)) {
     o << IND(indent) << "<UML:Constraint";
     o << attributeStr(attrs, TAG_XMI_idref);
     o << "/>" << endl;
   }
-  else
-  {
+  else {
     o << IND(indent) << "<UML:Constraint";
     o << attributeStr(attrs, TAG_XMI_id);
     o << attributeStr(attrs, TAG_XMI_name);
@@ -1136,15 +1070,12 @@ void XmiWriter::WriteUMLConstraint(ofstream & o, int indent,
 
     WriteElement(o, indent + 1, me);
 
-    if (!body.IsNil())
-    {
+    if (!body.IsNil()) {
       o << IND(indent + 1) << "<UML:Constraint.body>" << endl << flush;
       WriteElement(o, indent + 2, body);
       o << IND(indent + 1) << "</UML:Constraint.body>" << endl << flush;
     }
-
-    if (!ce.IsNil())
-    {
+    if (!ce.IsNil()) {
       o << IND(indent + 1) << "<UML:Constraint.constrainedElement>" << endl << flush;
       WriteElement(o, indent + 2, ce);
       o << IND(indent + 1) << "</UML:Constraint.constrainedElement>" << endl << flush;
@@ -1157,16 +1088,17 @@ void XmiWriter::WriteUMLConstraint(ofstream & o, int indent,
 string XmiWriter::attributeStr(const Map & attrs, const Sequence & key)
 {
   string res;
-  if (attrs.DomExists(key))
-  {
+  if (attrs.DomExists(key)) {
     res += " ";
     res += seq2mbstr(key);
     res += "=\"";
     if ((key == TAG_XMI_name) ||
-        (key == TAG_XMI_value))
+        (key == TAG_XMI_value)) {
       res += str2xmistr(seq2mbstr(attrs[Sequence(key)])); 
-    else
+    }
+    else {
       res += seq2mbstr(attrs[Sequence(key)]); 
+    }
     res += "\"";
   }
   return res;
@@ -1175,8 +1107,9 @@ string XmiWriter::attributeStr(const Map & attrs, const Sequence & key)
 string XmiWriter::IND(int level)
 {
   string res;
-  for (int i = 0; i < level; i++)
+  for (int i = 0; i < level; i++) {
     res += "  ";
+  }
   return res;
 }
 
@@ -1187,27 +1120,25 @@ string XmiWriter::seq2mbstr(const Sequence & seq)
 
 string XmiWriter::str2xmistr(const string & str)
 {
-  if (IsASTAH())
+  if (IsASTAH()) {
     return str2astahstr(str);
-  else
+  }
+  else {
     return str2webstr(str);
-//    return str;
+  }
 }
 
 string XmiWriter::str2astahstr(const string & str)
 {
   string res;
-  for (int i = 0; i < (int)str.size(); i++)
-  {
+  for (int i = 0; i < (int)str.size(); i++) {
     unsigned char c = str[i];
     if  ((('0' <= c) && ('9' >= c)) ||
          (('a' <= c) && ('z' >= c)) ||
-         (('A' <= c) && ('Z' >= c)))
-    {
+         (('A' <= c) && ('Z' >= c))) {
       res += c;
     }
-    else
-    {
+    else {
       switch (c) {
         case '*':
         case '-':
@@ -1236,8 +1167,7 @@ string XmiWriter::str2astahstr(const string & str)
 string XmiWriter::str2webstr(const string & str)
 {
   string res;
-  for (int i = 0; i < (int)str.size(); i++)
-  {
+  for (int i = 0; i < (int)str.size(); i++) {
     unsigned char c = str[i];
     switch(c) {
       case '&': {

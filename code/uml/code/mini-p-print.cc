@@ -103,12 +103,13 @@ wstring MPP::ListSetOfSeq(const Set & lst_)
   wstring str;
   Generic g;
   bool first = true;
-  for(bool bb = lst.First(g); bb; bb = lst.Next(g))
-  {
-    if (first)
+  for(bool bb = lst.First(g); bb; bb = lst.Next(g)) {
+    if (first) {
       first = false;
-    else
+    }
+    else {
       str += L", ";
+    }
     str += Seq2Ascii(g);
   }
   return str;
@@ -119,8 +120,7 @@ wstring MPP::RecordModList2Ascii(const Sequence & l)
   wstring str; 
   int first=1;
   size_t len_l = l.Length();
-  for(size_t idx = 1; idx <= len_l; idx++)
-  {
+  for(size_t idx = 1; idx <= len_l; idx++) {
     Record r (l[idx]);
     str += first-- > 0 ? L"" : L", ";
     str += Type2Ascii(r.GetField(1)) + L" |-> " + Type2Ascii(r.GetField(2));
@@ -131,20 +131,17 @@ wstring MPP::RecordModList2Ascii(const Sequence & l)
 wstring MPP::MapletList2Ascii(const Sequence & l)
 {
   wstring str; 
-  if(!l.IsEmpty())
-  {
+  if(!l.IsEmpty()) {
     int first=1;
     size_t len_l = l.Length();
-    for (size_t idx = 1; idx <= len_l; idx++)
-    {
-      //Record r(g);
+    for (size_t idx = 1; idx <= len_l; idx++) {
       str += first-- > 0 ? L"" : L", ";
-      //str += Type2Ascii(r.Getfield(1)) + L" |-> " + Type2Ascii(r.Getfield(2));
       str += Type2Ascii(l[idx]);
     }
   }
-  else
+  else {
     str = L"|->";
+  }
   return str;
 }
 
@@ -156,7 +153,7 @@ wstring MPP::BindList2Ascii(const Sequence & l)
   for(size_t idx = 1; idx <= len_l; idx++) {
     const TYPE_AS_MultBind & r (l[idx]);
     str += first-- > 0 ? L"" : L", ";
-    switch(r.GetTag()){
+    switch (r.GetTag()) {
       case TAG_TYPE_AS_MultSetBind: {
         str += PatternList2Ascii(r.GetSequence(pos_AS_MultSetBind_pat));
         str += L" in set " + Type2Ascii(r.GetRecord(pos_AS_MultSetBind_Set)); // Expr
@@ -195,13 +192,13 @@ wstring MPP::List2Ascii(const Sequence & l)
   wstring str;
   bool first = true;
   size_t len_l = l.Length(); 
-  for(size_t idx = 1; idx <= len_l; idx++)
-  {
-    if (first)
+  for(size_t idx = 1; idx <= len_l; idx++) {
+    if (first) {
       first = false;
-    else
+    }
+    else {
       str += L", ";
-
+    }
     str += Type2Ascii(l[idx]);
   }
   return str;
@@ -217,17 +214,19 @@ wstring MPP::PrintNameCharSeq (const TYPE_AS_Name & rc)
 {
   const TYPE_AS_Ids & ids (rc.GetSequence(pos_AS_Name_ids));
   switch (ids.Length()) {
-    case 0:
+    case 0: {
       return L"";
-    case 1:
+    }
+    case 1: {
       return ids.Index(1).GetString();
-    case 2:
+    }
+    case 2: {
       return ids.Index(1).GetString() + L"`" + ids.Index(2).GetString();
+    }
     default: { // ids.Length() > 2 : will not occor this situation
       wstring res (ids.Index(1).GetString());
       size_t len_ids = ids.Length();
-      for (size_t i = 2; i <= len_ids; i++)
-      {
+      for (size_t i = 2; i <= len_ids; i++) {
         res += L'`';
         res += ids.Index(i).GetString();
       }
@@ -241,10 +240,11 @@ wstring MPP::Type2Ascii (const Record & tp)
   wstring str;
 
   static Map OpMap;
-  if(OpMap.IsEmpty()) // Construct the map - only once:
-    for(int i = 0; OP_TBL[i].Qstr[0]; i++)
+  if(OpMap.IsEmpty()) { // Construct the map - only once:
+    for(int i = 0; OP_TBL[i].Qstr[0]; i++) {
       OpMap.Insert(Quote(wstring(OP_TBL[i].Qstr)), Text(wstring(OP_TBL[i].Op)));
-
+    }
+  }
   string tpstr = TBWSTR::wstring2string(tp.ascii());
 
   int tag = tp.GetTag ();
@@ -269,16 +269,21 @@ wstring MPP::Type2Ascii (const Record & tp)
   case TAG_TYPE_AS_NumericType: {
     Quote btp (tp.GetField(pos_AS_NumericType_qtp));
     wstring btpstr (btp.GetValue());
-    if(btpstr == L"NATONE")
+    if(btpstr == L"NATONE") {
       str += L"nat1";
-    else if(btpstr == L"NAT")
+    }
+    else if(btpstr == L"NAT") {
       str += L"nat";
-    else if(btpstr == L"INTEGER")
+    }
+    else if(btpstr == L"INTEGER") {
       str += L"int";
-    else if(btpstr == L"RAT")
+    }
+    else if(btpstr == L"RAT") {
       str += L"rat";
-    else if(btpstr == L"REAL")
+    }
+    else if(btpstr == L"REAL") {
       str += L"real";
+    }
     else {
       // RunTimeError(L"Type2Ascii", "Unknown basic type", btp);
       vdm_err << L"Warning: non-supported type encountered during mapping" << endl;
@@ -314,7 +319,6 @@ wstring MPP::Type2Ascii (const Record & tp)
       str += Type2Ascii (fld_l[idx].GetRecord (pos_AS_Field_type));
       str += L" ";
     }
-
     str += L"end";
     break;
   }
@@ -322,10 +326,10 @@ wstring MPP::Type2Ascii (const Record & tp)
     // str += L"( ";
     SEQ<TYPE_AS_Type> tp_l (tp.GetSequence(pos_AS_UnionType_tps));
     size_t len_tp_l = tp_l.Length();
-    for (size_t idx = 1; idx <= len_tp_l; idx++)
-    {
-      if (idx > 1)
+    for (size_t idx = 1; idx <= len_tp_l; idx++) {
+      if (idx > 1) {
 	str += L" | ";
+      }
       str += Type2Ascii (tp_l[idx]);
     }
     // str += L" )";
@@ -405,10 +409,12 @@ wstring MPP::Type2Ascii (const Record & tp)
     bool first = true;
     Generic g;
     for (bool bb = tp_l.First(g); bb; bb = tp_l.Next(g)) {
-      if (first)
+      if (first) {
         first = false;
-      else
+      }
+      else {
         str += L" * ";
+      }
       str += Type2Ascii(g);
     }
     str += L") -> ";
@@ -421,10 +427,12 @@ wstring MPP::Type2Ascii (const Record & tp)
     bool first = true;
     Generic g;
     for (bool bb = tp_l.First(g); bb; bb = tp_l.Next(g)) {
-      if (first)
+      if (first) {
         first = false;
-      else
+      }
+      else {
         str += L" * ";
+      }
       str += Type2Ascii(g);
     }
     str += L") +> ";
@@ -437,10 +445,12 @@ wstring MPP::Type2Ascii (const Record & tp)
     // ###########################
 
   case TAG_TYPE_AS_PatternName: {
-    if(!tp.GetField(pos_AS_PatternName_nm).IsNil())
+    if(!tp.GetField(pos_AS_PatternName_nm).IsNil()) {
       str += PrintNameCharSeq (tp.GetRecord (pos_AS_PatternName_nm));
-    else
+    }
+    else {
       str += L"-";
+    }
     break;
   }
   case TAG_TYPE_AS_MatchVal: {
@@ -586,10 +596,12 @@ wstring MPP::Type2Ascii (const Record & tp)
     Generic g;
     for(bool bb = tpl_l.First(g); bb; bb = tpl_l.Next(g)) {
       Tuple t(g);
-      if(first)
+      if(first) {
         first = false;
-      else
+      }
+      else {
         str += L"; ";
+      }
       str += Type2Ascii(t.GetField(1)) + L" = " + Type2Ascii(t.GetField(2));
     }
     break;
@@ -602,8 +614,9 @@ wstring MPP::Type2Ascii (const Record & tp)
   }
   case TAG_TYPE_AS_ValueDef: {  // Part of the let expression
     str += Type2Ascii(tp.GetRecord(pos_AS_ValueDef_pat));            // Pattern
-    if(!tp.GetField(pos_AS_ValueDef_tp).IsNil())
+    if(!tp.GetField(pos_AS_ValueDef_tp).IsNil()) {
       str += L" : " + Type2Ascii(tp.GetRecord(pos_AS_ValueDef_tp));  // Type
+    }
     str += L" = " + Type2Ascii(tp.GetRecord(pos_AS_ValueDef_val));    // Expr
     break;
   }
@@ -618,8 +631,9 @@ wstring MPP::Type2Ascii (const Record & tp)
   case TAG_TYPE_AS_LetBeSTExpr: {
 //    str += L"let " + Type2Ascii(tp.GetRecord(pos_AS_LetBeSTExpr_lhs)); // Bind
     str += L"let " + BindList2Ascii(ASTAUX::BindToBindList(tp.GetRecord(pos_AS_LetBeSTExpr_lhs))); // Bind
-    if(!tp.GetField(pos_AS_LetBeSTExpr_St).IsNil())
+    if(!tp.GetField(pos_AS_LetBeSTExpr_St).IsNil()) {
       str += L" be st " + Type2Ascii(tp.GetRecord(pos_AS_LetBeSTExpr_St));  // 'be st'
+    }
     str += Type2Ascii(tp.GetRecord(pos_AS_LetBeSTExpr_In));
     break;
   }
@@ -643,10 +657,12 @@ wstring MPP::Type2Ascii (const Record & tp)
     Generic g;
     for(bool bb = alt_l.First(g); bb; bb = alt_l.Next(g)) {
       TYPE_AS_CaseAltn r (g);
-      if(first)
+      if(first) {
         first = false;
-      else
+      }
+      else {
         str += L", ";
+      }
       str += PatternList2Ascii(r.GetSequence(pos_AS_CaseAltn_match));
       str += L" -> " + Type2Ascii(r.GetRecord(pos_AS_CaseAltn_body));
     }
@@ -669,10 +685,12 @@ wstring MPP::Type2Ascii (const Record & tp)
   }
   case TAG_TYPE_AS_AllOrExistsExpr : {
     Quote q(tp.GetField(pos_AS_AllOrExistsExpr_quant));
-    if(q == Quote(L"ALL"))
+    if(q == Quote(L"ALL")) {
       str += L"forall ";
-    else
+    }
+    else {
       str += L"exists ";
+    }
     str += BindList2Ascii(tp.GetField(pos_AS_AllOrExistsExpr_bind)) + L" & " +
            Type2Ascii(tp.GetField(pos_AS_AllOrExistsExpr_pred));
     break;
@@ -700,8 +718,10 @@ wstring MPP::Type2Ascii (const Record & tp)
            BindList2Ascii(tp.GetField(pos_AS_SetComprehensionExpr_bind));
     if(!tp.GetField(pos_AS_SetComprehensionExpr_pred).IsNil()) {
       TYPE_AS_Expr r(tp.GetField(pos_AS_SetComprehensionExpr_pred));
-      if(! (r.Is(TAG_TYPE_AS_BoolLit) && Bool(r.GetField(pos_AS_BoolLit_val)).GetValue()))
+      //if(! (r.Is(TAG_TYPE_AS_BoolLit) && Bool(r.GetField(pos_AS_BoolLit_val)).GetValue())) {
+      if(! (r.Is(TAG_TYPE_AS_BoolLit) && r.GetBoolValue(pos_AS_BoolLit_val))) {
         str += L" & " + Type2Ascii(r);
+      }
     }
     str += L"}";
     break;
@@ -711,8 +731,10 @@ wstring MPP::Type2Ascii (const Record & tp)
            Type2Ascii(tp.GetField(pos_AS_SeqComprehensionExpr_bind));
     if(!tp.GetField(pos_AS_SeqComprehensionExpr_pred).IsNil()) {
       TYPE_AS_Expr r(tp.GetField(pos_AS_SeqComprehensionExpr_pred));
-      if(! (r.Is(TAG_TYPE_AS_BoolLit) && Bool(r.GetField(pos_AS_BoolLit_val)).GetValue()))
+      //if(! (r.Is(TAG_TYPE_AS_BoolLit) && Bool(r.GetField(pos_AS_BoolLit_val)).GetValue())) {
+      if(! (r.Is(TAG_TYPE_AS_BoolLit) && r.GetBoolValue(pos_AS_BoolLit_val))) {
         str += L" & " + Type2Ascii(r);
+      }
     }
     str += L"]";
     break;
@@ -734,16 +756,18 @@ wstring MPP::Type2Ascii (const Record & tp)
     break;
   }
   case TAG_TYPE_AS_MapEnumerationExpr : {
-    str += L"{" + MapletList2Ascii(tp.GetField(pos_AS_MapEnumerationExpr_els)) + L"}";
+    str += L"{" + MapletList2Ascii(tp.GetSequence(pos_AS_MapEnumerationExpr_els)) + L"}";
     break;
   }
   case TAG_TYPE_AS_MapComprehensionExpr : {
     str += L"{" + Type2Ascii(tp.GetField(pos_AS_MapComprehensionExpr_elem)) + L" | " + 
-           BindList2Ascii(tp.GetField(pos_AS_MapComprehensionExpr_bind));
+           BindList2Ascii(tp.GetSequence(pos_AS_MapComprehensionExpr_bind));
     if(!tp.GetField(pos_AS_MapComprehensionExpr_pred).IsNil()){
-      TYPE_AS_Expr r (tp.GetField(pos_AS_MapComprehensionExpr_pred));
-      if(! (r.Is(TAG_TYPE_AS_BoolLit) && Bool(r.GetField(1)).GetValue()))
+      TYPE_AS_Expr r (tp.GetRecord(pos_AS_MapComprehensionExpr_pred));
+      //if(! (r.Is(TAG_TYPE_AS_BoolLit) && Bool(r.GetField(1)).GetValue()))
+      if(! (r.Is(TAG_TYPE_AS_BoolLit) && r.GetBoolValue(1))) {
         str += L" & " + Type2Ascii(r);
+      }
     }
     str += L"}";
     break;
@@ -755,13 +779,13 @@ wstring MPP::Type2Ascii (const Record & tp)
   }
   case TAG_TYPE_AS_TupleConstructorExpr : {
     str += L"mk_(";
-    str += ExprList2Ascii(tp.GetField(pos_AS_TupleConstructorExpr_fields));
+    str += ExprList2Ascii(tp.GetSequence(pos_AS_TupleConstructorExpr_fields));
     str += L")";
     break;
   }
   case TAG_TYPE_AS_RecordConstructorExpr : {
     str += L"mk_" + PrintNameCharSeq(tp.GetField(pos_AS_RecordConstructorExpr_tag)) + L"(";
-    str += ExprList2Ascii(tp.GetField(pos_AS_RecordConstructorExpr_fields));
+    str += ExprList2Ascii(tp.GetSequence(pos_AS_RecordConstructorExpr_fields));
     str += L")";
     break;
   }
@@ -961,13 +985,14 @@ wstring MPP::MiniPP(const Generic & g)
   // AS`Type, AS`Pattern or AS`Expr.
   // For AS`Expr only simple expressions are supported
 {
-  if(g.IsNil())
+  if(g.IsRecord()) {
+    return Type2Ascii(g);
+  }
+  else if(g.IsNil()) {
     return wstring();
-  wstring s;
-  if(g.IsRecord())
-    s = Type2Ascii(g);
-  else
+  }
+  else {
     //    RunTimeError(L"MiniPP", REC_EXPECTED, g);  //
-    s = L"Runtime error in MiniPP";
-  return s;
+    return L"Runtime error in MiniPP";
+  }
 }

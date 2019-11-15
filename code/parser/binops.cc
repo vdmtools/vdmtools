@@ -331,8 +331,7 @@ void ParserRecover::AddToken(int token, const wchar_t * str, int vr, long grp, l
 {
   pair<TokenTableType::iterator, bool> p (
     this->repair_tokens.insert(TokenTableType::value_type(token, TokenTableEntry(str, vr, grp, flag))));
-  if (!p.second)
-  {
+  if (!p.second) {
      wcout << L"Duplicate entry [" << token << L"] in ReservedWords: " << str << endl;
      exit(1);
   }
@@ -363,16 +362,14 @@ wstring VDM_Recover::GroupExpected(const TokenSeq & expected, TokenTableType & R
     itr->actCount = 0;
   }
 
-  for (TokenTableType::const_iterator iter(this->repair_tokens.begin()); iter != this->repair_tokens.end(); iter++)
-  {
-    if (!iter->second.validRepair)
+  for (TokenTableType::const_iterator iter(this->repair_tokens.begin()); iter != this->repair_tokens.end(); iter++) {
+    if (!iter->second.validRepair) {
       continue;
+    }
     long f = iter->second.lexTokenGroups;
     for (TokenGroupArray::iterator itr(this->tokenGroupArray.begin());
-         itr != this->tokenGroupArray.end() && f != 0; itr++)
-    {
-      if (f & itr->tGroup)
-      {
+         itr != this->tokenGroupArray.end() && f != 0; itr++) {
+      if (f & itr->tGroup) {
         itr->count++;
         f &= ~ itr->tGroup;
       } 
@@ -384,47 +381,43 @@ wstring VDM_Recover::GroupExpected(const TokenSeq & expected, TokenTableType & R
 //  }
 
   long doGroupFlag = 0;
-  for (TokenSeq::const_iterator titr = expected.begin(); titr != expected.end(); titr++)
-  {
+  for (TokenSeq::const_iterator titr = expected.begin(); titr != expected.end(); titr++) {
     //int tok = titr->token;
     //TokenTableType::iterator mitr (this->repair_tokens.find(tok));
     TokenTableType::iterator mitr (this->repair_tokens.find(titr->token));
     int flag = mitr->second.lexTokenGroups;
-    if (flag != 0)
-    {
-      for (TokenGroupArray::iterator itr(this->tokenGroupArray.begin()); itr != this->tokenGroupArray.end(); itr++)
-      {
-        if (itr->tGroup & flag)
-        {
-          if (++(itr->actCount) == itr->count)
+    if (flag != 0) {
+      for (TokenGroupArray::iterator itr(this->tokenGroupArray.begin()); itr != this->tokenGroupArray.end(); itr++) {
+        if (itr->tGroup & flag) {
+          if (++(itr->actCount) == itr->count) {
             doGroupFlag |= itr->tGroup;
+          }
         }
       }
     }
   }
 
-  for (TokenGroupArray::const_iterator itr(this->tokenGroupArray.begin()); itr != this->tokenGroupArray.end(); itr++)
-  {
-    if (itr->tGroup & doGroupFlag && itr->override)
+  for (TokenGroupArray::const_iterator itr(this->tokenGroupArray.begin()); itr != this->tokenGroupArray.end(); itr++) {
+    if (itr->tGroup & doGroupFlag && itr->override) {
       doGroupFlag &= ~ itr->override;
+    }
   }
 
   long outFlag = 0;
   vector<wstring> slist;
   TokenSeq rest;
-  for (TokenSeq::const_iterator titr = expected.begin(); titr != expected.end(); titr++)
-  {
+  for (TokenSeq::const_iterator titr = expected.begin(); titr != expected.end(); titr++) {
     //int tok = titr->token;
     //TokenTableType::iterator mitr (this->repair_tokens.find(tok));
     TokenTableType::iterator mitr (this->repair_tokens.find(titr->token));
     int flag = mitr->second.lexTokenGroups;
     if ((flag & doGroupFlag) == 0) {
       rest.push_back(*titr);
-    } else {
+    }
+    else {
       flag &= doGroupFlag & ~outFlag;
       outFlag |= flag;
-      for (TokenGroupArray::iterator itr(this->tokenGroupArray.begin()); itr != this->tokenGroupArray.end(); itr++)
-      {
+      for (TokenGroupArray::iterator itr(this->tokenGroupArray.begin()); itr != this->tokenGroupArray.end(); itr++) {
         if (itr->tGroup & flag) {
           slist.push_back(itr->groupName);
           flag &= ~ itr->tGroup;
@@ -443,7 +436,8 @@ wstring VDM_Recover::GroupExpected(const TokenSeq & expected, TokenTableType & R
   for (int i7 = 0; i7 < slist_size; i7++) {
     if ((i7 > 0) && (i7 + 1 == slist_size)) {
       Res += L" or ";
-    } else if (i7 > 0) {
+    }
+    else if (i7 > 0) {
       Res += L", ";
     }
     Res += slist[i7];
@@ -462,13 +456,16 @@ wstring VDM_Recover::GetString(int token)
   wstring res;
   switch (token) {
     case 0: {                     // End of File/Line/Expression.
-      if (!this->EofText.empty())
+      if (!this->EofText.empty()) {
         return this->EofText;
-      else
+      }
+      else {
         return ParserRecover::GetString(token);
+      }
     }
-    default:
+    default: {
       return ParserRecover::GetString(token);
+    }
   }
 }
 
@@ -481,25 +478,30 @@ wstring BINOPS::getLexText( int id, const wstring & text )
 {
   wstring res;
   switch (id) {
-    case LEX_text_lit:
+    case LEX_text_lit: {
       res = L"\"";
       res += text;
       res += L"\"";
       break;
-    case LEX_char_lit:
+    }
+    case LEX_char_lit: {
       res = L"'";
       res += text;
       res += L"'";
       break;
-    case LEX_dollar_identifier:
+    }
+    case LEX_dollar_identifier: {
       res = text;
       break;
-    case LEX_TEXBREAK:
+    }
+    case LEX_TEXBREAK: {
       res = L"\\begin/end{vdm_al}";
       break;
-    default:
+    }
+    default: {
       res = text;
       break;
+    }
   }
   return res;
 }
@@ -507,17 +509,16 @@ wstring BINOPS::getLexText( int id, const wstring & text )
 wstring BINOPS::id2str( int id, const wstring & text )
 {
   wstring res;
-  if( id < 256 )
-  {
+  if( id < 256 ) {
     wchar_t a = id;
     res = a;
   }
-  else
+  else {
     res = text;
-
-  if (res.empty())
+  }
+  if (res.empty()) {
     res = vdm_rec.GetString(id);
-
+  }
   return res;
 }
 
@@ -526,10 +527,10 @@ Token_Type BINOPS::id2gtype( int id )
   Token_Type type = TT_DEFAULT;
   switch( id )
   {
-    case LEX_COMMENT:
+    case LEX_COMMENT: {
       type = TT_COMMENT;
       break;
-
+    }
 #ifdef VDMSL
     case LEX_DEFINITIONS:
 #endif // VDMSL
@@ -555,10 +556,10 @@ Token_Type BINOPS::id2gtype( int id )
     case LEX_SYNC:
     case LEX_THREAD:
 #endif // VDMPP
-    case LEX_TRACES:
+    case LEX_TRACES: {
       type = TT_DEF;
       break;
-
+    }
     case LEX_IS:
     case LEX_YET:
     case LEX_SPECIFIED:
@@ -714,10 +715,10 @@ Token_Type BINOPS::id2gtype( int id )
     case LEX_UNDEFINED:
     case LEX_WHILE:
     case LEX_WITH:
-    case LEX_WR:
+    case LEX_WR: {
       type = TT_RESERVE;
       break;
-
+    }
     case ';':
     case '*':
     case ',':
@@ -760,48 +761,49 @@ Token_Type BINOPS::id2gtype( int id )
     case LEX_RAISED_DOT:
     case LEX_RANGE_OVER:
     case LEX_SEQUENCE_CONCATENATE:
-    case LEX_LAST_RESULT:
+    case LEX_LAST_RESULT: {
       type = TT_OPERATOR;
       break;
-
+    }
     case ')':
     case ']':
     case '}':
     case '(':
     case '[':
-    case '{':
+    case '{': {
       type = TT_PARENTHESIS;
       break;
-
-    case '@':
+    }
+    case '@': {
       type = TT_POLY;
       break;
-
+    }
     case LEX_dollar_identifier:
     case LEX_bool_true:
     case LEX_bool_false:
     case LEX_real_lit:
-    case LEX_int_lit:
+    case LEX_int_lit: {
       type = TT_LITERAL;
       break;
-
+    }
     case LEX_char_lit:
     case LEX_quote_lit:
-    case LEX_text_lit:
+    case LEX_text_lit: {
       type = TT_CHARLITERAL;
       break;
-
-    case LEX_TEXBREAK:
+    }
+    case LEX_TEXBREAK: {
       type = TT_TEXBREAK;
       break;
-
-    case LEX_identifier:
+    }
+    case LEX_identifier: {
       type = TT_IDENT;
       break;
-
-    default:
+    }
+    default: {
       type = TT_DEFAULT;
       break;
+    }
   }
   return type;
 }

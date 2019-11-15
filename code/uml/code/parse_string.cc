@@ -112,12 +112,12 @@ bool UMLPARSE::str2type(const wstring & s, TYPE_AS_Type & type)
 bool UMLPARSE::str2pat(const wstring & s, TYPE_AS_Pattern & pat)
 {
   wstring unmangledS;
-  if (MANGLE::IsMangled(s))
+  if (MANGLE::IsMangled(s)) {
     unmangledS = MANGLE::unmangleStem(s);
-  else
+  }
+  else {
     unmangledS = s;
-
-//  wstring expr (L"let " + unmangledS + L" = undefined in undefined");
+  }
   wstring expr (L"let " + unmangledS + L" = undefined in undefined");
 
   TYPE_AS_LetExpr pars_res;
@@ -186,30 +186,36 @@ Tuple UMLPARSE::Seq2Type(const Sequence & s)
 {
   wstring str (s.GetString());
   TYPE_AS_Type type;
-  if (str2type(str, type))
+  if (str2type(str, type)) {
     return mk_(Bool(true), type);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 Tuple UMLPARSE::Seq2Expr(const Sequence & s)
 {
   wstring str (s.GetString());
   TYPE_AS_Expr exp;
-  if (str2expr(str, exp))
+  if (str2expr(str, exp)) {
     return mk_(Bool(true), exp);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 Tuple UMLPARSE::Seq2Pat(const Sequence & s)
 {
   wstring str (s.GetString());
   TYPE_AS_Pattern pat;
-  if (str2pat(str, pat))
+  if (str2pat(str, pat)) {
     return mk_(Bool(true), pat);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 

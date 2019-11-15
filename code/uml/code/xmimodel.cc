@@ -43,10 +43,12 @@ IXmiClass::IXmiClass(const Map & attrs, const Map & ns_attrs)
 void IXmiClass::SetAbstract(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_isAbstract, TAG_XMI_TRUE);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_isAbstract, TAG_XMI_FALSE);
+  }
   this->set_attrs(attrs);
 }
 
@@ -54,9 +56,9 @@ Sequence IXmiClass::GetFeatures() const
 {
   Generic cfg (this->get_classifier());
 
-  if (cfg.IsNil())
+  if (cfg.IsNil()) {
     return Sequence();
-  
+  } 
   TYPE_XMI_UMLClassifier cf (cfg);
   return cf.get_feature();
 }
@@ -66,10 +68,10 @@ Sequence IXmiClass::GetAttributes() const
   Sequence cf_l (this->GetFeatures());
   Sequence res;
   Generic g;
-  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g))
-  {
-    if (Record(g).Is(TAG_TYPE_XMI_UMLAttribute))
+  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g)) {
+    if (Record(g).Is(TAG_TYPE_XMI_UMLAttribute)) {
       res.ImpAppend(g);
+    }
   }
   return res;
 }
@@ -79,10 +81,10 @@ Sequence IXmiClass::GetOperations() const
   Sequence cf_l (this->GetFeatures());
   Sequence res;
   Generic g;
-  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g))
-  {
-    if (Record(g).Is(TAG_TYPE_XMI_UMLOperation))
+  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g)) {
+    if (Record(g).Is(TAG_TYPE_XMI_UMLOperation)) {
       res.ImpAppend(g);
+    }
   }
   return res;
 }
@@ -149,10 +151,12 @@ Bool IXmiAttribute::IsStatic() const
 void IXmiAttribute::SetStatic(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_ownerScope, TAG_XMI_classifier);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_ownerScope, TAG_XMI_instance);
+  }
   this->set_attrs(attrs);
 }
 
@@ -160,20 +164,24 @@ void IXmiAttribute::SetStatic(const Bool & b)
 Bool IXmiAttribute::IsChangeable() const
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_changeability))
+  if (attrs.DomExists(TAG_XMI_changeability)) {
     return Bool(attrs[TAG_XMI_changeability] == TAG_XMI_changeable);
-  else
+  }
+  else {
     return Bool(true);
+  }
 }
 */
 
 void IXmiAttribute::SetChangeable(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_changeability, TAG_XMI_changeable);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_changeability, TAG_XMI_frozen);
+  }
   this->set_attrs(attrs);
 }
 
@@ -181,10 +189,12 @@ void IXmiAttribute::SetChangeable(const Bool & b)
 Sequence IXmiAttribute::GetVisibility() const
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_visibility))         // EA
+  if (attrs.DomExists(TAG_XMI_visibility)) {       // EA
     return attrs[TAG_XMI_visibility];
-  else
+  }
+  else {
     return this->get_feature().get_visibility ();  // ASTAH
+  }
 }
 */
 
@@ -258,11 +268,11 @@ IXmiParameter IXmiOperation::GetReturnType() const
 {
   Sequence p_l (this->GetParameters());
   Generic g;
-  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g))
-  {
+  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g)) {
     IXmiParameter p (g);
-    if (p.IsReturn())
+    if (p.IsReturn()) {
       return p;
+    }
   }
   return TYPE_XMI_UMLParameter();
 }
@@ -272,11 +282,11 @@ Sequence IXmiOperation::GetParam() const
   Sequence p_l (this->GetParameters());
   Sequence res;
   Generic g;
-  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g))
-  {
+  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g)) {
     IXmiParameter p (g);
-    if (!p.IsReturn())
+    if (!p.IsReturn()) {
       res.ImpAppend(p);
+    }
   }
   return res;
 }
@@ -299,39 +309,47 @@ void IXmiOperation::AppendStereotype(const TYPE_XMI_UMLStereotype & st)
 void IXmiOperation::SetStatic(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_ownerScope, TAG_XMI_classifier);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_ownerScope, TAG_XMI_instance);
+  }
   this->set_attrs(attrs);
 }
 
 Bool IXmiOperation::IsAbstract()
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_isAbstract))
+  if (attrs.DomExists(TAG_XMI_isAbstract)) {
     return Bool(attrs[TAG_XMI_isAbstract] == TAG_XMI_TRUE);
-  else
+  }
+  else {
     return Bool(false);
+  }
 }
 
 void IXmiOperation::SetAbstract(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_isAbstract, TAG_XMI_TRUE);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_isAbstract, TAG_XMI_FALSE);
+  }
   this->set_attrs(attrs);
 }
 
 Sequence IXmiOperation::GetVisibility()
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_visibility))        // EA
+  if (attrs.DomExists(TAG_XMI_visibility)) {      // EA
     return attrs[TAG_XMI_visibility];
-  else
+  }
+  else {
     return this->get_feature().get_visibility (); // ASTAH
+  }
 }
 
 void IXmiOperation::SetVisibility(const Sequence & v)
@@ -398,10 +416,12 @@ IXmiParameter::IXmiParameter(const Sequence & name, const Sequence & id,
 Bool IXmiParameter::IsReturn() const
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_kind))
+  if (attrs.DomExists(TAG_XMI_kind)) {
     return Bool(attrs[TAG_XMI_kind] == TAG_XMI_return);
-  else
+  }
+  else {
     return Bool(false);
+  }
 }
 
 void IXmiParameter::SetReturn()
@@ -470,10 +490,12 @@ IXmiAssociationEnd::IXmiAssociationEnd(const Sequence & name, const Sequence & i
 void IXmiAssociationEnd::SetStatic(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_targetScope, TAG_XMI_classifier);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_targetScope, TAG_XMI_instance);
+  }
   this->set_attrs(attrs);
 }
 
@@ -518,22 +540,22 @@ void IXmiAssociationEnd::SetMultiplicityEA(const Sequence & m)
 Bool IXmiAssociationEnd::IsNavigable()
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_isNavigable))
+  if (attrs.DomExists(TAG_XMI_isNavigable)) {
     return Bool(attrs[TAG_XMI_isNavigable] == TAG_XMI_TRUE);
-  else
+  }
+  else {
     return Bool(false);
+  }
 }
 
 void IXmiAssociationEnd::SetNavigable(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
-  {
+  if (b) {
     attrs.ImpModify(TAG_XMI_isNavigable, TAG_XMI_TRUE);
     attrs.ImpModify(TAG_XMI_navigableType, TAG_XMI_navigable);
   }
-  else
-  {
+  else {
     attrs.ImpModify(TAG_XMI_isNavigable, TAG_XMI_FALSE);
     attrs.ImpModify(TAG_XMI_navigableType, TAG_XMI_non_navigable);
   }
@@ -543,10 +565,12 @@ void IXmiAssociationEnd::SetNavigable(const Bool & b)
 void IXmiAssociationEnd::SetOrdered(const Bool & b)
 {
   Map attrs (this->get_attrs());
-  if (b)
+  if (b) {
     attrs.ImpModify(TAG_XMI_ordering, TAG_XMI_ordered);
-  else
+  }
+  else {
     attrs.ImpModify(TAG_XMI_ordering, TAG_XMI_unordered);
+  }
   this->set_attrs(attrs);
 }
 
@@ -602,10 +626,12 @@ IXmiMultiplicityRange::IXmiMultiplicityRange(const Sequence & id)
 Sequence IXmiMultiplicityRange::GetLowerValue()
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_lowerValue))
+  if (attrs.DomExists(TAG_XMI_lowerValue)) {
     return attrs[TAG_XMI_lowerValue];
-  else
+  }
+  else {
     return Sequence(L"");
+  }
 }
 
 void IXmiMultiplicityRange::SetLowerValue(const Sequence & v)
@@ -618,10 +644,12 @@ void IXmiMultiplicityRange::SetLowerValue(const Sequence & v)
 Sequence IXmiMultiplicityRange::GetUpperValue()
 {
   Map attrs (this->get_attrs());
-  if (attrs.DomExists(TAG_XMI_upperValue))
+  if (attrs.DomExists(TAG_XMI_upperValue)) {
     return attrs[TAG_XMI_upperValue];
-  else
+  }
+  else {
     return Sequence(L"");
+  }
 }
 
 void IXmiMultiplicityRange::SetUpperValue(const Sequence & v)

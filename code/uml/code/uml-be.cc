@@ -77,10 +77,10 @@ UMLMapper::~UMLMapper()
 
 bool UMLMapper::SetToolInterface(int i)
 {
-  if (IsCurrentUmlInterfaceType(i))
-  {
-    if (IsXMIInterfaceLoaded()) // 20130209
+  if (IsCurrentUmlInterfaceType(i)) {
+    if (IsXMIInterfaceLoaded()) {
       SetXMIMode(i);
+    }
     return true;
   }
 
@@ -107,8 +107,9 @@ bool UMLMapper::SetToolInterface(int i)
       SetCurrentUmlInterface(new XmiInterface(MODE_EnterpriseArchitect));
       return true;
     }
-    default:
+    default: {
       return false;
+    }
   }
   return false;
 }
@@ -124,13 +125,11 @@ bool UMLMapper::InitMapper(const wstring & theModel)
   // (when a name received from TI is assigned to it). However we need
   // to ensure that a model file named e.g. model.mdl_old.mdl is handled
   // properly
-  if (GetUmlInterface()->Init())
-  {
+  if (GetUmlInterface()->Init()) {
     GetUmlInterface()->SelectModel(theModel);
 
     // Check whether we are analysing the same model as last time
-    if (this->ModelFile != theModel)
-    {
+    if (this->ModelFile != theModel) {
       this->ModelFile = theModel;
 
       // If we are analysing a different model to last time,
@@ -139,16 +138,17 @@ bool UMLMapper::InitMapper(const wstring & theModel)
     }
     return true;
   }
-  else
-  {
+  else {
     wstring title (wstring(L"Unable to connect to ") + GetUmlInterface()->ToolName() + L".");
 #ifdef _MSC_VER
     wstring message (L"Check that the program is properly installed, and that the entry in the registry is correct.");
     const char * c = getenv("VDMERRMSG");
-    if ( c != NULL)
+    if ( c != NULL) {
       vdm_log << title << endl << message << endl << flush;
-    else
+    }
+    else {
       MessageBoxW (NULL, message.c_str(), title.c_str(), MB_OK | MB_ICONSTOP | MB_SETFOREGROUND);
+    }
 #else
     vdm_log << title << endl << flush;
 #endif // _MSC_VER
@@ -159,19 +159,21 @@ bool UMLMapper::InitMapper(const wstring & theModel)
 wstring UMLMapper::GetProjectName()
 {
   Generic g (ToolMediator::GetProjectName());
-  if(!g.IsNil())
+  if(!g.IsNil()) {
     return PTAUX::ExtractFileName(g);
-  else
+  }
+  else {
     return L"";
+  }
 }
 
 wstring UMLMapper::BaseName(const wstring & name, const wstring & fext)
 {
   wstring basename (name);
   std::string::size_type pos = name.rfind(fext.c_str());
-  if (pos != wstring::npos)
+  if (pos != wstring::npos) {
     basename = name.substr(0, pos);
-
+  }
   return basename;
 }
 
@@ -189,16 +191,15 @@ bool UMLMapper::InitMapper(void)
 
   wstring model;
   wstring pjname (GetProjectName());
-  if (!pjname.empty())
-  {
+  if (!pjname.empty()) {
     model = BaseName(pjname, wstring(L".prj")) + GetUmlInterface()->GetFileExtension();
   }
-  else
-  {
+  else {
     // 
     SEQ<Char> mname (GetModelName());
-    if (!mname.IsEmpty())
+    if (!mname.IsEmpty()) {
       model = mname.GetString();
+    }
   }
   return InitMapper(model);
 }
@@ -222,9 +223,9 @@ Bool UMLMapper::Conflicts(const TYPE_MERGE_GuiSettings & gui_set)
 {
   // It is not meaningful to compute conflicts if project has changed
   // in toolbox or Rose
-  if (HasProjectChanged(false))
+  if (HasProjectChanged(false)) {
     return Bool(false);
-
+  }
   Bool b;
   try {
     vdm_MERGE_ClearConflicts();
@@ -238,15 +239,16 @@ Bool UMLMapper::Conflicts(const TYPE_MERGE_GuiSettings & gui_set)
     // The following call to LockedFiles() is added as a last >hack<
     // before the release. The check for locked files should be moved to
     // a seperate function after the release.
-    else if(VppInterface::LockedFiles(newmdl, this->Cur_VPP_Model)){
+    else if(VppInterface::LockedFiles(newmdl, this->Cur_VPP_Model)) {
       return Bool(true);
     }
   }
   catch (TB_Exception & e) {
     switch (e.GetExType()) {
-    default:
-      vdm_log << L"Internal error in Conflicts: " << e.GetExType() << endl << flush;
-      break;
+      default: {
+        vdm_log << L"Internal error in Conflicts: " << e.GetExType() << endl << flush;
+        break;
+      }
     }
   }
   return b;
@@ -272,10 +274,11 @@ TYPE_AUML_Model UMLMapper::ModelMerge(const TYPE_AUML_Model & oldModel,
 
   Set deleted (deleted_);
   Generic g;
-  for (bool bb = deleted.First(g); bb; bb = deleted.Next(g))
-    if (mergedClasses.DomExists(g))
+  for (bool bb = deleted.First(g); bb; bb = deleted.Next(g)) {
+    if (mergedClasses.DomExists(g)) {
       mergedClasses.RemElem(g);
-
+    }
+  }
   return TYPE_AUML_Model().Init(mergedClasses, mergedInh, mergedAssoc);
 }
 
@@ -285,8 +288,7 @@ TYPE_AUML_Model UMLMapper::ModelMerge(const TYPE_AUML_Model & oldModel,
 SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
 {
   // Can not map models if project has changed in toolbox or Rose
-  if (HasProjectChanged(true))
-  {
+  if (HasProjectChanged(true)) {
     return SEQ<Char>();
   }
 
@@ -295,8 +297,7 @@ SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
   TYPE_AUML_Model newmdl;
   SEQ<TYPE_ProjectTypes_FileName> to_be_parsed;
 
-  if (InitMapper(this->ModelFile))
-  {
+  if (InitMapper(this->ModelFile)) {
     vdm_log << L"Merging VDM++ and UML Models..." << endl << flush;
     try {
 
@@ -309,8 +310,9 @@ SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
         for (bool bb = dom_classStatus.First(g); bb; bb = dom_classStatus.Next(g)) {
           Tuple t (this->classStatus[g]); // (State * State)
           TYPE_MERGE_State f1 (t.GetRecord(1)), f2(t.GetRecord(2));
-          if ((f1.Is(TAG_TYPE_MERGE_None)) && (f2.Is(TAG_TYPE_MERGE_None)) )
+          if ((f1.Is(TAG_TYPE_MERGE_None)) && (f2.Is(TAG_TYPE_MERGE_None)) ) {
             changed.RemElem(g);
+          }
         }
       }
 
@@ -321,29 +323,29 @@ SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
       Generic g;
       for (bool bb = dom_gui_set.First(g); bb; bb = dom_gui_set.Next(g)) {
         Tuple guiTup (gui_set[g]);
-        if (guiTup == deletedTup)
+        if (guiTup == deletedTup) {
           deleted.Insert(g);
+        }
       }
 
       newmdl = ModelMerge(this->Current_Model, mergedmdl, deleted);
 
-// 20120518 -->
       Map inh (newmdl.get_inheritance());
       Set dom_inh (inh.Dom());
       Set cls_s;
       Generic sup;
-      for (bool bb = dom_inh.First(sup); bb; bb = dom_inh.Next(sup))
+      for (bool bb = dom_inh.First(sup); bb; bb = dom_inh.Next(sup)) {
         cls_s.ImpUnion(inh[sup]);
+      }
       cls_s.ImpDiff(dom_inh);
-      if (!cls_s.IsEmpty())
-      {
+      if (!cls_s.IsEmpty()) {
         Generic g;
-        for (bool cc = cls_s.First(g); cc; cc =cls_s.Next(g))
+        for (bool cc = cls_s.First(g); cc; cc =cls_s.Next(g)) {
           vdm_err << L"Class: " << g.ascii() << L" is't defined." << endl;
+        }
         vdm_err << L"Error(s) detected in mapping UML model to files." << endl << flush;
         return SEQ<Char>(L"Error");
       }
-// <-- 20120518
 
       this->Current_Model = newmdl;
 
@@ -369,9 +371,9 @@ SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
           return SEQ<Char>(L"Error");
         }
       }
-      else
+      else {
         vdm_log << L"  No changes necessary in the VDM++ Model" << endl << flush;
-
+      }
       if(newmdl != this->Cur_UML_Model) {
         // Write the newly calculated model to the CASE tool
         if(!modified_s.IsEmpty()) {
@@ -384,22 +386,23 @@ SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
           vdm_log <<L"  You should consider parsing them and then re-invoke the UML-VDM++ Link." << endl << flush;
         }
 
-        if (this->Cur_UML_Model != EmptyModel())
-        {
+        if (this->Cur_UML_Model != EmptyModel()) {
           const wstring backedup = GetUmlInterface()->DoBackup(cwd);
           vdm_log << L"  UML Model was backed up in file: " << backedup << endl << flush;
         }
         GetUmlInterface()->SetCurModel(newmdl, this->Cur_UML_Model);
         vdm_log << L"  UML Model updated." << endl;
       }
-      else
+      else {
         vdm_log << L"  No changes necessary in the UML Model" << endl << flush;
+      }
     }
     catch (TB_Exception & e) {
       switch (e.GetExType()) {
-      default:
-        vdm_log << L"Internal error in MapUML: " << e.GetExType() << endl << flush;
-        break;
+        default: {
+          vdm_log << L"Internal error in MapUML: " << e.GetExType() << endl << flush;
+          break;
+        }
       }
     }
   }
@@ -409,9 +412,9 @@ SEQ<Char> UMLMapper::MapUML(const TYPE_MERGE_GuiSettings & gui_set)
   this->Old_UML_Model = newmdl;
 
   // And finally parse the updated and new files:
-  if(to_be_parsed.Length())
+  if(to_be_parsed.Length()) {
     ToolMediator::BTools()->vdm_SyntaxCheck(to_be_parsed);
-
+  }
   return SEQ<Char>();
 }
 
@@ -429,18 +432,17 @@ Bool UMLMapper::SetMapperState(const TYPE_AS_Document & doc_l, const Bool & Repo
 {
   Sequence cs_l;
   size_t len_doc_l = doc_l.Length();
-  for (size_t idx = 1; idx <= len_doc_l; idx++)
-  {
-     Generic cs (doc_l[idx]);
-    if (!cs.Is(TAG_TYPE_CPP_Module))
+  for (size_t idx = 1; idx <= len_doc_l; idx++) {
+    Generic cs (doc_l[idx]);
+    if (!cs.Is(TAG_TYPE_CPP_Module)) {
       cs_l.ImpAppend(cs);
+    }
   }
 
   Bool res (true);
   ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Reading definitions..."), type_cL());
 
-  if(InitMapper())
-  {
+  if(InitMapper()) {
     try {
       this->reset = false;
       SEQ<TYPE_AS_Class> asts (INT2Q::h2gAS(cs_l)); // Convert handwritten ASs to generated ASs
@@ -465,14 +467,16 @@ Bool UMLMapper::SetMapperState(const TYPE_AS_Document & doc_l, const Bool & Repo
     }
     catch (TB_Exception & e) {
       switch (e.GetExType()) {
-      default:
-        vdm_log << L"Internal error in SetMapperState: " << e.GetExType() << endl << flush;
-        break;
+        default: {
+          vdm_log << L"Internal error in SetMapperState: " << e.GetExType() << endl << flush;
+          break;
+        }
       }
     }
   }
-  else
+  else {
     res = Bool(false);
+  }
   ToolMediator::Interf()->vdm_DestroyMeter();
   return res;
 }
@@ -511,15 +515,12 @@ void UMLMapper::ReportVPPErrors(const Map & assoc_err)
   Set dom_assoc_err (assoc_err.Dom());
   SEQ<TYPE_ProjectTypes_Message> err_l;
   Generic g;
-  for (bool bb = dom_assoc_err.First (g); bb; bb = dom_assoc_err.Next (g))
-  {
+  for (bool bb = dom_assoc_err.First (g); bb; bb = dom_assoc_err.Next (g)) {
     Set ref (assoc_err[g]);
     Generic id; // an instance variable
-    for (bool cc = ref.First (id); cc; cc = ref.Next (id))
-    {
+    for (bool cc = ref.First (id); cc; cc = ref.Next (id)) {
       Tuple gfp (GetCI().GetFilePos(ASTAUX::GetCid(id)));
-      if (gfp.GetBoolValue(1))
-      {
+      if (gfp.GetBoolValue(1)) {
         const TYPE_CI_FileId & fid (gfp.GetInt(2));
         const TYPE_CI_TokenPos & astpos (gfp.GetRecord(4));
         const TYPE_CI_Line & line (astpos.GetInt(pos_CI_TokenPos_abs_uline));
@@ -533,8 +534,7 @@ void UMLMapper::ReportVPPErrors(const Map & assoc_err)
         lastline = line;
         lastcol = column;
       }
-      else
-      {
+      else {
         type_cLL descr_l;
         descr_l.ImpAppend (SEQ<Char>(L"(Imprecise position information.)"));
         descr_l.ImpAppend (SEQ<Char>(L"Instance variable refers to multiple object references"));
@@ -544,8 +544,9 @@ void UMLMapper::ReportVPPErrors(const Map & assoc_err)
     }
     SEQ<TYPE_ProjectTypes_Message> sort_l (PTAUX::QS(err_l, false));
     int len_sort_l = sort_l.Length();
-    for (int index = 1; index <= len_sort_l; index++)
+    for (int index = 1; index <= len_sort_l; index++) {
       ToolMediator::Errs()->vdm_AddMsg(sort_l[index]);
+    }
     ToolMediator::Errs()->vdm_Done();
   }
   ToolMediator::Errs()->vdm_AllDone();
@@ -562,15 +563,12 @@ void UMLMapper::ReportVPPWarnings()
   ToolMediator::Errs()->vdm_ClearAll();
   SEQ<TYPE_ProjectTypes_Message> err_l;
   Generic gc;
-  for(bool bb = dom_warn.First(gc); bb; bb = dom_warn.Next(gc))
-  {
+  for(bool bb = dom_warn.First(gc); bb; bb = dom_warn.Next(gc)) {
     Set ids (warn[gc]); // The set of warnings associated with a class
     Generic id;
-    for(bool cc = ids.First(id); cc; cc = ids.Next(id))
-    {
+    for(bool cc = ids.First(id); cc; cc = ids.Next(id)) {
       Tuple gfp (GetCI().GetFilePos(ASTAUX::GetCid(id)));
-      if (gfp.GetBoolValue(1))
-      {
+      if (gfp.GetBoolValue(1)) {
         const TYPE_CI_FileId & fid (gfp.GetInt(2));
         const TYPE_CI_TokenPos & astpos (gfp.GetRecord(4));
         const TYPE_CI_Line & line (astpos.GetInt(pos_CI_TokenPos_abs_uline));
@@ -582,7 +580,7 @@ void UMLMapper::ReportVPPWarnings()
         lastline = line;
         lastcol = column;
       }
-      else{
+      else {
         type_cLL descr_l;
         descr_l.ImpAppend (SEQ<Char>(L"(Imprecise position information.)"));
         descr_l.ImpAppend (SEQ<Char>(L"Warning: Instance variable will not be translated to an association in UML. The object reference is too complex."));
@@ -592,8 +590,9 @@ void UMLMapper::ReportVPPWarnings()
 
     SEQ<TYPE_ProjectTypes_Message> sort_l (PTAUX::QS(err_l, false));
     int len_sort_l = sort_l.Length();
-    for (int index = 1; index <= len_sort_l; index++)
+    for (int index = 1; index <= len_sort_l; index++) {
       ToolMediator::Errs()->vdm_AddMsg(sort_l[index]);
+    }
     ToolMediator::Errs()->vdm_Done();
   }
 }
@@ -601,9 +600,10 @@ void UMLMapper::ReportVPPWarnings()
 void UMLMapper::ReportUMLWarnings()
 {
   SEQ<TYPE_ProjectTypes_Message> err_l (PTAUX::QS(GetUmlInterface()->GetErrors(), false));
-  int len_err_l = err_l.Length();
-  for (int index = 1; index <= len_err_l; index++)
+  size_t len_err_l = err_l.Length();
+  for (size_t index = 1; index <= len_err_l; index++) {
     ToolMediator::Errs()->vdm_AddMsg(err_l[index]);
+  }
   ToolMediator::Errs()->vdm_Done();
 }
 
@@ -616,11 +616,12 @@ bool UMLMapper::HasProjectChanged(bool closewin)
   wstring fext (GetUmlInterface()->GetFileExtension());
 
   wstring restart_msg;
-  if(closewin)
+  if(closewin) {
     restart_msg = L"Restart UML-VDM++ Link";
-  else
+  }
+  else {
     restart_msg = L"Close UML-VDM++ Window and restart UML-VDM++ Link";
-
+  }
   // Project has changed if
   // (a) Project name is different to model name,
   // (b) Reset flag has been set. This means that the mapper state
@@ -630,8 +631,7 @@ bool UMLMapper::HasProjectChanged(bool closewin)
   //     mapper is started with empty project, linking to default
   //     project in Rose
   if ((!projname.empty() && (BaseName(projname, wstring(L".prj")) != BaseName(this->ModelFile, fext)))
-      || this->reset)
-  {
+      || this->reset) {
     vdm_log << L"Project has changed since mapper was started." << endl;
     vdm_log << restart_msg << endl << flush;
     return true;
@@ -639,17 +639,15 @@ bool UMLMapper::HasProjectChanged(bool closewin)
 
 #ifdef _MSC_VER
 //  else if (!this->ModelFile.empty() && (curModelName != MakeWindowsName(this->ModelFile)))
-  else if (!this->ModelFile.empty() && (curModelName != this->ModelFile))
+  else if (!this->ModelFile.empty() && (curModelName != this->ModelFile)) {
 #else
-  else if (!this->ModelFile.empty() && (curModelName != this->ModelFile))
+  else if (!this->ModelFile.empty() && (curModelName != this->ModelFile)) {
 #endif // _MSC_VER
-  {
     vdm_log <<  L"Model File in " << GetUmlInterface()->ToolName() << L" has changed." << endl;
     vdm_log << restart_msg << endl << flush;
     return true;
   }
-  else
-  {
+  else {
     return false;
   }
 }
@@ -670,18 +668,21 @@ TYPE_MERGE_StateMaps UMLMapper::GetClassStatus()
   try {
     // If we are mapping for the first time, we calculate initial
     // states rather than comparing to previous (empty) ones
-    if ((this->Old_VPP_Model == EmptyModel()) && (this->Old_UML_Model == EmptyModel()))
+    if ((this->Old_VPP_Model == EmptyModel()) && (this->Old_UML_Model == EmptyModel())) {
       this->classStatus = vdm_MERGE_CalcInitState(this->Cur_VPP_Model, this->Cur_UML_Model);
-    else
+    }
+    else {
       this->classStatus = vdm_MERGE_MergeStates(
                             vdm_MERGE_CalcState(this->Old_VPP_Model, this->Cur_VPP_Model),
                             vdm_MERGE_CalcState(this->Old_UML_Model, this->Cur_UML_Model));
+    }
   }
   catch (TB_Exception & e)  {
     switch (e.GetExType()) {
-    default:
-      vdm_log << L"Internal error in GetClassStatus: " << e.GetExType() << endl << flush;
-      break;
+      default: {
+        vdm_log << L"Internal error in GetClassStatus: " << e.GetExType() << endl << flush;
+        break;
+      }
     }
   }
   return this->classStatus;
@@ -696,9 +697,10 @@ TYPE_MERGE_DefaultMap UMLMapper::GetDefaultSettings(const TYPE_MERGE_StateMaps &
   }
   catch (TB_Exception & e) {
     switch (e.GetExType()) {
-    default:
-      vdm_log << L"Internal error in GetDefaultSettings: " << e.GetExType() << endl << flush;
-      break;
+      default: {
+        vdm_log << L"Internal error in GetDefaultSettings: " << e.GetExType() << endl << flush;
+        break;
+      }
     }
   }
   return ds;
@@ -711,10 +713,12 @@ TYPE_MERGE_DefaultMap UMLMapper::GetDefaultSettings(const TYPE_MERGE_StateMaps &
 
 Sequence UMLMapper::Merge(const Sequence & s1, const Sequence & s2)
 {
-  if (s1.IsEmpty())
+  if (s1.IsEmpty()) {
     return s2;
-  else if (s2.IsEmpty())
+  }
+  else if (s2.IsEmpty()) {
     return s1;
+  }
   else {
     Generic gc1(s1.Hd()), gc2(s2.Hd());
     wstring str1, str2;
@@ -732,8 +736,9 @@ Sequence UMLMapper::Merge(const Sequence & s1, const Sequence & s2)
 
 Sequence UMLMapper::MergeSort(const Sequence & s)
 {
-  if (s.Length() < 2)
+  if (s.Length() < 2) {
     return s;
+  }
   else {
     Sequence left, right(s);
     int size = s.Length();
@@ -750,8 +755,7 @@ SEQ<Char> UMLMapper::Diff(const SET<TYPE_AUML_Name> & nm_s)
 {
   // This comparison is meaningless (and possibly could lead to
   // to a segmentation violation) if the project has changed
-  if(HasProjectChanged(false))
-  {
+  if(HasProjectChanged(false)) {
     return SEQ<Char>();
   }
 
@@ -783,62 +787,69 @@ wstring UMLMapper::ClassDiff(const TYPE_AUML_Name & nm_l)
   nm_l.GetString(name);
   if(uml_cm.Dom().InSet(nm_l) && vpp_cm.Dom().InSet(nm_l)) {
     try {
-    // Compute differences between the two representations.
-    TYPE_AUML_Class uml_vpp (vdm_MERGE_ClassDiff(vdm_MERGE_GetClass(nm_l, uml_cm),
-                                                 vdm_MERGE_GetClass(nm_l, vpp_cm)));
-    TYPE_AUML_Class vpp_uml (vdm_MERGE_ClassDiff(vdm_MERGE_GetClass(nm_l, vpp_cm),
-                                                 vdm_MERGE_GetClass(nm_l, uml_cm)));
+      // Compute differences between the two representations.
+      TYPE_AUML_Class uml_vpp (vdm_MERGE_ClassDiff(vdm_MERGE_GetClass(nm_l, uml_cm),
+                                                   vdm_MERGE_GetClass(nm_l, vpp_cm)));
+      TYPE_AUML_Class vpp_uml (vdm_MERGE_ClassDiff(vdm_MERGE_GetClass(nm_l, vpp_cm),
+                                                   vdm_MERGE_GetClass(nm_l, uml_cm)));
+  
+      // construct diff-wstring:
+      cldiff += ListDiff(pos_AUML_Class_inst, uml_vpp, vpp_uml);
+      //cldiff += ListDiff(pos_AUML_Class_time, uml_vpp, vpp_uml);
+      cldiff += ListDiff(pos_AUML_Class_val, uml_vpp, vpp_uml);
+      cldiff += ListDiff(pos_AUML_Class_meth, uml_vpp, vpp_uml);
+      cldiff += ListDiff(pos_AUML_Class_func, uml_vpp, vpp_uml);
 
-    // construct diff-wstring:
-    cldiff += ListDiff(pos_AUML_Class_inst, uml_vpp, vpp_uml);
-    //cldiff += ListDiff(pos_AUML_Class_time, uml_vpp, vpp_uml);
-    cldiff += ListDiff(pos_AUML_Class_val, uml_vpp, vpp_uml);
-    cldiff += ListDiff(pos_AUML_Class_meth, uml_vpp, vpp_uml);
-    cldiff += ListDiff(pos_AUML_Class_func, uml_vpp, vpp_uml);
+      // AUML`UniAssoc = map AUML`Name to AUML`Role
+      TYPE_AUML_UniAssoc vpp_assoc (vdm_MERGE_GetAssoc(nm_l, this->Cur_VPP_Model.get_associations()));
+      TYPE_AUML_UniAssoc uml_assoc (vdm_MERGE_GetAssoc(nm_l, this->Cur_UML_Model.get_associations()));
+      cldiff += ListDiff(UML_assiciation_type,
+                          vdm_MERGE_MapDiff((Generic)uml_assoc, (Generic)vpp_assoc),
+                          vdm_MERGE_MapDiff((Generic)vpp_assoc, (Generic)uml_assoc));
 
-    // AUML`UniAssoc = map AUML`Name to AUML`Role
-    TYPE_AUML_UniAssoc vpp_assoc (vdm_MERGE_GetAssoc(nm_l, this->Cur_VPP_Model.get_associations()));
-    TYPE_AUML_UniAssoc uml_assoc (vdm_MERGE_GetAssoc(nm_l, this->Cur_UML_Model.get_associations()));
-    cldiff += ListDiff(UML_assiciation_type,
-                        vdm_MERGE_MapDiff((Generic)uml_assoc, (Generic)vpp_assoc),
-                        vdm_MERGE_MapDiff((Generic)vpp_assoc, (Generic)uml_assoc));
-
-    Set inh_uml(vdm_MERGE_GetInh(nm_l, this->Cur_UML_Model.get_inheritance()));
-    Set inh_vpp(vdm_MERGE_GetInh(nm_l, this->Cur_VPP_Model.get_inheritance()));
-    if(inh_uml != inh_vpp) {
-      cldiff += L"inheritance relations\n\n";
-      wstring temp;
-      nm_l.GetString(temp);
-      cldiff += L">>> UML\nclass " + temp;
-      if(inh_uml.Card())
-        cldiff += L" is subclass of " + MPP::ListSetOfSeq(inh_uml) + L"\n";
-      else
-        cldiff += L" has no super classes\n";
-      cldiff += L"=== VDM++\nclass " + temp;
-      if(inh_vpp.Card())
-        cldiff += L" is subclass of " + MPP::ListSetOfSeq(inh_vpp) + L"\n";
-      else
-        cldiff += L" has no super classes\n";
-    }
-    if(cldiff != L"")
-      thediff = L"Class " + name + L"\n" + cldiff + L"\nend " + name + L"\n";
-    else
-      thediff = L"The versions of " + name + L" do not differ\n";
+      Set inh_uml(vdm_MERGE_GetInh(nm_l, this->Cur_UML_Model.get_inheritance()));
+      Set inh_vpp(vdm_MERGE_GetInh(nm_l, this->Cur_VPP_Model.get_inheritance()));
+      if(inh_uml != inh_vpp) {
+        cldiff += L"inheritance relations\n\n";
+        wstring temp;
+        nm_l.GetString(temp);
+        cldiff += L">>> UML\nclass " + temp;
+        if(inh_uml.IsEmpty()) {
+          cldiff += L" has no super classes\n";
+        }
+        else {
+          cldiff += L" is subclass of " + MPP::ListSetOfSeq(inh_uml) + L"\n";
+        }
+        cldiff += L"=== VDM++\nclass " + temp;
+        if(inh_vpp.IsEmpty()) {
+          cldiff += L" has no super classes\n";
+        }
+        else {
+          cldiff += L" is subclass of " + MPP::ListSetOfSeq(inh_vpp) + L"\n";
+        }
+      }
+      if(cldiff != L"") {
+        thediff = L"Class " + name + L"\n" + cldiff + L"\nend " + name + L"\n";
+      }
+      else {
+        thediff = L"The versions of " + name + L" do not differ\n";
+      }
     }
     catch (TB_Exception & e) {
-	switch (e.GetExType()) {
-	default:
-	  vdm_log << L"Internal error in ClassDiff: "
-		  << e.GetExType() << endl << flush;
-	  break;
-	}
+      switch (e.GetExType()) {
+        default: {
+          vdm_log << L"Internal error in ClassDiff: " << e.GetExType() << endl << flush;
+          break;
+        }
+      }
     }
   }
-  else if(uml_cm.Dom().InSet(nm_l) && !vpp_cm.Dom().InSet(nm_l))
+  else if(uml_cm.Dom().InSet(nm_l) && !vpp_cm.Dom().InSet(nm_l)) {
     thediff = L"The class " + name + L" is not defined in VDM++\n";
-  else if(!uml_cm.Dom().InSet(nm_l) && vpp_cm.Dom().InSet(nm_l))
+  }
+  else if(!uml_cm.Dom().InSet(nm_l) && vpp_cm.Dom().InSet(nm_l)) {
     thediff = L"The class " + name + L" is not defined in UML\n";
-
+  }
   return thediff;
 }
 
@@ -892,15 +903,13 @@ wstring UMLMapper::ListDiff(int difftype, const Generic & uml_r, const Generic &
     if(!unpp.IsEmpty() || !cfl.IsEmpty()) {
       thediff += L">>> UML\n";
       Generic gc;
-      for (bool bb = unpp.First(gc); bb; bb = unpp.Next(gc))
-      {
+      for (bool bb = unpp.First(gc); bb; bb = unpp.Next(gc)) {
         thediff += VppInterface::PPEntity(difftype, gc, uml_vpp[gc], L"");
         thediff += VppInterface::PPConditions(difftype, gc, uml_vpp[gc], L"");
         thediff += L"\n";
       }
       // List conflicts
-      for (bool cc = cfl.First(gc); cc; cc = cfl.Next(gc))
-      {
+      for (bool cc = cfl.First(gc); cc; cc = cfl.Next(gc)) {
         thediff += VppInterface::PPEntity(difftype, gc, uml_vpp[gc], L"");
         thediff += VppInterface::PPConditions(difftype, gc, uml_vpp[gc], L"");
         thediff += L"\n";
@@ -910,32 +919,32 @@ wstring UMLMapper::ListDiff(int difftype, const Generic & uml_r, const Generic &
     // Constructs from VPP not in UML:
     Set ppnu = vpp;
     ppnu.ImpDiff(uml);
-    if(!ppnu.IsEmpty() || !cfl.IsEmpty())
-    {
-      if(unpp.IsEmpty() || cfl.IsEmpty())
+    if(!ppnu.IsEmpty() || !cfl.IsEmpty()) {
+      if(unpp.IsEmpty() || cfl.IsEmpty()) {
         thediff += L">>> VDM++\n";
-      else
+      }
+      else {
         thediff += L" VDM++\n";
-
+      }
       Generic gc;
-      for (bool dd = ppnu.First(gc); dd; dd = ppnu.Next(gc))
-      {
+      for (bool dd = ppnu.First(gc); dd; dd = ppnu.Next(gc)) {
         thediff += VppInterface::PPEntity(difftype, gc, vpp_uml[gc], L"");
         thediff += VppInterface::PPConditions(difftype, gc, vpp_uml[gc], L"");
         thediff += L"\n";
       }
       // List conflicts
-      for (bool ee = cfl.First(gc); ee ; ee = cfl.Next(gc))
-      {
+      for (bool ee = cfl.First(gc); ee ; ee = cfl.Next(gc)) {
         thediff += VppInterface::PPEntity(difftype, gc, vpp_uml[gc], L"");
         thediff += VppInterface::PPConditions(difftype, gc, vpp_uml[gc], L"");
         thediff += L"\n";
       }
 
-      if(unpp.IsEmpty() && cfl.IsEmpty())
+      if(unpp.IsEmpty() && cfl.IsEmpty()) {
         thediff += L"===\n";
-      else
+      }
+      else {
         thediff += L"<<<\n";
+      }
     }
     else {
       thediff += L"\n";
@@ -973,8 +982,7 @@ bool UMLMapper::LoadDefaultUmlInterface()
 
 void UMLMapper::UnLoadCurrentUmlInterface()
 {
-  if (this->TI != NULL)
-  {
+  if (this->TI != NULL) {
     this->TI->CloseDown();
     delete this->TI;
     this->TI = NULL;
@@ -983,9 +991,9 @@ void UMLMapper::UnLoadCurrentUmlInterface()
 
 UmlToolInterface * UMLMapper::GetUmlInterface()
 {
-  if (!IsUmlInterfaceLoaded())
+  if (!IsUmlInterfaceLoaded()) {
     LoadDefaultUmlInterface();
-  
+  } 
   return this->TI;
 }
 
@@ -996,26 +1004,26 @@ bool UMLMapper::IsUmlInterfaceLoaded()
 
 bool UMLMapper::IsXMIInterfaceLoaded()
 {
-  if (!IsUmlInterfaceLoaded())
-    return false;
-
-  return (this->TI->ToolName() == wstring(L"XMI"));
+  if (IsUmlInterfaceLoaded()) {
+    return (this->TI->ToolName() == wstring(L"XMI"));
+  }
+  return false;
 }
 
 bool UMLMapper::IsRoseInterfaceLoaded()
 {
-  if (!IsUmlInterfaceLoaded())
-    return false;
-
-  return (this->TI->ToolName() == wstring(L"Rose"));
+  if (IsUmlInterfaceLoaded()) {
+    return (this->TI->ToolName() == wstring(L"Rose"));
+  }
+  return false;
 }
 
 bool UMLMapper::IsNullInterfaceLoaded()
 {
-  if (!IsUmlInterfaceLoaded())
-    return false;
-
-  return (this->TI->ToolName() == wstring(L"Null"));
+  if (IsUmlInterfaceLoaded()) {
+    return (this->TI->ToolName() == wstring(L"Null"));
+  }
+  return false;
 }
 
 bool UMLMapper::IsCurrentUmlInterfaceType(int i)
@@ -1045,17 +1053,16 @@ void UMLMapper::SetCurrentUmlInterface(UmlToolInterface * itrf)
 
 void UMLMapper::SetXMIMode(int i)
 {
-  if (!IsXMIInterfaceLoaded())
-    return;
-
-  switch (i) {
-    case INTERFACE_XMI11_UML14_ASTAH: {
-      ((XmiInterface *)(this->TI))->SetMode(MODE_ASTAH);
-      break;
-    }
-    case INTERFACE_XMI11_UML14_EA: {
-      ((XmiInterface *)(this->TI))->SetMode(MODE_EnterpriseArchitect);
-      break;
+  if (IsXMIInterfaceLoaded()) {
+    switch (i) {
+      case INTERFACE_XMI11_UML14_ASTAH: {
+        ((XmiInterface *)(this->TI))->SetMode(MODE_ASTAH);
+        break;
+      }
+      case INTERFACE_XMI11_UML14_EA: {
+        ((XmiInterface *)(this->TI))->SetMode(MODE_EnterpriseArchitect);
+        break;
+      }
     }
   }
 }

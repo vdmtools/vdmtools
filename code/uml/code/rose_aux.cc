@@ -47,10 +47,12 @@ CString ExtractSubString(const CString & str, const CString & subs)
   // Extracts the subwstring subs from the wstring str.
 {
   int start = str.Find(subs);
-  if(start>=0)
+  if(start>=0) {
     return str.Mid(0, start) + str.Mid(start + subs.GetLength());
-  else
+  }
+  else {
     return str;
+  }
 }
 
 
@@ -69,18 +71,22 @@ SEQ<Char> cstr2seq(const CString & cstr)
 
 Bool bstr2bool(const CString & bstr)
 {
-  if (bstr == L"")
+  if (bstr == L"") {
     return Bool(false);
-  else
+  }
+  else {
     return Bool(true);
+  }
 }
 
 Bool BOOL2bool(const BOOL & b)
 {
-  if (b == false)
+  if (b == false) {
     return Bool(false);
-  else
+  }
+  else {
     return Bool(true);
+  }
 }
 
 void ListSetOfNames(const Set & s)
@@ -124,16 +130,18 @@ bool ParseValDef(const wstring & tp,
   success = tp == L"" ? true : UMLPARSE::str2type(tp, as_tp);
   success = success && (initval == L"" ? true : UMLPARSE::str2expr(initval, as_expr));
   
-  if(tp == L"")
+  if(tp == L"") {
     val.set_tp(Nil());
-  else 
+  }
+  else {
     val.set_tp(as_tp);
-
-  if(initval == L"")
+  }
+  if(initval == L"") {
     val.set_expr(valinit);
-  else 
+  }
+  else {
     val.set_expr(as_expr);
-
+  }
   return success;
 }
                                

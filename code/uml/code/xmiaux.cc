@@ -23,21 +23,21 @@ Sequence XmiAux::UniqueID()
 
 Sequence XmiAux::GetName(const Generic & g)
 {
-  if (g.IsRecord())
-  {
+  if (g.IsRecord()) {
     Map attrs (GetAttribute(g));
-    if (attrs.DomExists(TAG_XMI_name))
+    if (attrs.DomExists(TAG_XMI_name)) {
       return attrs[TAG_XMI_name];
-    else
+    }
+    else {
       return Sequence (L"");
+    }
   }
   return Sequence(L"");
 }
 
 bool XmiAux::IsRef(const Generic & g)
 {
-  if (g.IsRecord())
-  {
+  if (g.IsRecord()) {
     Map attrs (GetAttribute(g));
     return attrs.DomExists(TAG_XMI_idref);
   }
@@ -46,15 +46,17 @@ bool XmiAux::IsRef(const Generic & g)
 
 Sequence XmiAux::GetID(const Generic & g)
 {
-  if (g.IsRecord())
-  {
+  if (g.IsRecord()) {
     Map attrs (GetAttribute(g));
-    if (attrs.DomExists(TAG_XMI_id))
+    if (attrs.DomExists(TAG_XMI_id)) {
       return attrs[TAG_XMI_id];
-    else if (attrs.DomExists(TAG_XMI_idref))
+    }
+    else if (attrs.DomExists(TAG_XMI_idref)) {
       return attrs[TAG_XMI_idref];
-    else
+    }
+    else {
       return Sequence (L"");
+    }
   }
 
   return Sequence(L"");
@@ -120,32 +122,27 @@ Map XmiAux::GetAttribute(const Record & r)
 
 Sequence XmiAux::GetElementName(const Generic & rg, const Map & idm)
 { 
-  if (rg.IsNil())
-  {
+  if (rg.IsNil()) {
      return Sequence(L"");
   }
-  else if (rg.IsSequence())
-  {
-    if (idm.DomExists(rg))
-    {
+  else if (rg.IsSequence()) {
+    if (idm.DomExists(rg)) {
       return GetName(idm[rg]);
     }
     return Sequence();
   }
-  else
-  {
-    if (IsRef(rg))
-    {
+  else {
+    if (IsRef(rg)) {
       Sequence id (GetID(rg));
 
-      if (idm.DomExists(id))
-      {
+      if (idm.DomExists(id)) {
         return GetName(idm[id]);
       }
       return Sequence();
     }
-    else
+    else {
       return GetName(rg);
+    }
   }
 }
 
@@ -154,31 +151,29 @@ bool XmiAux::IsPrimitive(const Sequence & t)
   if ((Sequence(L"int") == t) ||
       (Sequence(L"bool") == t) ||
       (Sequence(L"char") == t) ||
-      (Sequence(L"void") == t))
+      (Sequence(L"void") == t)) {
     return true;
-  else
+  }
+  else {
     return false;
+  }
 }
 
 Sequence XmiAux::GetAllElements(const TYPE_XMI_UMLModel & m)
 {
-  if (IsEAModel(m))
-  {
+  if (IsEAModel(m)) {
     // Enterprise Architect
     Sequence s (m.get_namespace().get_ownedElement());
-    if (s.Length() >= 2)
-    {
+    if (s.Length() >= 2) {
       Record r (s[2]);
-      if (r.Is(TAG_TYPE_XMI_UMLPackage))
-      {
+      if (r.Is(TAG_TYPE_XMI_UMLPackage)) {
         TYPE_XMI_UMLPackage p (r);
         return (p.get_namespace().get_ownedElement());
       }
     }
     return Sequence();
   }
-  else
-  {
+  else {
     // ASTAH
     return m.get_namespace().get_ownedElement();
   }
@@ -190,10 +185,8 @@ SEQ<TYPE_XMI_UMLClass> XmiAux::GetAllClasses(const TYPE_XMI_UMLModel & m)
   
   SEQ<TYPE_XMI_UMLClass> res;
   Generic elm;
-  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm))
-  {
-    if (Record(elm).Is(TAG_TYPE_XMI_UMLClass))
-    {
+  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm)) {
+    if (Record(elm).Is(TAG_TYPE_XMI_UMLClass)) {
         res.ImpAppend(elm);
     }
   }
@@ -206,10 +199,8 @@ SEQ<TYPE_XMI_UMLGeneralization> XmiAux::GetAllGeneralizations(const TYPE_XMI_UML
 
   SEQ<TYPE_XMI_UMLGeneralization> res;
   Generic elm;
-  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm))
-  {
-    if (Record(elm).Is(TAG_TYPE_XMI_UMLGeneralization))
-    {
+  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm)) {
+    if (Record(elm).Is(TAG_TYPE_XMI_UMLGeneralization)) {
       res.ImpAppend(elm);
     }
   }
@@ -222,10 +213,8 @@ SEQ<TYPE_XMI_UMLAssociation> XmiAux::GetAllAssociation(const TYPE_XMI_UMLModel &
   
   SEQ<TYPE_XMI_UMLAssociation> res;
   Generic elm;
-  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm))
-  {
-    if (Record(elm).Is(TAG_TYPE_XMI_UMLAssociation))
-    {
+  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm)) {
+    if (Record(elm).Is(TAG_TYPE_XMI_UMLAssociation)) {
       res.ImpAppend(elm);
     }
   }
@@ -238,30 +227,24 @@ SEQ<TYPE_XMI_UMLAssociationEnd> XmiAux::GetAllAssociationEnds(const TYPE_XMI_UML
   
   SEQ<TYPE_XMI_UMLAssociationEnd> res;
   Generic elm;
-  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm))
-  {
+  for (bool bb = elm_l.First(elm); bb; bb = elm_l.Next(elm)) {
 /*
     if (Record(elm).Is(TAG_TYPE_XMI_UMLAssociationEnd))
     {
       res.ImpAppend(elm);
     }
 */
-    if (Record(elm).Is(TAG_TYPE_XMI_UMLAssociation))
-    {
+    if (Record(elm).Is(TAG_TYPE_XMI_UMLAssociation)) {
       TYPE_XMI_UMLAssociation as (elm);
       Sequence ae_l (as.get_connection());
       Generic aeg;
-      for (bool cc = ae_l.First(aeg); cc; cc = ae_l.Next(aeg))
-      {
-        if (Record (aeg).Is(TAG_TYPE_XMI_UMLAssociationEnd))
-        {
+      for (bool cc = ae_l.First(aeg); cc; cc = ae_l.Next(aeg)) {
+        if (Record (aeg).Is(TAG_TYPE_XMI_UMLAssociationEnd)) {
           TYPE_XMI_UMLAssociationEnd ae (aeg);
           Map attrs (ae.get_attrs());
-          if (attrs.DomExists(TAG_XMI_name))
-          {
+          if (attrs.DomExists(TAG_XMI_name)) {
             Sequence nm (attrs[TAG_XMI_name]);
-            if (!nm.IsEmpty())
-            {
+            if (!nm.IsEmpty()) {
               res.ImpAppend(ae);
             }
           }
@@ -276,18 +259,18 @@ SEQ<TYPE_XMI_UMLAttribute> XmiAux::GetAllAttributes(const TYPE_XMI_UMLClass & c)
 {
   Generic cfg (c.get_classifier());
 
-  if (cfg.IsNil())
+  if (cfg.IsNil()) {
     return Sequence();
- 
+  } 
   TYPE_XMI_UMLClassifier cf (cfg);
   Sequence cf_l (cf.get_feature());
 
   SEQ<TYPE_XMI_UMLAttribute> res;
   Generic g;
-  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g))
-  {
-    if (Record(g).Is(TAG_TYPE_XMI_UMLAttribute))
+  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g)) {
+    if (Record(g).Is(TAG_TYPE_XMI_UMLAttribute)) {
       res.ImpAppend(g);
+    }
   }
   return res;
 }
@@ -296,18 +279,18 @@ SEQ<TYPE_XMI_UMLOperation> XmiAux::GetAllOperations(const TYPE_XMI_UMLClass & c)
 {
   Generic cfg (c.get_classifier());
 
-  if (cfg.IsNil())
+  if (cfg.IsNil()) {
     return Sequence();
- 
+  } 
   TYPE_XMI_UMLClassifier cf (cfg);
   Sequence cf_l (cf.get_feature());
 
   SEQ<TYPE_XMI_UMLOperation> res;
   Generic g;
-  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g))
-  {
-    if (Record(g).Is(TAG_TYPE_XMI_UMLOperation))
+  for (bool bb = cf_l.First(g); bb; bb = cf_l.Next(g)) {
+    if (Record(g).Is(TAG_TYPE_XMI_UMLOperation)) {
       res.ImpAppend(g);
+    }
   }
   return res;
 }
@@ -317,12 +300,12 @@ Sequence XmiAux::GetClasses(const TYPE_XMI_UMLModel & m)
   Sequence c_l (GetAllClasses(m));
   Sequence res;
   Generic g;
-  for (bool bb = c_l.First(g); bb; bb = c_l.Next(g))
-  { 
+  for (bool bb = c_l.First(g); bb; bb = c_l.Next(g)) { 
     TYPE_XMI_UMLClass c (g);
     Sequence nm (GetName(c));
-    if ((nm != Sequence(L"void")) && IsRealClassName(nm) && IsClass(c))
+    if ((nm != Sequence(L"void")) && IsRealClassName(nm) && IsClass(c)) {
       res.ImpAppend(c);
+    }
   }
   return res;
 }
@@ -330,11 +313,9 @@ Sequence XmiAux::GetClasses(const TYPE_XMI_UMLModel & m)
 bool XmiAux::IsRealClassName(const Sequence & nm)
 {
   Tuple t (UMLPARSE::Seq2Type(nm));
-  if (t.GetBool(1))
-  {
+  if (t.GetBool(1)) {
     TYPE_AS_Type tp (t.GetRecord(2));
-    if (tp.Is(TAG_TYPE_AS_TypeName))
-    {
+    if (tp.Is(TAG_TYPE_AS_TypeName)) {
       TYPE_AS_Name name (tp.GetRecord(pos_AS_TypeName_name));
       return (name.get_ids().Length() == 1);
     }
@@ -346,12 +327,13 @@ bool XmiAux::IsFunction(const TYPE_XMI_UMLOperation & o, const Map & idm)
 {
   Sequence st_l (o.get_modelElement().get_stereotype());
   Generic g;
-  for (bool bb = st_l.First(g); bb; bb = st_l.Next(g))
-  {
-    if (GetElementName(g, idm) == TAG_XMI_function)
+  for (bool bb = st_l.First(g); bb; bb = st_l.Next(g)) {
+    if (GetElementName(g, idm) == TAG_XMI_function) {
       return true;
-    else if (GetElementName(g, idm) == TAG_XMI_operation)
+    }
+    else if (GetElementName(g, idm) == TAG_XMI_operation) {
       return false;
+    }
   }
   return false; // default
 }
@@ -360,12 +342,13 @@ bool XmiAux::IsOperation(const TYPE_XMI_UMLOperation & o, const Map & idm)
 {
   Sequence st_l (o.get_modelElement().get_stereotype());
   Generic g;
-  for (bool bb = st_l.First(g); bb; bb = st_l.Next(g))
-  {
-    if (GetElementName(g, idm) == TAG_XMI_operation)
+  for (bool bb = st_l.First(g); bb; bb = st_l.Next(g)) {
+    if (GetElementName(g, idm) == TAG_XMI_operation) {
       return true;
-    else if (GetElementName(g, idm) == TAG_XMI_function)
+    }
+    else if (GetElementName(g, idm) == TAG_XMI_function) {
       return false;
+    }
   }
 //  return false;
   return true; // default
@@ -389,27 +372,33 @@ bool XmiAux::IsPartial(const TYPE_XMI_UMLOperation & o, const Map & idm)
 TYPE_XMI_UMLClassifier XmiAux::GetTypeRef(const TYPE_XMI_UMLAttribute & a)
 {
   TYPE_XMI_UMLStructuralFeature sf (a.get_structuralFeature ());
-  if (!sf.get_type().IsNil())
+  if (!sf.get_type().IsNil()) {
     return sf.get_type();
-  else
+  }
+  else {
     return TYPE_XMI_UMLClassifier().Init(Map(), Sequence());  // not occur
+  }
 }
 
 TYPE_XMI_UMLClassifier XmiAux::GetTypeRef(const TYPE_XMI_UMLParameter & p)
 {
-  if (!p.get_type().IsNil())
+  if (!p.get_type().IsNil()) {
     return p.get_type();
-  else
+  }
+  else {
     return TYPE_XMI_UMLClassifier().Init(Map(), Sequence()); // not occur
+  }
 }
 
 bool XmiAux::IsReturnType(const TYPE_XMI_UMLParameter & p)
 {
   Map attrs (p.get_attrs());
-  if (attrs.DomExists(TAG_XMI_kind))
+  if (attrs.DomExists(TAG_XMI_kind)) {
     return (attrs[TAG_XMI_kind] == TAG_XMI_return);
-  else
+  }
+  else {
     return false;
+  }
 }
 
 SEQ<TYPE_XMI_UMLParameter> XmiAux::GetParam(const TYPE_XMI_UMLOperation & o)
@@ -417,11 +406,11 @@ SEQ<TYPE_XMI_UMLParameter> XmiAux::GetParam(const TYPE_XMI_UMLOperation & o)
   SEQ<TYPE_XMI_UMLParameter> p_l (o.get_behavioralFeature().get_parameter());
   SEQ<TYPE_XMI_UMLParameter> res;
   Generic g;
-  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g))
-  {
+  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g)) {
     TYPE_XMI_UMLParameter p (g);
-    if (!IsReturnType(p))
+    if (!IsReturnType(p)) {
       res.ImpAppend(p);
+    }
   }
   return res;
 }
@@ -430,11 +419,11 @@ TYPE_XMI_UMLParameter XmiAux::GetReturnType(const TYPE_XMI_UMLOperation & o)
 {
   SEQ<TYPE_XMI_UMLParameter> p_l (o.get_behavioralFeature().get_parameter());
   Generic g;
-  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g))
-  {
+  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g)) {
     TYPE_XMI_UMLParameter p (g);
-    if (IsReturnType(p))
+    if (IsReturnType(p)) {
       return p;
+    }
   }
   return TYPE_XMI_UMLParameter();
 }
@@ -443,52 +432,52 @@ Sequence XmiAux::GetPreCondition(const TYPE_XMI_UMLOperation & o)
 {
   // EA
   Sequence c_l (o.get_modelElement().get_constraint());
-  if (!c_l.IsEmpty())
-  {
+  if (!c_l.IsEmpty()) {
     Generic g;
-    for (bool bb = c_l.First(g); bb; bb = c_l.Next(g))
-    {
+    for (bool bb = c_l.First(g); bb; bb = c_l.Next(g)) {
       TYPE_XMI_UMLConstraint co (g);
       if (SearchTagValue(TAG_XMI_constraint_type, co.get_modelElement())
-            == Sequence(L"precondition"))
-      {
+            == Sequence(L"precondition")) {
         Map attrs (co.get_attrs());
-        if (attrs.DomExists(TAG_XMI_name))
+        if (attrs.DomExists(TAG_XMI_name)) {
           return attrs[TAG_XMI_name];
-        else
+        }
+        else {
           return Sequence();
+        }
       }
     }
     return Sequence();
   }
-  else
+  else {
     return SearchTagValue(TAG_XMI_precondition, o.get_modelElement()); // ASTAH
+  }
 }
 
 Sequence XmiAux::GetPostCondition(const TYPE_XMI_UMLOperation & o)
 {
   // EA
   Sequence c_l (o.get_modelElement().get_constraint());
-  if (!c_l.IsEmpty())
-  {
+  if (!c_l.IsEmpty()) {
     Generic g;
-    for (bool bb = c_l.First(g); bb; bb = c_l.Next(g))
-    {
+    for (bool bb = c_l.First(g); bb; bb = c_l.Next(g)) {
       TYPE_XMI_UMLConstraint co (g);
       if (SearchTagValue(TAG_XMI_constraint_type, co.get_modelElement())
-            == Sequence(L"postcondition"))
-      {
+            == Sequence(L"postcondition")) {
         Map attrs (co.get_attrs());
-        if (attrs.DomExists(TAG_XMI_name))
+        if (attrs.DomExists(TAG_XMI_name)) {
           return attrs[TAG_XMI_name];
-        else
+        }
+        else {
           return Sequence();
+        }
       }
     }
     return Sequence();
   }
-  else
-  return SearchTagValue(TAG_XMI_postcondition, o.get_modelElement());
+  else {
+    return SearchTagValue(TAG_XMI_postcondition, o.get_modelElement());
+  }
 }
 
 Sequence XmiAux::GetFnType(const TYPE_XMI_UMLOperation & o)
@@ -505,13 +494,14 @@ Sequence XmiAux::SearchTagValue(const Sequence & key, const TYPE_XMI_UMLModelEle
 {
   Sequence tv_l (me.get_taggedValue());
   Generic g;
-  for (bool bb = tv_l.First(g); bb; bb = tv_l.Next(g))
-  {
+  for (bool bb = tv_l.First(g); bb; bb = tv_l.Next(g)) {
     TYPE_XMI_UMLTaggedValue tv (g);
     Map attrs (tv.get_attrs());
-    if (attrs.DomExists(TAG_XMI_tag))
-      if (attrs[TAG_XMI_tag] == key)
+    if (attrs.DomExists(TAG_XMI_tag)) {
+      if (attrs[TAG_XMI_tag] == key) {
         return attrs[TAG_XMI_value];
+      }
+    }
   }
   return Sequence(L"");
 }
@@ -520,13 +510,14 @@ bool XmiAux::HasTagValue(const Sequence & key, const TYPE_XMI_UMLModelElement & 
 {
   Sequence tv_l (me.get_taggedValue());
   Generic g;
-  for (bool bb = tv_l.First(g); bb; bb = tv_l.Next(g))
-  {
+  for (bool bb = tv_l.First(g); bb; bb = tv_l.Next(g)) {
     TYPE_XMI_UMLTaggedValue tv (g);
     Map attrs (tv.get_attrs());
-    if (attrs.DomExists(TAG_XMI_tag))
-      if (attrs[TAG_XMI_tag] == key)
+    if (attrs.DomExists(TAG_XMI_tag)) {
+      if (attrs[TAG_XMI_tag] == key) {
         return true;
+      }
+    }
   }
   return false;
 }
@@ -540,28 +531,34 @@ bool XmiAux::IsClass(const TYPE_XMI_UMLClass & c)
 bool XmiAux::IsAbstract(const TYPE_XMI_UMLClass & c)
 {
   Map attrs (c.get_attrs());
-  if (attrs.DomExists(TAG_XMI_isAbstract))
+  if (attrs.DomExists(TAG_XMI_isAbstract)) {
     return Bool(attrs[TAG_XMI_isAbstract] == TAG_XMI_TRUE);
-  else
+  }
+  else {
     return Bool(false);
+  }
 }
 
 Bool XmiAux::IsStatic(const TYPE_XMI_UMLOperation & o)
 {
   Map attrs (o.get_attrs());
-  if (attrs.DomExists(TAG_XMI_ownerScope))
+  if (attrs.DomExists(TAG_XMI_ownerScope)) {
     return Bool(attrs[TAG_XMI_ownerScope] == TAG_XMI_classifier);
-  else
+  }
+  else {
     return Bool(false);
+  }
 }
 
 Sequence XmiAux::GetVisibility(const TYPE_XMI_UMLOperation & o)
 {
   Map attrs (o.get_attrs());
-  if (attrs.DomExists(TAG_XMI_visibility))
+  if (attrs.DomExists(TAG_XMI_visibility)) {
     return attrs[TAG_XMI_visibility];         // EA
-  else
+  }
+  else {
     return o.get_feature().get_visibility (); // ASTAH
+  }
 }
 
 bool XmiAux::IsVoid(const TYPE_XMI_UMLParameter & p, const Map & idm)
@@ -572,44 +569,50 @@ bool XmiAux::IsVoid(const TYPE_XMI_UMLParameter & p, const Map & idm)
 Bool XmiAux::IsStatic(const TYPE_XMI_UMLAttribute & a)
 {
   Map attrs (a.get_attrs());
-  if (attrs.DomExists(TAG_XMI_ownerScope))
+  if (attrs.DomExists(TAG_XMI_ownerScope)) {
     return Bool(attrs[TAG_XMI_ownerScope] == TAG_XMI_classifier);
-  else
+  }
+  else {
     return Bool(false);
+  }
 }
 
 Sequence XmiAux::GetVisibility(const TYPE_XMI_UMLAttribute & a)
 {
   Map attrs (a.get_attrs());
-  if (attrs.DomExists(TAG_XMI_visibility))
+  if (attrs.DomExists(TAG_XMI_visibility)) {
     return attrs[TAG_XMI_visibility];         // EA
-  else
+  }
+  else {
     return a.get_feature().get_visibility (); // ASTAH
+  }
 }
 
 bool XmiAux::IsChangeable(const TYPE_XMI_UMLAttribute & a)
 {
   Map attrs (a.get_attrs());
-  if (attrs.DomExists(TAG_XMI_changeability))
+  if (attrs.DomExists(TAG_XMI_changeability)) {
     return (attrs[TAG_XMI_changeability] == TAG_XMI_changeable);
-  else
+  }
+  else {
     return true;
+  }
 }
 
 Bool XmiAux::IsStatic(const TYPE_XMI_UMLAssociationEnd & ae,
                       const Map & idm)
 {
   Map attrs (ae.get_attrs());
-  if (attrs.DomExists(TAG_XMI_targetScope))
+  if (attrs.DomExists(TAG_XMI_targetScope)) {
     return Bool(attrs[TAG_XMI_targetScope] == TAG_XMI_classifier);
-
+  }
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
     Map attrs (nae.get_attrs());
-    if (attrs.DomExists(TAG_XMI_targetScope))
+    if (attrs.DomExists(TAG_XMI_targetScope)) {
       return Bool(attrs[TAG_XMI_targetScope] == TAG_XMI_classifier);
+    }
   }
    
   return Bool(false);
@@ -619,13 +622,12 @@ Sequence XmiAux::GetVisibility(const TYPE_XMI_UMLAssociationEnd & ae,
                                const Map & idm)
 {
   Map attrs (ae.get_attrs());
-  if (attrs.DomExists(TAG_XMI_visibility))        // EA
+  if (attrs.DomExists(TAG_XMI_visibility)) {       // EA
     return attrs[TAG_XMI_visibility];
-
+  }
   // ASTAH
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
     return nae.get_feature().get_visibility ();
   }
@@ -637,53 +639,60 @@ Sequence XmiAux::GetMultiplicity(const TYPE_XMI_UMLAssociationEnd & ae,
 {
   // for EA
   Map attrs (ae.get_attrs());
-  if (attrs.DomExists(TAG_XMI_multiplicity))
+  if (attrs.DomExists(TAG_XMI_multiplicity)) {
     return attrs[TAG_XMI_multiplicity];
-
+  }
   // for ASTAH
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
     TYPE_XMI_UMLStructuralFeature sf (nae.get_structuralFeature());
     Generic m_g (sf.get_multiplicity());
   
-    if (m_g.IsNil()) return Sequence(L"1");
-
+    if (m_g.IsNil()) {
+      return Sequence(L"1");
+    }
     TYPE_XMI_UMLMultiplicity m (m_g);
     Generic rg (m.get_range());
-    if (rg.IsNil())
+    if (rg.IsNil()) {
       return Sequence(L"1"); 
-
+    }
     TYPE_XMI_UMLMultiplicityRange r (rg);
     Map rg_attrs (r.get_attrs());
     Sequence lower;
-    if (rg_attrs.DomExists(TAG_XMI_lowerValue))
+    if (rg_attrs.DomExists(TAG_XMI_lowerValue)) {
       lower = rg_attrs[TAG_XMI_lowerValue];
-    if (lower.IsEmpty())
-    {
-      if (rg_attrs.DomExists(TAG_XMI_lower))
-      lower = rg_attrs[TAG_XMI_lower];
+    }
+    if (lower.IsEmpty()) {
+      if (rg_attrs.DomExists(TAG_XMI_lower)) {
+        lower = rg_attrs[TAG_XMI_lower];
+      }
     }
     Sequence upper;
-    if (rg_attrs.DomExists(TAG_XMI_upperValue))
+    if (rg_attrs.DomExists(TAG_XMI_upperValue)) {
       upper = rg_attrs[TAG_XMI_upperValue];
-    if (upper.IsEmpty())
-    {
-      if (rg_attrs.DomExists(TAG_XMI_upper))
+    }
+    if (upper.IsEmpty()) {
+      if (rg_attrs.DomExists(TAG_XMI_upper)) {
         upper = rg_attrs[TAG_XMI_upper];
+      }
     }
 
-    if ((lower == Sequence(L"0")) && (upper == Sequence(L"*")))
+    if ((lower == Sequence(L"0")) && (upper == Sequence(L"*"))) {
       return Sequence(L"0..*");
-    if ((lower == Sequence(L"0")) && (upper == Sequence(L"-1")))
+    }
+    else if ((lower == Sequence(L"0")) && (upper == Sequence(L"-1"))) {
       return Sequence(L"0..*");
-    if ((lower == Sequence(L"1")) && (upper == Sequence(L"*")))
+    }
+    else if ((lower == Sequence(L"1")) && (upper == Sequence(L"*"))) {
       return Sequence(L"1..*");
-    if ((lower == Sequence(L"1")) && (upper == Sequence(L"-1")))
+    }
+    else if ((lower == Sequence(L"1")) && (upper == Sequence(L"-1"))) {
       return Sequence(L"1..*");
-    if ((lower == Sequence(L"0")) && (upper == Sequence(L"1")))
+    }
+    else if ((lower == Sequence(L"0")) && (upper == Sequence(L"1"))) {
       return Sequence(L"0..1");
+    }
   }
   return Sequence(L"1");
 }
@@ -693,17 +702,17 @@ bool XmiAux::IsOrdered(const TYPE_XMI_UMLAssociationEnd & ae,
 {
   // for EA
   Map attrs (ae.get_attrs());
-  if (attrs.DomExists(TAG_XMI_isOrdered))
+  if (attrs.DomExists(TAG_XMI_isOrdered)) {
     return (attrs[TAG_XMI_isOrdered] == TAG_XMI_TRUE);
-
+  }
   // for ASTAH
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
     Map attrs (nae.get_attrs());
-    if (attrs.DomExists(TAG_XMI_ordering))
+    if (attrs.DomExists(TAG_XMI_ordering)) {
       return (attrs[TAG_XMI_ordering] == TAG_XMI_ordered);
+    }
   }
   return false;
 }
@@ -722,11 +731,9 @@ Generic XmiAux::GetQualiferSeq(const TYPE_XMI_UMLAssociationEnd & se,
     case MODE_ASTAH: {
       // for ASTAH
       Sequence id (GetID(se));
-      if (idm.DomExists(id))
-      {
+      if (idm.DomExists(id)) {
         TYPE_XMI_UMLAssociationEnd nae (idm[id]);
-        if (!nae.get_qualifier().IsNil())
-        {
+        if (!nae.get_qualifier().IsNil()) {
           TYPE_XMI_UMLAttribute at (nae.get_qualifier());
           Sequence type (GetElementName(GetTypeRef(at), idm));
           return type;
@@ -750,31 +757,30 @@ Generic XmiAux::GetQualifer(const TYPE_XMI_UMLAssociationEnd & se,
     case MODE_EnterpriseArchitect: {
       // for EA
       Sequence qualifier (SearchTagValue(TAG_XMI_qualifier, ce.get_modelElement()));
-      if (!qualifier.IsEmpty())
-      {
+      if (!qualifier.IsEmpty()) {
         Tuple t (UMLPARSE::Seq2Type(qualifier));
-        if (t.GetBool(1))
+        if (t.GetBool(1)) {
           return t.GetRecord(2);
-        else
+        }
+        else {
           return Nil();
+        }
       }
       return Nil();
     }
     case MODE_ASTAH: {
       // for ASTAH
       Sequence id (GetID(se));
-      if (idm.DomExists(id))
-      {
+      if (idm.DomExists(id)) {
         TYPE_XMI_UMLAssociationEnd nae (idm[id]);
-        if (!nae.get_qualifier().IsNil())
-        {
+        if (!nae.get_qualifier().IsNil()) {
           TYPE_XMI_UMLAttribute at (nae.get_qualifier());
           Sequence type (GetElementName(GetTypeRef(at), idm));
-          if (!type.IsEmpty())
-          {
+          if (!type.IsEmpty()) {
             Tuple t (UMLPARSE::Seq2Type(type));
             if (t.GetBool(1))
             return t.GetRecord(2);
+          }
         }
       }
       return Nil();
@@ -785,11 +791,11 @@ Generic XmiAux::GetQualifer(const TYPE_XMI_UMLAssociationEnd & se,
   }
 */
   Sequence qualifer (GetQualiferSeq(se, ce, idm, mode));
-  if (!qualifer.IsEmpty())
-  {
+  if (!qualifer.IsEmpty()) {
     Tuple t (UMLPARSE::Seq2Type(qualifer));
-    if (t.GetBool(1))
+    if (t.GetBool(1)) {
       return t.GetRecord(2);
+    }
   }
   return Nil();
 }
@@ -800,25 +806,25 @@ Generic XmiAux::GetQualifer(const TYPE_XMI_UMLAssociation & a,
   // for EA
   TYPE_XMI_UMLAssociationEnd dest (GetRoleDest(a, idm));
   Sequence qualifier (SearchTagValue(TAG_XMI_qualifier, dest.get_modelElement()));
-  if (!qualifier.IsEmpty())
-  {
+  if (!qualifier.IsEmpty()) {
     Tuple t (UMLPARSE::Seq2Type(qualifier));
-    if (t.GetBool(1))
+    if (t.GetBool(1)) {
       return t.GetRecord(2);
-    else
+    }
+    else {
       return Nil();
+    }
   }
   // for ASTAH
   TYPE_XMI_UMLAssociationEnd source (GetRoleSource(a, idm));
-  if (!source.get_qualifier().IsNil())
-  {
+  if (!source.get_qualifier().IsNil()) {
     TYPE_XMI_UMLAttribute at (source.get_qualifier());
     Sequence type (GetElementName(GetTypeRef(at), idm));
-    if (!type.IsEmpty())
-    {
+    if (!type.IsEmpty()) {
       Tuple t (UMLPARSE::Seq2Type(type));
-      if (t.GetBool(1))
+      if (t.GetBool(1)) {
         return t.GetRecord(2);
+      }
     }
   }
   return Nil();
@@ -830,18 +836,16 @@ Generic XmiAux::GetInitValue(const TYPE_XMI_UMLAssociationEnd & ae, const Map & 
   // TODO
   // for ASTAH
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
-    if (!nae.get_initialValue().IsNil())
-    {
+    if (!nae.get_initialValue().IsNil()) {
       TYPE_XMI_UMLExpression e (nae.get_initialValue());
       Generic body (e.get_body());
-      if (body.IsSequence())
-      {
+      if (body.IsSequence()) {
         Tuple t (UMLPARSE::Seq2Expr(body));
-        if (t.GetBool(1))
+        if (t.GetBool(1)) {
           return t.GetRecord(2);
+        }
       }
     }
   }
@@ -859,41 +863,39 @@ Generic XmiAux::GetInitType(const TYPE_XMI_UMLAssociationEnd & ae,
   // TODO
   // for ASTAH
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
-    if (!nae.get_initialValue().IsNil())
-    {
+    if (!nae.get_initialValue().IsNil()) {
       Sequence tpstr;
-      if ((cd == QUOTE_ONE) || (cd == QUOTE_ZERO_ONE))
+      if ((cd == QUOTE_ONE) || (cd == QUOTE_ZERO_ONE)) {
         tpstr.ImpConc(server);
-      else if ((cd == QUOTE_MANY) || (cd == QUOTE_ONE_TO_MANY))
-      {
-        if (role_t == QUOTE_ORDERED) 
+      }
+      else if ((cd == QUOTE_MANY) || (cd == QUOTE_ONE_TO_MANY)) {
+        if (role_t == QUOTE_ORDERED) {
           tpstr.ImpConc(Sequence(L"seq of ")).ImpConc(server);
-        else
+        }
+        else {
           tpstr.ImpConc(Sequence(L"set of ")).ImpConc(server);
+        }
       }
 
 /*
-      if (!nae.get_qualifier().IsNil())
-      {
+      if (!nae.get_qualifier().IsNil()) {
         TYPE_XMI_UMLAttribute a (nae.get_qualifier());
         Sequence type (GetElementName(GetTypeRef(a), idm));
-        if (!type.IsEmpty())
-        {
+        if (!type.IsEmpty()) {
           tpstr = Sequence(L"map ").ImpConc(type).ImpConc(L" to ").ImpConc(tpstr);
         }
       }
 */
-      if (!qualifer.IsEmpty())
-      {
+      if (!qualifer.IsEmpty()) {
         tpstr = Sequence(L"map ").ImpConc(qualifer).ImpConc(L" to ").ImpConc(tpstr);
       }
 
       Tuple t (UMLPARSE::Seq2Type(tpstr));
-      if (t.GetBool(1))
+      if (t.GetBool(1)) {
         return t.GetRecord(2);
+      }
     }
   }
   return Nil();
@@ -903,13 +905,12 @@ Sequence XmiAux::GetChildId(const TYPE_XMI_UMLGeneralization & ge)
 {
   // for EA
   Map attrs (ge.get_attrs());
-  if (attrs.DomExists(TAG_XMI_subtype))
+  if (attrs.DomExists(TAG_XMI_subtype)) {
     return attrs[TAG_XMI_subtype];
-  
+  } 
   // ASTAH
   Generic child (ge.get_child());
-  if (!child.IsNil())
-  {
+  if (!child.IsNil()) {
     return GetID(child);
   }
   return Sequence(L"");
@@ -919,13 +920,12 @@ Sequence XmiAux::GetParentId(const TYPE_XMI_UMLGeneralization & ge)
 {
   // EA
   Map attrs (ge.get_attrs());
-  if (attrs.DomExists(TAG_XMI_supertype))
+  if (attrs.DomExists(TAG_XMI_supertype)) {
     return attrs[TAG_XMI_supertype];
-  
+   } 
   // ASTAH
   Generic parent (ge.get_parent());
-  if (!parent.IsNil())
-  {
+  if (!parent.IsNil()) {
     return GetID(parent);
   }
   return Sequence(L"");
@@ -936,24 +936,24 @@ TYPE_XMI_UMLAssociationEnd XmiAux::GetRoleSource(const TYPE_XMI_UMLAssociation &
 {
   Sequence ae_l (a.get_connection());
   Generic g;
-  for (bool bb = ae_l.First(g); bb; bb = ae_l.Next(g))
-  {
+  for (bool bb = ae_l.First(g); bb; bb = ae_l.Next(g)) {
     // for EA
     TYPE_XMI_UMLAssociationEnd ae (g);
-    if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement()))
+    if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement())) {
       return g;
-    else if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement()))
+    }
+    else if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement())) {
       continue;
-    else
-    {
+    }
+    else {
       // for ASTAH
       Sequence id (GetID(g));
-      if (idm.DomExists(id))
-      {
+      if (idm.DomExists(id)) {
         Generic ng (idm[id]);
         Sequence nm (GetName(ng));
-        if (!nm.IsEmpty()) 
+        if (!nm.IsEmpty()) {
           return ng;
+        }
       } 
     }
   }
@@ -965,24 +965,24 @@ TYPE_XMI_UMLAssociationEnd XmiAux::GetRoleDest(const TYPE_XMI_UMLAssociation & a
 {
   Sequence ae_l (a.get_connection());
   Generic g;
-  for (bool bb = ae_l.First(g); bb; bb = ae_l.Next(g))
-  {
+  for (bool bb = ae_l.First(g); bb; bb = ae_l.Next(g)) {
     // for EA
     TYPE_XMI_UMLAssociationEnd ae (g);
-    if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement()))
+    if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement())) {
       return g;
-    else if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement()))
+    }
+    else if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement())) {
       continue;
-    else
-    {
+    }
+    else {
       // for ASTAH
       Sequence id (GetID(g));
-      if (idm.DomExists(id))
-      {
+      if (idm.DomExists(id)) {
         Generic ng (idm[id]);
         Sequence nm (GetName(ng));
-        if (nm.IsEmpty()) 
+        if (nm.IsEmpty()) {
           return ng;
+        }
       } 
     }
   }
@@ -994,24 +994,24 @@ Sequence XmiAux::GetClientClassName(const TYPE_XMI_UMLAssociation & a, const Map
 {
   Sequence ae_l (a.get_connection());
   Generic g;
-  for (bool bb = ae_l.First(g); bb; bb = ae_l.Next(g))
-  {
+  for (bool bb = ae_l.First(g); bb; bb = ae_l.Next(g)) {
     // for EA
     TYPE_XMI_UMLAssociationEnd ae (g);
-    if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement()))
+    if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement())) {
       return GetClassName(g, idm);
-    else if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement()))
+    }
+    else if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement())) {
       continue;
-    else
-    {
+    }
+    else {
       // for ASTAH
       Sequence id (GetID(g));
-      if (idm.DomExists(id))
-      {
+      if (idm.DomExists(id)) {
         Generic ng (idm[id]);
         Sequence nm (GetName(ng));
-        if (!nm.IsEmpty()) 
+        if (!nm.IsEmpty()) {
           return GetClassName(ng, idm);
+        }
       }
     }
   }
@@ -1026,12 +1026,13 @@ Sequence XmiAux::GetServerClassName(const TYPE_XMI_UMLAssociation & a, const Map
   {
     // for EA
     TYPE_XMI_UMLAssociationEnd ae (g);
-    if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement()))
+    if (HasTagValue(TAG_XMI_sourcestyle, ae.get_modelElement())) {
       return GetClassName(g, idm);
-    else if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement()))
+    }
+    else if (HasTagValue(TAG_XMI_deststyle, ae.get_modelElement())) {
       continue;
-    else
-    {
+    }
+    else {
       // for ASTAH
       Sequence id (GetID(g));
       if (idm.DomExists(id))
@@ -1051,13 +1052,12 @@ Sequence XmiAux::GetClassNameFromAssoc(const TYPE_XMI_UMLAssociationEnd & ae, co
 {
   // EA
   Map attrs (ae.get_attrs());
-  if (attrs.DomExists(TAG_XMI_type))
+  if (attrs.DomExists(TAG_XMI_type)) {
     return GetElementName(attrs[TAG_XMI_type], idm);
-
+  }
   // ASTAH
   Sequence id (GetID(ae));
-  if (idm.DomExists(id))
-  {
+  if (idm.DomExists(id)) {
     TYPE_XMI_UMLAssociationEnd nae (idm[id]);
     return GetElementName(nae.get_feature().get_owner(), idm);
   }
@@ -1070,17 +1070,15 @@ Sequence XmiAux::PrintAttribute(const TYPE_XMI_UMLAttribute & a,
   Sequence res (GetName(a));
 
   Sequence type (GetElementName(GetTypeRef(a), idm));
-  if (!type.IsEmpty())
+  if (!type.IsEmpty()) {
     res.ImpConc(Sequence(L" : "))
        .ImpConc(type);
-
+  }
   Generic initv (a.get_initialValue());
-  if (!initv.IsNil())
-  {
+  if (!initv.IsNil()) {
     TYPE_XMI_UMLExpression exp (initv);
     Generic body (exp.get_body());
-    if (body.IsSequence())
-    {
+    if (body.IsSequence()) {
       res.ImpConc(Sequence(L" = "))
          .ImpConc(body);
     }
@@ -1097,14 +1095,14 @@ Sequence XmiAux::PrintOperation(const TYPE_XMI_UMLOperation & o,
   SEQ<TYPE_XMI_UMLParameter> p_l (GetParam(o));
   bool first = true;
   Generic g;
-  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g))
-  { 
+  for (bool bb = p_l.First(g); bb; bb = p_l.Next(g)) { 
     TYPE_XMI_UMLParameter p (g);
-    if (first)
+    if (first) {
       first = false;
-    else
+    }
+    else {
       res.ImpConc(Sequence(L", "));
-    
+    }
     res.ImpConc(GetName(p))
        .ImpConc(Sequence(L" : "))
        .ImpConc(GetElementName(GetTypeRef(p), idm));
@@ -1112,8 +1110,7 @@ Sequence XmiAux::PrintOperation(const TYPE_XMI_UMLOperation & o,
   res.ImpAppend(Char(L')'));
   
   TYPE_XMI_UMLParameter rp (GetReturnType(o));
-  if (!IsVoid(rp, idm))
-  { 
+  if (!IsVoid(rp, idm)) { 
     Sequence rt (GetElementName(GetTypeRef(rp), idm));
     res.ImpConc(Sequence(L" : "))
        .ImpConc(rt);
@@ -1254,9 +1251,9 @@ TYPE_XMI_UMLModelElement XmiAux::mk_UMLModelElement(const Map & attrs,
                                                     const Generic & visibility)
 {
   Sequence ns;
-  if (!ns_attrs.IsEmpty())
+  if (!ns_attrs.IsEmpty()) {
     ns.ImpAppend(mk_UMLNamespace(ns_attrs));
-  
+  } 
   return TYPE_XMI_UMLModelElement().Init(attrs,
                                          ns,             // namespace
                                          //TAG_XMI_public, // visibility
@@ -1284,9 +1281,9 @@ TYPE_XMI_UMLTaggedValue XmiAux::mk_UMLTaggedValue(const Sequence & tag,
   attrs.ImpModify(TAG_XMI_value,    value);
 
   Map me_attrs;
-  if (!pid.IsEmpty())
+  if (!pid.IsEmpty()) {
     me_attrs.ImpModify(TAG_XMI_idref, pid);
-
+  }
   return TYPE_XMI_UMLTaggedValue().Init(attrs,
                                         mk_UMLModelElement(me_attrs, Map(), Nil()));
 }
@@ -1403,14 +1400,13 @@ TYPE_XMI_Metamodel XmiAux::createDefaultMetamodel()
 bool XmiAux::IsEAModel(const TYPE_XMI_UMLModel & m)
 {
   Sequence elm_l (m.get_namespace().get_ownedElement());
-  if (!elm_l.IsEmpty())
-  {
+  if (!elm_l.IsEmpty()) {
     Record r (elm_l[1]);
-    if (r.Is(TAG_TYPE_XMI_UMLClass))
-    {
+    if (r.Is(TAG_TYPE_XMI_UMLClass)) {
       Map attr (r.GetMap(pos_XMI_UMLClass_attrs));
-      if (attr.DomExists(TAG_XMI_name))
+      if (attr.DomExists(TAG_XMI_name)) {
         return (attr[TAG_XMI_name] == Sequence(L"EARootClass"));
+      }
     }
   }
   return false;
@@ -1418,10 +1414,12 @@ bool XmiAux::IsEAModel(const TYPE_XMI_UMLModel & m)
 
 int XmiAux::GetModeOfAssociation(const TYPE_XMI_UMLAssociation & m)
 {
-  if (HasTagValue(TAG_XMI_ea_type, m.get_modelElement()))
+  if (HasTagValue(TAG_XMI_ea_type, m.get_modelElement())) {
     return MODE_EnterpriseArchitect;
-  else 
+  }
+  else {
     return MODE_ASTAH;
+  }
 }
 
 TYPE_XMI_UMLConstraint XmiAux::mk_UMLConstraint(const Sequence & name,
