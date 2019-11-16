@@ -206,13 +206,14 @@ int TBUTILS::remove_file(const std::wstring & s)
 bool TBUTILS::file_exists(const std::wstring & name) 
 {
   wifstream wif (TBWSTR::wstring2fsstr(name).c_str());
-  if (wif){
+  if (wif) {
     // File exists
     wif.close();
     return true;
   }
-  else 
+  else {
     return false;
+  }
 }
 
 bool TBUTILS::file_copy_overwrite(const std::wstring & to, const std::wstring & from)
@@ -229,22 +230,22 @@ bool TBUTILS::file_copy_overwrite(const std::wstring & to, const std::wstring & 
 bool TBUTILS::file_copy(const std::wstring & to, const std::wstring & from)
 {
   FILE *in, *out;
-  if( (in = fopen(TBWSTR::wstring2fsstr(from).c_str(), "r")) == NULL )
+  if( (in = fopen(TBWSTR::wstring2fsstr(from).c_str(), "r")) == NULL ) {
     return false;
-
+  }
   // Does the file L"to" exist already?
   if( (out = fopen(TBWSTR::wstring2fsstr(to).c_str(), "r")) != NULL ) {
     fclose(out);
     return false;
   }
 
-  if( (out = fopen(TBWSTR::wstring2fsstr(to).c_str(), "w")) == NULL )
+  if( (out = fopen(TBWSTR::wstring2fsstr(to).c_str(), "w")) == NULL ) {
     return false;
-
+  }
   int c;
-  while((c = getc(in)) != EOF)
+  while((c = getc(in)) != EOF) {
     putc(c, out);
-
+  }
   fclose(in);
   fclose(out);
   return true;
@@ -261,15 +262,18 @@ void TBUTILS::rename_file(const std::wstring & s1, const std::wstring & s2)
 
 std::wstring TBUTILS::ExpandPath (const std::wstring & path, const std::wstring & stnd_path)
 {
-  if (path.find(L"/") == 0)
+  if (path.find(L"/") == 0) {
     return path;
+  }
   else {
     std::wstring res; 
     if (stnd_path == L"" || stnd_path == L".") {
       res = path;
-    } else if (stnd_path[stnd_path.length()-1] == L'/') {
+    }
+    else if (stnd_path[stnd_path.length()-1] == L'/') {
       res = stnd_path + path;
-    } else {
+    }
+    else {
       res = stnd_path + L"/" + path;
     }
     return res;
@@ -289,8 +293,9 @@ std::wstring TBUTILS::ExpandPath (const std::wstring & path, const std::wstring 
 //  L"/d/"     + "x.vdm" -> "/d/x.vdm"
 std::wstring TBUTILS::tb_JoinPaths (const std::wstring & prefix, const std::wstring & name)
 {
-  if (prefix.empty())
+  if (prefix.empty()) {
     return name;
+  }
   // Now we know prefix is not empty.
 
 #ifdef _MSC_VER
@@ -306,7 +311,8 @@ std::wstring TBUTILS::tb_JoinPaths (const std::wstring & prefix, const std::wstr
 #endif // _MSC_VER
   if (n == (prefix.length() - 1)) {
     return prefix + name;
-  } else {
+  }
+  else {
     if (n != std::string::npos) {
       // We found a separator in prefix. 
       return prefix + prefix[n] + name;
@@ -327,26 +333,29 @@ void TBUTILS::tb_chdir(const std::wstring & newdir, wostream & wos)
 #else
   int res = chdir(TBWSTR::wstring2fsstr(newdir).c_str());
 #endif //_MSC_VER
-  if (res != 0)
+  if (res != 0) {
     wos << L"Unable to change directory to " << newdir << endl;
-  else
+  }
+  else {
     wos << L"Changed directory to " << newdir << endl;
+  }
 }
 
 void TBUTILS::tb_mkdir(const std::wstring & newdir, wostream & wos)
 {
   struct stat stbuf;
-  if ( stat( TBWSTR::wstring2fsstr(newdir).c_str(), &stbuf ) == -1 )
-  {
+  if ( stat( TBWSTR::wstring2fsstr(newdir).c_str(), &stbuf ) == -1 ) {
 #ifdef _MSC_VER
     int res = _mkdir(TBWSTR::wstring2fsstr(newdir).c_str());
 #else
     int res = mkdir(TBWSTR::wstring2fsstr(newdir).c_str(), 0777);
 #endif //_MSC_VER
-    if (res != 0)
+    if (res != 0) {
       wos << L"Unable to make directory ... " << newdir << endl;
-    else
+    }
+    else {
       wos << L"Making directory ... " << newdir << endl;
+    }
   }
 }
 
@@ -364,7 +373,8 @@ std::wstring TBUTILS::tb_getcwd()
 #endif // _MSC_VER
     return TBWSTR::fsstr2wstring(std::string(p));
     
-  } else {
+  }
+  else {
     return wstring(L"/getcwd/failed!");
   }
 }
@@ -379,14 +389,17 @@ std::wstring TBUTILS::tb_getbasedir(const std::wstring& path)
   if (n == std::string::npos) {
     // Did not find any path seps.
     return L".";
-  } else {
+  }
+  else {
     // For /x.suf return /
     // For /d/x.suf return /d 
-    if (n == 0)
+    if (n == 0) {
       n = 1; 
+    }
 #ifdef _MSC_VER
-    if ((n == 2) && (path[1] == ':')) // d:/xyz ->d:/
+    if ((n == 2) && (path[1] == ':')) { // d:/xyz ->d:/
       n = 3;
+    }
 #endif      
     return path.substr(0, n);
   }
@@ -402,7 +415,8 @@ SEQ<Char> TBUTILS::tb_getbasename(const std::wstring & path)
   if (n == std::string::npos) {
     // Did not find any path seps.
     return SEQ<Char>(path);
-  } else {
+  }
+  else {
     // For /x.suf return x.suf
     // For d:/x.suf return x.suf
     return SEQ<Char>(path.substr(n+1));
@@ -418,22 +432,25 @@ void TBUTILS::ResetSearchPath ()
 void TBUTILS::SetDefaultPath (const std::wstring & arg)
 {
   SEQ<Char> tk (arg);
-  if (! InElems (TBUTILS::standard_path, tk))
+  if (! InElems (TBUTILS::standard_path, tk)) {
     TBUTILS::standard_path.ImpPrepend (tk);
+  }
 }
 
 void TBUTILS::ShowPath(wostream & wos)
 {
   size_t len = TBUTILS::standard_path.Length();
-  for (size_t i = 1; i<= len; i++)
+  for (size_t i = 1; i<= len; i++) {
     wos << L"  " << SEQ<Char>(TBUTILS::standard_path[i]).GetString()<< endl << flush;
+  }
 }
 
 void TBUTILS::AddPath(const wstring & path)
 {
   SEQ<Char> tk (ExpandPath (path, wstring(SEQ<Char>(TBUTILS::standard_path[1]).GetString ())));
-  if (! InElems (TBUTILS::standard_path, tk))
+  if (! InElems (TBUTILS::standard_path, tk)) {
     TBUTILS::standard_path.ImpPrepend (tk);
+  }
 }
 
 bool TBUTILS::TryOpenFile(const std::wstring & name, wifstream & sp)
@@ -443,7 +460,8 @@ bool TBUTILS::TryOpenFile(const std::wstring & name, wifstream & sp)
     sp.close();
     sp.clear();
     return false; 
-  } else {
+  }
+  else {
     return true;
   }
 }
@@ -455,7 +473,8 @@ bool TBUTILS::TryOpenFile(const std::wstring & name, ifstream & sp)
     sp.close();
     sp.clear();
     return false; 
-  } else {
+  }
+  else {
     return true;
   }
 }
@@ -463,18 +482,21 @@ bool TBUTILS::TryOpenFile(const std::wstring & name, ifstream & sp)
 bool TBUTILS::TryOpenFile(const std::wstring & name, bool isWide,
                           wifstream & wsp, ifstream & ssp)
 {
-  if (isWide)
+  if (isWide) {
     return TryOpenFile(name, wsp);
-  else
+  }
+  else {
     return TryOpenFile(name, ssp);
+  }
 }
 
 bool TBUTILS::HasPathSpec(const std::wstring & s)
 {
 #ifdef _MSC_VER
   // Check for d: prefix
-  if (s.length()>=2 && s[1]==':')
+  if (s.length()>=2 && s[1]==':') {
     return true;
+  }
   // This is for WinNT paths. 
   std::string::size_type n = s.find_first_of(L"\\/");
   return (n != std::string::npos);
@@ -484,12 +506,6 @@ bool TBUTILS::HasPathSpec(const std::wstring & s)
   return (n != std::string::npos);
 #endif // _MSC_VER
 }
-
-//#ifdef _MSC_VER
-//static wchar_t PATH_SEP = ';';
-//#else
-//static wchar_t PATH_SEP = ':';
-//#endif
 
 std::wstring TBUTILS::tb_Search (const std::wstring & library,
                                  const std::wstring & name)
@@ -514,7 +530,8 @@ std::wstring TBUTILS::tb_Search (const std::wstring & library,
 #else
       path += L'/' + name;
 #endif // _MSC_VER
-    } else {
+    }
+    else {
 #ifdef _MSC_VER
       path = lib + L'\\' + name;
 #else
@@ -531,8 +548,7 @@ std::wstring TBUTILS::tb_Search (const std::wstring & library,
   }
 
   size_t len = TBUTILS::standard_path.Length();
-  for (size_t i = 1; i <= len; i++)
-  {
+  for (size_t i = 1; i <= len; i++) {
     const SEQ<Char> & seq (TBUTILS::standard_path[i]);
     std::wstring path (seq.GetString());
     wifstream pathStream (TBWSTR::wstring2fsstr(path).c_str());
@@ -566,8 +582,7 @@ int TBUTILS::Search_and_OpenFile2(const std::wstring & short_name,
   if (! HasPathSpec(short_name)) {
     // Now use the path to search for the file. 
     size_t len = TBUTILS::standard_path.Length();
-    for (size_t i = 1; i <= len; i++)
-    {
+    for (size_t i = 1; i <= len; i++) {
       fname = tb_JoinPaths (SEQ<Char>(TBUTILS::standard_path[i]).GetString (), short_name);
       if (TryOpenFile(fname, isWide, wsp, ssp)) {
         not_found = 0;
@@ -603,75 +618,44 @@ std::wstring TBUTILS::GetAbsolutePath(const std::wstring & filename, const std::
   std::wstring apath = rpath;
 
   std::wstring afile = filename;
-  if( ( !rpath.empty() ) && ( rpath[0] == L'.' ) )
-  {
-    if( !rpath.empty() )
-    {
+  if( ( !rpath.empty() ) && ( rpath[0] == L'.' ) ) {
+    if( !rpath.empty() ) {
       std::wstring upath = ppath;
       std::wstring dpath;
 
       std::wstring tpath = rpath.substr( 1 );
-      if( !tpath.empty() && ( tpath[0] == L'/' ) )
+      if( !tpath.empty() && ( tpath[0] == L'/' ) ) {
         tpath = tpath.substr( 1 );
-
-      while( !tpath.empty() )
-      {
+      }
+      while( !tpath.empty() ) {
         std::wstring elem;
         std::string::size_type index = 0;
-        if( ( index = tpath.find( L'/' ) ) != std::string::npos )
-        {
+        if( ( index = tpath.find( L'/' ) ) != std::string::npos ) {
           elem = tpath.substr( 0, index );
           tpath = tpath.substr( index + 1 );
         }
-        else
-        {
+        else {
           elem = tpath;
           tpath = L"";
         }
 
-        if ( elem == L".." )
-        {
-          if (dpath.empty())
-          {
+        if ( elem == L".." ) {
+          if (dpath.empty()) {
             std::string::size_type idx = upath.find_last_of( L'/' );
-            if( idx != std::string::npos )
+            if( idx != std::string::npos ) {
               upath = upath.substr( 0, idx );
+            }
           }
-          else
-          {
+          else {
             std::string::size_type idx = dpath.find_last_of( L'/' );
-            if( idx != std::string::npos )
+            if( idx != std::string::npos ) {
               dpath = dpath.substr( 0, idx );
+            }
           }
         }
         else
           dpath = dpath + L'/' + elem;
       }
-
-/*
-      while( tpath.length() > 0 )
-      {
-        std::wstring elem = tpath;
-        std::string::size_type index = 0;
-        if( ( index = tpath.find_last_of( L'/' ) ) != std::string::npos )
-        {
-          elem = tpath.substr( index + 1 );
-        } 
-        if( elem == L".." )
-        {
-          std::string::size_type idx = upath.find_last_of( L'/' );
-          if( index != std::string::npos ) upath = upath.substr( 0, idx );
-        }
-        else
-        {
-          dpath = L'/' + elem + dpath;
-        }
-        if( index != std::string::npos )
-          tpath = tpath.substr( 0, index );
-        else
-          tpath = L"";
-      }
-*/
       apath = upath + dpath;
     }
     afile = apath + L'/' + tb_getbasename( filename ).GetString();
@@ -698,56 +682,45 @@ std::wstring TBUTILS::GetRelativePath( const std::wstring & filename,
 
   // get common path
   std::wstring cpath = apath;
-  while( cpath.length() > 0 )
-  {
-    if( cpath.length() <= ppath.length() )
-    {
+  while( cpath.length() > 0 ) {
+    if( cpath.length() <= ppath.length() ) {
       std::wstring p1 = ppath.substr( 0, cpath.length() );
       std::wstring p2 = ppath.substr( cpath.length() );
-      if( cpath == p1 )
+      if( cpath == p1 ) {
         if( ( p2.length() == 0 ) || ( p2[0] == L'/' ) ) break;
-    }
-/*
-    if( ppath.find_first_of( cpath ) == 0 )
-    {
-      if( ( ppath.length() == cpath.length() ) ||
-          ( cpath.length() == ppath.find_first_of( L'/', cpath.length() ) ) )
-      {
-        break;     
       }
     }
-    std::string::size_type idx = cpath.find_last_of( L'/' );
-    if( idx != std::string::npos )
-      cpath = cpath.substr( 0, idx );
-*/
     int idx = cpath.length();
-    while( ( idx > 0 ) && (cpath[idx] != L'/' ) ) idx--;
-    if( idx > 0 )
+    while( ( idx > 0 ) && (cpath[idx] != L'/' ) ) {
+      idx--;
+    }
+    if( idx > 0 ) {
       cpath = cpath.substr( 0, idx );
-    else
+    }
+    else {
       cpath = L"";
+    }
   }
   // construct rerative path
-  if( cpath.length() > 0 )
-  {
+  if( cpath.length() > 0 ) {
     std::wstring dpath = apath.substr( cpath.length() );
     std::wstring upath = ppath.substr( cpath.length() );
     rpath = L".";
-    if( upath.length() > 0 )
-    {
+    if( upath.length() > 0 ) {
       std::string::size_type index = 0;
-      while( ( index = upath.find_last_of( L'/' ) ) != std::string::npos ) 
-      {
+      while( ( index = upath.find_last_of( L'/' ) ) != std::string::npos ) {
         rpath = rpath + L'/' + L"..";
         upath = upath.substr( 0, index );
       }
     }
-    if( dpath.length() > 0 )
+    if( dpath.length() > 0 ) {
       rpath = rpath + dpath;
+    }
   }
 #ifdef _MSC_VER
-  else
+  else {
     rpath = drl + rpath;
+  }
 #endif // _MSC_VER
 
   std::wstring rfile = rpath + L'/' + tb_getbasename( filename ).GetString();
@@ -767,7 +740,8 @@ bool TBUTILS::ExpectNumericArg(const wchar_t *arg, int & value)
    if (arg[0] != '\0' && *endp == '\0') {
      value = l;
      return true;
-   } else {
+   }
+   else {
      return false;
    }
 }
@@ -776,12 +750,13 @@ bool TBUTILS::ExpectNumericArg(const wchar_t *arg, int & value)
 const std::wstring TBUTILS::MakeWindowsName(const std::wstring & piName)
 {
   std::wstring ret = L"";
-  for( int i = 0; i < piName.length(); i++ )
-  {
-    if( L'/' == piName[i] )
+  for( int i = 0; i < piName.length(); i++ ) {
+    if( L'/' == piName[i] ) {
       ret += L'\\';
-    else
+    }
+    else {
       ret += piName[i];
+    }
   }
   return ret; 
 }
@@ -805,8 +780,7 @@ std::wstring TBUTILS::GetDateString( const char* format )
     strftime (buf, 49, format, localtime (&t));
     return TBWSTR::string2wstring(std::string (buf));
   }
-  else
-  {
+  else {
     return L"unknown time";
   }
 }
@@ -829,16 +803,16 @@ std::wstring TBUTILS::GetHome()
 std::wstring TBUTILS::GetCGExt()
 {
   std::wstring cgext = GetEnv( "VDMCGEXT" );
-  if( 0 == cgext.length() )
-  {
+  if( 0 == cgext.length() ) {
 #ifdef _MSC_VER
     return std::wstring( L".cpp" );
 #else
     return std::wstring( L".cc" );
 #endif // _MSC_VER
   }
-  else
+  else {
     return cgext;
+  }
 }
  
 #ifdef _MSC_VER
@@ -880,13 +854,13 @@ void TBUTILS::restoreLCNumeric()
 std::wstring TBUTILS::GetTmpDir()
 {
   const char * tmpd = getenv( "TMPDIR" );
-  if ( NULL != tmpd )
+  if ( NULL != tmpd ) {
     return TBWSTR::fsstr2wstring(tmpd);
-
+  }
   const char * tmp = getenv( "TMP" );
-  if ( NULL != tmp )
+  if ( NULL != tmp ) {
     return TBWSTR::fsstr2wstring(tmp);
- 
+  } 
 #if defined( __APPLE_CC__ ) || defined( __SunOS__ )
   return TBWSTR::fsstr2wstring(string("/var/tmp"));
 #else
@@ -898,8 +872,11 @@ std::wstring TBUTILS::CreateTemplate(const std::wstring & prefix)
 {
   std::wstring tdir (GetTmpDir());
 #ifdef _MSC_VER
-  for( int i = 0; i < tdir.length(); i++ )
-    if( tdir[i] == L'\\' ) tdir[i] = L'/';
+  for( int i = 0; i < tdir.length(); i++ ) {
+    if( tdir[i] == L'\\' ) {
+      tdir[i] = L'/';
+    }
+  }
 #endif // _MSC_VER
   std::wstring tl = tdir + L"/" + prefix + L"XXXXXX";
   return tl;
@@ -909,19 +886,21 @@ std::wstring TBUTILS::tb_tempnam(const wchar_t* prefix)
 {
 #if defined(_MSC_VER)
   std::wstring ret;
-  for (int i = 0; i < 100; i++)
-  {
+  for (int i = 0; i < 100; i++) {
     wstring newprefix (prefix);
     newprefix += Int(i).ascii();
     std::wstring tpl = CreateTemplate(newprefix);
     size_t len_tpl = tpl.length() + 1;
     wchar_t * tbuf = new wchar_t[ len_tpl ];
-    //wcscpy( tbuf, tpl.c_str() );
     wcscpy_s( tbuf, len_tpl, tpl.c_str() );
     wchar_t * res = _wmktemp( tbuf );
-    if( NULL != res ) ret = res;
+    if( NULL != res ) {
+      ret = res;
+    }
     delete[] tbuf;
-    if (ret.size() > 0) break;
+    if (ret.size() > 0) {
+      break;
+    }
   }
   return ret;
 #else 
@@ -936,7 +915,9 @@ std::wstring TBUTILS::tb_tempnam(const wchar_t* prefix)
   std::wstring ret (TBWSTR::string2wstring(tbuf));
   delete[] tbuf;
 
-  if( -1 == fd ) return std::wstring(L"");
+  if( -1 == fd ) {
+    return std::wstring(L"");
+  }
   close( fd );
   return ret;
 #endif // _MSC_VER
@@ -949,8 +930,7 @@ Set TBUTILS::CheckForLockedFiles(const Set & file_s)
 #ifdef _MSC_VER
   Set not_locked;
   Generic gc;
-  for (bool bb = file_s.First(gc); bb; bb = file_s.Next(gc))
-  {
+  for (bool bb = file_s.First(gc); bb; bb = file_s.Next(gc)) {
     std::wstring fn (PTAUX::ExtractFileName (TYPE_ProjectTypes_FileName (gc)).c_str());
     HANDLE f = CreateFileW( fn.c_str(),
                    GENERIC_READ | GENERIC_WRITE,
@@ -958,11 +938,13 @@ Set TBUTILS::CheckForLockedFiles(const Set & file_s)
                    NULL /* security attrib */,
                    OPEN_EXISTING,
                    FILE_ATTRIBUTE_NORMAL, NULL);
-    if(f == INVALID_HANDLE_VALUE)
+    if(f == INVALID_HANDLE_VALUE) {
       // Unable to open file for sharing.
       not_locked.Insert(gc);
-    else
+    }
+    else {
       CloseHandle(f);
+    }
   }
   return not_locked;
 #else
@@ -986,38 +968,15 @@ Tuple TBUTILS::ConvRealLit(const char * text)
 {
   char * ptr = NULL;
 #ifdef _MSC_VER
-  if (text == NULL) return mk_(Bool(false), Nil());
-/*
-  std::string str (text);
-  if ((str.length() > 2) &&
-      (str[0] == '0') &&
-      ((str[1] == 'x') || (str[1] == 'X')))
-  {
-    int num = 0;
-    int len = str.length();
-    for (int i = 2; i < len; i++)
-    {
-      num = num * 16;
-      char ch = str[i];
-      if (ch >= '0' && ch <= '9')
-        num += (ch - '0');
-      else if (ch >= 'a' && ch <= 'f')
-        num += (ch - 'a') + 10;
-      else if (ch >= 'A' && ch <= 'F')
-        num += (ch - 'A') + 10;
-      else {
-        return mk_(Bool(false), Nil());
-      }
-    }
-    return mk_(Bool(true), Real(num));
+  if (text == NULL) {
+    return mk_(Bool(false), Nil());
   }
-*/
   if (strlen(text) > 2 ) {
-    if ((*text == '0') && ((*(text+1) == 'x') || (*(text+1) == 'X')))
-    {
+    if ((*text == '0') && ((*(text+1) == 'x') || (*(text+1) == 'X'))) {
       double hexres = (double)_strtoui64(text, & ptr, 16);
-      if ((text != ptr) && (*ptr == '\0'))
+      if ((text != ptr) && (*ptr == '\0')) {
         return mk_(Bool(true), Real(hexres));
+      }
     }
   }
 #endif // _MSC_VER
@@ -1025,10 +984,12 @@ Tuple TBUTILS::ConvRealLit(const char * text)
 //  char * ptr = NULL;
 //  long double res = strtold(text, & ptr);
   double res = strtod(text, & ptr);
-  if ((text != ptr) && (*ptr == '\0'))
+  if ((text != ptr) && (*ptr == '\0')) {
     return mk_(Bool(true), Real(res));
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 // Used by the typecheker and code generator (err.cc) to
@@ -1074,14 +1035,11 @@ wstring TBUTILS::getLanguage()
   int mainID = langID & 0xFF;
   int subID = (langID & 0xFF00) >> 8;
   wstring lang;
-  switch( mainID )
-  {
+  switch( mainID ) {
     case LANG_AFRIKAANS:                  lang = L"af_ZA"; break;
     case LANG_ALBANIAN:                   lang = L"sq_AL"; break;
-    case LANG_ARABIC:
-    {
-      switch( subID )
-      {
+    case LANG_ARABIC: {
+      switch( subID ) {
         case SUBLANG_ARABIC_SAUDI_ARABIA: lang = L"ar_SA"; break;
         case SUBLANG_ARABIC_IRAQ:         lang = L"ar_IQ"; break;
         case SUBLANG_ARABIC_EGYPT:        lang = L"ar_EG"; break;
@@ -1110,10 +1068,8 @@ wstring TBUTILS::getLanguage()
     case LANG_BENGALI:                    lang = L"bn_IN"; break;
     case LANG_BULGARIAN:                  lang = L"bg_BG"; break;
     case LANG_CATALAN:                    lang = L"ca_ES"; break;
-    case LANG_CHINESE:
-    {
-      switch( subID )
-      {
+    case LANG_CHINESE: {
+      switch( subID ) {
         case SUBLANG_CHINESE_TRADITIONAL: lang = L"zh_TW"; break;
         case SUBLANG_CHINESE_SIMPLIFIED:  lang = L"zh_CN"; break;
         case SUBLANG_CHINESE_HONGKONG:    lang = L"zh_HK"; break;
@@ -1125,20 +1081,16 @@ wstring TBUTILS::getLanguage()
 //    case LANG_CROATIAN:                   lang = L"hr_HR"; break;
     case LANG_CZECH:                      lang = L"cs_CZ"; break;
     case LANG_DANISH:                     lang = L"da_DK"; break;
-    case LANG_DUTCH:
-    {
-      switch( subID )
-      {
+    case LANG_DUTCH: {
+      switch( subID ) {
         case SUBLANG_DUTCH:               lang = L"nl_NL"; break;
         case SUBLANG_DUTCH_BELGIAN:       lang = L"nl_BE"; break;
         default:                          lang = L"nl_NL"; break;
       }
       break;
     }
-    case LANG_ENGLISH:
-    {
-      switch( subID )
-      {
+    case LANG_ENGLISH: {
+      switch( subID ) {
         case SUBLANG_ENGLISH_US:          lang = L"en_US"; break;
         case SUBLANG_ENGLISH_UK:          lang = L"en_GB"; break;
         case SUBLANG_ENGLISH_AUS:         lang = L"en_AU"; break;
@@ -1160,10 +1112,8 @@ wstring TBUTILS::getLanguage()
     case LANG_FAEROESE:                   lang = L"fo_FO"; break;
     case LANG_FARSI:                      lang = L""; break;
     case LANG_FINNISH:                    lang = L"fi_FI"; break;
-    case LANG_FRENCH:
-    {
-      switch( subID )
-      {
+    case LANG_FRENCH: {
+      switch( subID ) {
         case SUBLANG_FRENCH:              lang = L"fr_FR"; break;
         case SUBLANG_FRENCH_BELGIAN:      lang = L"fr_BE"; break;
         case SUBLANG_FRENCH_CANADIAN:     lang = L"fr_CA"; break;
@@ -1175,10 +1125,8 @@ wstring TBUTILS::getLanguage()
       break;
     }
     case LANG_GEORGIAN:                   lang = L"ka_GE"; break;
-    case LANG_GERMAN:
-    {
-      switch( subID )
-      {
+    case LANG_GERMAN: {
+      switch( subID ) {
         case SUBLANG_GERMAN:              lang = L"de_DE"; break;
         case SUBLANG_GERMAN_SWISS:        lang = L"de_CH"; break;
         case SUBLANG_GERMAN_AUSTRIAN:     lang = L"de_AT"; break;
@@ -1195,10 +1143,8 @@ wstring TBUTILS::getLanguage()
     case LANG_HUNGARIAN:                  lang = L"hu_HU"; break;
     case LANG_ICELANDIC:                  lang = L"is_IS"; break;
     case LANG_INDONESIAN:                 lang = L"id_ID"; break;
-    case LANG_ITALIAN:
-    {
-      switch( subID )
-      {
+    case LANG_ITALIAN: {
+      switch( subID ) {
         case SUBLANG_ITALIAN:             lang = L"it_IT"; break;
         case SUBLANG_ITALIAN_SWISS:       lang = L"it_CH"; break;
         default:                          lang = L"it_IT"; break;
@@ -1212,10 +1158,8 @@ wstring TBUTILS::getLanguage()
     case LANG_KONKANI:                    lang = L""; break;
     case LANG_KOREAN:                     lang = L"ko_KR"; break;
     case LANG_LATVIAN:                    lang = L"lv_LV"; break;
-    case LANG_LITHUANIAN:
-    {
-      switch( subID )
-      {
+    case LANG_LITHUANIAN: {
+      switch( subID ) {
         case SUBLANG_LITHUANIAN:          lang = L"lt_LT"; break;
 #if (_MSC_VER < 1400 )
         case SUBLANG_LITHUANIAN_CLASSIC:  lang = L"lt_LT"; break;
@@ -1225,10 +1169,8 @@ wstring TBUTILS::getLanguage()
       break;
     }
     case LANG_MACEDONIAN:                 lang = L"mk_MK"; break;
-    case LANG_MALAY:
-    {
-      switch( subID )
-      {
+    case LANG_MALAY: {
+      switch( subID ) {
         case SUBLANG_MALAY_BRUNEI_DARUSSALAM: lang = L"ms_MY"; break;
         case SUBLANG_MALAY_MALAYSIA:      lang = L"ms_MY"; break;
         default:                          lang = L"ms_MY"; break;
@@ -1240,10 +1182,8 @@ wstring TBUTILS::getLanguage()
     case LANG_MARATHI:                    lang = L"mr_IN"; break;
     case LANG_NEPALI:                     lang = L""; break;
     case LANG_NEUTRAL:                    lang = L""; break;
-    case LANG_NORWEGIAN:
-    {
-      switch( subID )
-      {
+    case LANG_NORWEGIAN: {
+      switch( subID ) {
         case SUBLANG_NORWEGIAN_BOKMAL:    lang = L"no_NO"; break;
         case SUBLANG_NORWEGIAN_NYNORSK:   lang = L"nn_NO"; break;
         default:                          lang = L"no_NO"; break;
@@ -1252,10 +1192,8 @@ wstring TBUTILS::getLanguage()
     }
     case LANG_ORIYA:                      lang = L""; break;
     case LANG_POLISH:                     lang = L"pl_PL"; break;
-    case LANG_PORTUGUESE:
-    {
-      switch( subID )
-      {
+    case LANG_PORTUGUESE: {
+      switch( subID ) {
         case SUBLANG_PORTUGUESE:          lang = L"pt_PT"; break;
         case SUBLANG_PORTUGUESE_BRAZILIAN: lang = L"pt_BR"; break;
         default:                          lang = L"pt_PT"; break;
@@ -1266,10 +1204,8 @@ wstring TBUTILS::getLanguage()
     case LANG_ROMANIAN:                   lang = L"ro_RO"; break;
     case LANG_RUSSIAN:                    lang = L"ru_RU"; break;
     case LANG_SANSKRIT:                   lang = L""; break;
-    case LANG_SERBIAN:
-    {
-      switch( subID )
-      {
+    case LANG_SERBIAN: {
+      switch( subID ) {
         case SUBLANG_SERBIAN_LATIN:       lang = L""; break;
         case SUBLANG_SERBIAN_CYRILLIC:    lang = L"sr_YU"; break;
 //    case LANG_CROATIAN:                   lang = L"hr_HR"; break;
@@ -1280,10 +1216,8 @@ wstring TBUTILS::getLanguage()
     case LANG_SINDHI:                     lang = L""; break;
     case LANG_SLOVAK:                     lang = L"sk_SK"; break;
     case LANG_SLOVENIAN:                  lang = L"sl_SL"; break;
-    case LANG_SPANISH:
-    {
-      switch( subID )
-      {
+    case LANG_SPANISH: {
+      switch( subID ) {
         case SUBLANG_SPANISH:             lang = L"es_ES"; break;
         case SUBLANG_SPANISH_MEXICAN:     lang = L"es_MX"; break;
         case SUBLANG_SPANISH_MODERN:      lang = L"es_ES"; break;
@@ -1309,10 +1243,8 @@ wstring TBUTILS::getLanguage()
       break;
     }
     case LANG_SWAHILI:                    lang = L""; break;
-    case LANG_SWEDISH:
-    {
-      switch( subID )
-      {
+    case LANG_SWEDISH: {
+      switch( subID ) {
         case SUBLANG_SWEDISH:             lang = L"sv_SE"; break;
         case SUBLANG_SWEDISH_FINLAND:     lang = L"sv_FI"; break;
         default:                          lang = L"sv_SE"; break;
@@ -1325,20 +1257,16 @@ wstring TBUTILS::getLanguage()
     case LANG_THAI:                       lang = L"th_TH"; break;
     case LANG_TURKISH:                    lang = L"tr_TR"; break;
     case LANG_UKRAINIAN:                  lang = L"uk_UA"; break;
-    case LANG_URDU:
-    {
-      switch( subID )
-      {
+    case LANG_URDU: {
+      switch( subID ) {
         case SUBLANG_URDU_INDIA:          lang = L"ur_IN"; break;
         case SUBLANG_URDU_PAKISTAN:       lang = L"ur_PK"; break;
         default:                          lang = L"ur_PK"; break;
       }
       break;
     }
-    case LANG_UZBEK:
-    {
-      switch( subID )
-      {
+    case LANG_UZBEK: {
+      switch( subID ) {
         case SUBLANG_UZBEK_CYRILLIC:      lang = L"uz_UZ"; break;
         case SUBLANG_UZBEK_LATIN:         lang = L"uz_UZ"; break;
         default:                          lang = L"uz_UZ"; break;
@@ -1353,8 +1281,7 @@ wstring TBUTILS::getLanguage()
 #ifdef __APPLE_CC__
 #if (__APPLE_CC__ < 5493)
   CFLocaleRef ref = CFLocaleCopyCurrent();
-  if (ref != NULL)
-  {
+  if (ref != NULL) {
     CFStringRef str = CFLocaleGetIdentifier(ref);
     wstring res (string2wstring(CFStringGetCStringPtr( str, kCFStringEncodingUTF8 )));
     CFRelease(ref);
@@ -1362,41 +1289,39 @@ wstring TBUTILS::getLanguage()
   } 
 #else
   CFLocaleRef ref = CFLocaleCopyCurrent();
-  if (ref != NULL)
-  {
+  if (ref != NULL) {
     CFStringRef str = CFLocaleGetIdentifier(ref);
-    //return string2wstring(CFStringGetCStringPtr( str, kCFStringEncodingUTF8 ));
-    //CFIndex len = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
     wstring darwin_locale;
-    //CFIndex len = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingMacRoman);
     CFIndex len = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-    if (len > 0)
-    {
+    if (len > 0) {
       char* buf = new char[ len + 1 ];  
       bool ok = CFStringGetCString(str, buf, len, kCFStringEncodingUTF8);
-      //bool ok = CFStringGetCString(str, buf, len, kCFStringEncodingMacRoman);
-      if (ok)
-      {
+      if (ok) {
         darwin_locale = string2wstring(string(buf)); 
       }
       delete [] buf;
     }
     CFRelease(ref);
-    if (darwin_locale.size() > 0)
+    if (darwin_locale.size() > 0) {
       return darwin_locale;
+    }
   }
 #endif // (__APPLE_CC__ < 5493)
 #endif // __APPLE_CC__
   string lang;
   const char * l = getenv( "LANG" );
-  if( NULL == l ) return string2wstring(lang);
+  if( NULL == l ) {
+    return string2wstring(lang);
+  }
   lang = string(l);
 
   std::string::size_type pos = lang.find('.');
-  if (pos != string::npos)
+  if (pos != string::npos) {
     return string2wstring(lang.substr(0, pos));
-  else
+  }
+  else {
     return string2wstring(lang);
+  }
 #endif
 }
 
@@ -1437,17 +1362,16 @@ Generic TBUTILS::GetOSName()
   wstring version (Int(versionInfo.dwMajorVersion).ascii() + L"." + Int(versionInfo.dwMinorVersion).ascii());
 
   char nodenm[256];
-  if (gethostname(nodenm, 256) != 0) 
-  {
+  if (gethostname(nodenm, 256) != 0) {
     if (WSAGetLastError() == WSANOTINITIALISED) { // WinSock not initialized
         WSADATA WSAData;
         WSAStartup(MAKEWORD(1, 0), &WSAData);
         gethostname(nodenm, 256);
         WSACleanup();
     }
-    else
-      //return WSAGetLastError();
+    else {
       return Nil();
+    }
   }
   wstring nodename (TBWSTR::string2wstring(nodenm));
 
@@ -1463,8 +1387,7 @@ Generic TBUTILS::GetOSName()
 #else
   struct utsname buff;
 
-  if (uname(&buff) == 0)
-  {
+  if (uname(&buff) == 0) {
     string sysname (buff.sysname);
     string nodename (buff.nodename);
     string release (buff.release);

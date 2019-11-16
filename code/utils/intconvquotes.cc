@@ -224,8 +224,9 @@ bool INT2Q::IsCPPRec(const Record & r)
     case TAG_TYPE_CPP_SingleLineComments:
     case TAG_TYPE_CPP_TrailingComments:
     case TAG_TYPE_CPP_EndOfLineComments:
-    case TAG_TYPE_CPP_DocComments:
+    case TAG_TYPE_CPP_DocComments: {
       return true;
+    }
     default: {
       return false;
     }
@@ -251,8 +252,9 @@ Generic INT2Q::g2hAS(const Generic & g)
 Quote INT2Q::Integer2Quote(const Int & I)
 {
   Quote q (tag_table.GetKey(I));
-  if (q != Quote(L""))
+  if (q != Quote(L"")) {
     return q;
+  }
 #ifdef _MSC_VER
   wcerr << L"Integer2Quote: UNDEFINED QUOTE (" << I << L")" << endl;
 #else
@@ -265,24 +267,24 @@ Quote INT2Q::Integer2Quote(const Int & I)
 Generic INT2Q::TransformIntegers (const Generic & g)
 {
   if (g.IsInt()) {
-    if (Int(g).GetValue() < CG_OFFSET)
+    if (Int(g).GetValue() < CG_OFFSET) {
       return g;
+    }
     Quote q (Integer2Quote(g));
     return q;
   }
-  else if (g.IsSequence())
-  {
+  else if (g.IsSequence()) {
     // SEQUENCE CASE
     Sequence Sq (g);
     Sequence Sr;
     Generic Element;
     size_t len_Sq = Sq.Length();
-    for (size_t idx = 1; idx <= len_Sq; idx++)
+    for (size_t idx = 1; idx <= len_Sq; idx++) {
       Sr.ImpAppend (TransformIntegers (Sq[idx]));
+    }
     return Sr;
   }
-  else if (g.IsRecord())
-  {
+  else if (g.IsRecord()) {
     // RECORD CASE 
     Record Rc (g);
     int Tag = Rc.GetTag();
@@ -346,18 +348,22 @@ Generic INT2Q::TransformIntegers (const Generic & g)
       case TAG_TYPE_INSTRTP_TUPPATCONS:
       case TAG_TYPE_INSTRTP_RECPATCONS:
       case TAG_TYPE_INSTRTP_MAPLET:
-      case TAG_TYPE_INSTRTP_SEQBIND:
+      case TAG_TYPE_INSTRTP_SEQBIND: {
         return g;
-
+      }
       case TAG_TYPE_INSTRTP_POSTENV: {
-        Rc.SetField(1, TransformIntegers(Rc.GetField(1)));
+        //Rc.SetField(1, TransformIntegers(Rc.GetField(1)));
+        Rc.SetField(pos_INSTRTP_POSTENV_resnmtps,
+                    TransformIntegers(Rc.GetField(pos_INSTRTP_POSTENV_resnmtps)));
         return Rc;
       }
  
       case TAG_TYPE_INSTRTP_MULTBINDL: {
-        Quote partition (Rc.GetField(2) == Int(DO_PARTITION) ? Quote(L"DO_PARTITION") : Quote(L"DONT_PARTITION"));
-        //Rc.SetField(2, TransformIntegers(Rc.GetField(2)));
-        Rc.SetField(2, partition);
+        //Quote partition (Rc.GetField(2) == Int(DO_PARTITION) ? Quote(L"DO_PARTITION") : Quote(L"DONT_PARTITION"));
+        //Rc.SetField(2, partition);
+        Quote partition (Rc.GetField(pos_INSTRTP_MULTBINDL_part) == Int(DO_PARTITION)
+                          ? Quote(L"DO_PARTITION") : Quote(L"DONT_PARTITION"));
+        Rc.SetField(pos_INSTRTP_MULTBINDL_part, partition);
         return Rc;
       }
  
@@ -376,8 +382,9 @@ Generic INT2Q::TransformIntegers (const Generic & g)
       case TAG_TYPE_STKM_CallStackItem: {
         int len = Rc.Length();
         for(int i = 1; i <= len; i++) {
-          if (i < 7)
+          if (i < 7) {
             Rc.SetField(i, TransformIntegers(Rc.GetField(i)));
+          }
         }
         return(Rc);
       }
@@ -394,8 +401,7 @@ Generic INT2Q::TransformIntegers (const Generic & g)
             case pos_TYPE_STKM_EvaluatorStatus_release_time:
 #endif // VICE
 #endif // VDMPP
-            case pos_TYPE_STKM_EvaluatorStatus_cf:
-            {
+            case pos_TYPE_STKM_EvaluatorStatus_cf: {
               break;
             }
             default: {
@@ -409,14 +415,15 @@ Generic INT2Q::TransformIntegers (const Generic & g)
 
       default: {
         int Length;
-        if (!ASTAUX::IsASTRec(Rc) && !IsCPPRec(Rc))
+        if (!ASTAUX::IsASTRec(Rc) && !IsCPPRec(Rc)) {
           Length = Rc.Length();
-        else
+        }
+        else {
           // In this case
           // the last entry is the record is an context identifier
           // and it should not be transformed.
           Length = Rc.Length() -1;
-
+        }
         for(int i = 1; i <= Length; i++) {
           Rc.SetField(i, TransformIntegers(Rc.GetField(i)));
         }
@@ -424,8 +431,7 @@ Generic INT2Q::TransformIntegers (const Generic & g)
       }
     }
   }
-  else if (g.IsTuple())
-  { 
+  else if (g.IsTuple()) { 
     // TUPLE CASE
     Tuple Tp(g);
     int Length = Tp.Length();
@@ -435,30 +441,30 @@ Generic INT2Q::TransformIntegers (const Generic & g)
     }
     return(Tp);
   }
-  else if (g.IsSet())
-  {
+  else if (g.IsSet()) {
     // SET CASE
     Set St(g);
     Set Rs;
     Generic Element;
-    for (bool bb = St.First (Element); bb; bb = St.Next (Element))
+    for (bool bb = St.First (Element); bb; bb = St.Next (Element)) {
       Rs.Insert (TransformIntegers (Element));
-
+    }
     return(Rs);
   }
-  else if (g.IsMap())
-  {
+  else if (g.IsMap()) {
     // MAP CASE
     Map Mp (g);
     Set dom_Mp(Mp.Dom());
     Map Mr;
     Generic Element;
-    for (bool bb = dom_Mp.First (Element); bb; bb = dom_Mp.Next (Element))
+    for (bool bb = dom_Mp.First (Element); bb; bb = dom_Mp.Next (Element)) {
       Mr.Insert (TransformIntegers (Element), TransformIntegers (Mp [Element]));
+    }
     return(Mr);
   }
-  else
+  else {
     return g;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -478,43 +484,42 @@ Generic INT2Q::TransformIntegers (const Generic & g)
 Int INT2Q::Quote2Integer(const Quote & q)
 {
   Int q_val (tag_table.Compute(q));
-  if (q_val == Int(0))
+  if (q_val == Int(0)) {
 #ifdef _MSC_VER
     wcerr << L"Quote2Integer: UNDEFINED QUOTE (" << q << L")" << endl;
 #else
     vdm_log << L"Quote2Integer: UNDEFINED QUOTE (" << q << L")" << endl;
 #endif // _MSC_VER
+  }
   return(Int(q_val));
 }
 
 // TransformIntegersBack
 Generic INT2Q::TransformIntegersBack (const Generic & g)
 {
-  if (g.IsQuote())
-  {
+  if (g.IsQuote()) {
     return Quote2Integer(g);
   }
-  else if (g.IsSequence())
-  {
+  else if (g.IsSequence()) {
     // SEQUENCE CASE
     Sequence Sq (g);
     Sequence Sr;
     size_t len_Sq = Sq.Length();
-    for (size_t idx = 1; idx <= len_Sq; idx++)
+    for (size_t idx = 1; idx <= len_Sq; idx++) {
       Sr.ImpAppend (TransformIntegersBack (Sq[idx]));
+    }
     return Sr;
   }
-  else if (g.IsRecord())
-  {
+  else if (g.IsRecord()) {
     // RECORD CASE 
     Record Rc (g);
     int Length = Rc.Length();
-    for(int i = 1; i <= Length; i++)
+    for(int i = 1; i <= Length; i++) {
       Rc.SetField(i, TransformIntegersBack(Rc.GetField(i)));
+    }
     return(Rc);
   }
-  else if (g.IsTuple())
-  {
+  else if (g.IsTuple()) {
     // TUPLE CASE
     Tuple Tp (g);
     int Length = Tp.Length();
@@ -524,31 +529,30 @@ Generic INT2Q::TransformIntegersBack (const Generic & g)
     }
     return(Tp);
   }
-  else if (g.IsSet())
-  {
+  else if (g.IsSet()) {
     // SET CASE
     Set St (g);
     Set Rs;
     Generic Element;
 
-    for (bool bb = St.First (Element); bb; bb = St.Next (Element))
+    for (bool bb = St.First (Element); bb; bb = St.Next (Element)) {
       Rs.Insert (TransformIntegersBack (Element));
-
+    }
     return(Rs);
   }
-  else if (g.IsMap())
-  {
+  else if (g.IsMap()) {
     // MAP CASE
     Map Mp (g);
     Map Mr;
     Set dom_Mp (Mp.Dom());
     Generic Element;
-    for (bool bb = dom_Mp.First (Element); bb; bb = dom_Mp.Next (Element))
+    for (bool bb = dom_Mp.First (Element); bb; bb = dom_Mp.Next (Element)) {
       Mr.Insert (TransformIntegersBack (Element), TransformIntegersBack (Mp [Element]));
-
+    }
     return(Mr);
   }
-  else
+  else {
     return g;
+  }
 }
 

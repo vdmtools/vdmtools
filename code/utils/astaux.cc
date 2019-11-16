@@ -75,16 +75,18 @@ wstring ASTAUX::ASName2String(const TYPE_AS_Name & asname)
 {
   const TYPE_AS_Ids & ids (asname.GetSequence(pos_AS_Name_ids));
   switch (ids.Length()) {
-    case 0:
+    case 0: {
       return L"";
-    case 1:
+    }
+    case 1: {
       return Id2String(ids.Index(1));
-    case 2:
+    }
+    case 2: {
       return Id2String(ids.Index(1)) + L"`" + Id2String(ids.Index(2));
+    }
     default: { // ids.Length() > 2 : will not occor this situation
       wstring res (Id2String(ids.Index(1))); 
-      for (int64_t i = 2; i <= ids.Length(); i++)
-      {
+      for (int64_t i = 2; i <= ids.Length(); i++) {
         res += L'`'; 
         res += Id2String(ids.Index(i));
       }
@@ -98,8 +100,9 @@ wstring ASTAUX::ASName2String(const TYPE_AS_Name & asname)
 
 TYPE_CI_ContextId ASTAUX::GetCid(const Record & expr)
 {
-  if (IsASTRec(expr))
+  if (IsASTRec(expr)) {
     return expr.GetInt(expr.Length());
+  }
   else {
 #ifndef TESTSPEC
     vdm_err << L"Internal Error in GetCid: Not an Ast record" << endl << flush;
@@ -323,11 +326,12 @@ bool ASTAUX::IsASTRec(const Record & rec)
     case TAG_TYPE_AS_RepeatInterval:
     case TAG_TYPE_AS_QualifiedRepeatTrace:
     case TAG_TYPE_AS_Macro:
-    case TAG_TYPE_AS_LastRes:
+    case TAG_TYPE_AS_LastRes: {
       return true;
-    
-    default:
+    } 
+    default: {
       return false;
+    }
   }
 }
 
@@ -627,13 +631,13 @@ SEQ<TYPE_AS_Type> ASTAUX::ConstructImplDomType(const SEQ<TYPE_AS_PatTypePair> & 
 {
   SEQ<TYPE_AS_Type> result;
   size_t len_partps = partps.Length();
-  for (size_t i = 1; i <= len_partps; i++)
-  {
+  for (size_t i = 1; i <= len_partps; i++) {
     const TYPE_AS_PatTypePair & ptp (partps[i]);
     const TYPE_AS_Type & tp (ptp.GetRecord(pos_AS_PatTypePair_tp));
     size_t len_ptp = ptp.GetSequence(pos_AS_PatTypePair_pats).Length();
-    for (size_t j = 1; j <= len_ptp; j++)
+    for (size_t j = 1; j <= len_ptp; j++) {
       result.ImpAppend(tp);
+    }
   }
   return result;
 }
@@ -644,15 +648,18 @@ SEQ<TYPE_AS_Type> ASTAUX::ConstructImplDomType(const SEQ<TYPE_AS_PatTypePair> & 
 TYPE_AS_Type ASTAUX::ConstructImplRngType(const SEQ<TYPE_AS_NameType> & restps)
 {
   switch(restps.Length()) {
-    case 0:
+    case 0: {
       return TYPE_AS_VoidType().Init(NilContextId);
-    case 1:
+    }
+    case 1: {
       return restps[1].GetRecord(pos_AS_NameType_tp);
+    }
     default: {
       SEQ<TYPE_AS_Type> tps;
       size_t len_restps = restps.Length();
-      for (size_t idx = 1; idx <= len_restps; idx++)
+      for (size_t idx = 1; idx <= len_restps; idx++) {
         tps.ImpAppend(restps[idx].GetRecord(pos_AS_NameType_tp));
+      }
       return TYPE_AS_ProductType().Init(tps, NilContextId);
     }
   }
