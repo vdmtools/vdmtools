@@ -65,16 +65,13 @@ bool CodeGenTools::CheckAllowed(const TYPE_ProjectTypes_ModuleName & modnm, bool
 {
   Tuple allowres (ToolMediator::Repos()->vdm_Allowed (modnm, action_cg));
 
-  if (!allowres.GetBoolValue(1))
-  {
+  if (!allowres.GetBoolValue(1)) {
     const SEQ<Char> & mes (allowres.GetSequence (2));
-    if (!mes.IsEmpty())
-    {
+    if (!mes.IsEmpty()) {
       vdm_log << PTAUX::Seq2Str (mes) << endl << flush;
       return false;
     }
-    else
-    { 
+    else { 
 #ifdef VDMSL    
       vdm_log << L"The module must be possibly well-formed." << endl << flush;
 #endif //VDMSL
@@ -102,10 +99,12 @@ bool CodeGenTools::CheckAllowed(const TYPE_ProjectTypes_ModuleName & modnm, bool
 static wstring GetSourceFile (int fileid)
 {
   Generic file = ToolMediator::Repos()->vdm_GetFileName (fileid);
-  if (file.IsNil())
+  if (file.IsNil()) {
     return L""; // unknown file
-  else
+  }
+  else {
     return PTAUX::ExtractFileName (TYPE_ProjectTypes_FileName(file));
+  }
 }
 #endif // VDMSL
 
@@ -145,8 +144,7 @@ bool CodeGenTools::EvalCodeGen (const TYPE_ProjectTypes_ModuleName & modnm,
     Tuple ti (TOOLS::InitStatSem (ast_val));
 
     vdm_log << L"Generating code ... " << endl << flush;
-    if (TBUTILS::GetErrorsCount() == 0)
-    {
+    if (TBUTILS::GetErrorsCount() == 0) {
 #ifdef VDMSL
       Map TypeCheckState;
       TYPE_AS_Name nm (ASTAUX::MkNameFromId (ASTAUX::MkId(PTAUX::ExtractModuleName (modnm)), NilContextId));
@@ -229,8 +227,7 @@ Set CodeGenTools::EvalPossibleInterfaces ()
   }
   
   Set possibleInterfaces;
-  try
-  {
+  try {
     TBUTILS::ClearErrorsCount();
     GetStatSem().ResetErrors();
 
@@ -244,17 +241,8 @@ Set CodeGenTools::EvalPossibleInterfaces ()
                  Settings.GetJCGCheckPrePost());
     if (TBUTILS::GetErrorsCount() == 0) {
       SEQ<TYPE_AS_Class> cl_l (ToolMediator::GetVDMASTs()); 
-// 20121213 -->
-//      SET<TYPE_AS_Name> nm_s;
-//      size_t len_cl_l = cl_l.Length();
-//      for (size_t idx = 1; idx <= len_cl_l; idx++)
-//      {
-//        nm_s.Insert(cl_l[idx].get_nm());
-//      }
-//      this->CGi.set_interfaces(nm_s); 
       SET<TYPE_AS_Name> mnm_s (PTAUX::ModuleNameSet2ASNameSet(Settings.GetJCGInterfaces()));
       this->CGi.set_interfaces(mnm_s); 
-// <-- 20121213
       possibleInterfaces = this->CGi.GetPossibleInterfaces(cl_l);
       this->CGi.set_interfaces(Set()); 
     }
@@ -264,9 +252,9 @@ Set CodeGenTools::EvalPossibleInterfaces ()
     TBUTILS::IncrementErrorsCount();
   }
   
-  if (TBUTILS::GetErrorsCount() > 0)
+  if (TBUTILS::GetErrorsCount() > 0) {
     vdm_log << L"done (Errors detected)" << endl << flush;
-
+  }
   TOOLS::OutputStatSemErrors(Nil());
 
   return possibleInterfaces;
