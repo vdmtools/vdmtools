@@ -1928,8 +1928,7 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_Overloaded> DEF::TransOverloaded(const MAP<TYPE_AS_
               case TAG_TYPE_AS_ImplFnDef: {
                 const SEQ<TYPE_AS_NameType> & restps (fd.GetSequence(pos_AS_ImplFnDef_resnmtps));
                 size_t len_restps = restps.Length();
-                for (size_t i = 1; i <= len_restps; i++)
-                {
+                for (size_t i = 1; i <= len_restps; i++) {
                   restp.ImpAppend(restps[i].GetRecord(pos_AS_NameType_tp));
                 }
                 break;
@@ -1937,8 +1936,7 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_Overloaded> DEF::TransOverloaded(const MAP<TYPE_AS_
               case TAG_TYPE_AS_ExtExplFnDef: {
                 const SEQ<TYPE_AS_NameType> & restps (fd.GetSequence(pos_AS_ExtExplFnDef_resnmtps));
                 size_t len_restps = restps.Length();
-                for (size_t i = 1; i <= len_restps; i++)
-                {
+                for (size_t i = 1; i <= len_restps; i++) {
                   restp.ImpAppend(restps[i].GetRecord(pos_AS_NameType_tp));
                 }
                 break;

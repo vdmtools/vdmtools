@@ -408,8 +408,7 @@ void RTINFO::Calc_Coverage_Aux(const Generic & ast, ContextInfo & ci)
         const type_dd2PL & def_l (expr.GetSequence(pos_AS_DefExpr_Def));
         IncComposite(expr,ci);
         size_t len_def_l = def_l.Length();
-        for (size_t index = 1; index <= len_def_l; index++)
-        {
+        for (size_t index = 1; index <= len_def_l; index++) {
           const Tuple & t (def_l[index]);
           Calc_Coverage_Aux(t.GetRecord (1), ci);
           Calc_Coverage_Aux(t.GetRecord (2), ci);

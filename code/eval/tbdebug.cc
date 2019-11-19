@@ -1152,8 +1152,9 @@ wstring TBDEBUG::ExprOrStmt2Str (const Record & Expr)
 #if 0
       Sequence sq (Expr.GetField (1));
       Generic g;
-      for (bool bb = sq.First(g); bb; bb = sq.Next(g))
+      for (bool bb = sq.First(g); bb; bb = sq.Next(g)) {
         str += Char(g).GetValue ();
+      }
 #endif
       str += tk.GetString();
       str += L">";
@@ -2681,7 +2682,9 @@ void TBDEBUG::EvalTraces(const wstring & args, wostream & wos)
           wostringstream wostr;
           conv.Expr2ASCII(INT2Q::h2gAS(expr_l[idx]), wostr);
           wos << wostr.str() << L": ";
-          if (idx > 1) estr += L"; ";
+          if (idx > 1) {
+            estr += L"; ";
+          }
           estr += wostr.str();
                 
           Tuple res (theStackMachine().EvalUninterruptedCmd(expr_l[idx],

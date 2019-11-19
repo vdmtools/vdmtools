@@ -39,20 +39,21 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
     case TAG_TYPE_AS_PatternName: {
       const Generic & id (patbind.GetField(pos_AS_PatternName_nm));
       SET<TYPE_AS_Name> res_set;
-      if (!id.IsNil ())
+      if (!id.IsNil ()) {
         res_set.Insert (id);
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_MatchVal: {
-//      return SET<TYPE_AS_Name>();
       return eset;
     }
     case TAG_TYPE_AS_SetEnumPattern: {
       const SEQ<TYPE_AS_Pattern> & elems (patbind.GetSequence(pos_AS_SetEnumPattern_Elems));
       SET<TYPE_AS_Name> res_set (eset);
       size_t len_elems = elems.Length();
-      for (size_t i = 1; i <= len_elems; i++)
+      for (size_t i = 1; i <= len_elems; i++) {
         res_set.ImpUnion (IdentInPattern (elems[i]));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_SetUnionPattern: {
@@ -64,8 +65,9 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
       const SEQ<TYPE_AS_Pattern> & elems (patbind.GetSequence(pos_AS_SeqEnumPattern_els));
       SET<TYPE_AS_Name> res_set (eset);
       size_t len_elems = elems.Length();
-      for (size_t i = 1; i <= len_elems; i++ )
+      for (size_t i = 1; i <= len_elems; i++ ) {
         res_set.ImpUnion (IdentInPattern (elems[i]));
+      }
       return (res_set);
     }
     case TAG_TYPE_AS_SeqConcPattern: {
@@ -127,8 +129,9 @@ SET<TYPE_AS_Name> Free::IdentInPattern (const TYPE_AS_PatternBind & patbind)
     case TAG_TYPE_AS_TypeBind: {
       return IdentInPattern(patbind.GetRecord(pos_AS_TypeBind_pat));
     }
-    default:
+    default: {
       RTERR::Error (L"IdentInPattern", RTERR_PATTERN_UNKNOWN, Nil(), Nil(),Sequence());
+    }
   }
   return eset;
 }
@@ -177,8 +180,9 @@ SET<TYPE_AS_Name> Free::IdentInMultBind (const TYPE_AS_MultBind & bind)
       SET<TYPE_AS_Name> id_s (eset);
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultTypeBind_pat));
       size_t len = pat_l.Length();
-      for (size_t i = 1; i <= len; i++)
+      for (size_t i = 1; i <= len; i++) {
         id_s.ImpUnion (IdentInPattern (pat_l[i]));
+      }
       return id_s;
     }
     default: {
@@ -195,8 +199,9 @@ SET<TYPE_AS_Name> Free::IdentInMultBindSeq (const SEQ<TYPE_AS_MultBind> & bind_l
 {
   SET<TYPE_AS_Name> id_s (eset);
   size_t len_bind_l = bind_l.Length();
-  for (size_t index = 1; index <= len_bind_l; index++)
+  for (size_t index = 1; index <= len_bind_l; index++) {
     id_s.ImpUnion (IdentInMultBind (bind_l[index]));
+  }
   return (id_s);
 }
 
@@ -251,8 +256,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInMultBindSeq (const SEQ<TYPE_AS_MultB
       case TAG_TYPE_AS_MultTypeBind: {
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
     newid_s.ImpUnion (IdentInMultBind (bind));
   }
@@ -327,8 +333,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInDefExpr (const TYPE_AS_DefExpr & Def
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_def_l = def_l.Length();
-  for (size_t index = 1; index <= len_def_l; index++)
-  {
+  for (size_t index = 1; index <= len_def_l; index++) {
     const Tuple & t (def_l[index]); // (PatternBind * Expr)
     const TYPE_AS_PatternBind & pat_p (t.GetRecord (1));
     const TYPE_AS_Expr & val_e (t.GetRecord (2));
@@ -352,8 +357,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInLetExpr (const TYPE_AS_LetExpr & Let
 
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_localdef = localdef.Length();
-  for (size_t index = 1; index <= len_localdef; index++)
-  {
+  for (size_t index = 1; index <= len_localdef; index++) {
     const TYPE_AS_LocalDef & ldef (localdef[index]);
     switch(ldef.GetTag()) {
       case TAG_TYPE_AS_ValueDef: {
@@ -372,14 +376,14 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInLetExpr (const TYPE_AS_LetExpr & Let
         newid_s.Insert (ldef.GetRecord(pos_AS_ExtExplFnDef_nm));
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
 
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
-  for (size_t index2 = 1; index2 <= len_localdef; index2++)
-  {
+  for (size_t index2 = 1; index2 <= len_localdef; index2++) {
     const TYPE_AS_LocalDef & ldef (localdef[index2]);
     switch(ldef.GetTag()) {
       case TAG_TYPE_AS_ValueDef: {
@@ -397,8 +401,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInLetExpr (const TYPE_AS_LetExpr & Let
         newid_s.ImpUnion (tmp_m.Dom ());
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
   res_m.ImpOverride (FreeInExpr (in_e, newid_s));
@@ -420,16 +425,17 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInFnDef (const TYPE_AS_FnDef & fn, con
       const Generic & post_e (fn.GetField(pos_AS_ExplFnDef_fnpost));
 
       size_t len_parms = parms.Length();
-      for (size_t i = 1; i <= len_parms; i++)
-      {
+      for (size_t i = 1; i <= len_parms; i++) {
         SEQ<TYPE_AS_Pattern> pat_l (parms[i]);
         size_t len_pat_l = pat_l.Length();
-        for (size_t j = 1; j <= len_pat_l; j++)
+        for (size_t j = 1; j <= len_pat_l; j++) {
           newid_s.ImpUnion (IdentInPattern (pat_l[j]));
+        }
       }
       MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
-      if ( (body.GetField(pos_AS_FnBody_body)).IsRecord() )
+      if ( (body.GetField(pos_AS_FnBody_body)).IsRecord() ) {
         res_m = FreeInExpr (body.GetRecord(pos_AS_FnBody_body), newid_s);
+      }
       newid_s.ImpUnion (res_m.Dom ());
       MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInPreExpr (pre_e, newid_s));
       res_m.ImpOverride (tmp_m);
@@ -443,13 +449,13 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInFnDef (const TYPE_AS_FnDef & fn, con
       const TYPE_AS_Expr & post_e (fn.GetRecord(pos_AS_ImplFnDef_fnpost));
 
       size_t len_partps = partps.Length();
-      for (size_t i = 1; i <= len_partps; i++)
-      {
+      for (size_t i = 1; i <= len_partps; i++) {
         TYPE_AS_PatTypePair ptp (partps[i]);
         const SEQ<TYPE_AS_Pattern> & pat_l (ptp.GetSequence(pos_AS_PatTypePair_pats));
         size_t len_pat_l = pat_l.Length();
-        for (size_t j = 1; j <= len_pat_l; j++)
+        for (size_t j = 1; j <= len_pat_l; j++) {
           newid_s.ImpUnion (IdentInPattern (pat_l[j]));
+        }
       }
       MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (FreeInPreExpr (pre_e, newid_s));
       newid_s.ImpUnion (res_m.Dom ());
@@ -463,24 +469,26 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInFnDef (const TYPE_AS_FnDef & fn, con
       const Generic & post_e (fn.GetField(pos_AS_ExtExplFnDef_fnpost));
 
       size_t len_partps = partps.Length();
-      for (size_t i = 1; i <= len_partps; i++)
-      {
+      for (size_t i = 1; i <= len_partps; i++) {
         TYPE_AS_PatTypePair ptp (partps[i]);
         const SEQ<TYPE_AS_Pattern> & pat_l (ptp.GetSequence(pos_AS_PatTypePair_pats));
         size_t len_pat_l = pat_l.Length();
-        for (size_t j = 1; j <= len_pat_l; j++)
+        for (size_t j = 1; j <= len_pat_l; j++) {
           newid_s.ImpUnion (IdentInPattern (pat_l[j]));
+        }
       }
       MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
-      if ( (body.GetField(pos_AS_FnBody_body)).IsRecord() )
+      if ( (body.GetField(pos_AS_FnBody_body)).IsRecord() ) {
         res_m = FreeInExpr (body.GetRecord(pos_AS_FnBody_body), newid_s);
+      }
       res_m.ImpOverride (FreeInPreExpr (pre_e, newid_s));
       newid_s.ImpUnion (res_m.Dom ());
       res_m.ImpOverride (FreeInPostExpr (post_e, newid_s));
       return (res_m);
     }
-    default:
+    default: {
       return emap;
+    }
   }
 }
 
@@ -490,11 +498,12 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInFnDef (const TYPE_AS_FnDef & fn, con
 // ==> map AS`Name to SEM`VAL
 MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInPreExpr (const Generic & PreE, const SET<TYPE_AS_Name> & id_s)
 {
-  if (PreE.IsNil ())
-//    return MAP<TYPE_AS_Name, TYPE_SEM_VAL> ();
+  if (PreE.IsNil ()) {
     return emap;
-  else
+  }
+  else {
     return (FreeInExpr (PreE, id_s));
+  }
 }
 
 // FreeInPostExpr
@@ -503,11 +512,12 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInPreExpr (const Generic & PreE, const
 // ==> map AS`Name to SEM`VAL
 MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInPostExpr (const Generic & PostE, const SET<TYPE_AS_Name> & id_s)
 {
-  if (PostE.IsNil ())
-//    return MAP<TYPE_AS_Name, TYPE_SEM_VAL> ();
+  if (PostE.IsNil ()) {
     return emap;
-  else
+  }
+  else {
     return (FreeInExpr (PostE, id_s));
+  }
 }
 
 // FreeInLetBeSTExpr
@@ -527,8 +537,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInLetBeSTExpr (const TYPE_AS_LetBeSTEx
   newid_s.ImpUnion (res_m.Dom ());
   newid_s.ImpUnion (IdentInMultBindSeq (lhs));
 
-  if (!st_e.IsNil())
-  {
+  if (!st_e.IsNil()) {
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (st_e, newid_s));
     res_m.ImpOverride (tmp_m);
     newid_s.ImpUnion (tmp_m.Dom ());
@@ -573,8 +582,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInElseifExpr (
   SET<TYPE_AS_Name> newid_s (id_s);
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   size_t len_elif_l = elif_l.Length();
-  for (size_t i = 1; i <= len_elif_l; i++)
-  {
+  for (size_t i = 1; i <= len_elif_l; i++) {
     TYPE_AS_ElseifExpr eif (elif_l[i]);
     const TYPE_AS_Expr & test_e (eif.GetRecord(pos_AS_ElseifExpr_test));
     const TYPE_AS_Expr & cons_e (eif.GetRecord(pos_AS_ElseifExpr_cons));
@@ -606,20 +614,21 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInCasesExpr (const TYPE_AS_CasesExpr &
   newid_s.ImpUnion (res_m.Dom ());
 
   size_t len_altns_l = altns_l.Length();
-  for (size_t i = 1; i <= len_altns_l; i++)
-  {
+  for (size_t i = 1; i <= len_altns_l; i++) {
     TYPE_AS_CaseAltn ca (altns_l[i]);
     const SEQ<TYPE_AS_Pattern> & match_lp (ca.GetSequence(pos_AS_CaseAltn_match));
     const TYPE_AS_Expr & body_e (ca.GetRecord(pos_AS_CaseAltn_body));
     size_t len_match_lp = match_lp.Length();
-    for (size_t j = 1; j <= len_match_lp; j++)
+    for (size_t j = 1; j <= len_match_lp; j++) {
       newid_s.ImpUnion (IdentInPattern (match_lp[j]));
+    }
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (body_e, newid_s));
     res_m.ImpOverride (tmp_m);
     newid_s.ImpUnion (tmp_m.Dom ());
   }
-  if (!others_e.IsNil())
+  if (!others_e.IsNil()) {
     res_m.ImpOverride (FreeInExpr (others_e, newid_s));
+  }
   return (res_m);
 }
 
@@ -695,8 +704,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInSetEnumerationExpr (const TYPE_AS_Se
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_elm_le = elm_le.Length();
-  for (size_t i = 1; i <= len_elm_le; i++)
-  {
+  for (size_t i = 1; i <= len_elm_le; i++) {
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (elm_le[i], newid_s));
     res_m.ImpOverride (tmp_m);
     newid_s.ImpUnion (tmp_m.Dom ());
@@ -722,8 +730,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInSetComprehensionExpr (const TYPE_AS_
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (elem_e, newid_s));
   res_m.ImpOverride (tmp_m);
   newid_s.ImpUnion (tmp_m.Dom ());
-  if (!pred_e.IsNil())
+  if (!pred_e.IsNil()) {
     res_m.ImpOverride (FreeInExpr (pred_e, newid_s));
+  }
   return (res_m);
 }
 
@@ -754,8 +763,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInSeqEnumerationExpr (const TYPE_AS_Se
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_els_l = els_l.Length();
-  for (size_t i = 1; i <= len_els_l; i++)
-  {
+  for (size_t i = 1; i <= len_els_l; i++) {
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (els_l[i], newid_s));
     res_m.ImpOverride (tmp_m);
     newid_s.ImpUnion (tmp_m.Dom ());
@@ -792,8 +800,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInSeqComprehensionExpr (const TYPE_AS_
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (elem_e, newid_s));
   res_m.ImpOverride (tmp_m);
   newid_s.ImpUnion (tmp_m.Dom ());
-  if (!pred_e.IsNil())
+  if (!pred_e.IsNil()) {
     res_m.ImpOverride (FreeInExpr (pred_e, newid_s));
+  }
   return (res_m);
 }
 
@@ -848,8 +857,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInMapEnumerationExpr (const TYPE_AS_Ma
   SET<TYPE_AS_Name> newid_s (id_s);
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   size_t len_els_l = els_l.Length();
-  for (size_t i = 1; i <= len_els_l; i++)
-  {
+  for (size_t i = 1; i <= len_els_l; i++) {
     TYPE_AS_Maplet m (els_l[i]);
     const TYPE_AS_Expr & dom_e (m.GetRecord(pos_AS_Maplet_mapdom));
     const TYPE_AS_Expr & rng_e (m.GetRecord(pos_AS_Maplet_maprng));
@@ -884,8 +892,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInMapComprehensionExpr (const TYPE_AS_
   tmp_m = FreeInExpr (elem_e.GetRecord(pos_AS_Maplet_maprng), newid_s);
   newid_s.ImpUnion (tmp_m.Dom ());
   res_m.ImpOverride (tmp_m);
-  if (!pred_e.IsNil())
+  if (!pred_e.IsNil()) {
     res_m.ImpOverride (FreeInExpr (pred_e, newid_s));
+  }
   return (res_m);
 }
 
@@ -901,8 +910,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInTupleConstructorExpr (const TYPE_AS_
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_fields_le = fields_le.Length();
-  for (size_t index = 1; index <= len_fields_le; index++)
-  {
+  for (size_t index = 1; index <= len_fields_le; index++) {
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (fields_le[index], newid_s));
     res_m.ImpOverride (tmp_m);
     newid_s.ImpUnion (tmp_m.Dom ());
@@ -932,8 +940,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInRecordConstructorExpr (const TYPE_AS
   MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m (emap);
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_fields_le = fields_le.Length();
-  for (size_t i = 1; i <= len_fields_le; i++)
-  {
+  for (size_t i = 1; i <= len_fields_le; i++) {
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (fields_le[i], newid_s));
     res_m.ImpOverride (tmp_m);
     newid_s.ImpUnion (tmp_m.Dom ());
@@ -966,8 +973,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInRecordModifierExpr (const TYPE_AS_Re
   newid_s.ImpUnion (res_m.Dom ());
 
   size_t len_modifiers = modifiers.Length();
-  for (size_t i =1; i <= len_modifiers; i++)
-  {
+  for (size_t i =1; i <= len_modifiers; i++) {
     const TYPE_AS_RecordModification & rm (modifiers[i]);
     const TYPE_AS_Expr & expr (rm.GetRecord(pos_AS_RecordModification_newexpr));
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr (expr, newid_s));
@@ -991,8 +997,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInApplyExpr (const TYPE_AS_ApplyExpr &
   SET<TYPE_AS_Name> newid_s (id_s);
   newid_s.ImpUnion (res_m.Dom ());
   size_t len_arg_le = arg_le.Length();
-  for (size_t i = 1; i <= len_arg_le; i++)
-  {
+  for (size_t i = 1; i <= len_arg_le; i++) {
     Map arg_m (FreeInExpr (arg_le[i], newid_s));
     res_m.ImpOverride (arg_m);
     newid_s.ImpUnion (arg_m.Dom ());
@@ -1040,8 +1045,9 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInLambdaExpr (const TYPE_AS_LambdaExpr
   const SEQ<TYPE_AS_TypeBind> & tb_l (LambdaE.GetSequence(pos_AS_LambdaExpr_parm));
   SET<TYPE_AS_Name> newid_s (id_s);
   size_t len_tb_l = tb_l.Length();
-  for (size_t i = 1; i <= len_tb_l; i++)
+  for (size_t i = 1; i <= len_tb_l; i++) {
     newid_s.ImpUnion (IdentInBind (tb_l[i]));
+  }
   return (FreeInExpr (LambdaE.GetRecord(pos_AS_LambdaExpr_body), newid_s));
 }
 
@@ -1080,8 +1086,7 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInPreConditionApplyExpr(const TYPE_AS_
   newid_s.ImpUnion(res_m.Dom());
 
   size_t len_arg = arg.Length();
-  for (size_t i =1; i <= len_arg; i++)
-  {
+  for (size_t i =1; i <= len_arg; i++) {
     MAP<TYPE_AS_Name, TYPE_SEM_VAL> tmp_m (FreeInExpr(arg[i], newid_s));
     res_m.ImpOverride(tmp_m);
     newid_s.ImpUnion(tmp_m.Dom());
@@ -1096,14 +1101,14 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInPreConditionApplyExpr(const TYPE_AS_
 MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInName (const TYPE_AS_Name & NameE,
                                                   const SET<TYPE_AS_Name> & id_s)
 {
-  if (id_s.InSet (NameE))
-//    return MAP<TYPE_AS_Name, TYPE_SEM_VAL> ();
+  if (id_s.InSet (NameE)) {
     return emap;
+  }
   else {
     Generic val (LookUpInTopEnv (NameE));
-    if (val.IsNil ())
-//      return MAP<TYPE_AS_Name, TYPE_SEM_VAL> ();
+    if (val.IsNil ()) {
       return emap;
+    }
     else {
       MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m;
       res_m.Insert (NameE, val);

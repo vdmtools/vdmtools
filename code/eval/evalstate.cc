@@ -185,8 +185,7 @@ void EvalState::Init_Sigma (bool ast_is_new)
 
     Set orefs (this->obj_tab.Dom());
     Generic oref;
-    for(bool bb = orefs.First(oref); bb; bb = orefs.Next(oref))
-    {
+    for(bool bb = orefs.First(oref); bb; bb = orefs.Next(oref)) {
       TYPE_GLOBAL_OBJ_uDesc desc (RemoveHist(this->obj_tab[oref]));
       this->obj_tab.ImpModify(oref, desc);
     }
@@ -745,9 +744,7 @@ void EvalState::InitializeGSGV (bool ast_is_new)
     // initialization needed to be able to evaluate expressions
 /*
     Generic mod_name;
-    for(bool bb = this->mods.First(mod_name); bb;
-             bb = this->mods.Next(mod_name))
-    {
+    for(bool bb = this->mods.First(mod_name); bb; bb = this->mods.Next(mod_name)) {
       theCompiler().SetClMod( mod_name );
       if (! AUX::IsRealName ( mod_name ) )
         InitializeGlobalVal ( mod_name );
@@ -799,8 +796,7 @@ void EvalState::InitializeGSGV (bool ast_is_new)
 /*
   SET<TYPE_AS_Name> mod_names (this->mods.Dom());
   Generic mod_name;
-  for (bool bb = mod_names.First(mod_name); bb; bb = mod_names.Next(mod_name))
-  {
+  for (bool bb = mod_names.First(mod_name); bb; bb = mod_names.Next(mod_name)) {
     theStackMachine().PushModule(mod_name);
 
     TYPE_GLOBAL_SigmaMO sigmamo (this->mods[mod_name]);

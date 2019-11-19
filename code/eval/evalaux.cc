@@ -152,27 +152,29 @@ TYPE_AS_Name AUX::UniqueTagName (const TYPE_AS_Name & tname)
 Tuple AUX::ExtractTagName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> &)
 {
 /*
-  if (nm_s.InSet(name)) {
-    RTERR::Error(L"ExtractTagName", RTERR_TAG_CYCLIC, Nil(), Nil(), Sequence());
-    return mk_(Nil(), Bool(false));
-  }
-  TYPE_AS_Name the_tag (UniqueTagName(name));
-  Tuple t (LookUpRename(the_tag));
-  if (t.GetBoolValue(1))
-    return ExtractTagName(t.GetRecord(2), nm_s.Union(mk_set(the_tag)));
-  else {
-    if (IsDefinedInModule (the_tag) && IsTypeStructExported(the_tag))
-      return mk_(the_tag, Bool(true));
-    else
-      return mk_(Nil(), Bool(false));
-  }
+//  if (nm_s.InSet(name)) {
+//    RTERR::Error(L"ExtractTagName", RTERR_TAG_CYCLIC, Nil(), Nil(), Sequence());
+//    return mk_(Nil(), Bool(false));
+//  }
+//  TYPE_AS_Name the_tag (UniqueTagName(name));
+//  Tuple t (LookUpRename(the_tag));
+//  if (t.GetBoolValue(1))
+//    return ExtractTagName(t.GetRecord(2), nm_s.Union(mk_set(the_tag)));
+//  else {
+//    if (IsDefinedInModule (the_tag) && IsTypeStructExported(the_tag))
+//      return mk_(the_tag, Bool(true));
+//    else
+//      return mk_(Nil(), Bool(false));
+//  }
 */
   Tuple t (LookUpRename(UniqueTagName(name)));
   TYPE_AS_Name the_tag (t.GetRecord(2));
-  if (IsDefinedInModule (the_tag) && IsTypeStructExported(the_tag))
+  if (IsDefinedInModule (the_tag) && IsTypeStructExported(the_tag)) {
     return mk_(the_tag, Bool(true));
-  else
+  }
+  else {
     return mk_(Nil(), Bool(false));
+  }
 }
 #endif //VDMSL
 
@@ -212,41 +214,36 @@ Tuple AUX::ExtractTagName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> & n
           return ExtractTagName(shape.GetRecord(pos_AS_TypeName_name), Set(nm_s).Insert(name));
       }
 */
-      if (theState().GetRecSel(clnm).DomExists(thename))
+      if (theState().GetRecSel(clnm).DomExists(thename)) {
         return mk_(ConstructDoubleName(clnm, name), Bool (true));
-
+      }
       allsupers = theState().GetAllSupers(clnm); // HasCurCl() == true
     }
   }
   else {
     TYPE_AS_Name classname (ASTAUX::GetFirstName(name));
 /*
-    if (theState().IsAClass(classname))
-    {
+    if (theState().IsAClass(classname)) {
       MAP<TYPE_AS_Name,TYPE_AS_TypeDef> tdm (theState().GetLocalTps(classname));
-      if (tdm.DomExists(thename))
-      {
+      if (tdm.DomExists(thename)) {
         const TYPE_AS_TypeDef & td (tdm[thename]);
         const TYPE_AS_Type & shape (td.GetRecord(pos_AS_TypeDef_shape));
-        if (shape.Is(TAG_TYPE_AS_TypeName))
-        {
+        if (shape.Is(TAG_TYPE_AS_TypeName)) {
           const TYPE_AS_Name & tn (shape.GetRecord(pos_AS_TypeName_name));
-          if (tn.GetSequence(pos_AS_Name_ids).Length() == 2)
-          {
+          if (tn.GetSequence(pos_AS_Name_ids).Length() == 2) {
             TYPE_AS_Name cls (ASTAUX::GetFirstName(tn));
             TYPE_AS_Name tnm (ASTAUX::GetSecondName(tn));
             
             MAP<TYPE_AS_Name,TYPE_AS_TypeDef> ntdm (theState().GetLocalTps(cls));
-            if (ntdm.DomExists(tnm))
-            {
+            if (ntdm.DomExists(tnm)) {
               const TYPE_AS_TypeDef & ntd (ntdm[tnm]);
               const TYPE_AS_Access & acc (ntd.GetField(pos_AS_TypeDef_access));
-              if (theState().AccessOk(acc, classname, cls))
-              {
+              if (theState().AccessOk(acc, classname, cls)) {
                 return ExtractTagName(tn, Set(nm_s).Insert(name));
               }
-              else
+              else {
                 return mk_(Nil(), Bool(false));
+              }
             }
           }
         }
@@ -272,20 +269,20 @@ Tuple AUX::ExtractTagName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> & n
   Generic clname;
   for (bool bb = allsupers.First(clname); bb; bb = allsupers.Next(clname)) {
     Map recsel (theState().GetRecSel(clname)); // map AS`Name to GLOBAL`RecSel
-    if (recsel.DomExists(thename))
+    if (recsel.DomExists(thename)) {
       rs_tps.ImpModify(clname, recsel[thename]); //
-
+    }
     Map ltps (theState().GetLocalTps(clname));
-    if (ltps.DomExists(name))
+    if (ltps.DomExists(name)) {
       ltp.ImpModify(clname, ltps[name]); //
+    }
   }
 
   // in cases dom recsels:
   SET<TYPE_AS_Name> dom_rs_tps (rs_tps.Dom());
   switch(dom_rs_tps.Card()) {
     case 0: {
-      if (ltp.Size() == 1)
-      {
+      if (ltp.Size() == 1) {
         TYPE_AS_TypeDef td (ltp.Rng().GetElem());
         TYPE_AS_Type tp (td.GetRecord(pos_AS_TypeDef_shape));
         if (tp.Is(TAG_TYPE_AS_TypeName)) {
@@ -298,10 +295,12 @@ Tuple AUX::ExtractTagName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> & n
       TYPE_AS_Name cl (dom_rs_tps.GetElem());
       Tuple t (rs_tps[cl]);
       //if (theState().AccessOk(t.GetField(2), clnm, cl)) // AS`Access
-      if (theState().AccessOk(t.GetField(4), clnm, cl)) // AS`Access
+      if (theState().AccessOk(t.GetField(4), clnm, cl)) { // AS`Access
         return mk_(ConstructDoubleName(cl, name), Bool(true));
-      else
+      }
+      else {
         return mk_(Nil(), Bool(false));
+      }
     }
     default: {
       //TYPE_AS_Name classname (ASTAUX::GetFirstName(name));
@@ -325,13 +324,16 @@ Tuple AUX::ExtractTagName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> & n
           const TYPE_AS_Name & child (eoc.GetRecord(2));
           Tuple t (rs_tps[child]);
           //if (theState().AccessOk(t.GetField(2), clnm, child)) 
-          if (theState().AccessOk(t.GetField(4), clnm, child)) 
+          if (theState().AccessOk(t.GetField(4), clnm, child)) {
             return mk_(ConstructDoubleName(child, name), Bool(true));
-          else
+          }
+          else {
             return mk_(Nil(), Bool(false));
+          }
         }
-        else
+        else {
           return mk_(Nil(), Bool(false));
+        }
       }
     }
   }
@@ -428,8 +430,9 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
   Generic clname;
   for (bool bb = allsupers.First(clname); bb; bb = allsupers.Next(clname)) {
     MAP<TYPE_AS_Name,TYPE_AS_TypeDef> glt (theState().GetLocalTps(clname));
-    if (glt.DomExists(thename))
+    if (glt.DomExists(thename)) {
       spcl_tps.ImpModify(clname, glt);
+    }
   }
 
   // in cases dom spcl_tps:
@@ -485,7 +488,8 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
                             td.GetField(pos_AS_TypeDef_Eq),
                             td.GetField(pos_AS_TypeDef_Ord),
                             cl, access);
-      } else {
+      }
+      else {
         vdm_iplog << L"The name was '" << ASTAUX::ASName2String (name) << L"'" << endl << flush;
         RTERR::Error(L"IsTypeDef", RTERR_MULT_DEF, Nil(), Nil(), Sequence());
         return mk_(Bool(false), Nil(), Nil(), Nil(), Nil(), Nil(), Nil());
@@ -605,11 +609,13 @@ Tuple AUX::LookUpRecSel(const TYPE_AS_Name & name)
   TYPE_AS_Name tgnm (ASTAUX::GetSecondName(name));
 
   Generic recsel;
-  if (theState().GetRecSel(clnm).DomExists(tgnm, recsel))
+  if (theState().GetRecSel(clnm).DomExists(tgnm, recsel)) {
     //return mk_(Bool(true), Tuple(recsel_info).GetField(1));
     return mk_(Bool(true), recsel);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());    // dummy
+  }
 }
 #endif //VDMPP
 
@@ -686,8 +692,9 @@ bool AUX::IsStmt(const Record & se)
     case TAG_TYPE_AS_SpecificationStmt: {
       return true;
     }
-    default:
+    default: {
       return false;
+    }
   }
 }
 
@@ -710,23 +717,22 @@ SET<Sequence> AUX::AUX_Permute (const SEQ<TYPE_SEM_VAL> & l)
   return l.Permute();
 /*
   SET<Sequence> res_s;
-  if (l.Length () <= 1)
+  if (l.Length () <= 1) {
     res_s.Insert (l);
-  else
-  {
+  }
+  else {
     size_t maxi = l.Length ();
-    for (size_t i = 1; i <= maxi; i++)
-    {
+    for (size_t i = 1; i <= maxi; i++) {
       TYPE_SEM_VAL e (l[i]);
       SEQ<TYPE_SEM_VAL> tmp_l;
-      for (size_t j = 1; j <= maxi; j++)
-        if (i != j)
+      for (size_t j = 1; j <= maxi; j++) {
+        if (i != j) {
           tmp_l.ImpAppend (l[j]);
-
+        }
+      }
       SET<Sequence> perm_s (AUX_Permute (tmp_l));
       Generic ll;
-      for (bool bb = perm_s.First (ll); bb; bb = perm_s.Next (ll))
-      {
+      for (bool bb = perm_s.First (ll); bb; bb = perm_s.Next (ll)) {
         SEQ<TYPE_SEM_VAL> tbd_l (ll);
         tbd_l.ImpPrepend (e);
         res_s.Insert (tbd_l);
@@ -865,8 +871,7 @@ bool AUX::IsDefinedInModule (const TYPE_AS_Name& name)
 
   bool exists = false;
   Generic tp;
-  for(bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp))
-  {
+  for(bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp)) {
     const TYPE_AS_Type & shape (Record(tp).GetRecord(pos_AS_TypeDef_shape));
     exists = FindTagName(tag_id, shape);
   }
@@ -1163,8 +1168,7 @@ SEQ<Char> AUX::PrintName(const TYPE_AS_Name & name)
     default: {
       SEQ<Char> res (ids[1]);
       size_t len_ids = ids.Length();
-      for (size_t idx = 2; idx <= len_ids; idx++)
-      {
+      for (size_t idx = 2; idx <= len_ids; idx++) {
         res.ImpAppend(Char(L'`'));
         res.ImpConc(ids[idx]);
       }
@@ -1219,8 +1223,7 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
 
       const SEQ<TYPE_AS_Field> & fields (tp.GetSequence(pos_AS_CompositeType_fields));
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_AS_Field & field (fields[idx]);
         res.ImpConc(PrintType (field.GetRecord(pos_AS_Field_type)));
         res.ImpConc(SEQ<Char>(L" "));
@@ -1232,10 +1235,10 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
       const SEQ<TYPE_AS_Type> & tps (tp.GetSequence(pos_AS_UnionType_tps));
       SEQ<Char> res (L"( ");
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; idx <= len_tps; idx++)
-      {
-        if (idx > 1)
+      for (size_t idx = 1; idx <= len_tps; idx++) {
+        if (idx > 1) {
           res.ImpConc(SEQ<Char>(L" | "));
+        }
         res.ImpConc(PrintType (tps[idx]));
       }
       res.ImpConc(SEQ<Char>(L" )"));
@@ -1245,10 +1248,10 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
       const SEQ<TYPE_AS_Type> & tps (tp.GetSequence(pos_AS_ProductType_tps));
       SEQ<Char> res (L"( ");
       size_t len_tps = tps.Length();
-      for (size_t idx = 1; idx <= len_tps; idx++)
-      {
-        if (idx > 1)
+      for (size_t idx = 1; idx <= len_tps; idx++) {
+        if (idx > 1) {
           res.ImpConc(SEQ<Char>(L" * "));
+        }
         res.ImpConc(PrintType (tps[idx]));
       }
       res.ImpConc(SEQ<Char>(L" )"));
@@ -1291,16 +1294,16 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
     case TAG_TYPE_AS_OpType: {
       const SEQ<TYPE_AS_Type> & opdom (tp.GetSequence(pos_AS_OpType_opdom));
       SEQ<Char> res;
-      if (opdom.IsEmpty())
+      if (opdom.IsEmpty()) {
         res.ImpConc(SEQ<Char>(L"()"));
-      else
-      {
+      }
+      else {
         res.ImpConc(SEQ<Char>(L"( "));
         size_t len_opdom = opdom.Length();
-        for (size_t idx = 1; idx <= len_opdom; idx++)
-        {
-          if (idx > 1)
+        for (size_t idx = 1; idx <= len_opdom; idx++) {
+          if (idx > 1) {
             res.ImpConc(SEQ<Char>(L" * "));
+          }
           res.ImpConc(PrintType (opdom[idx]));
         }
         res.ImpConc(SEQ<Char>(L" )"));
@@ -1312,16 +1315,16 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
     case TAG_TYPE_AS_PartialFnType: {
       const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(pos_AS_PartialFnType_fndom));
       SEQ<Char> res;
-      if (fndom.IsEmpty())
+      if (fndom.IsEmpty()) {
         res.ImpConc(SEQ<Char>(L"()"));
-      else
-      {
+      }
+      else {
         res.ImpConc(SEQ<Char>(L"( "));
         size_t len_fndom = fndom.Length();
-        for (size_t idx = 1; idx <= len_fndom; idx++)
-        {
-          if (idx > 1)
+        for (size_t idx = 1; idx <= len_fndom; idx++) {
+          if (idx > 1) {
             res.ImpConc(SEQ<Char>(L" * "));
+          }
           res.ImpConc(PrintType (fndom[idx]));
         }
         res.ImpConc(SEQ<Char>(L" )"));
@@ -1333,16 +1336,16 @@ SEQ<Char> AUX::PrintType(const TYPE_AS_Type & tp)
     case TAG_TYPE_AS_TotalFnType: {
       const SEQ<TYPE_AS_Type> & fndom (tp.GetSequence(pos_AS_TotalFnType_fndom));
       SEQ<Char> res;
-      if (fndom.IsEmpty())
+      if (fndom.IsEmpty()) {
         res.ImpConc(SEQ<Char>(L"()"));
-      else
-      {
+      }
+      else {
         res.ImpConc(SEQ<Char>(L"( "));
         size_t len_fndom = fndom.Length();
-        for (size_t idx = 1; idx <= len_fndom; idx++)
-        {
-          if (idx > 1)
+        for (size_t idx = 1; idx <= len_fndom; idx++) {
+          if (idx > 1) {
             res.ImpConc(SEQ<Char>(L" * "));
+          }
           res.ImpConc(PrintType (fndom[idx]));
         }
         res.ImpConc(SEQ<Char>(L" )"));
@@ -1371,8 +1374,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBindList(const SEQ<TYPE_AS_PatternBind> &
 {
   SET<TYPE_AS_Name> nms;
   size_t len_pat_l = pat_l.Length();
-  for (size_t i = 1; i <= len_pat_l; i++)
+  for (size_t i = 1; i <= len_pat_l; i++) {
     nms.ImpUnion(ClModNmInPatternBind(pat_l[i]));
+  }
   return nms;
 }
 
@@ -1394,8 +1398,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBind(const TYPE_AS_PatternBind & patb)
       const SEQ<TYPE_AS_Pattern> & Elems (patb.GetSequence(pos_AS_SetEnumPattern_Elems));
       SET<TYPE_AS_Name> nms;
       size_t len_Elems = Elems.Length();
-      for (size_t i = 1; i <= len_Elems; i++ )
+      for (size_t i = 1; i <= len_Elems; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(Elems[i]));
+      }
       return nms;
       break;
     }
@@ -1409,8 +1414,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBind(const TYPE_AS_PatternBind & patb)
       const SEQ<TYPE_AS_Pattern> & els (patb.GetSequence(pos_AS_SeqEnumPattern_els));
       SET<TYPE_AS_Name> nms;
       size_t len_els = els.Length();
-      for (size_t i = 1; i <= len_els; i++ )
+      for (size_t i = 1; i <= len_els; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(els[i]));
+      }
       return nms;
       break;
     }
@@ -1441,8 +1447,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBind(const TYPE_AS_PatternBind & patb)
       const SEQ<TYPE_AS_Pattern> & fields (patb.GetSequence(pos_AS_RecordPattern_fields));
       SET<TYPE_AS_Name> nms;
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++ )
+      for (size_t i = 1; i <= len_fields; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(fields[i]));
+      }
       return nms;
       break;
     }
@@ -1450,8 +1457,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBind(const TYPE_AS_PatternBind & patb)
       const SEQ<TYPE_AS_Pattern> & fields (patb.GetSequence(pos_AS_TuplePattern_fields));
       SET<TYPE_AS_Name> nms;
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++ )
+      for (size_t i = 1; i <= len_fields; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(fields[i]));
+      }
       return nms;
       break;
     }
@@ -1460,8 +1468,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInPatternBind(const TYPE_AS_PatternBind & patb)
       const SEQ<TYPE_AS_Pattern> & fields (patb.GetSequence(pos_AS_ObjectPattern_fields));
       SET<TYPE_AS_Name> nms;
       size_t len_fields = fields.Length();
-      for (size_t i = 1; i <= len_fields; i++ )
+      for (size_t i = 1; i <= len_fields; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(fields[i].GetRecord(pos_AS_FieldPattern_pat)));
+      }
       return nms;
       break;
     }
@@ -1518,8 +1527,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInMultBind(const TYPE_AS_MultBind & bind)
       const SEQ<TYPE_AS_Pattern> & pat_l (bind.GetSequence(pos_AS_MultTypeBind_pat));
       SET<TYPE_AS_Name> nms;
       size_t len_pat_l = pat_l.Length();
-      for (size_t i = 1; i <= len_pat_l; i++ )
+      for (size_t i = 1; i <= len_pat_l; i++ ) {
         nms.ImpUnion(ClModNmInPatternBind(pat_l[i]));
+      }
       return nms;
       break;
     }
@@ -1534,8 +1544,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInMultBindList(const SEQ<TYPE_AS_MultBind> & bind_
 {
   SET<TYPE_AS_Name> nms;
   size_t len_bind_l = bind_l.Length();
-  for (size_t i = 1; i <= len_bind_l; i++)
+  for (size_t i = 1; i <= len_bind_l; i++) {
     nms.ImpUnion(ClModNmInMultBind(bind_l[i]));
+  }
   return nms;
 }
 
@@ -1562,21 +1573,24 @@ SET<TYPE_AS_Name> AUX::ClModNmInLocalDef(const SEQ<TYPE_AS_LocalDef> & localdef_
         const Generic & body (fnbody.GetField(pos_AS_FnBody_body));
 
         size_t len_parms = parms.Length();
-        for (size_t j = 1; j <= len_parms; j++)
+        for (size_t j = 1; j <= len_parms; j++) {
           nms.ImpUnion(ClModNmInPatternBindList(parms[j]));
+        }
 
 #ifdef VDMSL
-        if (body != Int(NOTYETSPEC))
+        if (body != Int(NOTYETSPEC)) {
 #endif // VDMSL
 #ifdef VDMPP
-        if ((body != Int(NOTYETSPEC)) && (body != Int(SUBRESP)))
+        if ((body != Int(NOTYETSPEC)) && (body != Int(SUBRESP))) {
 #endif // VDMPP
           nms.ImpUnion(ClModNmInExpr(body));
-
-        if (!pre_e.IsNil())
+        }
+        if (!pre_e.IsNil()) {
           nms.ImpUnion(ClModNmInExpr(pre_e));
-        if (!post_e.IsNil())
+        }
+        if (!post_e.IsNil()) {
           nms.ImpUnion(ClModNmInExpr(post_e));
+        }
         break;
       }
       case TAG_TYPE_AS_ImplFnDef: {
@@ -1585,11 +1599,12 @@ SET<TYPE_AS_Name> AUX::ClModNmInLocalDef(const SEQ<TYPE_AS_LocalDef> & localdef_
         const TYPE_AS_Expr & post_e     (localdef.GetRecord(pos_AS_ImplFnDef_fnpost));
 
         size_t len_partps = partps.Length();
-        for (size_t j = 1; j <= len_partps; j++)
+        for (size_t j = 1; j <= len_partps; j++) {
           nms.ImpUnion(ClModNmInPatternBindList(partps[j].GetSequence(pos_AS_PatTypePair_pats)));
-
-        if (!pre_e.IsNil())
+        }
+        if (!pre_e.IsNil()) {
           nms.ImpUnion(ClModNmInExpr(pre_e));
+        }
         nms.ImpUnion(ClModNmInExpr(post_e));
         break;
       }
@@ -1601,20 +1616,23 @@ SET<TYPE_AS_Name> AUX::ClModNmInLocalDef(const SEQ<TYPE_AS_LocalDef> & localdef_
         const Generic & body (fnbody.GetField(pos_AS_FnBody_body));
 
         size_t len_partps = partps.Length();
-        for (size_t j = 1; j <= len_partps; j++)
+        for (size_t j = 1; j <= len_partps; j++) {
           nms.ImpUnion(ClModNmInPatternBindList(partps[j].GetSequence(pos_AS_PatTypePair_pats)));
+        }
 #ifdef VDMSL
-        if (body != Int(NOTYETSPEC))
+        if (body != Int(NOTYETSPEC)) {
 #endif // VDMSL
 #ifdef VDMPP
-        if ((body != Int(NOTYETSPEC)) && (body != Int(SUBRESP)))
+        if ((body != Int(NOTYETSPEC)) && (body != Int(SUBRESP))) {
 #endif // VDMPP
           nms.ImpUnion(ClModNmInExpr(body));
-
-        if (!pre_e.IsNil())
+        }
+        if (!pre_e.IsNil()) {
           nms.ImpUnion(ClModNmInExpr(pre_e));
-        if (!post_e.IsNil())
+        }
+        if (!post_e.IsNil()) {
           nms.ImpUnion(ClModNmInExpr(post_e));
+        }
         break;
       }
     }
@@ -1657,8 +1675,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInExprList(const SEQ<TYPE_AS_Expr> & expr_l)
 {
   SET<TYPE_AS_Name> nms;
   size_t len_expr_l = expr_l.Length();
-  for (size_t i = 1; i <= len_expr_l; i++)
+  for (size_t i = 1; i <= len_expr_l; i++) {
     nms.ImpUnion(ClModNmInExpr(expr_l[i]));
+  }
   return nms;
 }
 
@@ -1698,8 +1717,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInExpr(const TYPE_AS_Expr & e)
       const Generic & St (e.GetField(pos_AS_LetBeSTExpr_St));
       SET<TYPE_AS_Name> nms;
       nms.ImpUnion(ClModNmInMultBindList(e.GetSequence(pos_AS_LetBeSTExpr_lhs)));
-      if (!St.IsNil())
+      if (!St.IsNil()) {
         nms.ImpUnion(ClModNmInExpr(St));
+      }
       nms.ImpUnion(ClModNmInExpr(e.GetRecord(pos_AS_LetBeSTExpr_In)));
       return nms;
       break;
@@ -1718,8 +1738,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInExpr(const TYPE_AS_Expr & e)
       SET<TYPE_AS_Name> nms;
       nms.ImpUnion(ClModNmInExpr(e.GetRecord(pos_AS_CasesExpr_sel)));
       nms.ImpUnion(ClModNmInCaseAltnList(e.GetSequence(pos_AS_CasesExpr_altns)));
-      if (!Others.IsNil())
+      if (!Others.IsNil()) {
         nms.ImpUnion(ClModNmInExpr(Others));
+      }
       return nms;
       break;
     }
@@ -1763,8 +1784,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInExpr(const TYPE_AS_Expr & e)
       SET<TYPE_AS_Name> nms;
       nms.ImpUnion(ClModNmInExpr(e.GetRecord(pos_AS_SetComprehensionExpr_elem)));
       nms.ImpUnion(ClModNmInMultBindList(e.GetSequence(pos_AS_SetComprehensionExpr_bind)));
-      if (!pred.IsNil())
+      if (!pred.IsNil()) {
         nms.ImpUnion(ClModNmInExpr(pred));
+      }
       return nms;
       break;
     }
@@ -1784,8 +1806,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInExpr(const TYPE_AS_Expr & e)
       SET<TYPE_AS_Name> nms;
       nms.ImpUnion(ClModNmInExpr(e.GetRecord(pos_AS_SeqComprehensionExpr_elem)));
       nms.ImpUnion(ClModNmInPatternBind(e.GetRecord(pos_AS_SeqComprehensionExpr_bind)));
-      if (!pred.IsNil())
+      if (!pred.IsNil()) {
         nms.ImpUnion(ClModNmInExpr(pred));
+      }
       return nms;
       break;
     }
@@ -1821,8 +1844,9 @@ SET<TYPE_AS_Name> AUX::ClModNmInExpr(const TYPE_AS_Expr & e)
       SET<TYPE_AS_Name> nms;
       nms.ImpUnion(ClModNmInExpr(e.GetRecord(pos_AS_MapComprehensionExpr_elem)));
       nms.ImpUnion(ClModNmInMultBindList(e.GetSequence(pos_AS_MapComprehensionExpr_bind)));
-      if (!pred.IsNil())
+      if (!pred.IsNil()) {
         nms.ImpUnion(ClModNmInExpr(pred));
+      }
       return nms;
       break;
     }

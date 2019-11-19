@@ -139,22 +139,25 @@ Generic MOD::BuildExportSig (const Generic & exp_sig, const Map & explfns, const
   Generic name;
   for (bool bb = dom_fns.First (name); bb; bb = dom_fns.Next (name)) {
     TYPE_AS_Name new_name (ren.DomExists(name) ? ren[name] : (TYPE_AS_Name)name);
-    if (HasFnPrePostCond (new_name, explfns, explpolys))
+    if (HasFnPrePostCond (new_name, explfns, explpolys)) {
       res_fns.ImpOverride (GetPrePostFns (new_name, explfns, explpolys));
+    }
   }
 
   SET<TYPE_AS_Name> dom_ops (ops.Dom());
   for (bool cc = dom_ops.First (name); cc; cc = dom_ops.Next (name)) {
     TYPE_AS_Name new_name (ren.DomExists(name) ? ren[name] : (TYPE_AS_Name)name);
-    if (HasOpPrePostCond (new_name, explfns))
+    if (HasOpPrePostCond (new_name, explfns)) {
       res_fns.ImpOverride (GetPrePostOps (new_name, explfns));
+    }
   }
 
   SET<TYPE_AS_Name> dom_tps (tps.Dom());
   for (bool dd = dom_tps.First (name); dd; dd = dom_tps.Next (name)) {
     TYPE_AS_Name new_name (ren.DomExists(name) ? ren[name] : (TYPE_AS_Name)name);
-    if (HasTpInvariant (new_name, explfns))
+    if (HasTpInvariant (new_name, explfns)) {
       res_fns.ImpOverride (GetTpInvariant (new_name, explfns));
+    }
   }
 
   TYPE_AS_ExportSig new_sig (exp_sig);

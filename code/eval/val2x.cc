@@ -43,8 +43,9 @@
 
 void VAL2X::my_space(wostream&os, int indent)
 {
-  for (int i=0; i<indent; i++)
+  for (int i=0; i<indent; i++) {
     os << L" ";
+  }
 }
 
 void VAL2X::init_EVAL_SEM()

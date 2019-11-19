@@ -39,8 +39,9 @@ void SemRecTable::Decl_SEM_REC(const TYPE_AS_Name & astag,
 
   size_t len = dc_s.Length();
   for (size_t i = 1; i <= len; i++) {
-    if (dc_s[i].GetValue())
+    if (dc_s[i].GetValue()) {
       this->DefSemRecInfo.SetDontCare(tag, i);
+    }
   }
 }
 
@@ -48,9 +49,9 @@ TYPE_DYNSEM_SEM_SemRecord SemRecTable::mk_SEM_REC(const TYPE_AS_Name & astag, co
 {
   int tag = 0;
   int size = 0;
-  if( !this->DefSemRecInfo.GetTag(ASName2String(astag), tag, size ) )
+  if( !this->DefSemRecInfo.GetTag(ASName2String(astag), tag, size ) ) {
     RTERR::Error(L"SemRecord::mk_SEM_REC", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
-
+  }
   Record inner_rec(tag, size, this->DefSemRecInfo);
   inner_rec.SetFields(v_l);
 

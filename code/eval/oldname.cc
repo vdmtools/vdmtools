@@ -44,10 +44,10 @@
 // ==> AS`PatternBind
 TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
 {
-  switch(pat.GetTag())
-  {
-    case TAG_TYPE_AS_PatternName:
+  switch(pat.GetTag()) {
+    case TAG_TYPE_AS_PatternName: {
       return (pat);
+    }
     case TAG_TYPE_AS_MatchVal: {
       TYPE_AS_MatchVal res_pat (pat);
       res_pat.SetField(pos_AS_MatchVal_val, OldNameInExpr (pat.GetRecord(pos_AS_MatchVal_val)));
@@ -58,8 +58,9 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       const SEQ<TYPE_AS_Pattern> & els_l (pat.GetSequence(pos_AS_SetEnumPattern_Elems));
       SEQ<TYPE_AS_Pattern> l;
       size_t len_els_l = els_l.Length();
-      for (size_t index = 1; index <= len_els_l; index++)
+      for (size_t index = 1; index <= len_els_l; index++) {
         l.ImpAppend (OldNameInPattern (els_l[index]));
+      }
       res_pat.SetField(pos_AS_SetEnumPattern_Elems, l);
       return (res_pat);
     }
@@ -68,8 +69,9 @@ TYPE_AS_PatternBind OLD::OldNameInPattern (const TYPE_AS_PatternBind & pat)
       const SEQ<TYPE_AS_Pattern> & els_l (pat.GetSequence(pos_AS_SeqEnumPattern_els));
       SEQ<TYPE_AS_Pattern> l;
       size_t len_els_l = els_l.Length();
-      for (size_t index = 1; index <= len_els_l; index++)
+      for (size_t index = 1; index <= len_els_l; index++) {
         l.ImpAppend (OldNameInPattern (els_l[index]));
+      }
       res_pat.SetField(pos_AS_SeqEnumPattern_els, l);
       return (res_pat);
     }
@@ -183,17 +185,16 @@ SEQ<TYPE_AS_MultBind> OLD::OldNameInMultBindSeq (const SEQ<TYPE_AS_MultBind> & b
 {
   SEQ<TYPE_AS_MultBind> new_l;
   size_t len_bind_l = bind_l.Length();
-  for (size_t index = 1; index <= len_bind_l; index++)
-  {
+  for (size_t index = 1; index <= len_bind_l; index++) {
     const TYPE_AS_MultBind & mb (bind_l[index]);
     switch(mb.GetTag()) {
       case TAG_TYPE_AS_MultSetBind: {
         const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSetBind_pat));
         SEQ<TYPE_AS_Pattern> tmp_l;
         size_t len_pat_l = pat_l.Length();
-        for (size_t idx = 1; idx <= len_pat_l; idx++)
+        for (size_t idx = 1; idx <= len_pat_l; idx++) {
           tmp_l.ImpAppend (OldNameInPattern (pat_l[idx]));
-  
+        } 
         TYPE_AS_MultSetBind new_bind (mb);
         new_bind.SetField(pos_AS_MultSetBind_pat, tmp_l);
         new_l.ImpAppend (new_bind);
@@ -203,9 +204,9 @@ SEQ<TYPE_AS_MultBind> OLD::OldNameInMultBindSeq (const SEQ<TYPE_AS_MultBind> & b
         const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultSeqBind_pat));
         SEQ<TYPE_AS_Pattern> tmp_l;
         size_t len_pat_l = pat_l.Length();
-        for (size_t idx = 1; idx <= len_pat_l; idx++)
+        for (size_t idx = 1; idx <= len_pat_l; idx++) {
           tmp_l.ImpAppend (OldNameInPattern (pat_l[idx]));
-  
+        } 
         TYPE_AS_MultSeqBind new_bind (mb);
         new_bind.SetField(pos_AS_MultSeqBind_pat, tmp_l);
         new_l.ImpAppend (new_bind);
@@ -215,16 +216,17 @@ SEQ<TYPE_AS_MultBind> OLD::OldNameInMultBindSeq (const SEQ<TYPE_AS_MultBind> & b
         const SEQ<TYPE_AS_Pattern> & pat_l (mb.GetSequence(pos_AS_MultTypeBind_pat));
         SEQ<TYPE_AS_Pattern> tmp_l;
         size_t len_pat_l = pat_l.Length();
-        for (size_t idx = 1; idx <= len_pat_l; idx++)
+        for (size_t idx = 1; idx <= len_pat_l; idx++) {
           tmp_l.ImpAppend (OldNameInPattern (pat_l[idx]));
-
+        }
         TYPE_AS_MultTypeBind new_bind (mb);
         new_bind.SetField(pos_AS_MultTypeBind_pat, tmp_l);
         new_l.ImpAppend (new_bind);
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
   return (new_l);
@@ -236,80 +238,47 @@ SEQ<TYPE_AS_MultBind> OLD::OldNameInMultBindSeq (const SEQ<TYPE_AS_MultBind> & b
 TYPE_AS_Expr OLD::OldNameInExpr (const TYPE_AS_Expr & expr)
 {
   switch (expr.GetTag ()) {
-  case TAG_TYPE_AS_DefExpr:
-    return OldNameInDefExpr (expr); break;
-  case TAG_TYPE_AS_LetExpr:
-    return OldNameInLetExpr (expr); break;
-  case TAG_TYPE_AS_LetBeSTExpr:
-    return OldNameInLetBeSTExpr (expr); break;
-  case TAG_TYPE_AS_IfExpr:
-    return OldNameInIfExpr (expr); break;
-  case TAG_TYPE_AS_CasesExpr:
-    return OldNameInCasesExpr (expr); break;
-  case TAG_TYPE_AS_PrefixExpr:
-    return OldNameInPrefixExpr (expr); break;
-  case TAG_TYPE_AS_BinaryExpr:
-    return OldNameInBinaryExpr (expr); break;
-  case TAG_TYPE_AS_AllOrExistsExpr:
-    return OldNameInAllOrExistsExpr (expr); break;
-  case TAG_TYPE_AS_ExistsUniqueExpr:
-    return OldNameInExistsUniqueExpr (expr); break;
-  case TAG_TYPE_AS_SetEnumerationExpr:
-    return OldNameInSetEnumerationExpr (expr); break;
-  case TAG_TYPE_AS_SetComprehensionExpr:
-    return OldNameInSetComprehensionExpr (expr); break;
-  case TAG_TYPE_AS_SetRangeExpr:
-    return OldNameInSetRangeExpr (expr); break;
-  case TAG_TYPE_AS_SeqEnumerationExpr:
-    return OldNameInSeqEnumerationExpr (expr); break;
-  case TAG_TYPE_AS_SeqComprehensionExpr:
-    return OldNameInSeqComprehensionExpr (expr); break;
-  case TAG_TYPE_AS_SubSequenceExpr:
-    return OldNameInSubSequenceExpr (expr); break;
-  case TAG_TYPE_AS_SeqModifyMapOverrideExpr:
-    return OldNameInSeqModifyMapOverrideExpr (expr); break;
-  case TAG_TYPE_AS_MapEnumerationExpr:
-    return OldNameInMapEnumerationExpr (expr); break;
-  case TAG_TYPE_AS_MapComprehensionExpr:
-    return OldNameInMapComprehensionExpr (expr); break;
-  case TAG_TYPE_AS_TupleConstructorExpr:
-    return OldNameInTupleConstructorExpr (expr); break;
-  case TAG_TYPE_AS_RecordConstructorExpr:
-    return OldNameInRecordConstructorExpr (expr); break;
-  case TAG_TYPE_AS_RecordModifierExpr:
-    return OldNameInRecordModifierExpr (expr); break;
-  case TAG_TYPE_AS_TokenConstructorExpr:
-    return OldNameInTokenConstructorExpr (expr); break;
-  case TAG_TYPE_AS_ApplyExpr:
-    return OldNameInApplyExpr (expr); break;
-  case TAG_TYPE_AS_LambdaExpr:
-    return OldNameInLambdaExpr (expr); break;
-  case TAG_TYPE_AS_FieldSelectExpr:
-    return OldNameInFieldSelectExpr (expr); break;
-  case TAG_TYPE_AS_FctTypeInstExpr:
-    return OldNameInFctTypeInstExpr (expr); break;
-  case TAG_TYPE_AS_IsExpr:
-    return OldNameInIsExpr (expr); break;
-  case TAG_TYPE_AS_NarrowExpr:
-    return OldNameInNarrowExpr (expr); break;
-  case TAG_TYPE_AS_IotaExpr:
-    return OldNameInIotaExpr (expr); break;
-  case TAG_TYPE_AS_UndefinedExpr:
-  case TAG_TYPE_AS_Name:
-  case TAG_TYPE_AS_BoolLit:
-  case TAG_TYPE_AS_CharLit:
-  case TAG_TYPE_AS_TextLit:
-  case TAG_TYPE_AS_QuoteLit:
-  case TAG_TYPE_AS_RealLit:
-  case TAG_TYPE_AS_NumLit:
-  case TAG_TYPE_AS_NilLit:
-    return (expr); break;
-  case TAG_TYPE_AS_OldName:
-    return OldNameInOldName (expr); break;
-  case TAG_TYPE_AS_BracketedExpr:
-    return OldNameInBracketedExpr (expr); break;
-  case TAG_TYPE_AS_Macro:
-    return (expr); break;
+    case TAG_TYPE_AS_DefExpr: { return OldNameInDefExpr (expr); break; }
+    case TAG_TYPE_AS_LetExpr: { return OldNameInLetExpr (expr); break; }
+    case TAG_TYPE_AS_LetBeSTExpr: { return OldNameInLetBeSTExpr (expr); break; }
+    case TAG_TYPE_AS_IfExpr: { return OldNameInIfExpr (expr); break; }
+    case TAG_TYPE_AS_CasesExpr: { return OldNameInCasesExpr (expr); break; }
+    case TAG_TYPE_AS_PrefixExpr: { return OldNameInPrefixExpr (expr); break; }
+    case TAG_TYPE_AS_BinaryExpr: { return OldNameInBinaryExpr (expr); break; }
+    case TAG_TYPE_AS_AllOrExistsExpr: { return OldNameInAllOrExistsExpr (expr); break; }
+    case TAG_TYPE_AS_ExistsUniqueExpr: { return OldNameInExistsUniqueExpr (expr); break; }
+    case TAG_TYPE_AS_SetEnumerationExpr: { return OldNameInSetEnumerationExpr (expr); break; }
+    case TAG_TYPE_AS_SetComprehensionExpr: { return OldNameInSetComprehensionExpr (expr); break; }
+    case TAG_TYPE_AS_SetRangeExpr: { return OldNameInSetRangeExpr (expr); break; }
+    case TAG_TYPE_AS_SeqEnumerationExpr: { return OldNameInSeqEnumerationExpr (expr); break; }
+    case TAG_TYPE_AS_SeqComprehensionExpr: { return OldNameInSeqComprehensionExpr (expr); break; }
+    case TAG_TYPE_AS_SubSequenceExpr: { return OldNameInSubSequenceExpr (expr); break; }
+    case TAG_TYPE_AS_SeqModifyMapOverrideExpr: { return OldNameInSeqModifyMapOverrideExpr (expr); break; }
+    case TAG_TYPE_AS_MapEnumerationExpr: { return OldNameInMapEnumerationExpr (expr); break; }
+    case TAG_TYPE_AS_MapComprehensionExpr: { return OldNameInMapComprehensionExpr (expr); break; }
+    case TAG_TYPE_AS_TupleConstructorExpr: { return OldNameInTupleConstructorExpr (expr); break; }
+    case TAG_TYPE_AS_RecordConstructorExpr: { return OldNameInRecordConstructorExpr (expr); break; }
+    case TAG_TYPE_AS_RecordModifierExpr: { return OldNameInRecordModifierExpr (expr); break; }
+    case TAG_TYPE_AS_TokenConstructorExpr: { return OldNameInTokenConstructorExpr (expr); break; }
+    case TAG_TYPE_AS_ApplyExpr: { return OldNameInApplyExpr (expr); break; }
+    case TAG_TYPE_AS_LambdaExpr: { return OldNameInLambdaExpr (expr); break; }
+    case TAG_TYPE_AS_FieldSelectExpr: { return OldNameInFieldSelectExpr (expr); break; }
+    case TAG_TYPE_AS_FctTypeInstExpr: { return OldNameInFctTypeInstExpr (expr); break; }
+    case TAG_TYPE_AS_IsExpr: { return OldNameInIsExpr (expr); break; }
+    case TAG_TYPE_AS_NarrowExpr: { return OldNameInNarrowExpr (expr); break; }
+    case TAG_TYPE_AS_IotaExpr: { return OldNameInIotaExpr (expr); break; }
+    case TAG_TYPE_AS_UndefinedExpr:
+    case TAG_TYPE_AS_Name:
+    case TAG_TYPE_AS_BoolLit:
+    case TAG_TYPE_AS_CharLit:
+    case TAG_TYPE_AS_TextLit:
+    case TAG_TYPE_AS_QuoteLit:
+    case TAG_TYPE_AS_RealLit:
+    case TAG_TYPE_AS_NumLit:
+    case TAG_TYPE_AS_NilLit: { return (expr); break; }
+    case TAG_TYPE_AS_OldName: { return OldNameInOldName (expr); break; }
+    case TAG_TYPE_AS_BracketedExpr: { return OldNameInBracketedExpr (expr); break; }
+    case TAG_TYPE_AS_Macro: { return (expr); break; }
   }
 
   RTERR::Error (L"OldNameInExpr", RTERR_EXPR_UNKNOWN, Nil(), Nil(), Sequence());
@@ -324,15 +293,13 @@ TYPE_AS_Expr OLD::OldNameInDefExpr (const TYPE_AS_DefExpr & expr)
   const Sequence & def_l (expr.GetSequence(pos_AS_DefExpr_Def));
   type_dd2PL new_l;
   size_t len_def_l = def_l.Length();
-  for (size_t index = 1; index <= len_def_l; index++)
-  {
+  for (size_t index = 1; index <= len_def_l; index++) {
     const type_dd2P & tmp (def_l[index]);
     type_dd2P new_elm;
     new_elm.SetField (1, OldNameInPattern (tmp.GetRecord (1)));
     new_elm.SetField (2, OldNameInExpr (tmp.GetRecord (2)));
     new_l.ImpAppend (new_elm);
   }
-
   TYPE_AS_DefExpr new_expr (expr);
   new_expr.SetField(pos_AS_DefExpr_Def, new_l);
   new_expr.SetField(pos_AS_DefExpr_In, OldNameInExpr (expr.GetRecord(pos_AS_DefExpr_In)));
@@ -348,8 +315,7 @@ TYPE_AS_Expr OLD::OldNameInLetExpr (const TYPE_AS_LetExpr & expr)
   const SEQ<TYPE_AS_LocalDef> & localdef (expr.GetSequence(pos_AS_LetExpr_localdef));
   SEQ<TYPE_AS_LocalDef> new_l;
   size_t len_localdef = localdef.Length();
-  for (size_t index = 1; index <= len_localdef; index++)
-  {
+  for (size_t index = 1; index <= len_localdef; index++) {
     const TYPE_AS_LocalDef & ldef (localdef[index]);
     switch(ldef.GetTag()) {
       case TAG_TYPE_AS_ValueDef: {
@@ -367,8 +333,9 @@ TYPE_AS_Expr OLD::OldNameInLetExpr (const TYPE_AS_LetExpr & expr)
         new_l.ImpAppend (ldef);
         break;
       }
-      default:
+      default: {
         break;
+      }
     }
   }
   TYPE_AS_LetExpr new_expr (expr);
@@ -397,8 +364,7 @@ TYPE_AS_Expr OLD::OldNameInIfExpr (const TYPE_AS_IfExpr & expr)
   const SEQ<TYPE_AS_ElseifExpr> & elif (expr.GetSequence(pos_AS_IfExpr_elsif));
   SEQ<TYPE_AS_ElseifExpr> new_l;
   size_t len_elif = elif.Length();
-  for (size_t index = 1; index <= len_elif; index++)
-  {
+  for (size_t index = 1; index <= len_elif; index++) {
     const TYPE_AS_ElseifExpr & tmp (elif[index]);
     TYPE_AS_ElseifExpr new_tmp (tmp);
     new_tmp.SetField(pos_AS_ElseifExpr_test, OldNameInExpr (tmp.GetRecord(pos_AS_ElseifExpr_test)));
@@ -423,15 +389,15 @@ TYPE_AS_Expr OLD::OldNameInCasesExpr (const TYPE_AS_CasesExpr & expr)
   const SEQ<TYPE_AS_CaseAltn> & altn (expr.GetSequence(pos_AS_CasesExpr_altns));
   SEQ<TYPE_AS_CaseAltn> new_l;
   size_t len_altn = altn.Length();
-  for (size_t index = 1; index <= len_altn; index++)
-  {
+  for (size_t index = 1; index <= len_altn; index++) {
     const TYPE_AS_CaseAltn & tmp (altn[index]);
     TYPE_AS_CaseAltn new_tmp (tmp);
     const SEQ<TYPE_AS_Pattern> & match (tmp.GetSequence(pos_AS_CaseAltn_match));
     SEQ<TYPE_AS_Pattern> pat_lp;
     size_t len_match = match.Length();
-    for (size_t idx = 1; idx <= len_match; idx++)
+    for (size_t idx = 1; idx <= len_match; idx++) {
       pat_lp.ImpAppend (OldNameInPattern (match[idx]));
+    }
     new_tmp.SetField(pos_AS_CaseAltn_match, pat_lp);
     new_tmp.SetField(pos_AS_CaseAltn_body, OldNameInExpr (tmp.GetRecord(pos_AS_CaseAltn_body)));
     new_l.ImpAppend(new_tmp);
@@ -496,9 +462,9 @@ TYPE_AS_Expr OLD::OldNameInSetEnumerationExpr (const TYPE_AS_SetEnumerationExpr 
   const SEQ<TYPE_AS_Expr> & elm_le (expr.GetSequence(pos_AS_SeqEnumerationExpr_els));
   SEQ<TYPE_AS_Expr> new_l;
   size_t len_elm_le = elm_le.Length();
-  for (size_t index = 1; index <= len_elm_le; index++)
+  for (size_t index = 1; index <= len_elm_le; index++) {
     new_l.ImpAppend (OldNameInExpr (elm_le[index]));
-
+  }
   TYPE_AS_SetEnumerationExpr new_expr (expr);
   new_expr.SetField(pos_AS_SeqEnumerationExpr_els, new_l);
   return (new_expr);
@@ -535,9 +501,9 @@ TYPE_AS_Expr OLD::OldNameInSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr 
   const SEQ<TYPE_AS_Expr> & els_l (expr.GetSequence(pos_AS_SeqEnumerationExpr_els));
   SEQ<TYPE_AS_Expr> new_l;
   size_t len_els_l = els_l.Length();
-  for (size_t index = 1; index <= len_els_l; index++)
+  for (size_t index = 1; index <= len_els_l; index++) {
     new_l.ImpAppend (OldNameInExpr (els_l[index]));
-
+  }
   TYPE_AS_SeqEnumerationExpr new_expr (expr);
   new_expr.SetField(pos_AS_SeqEnumerationExpr_els, new_l);
   return (new_expr);
@@ -603,9 +569,9 @@ TYPE_AS_Expr OLD::OldNameInMapEnumerationExpr (const TYPE_AS_MapEnumerationExpr 
   const SEQ<TYPE_AS_Maplet> & els_l (expr.GetSequence(pos_AS_MapEnumerationExpr_els));
   SEQ<TYPE_AS_Maplet> new_l;
   size_t len_els_l = els_l.Length();
-  for (size_t index = 1; index <= len_els_l; index++)
+  for (size_t index = 1; index <= len_els_l; index++) {
     new_l.ImpAppend (OldNameInMaplet (els_l[index]));
-
+  }
   TYPE_AS_MapEnumerationExpr new_expr (expr);
   new_expr.SetField(pos_AS_MapEnumerationExpr_els, new_l);
   return (new_expr);
@@ -631,9 +597,9 @@ TYPE_AS_Expr OLD::OldNameInTupleConstructorExpr (const TYPE_AS_TupleConstructorE
   const SEQ<TYPE_AS_Expr> & fields (expr.GetSequence(pos_AS_TupleConstructorExpr_fields));
   SEQ<TYPE_AS_Expr> new_l;
   size_t len_fields = fields.Length();
-  for (size_t index = 1; index <= len_fields; index++)
+  for (size_t index = 1; index <= len_fields; index++) {
     new_l.ImpAppend (OldNameInExpr (fields[index]));
-
+  }
   TYPE_AS_TupleConstructorExpr new_expr (expr);
   new_expr.SetField(pos_AS_TupleConstructorExpr_fields, new_l);
   return (new_expr);
@@ -647,9 +613,9 @@ TYPE_AS_Expr OLD::OldNameInRecordConstructorExpr (const TYPE_AS_RecordConstructo
   const SEQ<TYPE_AS_Expr> & fields (expr.GetSequence(pos_AS_RecordConstructorExpr_fields));
   SEQ<TYPE_AS_Expr> new_l;
   size_t len_fields = fields.Length();
-  for (size_t index = 1; index <= len_fields; index++)
+  for (size_t index = 1; index <= len_fields; index++) {
     new_l.ImpAppend (OldNameInExpr (fields[index]));
-  
+  } 
   TYPE_AS_RecordConstructorExpr new_expr (expr);
   new_expr.SetField(pos_AS_RecordConstructorExpr_fields, new_l);
   return (new_expr);
@@ -663,8 +629,7 @@ TYPE_AS_Expr OLD::OldNameInRecordModifierExpr (const TYPE_AS_RecordModifierExpr 
   const SEQ<TYPE_AS_RecordModification> & mod_l (expr.GetSequence(pos_AS_RecordModifierExpr_modifiers));
   SEQ<TYPE_AS_RecordModification> new_l;
   size_t len_mod_l = mod_l.Length();
-  for (size_t index = 1; index <= len_mod_l; index++)
-  {
+  for (size_t index = 1; index <= len_mod_l; index++) {
     const TYPE_AS_RecordModification & tmp (mod_l[index]);
     TYPE_AS_RecordModification new_tmp (tmp);
     new_tmp.set_newexpr (OldNameInExpr (tmp.GetRecord(pos_AS_RecordModification_newexpr)));
@@ -695,9 +660,9 @@ TYPE_AS_Expr OLD::OldNameInApplyExpr (const TYPE_AS_ApplyExpr & expr)
   const SEQ<TYPE_AS_Expr> & arg_l (expr.GetSequence(pos_AS_ApplyExpr_arg));
   SEQ<TYPE_AS_Expr> new_l;
   size_t len_arg_l = arg_l.Length();
-  for (size_t index = 1; index <= len_arg_l; index++)
+  for (size_t index = 1; index <= len_arg_l; index++) {
     new_l.ImpAppend (OldNameInExpr (arg_l[index]));
-
+  }
   TYPE_AS_ApplyExpr new_expr (expr);
   new_expr.SetField(pos_AS_ApplyExpr_fct, OldNameInExpr (expr.GetRecord(pos_AS_ApplyExpr_fct)));
   new_expr.SetField(pos_AS_ApplyExpr_arg, new_l);
@@ -798,10 +763,12 @@ TYPE_AS_Expr OLD::OldNameInIotaExpr (const TYPE_AS_IotaExpr & expr)
 // ==> [AS`Expr]
 Generic OLD::OldNameInGenericExpr (const Generic & expr)
 {
-  if (expr.IsNil ())
+  if (expr.IsNil ()) {
     return (expr);
-  else
+  }
+  else {
     return (OldNameInExpr (expr));
+  }
 }
 
 // OldNameInMaplet

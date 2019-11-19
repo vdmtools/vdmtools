@@ -208,7 +208,8 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
         RTERR::Error(L"M42Sem", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
       }
       return SemRec::mk_SEM_REC(symtag, resseq);
-    } else {
+    }
+    else {
       RTERR::Error(L"M42Sem", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
       return Nil();
     }
@@ -224,8 +225,9 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
     Tuple tuple (val);
     SEQ<TYPE_SEM_VAL> resseq;
     size_t len_tuple = tuple.Length();
-    for (size_t idx = 1; idx <= len_tuple; idx++)
+    for (size_t idx = 1; idx <= len_tuple; idx++) {
       resseq.ImpAppend(M42Sem(tuple.GetField(idx), dldata));
+    }
     return TYPE_SEM_TUPLE().Init(resseq);
   }
   else if (val.IsNil()) {
@@ -256,8 +258,9 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
     Sequence seq (val);
     size_t len_seq = seq.Length();
     SEQ<TYPE_SEM_VAL> resseq;
-    for (size_t idx = 1; idx <= len_seq; idx++)
+    for (size_t idx = 1; idx <= len_seq; idx++) {
       resseq.ImpAppend(M42Sem(seq[idx], dldata));
+    }
     return TYPE_SEM_SEQ().Init(resseq);
   }
   else if (val.IsUndef()) {
@@ -319,8 +322,9 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
       Set set (arg.GetSet(pos_SEM_SET_v));
       Set res;
       Generic elm;
-      for (bool bb = set.First(elm); bb; bb = set.Next(elm))
+      for (bool bb = set.First(elm); bb; bb = set.Next(elm)) {
         res.Insert(Convert2M4(elm, dldata));
+      }
       return res;
     }
     case TAG_TYPE_DYNSEM_SEM_REC: {
@@ -357,8 +361,9 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
       const Sequence & seq (arg.GetSequence(pos_SEM_SEQ_v));
       size_t len = seq.Length();
       Sequence res;
-      for (size_t idx = 1; idx <= len; idx++)
+      for (size_t idx = 1; idx <= len; idx++) {
         res.ImpAppend(Convert2M4(seq[idx], dldata));
+      }
       return res;
     }
     case TAG_TYPE_SEM_MAP : {

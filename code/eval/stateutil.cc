@@ -95,8 +95,7 @@ bool EvalState::ReCreateDObjs(wostream & wos)
   wos << L"Initialising user defined objects " << endl;
 
   size_t len_d_objs_order = this->d_objs_order.Length();
-  for (size_t idx = 1; idx <= len_d_objs_order; idx++)
-  {
+  for (size_t idx = 1; idx <= len_d_objs_order; idx++) {
     const TYPE_AS_Name & nm (this->d_objs_order[idx]);
     Tuple t (this->d_objs[nm]);
     TYPE_AS_Expr stmt (t.GetRecord(2));
@@ -107,11 +106,9 @@ bool EvalState::ReCreateDObjs(wostream & wos)
 
     const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
 
-    if (eval_state.Is(TAG_TYPE_STKM_Success))
-    {
+    if (eval_state.Is(TAG_TYPE_STKM_Success)) {
       const TYPE_SEM_VAL & rhs_v (res.GetRecord(2));
-      if ( !rhs_v.Is(TAG_TYPE_SEM_OBJ_uRef))
-      {
+      if ( !rhs_v.Is(TAG_TYPE_SEM_OBJ_uRef)) {
         wos << L"The right hand side does not evaluate to an object. "
             << L"The object is not initialised " << endl;
         return false;
@@ -143,16 +140,13 @@ void EvalState::CreateUserDefinedObject(const TYPE_AS_AssignStmt & stmt, const S
     bool found = false;
     int64_t index = 0;
     size_t len_d_objs_order = this->d_objs_order.Length();
-    for (size_t idx = 1; (idx <= len_d_objs_order) && !found; idx++)
-    {
-      if (this->d_objs_order[idx] == obj_name)
-      {
+    for (size_t idx = 1; (idx <= len_d_objs_order) && !found; idx++) {
+      if (this->d_objs_order[idx] == obj_name) {
         found = true;
         index = idx;
       }
     }
-    if(found)
-    {
+    if(found) {
       this->d_objs_order.RemElem(index);
     }
   }
@@ -194,11 +188,11 @@ TYPE_SEM_VAL EvalState::UndefObjectRef( const TYPE_SEM_VAL & semval )
       SEQ<TYPE_SEM_VAL> s (semval.GetSequence(pos_SEM_SEQ_v));
       SEQ<TYPE_SEM_VAL> s_new;
       Generic g;
-      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) )
-      {
+      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) ) {
         TYPE_SEM_VAL r (g);
-        if( !r.Is(TAG_TYPE_SEM_OBJ_uRef) )
+        if( !r.Is(TAG_TYPE_SEM_OBJ_uRef) ) {
           s_new.ImpAppend( UndefObjectRef( g ) );
+        }
       }
       return TYPE_SEM_SEQ().Init(s_new);
     }
@@ -206,11 +200,11 @@ TYPE_SEM_VAL EvalState::UndefObjectRef( const TYPE_SEM_VAL & semval )
       SET<TYPE_SEM_VAL> s (semval.GetSet(pos_SEM_SET_v));
       SET<TYPE_SEM_VAL> s_new;
       Generic g;
-      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) )
-      {
+      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) ) {
         TYPE_SEM_VAL r(g);
-        if( !r.Is(TAG_TYPE_SEM_OBJ_uRef) )
+        if( !r.Is(TAG_TYPE_SEM_OBJ_uRef) ) {
           s_new.Insert( UndefObjectRef( g ) );
+        }
       }
       return TYPE_SEM_SET().Init(s_new);
     }
@@ -219,11 +213,9 @@ TYPE_SEM_VAL EvalState::UndefObjectRef( const TYPE_SEM_VAL & semval )
       MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> m_new;
       Generic dom_g;
       Generic val_g;
-      for ( bool bb = m.First( dom_g, val_g); bb; bb = m.Next( dom_g, val_g ) )
-      {
+      for ( bool bb = m.First( dom_g, val_g); bb; bb = m.Next( dom_g, val_g ) ) {
         TYPE_SEM_VAL dom (dom_g);
-        if( !dom.Is(TAG_TYPE_SEM_OBJ_uRef) )
-        {
+        if( !dom.Is(TAG_TYPE_SEM_OBJ_uRef) ) {
           Generic new_dom = UndefObjectRef( dom_g );
           Generic new_val = UndefObjectRef( val_g );
           m_new.ImpModify(new_dom, new_val);
@@ -235,8 +227,7 @@ TYPE_SEM_VAL EvalState::UndefObjectRef( const TYPE_SEM_VAL & semval )
       SEQ<TYPE_SEM_VAL> s (semval.GetSequence(pos_SEM_TUPLE_v) );
       SEQ<TYPE_SEM_VAL> s_new;
       Generic g;
-      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) )
-      {
+      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) ) {
         s_new.ImpAppend( UndefObjectRef( g ) );
       }
       return TYPE_SEM_TUPLE().Init(s_new);
@@ -247,8 +238,7 @@ TYPE_SEM_VAL EvalState::UndefObjectRef( const TYPE_SEM_VAL & semval )
       SEQ<TYPE_SEM_VAL> fields_v (value.GetFields());
       SEQ<TYPE_SEM_VAL> nfields_v;
       Generic g;
-      for ( bool bb = fields_v.First( g ); bb; bb = fields_v.Next( g ) )
-      {
+      for ( bool bb = fields_v.First( g ); bb; bb = fields_v.Next( g ) ) {
         nfields_v.ImpAppend( UndefObjectRef( g ) );
       }
       value.SetFields(nfields_v);
@@ -266,26 +256,23 @@ TYPE_SEM_VAL EvalState::UndefObjectRef( const TYPE_SEM_VAL & semval )
 // ==> ()
 void EvalState::ClearObjectRef( const TYPE_SEM_OBJ_uRef & obj_ref )
 {
-  if (!this->obj_tab.DomExists(obj_ref)) return;
-
+  if (!this->obj_tab.DomExists(obj_ref)) {
+    return;
+  }
   TYPE_GLOBAL_OBJ_uDesc desc (this->obj_tab[obj_ref]);
   TYPE_SEM_OBJ sem (desc.GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
   TYPE_SEM_InsStrct ins (sem.GetMap(pos_SEM_OBJ_ins)); // map AS`Name to GLOBAL`ValueMap
 
   SET<TYPE_AS_Name> ins_dom ( ins.Dom() ); // set of AS`Name
   Generic clnm;
-  for (bool bb = ins_dom.First(clnm); bb; bb = ins_dom.Next(clnm))
-  {
+  for (bool bb = ins_dom.First(clnm); bb; bb = ins_dom.Next(clnm)) {
     MAP<TYPE_AS_Name,type_dU2P> valmap (ins[ clnm ]);  // map AS`Name to (SEM`VAL * AS`Access)
     SET<TYPE_AS_Name> valmap_dom( valmap.Dom() );
     Generic var_nm;
-    for (bool cc = valmap_dom.First(var_nm); cc;
-              cc = valmap_dom.Next(var_nm))
-    {
+    for (bool cc = valmap_dom.First(var_nm); cc; cc = valmap_dom.Next(var_nm)) {
       type_dU2P val (valmap[ var_nm ]);  // (SEM`VAL * AS`Access)
       TYPE_SEM_VAL semval ( val.GetField(1) );
-      if ( semval.IsRecord() )
-      {
+      if ( semval.IsRecord() ) {
         type_dU2P t_tmp;
 //        t_tmp.SetField(1, UndefObjectRef(semval));
         t_tmp.SetField(1, TYPE_SEM_UNDEF());
@@ -307,20 +294,16 @@ void EvalState::ClearObjectRefInMap( const TYPE_GLOBAL_ValueMap & m )
 {
   Set dom_m (m.Dom());
   Generic name;
-  for( bool bb = dom_m.First( name ); bb; bb = dom_m.Next( name ) )
-  {
+  for( bool bb = dom_m.First( name ); bb; bb = dom_m.Next( name ) ) {
     type_dU2P val (m[name]);
     TYPE_SEM_VAL r (val.GetField( 1 ));
     Set ref_s;
     this->CreateObjectRefSet( r, ref_s );
-    if( !ref_s.IsEmpty() )
-    {
+    if( !ref_s.IsEmpty() ) {
       Set ds (this->CreateDestroySet( ref_s ));
-      if( !ds.IsEmpty() )
-      {
+      if( !ds.IsEmpty() ) {
         Generic ref;
-        for( bool cc = ds.First( ref ); cc; cc = ds.Next( ref ) )
-        {
+        for( bool cc = ds.First( ref ); cc; cc = ds.Next( ref ) ) {
           this->ClearObjectRef( ref );
         }
       }
@@ -343,16 +326,18 @@ bool EvalState::HasObjectRef( const TYPE_SEM_VAL & semval, const TYPE_SEM_OBJ_uR
       const SEQ<TYPE_SEM_VAL> & s (semval.GetSequence(pos_SEM_SEQ_v));
       size_t len_s = s.Length();
       bool exists = false;
-      for (size_t idx = 1; (idx <= len_s) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_s) && !exists; idx++) {
         exists = this->HasObjectRef( s[idx], obj_ref );
+      }
       return exists;
     }
     case TAG_TYPE_SEM_SET: {
       SET<TYPE_SEM_VAL> s (semval.GetSet(pos_SEM_SET_v));
       Generic g;
       bool exists = false;
-      for (bool bb = s.First( g ); bb && !exists; bb = s.Next( g ))
+      for (bool bb = s.First( g ); bb && !exists; bb = s.Next( g )) {
         exists = this->HasObjectRef( g, obj_ref );
+      }
       return exists;
     }
     case TAG_TYPE_SEM_MAP: {
@@ -360,16 +345,18 @@ bool EvalState::HasObjectRef( const TYPE_SEM_VAL & semval, const TYPE_SEM_OBJ_uR
       Set dom_m (m.Dom());
       Generic dom;
       bool exists = false;
-      for (bool bb = dom_m.First(dom); bb && !exists; bb = dom_m.Next(dom))
+      for (bool bb = dom_m.First(dom); bb && !exists; bb = dom_m.Next(dom)) {
         exists = this->HasObjectRef( dom, obj_ref ) || this->HasObjectRef( m[dom], obj_ref );
+      }
       return exists;
     }
     case TAG_TYPE_SEM_TUPLE: {
       const SEQ<TYPE_SEM_VAL> & s (semval.GetSequence(pos_SEM_TUPLE_v));
       size_t len_s = s.Length();
       bool exists = false;
-      for (size_t idx = 1; (idx <= len_s) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_s) && !exists; idx++) {
         exists = this->HasObjectRef( s[idx], obj_ref );
+      }
       return exists;
     }
     case TAG_TYPE_DYNSEM_SEM_REC: {
@@ -377,14 +364,14 @@ bool EvalState::HasObjectRef( const TYPE_SEM_VAL & semval, const TYPE_SEM_OBJ_uR
       SEQ<TYPE_SEM_VAL> fields_v (srec.get_value().GetFields());
       size_t len_fields_v = fields_v.Length();
       bool exists = false;
-      for (size_t idx = 1; (idx <= len_fields_v) && !exists; idx++)
+      for (size_t idx = 1; (idx <= len_fields_v) && !exists; idx++) {
         exists = this->HasObjectRef( fields_v[idx], obj_ref );
+      }
       return exists;
     }
     case TAG_TYPE_SEM_EXIT: {
       const Generic & v (semval.GetField(pos_SEM_EXIT_v));
-      if (!v.IsNil())
-      {
+      if (!v.IsNil()) {
         return this->HasObjectRef( v, obj_ref );
       }
       return false;
@@ -394,30 +381,33 @@ bool EvalState::HasObjectRef( const TYPE_SEM_VAL & semval, const TYPE_SEM_OBJ_uR
       const Generic & objref (semval.GetField(pos_SEM_CompExplFN_objref));
       size_t len_fl = fl.Length();
       bool exists = false;
-      for (size_t idx = 1; (idx <= len_fl) && !exists; idx++)
-      {
+      for (size_t idx = 1; (idx <= len_fl) && !exists; idx++) {
         exists = this->HasObjectRef( fl[idx], obj_ref );
       }
-      if (!objref.IsNil() && !exists)
+      if (!objref.IsNil() && !exists) {
         exists = this->HasObjectRef( objref, obj_ref );
+      }
       return exists;
     }
     case TAG_TYPE_SEM_ExplFN: {
       const Generic & objref (semval.GetField(pos_SEM_ExplFN_objref));
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         return this->HasObjectRef( objref, obj_ref );
+      }
       return false;
     }
     case TAG_TYPE_SEM_ExplPOLY: {
       const Generic & objref (semval.GetField(pos_SEM_ExplPOLY_objref));
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         return this->HasObjectRef( objref, obj_ref );
+      }
       return false;
     }
     case TAG_TYPE_SEM_ExplOP: {
       const Generic & objref (semval.GetField(pos_SEM_ExplOP_objref));
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         return this->HasObjectRef( objref, obj_ref );
+      }
       return false;
     }
     case TAG_TYPE_SEM_OverOPFN: {
@@ -426,19 +416,21 @@ bool EvalState::HasObjectRef( const TYPE_SEM_VAL & semval, const TYPE_SEM_OBJ_uR
       Set dom_overload (overload.Dom());
       bool exists = false;
       Generic nm;
-      for (bool bb = dom_overload.First(nm); bb && !exists; bb = dom_overload.Next(nm))
-      {
+      for (bool bb = dom_overload.First(nm); bb && !exists; bb = dom_overload.Next(nm)) {
         Tuple t (overload[nm]);
         Generic ref (t.GetField(3));
-        if (!ref.IsNil())
+        if (!ref.IsNil()) {
           exists = this->HasObjectRef( ref, obj_ref );
+        }
       }
-      if (!objref.IsNil() && !exists)
+      if (!objref.IsNil() && !exists) {
         exists = this->HasObjectRef( objref, obj_ref );
+      }
       return exists;
     }
-    default:
+    default: {
       return false;
+    }
   }
 }
 
@@ -452,14 +444,12 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
     case TAG_TYPE_SEM_OBJ_uRef: {
       Map new_ref_count (ref_count);
       TYPE_SEM_OBJ_uRef obj_ref (semval);
-      if (!new_ref_count.DomExists(obj_ref))
-      {
+      if (!new_ref_count.DomExists(obj_ref)) {
         Int count(1);
         new_ref_count.Insert( obj_ref, count );
         return this->CreateObjectRefCount( obj_ref, new_ref_count );
       }
-      else
-      {
+      else {
         Int count (new_ref_count[obj_ref]);
         count = count + Int(1);
         new_ref_count.ImpModify( obj_ref, count );
@@ -470,8 +460,7 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       Map new_ref_count (ref_count);
       const SEQ<TYPE_SEM_VAL> & s (semval.GetSequence(pos_SEM_SEQ_v));
       size_t len_s = s.Length();
-      for (size_t idx = 1; idx <= len_s; idx++)
-      {
+      for (size_t idx = 1; idx <= len_s; idx++) {
         new_ref_count = this->CreateRefCount( s[idx], new_ref_count );
       }
       return new_ref_count;
@@ -480,8 +469,7 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       Map new_ref_count (ref_count);
       SET<TYPE_SEM_VAL> s (semval.GetSet(pos_SEM_SET_v));
       Generic g;
-      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) )
-      {
+      for ( bool bb = s.First( g ); bb; bb = s.Next( g ) ) {
         new_ref_count = this->CreateRefCount( g, new_ref_count );
       }
       return new_ref_count;
@@ -491,8 +479,7 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       const Map & m (semval.GetMap(pos_SEM_MAP_v));
       Set dom_m (m.Dom());
       Generic dom;
-      for ( bool bb = dom_m.First(dom); bb; bb = dom_m.Next(dom) )
-      {
+      for ( bool bb = dom_m.First(dom); bb; bb = dom_m.Next(dom) ) {
         new_ref_count = this->CreateRefCount( dom, new_ref_count );
         new_ref_count = this->CreateRefCount( m[dom], new_ref_count );
       }
@@ -502,8 +489,7 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       Map new_ref_count (ref_count);
       const Sequence & s (semval.GetSequence(pos_SEM_TUPLE_v) );
       size_t len_s = s.Length();
-      for (size_t idx = 1; idx <= len_s; idx++)
-      {
+      for (size_t idx = 1; idx <= len_s; idx++) {
         new_ref_count = this->CreateRefCount( s[idx], new_ref_count );
       }
       return new_ref_count;
@@ -513,8 +499,7 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       TYPE_DYNSEM_SEM_SemRecord srec (semval);
       SEQ<TYPE_SEM_VAL> fields_v (srec.get_value().GetFields());
       size_t len_fields_v = fields_v.Length();
-      for (size_t idx = 1; idx <= len_fields_v; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields_v; idx++) {
         new_ref_count = this->CreateRefCount( fields_v[idx], new_ref_count );
       }
       return new_ref_count;
@@ -522,8 +507,7 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
     case TAG_TYPE_SEM_EXIT: {
       Map new_ref_count (ref_count);
       const Generic & v (semval.GetField(pos_SEM_EXIT_v));
-      if (!v.IsNil())
-      {
+      if (!v.IsNil()) {
         new_ref_count = this->CreateRefCount( v, new_ref_count );
       }
       return new_ref_count;
@@ -533,33 +517,36 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       const SEQ<TYPE_SEM_ExplFN> fl (semval.GetSequence(pos_SEM_CompExplFN_fl));
       const Generic & objref (semval.GetField(pos_SEM_CompExplFN_objref));
       size_t len_fl = fl.Length();
-      for (size_t idx = 1; idx <= len_fl; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fl; idx++) {
         new_ref_count = this->CreateRefCount( fl[idx], new_ref_count );
       }
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         new_ref_count = this->CreateRefCount( objref, new_ref_count );
+      }
       return new_ref_count;
     }
     case TAG_TYPE_SEM_ExplFN: {
       Map new_ref_count (ref_count);
       const Generic & objref (semval.GetField(pos_SEM_ExplFN_objref));
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         new_ref_count = this->CreateRefCount( objref, new_ref_count );
+      }
       return new_ref_count;
     }
     case TAG_TYPE_SEM_ExplPOLY: {
       Map new_ref_count (ref_count);
       const Generic & objref (semval.GetField(pos_SEM_ExplPOLY_objref));
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         new_ref_count = this->CreateRefCount( objref, new_ref_count );
+      }
       return new_ref_count;
     }
     case TAG_TYPE_SEM_ExplOP: {
       Map new_ref_count (ref_count);
       const Generic & objref (semval.GetField(pos_SEM_ExplOP_objref));
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         new_ref_count = this->CreateRefCount( objref, new_ref_count );
+      }
       return new_ref_count;
     }
     case TAG_TYPE_SEM_OverOPFN: {
@@ -568,19 +555,21 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
       const Generic & objref (semval.GetField(pos_SEM_OverOPFN_objref));
       Set dom_overload (overload.Dom());
       Generic nm;
-      for (bool bb = dom_overload.First(nm); bb; bb = dom_overload.Next(nm))
-      {
+      for (bool bb = dom_overload.First(nm); bb; bb = dom_overload.Next(nm)) {
         Tuple t (overload[nm]);
         Generic ref (t.GetField(3));
-        if (!ref.IsNil())
+        if (!ref.IsNil()) {
           new_ref_count = this->CreateRefCount( ref, new_ref_count );
+        }
       }
-      if (!objref.IsNil())
+      if (!objref.IsNil()) {
         new_ref_count = this->CreateRefCount( objref, new_ref_count );
+      }
       return new_ref_count;
     }
-    default:
+    default: {
       return ref_count;
+    }
   }
 }
 
@@ -590,24 +579,23 @@ Map EvalState::CreateRefCount( const TYPE_SEM_VAL & semval, const Map & ref_coun
 // ==> map SEM`OBJ_Ref to nat
 Map EvalState::CreateObjectRefCount( const TYPE_SEM_OBJ_uRef & obj_ref, const Map & ref_count )
 {
-  if (!this->obj_tab.DomExists(obj_ref)) return ref_count;
+  if (!this->obj_tab.DomExists(obj_ref)) {
+    return ref_count;
+  }
   const TYPE_SEM_OBJ & sem (this->obj_tab[obj_ref].GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
   TYPE_SEM_InsStrct ins (sem.GetMap(pos_SEM_OBJ_ins)); // map AS`Name to GLOBAL`ValueMap
 
   Map new_ref_count (ref_count);
   Set dom_ins (ins.Dom());
   Generic clnm;
-  for (bool bb = dom_ins.First(clnm); bb; bb = dom_ins.Next(clnm))
-  {
+  for (bool bb = dom_ins.First(clnm); bb; bb = dom_ins.Next(clnm)) {
     Map valmap (ins[clnm]);
     Set dom_valmap (valmap.Dom());
     Generic var_nm;
-    for (bool cc = dom_valmap.First(var_nm); cc; cc = dom_valmap.Next(var_nm))
-    {
+    for (bool cc = dom_valmap.First(var_nm); cc; cc = dom_valmap.Next(var_nm)) {
       Tuple val (valmap[var_nm]);
       TYPE_SEM_VAL semval (val.GetRecord(1));
-      if ( semval.IsRecord() )
-      {
+      if ( semval.IsRecord() ) {
         new_ref_count = this->CreateRefCount( semval, new_ref_count );
       }
     }
@@ -623,16 +611,14 @@ Map EvalState::CreateObjectsDirectRefCount()
 
   // lastres
   Generic lastres = theStackMachine().GetLastRes();
-  if( lastres.IsRecord() )
-  {
+  if( lastres.IsRecord() ) {
     ref_count = this->CreateRefCount( lastres, ref_count );
   }
 
   // d_objs
   Set dom_d_objs (this->d_objs.Dom());
   Generic nm;
-  for( bool bb = dom_d_objs.First(nm); bb; bb = dom_d_objs.Next(nm) )
-  {
+  for( bool bb = dom_d_objs.First(nm); bb; bb = dom_d_objs.Next(nm) ) {
     Tuple tmp (this->d_objs[nm]);
     Record obj_ref (tmp.GetField(1));
     ref_count = this->CreateRefCount( obj_ref, ref_count );
@@ -689,63 +675,57 @@ Map EvalState::CreateObjectsIndirectRefCount()
 
   // lastres
   Generic lastres = theStackMachine().GetLastRes();
-  if( lastres.IsRecord() )
-  {
+  if( lastres.IsRecord() ) {
     ref_count = this->CreateRefCount(lastres, Map());
   }
 
   // d_objs (map AS`Name to (SEM`OBJ_Ref * AS`Expr * seq of char))
   Set dom_d_objs (this->d_objs.Dom());
   Generic nm;
-  for( bool bb = dom_d_objs.First(nm); bb; bb = dom_d_objs.Next(nm) )
-  {
+  for( bool bb = dom_d_objs.First(nm); bb; bb = dom_d_objs.Next(nm) ) {
     Tuple tmp (this->d_objs[nm]); // (SEM`OBJ_Ref * AS`Expr * seq of char))
     const TYPE_SEM_OBJ_uRef & obj_ref (tmp.GetRecord( 1 ));
 
     Map rtmp (this->CreateRefCount( obj_ref, Map()));
     Set dom_rtmp (rtmp.Dom());
     Generic ref;
-    for( bool cc = dom_rtmp.First(ref); cc; cc = dom_rtmp.Next(ref) )
-    {
+    for( bool cc = dom_rtmp.First(ref); cc; cc = dom_rtmp.Next(ref) ) {
       Int count (rtmp[ref]);
-      if( ref_count.DomExists(ref) )
-      {
+      if( ref_count.DomExists(ref) ) {
         Int new_count = count + Int(ref_count[ref]);
         ref_count.ImpModify(ref, new_count);
       }
-      else
+      else {
         ref_count.Insert(ref, count);
+      }
     }
   }
 
   Set dom_classes (this->classes.Dom());
   Generic clnm;
-  for (bool dd = dom_classes.First(clnm); dd; dd = dom_classes.Next(clnm))
-  {
+  for (bool dd = dom_classes.First(clnm); dd; dd = dom_classes.Next(clnm)) {
     TYPE_GLOBAL_SigmaClass sigmacl (this->classes[clnm]);
 
     // statics field of classes
     TYPE_GLOBAL_ValueMap statics (sigmacl.get_statics());
     Set dom_statics (statics.Dom());
     Generic statics_name;
-    for( bool ee = dom_statics.First(statics_name); ee; ee = dom_statics.Next(statics_name) )
-    {
+    for( bool ee = dom_statics.First(statics_name); ee; ee = dom_statics.Next(statics_name) ) {
       type_dU2P val (statics[statics_name]);
       const TYPE_SEM_VAL & r (val.GetRecord( 1 ));
       Map rtmp (this->CreateRefCount( r, Map()));
 
       Set dom_rtmp (rtmp.Dom());
       Generic ref;
-      for( bool ff = dom_rtmp.First(ref); ff; ff = dom_rtmp.Next(ref) )
-      {
+      for( bool ff = dom_rtmp.First(ref); ff; ff = dom_rtmp.Next(ref) ) {
         Int count (rtmp[ref]);
-        if( ref_count.DomExists(ref) )
-        {
+        if( ref_count.DomExists(ref) ) {
           Int new_count = count + Int(ref_count[ref]);
           ref_count.ImpModify(ref, new_count );
         }
-        else
+        else {
           ref_count.Insert(ref, count);
+        }
       }
     }
 
@@ -753,8 +733,7 @@ Map EvalState::CreateObjectsIndirectRefCount()
     TYPE_GLOBAL_ValueMap vls_init (sigmacl.get_vls_uinit());
     Set dom_vls_init (vls_init.Dom());
     Generic vls_init_name;
-    for( bool gg = dom_vls_init.First(vls_init_name); gg; gg = dom_vls_init.Next(vls_init_name) )
-    {
+    for( bool gg = dom_vls_init.First(vls_init_name); gg; gg = dom_vls_init.Next(vls_init_name) ) {
       type_dU2P val (vls_init[vls_init_name]);
       const TYPE_SEM_VAL & r (val.GetRecord( 1 ));
 
@@ -762,16 +741,15 @@ Map EvalState::CreateObjectsIndirectRefCount()
 
       Set dom_rtmp (rtmp.Dom());
       Generic ref;
-      for( bool hh = dom_rtmp.First(ref); hh; hh = dom_rtmp.Next(ref) )
-      {
+      for( bool hh = dom_rtmp.First(ref); hh; hh = dom_rtmp.Next(ref) ) {
         Int count (rtmp[ref]);
-        if( ref_count.DomExists(ref) )
-        {
+        if( ref_count.DomExists(ref) ) {
           Int new_count = count + Int( ref_count[ref] );
           ref_count.ImpModify(ref, new_count );
         }
-        else
+        else {
           ref_count.Insert(ref, count);
+        }
       }
     }
   }
@@ -799,7 +777,9 @@ void EvalState::CreateObjectRefSet( const TYPE_SEM_VAL & semval, Set & ref_s )
 {
   switch(semval.GetTag()) {
     case TAG_TYPE_SEM_OBJ_uRef: {
-      if (!ref_s.InSet(semval)) ref_s.Insert(semval);
+      if (!ref_s.InSet(semval)) {
+        ref_s.Insert(semval);
+      }
       break;
     }
     case TAG_TYPE_SEM_SEQ: {
@@ -893,8 +873,9 @@ void EvalState::CreateObjectRefSet( const TYPE_SEM_VAL & semval, Set & ref_s )
       }
       break;
     }
-    default:
+    default: {
       break;
+    }
   }
 }
 
@@ -1282,8 +1263,9 @@ TYPE_SEM_VAL EvalState::RestoreObjRef(const TYPE_SEM_VAL & semval, const Map & o
       Generic new_objref (this->RestoreObjRef(objref, obj_ref_map));
       return TYPE_SEM_OverOPFN().Init(new_overload, new_objref);
     }
-    default:
+    default: {
       return semval;
+    }
   }
 }
 
@@ -1636,8 +1618,7 @@ void EvalState::DisplayStaticObjects(wostream & wos)
   if( !s.IsEmpty() ) {
     wos << L"Static Objects: " << s.Card() << endl << flush;
     Generic g;
-    for( bool ee = s.First( g ); ee; ee = s.Next( g ) )
-    {
+    for( bool ee = s.First( g ); ee; ee = s.Next( g ) ) {
       DisplayObjectReference( g, wos );
     }
   }

@@ -13,15 +13,17 @@ LibraryManager * LibraryManager::libman = NULL;
 
 void LibraryManager::Init()
 {
-  if ( LibraryManager::libman != NULL )
+  if ( LibraryManager::libman != NULL ) {
     delete LibraryManager::libman;
+  }
   LibraryManager::libman = new LibraryManager();
 }
 
 void LibraryManager::Finish()
 {
-  if ( LibraryManager::libman != NULL )
+  if ( LibraryManager::libman != NULL ) {
     delete LibraryManager::libman;
+  }
   LibraryManager::libman = NULL;
 }
 
@@ -44,30 +46,34 @@ StackEval & LibraryManager::GetStackMachine ()
 
 StackCompiler & LibraryManager::GetCompiler ()
 {
-  if (this->the_Compiler == NULL)
+  if (this->the_Compiler == NULL) {
     this->the_Compiler = new StackCompiler;
+  }
   return * this->the_Compiler;
 }
 
 EvalState & LibraryManager::GetState ()
 {
-  if (this->the_State == NULL)
+  if (this->the_State == NULL) {
     this->the_State = new EvalState();
+  }
   return * this->the_State;
 }
 
 #ifdef VDMPP
 SCHD & LibraryManager::GetScheduler ()
 {
-  if (this->the_Scheduler == NULL)
+  if (this->the_Scheduler == NULL) {
     this->the_Scheduler = new SCHD();
+  }
   return * this->the_Scheduler;
 }
 
 SYSTEM & LibraryManager::GetSystem ()
 {
-  if (this->the_System == NULL)
+  if (this->the_System == NULL) {
     this->the_System = new SYSTEM();
+  }
   return * this->the_System;
 }
 #endif // VDMPP
@@ -75,17 +81,29 @@ SYSTEM & LibraryManager::GetSystem ()
 LibraryManager::~LibraryManager()
 {
   // clean up 
-  if (this->the_StackMachine != NULL)
+  if (this->the_StackMachine != NULL) {
     this->the_StackMachine->User_Init(TYPE_AS_Document(), true);
-
-  if (this->the_EvalDebugger != NULL) delete this->the_EvalDebugger;
-  if (this->the_StackMachine != NULL) delete this->the_StackMachine;
-  if (this->the_Compiler != NULL) delete this->the_Compiler;
+  }
+  if (this->the_EvalDebugger != NULL) {
+    delete this->the_EvalDebugger;
+  }
+  if (this->the_StackMachine != NULL) {
+    delete this->the_StackMachine;
+  }
+  if (this->the_Compiler != NULL) {
+    delete this->the_Compiler;
+  }
 #ifdef VDMPP
-  if (this->the_Scheduler != NULL) delete this->the_Scheduler;
-  if (this->the_System != NULL) delete this->the_System;
+  if (this->the_Scheduler != NULL) {
+    delete this->the_Scheduler;
+  }
+  if (this->the_System != NULL) {
+    delete this->the_System;
+  }
 #endif // VDMPP
-  if (this->the_State != NULL) delete this->the_State;
+  if (this->the_State != NULL) {
+    delete this->the_State;
+  }
 }
 
 EvalDebugger & theDebugger()

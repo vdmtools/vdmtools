@@ -1405,8 +1405,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileBlockStmt(const TYPE_AS_BlockStmt& sI
   TYPE_STKM_SubProgram sp_dcl;
   // Run through dcl_l in reverse order
   size_t len_dcl_l = dcl_l.Length();
-  for (size_t j = 1; j <= len_dcl_l; j++)
-  {
+  for (size_t j = 1; j <= len_dcl_l; j++) {
     const TYPE_AS_AssignDef & elm (dcl_l[j]);
     const TYPE_AS_Name & id (elm.GetRecord(pos_AS_AssignDef_var));
     const TYPE_AS_Type & tp (elm.GetRecord(pos_AS_AssignDef_tp));

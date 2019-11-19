@@ -220,8 +220,9 @@ TYPE_AS_Expr SemRec::VAL2Expr(const TYPE_SEM_VAL & val)
 //      SEQ<TYPE_SEM_VAL> newargs (theState().GetNewArgs(val));
 //      SEQ<TYPE_AS_Expr> exprs;
 //      size_t len_newargs = newargs.Length();
-//      for (size_t idx = 1; idx <= len_newargs; idx++)
+//      for (size_t idx = 1; idx <= len_newargs; idx++) {
 //        exprs.ImpAppend(VAL2Expr(newargs[idx]));
+//      }
 //      return TYPE_AS_NewExpr().Init(clnm, exprs, NilContextId);
       Generic nm (theState().GetBindName(val));
       if (!nm.IsNil()) {
@@ -754,10 +755,12 @@ wstring SemRec::Val2String( const TYPE_SEM_VAL & val )
     case TAG_TYPE_SEM_UNDEF: { return L"undefined "; }
     case TAG_TYPE_SEM_EXIT: {
       Generic val_g (val.GetField(pos_SEM_EXIT_v));
-      if( val_g.IsNil() )
+      if( val_g.IsNil() ) {
         return L"exit ";
-      else
+      }
+      else {
         return wstring(L"exit with ") + Val2String(val_g);
+      }
     }
     case TAG_TYPE_SEM_CONT:     { return L"Continue "; }
     case TAG_TYPE_SEM_RETURN:   { return L"Return "; }

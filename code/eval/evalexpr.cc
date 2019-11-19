@@ -1511,8 +1511,9 @@ TYPE_SEM_VAL EXPR::IterateMap (const TYPE_SEM_MAP & MapV, const TYPE_SEM_NUM & n
         SET<TYPE_SEM_VAL> dom_map_v (MapV.GetMap(pos_SEM_MAP_v).Dom());
         MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> res;
         Generic i;
-        for (bool bb = dom_map_v.First (i); bb; bb = dom_map_v.Next (i))
+        for (bool bb = dom_map_v.First (i); bb; bb = dom_map_v.Next (i)) {
           res.Insert (i, i);
+        }
         return mk_SEM_MAP(res);
       }
       case 1: {
@@ -1528,8 +1529,9 @@ TYPE_SEM_VAL EXPR::IterateMap (const TYPE_SEM_MAP & MapV, const TYPE_SEM_NUM & n
         const Map & tmp_v (tmp_res.GetMap(pos_SEM_MAP_v));
         MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> res;
         Generic i;
-        for (bool bb = dom_map_v.First (i); bb; bb = dom_map_v.Next (i))
+        for (bool bb = dom_map_v.First (i); bb; bb = dom_map_v.Next (i)) {
           res.Insert (i, map_v[tmp_v[i]]);
+        }
         return mk_SEM_MAP(res);
       }
     }

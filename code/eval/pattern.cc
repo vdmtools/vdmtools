@@ -175,8 +175,9 @@ SET<TYPE_SEM_BlkEnv> PAT::MatchSetEnumPattern (const TYPE_STKM_SetEnumPattern & 
           SET<Sequence> perm_slv (val_sv.ToSequence().Permute());
           SET<TYPE_SEM_BlkEnv> res_s;
           Generic tmp_lv;
-          for (bool bb = perm_slv.First (tmp_lv); bb; bb = perm_slv.Next (tmp_lv))
+          for (bool bb = perm_slv.First (tmp_lv); bb; bb = perm_slv.Next (tmp_lv)) {
             res_s.ImpUnion (MatchLists (elems_lp, tmp_lv));
+          }
           return res_s;
         }
       }

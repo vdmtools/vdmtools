@@ -166,8 +166,7 @@ void StackEval::Instantiate(const EvaluatorStatusCt & es2, const Generic & instr
     program = instr;
     state.pc = 0;
   }
-  else if (!state.call_stack.IsEmpty())
-  {
+  else if (!state.call_stack.IsEmpty()) {
     TYPE_STKM_CallStackItem csi (state.call_stack.Head());
     program = ExtractInstr(csi.GetField(pos_STKM_CallStackItem_code));
   }
@@ -794,8 +793,7 @@ void StackEval::PopCS(void)
   }
 
   TYPE_STKM_SubProgram program;
-  if (!this->cs_call_stack_p->IsEmpty())
-  {
+  if (!this->cs_call_stack_p->IsEmpty()) {
     const TYPE_STKM_CallStackItem & csi (this->cs_call_stack_p->Head());
     program = ExtractInstr(csi.GetField(pos_STKM_CallStackItem_code));
   }
@@ -923,8 +921,9 @@ Generic StackEval::get_objref_from_fnop(const TYPE_SEM_VAL & fnop)
     }
   }
 
-  if (!objref.IsNil() && !objref.Is(TAG_TYPE_SEM_OBJ_uRef))
+  if (!objref.IsNil() && !objref.Is(TAG_TYPE_SEM_OBJ_uRef)) {
     RTERR::Error(L"StackEval::get_objref_from_fnop", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+  }
   return objref;
 }
 

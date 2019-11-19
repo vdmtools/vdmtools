@@ -412,12 +412,10 @@ Tuple VdmStdLib::EvalStdLibCSV (const TYPE_AS_Name & fnname, const SEQ<TYPE_SEM_
             wostringstream d;
             Tuple pe_res (TBDEBUG::ParseAndFullyEvalExprs (sp_filenm, d, SEQ<Char>(func)));
 
-            if (pe_res.GetBoolValue (1))
-            {
+            if (pe_res.GetBoolValue (1)) {
               return mk_(Bool(true), mk_SEM_TUPLE(mk_sequence(sem_true, pe_res.GetSequence (2).Hd())));
             }
-            else
-            {
+            else {
               this->vdmferror = L"Error while reading file: " + filename;
               return mk_(Bool(true), mk_SEM_TUPLE(mk_sequence(sem_false, sem_nil)));
             }
@@ -454,8 +452,9 @@ Tuple VdmStdLib::EvalStdLibCSV (const TYPE_AS_Name & fnname, const SEQ<TYPE_SEM_
         string line;
         getline(ifs,line);
         //line = TBWSTR::convertCrToNl( line ); // TODO:
-        if (!ifs.eof())
+        if (!ifs.eof()) {
           count++;
+        }
       }
       ifs.close();
       Real r (count);
@@ -970,9 +969,9 @@ Tuple VdmStdLib::EvalStdLibVDMByteUtil (const TYPE_AS_Name & fnname, const SEQ<T
         const SEQ<TYPE_SEM_NUM> & bs1 (a1.GetSequence(pos_SEM_SEQ_v));
         const SEQ<TYPE_SEM_NUM> & bs2 (a2.GetSequence(pos_SEM_SEQ_v));
         if (bs1.Length() == bs2.Length()) {
-          if (bs1 == bs2)
+          if (bs1 == bs2) {
             return mk_(Bool(true), mk_SEM_NUM(Real(0)));
-          
+          }
           int eq = 0;
           for (size_t i = bs1.Length(); (i > 0) && (eq == 0); i--) {
             eq = bs1[i].GetReal(pos_SEM_NUM_v).Compare(bs2[i].GetReal(pos_SEM_NUM_v));
