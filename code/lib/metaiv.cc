@@ -1062,7 +1062,7 @@ MapVal* GetMapVal()
   try {
     return new MapVal();
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -1832,7 +1832,7 @@ SequenceVal* GetSequenceVal(const wstring & c)
   try {
     return ValCache->GetCachedStringVal (c);
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -1844,7 +1844,7 @@ SequenceVal* GetSequenceVal()
   try {
     return new SequenceVal();
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -2561,7 +2561,7 @@ SetVal* GetSetVal()
   try {
     return new SetVal();
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -2995,7 +2995,7 @@ RecordVal * GetRecordVal(const wstring & symtag, const VDMRecInfoMap & tagspace)
   try {
     return new RecordVal(symtag, tagspace);
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -3007,7 +3007,7 @@ RecordVal * GetRecordVal(int tag, int size, VDMRecInfoMap & tagspace)
   try {
     return new RecordVal(tag, size, tagspace);
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -3351,7 +3351,7 @@ TupleVal* GetTupleVal(int size)
   try {
     return ((size == 0) ? ValCache->tuplev : new TupleVal(size));
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -3716,7 +3716,7 @@ IntVal* GetIntVal(int64_t i)
   try {
     return (((i >= 0) && (i < 256)) ? ValCache->intv[i] : new IntVal(static_cast<IntVal::IntValueType>(i)));
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4002,7 +4002,7 @@ RealVal* GetRealVal(IntVal::IntValueType i)
                                   : ValCache->GetCachedRealVal(static_cast<RealVal::RealValueType>(i)));
 #endif // _MSC_VER
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4305,7 +4305,7 @@ CharVal* GetCharVal(wchar_t ch)
   try {
     return ((ch < 256) ? ValCache->charv[(wchar_t)ch] : new CharVal(ch));
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4395,7 +4395,7 @@ QuoteVal* GetQuoteVal(const wstring & c)
   try {
     return (c.empty() ? ValCache->quotev : ValCache->GetCachedQuoteVal(c));
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;
@@ -4596,7 +4596,7 @@ TokenVal* GetTokentVal(const wchar_t* c)
   try {
     return ((c == NULL) ? ValCache->tokenv : new TokenVal(wstring(c)));
   }
-  catch (bad_alloc e) {
+  catch (bad_alloc &e) {
     M4LibError::ReportError(ML_NULL_POINTER, wstring(L"Memory Allocation failed."));
   }
   return NULL;

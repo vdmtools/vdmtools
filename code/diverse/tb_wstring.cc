@@ -248,7 +248,7 @@ std::string TBWSTR::ConvertToHexquad(const std::wstring & ws)
   std::string result;
   char converted[9];
   for (std::wstring::const_iterator it = ws.begin(); it != ws.end(); it++) {
-    int wc = *it;
+    unsigned short wc = *it;
     if(wc < 0x007F) {
       result.append(1, (char) wc);
     }
