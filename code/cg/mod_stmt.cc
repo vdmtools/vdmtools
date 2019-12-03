@@ -2413,10 +2413,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmtAltn(const SEQ<TYPE_AS_CasesStmtAltn> & alt
   size_t len_altns = altns.Length();
   for (size_t i = 1; i <= len_altns; i++) {
     PushEnv_CGAUX();
-    TYPE_CPP_Stmt stmt (CGAltnStmt(altns[i], selRes_v, succ_v, Nil(), isLast));
+    TYPE_CPP_CompoundStmt stmt (CGAltnStmt(altns[i], selRes_v, succ_v, Nil(), isLast));
 
     if (i == 1) {
-      rb.ImpAppend(stmt);
+      rb.ImpConc (stmt.GetSequence(pos_CPP_CompoundStmt_stms));
     }
     else {
       rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));

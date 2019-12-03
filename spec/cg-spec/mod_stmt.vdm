@@ -2109,7 +2109,7 @@ CGCasesStmtAltn( altns, selRes_v, succ_v, Others, isLast ) ==
      def stmt = CGAltnStmt ( altns (i), selRes_v, succ_v, nil, isLast)
      in
        if i = 1
-       then rb := rb ^ [stmt]
+       then rb := rb ^ stmt.stms
        else rb := rb ^ [ BC`GenIfStmt(BC`GenNot(succ_v), stmt, nil) ];
      CGAUX`PopEnv();
     );

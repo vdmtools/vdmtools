@@ -619,9 +619,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesExprAltn (const SEQ<TYPE_AS_CaseAltn> & altns,
   SEQ<TYPE_CPP_Stmt> rb;
   size_t len_altns = altns.Length();
   for (size_t i = 1; i <= len_altns; i++) {
-    TYPE_CPP_Stmt stmt (CGAltn (altns[i], selRes_v, resVar_v, succ_v));
+    TYPE_CPP_CompoundStmt stmt (CGAltn (altns[i], selRes_v, resVar_v, succ_v));
     if (i == 1) {
-      rb.ImpAppend (stmt);
+      rb.ImpConc (stmt.GetSequence(pos_CPP_CompoundStmt_stms));
     }
     else {
       rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (succ_v), stmt, nil));
@@ -635,7 +635,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesExprAltn (const SEQ<TYPE_AS_CaseAltn> & altns,
 // selRes_v : CGMAIN`VT
 // resVar_v : CGMAIN`VT
 // succ_v : CPP`Name
-// ==> CPP`Stmt
+// ==> CPP`CompoundStmt
 TYPE_CPP_Stmt vdmcg::CGAltn(const TYPE_AS_CaseAltn & rc1,
                             const TYPE_CGMAIN_VT & selRes_v,
                             const TYPE_CGMAIN_VT & resVar_v,
