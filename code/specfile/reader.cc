@@ -1275,39 +1275,37 @@ RTFReadCharSetMap ( int  csId)
 
   /* read file */
 
-  while (fgets (buf, (int) sizeof (buf), f) != (wchar_t *) NULL)
-  {
-    if(buf[0] == '#')  /* skip comment lines */
+  while (fgets (buf, (int) sizeof (buf), f) != (wchar_t *) NULL) {
+    if(buf[0] == '#') { /* skip comment lines */
       continue;
+    }
     TSScanInit (buf);
-    if ((name = TSScan ()) == (wchar_t *) NULL)
+    if ((name = TSScan ()) == (wchar_t *) NULL) {
       continue;  /* skip blank lines */
-    if ((stdCode = RTFStdCharCode (name)) < 0)
-    {
+    }
+    if ((stdCode = RTFStdCharCode (name)) < 0) {
       RTFPanic (fn + L": unknown character name: " + name);
       continue;
     }
-    if ((p = TSScan ()) == (wchar_t *) NULL)
-    {
+    if ((p = TSScan ()) == (wchar_t *) NULL) {
       RTFPanic (fn + L": malformed charset map line for character " + name);
       continue;
     }
-    if (p[1] == '\0')  /* single wchar_t - use ascii value */
+    if (p[1] == '\0') { /* single wchar_t - use ascii value */
       value = p[0];
-    else
-    {
+    }
+    else {
       radix = 10;
-      if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X'))
-      {
+      if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
         radix = 16;
         p += 2;
       }
       value = 0;
-      while (*p != '\0')
+      while (*p != '\0') {
         value = value * radix + RTFCharToHex(*p++);
+      }
     }
-    if (value >= charSetSize)
-    {
+    if (value >= charSetSize) {
       RTFMsg (fn + L": character value " + 
               Int(value).ascii() + L" for " + 
               name + L" too high\n");

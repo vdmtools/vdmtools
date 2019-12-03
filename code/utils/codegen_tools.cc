@@ -118,10 +118,6 @@ bool CodeGenTools::EvalCodeGen (const TYPE_ProjectTypes_ModuleName & modnm,
                                 const Bool & concurrencyOption, 
                                 const Bool & testPrePostOption)
 {
-//  char* feature;
-//  if(!FeatureOk(kind, modnm, feature))
-//    return false;
-
   bool typeCheckerUsed = false;
   bool allowed = CheckAllowed(modnm, typeCheckerUsed);
   if (!allowed) {
@@ -130,12 +126,12 @@ bool CodeGenTools::EvalCodeGen (const TYPE_ProjectTypes_ModuleName & modnm,
   
   try {
     TBUTILS::ClearErrorsCount();
-    if (!typeCheckerUsed || TOOLS::isBatchMode())
+    if (!typeCheckerUsed || TOOLS::isBatchMode()) {
       GetStatSem().ResetErrors();
+    }
 
-// 20120702 -->
     vdm_CPP_setmode(kind);
-// <-- 20120702
+
     // Initialize the code generator
     InitCG();
 

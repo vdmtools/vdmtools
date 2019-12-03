@@ -28,8 +28,6 @@
 #include "tb_wstring.h"
 #include "tb_exceptions.h"
 #include <sys/stat.h>
-//#include <ctype.h>
-//#include <stdio.h> 
 #include <sstream>
 #include <string>
 
@@ -50,8 +48,7 @@ bool JavaGenTools::EvalJavaParse(const TYPE_ProjectTypes_FileName & filename)
 
   // Initialize the fileId if necessary
   TYPE_ProjectTypes_FileId fileId (ToolMediator::GetFileId(filename).GetValue());
-  if (fileId.GetValue() == 0)
-  {
+  if (fileId.GetValue() == 0) {
     SET<TYPE_ProjectTypes_FileName> s;
     s.Insert(filename);
     ToolMediator::AddFiles(s);
@@ -60,10 +57,10 @@ bool JavaGenTools::EvalJavaParse(const TYPE_ProjectTypes_FileName & filename)
 
   // Parse the file
   vdm_log << L"Parsing \"" << fn << L"\" (Java)" << flush;
-  bool parse_error = java_parse((wchar_t*) fn.c_str(), 
-                                true, 
-                                ToolMediator::Errs(), 
-                                ast, 
+  bool parse_error = java_parse((wchar_t*) fn.c_str(),
+                                true,
+                                ToolMediator::Errs(),
+                                ast,
                                 GetCI(),
                                 true,
                                 TYPE_CI_FileId(fileId)
@@ -80,7 +77,7 @@ bool JavaGenTools::EvalJavaParse(const TYPE_ProjectTypes_FileName & filename)
     // First, update parse env in JSS
 
     // Need to decompose the generated AST, since one java file could
-    // contain several classes 
+    // contain several classes
     Sequence moduleAsts;
     Generic header (ast.get_h());
     Sequence cppas (ast.get_ast());
@@ -90,8 +87,7 @@ bool JavaGenTools::EvalJavaParse(const TYPE_ProjectTypes_FileName & filename)
       Sequence declSpecifiers(classDecl.get_ds());
 
       Generic h;
-      for (int j = declSpecifiers.First(h); j; j = declSpecifiers.Next(h))
-      {
+      for (int j = declSpecifiers.First(h); j; j = declSpecifiers.Next(h)) {
         TYPE_CPP_TypeSpecifier ts (h);
 
         TYPE_CPP_IdentDeclaration thisIdent(classDecl);
@@ -99,16 +95,15 @@ bool JavaGenTools::EvalJavaParse(const TYPE_ProjectTypes_FileName & filename)
 
         TYPE_CPP_Module m;
         std::wstring nameStr;
-        if (Record(ts.get_tp()).GetTag() == TAG_TYPE_CPP_ClassSpecifier) 
-        {
+        if (Record(ts.get_tp()).GetTag() == TAG_TYPE_CPP_ClassSpecifier) {
           TYPE_CPP_ClassSpecifier cls (ts.get_tp());
           TYPE_CPP_ClassHead ch (cls.get_ch());
           TYPE_CPP_Identifier classNm (ch.get_name());
           Sequence classNmSeq (classNm.get_id());
           classNmSeq.GetString(nameStr);
         }
-        else 
-        { // InterfaceSpecifier
+        else {
+          // InterfaceSpecifier
           TYPE_CPP_InterfaceSpecifier isp (ts.get_tp());
           TYPE_CPP_InterfaceHead ih (isp.get_ih());
           TYPE_CPP_Identifier iName (ih.get_name());
@@ -176,8 +171,7 @@ bool JavaGenTools::EvalJavaTypeCheck(const TYPE_ProjectTypes_ModuleName& nm)
   int no_of_errors = GetNumJavaErrs();
 
   // If errors were found, output them to the interface
-  if (no_of_errors > 0)
-  {
+  if (no_of_errors > 0) {
     vdm_log << L"done (Errors detected)" << endl << flush;
     SEQ<TYPE_ProjectTypes_Message> err_l (PTAUX::QS (GetJavaErrors(), false));;
     size_t len_err_l = err_l.Length();
@@ -223,7 +217,7 @@ bool JavaGenTools::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & nm,
 //        vdm_log << Seq2Str (mes) << L"\n" << flush;
 //        return false;
 //      }
-//      else { 
+//      else {
 //        vdm_log << L"The class must be type correct.\n" << flush;
 //        EvalJavaTypeCheck (nm);
 //      }
@@ -236,18 +230,17 @@ bool JavaGenTools::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & nm,
 //    if (!allowed.GetValue ())
 //      return false;
 
-  
-  if (!EvalJavaTypeCheck (nm))
-    return false;
 
+  if (!EvalJavaTypeCheck (nm)) {
+    return false;
+  }
   Generic ast_val_g (ToolMediator::GetAST (nm));
-  if (ast_val_g.IsNil())
+  if (ast_val_g.IsNil()) {
     return false;
-
+  }
   SET<TYPE_XF_SXFId> strans;
   SET<TYPE_XF_EXFId> etrans;
-  if (trans.GetValue())
-  {
+  if (trans.GetValue()) {
     // etrans.Insert(TYPE_XF_EXFId().Init(Int(1)));
     // etrans.Insert(TYPE_XF_EXFId().Init(Int(2)));
     etrans.Insert(TYPE_XF_EXFId().Init(Int(3)));
@@ -273,7 +266,7 @@ bool JavaGenTools::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & nm,
 
   TYPE_CPP_Module module (PTAUX::ExtractAstVal(ast_val));
   TYPE_AS_SpecFile sf (vdm_J2V_J2VModule(module, stubsOpt, renameOpt));
-  
+
   TYPE_CI_TokenContextInfo tci (sf.get_tokenci());
   Sequence classes (sf.get_vdm());
 
@@ -283,34 +276,34 @@ bool JavaGenTools::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & nm,
     Sequence sfName (myG);
     sfName.GetString(packageName);
   }
-  if(packageName.compare(L"nil")==0) 
+  if(packageName.compare(L"nil")==0) {
     packageName.erase();
-  
+  }
   std::wstring packageDir(outputDir+L"/"+packageName);
 #ifndef _MSC_VER
   mkdir(TBWSTR::wstring2string(packageDir).c_str(), 0777);
 #else
-  _mkdir(TBWSTR::wstring2string(packageDir).c_str()); 
+  _mkdir(TBWSTR::wstring2string(packageDir).c_str());
 #endif // _MSC_VER
 
   SEQ<TYPE_ProjectTypes_FileName> newFiles;
   Generic g;
-  for (int j = classes.First(g); j; j = classes.Next(g))
-  {
+  for (int j = classes.First(g); j; j = classes.Next(g)) {
     TYPE_AS_Class cls (g);
     TYPE_AS_Name nm (cls.get_nm());
     std::wstring clsName (ASTAUX::GetFirstId(nm).GetString());
-    
+
     std::wostream* os;
     std::wstring fileName(outputDir + L"/" );
-    if (packageName != L"")
+    if (packageName != L"") {
       fileName = fileName + packageName + L"/";
+    }
     fileName = fileName + clsName + L".vpp";
 
     // On Linux, wofstreams are written as binary data, so the ascii
     // is generated in a wstringstream, then converted to an ascii
     // string and finally written to an ofstream
-#ifdef _MSC_VER    
+#ifdef _MSC_VER
     os = (std::wostream*) new wofstream(TBWSTR::wstring2fsstr(fileName).c_str());
 #else
     os = (std::wostream*) new wstringstream();
@@ -333,8 +326,7 @@ bool JavaGenTools::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & nm,
     newFiles.ImpAppend(PTAUX::mk_FileName(fileName));
   }
 
-  if (!newFiles.IsEmpty())
-  {
+  if (!newFiles.IsEmpty()) {
     ToolMediator::AddFiles(newFiles.Elems());
     ToolMediator::BTools()->vdm_SyntaxCheck(newFiles);
   }
@@ -346,7 +338,7 @@ bool JavaGenTools::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & nm,
     ToolMediator::UpdateCG(nm, kind, Bool(false));
   }
   else {
-    vdm_log << L"done" << endl << flush;   
+    vdm_log << L"done" << endl << flush;
     ToolMediator::UpdateCG(nm, kind, Bool(true));
   }
 

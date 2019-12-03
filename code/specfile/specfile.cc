@@ -289,11 +289,6 @@ int SpecFileHandler::get_replace_end_pos(const TYPE_ASTMERGE_AST_uNode & ast_nod
     // operations
     case TAG_TYPE_AS_ExplOpDef: {
       TYPE_AS_ExplOpDef temp(ast_node);
-      //    if (!temp.get_oppost().IsNil())
-      //      start_and_end(pos, temp.get_oppost(), ci);
-      //    else if (!temp.get_oppre().IsNil())
-      //      start_and_end(pos, temp.get_oppre(), ci);
-      //    else
       pos = start_and_end(temp.get_body(), ci);
       return pos.get_token_ust().GetValue() - 1;
     }

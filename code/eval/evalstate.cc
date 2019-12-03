@@ -549,12 +549,14 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
             if( ASTAUX::ASName2String(tptn.get_name()) == L"CPU" ) {
               theSystem().AddCPU(sysnm, var, decl);
             }
-            else if( ASTAUX::ASName2String(tptn.get_name()) == L"BUS" )
+            else if( ASTAUX::ASName2String(tptn.get_name()) == L"BUS" ) {
               busdecls.Insert( mk_(var, decl) );
+            }
           } 
         }
-        default:
+        default: {
           break;
+        }
       }
     }
     theStackMachine().PushEmptyEnv();
@@ -2242,8 +2244,9 @@ bool EvalState::IsSubTypeName (const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeNam
           RTERR::Error(L"IsSubTypeName", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
         }
       } // (!env_s.IsEmpty())
-      else
+      else {
         RTERR::Error(L"IsSubTypeName", RTERR_EMPTY_ENV_S, val_v, tp, Sequence());
+      }
     } // (checkinv && !td.GetField(pos_AS_TypeDef_Inv).IsNil())
     else {
       if (modulepushed)
@@ -2632,8 +2635,9 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
         }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
     case TAG_TYPE_AS_InjectiveMap0Type:
     case TAG_TYPE_AS_InjectiveMap1Type: {
@@ -2651,8 +2655,9 @@ bool EvalState::RealSubType(const TYPE_SEM_VAL & val_v, const TYPE_GLOBAL_Type &
         }
         return forall;
       }
-      else
+      else {
         return false;
+      }
     }
 #ifdef VDMPP
     case TAG_TYPE_GLOBAL_ObjRefType: {

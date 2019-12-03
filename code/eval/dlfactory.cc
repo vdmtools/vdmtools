@@ -85,9 +85,9 @@ Generic DlClassInstance::DlMethodCall (const wstring & name, Sequence & params)
 
   result = (*this->_dlclassinfo->GetDLLibInfo().GetDLFunctions().dlCall)(this->_dlClassRef, name.c_str (), params, success);
 
-  if (!success)
+  if (!success) {
     throw DLException (DLException::DLCALL_ERR, wstring (L"Could not call method ") + name);
-
+  }
   return result;
 }
 
@@ -227,8 +227,7 @@ void DlLibInfo::AddOpFnVal(const wstring & name)
 PROC_PTR DlLibInfo::GetOpFnValHandle(const wstring & name)
 {
   opfnvalmap_t::iterator it = this->opfnvalmap.find(name);
-  if (it == this->opfnvalmap.end())
-  {
+  if (it == this->opfnvalmap.end()) {
     throw DLException(DLException::DLL_LOAD_ERR,
                       wstring(L"Internal error: unknown name to GetOpFnValHandle\n: ") + name);
   }
@@ -246,22 +245,23 @@ Generic DlLibInfo::CallOp(const wstring& module, const wstring& op, bool isvoid,
 
   DLRecInfoData & dldata = GetDLRecInfoData();
 
-  if (arg_l.IsNil())
-  { // values
+  if (arg_l.IsNil()) {
+    // values
     ValueFuncType valfunc = (ValueFuncType) GetOpFnValHandle(op);
     //Generic res((*valfunc)());
     Generic res;
     (*valfunc)(res);
     return EvalState::M42Sem(res, &dldata);
   }
-  else
-  { // functions or operations
+  else {
+    // functions or operations
     Sequence m4arg_l(EvalState::Sem2M4(arg_l, &dldata));
     if (isvoid) {
       VoidFunc vfunc = (VoidFunc) GetOpFnValHandle(op);
       (*vfunc)(m4arg_l);
       return sem_cont;
-    } else {
+    }
+    else {
       FuncType func = (FuncType) GetOpFnValHandle(op);
       //Generic res((*func)(m4arg_l));
       Generic res;
@@ -289,13 +289,12 @@ Generic DlClassFactory::CallOp(const TYPE_AS_Name& module, const TYPE_AS_Name& o
 
 void DlLibInfo::CloseLibrary()
 {
-  if (this->dlLib != NULL)
-  {
+  if (this->dlLib != NULL) {
     vdm_log << L"\"" << this->path << L"\" unloaded." << endl;
 
-    if (this->dlFunctions.dlInit)
+    if (this->dlFunctions.dlInit) {
       (*(this->dlFunctions.dlInit))(false);
-
+    }
     int success = DLCLOSE( this->dlLib );
 #ifdef _MSC_VER
     if (success == 0)
@@ -328,12 +327,10 @@ void DlClassFactory::InsertClassLib (const TYPE_AS_Name & clnm,
   wstring className (ASTAUX::ASName2String(clnm));
   wstring libName (useslib.GetSequence(pos_AS_TextLit_val).GetString());
 
-  if( libName.empty() )
-  {
+  if ( libName.empty() ) {
     vdm_iplog << L"warning: dlclass " << className << L" has no uselib" << endl << flush;
   }
-  else
-  {
+  else {
     wstring opfnval (ASTAUX::ASName2String(name));
 
     // get file path
@@ -361,20 +358,23 @@ void DlClassFactory::InsertClassLib (const TYPE_AS_Name & clnm,
 void DlClassFactory::DLClose()
 {
   for (map<wstring, DlLibInfo*>::iterator libIt = this->_libMap.begin ();
-                                          libIt != this->_libMap.end (); ++libIt)
+                                          libIt != this->_libMap.end (); ++libIt) {
     (*libIt).second->CloseLibrary();
+  }
 }
 
 void DlClassFactory::clear()
 {
   for (map<wstring, DlClassInfo*>::iterator pathIt = this->_classPath.begin ();
-                                            pathIt != this->_classPath.end (); ++pathIt)
+                                            pathIt != this->_classPath.end (); ++pathIt) {
     delete (*pathIt).second;
+  }
   this->_classPath.erase(this->_classPath.begin(), this->_classPath.end());
 
   for (map<wstring, DlLibInfo*>::iterator libIt = this->_libMap.begin ();
-                                          libIt != this->_libMap.end (); ++libIt)
+                                          libIt != this->_libMap.end (); ++libIt) {
     delete (*libIt).second;
+  }
   this->_libMap.erase(this->_libMap.begin(), this->_libMap.end());
 }
 
@@ -419,11 +419,13 @@ bool DlClassFactory::CloseLibrary (const wstring& libName)
 // ==> DLObject
 Generic DlClassFactory::CreateDLObject(const TYPE_AS_Name & clnm, const Generic & dlclassp)
 {
-  if (dlclassp.IsNil())
+  if (dlclassp.IsNil()) {
     return Nil();
-  else
+  }
+  else {
     return DLObject(ASTAUX::ASName2String(clnm),
                     ((const VDMContainer<DlClassInstanceHolder>&)dlclassp).get_const_ref().dcip->GetDlClassRef());
+  }
 }
 
 // DLClose
@@ -468,10 +470,12 @@ Tuple DlClassFactory::DlMethodCall(const VDMContainer<DlClassInstanceHolder> & d
     Sequence m4arg_l (EvalState::Sem2M4(arg_l, &dcip->Get_DLRecInfoData()));
     // Log apply here to cname.opnm with args m4arg_l
     Generic res (dcip->DlMethodCall(ASTAUX::ASName2String(name), m4arg_l));
-    if (res == Generic()) // no return value
+    if (res == Generic()) { // no return value
       return mk_(Bool(true), sem_cont);
-    else
+    }
+    else {
       return mk_(Bool(true), EvalState::M42Sem(res, &dcip->Get_DLRecInfoData()));
+    }
   }
   catch (DLException e) {
     wstring cname (ASTAUX::ASName2String(clname));

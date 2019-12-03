@@ -398,10 +398,12 @@ bool RTFWordSpecFileHandler::pp_section(
 
 bool RTFWordSpecFileHandler::pp_keyword( const string & k)
 {
-  if(this->pp_key_and_ident)
+  if(this->pp_key_and_ident) {
     pp_out << "{\\b "<< k << "}"  ; // bold face
-  else
+  }
+  else {
     pp_out << k;
+  }
   return true;
 }
 
@@ -471,19 +473,19 @@ void RTFWordSpecFileHandler::ConvertHexQuadStrToRTF(const string & hqs, string& 
 //  string hqs (txt);
   bool containsDoubleChars = false;
 
-  while(i < txtSize)
-  {
-    if (i == txtSize - 1)
+  while(i < txtSize) {
+    if (i == txtSize - 1) {
       ConvertCharToRTF(hqs[i++], res);
-    else if (hqs[i] == '\\' && hqs[i+1]=='u' && i+5 < hqs.size())
-    {
+    }
+    else if (hqs[i] == '\\' && hqs[i+1]=='u' && i+5 < hqs.size()) {
       containsDoubleChars = true;
       string str(hqs.substr(i, 6));
       res.append(TBWSTR::hexquard2rtfstring(str));
       i = i + 6;
     }
-    else
+    else {
       ConvertCharToRTF(hqs[i++], res);
+    }
   }
   if (containsDoubleChars) {
     char buf[12];
@@ -496,10 +498,12 @@ bool RTFWordSpecFileHandler::pp_ident( const string& txt)
 {
   string rtf_tk_txt;
   ConvertHexQuadStrToRTF(txt, rtf_tk_txt);
-  if(this->pp_key_and_ident)
+  if(this->pp_key_and_ident) {
     pp_out << "{\\i " << rtf_tk_txt << "}";
-  else
+  }
+  else {
     pp_out << rtf_tk_txt;
+  }
   return true;
 }
 
@@ -536,9 +540,10 @@ bool RTFWordSpecFileHandler::pp_identifier( int tok, const string & k) {
 //////////////////////////////////////////////////////////////////////
 
 bool RTFWordSpecFileHandler::pp_newline(int num) {
- for (int i = 0; i < num; i++)
-   pp_out << "\n\\par ";
- return true;
+  for (int i = 0; i < num; i++) {
+    pp_out << "\n\\par ";
+  } 
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -546,10 +551,10 @@ bool RTFWordSpecFileHandler::pp_newline(int num) {
 //////////////////////////////////////////////////////////////////////
 
 bool RTFWordSpecFileHandler::pp_space(int num) {
- for (int i = 0; i < num; i++)
-   pp_out << " ";
-
- return true;
+  for (int i = 0; i < num; i++) {
+    pp_out << " ";
+  }
+  return true;
 }
 //////////////////////////////////////////////////////////////////////
 // print a token
@@ -616,36 +621,41 @@ bool RTFWordSpecFileHandler::pp_token(const TokenInfo & tk)
       switch (tk.get_index_element()) {
         case TokenInfo::no_index : {
           pp_ident(tk_txt);
-            break;
+          break;
         }
         case TokenInfo::fct_def : {
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\bxe}}";
+          }
           break;
         }
         case TokenInfo::fct_inv : {
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\ixe}}";
+          }
           break;
         }
         case TokenInfo::tp_def : {
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\bxe}}";
+          }
           break;
         }
         case TokenInfo::op_def : {
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\bxe}}";
+          }
           break;
         }
         case TokenInfo::op_inv : {
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\ixe}}";
+          }
           break;
         }
 #ifdef VDMSL
@@ -654,14 +664,16 @@ bool RTFWordSpecFileHandler::pp_token(const TokenInfo & tk)
           string rtf_mod_name;
           ConvertHexQuadStrToRTF(TBWSTR::wstring2string(mod_name), rtf_mod_name);
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out  << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\bxe}}";
+          }
           break;
         }
         case TokenInfo::state_def : {
           pp_ident(tk_txt);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\bxe}}";
+          }
           break;
         }
 #endif // VDMSL
@@ -671,8 +683,9 @@ bool RTFWordSpecFileHandler::pp_token(const TokenInfo & tk)
           mod_name = TBWSTR::string2wstring(tk_txt) + L"\\:";
           string rtf_mod_name;
           ConvertHexQuadStrToRTF(TBWSTR::wstring2string(mod_name), rtf_mod_name);
-          if (this->generate_index)
+          if (this->generate_index) {
             pp_out << "{\\xe {\\v " << rtf_mod_name << rtf_tk_txt << "\\bxe}}";
+          }
           break;
         }
 #endif // VDMPP
@@ -685,10 +698,12 @@ bool RTFWordSpecFileHandler::pp_token(const TokenInfo & tk)
 
 #ifdef VDMPP
     case LEX_dollar_identifier : {
-      if(this->pp_key_and_ident)
+      if(this->pp_key_and_ident) {
         pp_out << "${\\i " << rtf_tk_txt << "}";
-      else
+      }
+      else {
         pp_out << "$" << rtf_tk_txt;
+      }
       break;
     }
 #endif
@@ -896,16 +911,16 @@ bool RTFWordSpecFileHandler::pp_token(const TokenInfo & tk)
       if (s) {
         pp_keyword(string(s));
       }
-      else
-        {
-          if (tk_txt.length() > 0) {
-            pp_identifier(id, rtf_tk_txt);
-          } else {
-            // ERROR HANDLING ???
-            vdm_log << "Unknown token in Tokenlist " << id << " ";
-            vdm_log << TBWSTR::string2wstring( tk_txt ) << endl << flush;
-          }
+      else {
+        if (tk_txt.length() > 0) {
+          pp_identifier(id, rtf_tk_txt);
         }
+        else {
+          // ERROR HANDLING ???
+          vdm_log << "Unknown token in Tokenlist " << id << " ";
+          vdm_log << TBWSTR::string2wstring( tk_txt ) << endl << flush;
+        }
+      }
     }
   }
   return true;
@@ -953,8 +968,7 @@ bool RTFWordSpecFileHandler::pp(SpecFile & sf, Sequence & asts, ContextInfo &ci)
 
   // loop through the chunks counting the section number
 
-  for (int sec = 1; sec <= this->chunks.Length(); sec++)
-  {
+  for (int sec = 1; sec <= this->chunks.Length(); sec++) {
     switch (this->chunks.Get(sec)->get_chunk_type())  {
       case CHUNK_TYPE_VDM : {
         pp_section(sf, sec, &cov_on, tokl);
@@ -964,8 +978,8 @@ bool RTFWordSpecFileHandler::pp(SpecFile & sf, Sequence & asts, ContextInfo &ci)
         pp_out << ((ChunkVDM_TC_TABLE*) this->chunks.Get(sec))->header;
         if (this->generate_rti) {
           pp_tc_table( ((ChunkVDM_TC_TABLE*) this->chunks.Get(sec))->mod_name,asts,ci);
-        } else {
-  //        pp_out << ((ChunkVDM_TC_TABLE*) this->chunks.Get(sec))->mod_name;  // should maybe be removed
+        }
+        else {
           string rtfstring = TBWSTR::mbstr2rtfstring(((ChunkVDM_TC_TABLE*) this->chunks.Get(sec))->mod_name);
           pp_out << rtfstring;
         }
@@ -1063,15 +1077,13 @@ bool RTFWordSpecFileHandler::update_section(SpecFile &sf,
   // for all tokens in this section
   action = action_list.get(action_index);
 
-  if ( start_i != 0 )
-  {
+  if ( start_i != 0 ) {
     int64_t i = start_i;
-    while( action != NULL || i <= (int64_t)tokens.Length() )
-    {
+    while( action != NULL || i <= (int64_t)tokens.Length() ) {
       const TokenInfo & tk = tokens.Get(min(i,(int64_t)tokens.Length()));
       if( tk.get_sec_st() != sec ) break;
 
-      if(action && action->token_pos() <= i ){
+      if (action && action->token_pos() <= i ) {
         if (action->kind() == ACTION_SKIP){
           // Skip a part of the original token list:
           line = tk.get_sec_line_st();
@@ -1082,8 +1094,7 @@ bool RTFWordSpecFileHandler::update_section(SpecFile &sf,
           pp_comment(L"", tk);
           column = 1;
           int lastsec = tk.get_sec_st();
-          while( i <= action->to() && i <= (int64_t)tokens.Length() )
-          {
+          while( i <= action->to() && i <= (int64_t)tokens.Length() ) {
             const TokenInfo & tki= tokens.Get(i);
             lastsec = tki.get_sec_st();
             if( tki.get_sec_st() != sec) break;
@@ -1101,15 +1112,16 @@ bool RTFWordSpecFileHandler::update_section(SpecFile &sf,
             column = tki.get_col_end();
             i++;
           }
-          if( sec == lastsec )
+          if ( sec == lastsec ) {
             // Ok to fetch the next action. Otherwise the SKIP action
             // was interupted by a section break and the action should
             // be not be removed yet.
             action = action_list.get(++action_index);
+          }
         }
         else if (action->kind() == ACTION_INSERT){
           // Insert a portion of the newly created token list:
-          if(insert_pos != action->token_pos()){
+          if (insert_pos != action->token_pos()) {
             // New block of insertions - print a comment:
             pp_newline(1); // Necessary because this comment token is virtually
             // a copy (with respect to position information) of tk
@@ -1119,11 +1131,11 @@ bool RTFWordSpecFileHandler::update_section(SpecFile &sf,
           int64_t ins_line = new_tokl.Get(action->from()).get_sec_line_st();
           column = 1;
           pp_newline(1);
-          for(int64_t j = action->from(); (j <= (int64_t)new_tokl.Length()) && (j <= action->to()); j++)
-          {
+          for (int64_t j = action->from(); (j <= (int64_t)new_tokl.Length()) && (j <= action->to()); j++) {
             const TokenInfo & tki = new_tokl.Get(j);
-            if ( tki.get_sec_line_st() != ins_line)
+            if ( tki.get_sec_line_st() != ins_line) {
               column = 1;
+            }
             pp_newline( tki.get_sec_line_st() - ins_line );
             pp_space( tki.get_col_st() - column );
             pp_token( tki );
@@ -1136,7 +1148,9 @@ bool RTFWordSpecFileHandler::update_section(SpecFile &sf,
         }
       }
       else{
-        if ( tk.get_sec_line_st() != line) column = 1;
+        if ( tk.get_sec_line_st() != line) {
+          column = 1;
+        }
         pp_newline(tk.get_sec_line_st() - line);  // print optional new lines
         pp_space( tk.get_col_st() - column);      // print optional spaces
         pp_token(tk);                         // print the token
@@ -1162,16 +1176,15 @@ bool RTFWordSpecFileHandler::file_create(SpecFile &sf, wstring & err)
   // open the output file
 
   pp_out.open(TBWSTR::wstring2fsstr(sf.get_fname()).c_str(),ios::out);
-  if (!pp_out.good()){
+  if (!pp_out.good()) {
     err = L"Could not open the file for writing. File is probably locked by another application";
     return false;
   }
 
   // loop through the chunks counting the section number
 
-  for (int sec = 1; sec <= this->chunks.Length(); sec++)
-  {
-    switch (this->chunks.Get(sec)->get_chunk_type())  {
+  for (int sec = 1; sec <= this->chunks.Length(); sec++) {
+    switch (this->chunks.Get(sec)->get_chunk_type()) {
       case CHUNK_TYPE_VDM : {
         create_section(sf, sec);
         break;
@@ -1180,7 +1193,9 @@ bool RTFWordSpecFileHandler::file_create(SpecFile &sf, wstring & err)
         pp_out << ((ChunkBLOB*) this->chunks.Get(sec))->blob;
         break;
       }
-      default: break;
+      default: {
+        break;
+      }
     }
   }
   pp_out.close();
@@ -1218,8 +1233,7 @@ bool RTFWordSpecFileHandler::file_update(SpecFile &sf, wstring & err)
   int action_index = 0;
   // loop through the chunks counting the section number
 
-  for (int sec = 1; sec <= this->chunks.Length(); sec++)
-  {
+  for (int sec = 1; sec <= this->chunks.Length(); sec++) {
     switch (this->chunks.Get(sec)->get_chunk_type())  {
       case CHUNK_TYPE_VDM : {
         update_section(sf, sec, action_index);
@@ -1252,8 +1266,9 @@ wstring RTFWordSpecFileHandler::give_old_name(SpecFile& sf)
 bool RTFWordSpecFileHandler::set_default_font(SpecFile & sf)
 {
   int fnum = RTFGetFontNumByCharset( sf.GetCharset() );
-  if( fnum != -1 )
+  if( fnum != -1 ) {
     setNonAsciiFontNum(fnum);
+  }
   return true;
 }
 #endif // VDMPP

@@ -96,8 +96,7 @@ GenLatexOutput::GenLatexOutput (const std::wstring & OutputFilename,  // output 
 
   this->INDEX = Opt;
 
-  if (this->LatexOutput.good())
-  {
+  if (this->LatexOutput.good()) {
     // do the conversion stuff
     // we have to convert either an AST with a single definitions block
     // or a number of modules.
@@ -135,8 +134,7 @@ GenLatexOutput::GenLatexOutput (const std::wstring & OutputFilename,  // output 
       //////////////////////////
 
       size_t len_modorder = VDMPARSER::modorder.Length();
-      for (size_t i = 1; i <= len_modorder; i++)
-      {
+      for (size_t i = 1; i <= len_modorder; i++) {
         /////////////////
         // Get the next ast corresponding to
         // the next module in the file
@@ -146,8 +144,7 @@ GenLatexOutput::GenLatexOutput (const std::wstring & OutputFilename,  // output 
         Set AST_q (AST); 
         Generic ast_g;
         bool exists = false;
-        for ( bool bb = AST_q.First(ast_g); bb && !exists; bb = AST_q.Next(ast_g) )
-        {
+        for ( bool bb = AST_q.First(ast_g); bb && !exists; bb = AST_q.Next(ast_g) ) {
           if (name == ((Record) ast_g).GetField(1)) {
             exists = true;
             ast = ast_g;
@@ -216,8 +213,7 @@ void GenLatexOutput::ErrMsg1(const Record & ast, // the item that caused the err
   /////////////
   int fid = 0, line = 0, col = 0;
   Tuple gfp (GetCI().GetFilePos(ASTAUX::GetCid(ast)));
-  if (gfp.GetBool(1))
-  {
+  if (gfp.GetBool(1)) {
     fid = gfp.GetInt(2);
     TYPE_CI_TokenPos astpos (gfp.GetField(4));
     line = astpos.get_abs_uline().GetValue();
@@ -280,9 +276,9 @@ void GenLatexOutput::GenModule (const TYPE_AS_Module & mod_ast,  // The module (
   // Generate Index for current module
   ///////////////
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (mod_nm, mod_index);
-
+  }
   LatexOutput << endl;
 
   GenInterface (intf);
@@ -339,9 +335,9 @@ void GenLatexOutput::GenDLModule (const TYPE_AS_DLModule & mod_ast, // the dl mo
   // Generate Index for current module
   ///////////////
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (mod_nm, mod_index);
-
+  }
   LatexOutput << endl;
 
   GenDLInterface (intf);
@@ -376,8 +372,9 @@ void GenLatexOutput::GenInterface (const TYPE_AS_Interface & intf)
     LatexOutput << endl;
     Set dom_mod_imp (mod_imp.Dom());
     Generic elm;
-    for (bool bb = dom_mod_imp.First (elm); bb; bb = dom_mod_imp.Next (elm))
+    for (bool bb = dom_mod_imp.First (elm); bb; bb = dom_mod_imp.Next (elm)) {
       GenImportSig (elm, mod_imp[elm], false);
+    }
     LatexOutput << "\\end{interface}";
     LatexOutput << endl;
   }
@@ -395,9 +392,9 @@ void GenLatexOutput::GenDLInterface (const TYPE_AS_DLInterface & intf)
     LatexOutput << endl;
     Set dom_mod_imp (mod_imp.Dom());
     Generic elm;
-    for (bool bb = dom_mod_imp.First (elm); bb; bb = dom_mod_imp.Next (elm))
+    for (bool bb = dom_mod_imp.First (elm); bb; bb = dom_mod_imp.Next (elm)) {
         GenDLImportSig (elm, mod_imp[elm], false);
-
+    }
     LatexOutput << "\\end{interface}";
     LatexOutput << endl;
   }
@@ -415,8 +412,9 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
   }
 
   if (isig.IsNil ()) {
-    if (ininst)
+    if (ininst) {
       LatexOutput << "\\ ";
+    }
     LatexOutput << "\\kw{all}";
     LatexOutput << endl;
   }
@@ -435,17 +433,13 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
       Generic elm;
       bool bb = tps.First (elm);
       while (bb) {
-//        Generic tp_imp (tps[elm]);
-//kommenteret ud foreloebig da det ikke virker!!
-//        if (tp_imp.IsNil ())
-          GenName (elm, this->LatexOutput);
-//        else
-//          GenTypeDef (tp_imp);
+        GenName (elm, this->LatexOutput);
 
         GenRenaming (elm, ren);
         bb = tps.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -467,8 +461,9 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
         }
         GenRenaming (elm, ren);
         bb = val.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -493,8 +488,9 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
             for (size_t bb = 1; bb <= len; bb++) {
               TYPE_AS_TypeVar tv (tpparms[bb]);
               GenTypeVar (tv);
-              if (bb < len)
+              if (bb < len) {
                 LatexOutput << ",";
+              }
             }
             LatexOutput << "]";
           }
@@ -504,16 +500,16 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
         }
         GenRenaming (elm, ren);
         bb = fns.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
       LatexOutput << endl;
     }
 
-    if (! ops.IsEmpty ())
-    {
+    if (! ops.IsEmpty ()) {
       LatexOutput << "\\begin{modulesignature}{operations}";
       LatexOutput << endl;
       Generic elm;
@@ -527,8 +523,9 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
         }
         GenRenaming (elm, ren);
         bb = ops.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -536,8 +533,7 @@ void GenLatexOutput::GenImportSig (const TYPE_AS_Name & mod_id, const Generic & 
     }
   }
 
-  if (! ininst)
-  {
+  if (! ininst) {
     LatexOutput << "\\end{from}";
     LatexOutput << endl;
   }
@@ -564,25 +560,19 @@ void GenLatexOutput::GenDLImportSig (const TYPE_AS_Name & mod_id, const Generic 
     Generic elm;
     bool bb = tps.First (elm);
     while (bb) {
-      //        Generic tp_imp (tps[elm]);
-      //kommenteret ud foreloebig da det ikke virker!!
-      //        if (tp_imp.IsNil ())
       GenName (elm, this->LatexOutput);
-      //        else
-      //          GenTypeDef (tp_imp);
 
       bb = tps.Next (elm);
-      if (bb)
+      if (bb) {
         LatexOutput << ";" << LF;
+      }
     }
     LatexOutput << endl;
     LatexOutput << "\\end{modulesignature}";
     LatexOutput << endl;
   }
 
-
-  if (! ininst)
-  {
+  if (! ininst) {
     LatexOutput << "\\end{from}";
     LatexOutput << endl;
   }
@@ -595,8 +585,7 @@ void GenLatexOutput::GenDLExportSig (const Generic & esig)
   LatexOutput << "\\begin{interface}{exports}";
   LatexOutput << endl;
 
-  if (esig.IsNil ())
-  {
+  if (esig.IsNil ()) {
     LatexOutput << "\\kw{all}";
     LatexOutput << endl;
   }
@@ -617,8 +606,9 @@ void GenLatexOutput::GenDLExportSig (const Generic & esig)
         LatexOutput << ":";
         GenType (val[elm]);
         bb = val.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -656,8 +646,9 @@ void GenLatexOutput::GenDLExportSig (const Generic & esig)
         LatexOutput << ":";
         GenType (ops[elm]);
         bb = ops.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -675,8 +666,7 @@ void GenLatexOutput::GenExportSig (const Generic & esig)
   LatexOutput << "\\begin{interface}{exports}";
   LatexOutput << endl;
 
-  if (esig.IsNil ())
-  {
+  if (esig.IsNil ()) {
     LatexOutput << "\\kw{all}";
     LatexOutput << endl;
   }
@@ -694,12 +684,14 @@ void GenLatexOutput::GenExportSig (const Generic & esig)
       Generic elm;
       bool bb = tps.First (elm);
       while (bb) {
-        if (! tps[elm].IsNil ())
+        if (! tps[elm].IsNil ()) {
           LatexOutput << "\\kw{struct}\\ ";
+        }
         GenName (elm, this->LatexOutput);
         bb = tps.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -717,8 +709,9 @@ void GenLatexOutput::GenExportSig (const Generic & esig)
         LatexOutput << ":";
         GenType (val[elm]);
         bb = val.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -742,16 +735,18 @@ void GenLatexOutput::GenExportSig (const Generic & esig)
           for (size_t bb = 1; bb <= len; bb++) {
             TYPE_AS_TypeVar tv (tpparms[bb]);
             GenTypeVar (tv);
-            if (bb < len)
+            if (bb < len) {
               LatexOutput << ",";
+            }
           }
           LatexOutput << "]";
         }
         LatexOutput << ":";
         GenType (fnt);
         bb = fns.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -769,8 +764,9 @@ void GenLatexOutput::GenExportSig (const Generic & esig)
         LatexOutput << ":";
         GenType (ops[elm]);
         bb = ops.Next (elm);
-        if (bb)
+        if (bb) {
           LatexOutput << ";" << LF;
+        }
       }
       LatexOutput << endl;
       LatexOutput << "\\end{modulesignature}";
@@ -817,13 +813,14 @@ void GenLatexOutput::GenClass (const TYPE_AS_Class & ast,      // The clas (AST)
   // Generate Latex for class
   //////////////
 
-  if(ast.GetBoolValue(pos_AS_Class_sys))
+  if(ast.GetBoolValue(pos_AS_Class_sys)) {
 //    LatexOutput << "{\\small\\sf system} $";
     LatexOutput << "\\kSystem $";
-  else
+  }
+  else {
 //    LatexOutput << "{\\small\\sf class} $";
     LatexOutput << "\\kClass $";
-
+  }
   GenName (nm, this->LatexOutput);
   LatexOutput << "$";
 
@@ -834,8 +831,9 @@ void GenLatexOutput::GenClass (const TYPE_AS_Class & ast,      // The clas (AST)
     for (size_t bb = 1; bb <= len_supercls; bb++) {
       TYPE_AS_Name nm (supercls[bb]);
       GenName (nm, this->LatexOutput);
-      if (bb < len_supercls)
+      if (bb < len_supercls) {
         LatexOutput << ",";
+      }
     }
     LatexOutput << "$";
   }
@@ -844,9 +842,9 @@ void GenLatexOutput::GenClass (const TYPE_AS_Class & ast,      // The clas (AST)
   // Generate Index for current class
   ///////////////
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (nm, class_index);
-
+  }
   LatexOutput << endl;
   LatexOutput << "\\par";
   LatexOutput << endl;
@@ -890,8 +888,7 @@ void GenLatexOutput::GenDefinitions (const Generic & modnm,
                                      bool inmod)             // inmod == true => inside a module
                                                              // inmod == false => outside module
 {
-  if (inmod)
-  {
+  if (inmod) {
     LatexOutput << "\\kDefinitions";
     LatexOutput << endl;
   }
@@ -919,8 +916,7 @@ void GenLatexOutput::GenDefinitions (const Generic & modnm,
   //////////////////
 
   size_t len_order = order.Length();
-  for (size_t i = 1; i <= len_order; i++)
-  {
+  for (size_t i = 1; i <= len_order; i++) {
     ///////////////////
     // Get the type of the item following the current
     // used to determine when type/value/.. should be inserted
@@ -928,13 +924,13 @@ void GenLatexOutput::GenDefinitions (const Generic & modnm,
 
     next_type = TAG_TYPE_PRETTY_PRINTER_Texbreak;
     int64_t n = i+1;
-    while (next_type == TAG_TYPE_PRETTY_PRINTER_Texbreak)
-    {
-      if (n > order.Length ())
+    while (next_type == TAG_TYPE_PRETTY_PRINTER_Texbreak) {
+      if (n > order.Length ()) {
         next_type = 0;
-      else
-        //next_type = (int)(Int)  ((Tuple) order[n++]).GetField(1);
+      }
+      else {
         next_type = ((Tuple) order[n++]).GetIntValue(1);
+      }
     }
 
     /////////////////
@@ -977,15 +973,14 @@ void GenLatexOutput::GenDefinitions (const Generic & modnm,
         TYPE_AS_FnDef fn_def (fns[fn_id]);
 #endif // VDMSL
 #ifdef VDMPP
-        if (!fns.DomExists(fn_id) && MANGLE::IsMangled(fn_id))
-        {
+        if (!fns.DomExists(fn_id) && MANGLE::IsMangled(fn_id)) {
           fn_id = MANGLE::GetUnmangledName(fn_id);
         }
         TYPE_AS_FnDef fn_def;
-        if (fns.DomExists(fn_id))
+        if (fns.DomExists(fn_id)) {
           fn_def = fns[fn_id];
-        else
-        {
+        }
+        else {
           wcout << fn_id << L"is't exists" << endl;
         }
 #endif // VDMPP
@@ -999,15 +994,14 @@ void GenLatexOutput::GenDefinitions (const Generic & modnm,
         TYPE_AS_OpDef op_def (ops[op_id]);
 #endif // VDMSL
 #ifdef VDMPP
-        if (!ops.DomExists(op_id) && MANGLE::IsMangled(op_id))
-        {
+        if (!ops.DomExists(op_id) && MANGLE::IsMangled(op_id)) {
           op_id = MANGLE::GetUnmangledName(op_id);
         }
         TYPE_AS_OpDef op_def;
-        if (ops.DomExists(op_id))
+        if (ops.DomExists(op_id)) {
           op_def = ops[op_id];
-        else
-        {
+        }
+        else {
           wcout << op_id << L"is't exists" << endl;
         }
 #endif // VDMPP
@@ -1072,45 +1066,42 @@ void GenLatexOutput::GenTypeDef (const Generic & modnm, const TYPE_AS_TypeDef & 
   const Generic & inv        (tpdef.GetField(pos_AS_TypeDef_Inv));
   const Int & access         (tpdef.GetInt(pos_AS_TypeDef_access));
 
-  if (! shape.Is (TAG_TYPE_AS_CompositeType))
-  {
+  if (! shape.Is (TAG_TYPE_AS_CompositeType)) {
     LatexOutput << "\\type{";
     GenAccess(access,tpdef,false,false);
     LatexOutput << LATEXSPACE2;
     GenName (nm, this->LatexOutput);
 
-    if (this->INDEX)
+    if (this->INDEX) {
       GenIndex (nm, typedef_index);
-
+    }
     LatexOutput << "}{";
     GenType (shape);
-    if (inv.IsNil() && semicolon)
+    if (inv.IsNil() && semicolon) {
       LatexOutput << ";";
+    }
     LatexOutput << "}";
     if (!inv.IsNil()) {
       LatexOutput << endl;
       GenInv (modnm, inv, semicolon);
     }
   }
-  else
-  {
+  else {
     // TODO: map nat to compose ....
-    if (!(nm == shape.GetRecord(pos_AS_CompositeType_name)))
-    {
+    if (!(nm == shape.GetRecord(pos_AS_CompositeType_name))) {
       LatexOutput << "\\type{";
       GenAccess(access, tpdef, false, false);
       LatexOutput << LATEXSPACE2;
       GenName (nm, this->LatexOutput);
 
-      if (this->INDEX)
+      if (this->INDEX) {
         GenIndex (nm, typedef_index);
-
+      }
       LatexOutput << "}{";
       GenCompositeType (shape, semicolon && inv.IsNil());
       LatexOutput << "}";
     }
-    else
-    {
+    else {
       GenAccess(access,tpdef,false,false);
       //      LatexOutput << "\\kw{ }";
       GenRecordType (shape, semicolon && inv.IsNil());
@@ -1128,83 +1119,106 @@ void GenLatexOutput::GenTypeDef (const Generic & modnm, const TYPE_AS_TypeDef & 
 void GenLatexOutput::GenType (const TYPE_AS_Type & shape)
 {
   switch (shape.GetTag ()) {
-    case TAG_TYPE_AS_BooleanType:
+    case TAG_TYPE_AS_BooleanType: {
       GenBooleanType (shape);
       break;
-    case TAG_TYPE_AS_NumericType:
+    }
+    case TAG_TYPE_AS_NumericType: {
       GenNumericType (shape);
       break;
-    case TAG_TYPE_AS_TokenType:
+    }
+    case TAG_TYPE_AS_TokenType: {
       GenTokenType (shape);
       break;
-    case TAG_TYPE_AS_CharType:
+    }
+    case TAG_TYPE_AS_CharType: {
       GenCharType (shape);
       break;
-    case TAG_TYPE_AS_VoidType:
+    }
+    case TAG_TYPE_AS_VoidType: {
       GenVoidType (shape);
       break;
-    case TAG_TYPE_AS_QuoteType:
+    }
+    case TAG_TYPE_AS_QuoteType: {
       GenQuoteLit (shape.GetRecord(pos_AS_QuoteType_lit), this->LatexOutput);
       break;
-    case TAG_TYPE_AS_CompositeType:
-//
-      //GenRecordType (shape, false);    // default
+    }
+    case TAG_TYPE_AS_CompositeType: {
       GenCompositeType (shape, false);
-//
       break;
-    case TAG_TYPE_AS_UnionType:
+    }
+    case TAG_TYPE_AS_UnionType: {
       GenUnionType (shape);
       break;
-    case TAG_TYPE_AS_ProductType:
+    }
+    case TAG_TYPE_AS_ProductType: {
       GenProductType (shape);
       break;
-    case TAG_TYPE_AS_OptionalType:
+    }
+    case TAG_TYPE_AS_OptionalType: {
       GenOptionalType (shape);
       break;
-    case TAG_TYPE_AS_Set0Type:
+    }
+    case TAG_TYPE_AS_Set0Type: {
       GenSet0Type (shape);
       break;
-    case TAG_TYPE_AS_Set1Type:
+    }
+    case TAG_TYPE_AS_Set1Type: {
       GenSet1Type (shape);
       break;
-    case TAG_TYPE_AS_Seq0Type:
+    }
+    case TAG_TYPE_AS_Seq0Type: {
       GenSeq0Type (shape);
       break;
-    case TAG_TYPE_AS_Seq1Type:
+    }
+    case TAG_TYPE_AS_Seq1Type: {
       GenSeq1Type (shape);
       break;
-    case TAG_TYPE_AS_GeneralMap0Type:
+    }
+    case TAG_TYPE_AS_GeneralMap0Type: {
       GenGeneralMap0Type (shape);
       break;
-    case TAG_TYPE_AS_GeneralMap1Type:
+    }
+    case TAG_TYPE_AS_GeneralMap1Type: {
       GenGeneralMap1Type (shape);
       break;
-    case TAG_TYPE_AS_InjectiveMap0Type:
+    }
+    case TAG_TYPE_AS_InjectiveMap0Type: {
       GenInjectiveMap0Type (shape);
       break;
-    case TAG_TYPE_AS_InjectiveMap1Type:
+    }
+    case TAG_TYPE_AS_InjectiveMap1Type: {
       GenInjectiveMap1Type (shape);
       break;
-    case TAG_TYPE_AS_TypeName:
+    }
+    case TAG_TYPE_AS_TypeName: {
       GenTypeName (shape);
       break;
-    case TAG_TYPE_AS_PartialFnType:
+    }
+    case TAG_TYPE_AS_PartialFnType: {
       GenPartialFnType (shape);
       break;
-    case TAG_TYPE_AS_TotalFnType:
+    }
+    case TAG_TYPE_AS_TotalFnType: {
       GenTotalFnType (shape);
       break;
-    case TAG_TYPE_AS_OpType:
+    }
+    case TAG_TYPE_AS_OpType: {
       GenOpType (shape);
       break;
-    case TAG_TYPE_AS_TypeVar:
+    }
+    case TAG_TYPE_AS_TypeVar: {
       GenTypeVar (shape);
       break;
-    case TAG_TYPE_AS_BracketedType:
+    }
+    case TAG_TYPE_AS_BracketedType: {
       GenBracketedType (shape);
       break;
-    default:
+    }
+    default: {
       GenLiteral (shape, this->LatexOutput);
+      break;
+    }
   }
 }
 
@@ -1219,8 +1233,9 @@ void GenLatexOutput::GenInv (const Generic & modnm, const TYPE_AS_Invariant & In
 
   int patline = PatLine(pat);
   int expline = GetLine(exp);
-  if (patline < expline ) LatexOutput << LF;
-
+  if (patline < expline ) {
+    LatexOutput << LF;
+  }
   GenExpr (modnm, exp);
   if (semicolon) {
     LatexOutput << ";";
@@ -1246,16 +1261,9 @@ void GenLatexOutput::GenOrder(const Generic & modnm, const TYPE_AS_Order& ord, b
 void GenLatexOutput::GenFnType (const TYPE_AS_FnType & shape)
 {
   switch(shape.GetTag()) {
-    case TAG_TYPE_AS_TotalFnType: {
-      GenTotalFnType (shape);
-      break;
-    }
-    case TAG_TYPE_AS_PartialFnType: {
-      GenPartialFnType (shape);
-      break;
-    }
-    default:
-      break;
+    case TAG_TYPE_AS_TotalFnType:   { GenTotalFnType (shape); break; }
+    case TAG_TYPE_AS_PartialFnType: { GenPartialFnType (shape); break; }
+    default: { break; }
   }
 }
 
@@ -1266,7 +1274,6 @@ void GenLatexOutput::GenPartialFnType (const TYPE_AS_PartialFnType & shape)
 
   if (fndom.IsEmpty ()) {
     LatexOutput << "()";
-//    LatexOutput << " \\To ";
     LatexOutput << " \\Pto ";
   }
   else {
@@ -1276,15 +1283,14 @@ void GenLatexOutput::GenPartialFnType (const TYPE_AS_PartialFnType & shape)
       rc.set_cid(shape.GetInt(pos_AS_PartialFnType_cid));
       GenType(rc);
     }
-    else
+    else {
       GenType(fndom.Hd ());
-
-//    LatexOutput << " \\To ";
+    }
     LatexOutput << " \\Pto ";
 
-    if (GetLine (fnrng) > GetLine (fndom. Hd ()))
+    if (GetLine (fnrng) > GetLine (fndom. Hd ())) {
       LatexOutput << LF;
-
+    }
   }
   GenType (fnrng);
 }
@@ -1294,8 +1300,9 @@ void GenLatexOutput::GenTotalFnType (const TYPE_AS_TotalFnType & shape)
   const SEQ<TYPE_AS_Type> & fndom (shape.GetSequence(pos_AS_TotalFnType_fndom));
   const TYPE_AS_Type & fnrng (shape.GetRecord(pos_AS_TotalFnType_fnrng));
 
-  if (fndom.IsEmpty ())
+  if (fndom.IsEmpty ()) {
     LatexOutput << "()";
+  }
   else {
     if (fndom.Length () > 1) {
       TYPE_AS_ProductType rc;
@@ -1303,16 +1310,18 @@ void GenLatexOutput::GenTotalFnType (const TYPE_AS_TotalFnType & shape)
       rc.set_cid(shape.GetInt(pos_AS_TotalFnType_cid));
       GenType(rc);
     }
-    else
+    else {
       GenType(fndom.Hd ());
-
-    if (GetLine (shape) > GetLine (fndom.Hd ()))
+    }
+    if (GetLine (shape) > GetLine (fndom.Hd ())) {
       LatexOutput << LF;
+    }
   }
   LatexOutput << " \\To ";
 
-  if (GetLine (shape) < GetLine (fnrng))
+  if (GetLine (shape) < GetLine (fnrng)) {
     LatexOutput << LF;
+  }
   GenType (fnrng);
 }
 
@@ -1332,12 +1341,13 @@ void GenLatexOutput::GenOpType(const TYPE_AS_OpType & shape)
       rc.set_cid(shape.GetInt(pos_AS_OpType_cid));
       GenType(rc);
     }
-    else
+    else {
       GenType(lhs.Hd ());
-
+    }
     LatexOutput << " \\Oto ";
-    if (!rhs.IsNil() && GetLine (rhs) > GetLine (lhs.Hd()))
+    if (!rhs.IsNil() && GetLine (rhs) > GetLine (lhs.Hd())) {
       LatexOutput << LF;
+    }
   }
   GenType (rhs);
 }
@@ -1352,24 +1362,12 @@ void GenLatexOutput::GenNumericType (const TYPE_AS_NumericType & BTp)
   const Int & bas_tp (BTp.GetInt(pos_AS_NumericType_qtp));
 
   switch (bas_tp.GetValue ()) {
-    case NAT :
-      LatexOutput << "\\Nat ";
-      break;
-    case NATONE :
-      LatexOutput << "\\Natone ";
-      break;
-    case INTEGER :
-      LatexOutput << "\\Int ";
-      break;
-    case RAT :
-      LatexOutput << "\\Rat ";
-      break;
-    case REAL :
-      LatexOutput << "\\Real ";
-      break;
-    default :
-      ErrMsg1 (BTp, L"Unknown basic type");
-      LatexOutput << "";
+    case NAT:     { LatexOutput << "\\Nat "; break; }
+    case NATONE:  { LatexOutput << "\\Natone "; break; }
+    case INTEGER: { LatexOutput << "\\Int "; break; }
+    case RAT:     { LatexOutput << "\\Rat "; break; }
+    case REAL:    { LatexOutput << "\\Real "; break; }
+    default: { ErrMsg1 (BTp, L"Unknown basic type"); LatexOutput << ""; break; }
   }
 }
 
@@ -1402,8 +1400,9 @@ void GenLatexOutput::GenQuoteLit (const TYPE_AS_QuoteLit & QLt, std::ofstream & 
       ofs << "\\hbox{\\textunderscore}";
       wstr = L"";
     }
-    else
+    else {
      wstr += qwnm[i];
+    }
   }
   if(wstr.length() != 0) {
     ofs << TBWSTR::wstring2mbstr(wstr);
@@ -1542,8 +1541,9 @@ void GenLatexOutput::GenTypeName (const TYPE_AS_TypeName & Tname)
   const TYPE_AS_Name & nm (Tname.GetRecord(pos_AS_TypeName_name));
 
   GenName (nm, this->LatexOutput);
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (nm, typeocc_index);
+  }
 }
 
 // Record type is a composite type with the double colon notation
@@ -1556,49 +1556,52 @@ void GenLatexOutput::GenRecordType (const TYPE_AS_CompositeType & RTp, bool semi
   //  LatexOutput << "\\kw{ }";
 
   GenName (name, this->LatexOutput);
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (name, typedef_index);
-
+  }
   this->LatexOutput << "}"; //LatexOutput << "}\n";
 
-  if (!flds.IsEmpty())
-  {
+  if (!flds.IsEmpty()) {
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
-    {
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       const TYPE_AS_Field & field (flds[idx]);
       const Generic & sel_r   (field.GetField(pos_AS_Field_sel));
       const TYPE_AS_Type & tp (field.GetRecord(pos_AS_Field_type));
       const Bool & dc         (field.GetBool(pos_AS_Field_dc));
 
-      if (!sel_r.IsNil())
+      if (!sel_r.IsNil()) {
         GenName (sel_r, this->LatexOutput);
-
+      }
       // to make sure line breaks are properly handled, we enclose the
       // generated type with curly braces.
-      if (!dc)
+      if (!dc) {
         this->LatexOutput << " :{";
-      else
+      }
+      else {
         this->LatexOutput << " :- {";
-
+      }
       GenType (tp);
 
-      if (idx < len_flds)
+      if (idx < len_flds) {
         this->LatexOutput << "}" << LF;
-      else
-      {
-        if (semicolon)
+      }
+      else {
+        if (semicolon) {
           this->LatexOutput << "; }" << LF;
-        else
+        }
+        else {
           this->LatexOutput << "}" << LF;
+        }
       }
     }
   }
   else {
-    if (semicolon)
+    if (semicolon) {
       this->LatexOutput << ": ;" << LF;
-    else
+    }
+    else {
       this->LatexOutput << ":" << LF;
+    }
   }
 
   LatexOutput << "\\end{record}";
@@ -1614,26 +1617,25 @@ void GenLatexOutput::GenCompositeType (const TYPE_AS_CompositeType & CompTp, boo
   this->LatexOutput << "}";
   this->LatexOutput << endl;
 
-  if (!flds.IsEmpty())
-  {
+  if (!flds.IsEmpty()) {
     size_t len_flds = flds.Length();
-    for (size_t idx = 1; idx <= len_flds; idx++)
-    {
+    for (size_t idx = 1; idx <= len_flds; idx++) {
       const TYPE_AS_Field & field (flds[idx]);
       const Generic & sel_r   (field.GetField(pos_AS_Field_sel));
       const TYPE_AS_Type & tp (field.GetRecord(pos_AS_Field_type));
       const Bool & dc         (field.GetBool(pos_AS_Field_dc));
 
-      if (!sel_r.IsNil())
+      if (!sel_r.IsNil()) {
         GenName (sel_r, this->LatexOutput);
-
+      }
       // to make sure line breaks are properly handled, we enclose the
       // generated type with curly braces.
-      if (!dc)
+      if (!dc) {
         this->LatexOutput << " :{";
-      else
+      }
+      else {
         this->LatexOutput << " :-{";
-
+      }
       GenType (tp);
       this->LatexOutput << "}" << LF;
     }
@@ -1644,8 +1646,9 @@ void GenLatexOutput::GenCompositeType (const TYPE_AS_CompositeType & CompTp, boo
 
   LatexOutput << "\\end{composite}";
 
-  if (semicolon)
+  if (semicolon) {
     this->LatexOutput << ";";
+  }
 }
 
 void GenLatexOutput::GenTypeVar (const TYPE_AS_TypeVar & TypeV)
@@ -1682,22 +1685,21 @@ void GenLatexOutput::GenStateDef (const Generic & modnm, const TYPE_AS_StateDef 
   LatexOutput << "\\begin{statedef}{";
   GenName (name, this->LatexOutput);
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (name, state_index);
-
+  }
   LatexOutput << "}";
   LatexOutput << endl;
 
   size_t len_flds = flds.Length();
-  for (size_t idx = 1; idx <= len_flds; idx++)
-  {
+  for (size_t idx = 1; idx <= len_flds; idx++) {
     const TYPE_AS_Field & field (flds[idx]);
     const Generic & sel_r   (field.GetField(pos_AS_Field_sel));
     const TYPE_AS_Type & tp (field.GetRecord(pos_AS_Field_type));
 
-    if (!sel_r.IsNil())
+    if (!sel_r.IsNil()) {
       GenName (sel_r, this->LatexOutput);
-
+    }
     this->LatexOutput << " :{";
     GenType(tp);
     this->LatexOutput << "}" << LF;
@@ -1731,8 +1733,9 @@ void GenLatexOutput::GenInvariant (const Generic & modnm, const TYPE_AS_Invarian
 
   int patline = PatLine(pat);
   int expline = GetLine(expr);
-  if (patline < expline) this->LatexOutput << LF;
-
+  if (patline < expline) {
+    this->LatexOutput << LF;
+  }
   GenExpr(modnm, expr);
   this->LatexOutput << endl;
   this->LatexOutput << "\\end{invfn}";
@@ -1741,26 +1744,34 @@ void GenLatexOutput::GenInvariant (const Generic & modnm, const TYPE_AS_Invarian
 void GenLatexOutput::GenStatic(const Bool& statiC, const Record& from, bool prelinebreak, bool postlinebreak)
 {
 #ifdef VDMPP
-  if(!statiC.GetValue()) return;
+  if(statiC.GetValue()) {
 
-  if (prelinebreak) this->LatexOutput << endl;
+    if (prelinebreak) {
+      this->LatexOutput << endl;
+    }
+    this->LatexOutput << "\\kw{static}";
 
-  this->LatexOutput << "\\kw{static}";
-
-  if (postlinebreak) this->LatexOutput << endl;
+    if (postlinebreak) {
+      this->LatexOutput << endl;
+    }
+  }
 #endif
 }
 
 void GenLatexOutput::GenAsync(const Bool& sync, const Record & from, bool prelinebreak, bool postlinebreak)
 {
 #ifdef VDMPP
-  if(sync) return;
+  if(!sync) {
 
-  if (prelinebreak) this->LatexOutput << endl;
+    if (prelinebreak) {
+      this->LatexOutput << endl;
+    }
+    this->LatexOutput << "\\kw{async}";
 
-  this->LatexOutput << "\\kw{async}";
-
-  if (postlinebreak) this->LatexOutput << endl;
+    if (postlinebreak) {
+      this->LatexOutput << endl;
+    }
+  }
 #endif
 }
 
@@ -1780,28 +1791,14 @@ void GenLatexOutput::GenAccess(const Int& access,
 #endif //VDMPP
 
   switch (acc) {
-    case DEFAULT_AS :
-      break;
+    case DEFAULT_AS : { break; }
 #ifdef VDMPP
-    case PRIVATE_AS : {
-      this->LatexOutput << "\\kw{private}";
-      break;
-    }
-    case PROTECTED_AS : {
-      this->LatexOutput << "\\kw{protected}";
-      break;
-    }
-    case PUBLIC_AS : {
-      this->LatexOutput << "\\kw{public}";
-      break;
-    }
+    case PRIVATE_AS :   { this->LatexOutput << "\\kw{private}"; break; }
+    case PROTECTED_AS : { this->LatexOutput << "\\kw{protected}"; break; }
+    case PUBLIC_AS :    { this->LatexOutput << "\\kw{public}"; break; }
 #endif //VDMPP
-    case NOT_INITIALISED_AS : {
-      break;
-    }
-
-    default:
-      ErrMsg1(from,L"Unknown Access value");
+    case NOT_INITIALISED_AS : { break; }
+    default: { ErrMsg1(from,L"Unknown Access value"); break; }
   }
 
 #ifdef VDMPP
@@ -1848,11 +1845,11 @@ GenLatexOutput::GenInstanceVarDef (const Generic & modnm, const TYPE_AS_Instance
       GenInstanceInv (modnm, instvar);
       break;
     }
-    default:
+    default: {
       break;
+    }
   }
-  if (last_instvar)
-  {
+  if (last_instvar) {
     this->LatexOutput << "\\par";
     this->LatexOutput << endl;
   }
@@ -1865,11 +1862,11 @@ void GenLatexOutput::GenInstAssignDef(const Generic & modnm, const TYPE_AS_InstA
   const Bool & statiC             (iad.GetBool(pos_AS_InstAssignDef_stat));
 
   int acc = Int(access).GetValue();
-  if((acc != DEFAULT_AS) || statiC.GetValue())
-  {
+  if ((acc != DEFAULT_AS) || statiC.GetValue()) {
      GenAccess(access, iad, false, false);
-     if((acc != DEFAULT_AS) && statiC.GetValue())
+     if ((acc != DEFAULT_AS) && statiC.GetValue()) {
        this->LatexOutput << LATEXSPACE2;
+     }
      GenStatic(statiC, iad, false, false);
   }
   GenAssignDef(modnm, asdef);
@@ -1893,16 +1890,9 @@ void GenLatexOutput::GenSyncDef (const Generic & modnm, const TYPE_AS_SyncDef & 
   // SyncDef = Permission | Trace;
 
   switch(sync.GetTag()) {
-    case TAG_TYPE_AS_Permission: {
-      GenPermission(modnm, sync, semicolon);
-      break;
-    }
-    case TAG_TYPE_AS_Mutex: {
-      GenMutex(modnm, sync, semicolon);
-      break;
-    }
-    default:
-      break;
+    case TAG_TYPE_AS_Permission: { GenPermission(modnm, sync, semicolon); break; }
+    case TAG_TYPE_AS_Mutex:      { GenMutex(modnm, sync, semicolon); break; }
+    default: { break; }
   }
 }
 
@@ -2066,34 +2056,13 @@ void GenLatexOutput::GenTraceDefList(const Generic & modnm, const SEQ<TYPE_AS_Tr
 void GenLatexOutput::GenTraceDefTerm(const Generic & modnm, const TYPE_AS_TraceDefTerm & tdt)
 {
   switch(tdt.GetTag()) {
-    case TAG_TYPE_AS_TraceApplyExpr: {
-      GenTraceApplyExpr(modnm, tdt);
-      break;
-    }
-    case TAG_TYPE_AS_TraceBracketedExpr: {
-      GenTraceBracketedExpr(modnm, tdt);
-      break;
-    }
-    case TAG_TYPE_AS_TracePermuteExpr: {
-      GenTracePermuteExpr(modnm, tdt);
-      break;
-    }
-    case TAG_TYPE_AS_QualifiedTrace: {
-      GenQualifiedTrace(modnm, tdt);
-      break;
-    }
-    case TAG_TYPE_AS_RepeatTrace: {
-      GenRepeatTrace(modnm, tdt);
-      break;
-    }
-    case TAG_TYPE_AS_QualifiedRepeatTrace: {
-      GenQualifiedRepeatTrace(modnm, tdt);
-      break;
-    }
-    case TAG_TYPE_AS_TraceDefAltn: {
-      GenTraceDefAltn(modnm, tdt);
-      break;
-    }
+    case TAG_TYPE_AS_TraceApplyExpr:       { GenTraceApplyExpr(modnm, tdt); break; }
+    case TAG_TYPE_AS_TraceBracketedExpr:   { GenTraceBracketedExpr(modnm, tdt); break; }
+    case TAG_TYPE_AS_TracePermuteExpr:     { GenTracePermuteExpr(modnm, tdt); break; }
+    case TAG_TYPE_AS_QualifiedTrace:       { GenQualifiedTrace(modnm, tdt); break; }
+    case TAG_TYPE_AS_RepeatTrace:          { GenRepeatTrace(modnm, tdt); break; }
+    case TAG_TYPE_AS_QualifiedRepeatTrace: { GenQualifiedRepeatTrace(modnm, tdt); break; }
+    case TAG_TYPE_AS_TraceDefAltn:         { GenTraceDefAltn(modnm, tdt); break; }
   }
 }
 
@@ -2233,18 +2202,9 @@ void GenLatexOutput::GenTraceRepeatPattern(const Generic & modnm, const TYPE_AS_
   else if(trp.IsInt())
   {
     switch(Int(trp).GetValue()) {
-      case ANY: {
-        LatexOutput << "*";
-        break;
-      }
-      case ATLEASTONE: {
-        LatexOutput << "+";
-        break;
-      }
-      case POSSIBLY: {
-        LatexOutput << "?";
-        break;
-      }
+      case ANY:        { LatexOutput << "*"; break; }
+      case ATLEASTONE: { LatexOutput << "+"; break; }
+      case POSSIBLY:   { LatexOutput << "?"; break; }
     }
   }
 }
@@ -2252,18 +2212,9 @@ void GenLatexOutput::GenTraceRepeatPattern(const Generic & modnm, const TYPE_AS_
 void GenLatexOutput::GenTraceBind(const Generic & modnm, const TYPE_AS_TraceBind & tb)
 {
   switch(tb.GetTag()) {
-    case TAG_TYPE_AS_LocalTraceBind: {
-      GenLocalTraceBind(modnm, tb);
-      break;
-    }
-    case TAG_TYPE_AS_LetTraceBind: {
-      GenLetTraceBind(modnm, tb);
-      break;
-    }
-    case TAG_TYPE_AS_LetBeTraceBind: {
-      GenLetBeTraceBind(modnm, tb);
-      break;
-    }
+    case TAG_TYPE_AS_LocalTraceBind: { GenLocalTraceBind(modnm, tb); break; }
+    case TAG_TYPE_AS_LetTraceBind:   { GenLetTraceBind(modnm, tb); break; }
+    case TAG_TYPE_AS_LetBeTraceBind: { GenLetBeTraceBind(modnm, tb); break; }
   }
 }
 
@@ -2275,8 +2226,7 @@ void GenLatexOutput::GenLocalTraceBind(const Generic & modnm, const TYPE_AS_Loca
   this->LatexOutput << LATEXSPACE2;
 
   size_t len_ldef_l = ldef_l.Length();
-  for (size_t i = 1; i <= len_ldef_l; i++)
-  {
+  for (size_t i = 1; i <= len_ldef_l; i++) {
     const TYPE_AS_LocalDef & def (ldef_l[i]);
     switch(def.GetTag()) {
       case TAG_TYPE_AS_ValueDef: {
@@ -2295,9 +2245,9 @@ void GenLatexOutput::GenLocalTraceBind(const Generic & modnm, const TYPE_AS_Loca
         int l1 = PatLine (pat);
         int l2 = GetLine (val);
 
-        if (l2 > l1)
+        if (l2 > l1) {
           LatexOutput << LF;
-
+        }
         LatexOutput << "{";
         GenExpr (modnm, val);
         LatexOutput << "}";
@@ -2329,14 +2279,15 @@ void GenLatexOutput::GenLetTraceBind(const Generic & modnm, const TYPE_AS_LetTra
   int l1 = BindLine (bind_l[1]);
 
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; idx <= len_bind_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_bind_l; idx++) {
     const TYPE_AS_MultBind & bind (bind_l[idx]);
     int l2 = BindLine (bind);
-    if (idx > 1)
+    if (idx > 1) {
       LatexOutput << ",";
-    if (l2 > l1)
+    }
+    if (l2 > l1) {
       LatexOutput << LF;
+    }
     GenMultBind (modnm, bind);
     l1 = l2;
   }
@@ -2357,14 +2308,15 @@ void GenLatexOutput::GenLetBeTraceBind(const Generic & modnm, const TYPE_AS_LetB
   int l1 = BindLine (bind_l[1]);
 
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; idx <= len_bind_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_bind_l; idx++) {
     const TYPE_AS_MultBind & bind (bind_l[idx]);
     int l2 = BindLine (bind);
-    if (idx > 1)
+    if (idx > 1) {
       LatexOutput << ",";
-    if (l2 > l1)
+    }
+    if (l2 > l1) {
       LatexOutput << LF;
+    }
     GenMultBind (modnm, bind);
     l1 = l2;
   }
@@ -2373,9 +2325,9 @@ void GenLatexOutput::GenLetBeTraceBind(const Generic & modnm, const TYPE_AS_LetB
 
   int l3 = GetLine (stexpr);
 
-  if (l3 > l1)
+  if (l3 > l1) {
     this->LatexOutput << LF;
-
+  }
   this->linefeed = false;
   this->LatexOutput << LATEXSPACE2;
   GenExpr(modnm, stexpr);
@@ -2426,9 +2378,9 @@ void GenLatexOutput::GenValueDef (const Generic & modnm, const TYPE_AS_ValueDef 
 
   LatexOutput << "{";
   GenExpr(modnm, expr);
-  if (semicolon)
+  if (semicolon) {
     LatexOutput << ";";
-
+  }
   LatexOutput << "}";
   LatexOutput << endl;
   LatexOutput.flush ();
@@ -2453,9 +2405,10 @@ void GenLatexOutput::GenFunctionDef (const Generic & mod, const TYPE_AS_FnDef & 
 void GenLatexOutput::GenExplFnDef (const Generic & modnm, const TYPE_AS_ExplFnDef & fn_def, bool semicolon)
 {
 #ifdef PROTO
-  if (Settings.GetPrettyPrintRTI())
+  if (Settings.GetPrettyPrintRTI()) {
     //CalculateValCov (this->current_module, fn_def, LatexOutput);
     CalculateValCov (modnm, fn_def, LatexOutput);
+  }
 #endif //PROTO
 
   const TYPE_AS_Name & id               (fn_def.GetRecord(pos_AS_ExplFnDef_nm));
@@ -2483,22 +2436,22 @@ void GenLatexOutput::GenExplFnDef (const Generic & modnm, const TYPE_AS_ExplFnDe
   GenName (id, this->LatexOutput);
   LatexOutput << "}";
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (id, fct_index);
-
+  }
   LatexOutput << "%";
   LatexOutput << endl;
   LatexOutput << "\\signature";
 
-  if (!tpparms.IsEmpty())
-  {
+  if (!tpparms.IsEmpty()) {
     LatexOutput << "[";
     size_t len_tpparms = tpparms.Length ();
     for (size_t i = 1; i <= len_tpparms; i++) {
       TYPE_AS_TypeVar tv (tpparms[i]);
       GenTypeVar (tv);
-      if (i < len_tpparms)
+      if (i < len_tpparms) {
         LatexOutput << ",";
+      }
     }
     LatexOutput << "]";
   }
@@ -2509,36 +2462,33 @@ void GenLatexOutput::GenExplFnDef (const Generic & modnm, const TYPE_AS_ExplFnDe
   this->LatexOutput << endl;
   this->LatexOutput << "\\parms*{";
 
-  if (!parms.IsEmpty())
-  {
+  if (!parms.IsEmpty()) {
     int l1 = 0;
     int l2 = -1;
 
     size_t len_parms = parms.Length ();
-    for (size_t bb = 1; bb <= len_parms; bb++)
-    {
+    for (size_t bb = 1; bb <= len_parms; bb++) {
       SEQ<TYPE_AS_Pattern> prm (parms[bb]);
 
-      if (!prm.IsEmpty())
+      if (!prm.IsEmpty()) {
         l1 = PatLine (prm[1]);
-
-      if ((l1 > l2) && (l2 != -1))
+      }
+      if ((l1 > l2) && (l2 != -1)) {
         this->LatexOutput << LF;
-
+      }
       this->LatexOutput << "\\Lp ";
 
       size_t len_prm = prm.Length ();
-      for (size_t cc = 1; cc <= len_prm; cc++)
-      {
+      for (size_t cc = 1; cc <= len_prm; cc++) {
         l2 = PatLine (prm[cc]);
 
-        if (l2 > l1)
+        if (l2 > l1) {
           this->LatexOutput << LF;
-        
+        }
         GenPattern (modnm, prm[cc]);
-        if (cc < len_prm)
+        if (cc < len_prm) {
           this->LatexOutput << ",";
-
+        }
         l1 = l2;
       }
       this->LatexOutput << "\\Rp ";
@@ -2550,8 +2500,7 @@ void GenLatexOutput::GenExplFnDef (const Generic & modnm, const TYPE_AS_ExplFnDe
 
   this->LatexOutput << "\\annlab[o]{";
   //if (!this->current_module.IsNil ())
-  if (!modnm.IsNil ())
-  {
+  if (!modnm.IsNil ()) {
     //GenLabelName (this->current_module);
     GenLabelName (modnm, this->LatexOutput);
     this->LatexOutput << "`";
@@ -2563,14 +2512,13 @@ void GenLatexOutput::GenExplFnDef (const Generic & modnm, const TYPE_AS_ExplFnDe
   this->linefeed = false;
   GenFnBody (modnm, body);
 
-  if (!pre.IsNil())
+  if (!pre.IsNil()) {
     GenPre (modnm, pre);
-
-  if (!post.IsNil())
+  }
+  if (!post.IsNil()) {
     GenPost (modnm, post);
-
-  if (!measu.IsNil())
-  {
+  }
+  if (!measu.IsNil()) {
     this->LatexOutput << endl;
     this->LatexOutput << "\\begin{measu}";
     this->LatexOutput << endl;
@@ -2599,15 +2547,14 @@ void GenLatexOutput::GenExtExplFnDef (const Generic & modnm, const TYPE_AS_ExtEx
   const Int & access                        (fn_def.GetInt(pos_AS_ExtExplFnDef_access));
   const Bool & statiC                       (fn_def.GetBool(pos_AS_ExtExplFnDef_stat));
 
-  if(access.GetValue() != DEFAULT_AS || statiC.GetValue())
-  {
-      this->LatexOutput << "\\kw{";
-      GenAccess(access, fn_def, false, false);
-      if(access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
-          this->LatexOutput << LATEXSPACE2;
-          GenStatic(statiC, fn_def, false, false);
-      }
-      this->LatexOutput << "}";
+  if (access.GetValue() != DEFAULT_AS || statiC.GetValue()) {
+    this->LatexOutput << "\\kw{";
+    GenAccess(access, fn_def, false, false);
+    if (access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
+      this->LatexOutput << LATEXSPACE2;
+      GenStatic(statiC, fn_def, false, false);
+    }
+    this->LatexOutput << "}";
   }
 
   this->LatexOutput << "\\begin{fn}[e]{";
@@ -2615,47 +2562,47 @@ void GenLatexOutput::GenExtExplFnDef (const Generic & modnm, const TYPE_AS_ExtEx
 
       // we have to put the polymorphic type vars in the function name,
       // because the macros do not offer another solution
-  if (!tpparms.IsEmpty())
-  {
+  if (!tpparms.IsEmpty()) {
     this->LatexOutput << "[";
     size_t len_tpparms = tpparms.Length ();
     for (size_t bb = 1; bb <= len_tpparms; bb++) {
       TYPE_AS_TypeVar tv (tpparms[bb]);
       GenTypeVar (tv);
-      if (bb < len_tpparms)
+      if (bb < len_tpparms) {
         this->LatexOutput << ",";
+      }
     }
     this->LatexOutput << "]";
   }
 
   this->LatexOutput << "}";
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (id, fct_index);
-
+  }
   this->LatexOutput << "%";
   this->LatexOutput << endl;
   this->LatexOutput << "\\parms{";
 
-  if (!partps.IsEmpty())
-  {
+  if (!partps.IsEmpty()) {
     size_t len_partps = partps.Length ();
-    for (size_t bb = 1; bb <= len_partps; bb++)
-    {
+    for (size_t bb = 1; bb <= len_partps; bb++) {
       TYPE_AS_PatTypePair ptp (partps[bb]);
       SEQ<TYPE_AS_Pattern> patlist (ptp.get_pats ());
       TYPE_AS_Type tp (ptp.get_tp ());
       size_t len_patlist = patlist.Length ();
       for (size_t cc = 1; cc <= len_patlist; cc++) {
         GenPattern (modnm, patlist[cc]);
-        if (cc < len_patlist)
+        if (cc < len_patlist) {
           this->LatexOutput << ",";
+        }
       }
       this->LatexOutput << " : ";
       GenType (tp);
 
-      if (bb < len_partps)
+      if (bb < len_partps) {
         this->LatexOutput << ",";
+      }
     }
   }
 
@@ -2663,8 +2610,7 @@ void GenLatexOutput::GenExtExplFnDef (const Generic & modnm, const TYPE_AS_ExtEx
   this->LatexOutput << "[";
 
   size_t len_residtplist = residtplist.Length();
-  for (size_t i = 1; i<= len_residtplist; i++)
-  {
+  for (size_t i = 1; i<= len_residtplist; i++) {
     const TYPE_AS_NameType & residtp (residtplist[i]);
 
     GenName (residtp.get_nm (), this->LatexOutput);
@@ -2679,8 +2625,7 @@ void GenLatexOutput::GenExtExplFnDef (const Generic & modnm, const TYPE_AS_ExtEx
 
   this->LatexOutput << "\\annlab[o]{";
   //if (!this->current_module.IsNil ())
-  if (!modnm.IsNil ())
-  {
+  if (!modnm.IsNil ()) {
     //GenLabelName (this->current_module);
     GenLabelName (modnm, this->LatexOutput);
     this->LatexOutput << "`";
@@ -2691,15 +2636,15 @@ void GenLatexOutput::GenExtExplFnDef (const Generic & modnm, const TYPE_AS_ExtEx
 
   GenFnBody (modnm, body);
 
-  if (!pre.IsNil())
+  if (!pre.IsNil()) {
     GenPre (modnm, pre);
-
-  if (!post.IsNil())
+  }
+  if (!post.IsNil()) {
     GenPost (modnm, post);
-
-  if (semicolon)
+  }
+  if (semicolon) {
     this->LatexOutput << ";";
-
+  }
   this->LatexOutput << endl;
   this->LatexOutput << "\\end{fn}";
   this->LatexOutput << endl;
@@ -2716,11 +2661,10 @@ void GenLatexOutput::GenImplFnDef (const Generic & modnm, const TYPE_AS_ImplFnDe
   const Int & access                        (fn_def.GetInt(pos_AS_ImplFnDef_access));
   const Bool & statiC                       (fn_def.GetBool(pos_AS_ImplFnDef_stat));
 
-  if(access.GetValue() != DEFAULT_AS || statiC.GetValue())
-  {
+  if (access.GetValue() != DEFAULT_AS || statiC.GetValue()) {
     this->LatexOutput << "\\kw{";
     GenAccess(access, fn_def, false, false);
-    if(access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
+    if (access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
       this->LatexOutput << LATEXSPACE2;
       GenStatic(statiC, fn_def, false, false);
     }
@@ -2732,55 +2676,53 @@ void GenLatexOutput::GenImplFnDef (const Generic & modnm, const TYPE_AS_ImplFnDe
 
   // we have to put the polymorphic type vars in the function name,
   // because the macros do not offer another solution
-  if (!tpparms.IsEmpty())
-  {
+  if (!tpparms.IsEmpty()) {
     this->LatexOutput << "[";
     size_t len_tpparms = tpparms.Length ();
     for (size_t bb = 1; bb <= len_tpparms; bb++) {
       TYPE_AS_TypeVar tv (tpparms[bb]);
       GenTypeVar (tv);
-      if (bb < len_tpparms)
+      if (bb < len_tpparms) {
         this->LatexOutput << ",";
+      }
     }
     this->LatexOutput << "]";
   }
   this->LatexOutput << "}";
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (id, fct_index);
-
+  }
   this->LatexOutput << "%";
   this->LatexOutput << endl;
 
   this->LatexOutput << "\\parms{";
-  if (!partps.IsEmpty())
-  {
+  if (!partps.IsEmpty()) {
     size_t len_partps = partps.Length ();
-    for (size_t bb = 1; bb <= len_partps; bb++)
-    {
+    for (size_t bb = 1; bb <= len_partps; bb++) {
       TYPE_AS_PatTypePair ptp (partps[bb]);
       SEQ<TYPE_AS_Pattern> patlist (ptp.get_pats ());
       TYPE_AS_Type tp (ptp.get_tp ());
       size_t len_patlist = patlist.Length ();
-      for (size_t cc = 1; cc <= len_patlist; cc++)
-      {
+      for (size_t cc = 1; cc <= len_patlist; cc++) {
         GenPattern (modnm, patlist[cc]);
-        if (cc < len_patlist)
+        if (cc < len_patlist) {
           this->LatexOutput << ",";
+        }
       }
       this->LatexOutput << " : ";
       GenType (tp);
 
-      if (bb < len_partps)
+      if (bb < len_partps) {
         this->LatexOutput << ",";
+      }
     }
   }
   this->LatexOutput << "}";
 
   this->LatexOutput << "[";
   size_t len_residtplist = residtplist.Length();
-  for (size_t i = 1; i <= len_residtplist; i++)
-  {
+  for (size_t i = 1; i <= len_residtplist; i++) {
     TYPE_AS_NameType residtp (residtplist[i]);
 
     GenName (residtp.get_nm (), this->LatexOutput);
@@ -2795,8 +2737,7 @@ void GenLatexOutput::GenImplFnDef (const Generic & modnm, const TYPE_AS_ImplFnDe
 
   this->LatexOutput << "\\annlab[o]{";
   //if (!this->current_module.IsNil ())
-  if (!modnm.IsNil ())
-  {
+  if (!modnm.IsNil ()) {
     //GenLabelName (this->current_module);
     GenLabelName (modnm, this->LatexOutput);
     this->LatexOutput << "`";
@@ -2805,14 +2746,14 @@ void GenLatexOutput::GenImplFnDef (const Generic & modnm, const TYPE_AS_ImplFnDe
   this->LatexOutput << "}";
   this->LatexOutput << endl;
 
-  if (!pre.IsNil())
+  if (!pre.IsNil()) {
     GenPre (modnm, pre);
-
+  }
   GenPost (modnm, post);
 
-  if (semicolon)
+  if (semicolon) {
     this->LatexOutput << ";";
-
+  }
   this->LatexOutput << endl;
   this->LatexOutput << "\\end{fn}";
   this->LatexOutput << endl;
@@ -2843,27 +2784,33 @@ void GenLatexOutput::GenPost (const Generic & modnm, const TYPE_AS_Expr & post)
 void GenLatexOutput::GenFnBody (const Generic & modnm, const TYPE_AS_FnBody & fnbody)
 {
   const Generic & body (fnbody.GetField(pos_AS_FnBody_body));
-  if (body.IsRecord())
+  if (body.IsRecord()) {
     GenExpr(modnm, body);
+  }
 #ifdef VDMPP
-  else if (Int(body).GetValue() == SUBRESP)
+  else if (Int(body).GetValue() == SUBRESP) {
     LatexOutput << "\\issubclassresp";
+  }
 #endif // VDMPP
-  else
+  else {
     LatexOutput << "\\isnotyetspec";
+  }
 }
 
 void GenLatexOutput::GenOpBody (const Generic & modnm, const TYPE_AS_OpBody & opbody)
 {
   const Generic & body(opbody.GetField(pos_AS_OpBody_body));
-  if (body.IsRecord())
+  if (body.IsRecord()) {
     GenStmt(modnm, body);
+  }
 #ifdef VDMPP
-  else if (Int(body).GetValue() == SUBRESP)
+  else if (Int(body).GetValue() == SUBRESP) {
     LatexOutput << "\\issubclassresp";
+  }
 #endif // VDMPP
-  else
+  else {
     LatexOutput << "\\isnotyetspec";
+  }
 }
 
 /** Operation Definitions part **********************************************/
@@ -2899,19 +2846,18 @@ void GenLatexOutput::GenExplOpDef (const Generic & modnm, const TYPE_AS_ExplOpDe
   const Bool & statiC                (op_def.GetBool(pos_AS_ExplOpDef_stat));
   const Bool & sync                  (op_def.GetBool(pos_AS_ExplOpDef_opsync));
 
-  if(access.GetValue() != DEFAULT_AS || statiC.GetValue() || !sync)
-  {
+  if (access.GetValue() != DEFAULT_AS || statiC.GetValue() || !sync) {
     this->LatexOutput << "\\kw{";
-    if(!sync)
-    {
+    if (!sync) {
       GenAsync(sync, op_def, false, false);
-      if(access.GetValue() != DEFAULT_AS || statiC.GetValue())
+      if (access.GetValue() != DEFAULT_AS || statiC.GetValue()) {
         this->LatexOutput << LATEXSPACE2;
+      }
     }
     GenAccess(access, op_def, false, false);
-    if(access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
-        this->LatexOutput << LATEXSPACE2;
-        GenStatic(statiC, op_def, false, false);
+    if (access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
+      this->LatexOutput << LATEXSPACE2;
+      GenStatic(statiC, op_def, false, false);
     }
     this->LatexOutput << "}";
   }
@@ -2920,9 +2866,9 @@ void GenLatexOutput::GenExplOpDef (const Generic & modnm, const TYPE_AS_ExplOpDe
   GenName (id, this->LatexOutput);
   this->LatexOutput << "}";
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (id, fct_index);
-
+  }
   this->LatexOutput << "%";
   this->LatexOutput << endl;
   this->LatexOutput << "\\signature{";
@@ -2931,8 +2877,7 @@ void GenLatexOutput::GenExplOpDef (const Generic & modnm, const TYPE_AS_ExplOpDe
   this->LatexOutput << endl;
   this->LatexOutput << "\\parms{";
 
-  if (!parms.IsEmpty())
-  {
+  if (!parms.IsEmpty()) {
     size_t len = parms.Length ();
     for (size_t bb = 1; bb <= len; bb++) {
       TYPE_AS_Pattern pat (parms[bb]);
@@ -2956,16 +2901,16 @@ void GenLatexOutput::GenExplOpDef (const Generic & modnm, const TYPE_AS_ExplOpDe
   this->linefeed = false;
   GenOpBody(modnm, body);
 
-  if (!pre.IsNil())
+  if (!pre.IsNil()) {
     GenPre (modnm, pre);
-
+  }
   if (!post.IsNil()) {
     GenPost(modnm, post);
   }
 
-  if (semicolon)
+  if (semicolon) {
     this->LatexOutput << ";";
-
+  }
   this->LatexOutput << endl;
   this->LatexOutput << "\\end{op}";
   this->LatexOutput << endl;
@@ -2986,15 +2931,15 @@ void GenLatexOutput::GenExtExplOpDef (const Generic & modnm, const TYPE_AS_ExtEx
   const Bool & statiC                       (op_def.GetBool(pos_AS_ExtExplOpDef_stat));
   const Bool & sync                         (op_def.GetBool(pos_AS_ExtExplOpDef_opsync));
 
-  if(access.GetValue() != DEFAULT_AS || statiC.GetValue() || !sync) {
+  if (access.GetValue() != DEFAULT_AS || statiC.GetValue() || !sync) {
     LatexOutput << "\\kw{";
-    if(!sync) {
+    if (!sync) {
       GenAsync(sync, op_def, false, false);
-      if(access.GetValue() != DEFAULT_AS || statiC.GetValue())
+      if (access.GetValue() != DEFAULT_AS || statiC.GetValue())
         LatexOutput << LATEXSPACE2;
     }
     GenAccess(access, op_def, false, false);
-    if(access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
+    if (access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
       LatexOutput << LATEXSPACE2;
       GenStatic(statiC, op_def, false, false);
     }
@@ -3035,8 +2980,7 @@ void GenLatexOutput::GenExtExplOpDef (const Generic & modnm, const TYPE_AS_ExtEx
   }
   LatexOutput << "}";
 
-  if (residtplist.Length() > 0)
-  {
+  if (residtplist.Length() > 0) {
     LatexOutput << "[";
     size_t len_residtplist = residtplist.Length();
     for (size_t i = 1; i <= len_residtplist; i++) {
@@ -3093,16 +3037,16 @@ void GenLatexOutput::GenImplOpDef (const Generic & modnm, const TYPE_AS_ImplOpDe
   const Bool & statiC                       (op_def.GetBool(pos_AS_ImplOpDef_stat));
   const Bool & sync                         (op_def.GetBool(pos_AS_ImplOpDef_opsync));
 
-  if(access.GetValue() != DEFAULT_AS || statiC.GetValue() || !sync) {
+  if (access.GetValue() != DEFAULT_AS || statiC.GetValue() || !sync) {
     LatexOutput << "\\kw{";
-    if(!sync) {
+    if (!sync) {
       GenAsync(sync, op_def, false, false);
-      if(access.GetValue() != DEFAULT_AS || statiC.GetValue()) {
+      if (access.GetValue() != DEFAULT_AS || statiC.GetValue()) {
         LatexOutput << LATEXSPACE2;
       }
     }
     GenAccess(access, op_def, false, false);
-    if(access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
+    if (access.GetValue() != DEFAULT_AS && statiC.GetValue()) {
       LatexOutput << LATEXSPACE2;
       GenStatic(statiC, op_def, false, false);
     }
@@ -3120,19 +3064,18 @@ void GenLatexOutput::GenImplOpDef (const Generic & modnm, const TYPE_AS_ImplOpDe
   LatexOutput << endl;
   LatexOutput << "\\parms{";
 
-  if (!partps.IsEmpty())
-  {
+  if (!partps.IsEmpty()) {
     size_t len_partps = partps.Length ();
-    for (size_t bb = 1; bb <= len_partps; bb++)
-    {
+    for (size_t bb = 1; bb <= len_partps; bb++) {
       TYPE_AS_PatTypePair pattp (partps[bb]);
       SEQ<TYPE_AS_Pattern> patlist (pattp.get_pats ());
       TYPE_AS_Type tp (pattp.get_tp ());
       size_t len_patlist = patlist.Length ();
       for (size_t cc = 1; cc <= len_patlist; cc++) {
         GenPattern (modnm, patlist[cc]);
-        if (cc < len_patlist)
+        if (cc < len_patlist) {
           LatexOutput << ",";
+        }
       }
       LatexOutput << " : ";
       GenType (tp);
@@ -3269,8 +3212,7 @@ void GenLatexOutput::GenStmt(const Generic & modnm, const TYPE_AS_Stmt & stmt)
   bool not_covered = false;
   if (Settings.GetPrettyPrintRTI() &&
       !this->not_covered_area &&
-      !RTINFO::Is_Covered (stmt, *this->contextinfo))
-  {
+      !RTINFO::Is_Covered (stmt, *this->contextinfo)) {
     not_covered = true;
     this->not_covered_area = true;
     this->LatexOutput << "\\color{not-covered}";
@@ -3278,98 +3220,40 @@ void GenLatexOutput::GenStmt(const Generic & modnm, const TYPE_AS_Stmt & stmt)
 
   // gen statement
   switch (stmt.GetTag ()) {
-    case TAG_TYPE_AS_DefStmt:
-      GenDefStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_LetStmt:
-      GenLetStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_LetBeSTStmt:
-      GenLetBeSTStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_AssignStmt:
-      GenAssignStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_AtomicAssignStmt:
-      GenAtomicAssignStmt(modnm, stmt);
-      break;
-    case TAG_TYPE_AS_SeqForLoopStmt:
-      GenSeqForLoopStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_SetForLoopStmt:
-      GenSetForLoopStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_IndexForLoopStmt:
-      GenIndexForLoopStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_WhileLoopStmt:
-      GenWhileLoopStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_CallStmt:
-      GenCallStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_ErrorStmt:
-      GenErrorStmt ();
-      break;
-    case TAG_TYPE_AS_AlwaysStmt:
-      GenAlwaysStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_ExitStmt:
-      GenExitStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_TrapStmt:
-      GenTrapStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_RecTrapStmt:
-      GenRecTrapStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_NonDetStmt:
-      GenNonDetStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_ReturnStmt:
-      GenReturnStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_IfStmt:
-      GenIfStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_CasesStmt:
-      GenCasesStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_BlockStmt:
-      GenBlockStmt (modnm, stmt);
-      break;
-    case TAG_TYPE_AS_IdentStmt:
-      GenIdentStmt ();
-      break;
-    case TAG_TYPE_AS_SpecificationStmt:
-      GenSpecificationStmt(modnm, stmt);
-      break;
+    case TAG_TYPE_AS_DefStmt:           { GenDefStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_LetStmt:           { GenLetStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_LetBeSTStmt:       { GenLetBeSTStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_AssignStmt:        { GenAssignStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_AtomicAssignStmt:  { GenAtomicAssignStmt(modnm, stmt); break; }
+    case TAG_TYPE_AS_SeqForLoopStmt:    { GenSeqForLoopStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_SetForLoopStmt:    { GenSetForLoopStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_IndexForLoopStmt:  { GenIndexForLoopStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_WhileLoopStmt:     { GenWhileLoopStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_CallStmt:          { GenCallStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_ErrorStmt:         { GenErrorStmt (); break; }
+    case TAG_TYPE_AS_AlwaysStmt:        { GenAlwaysStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_ExitStmt:          { GenExitStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_TrapStmt:          { GenTrapStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_RecTrapStmt:       { GenRecTrapStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_NonDetStmt:        { GenNonDetStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_ReturnStmt:        { GenReturnStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_IfStmt:            { GenIfStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_CasesStmt:         { GenCasesStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_BlockStmt:         { GenBlockStmt (modnm, stmt); break; }
+    case TAG_TYPE_AS_IdentStmt:         { GenIdentStmt (); break; }
+    case TAG_TYPE_AS_SpecificationStmt: { GenSpecificationStmt(modnm, stmt); break; }
 #ifdef VDMPP
-    case TAG_TYPE_AS_StartStmt:
-      GenStartStmt(modnm, stmt);
-      break;
-    case TAG_TYPE_AS_StartListStmt:
-      GenStartListStmt(modnm, stmt);
-      break;
-    case TAG_TYPE_AS_StopStmt:
-      GenStopStmt(modnm, stmt);
-      break;
-    case TAG_TYPE_AS_StopListStmt:
-      GenStopListStmt(modnm, stmt);
-      break;
+    case TAG_TYPE_AS_StartStmt:         { GenStartStmt(modnm, stmt); break; }
+    case TAG_TYPE_AS_StartListStmt:     { GenStartListStmt(modnm, stmt); break; }
+    case TAG_TYPE_AS_StopStmt:          { GenStopStmt(modnm, stmt); break; }
+    case TAG_TYPE_AS_StopListStmt:      { GenStopListStmt(modnm, stmt); break; }
 #ifdef VICE
-    case TAG_TYPE_AS_DurationStmt:
-      GenDurationStmt(modnm, stmt);
-      break;
-    case TAG_TYPE_AS_CycleStmt:
-      GenCycleStmt(modnm, stmt);
-      break;
+    case TAG_TYPE_AS_DurationStmt:      { GenDurationStmt(modnm, stmt); break; }
+    case TAG_TYPE_AS_CycleStmt:         { GenCycleStmt(modnm, stmt); break; }
 #endif // VICE
 #endif // VDMPP
   
-    default: {
-      ErrMsg1 (stmt,L"Unknown statement encountered");
-    }
+    default: { ErrMsg1 (stmt,L"Unknown statement encountered"); }
   }
   // post Covered
   if (Settings.GetPrettyPrintRTI() && not_covered) {
@@ -3449,9 +3333,9 @@ void GenLatexOutput::GenLetStmt(const Generic & modnm, const TYPE_AS_LetStmt & l
         int l1 = PatLine (pat);
         int l2 = GetLine (val);
 
-        if (l2 > l1)
+        if (l2 > l1) {
           this->LatexOutput << LF;
-
+        }
         this->LatexOutput << "{";
         GenExpr (modnm, val);
         this->LatexOutput << "}";
@@ -3586,23 +3470,11 @@ void GenLatexOutput::GenAtomicAssignStmt(const Generic & modnm, const TYPE_AS_At
 void GenLatexOutput::GenStateDesignator(const Generic & modnm, const TYPE_AS_StateDesignator & sd)
 {
   switch(sd.GetTag()) {
-    case TAG_TYPE_AS_Name: {
-      GenName (sd, this->LatexOutput);
-      break;
-    }
-    case TAG_TYPE_AS_MapOrSeqRef: {
-      GenMapOrSeqRef (modnm, sd);
-      break;
-    }
-    case TAG_TYPE_AS_FieldRef: {
-      GenFieldRef (modnm, sd);
-      break;
-    }
-    case TAG_TYPE_AS_NarrowExpr: {
-      GenNarrowExpr (modnm, sd);
-    }
-    default:
-      break;
+    case TAG_TYPE_AS_Name:        { GenName (sd, this->LatexOutput); break; }
+    case TAG_TYPE_AS_MapOrSeqRef: { GenMapOrSeqRef (modnm, sd); break; }
+    case TAG_TYPE_AS_FieldRef:    { GenFieldRef (modnm, sd); break; }
+    case TAG_TYPE_AS_NarrowExpr:  { GenNarrowExpr (modnm, sd); }
+    default: { break; }
   }
 }
 
@@ -3649,9 +3521,9 @@ void GenLatexOutput::GenSeqForLoopStmt (const Generic & modnm, const TYPE_AS_Seq
   GenPatternBind (modnm, bind);
   this->LatexOutput << "}";
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
 //  if (dirn.IsQuote ())
 //    this->LatexOutput << "[rev]";
 
@@ -3683,9 +3555,9 @@ void GenLatexOutput::GenSetForLoopStmt (const Generic & modnm, const TYPE_AS_Set
   GenPattern (modnm, pat);
   this->LatexOutput << "}";
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   this->LatexOutput << "{";
   GenExpr (modnm, set);
   this->LatexOutput << "}";
@@ -3718,30 +3590,31 @@ void GenLatexOutput::GenIndexForLoopStmt (const Generic & modnm, const TYPE_AS_I
   GenName (id, this->LatexOutput);
   this->LatexOutput << "}";
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   this->LatexOutput << "{";
   GenExpr (modnm, lb_e);
   this->LatexOutput << "}";
 
-  if (l3 > l2)
+  if (l3 > l2) {
     this->LatexOutput << LF;
-
+  }
   this->LatexOutput << "{";
   GenExpr (modnm, ub_e);
   this->LatexOutput << "}";
 
-  if (by_e.IsNil ())
+  if (by_e.IsNil ()) {
     this->LatexOutput << endl;
+  }
   else {
     TYPE_AS_Expr incr_by (by_e);
 
 //    if (!( incr_by.Is(TAG_TYPE_AS_RealLit) &&
 //        ((Real) incr_by.GetField(1)).GetValue() == 1.0 )) {
-      if (l4 > l3)
+      if (l4 > l3) {
         this->LatexOutput << LF;
-
+      }
       this->LatexOutput << "[";
       GenExpr (modnm, by_e);
       this->LatexOutput << "]";
@@ -3790,11 +3663,13 @@ void GenLatexOutput::GenCallStmt (const Generic & modnm, const TYPE_AS_CallStmt 
     this->linefeed = false;
     bool isName = obj.IsRecord() && Record(obj).Is(TAG_TYPE_AS_Name);
     int len = isName ? Record(obj).GetSequence(pos_AS_Name_ids).Length() : 0;
-    if(isName && len == 1)
+    if(isName && len == 1) {
       this->LatexOutput << "$";
+    }
     GenExpr(modnm, obj);
-    if(isName && len == 1)
+    if(isName && len == 1) {
       this->LatexOutput << "$";
+    }
     this->LatexOutput << ".";
   }
 #endif // VDMPP
@@ -3803,18 +3678,18 @@ void GenLatexOutput::GenCallStmt (const Generic & modnm, const TYPE_AS_CallStmt 
 
   GenName (oprt, this->LatexOutput);
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (oprt, fctocc_index);
-
+  }
   this->LatexOutput << "}";
 
   int l1 = GetLine (oprt);
 
-  if (!args.IsEmpty())
-  {
+  if (!args.IsEmpty()) {
     int l2 = GetLine (args[1]);
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
+    }
   }
 
   this->LatexOutput << "{";
@@ -3823,13 +3698,13 @@ void GenLatexOutput::GenCallStmt (const Generic & modnm, const TYPE_AS_CallStmt 
   for (size_t bb = 1; bb <= len_args; bb++) {
     int l3 = GetLine (args[bb]);
 
-    if (l3 > l1 && !first)
+    if (l3 > l1 && !first) {
       this->LatexOutput << LF;
-
+    }
     GenExpr (modnm, args[bb]);
-    if (bb < len_args)
+    if (bb < len_args) {
       this->LatexOutput << ",";
-
+    }
     l1 = l3;
     first = false;
   }
@@ -3845,8 +3720,9 @@ void GenLatexOutput::GenReturnStmt(const Generic & modnm, const TYPE_AS_ReturnSt
 
   this->LatexOutput << "\\return{";
 
-  if (! ret_e.IsNil ())
+  if (! ret_e.IsNil ()) {
     GenExpr (modnm, ret_e);
+  }
   else {
     this->LatexOutput <<"\\mbox{}";
   }
@@ -3872,8 +3748,7 @@ void GenLatexOutput::GenIfStmt(const Generic & modnm, const TYPE_AS_IfStmt & is)
   GenStmt (modnm, cons);
 
   size_t len_elif_l = elif_l.Length();
-  for (size_t i = 1; i <= len_elif_l; i++)
-  {
+  for (size_t i = 1; i <= len_elif_l; i++) {
     const TYPE_AS_ElseifStmt & elif (elif_l[i]);
     const TYPE_AS_Expr & elif_test (elif.GetRecord(pos_AS_ElseifStmt_test));
     const TYPE_AS_Stmt & elif_cons (elif.GetRecord(pos_AS_ElseifStmt_cons));
@@ -4026,9 +3901,9 @@ void GenLatexOutput::GenTrapStmt (const Generic & modnm, const TYPE_AS_TrapStmt 
   int l1 = PatBindLine (bind);
   int l2 = GetLine (stmt);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   this->LatexOutput << "{\\ ";
   GenStmt (modnm, stmt);
   this->LatexOutput << "}";
@@ -4050,8 +3925,7 @@ void GenLatexOutput:: GenRecTrapStmt (const Generic & modnm,const TYPE_AS_RecTra
   this->LatexOutput << endl;
 
   size_t len_trap_l = trap_l.Length();
-  for (size_t i = 1; i <= len_trap_l; i++)
-  {
+  for (size_t i = 1; i <= len_trap_l; i++) {
     const TYPE_AS_Trap & trap (trap_l[i]);
     const TYPE_AS_PatternBind & bind (trap.GetRecord(pos_AS_Trap_match));
     const TYPE_AS_Stmt & stmt        (trap.GetRecord(pos_AS_Trap_trappost));
@@ -4064,9 +3938,9 @@ void GenLatexOutput:: GenRecTrapStmt (const Generic & modnm,const TYPE_AS_RecTra
     int l1 = PatBindLine (bind);
     int l2 = GetLine (stmt);
 
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
-
+    }
     this->LatexOutput << "{";
     GenStmt (modnm, stmt);
     this->LatexOutput << "}";
@@ -4095,8 +3969,7 @@ void GenLatexOutput::GenAssignDef (const Generic & modnm, const TYPE_AS_AssignDe
   GenType (tp);
   this->LatexOutput << "}";
 
-  if (! init.IsNil ())
-  {
+  if (! init.IsNil ()) {
     this->linefeed = false;
     this->LatexOutput << "[{";
     GenExpr(modnm, init);
@@ -4115,13 +3988,11 @@ void GenLatexOutput::GenBlockStmt (const Generic & modnm, const TYPE_AS_BlockStm
   this->LatexOutput << "\\begin{blockstmt}";
   this->LatexOutput << endl;
 
-  if (!assdef_l.IsEmpty())
-  {
+  if (!assdef_l.IsEmpty()) {
     this->LatexOutput << "\\begin{dclstmt}";
 
     size_t len_assdef_l = assdef_l.Length();
-    for (size_t i = 1; i <= len_assdef_l; i++)
-    {
+    for (size_t i = 1; i <= len_assdef_l; i++) {
       GenAssignDef(modnm, assdef_l[i]);
     }
 
@@ -4135,10 +4006,12 @@ void GenLatexOutput::GenBlockStmt (const Generic & modnm, const TYPE_AS_BlockStm
   size_t len_stmt_l = stmt_l.Length ();
   for (size_t cc = 1; cc <= len_stmt_l; cc++) {
     GenStmt (modnm, stmt_l[cc]);
-    if (cc < len_stmt_l)
+    if (cc < len_stmt_l) {
       this->LatexOutput << " ;" << LF;
-    else
+    }
+    else {
       this->LatexOutput << endl;
+    }
   }
 
   this->LatexOutput << "\\end{blockstmt}";
@@ -4159,10 +4032,12 @@ void GenLatexOutput::GenNonDetStmt (const Generic & modnm, const TYPE_AS_NonDetS
   for (size_t i = 1; i <= len_stmt_l; i++) {
 
     GenStmt (modnm, stmt_l[i]);
-    if (i < len_stmt_l)
+    if (i < len_stmt_l) {
       this->LatexOutput << "," << LF;
-    else
+    }
+    else {
       this->LatexOutput << endl;
+    }
   }
 
   this->LatexOutput << "\\end{nondetstmt}";
@@ -4187,9 +4062,9 @@ void GenLatexOutput::GenSpecificationStmt(const Generic & modnm, const TYPE_AS_S
   this->LatexOutput << "[";
   GenExternals (opext);
 
-  if (!pre.IsNil())
+  if (!pre.IsNil()) {
     GenPre (modnm, pre);
-
+  }
   GenPost (modnm, post);
 
   GenExceptions (modnm, excps);
@@ -4290,189 +4165,81 @@ void GenLatexOutput::GenExpr (const Generic & modnm, const TYPE_AS_Expr & Expr)
   bool not_covered = false;
   if (Settings.GetPrettyPrintRTI() &&
       !this->not_covered_area &&
-      !RTINFO::Is_Covered (Expr, *this->contextinfo))
-  {
+      !RTINFO::Is_Covered (Expr, *this->contextinfo)) {
     not_covered = true;
     this->not_covered_area = true;
     this->LatexOutput << "\\color{not-covered}";
   }
 
-//  int tag = Expr.GetTag ();
   switch (Expr.GetTag ()) {
-    case TAG_TYPE_AS_PrefixExpr:
-      GenPrefixExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_BinaryExpr:
-      GenBinaryExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_DefExpr:
-      GenDefExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_LetExpr:
-      GenLetExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_LetBeSTExpr:
-      GenLetBeSTExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_IfExpr:
-      GenIfExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_CasesExpr:
-      GenCasesExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_AllOrExistsExpr:
-      GenAllOrExistsExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_ExistsUniqueExpr:
-      GenExistsUniqueExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_IotaExpr:
-      GenIotaExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SetEnumerationExpr:
-      GenSetEnumerationExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SetComprehensionExpr:
-      GenSetComprehensionExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SetRangeExpr:
-      GenSetRangeExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SeqEnumerationExpr:
-      GenSeqEnumerationExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SeqComprehensionExpr:
-      GenSeqComprehensionExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SubSequenceExpr:
-      GenSubSequenceExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_SeqModifyMapOverrideExpr:
-      GenSeqModifyMapOverrideExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_MapEnumerationExpr:
-      GenMapEnumerationExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_MapComprehensionExpr:
-      GenMapComprehensionExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_TupleConstructorExpr:
-      GenTupleConstructorExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_RecordConstructorExpr:
-      GenRecordConstructorExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_RecordModifierExpr:
-      GenRecordModifierExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_ApplyExpr:
-      GenApplyExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_FieldSelectExpr:
-      GenFieldSelectExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_TokenConstructorExpr:
-      GenTokenConstructorExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_LambdaExpr:
-      GenLambdaExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_FctTypeInstExpr:
-      GenFctTypeInstExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_IsExpr:
-      GenIsExpr (modnm, Expr);
-      break;
+    case TAG_TYPE_AS_PrefixExpr:               { GenPrefixExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_BinaryExpr:               { GenBinaryExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_DefExpr:                  { GenDefExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_LetExpr:                  { GenLetExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_LetBeSTExpr:              { GenLetBeSTExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_IfExpr:                   { GenIfExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_CasesExpr:                { GenCasesExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_AllOrExistsExpr:          { GenAllOrExistsExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_ExistsUniqueExpr:         { GenExistsUniqueExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_IotaExpr:                 { GenIotaExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SetEnumerationExpr:       { GenSetEnumerationExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SetComprehensionExpr:     { GenSetComprehensionExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SetRangeExpr:             { GenSetRangeExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SeqEnumerationExpr:       { GenSeqEnumerationExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SeqComprehensionExpr:     { GenSeqComprehensionExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SubSequenceExpr:          { GenSubSequenceExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_SeqModifyMapOverrideExpr: { GenSeqModifyMapOverrideExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_MapEnumerationExpr:       { GenMapEnumerationExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_MapComprehensionExpr:     { GenMapComprehensionExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_TupleConstructorExpr:     { GenTupleConstructorExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_RecordConstructorExpr:    { GenRecordConstructorExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_RecordModifierExpr:       { GenRecordModifierExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_ApplyExpr:                { GenApplyExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_FieldSelectExpr:          { GenFieldSelectExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_TokenConstructorExpr:     { GenTokenConstructorExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_LambdaExpr:               { GenLambdaExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_FctTypeInstExpr:          { GenFctTypeInstExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_IsExpr:                   { GenIsExpr (modnm, Expr); break; }
     case TAG_TYPE_AS_BoolLit:
     case TAG_TYPE_AS_CharLit:
     case TAG_TYPE_AS_TextLit:
     case TAG_TYPE_AS_QuoteLit:
     case TAG_TYPE_AS_RealLit:
     case TAG_TYPE_AS_NumLit:
-    case TAG_TYPE_AS_NilLit:
-      GenLiteral (Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_Name:
-      GenName(Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_OldName:
-      GenOldName (Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_UndefinedExpr:
-      GenUndefinedExpr ();
-      break;
-    case TAG_TYPE_AS_TupleSelectExpr:
-      GenTupleSelectExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_TypeJudgementExpr:
-      GenTypeJudgementExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_NarrowExpr:
-      GenNarrowExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_PreConditionApplyExpr:
-      GenPreConditionApplyExpr(modnm, Expr);
-      break;
-    case TAG_TYPE_AS_BracketedExpr:
-      GenBracketedExpr (modnm, Expr);
-      break;
-    case TAG_TYPE_AS_Macro: {
-      GenMacro (modnm, Expr);
-      break;
-    }
+    case TAG_TYPE_AS_NilLit:                   { GenLiteral (Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_Name:                     { GenName(Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_OldName:                  { GenOldName (Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_UndefinedExpr:            { GenUndefinedExpr (); break; }
+    case TAG_TYPE_AS_TupleSelectExpr:          { GenTupleSelectExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_TypeJudgementExpr:        { GenTypeJudgementExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_NarrowExpr:               { GenNarrowExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_PreConditionApplyExpr:    { GenPreConditionApplyExpr(modnm, Expr); break; }
+    case TAG_TYPE_AS_BracketedExpr:            { GenBracketedExpr (modnm, Expr); break; }
+    case TAG_TYPE_AS_Macro:                    { GenMacro (modnm, Expr); break; }
 #ifdef VDMPP
-    case TAG_TYPE_AS_NewExpr:
-      GenNewExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_SelfExpr:
-      GenSelfExpr(this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_IsOfClassExpr:
-      GenIsOfClassExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_IsOfBaseClassExpr:
-      GenIsOfBaseClassExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_SameBaseClassExpr:
-      GenSameBaseClassExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_SameClassExpr:
-      GenSameClassExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_ActExpr:
-      GenActExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_FinExpr:
-      GenFinExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_ActiveExpr:
-      GenActiveExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_WaitingExpr:
-      GenWaitingExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_ReqExpr:
-      GenReqExpr(modnm, Expr, this->LatexOutput);
-      break;
-    case TAG_TYPE_AS_ThreadIdExpr:
-      GenThreadIdExpr(this->LatexOutput);
-      break;
+    case TAG_TYPE_AS_NewExpr:           { GenNewExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_SelfExpr:          { GenSelfExpr(this->LatexOutput); break; }
+    case TAG_TYPE_AS_IsOfClassExpr:     { GenIsOfClassExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_IsOfBaseClassExpr: { GenIsOfBaseClassExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_SameBaseClassExpr: { GenSameBaseClassExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_SameClassExpr:     { GenSameClassExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_ActExpr:           { GenActExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_FinExpr:           { GenFinExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_ActiveExpr:        { GenActiveExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_WaitingExpr:       { GenWaitingExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_ReqExpr:           { GenReqExpr(modnm, Expr, this->LatexOutput); break; }
+    case TAG_TYPE_AS_ThreadIdExpr:      { GenThreadIdExpr(this->LatexOutput); break; }
 #ifdef VICE
-    case TAG_TYPE_AS_CurTimeExpr:
-      GenCurTimeExpr(this->LatexOutput);
-      break;
+    case TAG_TYPE_AS_CurTimeExpr:       { GenCurTimeExpr(this->LatexOutput); break; }
 #endif // VICE
 #endif // VDMPP
-    default: {
-      ErrMsg1 (Expr, L"Unknown expression encountered");
-    }
+    default: { ErrMsg1 (Expr, L"Unknown expression encountered"); }
   }
 
-  if (Settings.GetPrettyPrintRTI() && not_covered)
-    {
-      this->not_covered_area = false;
-      this->LatexOutput << "\\color{covered}";
-    }
+  if (Settings.GetPrettyPrintRTI() && not_covered) {
+    this->not_covered_area = false;
+    this->LatexOutput << "\\color{covered}";
+  }
 }
 
 /** Complex Expressions part ************************************************/
@@ -4491,8 +4258,7 @@ void GenLatexOutput::GenDefExpr(const Generic & modnm, const TYPE_AS_DefExpr & d
   this->LatexOutput << endl;
 
   size_t len_value_l = value_l.Length();
-  for (size_t i = 1; i < len_value_l; i++)
-  {
+  for (size_t i = 1; i < len_value_l; i++) {
     const Tuple & t (value_l[i]);
     const TYPE_AS_PatternBind & bind (t.GetRecord(1));
     const TYPE_AS_Expr & expr        (t.GetRecord(2));
@@ -4505,9 +4271,9 @@ void GenLatexOutput::GenDefExpr(const Generic & modnm, const TYPE_AS_DefExpr & d
     int l1 = PatBindLine (bind);
     int l2 = GetLine (expr);
 
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
-
+    }
     this->LatexOutput << "{";
     GenExpr (modnm, expr);
     this->LatexOutput << "}";
@@ -4531,8 +4297,7 @@ void GenLatexOutput::GenLetExpr(const Generic & modnm, const TYPE_AS_LetExpr & l
   this->LatexOutput << endl;
 
   size_t len_localdef = localdef.Length();
-  for (size_t i = 1; i <= len_localdef; i++)
-  {
+  for (size_t i = 1; i <= len_localdef; i++) {
     const TYPE_AS_LocalDef & def (localdef[i]);
     this->linefeed = false;
     switch(def.GetTag()) {
@@ -4552,9 +4317,9 @@ void GenLatexOutput::GenLetExpr(const Generic & modnm, const TYPE_AS_LetExpr & l
         int l1 = PatLine (pat);
         int l2 = GetLine (val);
 
-        if (l2 > l1)
+        if (l2 > l1) {
           this->LatexOutput << LF;
-
+        }
         this->LatexOutput << "{";
         GenExpr (modnm, val);
         this->LatexOutput << "}";
@@ -4588,21 +4353,21 @@ void GenLatexOutput::GenLetBeSTExpr(const Generic & modnm, const TYPE_AS_LetBeST
   this->LatexOutput << "\\Letbe";
 
   if (st_expr.IsNil() ||
-      (st_expr.Is (TAG_TYPE_AS_BoolLit) && Record(st_expr).GetBoolValue(pos_AS_BoolLit_val)))
-  {
+      (st_expr.Is (TAG_TYPE_AS_BoolLit) && Record(st_expr).GetBoolValue(pos_AS_BoolLit_val))) {
     this->LatexOutput << "* ";
 
     int l1 = BindLine (bind_l[1]);
 
     size_t len_bind_l = bind_l.Length();
-    for (size_t idx = 1; idx <= len_bind_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_bind_l; idx++) {
       const TYPE_AS_MultBind & bind (bind_l[idx]);
       int l2 = BindLine (bind);
-      if (idx > 1)
+      if (idx > 1) {
         LatexOutput << ",";
-      if (l2 > l1)
+      }
+      if (l2 > l1) {
         LatexOutput << LF;
+      }
       GenMultBind (modnm, bind);
       l1 = l2;
     }
@@ -4613,14 +4378,15 @@ void GenLatexOutput::GenLetBeSTExpr(const Generic & modnm, const TYPE_AS_LetBeST
     int l1 = BindLine (bind_l[1]);
 
     size_t len_bind_l = bind_l.Length();
-    for (size_t idx = 1; idx <= len_bind_l; idx++)
-    {
+    for (size_t idx = 1; idx <= len_bind_l; idx++) {
       const TYPE_AS_MultBind & bind (bind_l[idx]);
       int l2 = BindLine (bind);
-      if (idx > 1)
+      if (idx > 1) {
         LatexOutput << ",";
-      if (l2 > l1)
+      }
+      if (l2 > l1) {
         LatexOutput << LF;
+      }
       GenMultBind (modnm, bind);
       l1 = l2;
     }
@@ -4629,9 +4395,9 @@ void GenLatexOutput::GenLetBeSTExpr(const Generic & modnm, const TYPE_AS_LetBeST
 
     int l3 = GetLine (st_expr);
 
-    if (l3 > l1)
+    if (l3 > l1) {
       this->LatexOutput << LF;
-
+    }
     this->LatexOutput << LATEXSPACE2;
     this->linefeed = false;
     GenExpr (modnm, st_expr);
@@ -4659,11 +4425,9 @@ void GenLatexOutput::GenIfExpr(const Generic & modnm, const TYPE_AS_IfExpr & ie)
   this->LatexOutput << "\\Then" << LF;
   GenExpr (modnm, cons);
 
-  if (!elif_l.IsEmpty())
-  {
+  if (!elif_l.IsEmpty()) {
     size_t len_elif_l = elif_l.Length();
-    for (size_t i = 1; i <= len_elif_l; i++)
-    {
+    for (size_t i = 1; i <= len_elif_l; i++) {
       const TYPE_AS_ElseifExpr & elif (elif_l[i]);
       const TYPE_AS_Expr & elif_test (elif.GetRecord(pos_AS_ElseifExpr_test));
       const TYPE_AS_Expr & elif_cons (elif.GetRecord(pos_AS_ElseifExpr_cons));
@@ -4713,9 +4477,9 @@ void GenLatexOutput::GenCasesExpr(const Generic & modnm, const TYPE_AS_CasesExpr
     for (size_t cc = 1; cc <= len; cc++) {
       int l2 = PatLine (pat_l[cc]);
 
-      if (l2 > l1)
+      if (l2 > l1) {
         LatexOutput << LF;
-
+      }
       bool not_covered = false;
       if (Settings.GetPrettyPrintRTI() &&
           !this->not_covered_area &&
@@ -4906,14 +4670,14 @@ void GenLatexOutput::GenSetComprehensionExpr(const Generic & modnm, const TYPE_A
   while(bb) {
     int l3 = BindLine (env);
 
-    if (l3 > l1)
+    if (l3 > l1) {
       LatexOutput << LF;
-
+    }
     GenMultBind(modnm, env);
     bb = bind_s.Next (env);
-    if (bb)
+    if (bb) {
       LatexOutput << ",";
-
+    }
     l1 = l3;
   }
 */
@@ -5039,8 +4803,7 @@ void GenLatexOutput::GenSeqComprehensionExpr (const Generic & modnm, const TYPE_
   LatexOutput << "}";
 
   if (! ( pred_e.IsNil() ||
-          (pred_e.Is(TAG_TYPE_AS_BoolLit) && Record(pred_e).GetBoolValue(pos_AS_BoolLit_val))))
-  {
+          (pred_e.Is(TAG_TYPE_AS_BoolLit) && Record(pred_e).GetBoolValue(pos_AS_BoolLit_val)))) {
     int l3 = GetLine (pred_e);
 
     if (l3 > l1) {
@@ -5228,8 +4991,9 @@ void GenLatexOutput::GenTupleConstructorExpr(const Generic & modnm, const TYPE_A
 
   if (!fields_le.IsEmpty ()) {
     int l2 = GetLine (fields_le[1]);
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
+    }
   }
 
   this->LatexOutput << "{";
@@ -5444,19 +5208,18 @@ void GenLatexOutput::GenLambdaExpr (const Generic & modnm, const TYPE_AS_LambdaE
   int l1 = BindLine (parm[1]);
 
   size_t len_parm = parm.Length();
-  for (size_t idx = 1; idx <= len_parm; idx++)
-  {
+  for (size_t idx = 1; idx <= len_parm; idx++) {
     const TYPE_AS_TypeBind & tb (parm[idx]);
     int l2 = BindLine (tb);
 
-    if (l2 > l1)
+    if (l2 > l1) {
       LatexOutput << LF;
-
+    }
     GenTypeBind (modnm, tb);
 
-    if (idx < len_parm)
+    if (idx < len_parm) {
       LatexOutput << ",";
-
+    }
     l1 = l2;
   }
 
@@ -5465,9 +5228,9 @@ void GenLatexOutput::GenLambdaExpr (const Generic & modnm, const TYPE_AS_LambdaE
 
   int l3 = GetLine (body);
 
-  if (l3 > l1)
+  if (l3 > l1) {
     LatexOutput << LF;
-
+  }
   LatexOutput << "{";
   GenExpr (modnm, body);
   LatexOutput << "}";
@@ -5488,8 +5251,9 @@ void GenLatexOutput::GenIsExpr(const Generic & modnm, const TYPE_AS_IsExpr & IsE
   switch(type.GetTag()) {
     case TAG_TYPE_AS_Name: {
       GenName (type, this->LatexOutput);
-      if (this->INDEX)
+      if (this->INDEX) {
         GenIndex (type, typeocc_index);
+      }
       break;
     }
     case TAG_TYPE_AS_BooleanType: {
@@ -5517,9 +5281,9 @@ void GenLatexOutput::GenIsExpr(const Generic & modnm, const TYPE_AS_IsExpr & IsE
   int l1 = GetLine (IsE);
   int l2 = GetLine (arg_e);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   this->LatexOutput << "{";
 
   this->linefeed = false;
@@ -5537,20 +5301,22 @@ void GenLatexOutput::GenLiteral(const TYPE_AS_Literal & Lit, std::ofstream & ofs
 {
   switch(Lit.GetTag()) {
     case TAG_TYPE_AS_BoolLit: {
-      if (Lit.GetBoolValue(pos_AS_BoolLit_val))
+      if (Lit.GetBoolValue(pos_AS_BoolLit_val)) {
         ofs << "\\True ";
-      else
+      }
+      else {
         ofs << "\\False ";
+      }
       break;
     }
     case TAG_TYPE_AS_RealLit: {
       const Real & val (Lit.GetReal(pos_AS_RealLit_val));
       double n = val.GetValue ();
       int ni = (int) n;
-      if (n == ni)
+      if (n == ni) {
         ofs << (int) ni;
-      else
-      {
+      }
+      else {
         char buf[30];
         char *  comma = NULL;
         sprintf(buf, "%f", n);  // was form("%lf"...)
@@ -5560,8 +5326,12 @@ void GenLatexOutput::GenLiteral(const TYPE_AS_Literal & Lit, std::ofstream & ofs
         comma = strrchr(buf,'.');
         if ( comma ) {
           char * p = buf + strlen(buf)-1;
-          while ( (*p) == '0' ) p--;
-          if ( p == comma ) p--; // remove comma as well
+          while ( (*p) == '0' ) {
+            p--;
+          }
+          if ( p == comma ) {
+            p--; // remove comma as well
+          }
           *(p+1) = 0;
         }
         ofs << buf;
@@ -5739,27 +5509,25 @@ void GenLatexOutput::GenNewExpr(const Generic & modnm, const TYPE_AS_NewExpr& ne
 
   ofs << "{";
 
-  if (!args.IsEmpty ())
-  {
+  if (!args.IsEmpty ()) {
     int l1 = GetLine (cls);
     int l2 = GetLine (args[1]);
-    if (l2 > l1)
+    if (l2 > l1) {
       ofs << LF;
-
+    }
     size_t len_args = args.Length();
-    for (size_t i = 1; i <= len_args; i++)
-    {
+    for (size_t i = 1; i <= len_args; i++) {
       const TYPE_AS_Expr & arg (args[i]);
       int l3 = GetLine (arg);
-      if (l3 > l1)
+      if (l3 > l1) {
         ofs << LF;
-
+      }
       this->linefeed = false;
       GenExpr (modnm, arg);
 
-      if (i < len_args)
+      if (i < len_args) {
         ofs << ",";
-
+      }
       l1 = l3;
     }
   }
@@ -5869,8 +5637,9 @@ void GenLatexOutput::GenFctTypeInstExpr (const Generic & modnm, const TYPE_AS_Fc
 
   size_t len_inst = inst.Length ();
   for (size_t index = 1; index <= len_inst; index++) {
-    if (index > 1)
+    if (index > 1) {
       this->LatexOutput << ",";
+    }
     GenType (inst[index]);
   }
 
@@ -5887,11 +5656,11 @@ void GenLatexOutput::GenLabelName (const TYPE_AS_Name & Name1, std::ofstream & o
   const TYPE_AS_Ids & name_l (Name1.GetSequence(pos_AS_Name_ids));
 
   size_t len_name_l = name_l.Length ();
-  for (size_t index = 1; index <= len_name_l; index++)
-  {
+  for (size_t index = 1; index <= len_name_l; index++) {
     const TYPE_AS_Id & id (name_l[index]);
-    if (index > 1)
+    if (index > 1) {
       ofs << "`";
+    }
     GenRealLabelId (id, ofs);
   }
 }
@@ -5923,8 +5692,9 @@ void GenLatexOutput::GenName (const TYPE_AS_Name & Name1, std::ofstream & ofs)
   for (size_t index = 1; index <= len_name_l; index++) {
     const TYPE_AS_Id & id (name_l[index]);
     GenRealId (id, ofs);
-    if (index < len_name_l)
+    if (index < len_name_l) {
       ofs << "`";
+    }
   }
 }
 
@@ -6044,30 +5814,22 @@ std::wstring GenLatexOutput::ConvertStr (const std::wstring & TheStr)
   std::wstring RX_post (L"post_");
   std::wstring RX_inv  (L"inv_");
 
-  if (NewStr.find(RX_pre) == 0)
-//    NewStr.replace(0, RX_pre.length(), L"\\kw{pre-}");
+  if (NewStr.find(RX_pre) == 0) {
     NewStr.replace(0, RX_pre.length(), L"\\kw{pre\\textunderscore}");
-  else if (NewStr.find(RX_post) == 0)
-//    NewStr.replace(0, RX_post.length(), L"\\kw{post-}");
+  }
+  else if (NewStr.find(RX_post) == 0) {
     NewStr.replace(0, RX_post.length(), L"\\kw{post\\textunderscore}");
-  else if (NewStr.find(RX_inv) == 0)
-//    NewStr.replace(0, RX_inv.length(), L"\\kw{inv-}");
+  }
+  else if (NewStr.find(RX_inv) == 0) {
     NewStr.replace(0, RX_inv.length(), L"\\kw{inv\\textunderscore}");
-
-  // replace all other underscores with '-'
-//  for (int i = 0, Max = NewStr.length(); i < Max; i++) {
-//    if (NewStr[i] == L'_') {
-//      NewStr[i] = L'-';
-//    }
-//  }
-//  return (NewStr);
+  }
+  // replace all other underscores with '\\textunderscore'
   std::wstring res;
   for (int i = 0, Max = NewStr.length(); i < Max; i++) {
     if (NewStr[i] == L'_') {
       res += L"\\hbox{\\textunderscore}";
     }
-    else
-    {
+    else {
       res += NewStr[i];
     }
   }
@@ -6077,21 +5839,12 @@ std::wstring GenLatexOutput::ConvertStr (const std::wstring & TheStr)
 // ConvertIndexStr
 std::wstring GenLatexOutput::ConvertIndexStr (const std::wstring & id) const
 {
-//  std::wstring NewStr (id);
-  // Replace _ with -
-//  for (int i = 0, Max = NewStr.length(); i < Max; i++) {
-//    if (NewStr[i] == L'_') {
-//      NewStr[i] = L'-';
-//    }
-//  }
-//  return (NewStr);
   std::wstring res;
   for (int i = 0, Max = id.length(); i < Max; i++) {
     if (id[i] == L'_') {
       res += L"\\hbox{\\textunderscore}";
     }
-    else
-    {
+    else {
       res += id[i];
     }
   }
@@ -6108,63 +5861,25 @@ void GenLatexOutput::GenPrefixExpr(const Generic & modnm, const TYPE_AS_PrefixEx
   const TYPE_AS_Expr & arg_e (UnaryE.GetRecord(pos_AS_PrefixExpr_arg));
 
   switch (Int(opr).GetValue ()) {
-    case NUMPLUS :
-      LatexOutput << " \\Uplus ";
-      break;
-    case NUMMINUS :
-      LatexOutput << " \\Uminus ";
-      break;
-    case FLOOR :
-      LatexOutput << " \\Floor ";
-      break;
-    case NUMABS :
-      LatexOutput << " \\Abs ";
-      break;
-    case NOT :
-      LatexOutput << " \\Not ";
-      break;
-    case SETCARD :
-      LatexOutput << " \\Card ";
-      break;
-    case SETDISTRUNION :
-      LatexOutput << " \\Dunion ";
-      break;
-    case SETDISTRINTERSECT :
-      LatexOutput << " \\Dinter ";
-      break;
-    case SETPOWER :
-      LatexOutput << " \\Power ";
-      break;
-    case SEQHEAD :
-      LatexOutput << " \\Hd ";
-      break;
-    case SEQTAIL :
-      LatexOutput << " \\Tl ";
-      break;
-    case SEQLEN :
-      LatexOutput << " \\Len ";
-      break;
-    case SEQELEMS :
-      LatexOutput << " \\Elems ";
-      break;
-    case SEQINDICES :
-      LatexOutput << " \\Inds ";
-      break;
-    case SEQDISTRCONC :
-      LatexOutput << " \\Conc ";
-      break;
-    case SEQREVERSE :
-      LatexOutput << " \\Reverse ";
-      break;
-    case MAPDOM :
-      LatexOutput << " \\Dom ";
-      break;
-    case MAPRNG :
-      LatexOutput << " \\Rng ";
-      break;
-    case MAPDISTRMERGE :
-      LatexOutput << " \\Merge ";
-      break;
+    case NUMPLUS :           { LatexOutput << " \\Uplus "; break; }
+    case NUMMINUS :          { LatexOutput << " \\Uminus "; break; }
+    case FLOOR :             { LatexOutput << " \\Floor "; break; }
+    case NUMABS :            { LatexOutput << " \\Abs "; break; }
+    case NOT :               { LatexOutput << " \\Not "; break; }
+    case SETCARD :           { LatexOutput << " \\Card "; break; }
+    case SETDISTRUNION :     { LatexOutput << " \\Dunion "; break; }
+    case SETDISTRINTERSECT : { LatexOutput << " \\Dinter "; break; }
+    case SETPOWER :          { LatexOutput << " \\Power "; break; }
+    case SEQHEAD :           { LatexOutput << " \\Hd "; break; }
+    case SEQTAIL :           { LatexOutput << " \\Tl "; break; }
+    case SEQLEN :            { LatexOutput << " \\Len "; break; }
+    case SEQELEMS :          { LatexOutput << " \\Elems "; break; }
+    case SEQINDICES :        { LatexOutput << " \\Inds "; break; }
+    case SEQDISTRCONC :      { LatexOutput << " \\Conc "; break; }
+    case SEQREVERSE :        { LatexOutput << " \\Reverse "; break; }
+    case MAPDOM :            { LatexOutput << " \\Dom "; break; }
+    case MAPRNG :            { LatexOutput << " \\Rng "; break; }
+    case MAPDISTRMERGE : { LatexOutput << " \\Merge "; break; }
     case MAPINVERSE: {
       this->LatexOutput << "\\mapinv{";
       this->linefeed = false;
@@ -6190,113 +5905,47 @@ void GenLatexOutput::GenBinaryExpr(const Generic & modnm, const TYPE_AS_BinaryEx
   GenExpr (modnm, left_e);
 
   switch (opr.GetValue ()) {
-    case NUMPLUS :
-      LatexOutput << " \\Plus ";
-      break;
-    case NUMMINUS :
-      LatexOutput << " \\Minus ";
-      break;
-    case NUMMULT :
-      LatexOutput << " \\Mult ";
-      break;
-    case NUMDIV :
-      LatexOutput << " \\NumDiv ";
-      break;
-    case NUMREM :
-      LatexOutput << " \\Rem ";
-      break;
-    case NUMMOD :
-      LatexOutput << " \\Mod ";
-      break;
-    case INTDIV :
-      LatexOutput << " \\Div ";
-      break;
-    case NUMLT :
-      LatexOutput << " \\NumLt ";
-      break;
-    case NUMLE :
-      LatexOutput << " \\Le ";
-      break;
-    case NUMGT :
-      LatexOutput << " \\NumGt ";
-      break;
-    case NUMGE :
-      LatexOutput << " \\Ge ";
-      break;
-    case AND :
-      LatexOutput << " \\And ";
-      break;
-    case OR :
-      LatexOutput << " \\Or ";
-      break;
-    case IMPLY :
-      LatexOutput << " \\Implies ";
-      break;
-    case EQUIV :
-      LatexOutput << " \\Equiv ";
-      break;
-    case EQ :
-      //LatexOutput << " = ";
-      LatexOutput << " \\Equals ";
-      break;
-    case NE :
-      LatexOutput << " \\Neq ";
-      break;
-    case INSET :
-      LatexOutput << " \\In ";
-      break;
-    case NOTINSET :
-      LatexOutput << " \\Notin ";
-      break;
-    case SETUNION :
-      LatexOutput << " \\Union ";
-      break;
-    case SETINTERSECT :
-      LatexOutput << " \\Inter ";
-      break;
-    case SETMINUS :
-      LatexOutput << " \\Setdiff ";
-      break;
-    case SUBSET :
-      LatexOutput << " \\Subset ";
-      break;
-    case PROPERSUBSET :
-      LatexOutput << " \\Psubset ";
-      break;
-    case SEQCONC :
-      LatexOutput << " \\Sconc ";
-      break;
-    case MAPMERGE :
-      LatexOutput << " \\Mapmerge ";
-      break;
-    case MAPDOMRESTTO :
-      LatexOutput << " \\Dto ";
-      break;
-    case MAPDOMRESTBY :
-      LatexOutput << " \\Dby ";
-      break;
-    case MAPRNGRESTTO :
-      LatexOutput << " \\Rto ";
-      break;
-    case MAPRNGRESTBY :
-      LatexOutput << " \\Rby ";
-      break;
-    case COMPOSE :
-      LatexOutput << " \\Compose ";
-      break;
-    case NUMEXP :
-      LatexOutput << " \\Iterate ";
-      break;
-    default :
-      ErrMsg1 (BinaryE, L"Unknown binary expression");
-    }
+    case NUMPLUS :      { LatexOutput << " \\Plus "; break; }
+    case NUMMINUS :     { LatexOutput << " \\Minus "; break; }
+    case NUMMULT :      { LatexOutput << " \\Mult "; break; }
+    case NUMDIV :       { LatexOutput << " \\NumDiv "; break; }
+    case NUMREM :       { LatexOutput << " \\Rem "; break; }
+    case NUMMOD :       { LatexOutput << " \\Mod "; break; }
+    case INTDIV :       { LatexOutput << " \\Div "; break; }
+    case NUMLT :        { LatexOutput << " \\NumLt "; break; }
+    case NUMLE :        { LatexOutput << " \\Le "; break; }
+    case NUMGT :        { LatexOutput << " \\NumGt "; break; }
+    case NUMGE :        { LatexOutput << " \\Ge "; break; }
+    case AND :          { LatexOutput << " \\And "; break; }
+    case OR :           { LatexOutput << " \\Or "; break; }
+    case IMPLY :        { LatexOutput << " \\Implies "; break; }
+    case EQUIV :        { LatexOutput << " \\Equiv "; break; }
+    case EQ :           { LatexOutput << " \\Equals "; break; }
+    case NE :           { LatexOutput << " \\Neq "; break; }
+    case INSET :        { LatexOutput << " \\In "; break; }
+    case NOTINSET :     { LatexOutput << " \\Notin "; break; }
+    case SETUNION :     { LatexOutput << " \\Union "; break; }
+    case SETINTERSECT : { LatexOutput << " \\Inter "; break; }
+    case SETMINUS :     { LatexOutput << " \\Setdiff "; break; }
+    case SUBSET :       { LatexOutput << " \\Subset "; break; }
+    case PROPERSUBSET : { LatexOutput << " \\Psubset "; break; }
+    case SEQCONC :      { LatexOutput << " \\Sconc "; break; }
+    case MAPMERGE :     { LatexOutput << " \\Mapmerge "; break; }
+    case MAPDOMRESTTO : { LatexOutput << " \\Dto "; break; }
+    case MAPDOMRESTBY : { LatexOutput << " \\Dby "; break; }
+    case MAPRNGRESTTO : { LatexOutput << " \\Rto "; break; }
+    case MAPRNGRESTBY : { LatexOutput << " \\Rby "; break; }
+    case COMPOSE :      { LatexOutput << " \\Compose "; break; }
+    case NUMEXP :       { LatexOutput << " \\Iterate "; break; }
+    default :           { ErrMsg1 (BinaryE, L"Unknown binary expression"); }
+  }
 
   int l1 = GetLine (left_e);
   int l2 = GetLine (right_e);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     LatexOutput << LF;
-
+  }
   this->linefeed = false;
   GenExpr (modnm, right_e);
 }
@@ -6371,10 +6020,12 @@ void GenLatexOutput::GenPatternName (const TYPE_AS_PatternName & PatId)
 {
   const Generic & id (PatId.GetField(pos_AS_PatternName_nm));
 
-  if (!id.IsNil())
+  if (!id.IsNil()) {
     GenName (id, this->LatexOutput);
-  else
+  }
+  else {
     this->LatexOutput << "\\DoNotCare";
+  }
 }
 
 void GenLatexOutput::GenMatchVal (const Generic & modnm, const TYPE_AS_MatchVal & MatPat)
@@ -6415,42 +6066,26 @@ void GenLatexOutput::GenSetEnumPattern (const Generic & modnm, const TYPE_AS_Set
 {
   const SEQ<TYPE_AS_Pattern> & enum_pat (EnumPat.GetSequence(pos_AS_SetEnumPattern_Elems));
 
-  if (enum_pat.IsEmpty())
+  if (enum_pat.IsEmpty()) {
     this->LatexOutput << "\\Emptyset ";
+  }
   else {
     this->LatexOutput << "\\set{";
 
     int l1 = PatLine (EnumPat);
 
-/*
-    Generic enum_p;
-    bool bb = enum_pat.First(enum_p);
-    while (bb) {
-      int l2 = PatLine (enum_p);
-      if (l2 > l1)
-        this->LatexOutput << LF;
-
-      GenPattern(modnm, enum_p);
-      bb = enum_pat.Next(enum_p);
-      if (bb)
-        this->LatexOutput << ",";
-
-      l1 = l2;
-    }
-*/
     size_t len_enum_pat = enum_pat.Length();
-    for (size_t idx = 1; idx <= len_enum_pat; idx++)
-    {
+    for (size_t idx = 1; idx <= len_enum_pat; idx++) {
       const TYPE_AS_Pattern & enum_p (enum_pat[idx]);
       int l2 = PatLine (enum_p);
-      if (l2 > l1)
+      if (l2 > l1) {
         this->LatexOutput << LF;
-
+      }
       GenPattern(modnm, enum_p);
 
-      if (idx < len_enum_pat)
+      if (idx < len_enum_pat) {
         this->LatexOutput << ",";
-
+      }
       l1 = l2;
     }
 
@@ -6468,9 +6103,9 @@ void GenLatexOutput::GenSetUnionPattern (const Generic & modnm, const TYPE_AS_Se
 
   int l1 = PatLine (lp);
   int l2 = PatLine (rp);
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   GenPattern(modnm, rp);
 }
 
@@ -6489,13 +6124,13 @@ void GenLatexOutput::GenSeqEnumPattern (const Generic & modnm, const TYPE_AS_Seq
     size_t len_els = els.Length ();
     for (size_t bb = 1 ; bb <= len_els ; bb++) {
       int l2 = PatLine (els[bb]);
-      if (l2 > l1)
+      if (l2 > l1) {
         this->LatexOutput << LF;
-
+      }
       GenPattern(modnm, els[bb]);
-      if (bb < len_els)
+      if (bb < len_els) {
         this->LatexOutput << ",";
-
+      }
       l1 = l2;
     }
     this->LatexOutput << "}";
@@ -6513,9 +6148,9 @@ void GenLatexOutput::GenSeqConcPattern (const Generic & modnm, const TYPE_AS_Seq
   int l1 = PatLine (lp);
   int l2 = PatLine (rp);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   GenPattern(modnm, rp);
 }
 
@@ -6533,26 +6168,26 @@ void GenLatexOutput::GenMapEnumPattern (const Generic & modnm, const TYPE_AS_Map
     int l1 = GetLine (EnumPat);
 
     size_t len_mls = mls.Length();
-    for (size_t idx = 1; idx <= len_mls; idx++)
-    {
+    for (size_t idx = 1; idx <= len_mls; idx++) {
       const TYPE_AS_MapletPattern & maplet (mls[idx]);
       const TYPE_AS_Pattern & dom_p (maplet.GetRecord(pos_AS_MapletPattern_dp));
       const TYPE_AS_Pattern & rng_p (maplet.GetRecord(pos_AS_MapletPattern_rp));
 
       int l2 = GetLine (dom_p);
       int l3 = GetLine (rng_p);
-      if (idx > 1)
+      if (idx > 1) {
         LatexOutput << ",";
-      if (l2 > l1)
+      }
+      if (l2 > l1) {
         LatexOutput << LF;
-
+      }
       this->linefeed = false;
       GenPattern (modnm, dom_p);
       LatexOutput << " \\Mapsto ";
 
-      if (l3 > l2)
+      if (l3 > l2) {
         LatexOutput << LF;
-
+      }
       GenPattern (modnm, rng_p);
       l1 = l3;
     }
@@ -6572,9 +6207,9 @@ void GenLatexOutput::GenMapMergePattern (const Generic & modnm, const TYPE_AS_Ma
   int l1 = PatLine (lp);
   int l2 = PatLine (rp);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   GenPattern(modnm, rp);
 }
 
@@ -6588,18 +6223,18 @@ void GenLatexOutput::GenRecordPattern (const Generic & modnm, const TYPE_AS_Reco
 
   GenName (tag, this->LatexOutput);
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (tag, typeocc_index);
-
+  }
   this->LatexOutput << "}";
 
   int l1 = PatLine (RPat);
 
-  if (!fields.IsEmpty())
-  {
+  if (!fields.IsEmpty()) {
     int l2 = PatLine (fields[1]);
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
+    }
   }
 
   this->LatexOutput << "{";
@@ -6608,13 +6243,13 @@ void GenLatexOutput::GenRecordPattern (const Generic & modnm, const TYPE_AS_Reco
   for (size_t bb = 1; bb <= len ; bb++) {
     int l3 = PatLine (fields[bb]);
 
-    if (l3 > l1)
+    if (l3 > l1) {
       this->LatexOutput << LF;
-
+    }
     GenPattern (modnm, fields[bb]);
-    if (bb < len)
+    if (bb < len) {
       this->LatexOutput << ",";
-
+    }
     l1 = l3;
   }
   this->LatexOutput << "}";
@@ -6629,11 +6264,11 @@ void GenLatexOutput::GenTuplePattern (const Generic & modnm, const TYPE_AS_Tuple
 
   int l1 = PatLine (TupPat);
 
-  if (!pats.IsEmpty())
-  {
+  if (!pats.IsEmpty()) {
     int l2 = PatLine (pats[1]);
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
+    }
   }
 
   this->LatexOutput << "{";
@@ -6642,13 +6277,13 @@ void GenLatexOutput::GenTuplePattern (const Generic & modnm, const TYPE_AS_Tuple
   for (size_t bb = 1; bb <= len ; bb ++) {
     int l3 = PatLine (pats[bb]);
 
-    if (l3 > l1)
+    if (l3 > l1) {
       this->LatexOutput << LF;
-
+    }
     GenPattern (modnm, pats[bb]);
-    if (bb < len)
+    if (bb < len) {
       this->LatexOutput << ",";
-
+    }
     l1 = l3;
   }
   this->LatexOutput << "}";
@@ -6663,41 +6298,41 @@ void GenLatexOutput::GenObjectPattern (const Generic & modnm, const TYPE_AS_Obje
   this->LatexOutput << "\\reccons{\\kw{obj\\textunderscore} ";
   GenName (cls, this->LatexOutput);
 
-  if (this->INDEX)
+  if (this->INDEX) {
     GenIndex (cls, typeocc_index);
-
+  }
   this->LatexOutput << "}";
 
-    LatexOutput << "(";
+  LatexOutput << "(";
 
-    int l1 = GetLine (ObjPat);
+  int l1 = GetLine (ObjPat);
 
-    size_t len_fields = fields.Length();
-    for (size_t idx = 1; idx <= len_fields; idx++)
-    {
-      const TYPE_AS_FieldPattern & field (fields[idx]);
-      const TYPE_AS_Name & nm (field.GetRecord(pos_AS_FieldPattern_nm));
-      const TYPE_AS_Pattern & pat (field.GetRecord(pos_AS_FieldPattern_pat));
+  size_t len_fields = fields.Length();
+  for (size_t idx = 1; idx <= len_fields; idx++) {
+    const TYPE_AS_FieldPattern & field (fields[idx]);
+    const TYPE_AS_Name & nm (field.GetRecord(pos_AS_FieldPattern_nm));
+    const TYPE_AS_Pattern & pat (field.GetRecord(pos_AS_FieldPattern_pat));
 
-      int l2 = GetLine (nm);
-      int l3 = GetLine (pat);
-      if (idx > 1)
-        LatexOutput << ",";
-      if (l2 > l1)
-        LatexOutput << LF;
-
-      this->linefeed = false;
-      GenName (nm, this->LatexOutput);
-      LatexOutput << " \\Mapsto ";
-
-      if (l3 > l2)
-        LatexOutput << LF;
-
-      GenPattern (modnm, pat);
-      l1 = l3;
+    int l2 = GetLine (nm);
+    int l3 = GetLine (pat);
+    if (idx > 1) {
+      LatexOutput << ",";
     }
+    if (l2 > l1) {
+      LatexOutput << LF;
+    }
+    this->linefeed = false;
+    GenName (nm, this->LatexOutput);
+    LatexOutput << " \\Mapsto ";
 
-    LatexOutput << ")";
+    if (l3 > l2) {
+      LatexOutput << LF;
+    }
+    GenPattern (modnm, pat);
+    l1 = l3;
+  }
+
+  LatexOutput << ")";
 }
 #endif // VDMPP
 
@@ -6708,38 +6343,25 @@ void GenLatexOutput::GenObjectPattern (const Generic & modnm, const TYPE_AS_Obje
 int GenLatexOutput::BindLine (const TYPE_AS_Bind & bind)
 {
   switch (bind.GetTag ()) {
-    case TAG_TYPE_AS_TypeBind: {
-      return PatLine (bind.GetRecord(pos_AS_TypeBind_pat));
-    }
-    case TAG_TYPE_AS_SetBind: {
-      return PatLine (bind.GetRecord(pos_AS_SetBind_pat));
-    }
-    case TAG_TYPE_AS_SeqBind: {
-      return PatLine (bind.GetRecord(pos_AS_SeqBind_pat));
-    }
+    case TAG_TYPE_AS_TypeBind:     { return PatLine (bind.GetRecord(pos_AS_TypeBind_pat)); }
+    case TAG_TYPE_AS_SetBind:      { return PatLine (bind.GetRecord(pos_AS_SetBind_pat)); }
+    case TAG_TYPE_AS_SeqBind:      { return PatLine (bind.GetRecord(pos_AS_SeqBind_pat)); }
     case TAG_TYPE_AS_MultSetBind:
     case TAG_TYPE_AS_MultSeqBind:
-    case TAG_TYPE_AS_MultTypeBind: {
-      return GetLine(bind);
-    }
-    default:
+    case TAG_TYPE_AS_MultTypeBind: { return GetLine(bind); }
+    default: {
       return -1;
+    }
   }
 }
 
 void GenLatexOutput::GenBind (const Generic & modnm, const TYPE_AS_Bind & bind)
 {
   switch(bind.GetTag()) {
-    case TAG_TYPE_AS_SetBind: {
-      GenSetBind (modnm, bind);
-      break;
-    }
-    case TAG_TYPE_AS_TypeBind: {
-      GenTypeBind (modnm, bind);
-      break;
-    }
-    default:
-      break;
+    case TAG_TYPE_AS_SetBind:  { GenSetBind (modnm, bind); break; }
+    case TAG_TYPE_AS_SeqBind:  { GenSeqBind (modnm, bind); break; }
+    case TAG_TYPE_AS_TypeBind: { GenTypeBind (modnm, bind); break; }
+    default: { break; }
   }
 }
 
@@ -6754,9 +6376,9 @@ void GenLatexOutput::GenSetBind (const Generic & modnm, const TYPE_AS_SetBind & 
   int l1 = PatLine (pat);
   int l2 = GetLine (expr);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   GenExpr (modnm, expr);
 }
 
@@ -6781,29 +6403,19 @@ void GenLatexOutput::GenSeqBind (const Generic & modnm, const TYPE_AS_SeqBind & 
   int l1 = PatLine (pat);
   int l2 = GetLine (expr);
 
-  if (l2 > l1)
+  if (l2 > l1) {
     this->LatexOutput << LF;
-
+  }
   GenExpr (modnm, expr);
 }
 
 void GenLatexOutput::GenMultBind (const Generic & modnm, const TYPE_AS_MultBind & MBind)
 {
   switch(MBind.GetTag()) {
-    case TAG_TYPE_AS_MultSetBind: {
-      GenMultSetBind (modnm, MBind);
-      break;
-    }
-    case TAG_TYPE_AS_MultSeqBind: {
-      GenMultSeqBind (modnm, MBind);
-      break;
-    }
-    case TAG_TYPE_AS_MultTypeBind: {
-      GenMultTypeBind (modnm, MBind);
-      break;
-    }
-    default:
-      break;
+    case TAG_TYPE_AS_MultSetBind:  { GenMultSetBind (modnm, MBind); break; }
+    case TAG_TYPE_AS_MultSeqBind:  { GenMultSeqBind (modnm, MBind); break; }
+    case TAG_TYPE_AS_MultTypeBind: { GenMultTypeBind (modnm, MBind); break; }
+    default: { break; }
   }
 }
 
@@ -6879,13 +6491,13 @@ void GenLatexOutput::GenMultTypeBind (const Generic & modnm, const TYPE_AS_MultT
   for (size_t bb = 1; bb <= len; bb++) {
     int l2 = PatLine (pat_l[bb]);
 
-    if (l2 > l1)
+    if (l2 > l1) {
       this->LatexOutput << LF;
-
+    }
     GenPattern (modnm, pat_l[bb]);
-    if (bb < (size_t)(pat_l.Length()))
+    if (bb < (size_t)(pat_l.Length())) {
       this->LatexOutput << ",";
-
+    }
     l1 = l2;
   }
 
@@ -6908,8 +6520,9 @@ std::wstring GenLatexOutput::Name2Str(const TYPE_AS_Name & Name1)
     std::wstring ws;
     id.GetString(ws);
     res += ConvertIndexStr (ws);
-    if (bb < len)
+    if (bb < len) {
       res += L"`";
+    }
   }
   return res;
 }
@@ -6917,9 +6530,9 @@ std::wstring GenLatexOutput::Name2Str(const TYPE_AS_Name & Name1)
 std::string GenLatexOutput::LineFeed (void)
 {
   std::string lf;
-  if (this->linefeed)
+  if (this->linefeed) {
     lf = "\n";
-
+  }
   this->linefeed = false;
   return (lf);
 }
@@ -6927,11 +6540,9 @@ std::string GenLatexOutput::LineFeed (void)
 // GetLine
 int GenLatexOutput::GetLine (const Generic & rc)
 {
-  if (!rc.IsNil())
-  {
+  if (!rc.IsNil()) {
     Tuple gfp (GetCI().GetFilePos(ASTAUX::GetCid(rc)));
-    if (gfp.GetBoolValue(1))
-    {
+    if (gfp.GetBoolValue(1)) {
       const TYPE_CI_TokenPos & astpos (gfp.GetRecord(4));
       return astpos.get_abs_uline().GetValue();
     }
@@ -6947,9 +6558,9 @@ int GenLatexOutput::GetLine (const Generic & rc)
 
 void GenLatexOutput::StartDef (int new_type, int *old_type)
 {
-  if (new_type == *old_type)
+  if (new_type == *old_type) {
     return;
-
+  }
   switch (new_type) {
     case TAG_TYPE_AS_TypeDef: {
       LatexOutput << "\\kTypes";
@@ -7005,8 +6616,9 @@ Map GenLatexOutput::InverseMap (const Map & m)
   Map res_m;
   Set dom_m (m.Dom());
   Generic elm;
-  for (bool bb = dom_m.First (elm); bb; bb = dom_m.Next (elm))
+  for (bool bb = dom_m.First (elm); bb; bb = dom_m.Next (elm)) {
     res_m.Insert (m[elm], elm);
+  }
   return (res_m);
 }
 

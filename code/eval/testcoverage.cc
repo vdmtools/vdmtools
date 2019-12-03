@@ -149,8 +149,7 @@ Record TestCoverage::GetRtInfoToken (std::ifstream & istr)
         str = "";
       }
 */
-      else
-      {
+      else {
         length = str.size();
         std::string::size_type n = str.find(MatchOutRTIStr);
         if ((n != std::string::npos) && (n < length)) length = n;
@@ -358,17 +357,20 @@ bool TestCoverage::PrintTestSuiteItem (
 
       if (ci.HasTestCoverage(ASTAUX::GetCid(fndef))) {
         ostr << RTINFO::Is_Covered (fndef, ci) << " & ";
-        if (pcov == 100)
+        if (pcov == 100) {
           ostr << "$\\surd$";
-        else
+        }
+        else {
           ostr << pcov <<"\\%";
+        }
       }
       else {
         ostr <<  "{\\bf undefined} &  {\\bf undefined} ";
       }
       ostr << " \\\\ \\hline\n";
 
-    } else if (fmt == FORMAT_RTF_WORD) {
+    }
+    else if (fmt == FORMAT_RTF_WORD) {
 
       // ROW IN TABLE
 

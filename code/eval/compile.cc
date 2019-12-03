@@ -1,7 +1,7 @@
 /***
 *  * WHAT
 *  *    Functions for compiling VDM(SL|++) ASTs into stack machine
-*  *    instructions. 
+*  *    instructions.
 *  * ID
 *  *    $Id: compile.cc,v 1.51 2006/09/22 11:14:03 vdmtools Exp $
 *  * SPECIFICATION VERSION
@@ -32,7 +32,7 @@
 // ResetProgramTable
 // modnm : AS`Name
 // ==> ()
-void ProgramTable::ResetProgramTable(const TYPE_AS_Name & modnm) 
+void ProgramTable::ResetProgramTable(const TYPE_AS_Name & modnm)
 {
   this->program_table.ImpModify( modnm, ModuleProgramTable() );
 }
@@ -71,7 +71,7 @@ const TYPE_STKM_SubProgram& ProgramTable::GetProgram(const TYPE_AS_Name & modnm,
   }
   return tbl[id];
 }
- 
+
 // CopyProgram
 // oldnm : AS`Name
 // newnm : AS`Name
@@ -95,7 +95,7 @@ SEQ<TYPE_STKM_SubProgram> ProgramTable::DumpProgram(const TYPE_AS_Name & modnm) 
 // }}}
 
 // {{{ StackCompiler
-//  
+//
 StackCompiler::StackCompiler()
 {
   Init_CSTMT();
@@ -223,7 +223,7 @@ TYPE_STKM_SubProgramId StackCompiler::CompileFnOpDef(const Record & fndef)
       RTERR::Error(L"StackCompiler::CompileFnOpDef", RTERR_UNKNOWN_RECORD_TYPE, Nil(), Nil(), Sequence());
       break;
     }
-  }  
+  }
   // Insert the generated instruction sequence into the program table
   // and return the index of this new entry:
 
@@ -275,11 +275,11 @@ TYPE_STKM_SubProgram StackCompiler::Mease2I(const TYPE_AS_FnDef& fndef)
   if (!measu.IsNil() && !fnbody.IsInt()) {
     if (measu != Int(NOTYETSPEC)) {
       TYPE_STKM_SubProgram tsp;
-      tsp.ImpConc(E2I(measu)); 
-      
+      tsp.ImpConc(E2I(measu));
+
       if (MeasureIsId(measu, fndef)) {
         int count = 0;
-    
+
         if (fndef.Is(TAG_TYPE_AS_ExplFnDef)) {
           if (!fndef.GetSequence(pos_AS_ExplFnDef_tpparms).IsEmpty()) {
             tsp.ImpAppend(TYPE_INSTRTP_MEASURETPINST().Init(fndef.GetSequence(pos_AS_ExplFnDef_tpparms)));
@@ -306,7 +306,7 @@ TYPE_STKM_SubProgram StackCompiler::Mease2I(const TYPE_AS_FnDef& fndef)
           tsp.ImpAppend(TYPE_INSTRTP_COPYVAL());
 
           const SEQ<TYPE_AS_PatTypePair> & parml (fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
-          size_t len_parml = parml.Length(); 
+          size_t len_parml = parml.Length();
           for (size_t idx1 = 1; idx1 <= len_parml; idx1++) {
             SEQ<TYPE_AS_Pattern> pat_l (parml[idx1].GetSequence(pos_AS_PatTypePair_pats));
             if (!pat_l.IsEmpty()) {
@@ -362,7 +362,7 @@ bool StackCompiler::MeasureIsId(const Generic & measu, const TYPE_AS_FnDef & fnd
     }
     else if (fndef.Is(TAG_TYPE_AS_ExtExplFnDef)) {
       const SEQ<TYPE_AS_PatTypePair> & partps (fndef.GetSequence(pos_AS_ExtExplFnDef_partps));
-      size_t len_partps = partps.Length(); 
+      size_t len_partps = partps.Length();
       SET<TYPE_AS_Name> nm_s;
       for (size_t i = 1; i <= len_partps; i++) {
         nm_s.ImpUnion(NamesInPatternList(partps[i].GetSequence(pos_AS_PatTypePair_pats)));
@@ -380,7 +380,7 @@ bool StackCompiler::MeasureIsId(const Generic & measu, const TYPE_AS_FnDef & fnd
 
 SET<TYPE_AS_Name> StackCompiler::NamesInPatternList(const SEQ<TYPE_AS_Pattern> & pat_l)
 {
-  size_t len_pat_l = pat_l.Length(); 
+  size_t len_pat_l = pat_l.Length();
   SET<TYPE_AS_Name> nm_s;
   for (size_t i = 1; i <= len_pat_l; i++) {
     nm_s.ImpUnion(NamesInPattern(pat_l[i]));
@@ -466,8 +466,8 @@ TYPE_STKM_SubProgramId StackCompiler::CompileLambdaBody(const TYPE_AS_Expr & e)
 // fnname : AS`Name
 // parms : (AS`ParametersList | AS`ParameterTypes)
 // ==>  STKM`SubProgram
-TYPE_STKM_SubProgram StackCompiler::FnDef2I(const Generic & fnpre, 
-                                            const Generic & fnpost, 
+TYPE_STKM_SubProgram StackCompiler::FnDef2I(const Generic & fnpre,
+                                            const Generic & fnpost,
                                             const TYPE_AS_FnBody & body,
                                             const SEQ<TYPE_AS_NameType> & resnmtps,
                                             const TYPE_AS_Name & fnname,
@@ -486,13 +486,13 @@ TYPE_STKM_SubProgram StackCompiler::FnDef2I(const Generic & fnpre,
         if (theState().IsDLClass(GetClMod())) {
           i_body.ImpAppend(TYPE_INSTRTP_DLCALL().Init(GetClMod(), fnname));
         }
-        else 
+        else
 #endif // VDMPP
           i_body.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_NOTYETSPECFCT),
                                                       GetClMod(), fnname, parms));
         break;
       }
-#ifdef VDMPP    
+#ifdef VDMPP
       case SUBRESP: {
         theState().AddAbstract(GetClMod());
         i_body.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_SUBRESP),
@@ -529,7 +529,7 @@ TYPE_STKM_SubProgram StackCompiler::PrePost2I(const Generic & cond, bool precond
     return TYPE_STKM_SubProgram();
   }
   else {
-    // icond 
+    // icond
     TYPE_STKM_SubProgram i_cond (E2I(cond)); // pre/post expr
 
     // prepost
@@ -582,12 +582,12 @@ TYPE_STKM_SubProgram StackCompiler::ImplFnDef2I(const TYPE_CI_ContextId& cid)
 // constr :  bool
 // sync : bool
 // ==> STKM`SubProgram
-TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre, 
-                                            const Generic & fnpost, 
+TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre,
+                                            const Generic & fnpost,
                                             const TYPE_AS_OpBody & body,
                                             const SEQ<TYPE_AS_NameType> & resnmtps,
                                             const TYPE_AS_Name & fnname,
-                                            const Sequence & parms, 
+                                            const Sequence & parms,
                                             const Bool & constr,
                                             const Bool & sync)
 {
@@ -609,7 +609,7 @@ TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre,
         if (theState().IsDLClass(GetClMod())) {
           prog.ImpAppend(TYPE_INSTRTP_DLCALL().Init(GetClMod(), fnname));
         }
-        else 
+        else
 #endif //VDMPP
           prog.ImpAppend(TYPE_INSTRTP_NOBODY().Init(TYPE_RTERR_ERR(RTERR_NOTYETSPECOP),
                                                     GetClMod(), fnname, parms));
@@ -647,7 +647,7 @@ TYPE_STKM_SubProgram StackCompiler::OpDef2I(const Generic & fnpre,
 // cid : CI`ContextId
 // -> STKM`SubProgram
 TYPE_STKM_SubProgram StackCompiler::ImplOpDef2I(const TYPE_CI_ContextId & cid)
-{ 
+{
   return CompileRunTime(TYPE_RTERR_ERR(RTERR_IMPL_OP_CALL), cid);
 }
 
@@ -671,7 +671,7 @@ TYPE_STKM_SubProgram StackCompiler::SetContext(const TYPE_CI_ContextId & cid, bo
 // SetDebugInfo
 // b : bool
 // ==> ()
-void StackCompiler::SetDebugInfo(bool b) 
+void StackCompiler::SetDebugInfo(bool b)
 {
   this->DebugInfo = b;
 }
@@ -679,7 +679,7 @@ void StackCompiler::SetDebugInfo(bool b)
 // SetClMod
 // nm : AS`Name
 // ==> ()
-void StackCompiler::SetClMod(const TYPE_AS_Name & nm) 
+void StackCompiler::SetClMod(const TYPE_AS_Name & nm)
 {
   this->curr_cl_mod = nm;
 }
@@ -697,7 +697,7 @@ const TYPE_AS_Name& StackCompiler::GetClMod() const
 // ResetProgramTable
 // modnm : AS`Name
 // ==> ()
-void StackCompiler::ResetProgramTable(const TYPE_AS_Name & modnm) 
+void StackCompiler::ResetProgramTable(const TYPE_AS_Name & modnm)
 {
   program_table.ResetProgramTable(modnm);
 }
@@ -789,47 +789,47 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 #endif //VICE
 // {{{ Old unused stuff from Ole's implementation
 
-// SubProgram 
+// SubProgram
 // StackCompiler::CompileCommandLine(const Generic &es)
 // {
 //   // In due time this function should decide whether es represents an
 //   // expression or a statement and then call E2I or S2I accordingly.
-// 
+//
 //   return E2I(es);
 // }
-// 
-// void 
+//
+// void
 // StackCompiler::ConcSubPrograms(SubProgram &dest, const SubProgram &src)
 //   // This function concatenates two sub programs. The sub program
-//   // contained in src is concatenated to the sub program of dest. 
+//   // contained in src is concatenated to the sub program of dest.
 //   // The function is used only during compilation.
 //   //
 // {
 //   copy(src.begin(), src.end(), back_insert_iterator<SubProgram>(dest));
 // }
-// 
-// 
-// Instruction 
+//
+//
+// Instruction
 // StackCompiler::GenRunTime(wchar_t * err)
-//   // Generates a run time error instruction 
+//   // Generates a run time error instruction
 // {
 //   return Instruction(INSTR::ERRINST, Sequence(wstring(err) ));
 // }
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// SubProgram 
+//
+//
+//
+//
+//
+//
+//
+// SubProgram
 // StackCompiler::E2I(const TYPE_AS_Expr & r)
 // {
 //   SubProgram p;
-// 
+//
 //   // First we add a CONTEXT instruction:
 //   PushContext(p, r);
-// 
+//
 //   // Next we recursively generate instructions depending on the type
 //   // of r:
 //   switch(r.GetTag()){
@@ -882,27 +882,27 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //       p.push_back( Instruction(INSTR::PUSH, EvalLiteral((Generic)r) ) );
 //       break;
 //     }
-// 
+//
 //   default:
-//     Error(L"StackCompiler::E2I", "Unknown record type", 
-//                  Generic());    
+//     Error(L"StackCompiler::E2I", "Unknown record type",
+//                  Generic());
 //   }
-//   
+//
 //   // - and finally append a POPCONTEXT instruction:
 //   PopContext(p, r);
-// 
+//
 //   return p;
 // }
-// 
-// 
-// 
-// 
-// SubProgram 
+//
+//
+//
+//
+// SubProgram
 // StackCompiler::CompileApplyExpr(const TYPE_AS_ApplyExpr &e)
-// { 
+// {
 //   SubProgram p;
 //   p.push_back(Instruction(INSTR::EMPTYLIST));
-// 
+//
 //   // Generate instructions for each argument:
 //   type_dL arg_l = e.get_arg();
 //   Generic gc;
@@ -911,11 +911,11 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //     p.push_back(Instruction(INSTR::APPENDESTCK));
 //   }
 //   p.push_back(Instruction(INSTR::APPLY));
-// 
+//
 //   return p;
 // }
-// 
-// SubProgram 
+//
+// SubProgram
 // StackCompiler::ConcIfThenElse(const SubProgram& cond_l,
 //                               const SubProgram& exp1_l,
 //                               const SubProgram& altn_l)
@@ -929,8 +929,8 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //   ConcSubPrograms(p, exp1_l);
 //   return p;
 // }
-// 
-// SubProgram 
+//
+// SubProgram
 // StackCompiler::CompileIfExpr(const TYPE_AS_IfExpr &e)
 // {
 //   SubProgram p,
@@ -946,7 +946,7 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //     Sequence elif_l = e.get_elsif();
 //     TYPE_AS_ElseifExpr elif_e = elif_l.Hd();
 //     TYPE_AS_IfExpr if_e;
-// 
+//
 //     // Construct a 'virtual' if-node containing the 'tail' of the
 //     // sequence of elseif branches:
 //     if_e.set_test(elif_e.get_test());
@@ -956,19 +956,19 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //     // Remember the context field. The context id of the first (Hd())
 //     // elseif expression is used:
 //     if_e.set_cid(elif_e.get_cid());
-// 
+//
 //     // Now make the recursive call:
 //     return ConcIfThenElse(cond_l, expr1_l, E2I(if_e));
 //   }
 // }
-// 
-// 
-// SubProgram 
+//
+//
+// SubProgram
 // StackCompiler::CompileUnaryExpr(const TYPE_AS_PrefixExpr &)
 // {return SubProgram();}
-// 
-// 
-// SubProgram 
+//
+//
+// SubProgram
 // StackCompiler::CompileBinaryExpr(const TYPE_AS_BinaryExpr &e)
 // {
 //   Int q = e.get_opr();
@@ -976,59 +976,59 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //   case AND:
 //   case OR:
 //   case IMPLY:
-//   case EQUIV: 
+//   case EQUIV:
 //     return CompileLogBinaryExpr(e);
 //   case COMPOSE:
 //     return CompileComposeExpr(e);
 //   case NUMEXP:
 //     return CompileIterateExpr(e);
-// 
+//
 //   case EQ:
 //   case NE:
-//   case NUMPLUS:   
-//   case NUMMINUS:  
-//   case NUMMULT:   
-//   case NUMDIV:    
-//   case NUMREM:    
-//   case INTDIV:    
-//   case NUMLT:     
-//   case NUMLE:     
-//   case NUMGT:     
-//   case NUMGE:     
-//   case NUMMOD:    
-//   case INSET:     
-//   case NOTINSET:  
-//   case SETUNION:  
+//   case NUMPLUS:
+//   case NUMMINUS:
+//   case NUMMULT:
+//   case NUMDIV:
+//   case NUMREM:
+//   case INTDIV:
+//   case NUMLT:
+//   case NUMLE:
+//   case NUMGT:
+//   case NUMGE:
+//   case NUMMOD:
+//   case INSET:
+//   case NOTINSET:
+//   case SETUNION:
 //   case SETINTERSECT:
-//   case SETMINUS:  
-//   case SUBSET:    
+//   case SETMINUS:
+//   case SUBSET:
 //   case PROPERSUBSET:
-//   case SEQCONC:   
-//   case MAPMERGE:  
+//   case SEQCONC:
+//   case MAPMERGE:
 //   case MAPDOMRESTTO:
 //   case MAPDOMRESTBY:
 //   case MAPRNGRESTTO:
-//   case MAPRNGRESTBY: 
+//   case MAPRNGRESTBY:
 //     return CompileOrdinaryBinaryExpr(e);
 //   }
 //   return SubProgram(); // To keep VC++ happy.
 // }
-// 
-// 
-// SubProgram 
+//
+//
+// SubProgram
 // StackCompiler::CompileLogBinaryExpr(const TYPE_AS_BinaryExpr &e)
 // {return SubProgram();}
-// 
-// SubProgram 
+//
+// SubProgram
 // StackCompiler::CompileComposeExpr(const TYPE_AS_BinaryExpr &)
 // {return SubProgram();}
-// 
-// SubProgram 
+//
+// SubProgram
 // StackCompiler::CompileIterateExpr(const TYPE_AS_BinaryExpr &)
 // {return SubProgram();}
-// 
-// 
-// SubProgram 
+//
+//
+// SubProgram
 // StackCompiler::CompileOrdinaryBinaryExpr(const TYPE_AS_BinaryExpr &e)
 // {
 //   SubProgram p = E2I(e.get_left());
@@ -1036,9 +1036,9 @@ TYPE_TIMEMAP_Timemap StackCompiler::GetTM() const
 //   p.push_back(Instruction(INSTR::BINOP, e.get_opr()));
 //   return p;
 // }
-// 
-// 
-// SubProgram 
+//
+//
+// SubProgram
 // StackCompiler::CompileMapComprehensionExpr(const TYPE_AS_MapComprehensionExpr &)
 // {return SubProgram();}
 // }}}

@@ -49,17 +49,19 @@ Sequence UTIL::set2seq(const Set & s)
 Real UTIL::minset(const SET<Real> & p_s)
 {
   Real l_v (p_s.GetElem());
-  if( p_s.Card() == 1 )
+  if( p_s.Card() == 1 ) {
     return l_v;
-  else
-  {
+  }
+  else {
     Set new_p_s( p_s );
     new_p_s.RemElem( l_v );
     Real l_minrest (minset( new_p_s ));
-    if( l_v > l_minrest )
+    if( l_v > l_minrest ) {
       return l_minrest;
-    else
+    }
+    else {
       return l_v;
+    }
   }
 }
 
@@ -84,8 +86,7 @@ SEQ<Char> UTIL::ReplacePercent(const SEQ<Char> & err,
   int max = 0;
 
   Generic g;
-  for (bool bb = err.First(g); bb; bb = err.Next(g))
-  {
+  for (bool bb = err.First(g); bb; bb = err.Next(g)) {
     Char ch (g);
     switch (ch.GetValue()) {
 
@@ -123,8 +124,9 @@ SEQ<Char> UTIL::ReplacePercent(const SEQ<Char> & err,
             throw TB_Exception(ERR_IP);
           }
           percent = false;
-          if (num > max)
+          if (num > max) {
             max = num;
+          }
           res.ImpConc(Txts[num]);
         }
         else {
@@ -161,8 +163,9 @@ SEQ<Char> UTIL::ReplacePercent(const SEQ<Char> & err,
 SEQ<TYPE_AS_Type> UTIL::GetOpParms(const TYPE_AS_OpDef & op)
 {
   switch (op.GetTag()) {
-    case TAG_TYPE_AS_ExplOpDef:
+    case TAG_TYPE_AS_ExplOpDef: {
       return op.GetRecord(pos_AS_ExplOpDef_tp).GetSequence(pos_AS_OpType_opdom);
+    }
     case TAG_TYPE_AS_ImplOpDef: {
       const SEQ<TYPE_AS_PatTypePair> & partps (op.GetSequence(pos_AS_ImplOpDef_partps));
       return UTIL::ConstructImplDomType(partps);
@@ -186,8 +189,9 @@ SEQ<TYPE_AS_Type> UTIL::GetOpParms(const TYPE_AS_OpDef & op)
 SEQ<TYPE_AS_Type> UTIL::GetFnParms(const TYPE_AS_FnDef & fn)
 {
   switch (fn.GetTag()) {
-    case TAG_TYPE_AS_ExplFnDef:
+    case TAG_TYPE_AS_ExplFnDef: {
       return fn.GetRecord(pos_AS_ExplFnDef_tp).GetSequence(1);
+    }
     case TAG_TYPE_AS_ImplFnDef: {
       const SEQ<TYPE_AS_PatTypePair> & partps (fn.GetSequence(pos_AS_ImplFnDef_partps));
       return UTIL::ConstructImplDomType(partps);
@@ -211,8 +215,9 @@ SEQ<TYPE_AS_Type> UTIL::GetFnParms(const TYPE_AS_FnDef & fn)
 Generic UTIL::GetOpRestype(const TYPE_AS_OpDef& op)
 {
   switch (op.GetTag()) {
-    case TAG_TYPE_AS_ExplOpDef:
+    case TAG_TYPE_AS_ExplOpDef: {
       return op.GetRecord(pos_AS_ExplOpDef_tp).GetField(pos_AS_OpType_oprng);
+    }
     case TAG_TYPE_AS_ImplOpDef: {
       const SEQ<TYPE_AS_NameType> & restps (op.GetSequence(pos_AS_ImplOpDef_resnmtps));
       return UTIL::ConstructImplResType(restps);
@@ -236,8 +241,9 @@ Generic UTIL::GetOpRestype(const TYPE_AS_OpDef& op)
 TYPE_AS_Type UTIL::GetFnRestype(const TYPE_AS_FnDef& fn)
 {
   switch (fn.GetTag()) {
-    case TAG_TYPE_AS_ExplFnDef:
+    case TAG_TYPE_AS_ExplFnDef: {
       return fn.GetRecord(pos_AS_ExplFnDef_tp).GetRecord(2);
+    }
     case TAG_TYPE_AS_ImplFnDef: {
       const SEQ<TYPE_AS_NameType> & restps (fn.GetSequence(pos_AS_ImplFnDef_resnmtps));
       return UTIL::ConstructImplResType(restps);
@@ -263,13 +269,13 @@ SEQ<TYPE_AS_Type> UTIL::ConstructImplDomType(
 {
   SEQ<TYPE_AS_Type> result;
   int len = partps.Length();
-  for (int i = 1; i <= len; i++)
-  {
+  for (int i = 1; i <= len; i++) {
     TYPE_AS_PatTypePair ptp (partps[i]);
     const TYPE_AS_Type & tp (ptp.GetRecord(pos_AS_PatTypePair_tp));
     int len_ptp = ptp.GetSequence(pos_AS_PatTypePair_pats).Length();
-    for (int j = 1; j <= len_ptp; j++)
+    for (int j = 1; j <= len_ptp; j++) {
       result.ImpAppend(tp);
+    }
   }
   return result;
 }
@@ -280,10 +286,12 @@ SEQ<TYPE_AS_Type> UTIL::ConstructImplDomType(
 Generic UTIL::ConstructImplResType(const SEQ<TYPE_AS_NameType> & restps)
 {
   switch(restps.Length()) {
-    case 0:
+    case 0: {
       return Nil();
-    case 1:
+    }
+    case 1: {
       return restps[1].GetRecord(pos_AS_NameType_tp);
+    }
     default: {
       SEQ<TYPE_AS_Type> result;
       int len = restps.Length();
@@ -300,8 +308,9 @@ Generic UTIL::ConstructImplResType(const SEQ<TYPE_AS_NameType> & restps)
 Generic UTIL::GetFnMeasu(const TYPE_AS_FnDef & fn)
 {
   switch (fn.GetTag()) {
-    case TAG_TYPE_AS_ExplFnDef:
+    case TAG_TYPE_AS_ExplFnDef: {
       return fn.GetField(pos_AS_ExplFnDef_measu);
+    }
     case TAG_TYPE_AS_ImplFnDef:
     case TAG_TYPE_AS_ExtExplFnDef: {
       return Nil();
@@ -341,19 +350,17 @@ TYPE_AS_Name UTIL::UnqualiName(const TYPE_AS_Name& p_nm)
 // -> seq of seq of char
 SEQ< SEQ<Char> > UTIL::split(const SEQ<Char> & cs, char ch)
 {
-  if (cs.IsEmpty())
+  if (cs.IsEmpty()) {
     return SEQ< SEQ<Char> >();
-  
+  } 
   int j = 1, length = cs.Length();
   Char cch (ch);
   SEQ< SEQ<Char> > allChunks;
 
-  while (j <= length)
-  {
+  while (j <= length) {
     int i = j;
     SEQ<Char> thisChunk;
-    while (i <= length && cs[i] != cch)
-    {
+    while (i <= length && cs[i] != cch) {
       thisChunk.ImpAppend(cs[i]);
       i++;
     }

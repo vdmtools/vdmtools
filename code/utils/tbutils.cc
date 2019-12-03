@@ -119,10 +119,12 @@ wstreambuf::int_type logbuf::overflow (wstreambuf::int_type ch)
 {
   put_buffer(); 
   if (ch != char_traits<wchar_t>::eof()) {
-    if (pbase() == epptr())
+    if (pbase() == epptr()) {
       put_char(ch);              // No buffer.
-    else
+    }
+    else {
       sputc(ch);
+    }
   }
   return 0;
 }
@@ -316,7 +318,8 @@ std::wstring TBUTILS::tb_JoinPaths (const std::wstring & prefix, const std::wstr
     if (n != std::string::npos) {
       // We found a separator in prefix. 
       return prefix + prefix[n] + name;
-    } else {
+    }
+    else {
 #ifdef _MSC_VER
       return prefix + L'\\' + name;
 #else
@@ -653,8 +656,9 @@ std::wstring TBUTILS::GetAbsolutePath(const std::wstring & filename, const std::
             }
           }
         }
-        else
+        else {
           dpath = dpath + L'/' + elem;
+        }
       }
       apath = upath + dpath;
     }

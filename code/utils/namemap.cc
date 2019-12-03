@@ -304,12 +304,15 @@ Map NameMap()
 
   // Go through the entire array of tag definitions and make the 
   // tag map.
-  for(i=0; TAG_TAB[i].TagNum!=0; i++)
-    if(TAG_TAB[i].TagNum == NewSetOfTags)
+  for(i=0; TAG_TAB[i].TagNum!=0; i++) {
+    if(TAG_TAB[i].TagNum == NewSetOfTags) {
       curr_set = i;  // remember the position of the module name
-    else
+    }
+    else {
       m.Insert(Text(wstring(TAG_TAB[curr_set].Tag) + 
                     wstring(TAG_TAB[i].Tag)), Int(TAG_TAB[i].TagNum));
+    }
+  }
   return m;
 }
 

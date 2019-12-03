@@ -320,12 +320,15 @@ static void GenNewSection(SpecFileChunkType s, bool /* pt */)
        // characters then there could be spurious unicode or \' chars
        // at the end of the chunk (if there is a unicode char, then
        // there will also be a \' char, experience shows)
-       if (plaintext_chunk_header.substr(l-11, 2) == "\\u") 
+       if (plaintext_chunk_header.substr(l-11, 2) == "\\u") {
          plaintext_chunk_header.erase(l-11, 11);
-       else if (plaintext_chunk_header.substr(l-4,2) == "\\'")
+       }
+       else if (plaintext_chunk_header.substr(l-4,2) == "\\'") {
          plaintext_chunk_header.erase(l-4, 4);
-       else
+       }
+       else {
 	 plaintext_chunk_header.erase(plaintext_chunk_header.length()-1);
+       }
      }
 
      // HEADER
@@ -336,22 +339,20 @@ static void GenNewSection(SpecFileChunkType s, bool /* pt */)
 
      int f,t;
      // strip the class/module name for leading/trailing non alpha chars
-     for (f = 0; (unsigned)f<chunk_buffer.length();  f++)
-// 20070828
-//       if (isalnum(chunk_buffer[f]) || chunk_buffer[f] == '_' || 
-//           ((unsigned)(chunk_buffer[f]) > 128))
-       if ((unsigned)(chunk_buffer[f]) > 0x20)
+     for (f = 0; (unsigned)f<chunk_buffer.length();  f++) {
+       if ((unsigned)(chunk_buffer[f]) > 0x20) {
          break; 
-     for (t = chunk_buffer.size()-1; t >=0 ; t--)
-// 20070828
-//       if (isalnum(chunk_buffer[t]) || chunk_buffer[f] == '_' ||
-//           ((unsigned)(chunk_buffer[t]) > 128))
-       if ((unsigned)(chunk_buffer[t]) > 0x20)
+       }
+     }
+     for (t = chunk_buffer.size()-1; t >=0 ; t--) {
+       if ((unsigned)(chunk_buffer[t]) > 0x20) {
          break;
-
+       }
+     }
      if (t>=f) {
        ck->mod_name = chunk_buffer.substr(f, t-f+1);
-     } else {
+     }
+     else {
        ck->mod_name = ""; 
      }
      
@@ -440,12 +441,21 @@ void HandleChunk() {
 
   /* Perform operation on the current chunk */
 
-  if      (chunk_id == style_VDM)       GenVDM();
-  else if (chunk_id == style_VDM_TC_TABLE)       GenVDM_TC_TABLE();
-  else if (chunk_id == style_VDM_IF)    GenVDM_IF();
-  else if (chunk_id == style_VDM_ENDIF) GenVDM_ENDIF();
-  else GenBLOB();
-
+  if (chunk_id == style_VDM) {
+    GenVDM();
+  }
+  else if (chunk_id == style_VDM_TC_TABLE) {
+    GenVDM_TC_TABLE();
+  }
+  else if (chunk_id == style_VDM_IF) {
+    GenVDM_IF();
+  }
+  else if (chunk_id == style_VDM_ENDIF) {
+    GenVDM_ENDIF();
+  }
+  else {
+    GenBLOB();
+  }
 }
 
 
@@ -476,8 +486,9 @@ void HandleLastChunk() {
 
 void WriterInit ()
 {
-  if (RTFReadOutputMap (outMap) == 0)
+  if (RTFReadOutputMap (outMap) == 0) {
     RTFPanic (L"Cannot read output map");
+  }
 }
 
 
@@ -505,18 +516,16 @@ BeginFile ()
 
 static void TextClass ()
 {
-  if (rtfMinor != rtfSC_nothing && !wasBSlashPrimeSym)
+  if (rtfMinor != rtfSC_nothing && !wasBSlashPrimeSym) {
     PutStdChar (rtfMinor);
-  else
-  {
-    if (rtfMajor < 128 && !wasBSlashPrimeSym)  /* in ASCII range */
-    {
+  }
+  else {
+    if (rtfMajor < 128 && !wasBSlashPrimeSym) { /* in ASCII range */
       char buf[rtfBufSiz];
       sprintf (buf, "[[%c]]", rtfMajor);
       PutLitStr (buf);
     }
-    else if(rtfMajor >= 128 && !wasBSlashPrimeSym) // Hi ANSI
-    {
+    else if(rtfMajor >= 128 && !wasBSlashPrimeSym) { // Hi ANSI
       PutMBLitStr(TBWSTR::hiansi2string(rtfMajor));
     }
     else {
@@ -546,79 +555,79 @@ static void TextClass ()
 static void
 ControlClass ()
 {
-  switch (rtfMajor)
-  {
-  case rtfDestination:
-    Destination ();
-    break;
-  case rtfSpecialChar:
-    SpecialChar ();
-    break;
-  case rtfParAttr:
-
-    /* Style change in document */
- 
-    if ( (rtfMinor == rtfStyleNum) || (rtfMinor == rtfParDef) ) {
-
-      // DON`t INCLUDE THE STYLE CHANGE COMMAND in the chunk buffer
-
-      // ??? LTO chunk_buffer_pos = last_token_end-1;
-
-      /* handle last chunk */
-
-      HandleChunk();
-
-      /* Get ready for next chunk */
-
-      plain_text_last = plain_text;
-
-      if ( rtfMinor == rtfParDef ) {
-        chunk_id = 0;  // defaults to Normal style on \pard ???
-      } else {
-        chunk_id = rtfParam;
-      }
-
-      /* get hold of style numbers for the non BLOB styles */
- 
-      if (style_VDM == -1) {
-        style_VDM       = RTFGetStyleNumber(style_name_VDM);
-        style_VDM_IF    = RTFGetStyleNumber(style_name_VDM_IF);
-        style_VDM_ENDIF = RTFGetStyleNumber(style_name_VDM_ENDIF);
-        style_VDM_COV   = RTFGetStyleNumber(style_name_VDM_COV);
-        style_VDM_NCOV  = RTFGetStyleNumber(style_name_VDM_NCOV);
-        style_VDM_TC_TABLE  = RTFGetStyleNumber(style_name_VDM_TC_TABLE);
-      }
-
-      /* setup according to the new style */
-
-      reset_paragraph = 0;
-      plaintext_meet = 0;
-      plaintext_chunk_header = "";
-      
-      // HANDLE PARAGRAPH STYLES
-
-      if (chunk_id == style_VDM) {
-  plain_text = 1;
-      }
-      else if (chunk_id == style_VDM_TC_TABLE) {
-  plain_text = 1;
-      }
-      else if (chunk_id == style_VDM_IF) {
-  plain_text = 1;
-      }
-      else if (chunk_id == style_VDM_ENDIF) {
-  plain_text = 1;
-      }
-      else {
-        reset_paragraph = 1;
-  plain_text = 0;
-      }
-
+  switch (rtfMajor) {
+    case rtfDestination: {
+      Destination ();
+      break;
     }
+    case rtfSpecialChar: {
+      SpecialChar ();
+      break;
+    }
+    case rtfParAttr: {
 
-    break;      
-  }
+      /* Style change in document */
+ 
+      if ( (rtfMinor == rtfStyleNum) || (rtfMinor == rtfParDef) ) {
+
+        // DON`t INCLUDE THE STYLE CHANGE COMMAND in the chunk buffer
+
+        // ??? LTO chunk_buffer_pos = last_token_end-1;
+
+        /* handle last chunk */
+
+        HandleChunk();
+
+        /* Get ready for next chunk */
+
+        plain_text_last = plain_text;
   
+        if ( rtfMinor == rtfParDef ) {
+          chunk_id = 0;  // defaults to Normal style on \pard ???
+        }
+        else {
+          chunk_id = rtfParam;
+        }
+
+        /* get hold of style numbers for the non BLOB styles */
+ 
+        if (style_VDM == -1) {
+          style_VDM       = RTFGetStyleNumber(style_name_VDM);
+          style_VDM_IF    = RTFGetStyleNumber(style_name_VDM_IF);
+          style_VDM_ENDIF = RTFGetStyleNumber(style_name_VDM_ENDIF);
+          style_VDM_COV   = RTFGetStyleNumber(style_name_VDM_COV);
+          style_VDM_NCOV  = RTFGetStyleNumber(style_name_VDM_NCOV);
+          style_VDM_TC_TABLE  = RTFGetStyleNumber(style_name_VDM_TC_TABLE);
+        }
+
+        /* setup according to the new style */
+
+        reset_paragraph = 0;
+        plaintext_meet = 0;
+        plaintext_chunk_header = "";
+      
+        // HANDLE PARAGRAPH STYLES
+
+        if (chunk_id == style_VDM) {
+          plain_text = 1;
+        }
+        else if (chunk_id == style_VDM_TC_TABLE) {
+          plain_text = 1;
+        }
+        else if (chunk_id == style_VDM_IF) {
+          plain_text = 1;
+        }
+        else if (chunk_id == style_VDM_ENDIF) {
+          plain_text = 1;
+        }
+        else {
+          reset_paragraph = 1;
+          plain_text = 0;
+        }
+      }
+      break;      
+    }
+  }
 }
 
 /*
@@ -627,35 +636,32 @@ ControlClass ()
  * data from being considered as plain text.
  */
 
-static void
-Destination ()
+static void Destination ()
 {
-  switch (rtfMinor)
-  {
-  case rtfPict:
-  case rtfFNContSep:
-  case rtfFNContNotice:
-  case rtfInfo:
-  case rtfIndexRange:
-  case rtfITitle:
-  case rtfISubject:
-  case rtfIAuthor:
-  case rtfIOperator:
-  case rtfIKeywords:
-  case rtfIComment:
-  case rtfIVersion:
-  case rtfIDoccomm:
+  switch (rtfMinor) {
+    case rtfPict:
+    case rtfFNContSep:
+    case rtfFNContNotice:
+    case rtfInfo:
+    case rtfIndexRange:
+    case rtfITitle:
+    case rtfISubject:
+    case rtfIAuthor:
+    case rtfIOperator:
+    case rtfIKeywords:
+    case rtfIComment:
+    case rtfIVersion:
+    case rtfIDoccomm:
        
-  case rtfBookmarkStart:  /* LTO */
-  case rtfBookmarkEnd:    /* LTO */
+    case rtfBookmarkStart:  /* LTO */
+    case rtfBookmarkEnd:    /* LTO */
 
-  case rtfListLevel:      /* LTO */
-  case rtfListText:
-
-    RTFSkipGroup ();
-    break;
+    case rtfListLevel:      /* LTO */
+    case rtfListText: {
+      RTFSkipGroup ();
+      break;
+    }
   }
-
 }
 
 
@@ -668,48 +674,23 @@ Destination ()
 static void
 SpecialChar ()
 {
-  switch (rtfMinor)
-  {
-  case rtfPage:
-  case rtfSect:
-  case rtfRow:
-  case rtfLine:
-  case rtfPar:
-    PutLitChar ('\n');
-    break;
-  case rtfCell:
-    PutStdChar (rtfSC_space);  /* make sure cells are separated */
-    break;
-  case rtfNoBrkSpace:
-    PutStdChar (rtfSC_nobrkspace);
-    break;
-  case rtfTab:
-    PutLitChar ('\t');
-    break;
-  case rtfNoBrkHyphen:
-    PutStdChar (rtfSC_nobrkhyphen);
-    break;
-  case rtfBullet:
-    PutStdChar (rtfSC_bullet);
-    break;
-  case rtfEmDash:
-    PutStdChar (rtfSC_emdash);
-    break;
-  case rtfEnDash:
-    PutStdChar (rtfSC_endash);
-    break;
-  case rtfLQuote:
-    PutStdChar (rtfSC_quoteleft);
-    break;
-  case rtfRQuote:
-    PutStdChar (rtfSC_quoteright);
-    break;
-  case rtfLDblQuote:
-    PutStdChar (rtfSC_quotedblleft);
-    break;
-  case rtfRDblQuote:
-    PutStdChar (rtfSC_quotedblright);
-    break;
+  switch (rtfMinor) {
+    case rtfPage:
+    case rtfSect:
+    case rtfRow:
+    case rtfLine:
+    case rtfPar:         { PutLitChar ('\n'); break; }
+    case rtfCell:        { PutStdChar (rtfSC_space);  /* make sure cells are separated */ break; }
+    case rtfNoBrkSpace:  { PutStdChar (rtfSC_nobrkspace); break; }
+    case rtfTab:         { PutLitChar ('\t'); break; }
+    case rtfNoBrkHyphen: { PutStdChar (rtfSC_nobrkhyphen); break; }
+    case rtfBullet:      { PutStdChar (rtfSC_bullet); break; }
+    case rtfEmDash:      { PutStdChar (rtfSC_emdash); break; }
+    case rtfEnDash:      { PutStdChar (rtfSC_endash); break; }
+    case rtfLQuote:      { PutStdChar (rtfSC_quoteleft); break; }
+    case rtfRQuote:      { PutStdChar (rtfSC_quoteright); break; }
+    case rtfLDblQuote:   { PutStdChar (rtfSC_quotedblleft); break; }
+    case rtfRDblQuote:   { PutStdChar (rtfSC_quotedblright); break; }
   }
 }
 
@@ -732,11 +713,11 @@ PutStdChar (int  stdCode)
   const char *oStr;
   char buf[rtfBufSiz];
 
-  if (stdCode == rtfSC_nothing)
+  if (stdCode == rtfSC_nothing) {
     RTFPanic (L"Unknown character code, logic error\n");
+  }
   oStr = outMap[stdCode];
-  if (oStr == (char *) NULL)  /* no output sequence in map */
-  {
+  if (oStr == (char *) NULL) { /* no output sequence in map */
     sprintf (buf, "[[%s]]", RTFStdCharName (stdCode));
     oStr = buf;
   }
@@ -802,7 +783,8 @@ void AddCharToChunkBuffer(char c)
 
     if (!plaintext_meet ) {
       plaintext_chunk_header += c;
-    } else {
+    }
+    else {
       chunk_footer += c;  // the potential end of the text part
     }
   }

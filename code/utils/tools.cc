@@ -1281,8 +1281,9 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
       // And insert files again in empty project
       AddFiles(allfiles_s);
     }
-    else
+    else {
       Repos ()->vdm_EnableSession ();
+    }
   }
 
   if (Repos()->vdm_IsSession (none_session)) {
@@ -2095,8 +2096,7 @@ bool TOOLS::EvalTypeCheck (const TYPE_ProjectTypes_ModuleName& modnm, int opt, w
     }
     return res;
   }
-  else
-  {
+  else {
 #ifdef VDMSL
     return LocalEvalTypeCheck (modnm, opt, wos);
 #endif //VDMSL
@@ -2507,8 +2507,9 @@ void TOOLS::EvalSet (const wstring & args, wostream & wos)
       Settings.VDM10On();
       wos << L"vdm10 set" << endl << flush;
       SEQ<TYPE_ProjectTypes_FileName> file_l (ToolMediator::Repos()->vdm_Files().ToSequence());
-      if (!file_l.IsEmpty())
+      if (!file_l.IsEmpty()) {
         ToolMediator::BTools ()->vdm_SyntaxCheck (file_l);
+      }
     }
   }
   else if (opt == L"dtc") {
@@ -5700,10 +5701,8 @@ bool TOOLS::InitCorbaApi(int argc, char *argv[], wstring &err)
       return false;
     }
   }
-  return true;
-#else
-  return true;
 #endif //CORBA_API
+  return true;
 }
 
 void TOOLS::TerminateCorbaApi()
