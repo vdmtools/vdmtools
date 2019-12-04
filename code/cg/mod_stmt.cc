@@ -2415,13 +2415,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmtAltn(const SEQ<TYPE_AS_CasesStmtAltn> & alt
     PushEnv_CGAUX();
     TYPE_CPP_CompoundStmt stmt (CGAltnStmt(altns[i], selRes_v, succ_v, Nil(), isLast));
 
-//    if (i == 1) {
-//      rb.ImpConc (stmt.GetSequence(pos_CPP_CompoundStmt_stms));
-//    }
-//    else {
-//      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
-//    }
-    rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
+    if ((i == 1) && (stmt.GetSequence(pos_CPP_CompoundStmt_stms).Length() == 1)) {
+      rb.ImpAppend(stmt.GetSequence(pos_CPP_CompoundStmt_stms).Hd());
+    }
+    else {
+      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
+    }
     PopEnv_CGAUX();
   }
   

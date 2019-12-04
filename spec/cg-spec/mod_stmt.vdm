@@ -2107,7 +2107,12 @@ CGCasesStmtAltn( altns, selRes_v, succ_v, Others, isLast ) ==
    for i = 1 to len altns do
     (CGAUX`PushEnv();
      def stmt = CGAltnStmt ( altns (i), selRes_v, succ_v, nil, isLast)
-     in rb := rb ^ [ BC`GenIfStmt(BC`GenNot(succ_v), stmt, nil) ];
+--     in rb := rb ^ [ BC`GenIfStmt(BC`GenNot(succ_v), stmt, nil) ];
+     in
+       cases stmt.stms:
+         [e]    -> rb := rb ^ [e],
+         others -> rb := rb ^ [ BC`GenIfStmt(BC`GenNot(succ_v), stmt, nil) ]
+       end;
      CGAUX`PopEnv();
     );
    if Others <> nil
