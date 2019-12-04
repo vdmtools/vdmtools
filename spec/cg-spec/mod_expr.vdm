@@ -545,7 +545,7 @@ CGCasesExprAltn( altns, selRes_v, resVar_v, succ_v ) ==
     def stmt = CGAltn( altns( i ), selRes_v, resVar_v, succ_v );
     in
       if i = 1
-      then rb := stmt.stms
+      then rb := [stmt]
       else rb := rb ^ [ BC`GenIfStmt( BC`GenNot( succ_v ), stmt, nil ) ];
   return rb;
 );

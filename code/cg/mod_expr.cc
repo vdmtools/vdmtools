@@ -621,7 +621,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesExprAltn (const SEQ<TYPE_AS_CaseAltn> & altns,
   for (size_t i = 1; i <= len_altns; i++) {
     TYPE_CPP_CompoundStmt stmt (CGAltn (altns[i], selRes_v, resVar_v, succ_v));
     if (i == 1) {
-      rb.ImpConc (stmt.GetSequence(pos_CPP_CompoundStmt_stms));
+      rb.ImpAppend (stmt);
     }
     else {
       rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (succ_v), stmt, nil));

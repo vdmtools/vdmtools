@@ -2415,12 +2415,13 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmtAltn(const SEQ<TYPE_AS_CasesStmtAltn> & alt
     PushEnv_CGAUX();
     TYPE_CPP_CompoundStmt stmt (CGAltnStmt(altns[i], selRes_v, succ_v, Nil(), isLast));
 
-    if (i == 1) {
-      rb.ImpConc (stmt.GetSequence(pos_CPP_CompoundStmt_stms));
-    }
-    else {
-      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
-    }
+//    if (i == 1) {
+//      rb.ImpConc (stmt.GetSequence(pos_CPP_CompoundStmt_stms));
+//    }
+//    else {
+//      rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
+//    }
+    rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), stmt, nil));
     PopEnv_CGAUX();
   }
   
@@ -2445,7 +2446,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmtAltn(const SEQ<TYPE_AS_CasesStmtAltn> & alt
 // succ_v : CPP`Name
 // elseStmt : [CPP`Stmt]
 // isLast : bool
-// ==> CPP`Stmt
+// ==> CPP`CompoundStmtStmt
 TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
                                 const TYPE_CGMAIN_VT & selRes_v,
                                 const TYPE_CPP_Name & succ_v,
@@ -2473,26 +2474,18 @@ TYPE_CPP_Stmt vdmcg::CGAltnStmt(const TYPE_AS_CasesStmtAltn & csa,
       Tuple cgpm (CGPatternMatchExcl(p_l[1], selRes_v, Set(), succ_v, Map(), inner, false, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpm.GetSequence(1));
       bool Is_Excl (cgpm.GetBoolValue(2)); // false : need to check pattern match failed
+      if (Is_Excl) {
+        rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
+      }
       if ((1 == pm.Length()) && pm[1].Is(TAG_TYPE_CPP_IfStmt) &&
             pm[1].GetRecord(pos_CPP_IfStmt_alt1).Is(TAG_TYPE_CPP_CompoundStmt)) {
-        if (Is_Excl) {
-          rb.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
-        }
         TYPE_CPP_Stmt stmt (pm[1]);
         SEQ<TYPE_CPP_Stmt> stmts (MergeStmts(decl,stmt.GetRecord(pos_CPP_IfStmt_alt1).GetSequence(pos_CPP_CompoundStmt_stms)));
         stmt.SetField(pos_CPP_IfStmt_alt1, vdm_BC_GenBlock(stmts));
         rb.ImpAppend(stmt);
       }
       else {
-        if (Is_Excl) {
-          SEQ<TYPE_CPP_Stmt> ss;
-          ss.ImpAppend(vdm_BC_GenAsgnStmt(succ_v, vdm_BC_GenBoolLit(true)));
-          ss.ImpConc(MergeStmts(decl,pm));
-          rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(ss), nil));
-        }
-        else {
-          rb.ImpConc(MergeStmts(decl,pm));
-        }
+        rb.ImpConc(MergeStmts(decl,pm));
       }
     }
     else {

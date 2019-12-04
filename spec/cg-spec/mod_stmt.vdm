@@ -2107,10 +2107,7 @@ CGCasesStmtAltn( altns, selRes_v, succ_v, Others, isLast ) ==
    for i = 1 to len altns do
     (CGAUX`PushEnv();
      def stmt = CGAltnStmt ( altns (i), selRes_v, succ_v, nil, isLast)
-     in
-       if i = 1
-       then rb := rb ^ stmt.stms
-       else rb := rb ^ [ BC`GenIfStmt(BC`GenNot(succ_v), stmt, nil) ];
+     in rb := rb ^ [ BC`GenIfStmt(BC`GenNot(succ_v), stmt, nil) ];
      CGAUX`PopEnv();
     );
    if Others <> nil
@@ -2178,7 +2175,6 @@ a map from the identifiers in the pattern alternatives to a sequence
 of types which they could be bound to.
 
 \begin{vdm_al}
---CGAltnStmt: AS`CasesStmtAltn * CGMAIN`VT * CPP`Name * [CPP`Stmt] * bool ==> CPP`Stmt
 CGAltnStmt: AS`CasesStmtAltn * CGMAIN`VT * CPP`Name * [CPP`CompoundStmt] * bool ==> CPP`CompoundStmt
 CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast) ==
   def mk_(samepatternIds, pid_m) = CGEXPR`SamePatternIds( p_l )
@@ -2194,20 +2190,14 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
           def inner = GenStmt(s, isLast);
               mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(p_l(1), selRes_v, {}, succ_v, nil, inner, false, false);
           in
+           (if Is_Excl
+            then rb := rb ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
             cases pm:
               [mk_CPP`IfStmt(-,mk_CPP`CompoundStmt(stmt_l,-),-,-)] ->
-                  (if Is_Excl
-                   then rb := rb ^ [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))];
                    def stmts = CGAUX`MergeStmts( decl, stmt_l )
-                   in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))]
-                  ),
-              others -> if Is_Excl
-                        then 
-                          def ss = [BC`GenAsgnStmt(succ_v, BC`GenBoolLit(true))] ^
-                                       CGAUX`MergeStmts( decl, pm )
-                          in rb := rb ^ [BC`GenIfStmt(BC`GenNot(succ_v), BC`GenBlock(ss), nil)]
-                        else rb := rb ^ CGAUX`MergeStmts( decl, pm )
-            end
+                   in rb := rb ^ [mu(pm(1), alt1 |-> BC`GenBlock(stmts))],
+              others -> rb := rb ^ CGAUX`MergeStmts( decl, pm )
+            end)
        else
          (rb := rb ^ decl;
           for i = 1 to len p_l do
@@ -2236,7 +2226,6 @@ CGAltnStmt(mk_AS`CasesStmtAltn(p_l, s, cid), selRes_v, succ_v, elseStmt, isLast)
       end;
      )
     else
---     (dcl elseStmt1 : [CPP`Stmt] := elseStmt;
      (dcl elseStmt1 : [CPP`CompoundStmt] := elseStmt;
        for i = 0 to len p_l -1 do
          (if (i > 0) then CGAUX`PushEnv();
