@@ -2108,7 +2108,7 @@ Tuple StatSem::wf_DurationStmt(const Int & i, const TYPE_AS_DurationStmt & durst
     GenErr(dur, ERR, 402, Sequence());
     return mk_(Bool(false), rep_unittp);
   }
-//  else if (dur.GetReal(pos_AS_RealLit_val).GetValue() < 0)
+//  else if (dur.GetRealValue(pos_AS_RealLit_val) < 0)
 //  {
 //    //-----------------------------------------------------------------------
 //    // Error message #371
@@ -2161,7 +2161,7 @@ Tuple StatSem::wf_CycleStmt(const Int & i, const TYPE_AS_CycleStmt & cystmt, con
     GenErr(num, ERR, 402, Sequence());
     return mk_(Bool(false), rep_unittp);
   }
-//  else if (num.GetReal(pos_AS_RealLit_val).GetValue() < 0)
+//  else if (num.GetRealValue(pos_AS_RealLit_val) < 0)
 //  {
 //    //-----------------------------------------------------------------------
 //    // Error message #371

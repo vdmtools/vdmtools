@@ -2064,7 +2064,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
   size_t len_excps = excps.Length();
   for (size_t idx = 1; idx <= len_excps; idx++) {
     const TYPE_AS_Error & err (excps[idx]);
-    Tuple infer2 (wf_Pred (i, err.get_cond (), EXCEP));
+    Tuple infer2 (wf_Pred (i, err.GetRecord(pos_AS_Error_cond), EXCEP));
     wf = wf && infer2.GetBool (1);
   }
 
@@ -2127,7 +2127,7 @@ bool StatSem::wf_ExtExplOperation (const Int & i, const TYPE_AS_ExtExplOpDef & v
     size_t len_excps = excps.Length(); 
     for (size_t idx = 1; idx <= len_excps; idx++) {
       const TYPE_AS_Error & err (excps[idx]);
-      Tuple infer5 (wf_Pred (i, err.get_action (), EXCEP));
+      Tuple infer5 (wf_Pred (i, err.GetRecord(pos_AS_Error_action), EXCEP));
       wf = wf && infer5.GetBool (1);
     }
     Tuple infer6 (wf_Pred (i, oppost, POST));
@@ -2196,7 +2196,7 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
             GenErrTp (var, ERR, 307, var_tp, rtp, mk_sequence(PrintName (var)));
           }
           else {
-            GetCI().SetTypeInfo(var.get_cid(), var_tp);
+            GetCI().SetTypeInfo(var.GetInt(pos_AS_Name_cid), var_tp);
           }
         }
         else {
@@ -2501,7 +2501,7 @@ bool StatSem::wf_PeriodicThread (const Int & i, const TYPE_AS_PerObl& thread, co
   --  reswf := false
   --);
 */
-  if (delay.GetReal(pos_AS_RealLit_val).GetValue() >= period.GetReal(pos_AS_RealLit_val).GetValue()) {
+  if (delay.GetRealValue(pos_AS_RealLit_val) >= period.GetRealValue(pos_AS_RealLit_val)) {
     //------------------------------
     // Error message #434
     // Delay argument must be less than the period in %1
