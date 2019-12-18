@@ -772,13 +772,6 @@ bool RTFWordSpecFileHandler::pp_token(const TokenInfo & tk)
       pp_out << "||";
       break;
     }
-// 20060105
-//#ifdef VDMPP
-//    case LEX_APPROX : {
-//       pp_out << "=~";
-//       break;
-//    }
-//#endif // VDMPP
     case LEX_ASSIGN : {
       pp_out << ":=";
       break;

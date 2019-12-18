@@ -47,7 +47,6 @@ void StatSem::InitParseEnv()
 #endif // VICE
 #endif // VDMPP
 
-// 20080612
   setRecMap(Map());
 }
 

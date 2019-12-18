@@ -2592,7 +2592,7 @@ Map DEF::TransTP(const Set & typeset_)
         Set s;
         size_t len_tpset = tpset.Length();
         for (size_t idx = 1; idx <= len_tpset; idx++) {
-          s.Insert(mk_(tpset[idx], access)); // 20060915
+          s.Insert(mk_(tpset[idx], access));
         }
         res.ImpOverride(TransTP(s));
         break;
@@ -2602,7 +2602,7 @@ Map DEF::TransTP(const Set & typeset_)
         Set s;
         size_t len_tpset = tpseq.Length();
         for (size_t idx = 1; idx <= len_tpset; idx++) {
-          s.Insert(mk_(tpseq[idx], access)); // 20060915
+          s.Insert(mk_(tpseq[idx], access));
         }
         res.ImpOverride(TransTP(s));
         break;

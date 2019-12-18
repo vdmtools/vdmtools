@@ -375,10 +375,7 @@ Tuple StatSem::wf_BlockStmt (const Int & i, const TYPE_AS_BlockStmt & stmt, cons
 
   Bool reswf (true);
 
-// 20140328 -->
   SET<TYPE_AS_Name> used;
-// <-- 20140328
-
   size_t len_dcls = dcls.Length();
   for (size_t idx = 1; idx <= len_dcls; idx++) {
     Tuple infer (wf_Dcl (i, dcls[idx]));
@@ -2342,7 +2339,6 @@ Tuple StatSem::wf_TrapStmt (const Int & i, const TYPE_AS_TrapStmt & tstmt, const
     // full check
     Bool reswf (true);
 
-// 20081006 -->
     //Generic etp (ExtractRealExitTypeRep(tpstmt, stmt));
     //if (etp.IsNil())
     //{
@@ -2353,7 +2349,6 @@ Tuple StatSem::wf_TrapStmt (const Int & i, const TYPE_AS_TrapStmt & tstmt, const
     //  GenErr(stmt, WRN1, 329, Sequence());
     //  reswf = Bool(false);
     //}
-// <-- 20081006
 
     Tuple infer2 (wf_PatternBind (POS, patbind, rep_alltp)); // [bool] * map AS`Name to REP`TypeRep
     const Generic & match (infer2.GetField (1)); // [bool]

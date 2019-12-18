@@ -139,7 +139,7 @@ static void javapsetpos_emptyrule (YYLTYPE * yylsp, const YYLTYPE & yylloc)
   yylsp -> first_line = yylloc.first_line;
   yylsp -> first_column = yylloc.first_column;
   yylsp -> pos.set_token_ust(yylloc.pos.get_token_ust());
-  yylsp -> pos.set_token_uast(yylloc.pos.get_token_uast()); // 20090915
+  yylsp -> pos.set_token_uast(yylloc.pos.get_token_uast());
   yylsp -> last_line = (yylsp-1) -> last_line;
   yylsp -> last_column = (yylsp-1) -> last_column;
   yylsp -> pos.set_token_uend((yylsp-1) -> pos.get_token_uend());

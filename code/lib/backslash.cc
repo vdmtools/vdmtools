@@ -37,12 +37,15 @@ bool Backslashed::hex_to_number(const std::wstring & s, int len, int & res)
   for (int i = 0; i < len; i++) {
     res = res * 16;
     wchar_t ch = s[i];
-    if (ch >= L'0' && ch <= L'9')
+    if (ch >= L'0' && ch <= L'9') {
       res += (ch - L'0');
-    else if (ch >= L'a' && ch <= L'f')
-      res += (ch - L'a') + 10; // 20060626 +10
-    else if (ch >= L'A' && ch <= L'F')
-      res += (ch - L'A') + 10; // 20060626 +10
+    }
+    else if (ch >= L'a' && ch <= L'f') {
+      res += (ch - L'a') + 10;
+    }
+    else if (ch >= L'A' && ch <= L'F') {
+      res += (ch - L'A') + 10;
+    }
     else {
       res = i;
       return false;
@@ -57,8 +60,9 @@ bool Backslashed::octal_to_number(const std::wstring & s, int len, int & res)
   for (int i = 0; i < len; i++) {
     res = res * 8;
     wchar_t ch = s[i];
-    if (ch >= L'0' && ch <= L'7')
+    if (ch >= L'0' && ch <= L'7') {
       res += (ch - L'0');
+    }
     else {
       res = i;
       return false;
@@ -234,13 +238,15 @@ void Backslashed::convert_internal_to_latex_backslash(const std::wstring&s,
       case L'\177':  str << latex_backslash << L"c?"; break;
       case L'\\':    str << latex_backslash << latex_backslash; break;
 
-      case L'\"':
-        if (textlit)
+      case L'\"': {
+        if (textlit) {
           str << latex_backslash << L"\\Dquote ";
-        else
+        }
+        else {
           str <<  L"\\Dquote ";
+        }
         break;
-
+      }
       case L'\'': str << L"\\Quote "; break;
 
       case L' ': str << L"\\hspace{0.5em}"; break;
@@ -290,7 +296,7 @@ void Backslashed::convert_internal_to_cxx_backslash(const std::wstring&s,
       case L'\"':  str << L"\\\""; break;
       case L'\'':  str << L"\\\'"; break;
       case L'\\':  str << L"\\\\"; break;
-      default:
+      default: {
      
         if (c<32
             // Dec cxx V6.0-021 cannot parse embedded wchar_t with ascii value 255
@@ -301,6 +307,7 @@ void Backslashed::convert_internal_to_cxx_backslash(const std::wstring&s,
           str << c;
         }
         break;
+      }
     }
   }
   res.assign(str.str());
@@ -324,13 +331,13 @@ void Backslashed::convert_internal_to_java_backslash(const std::wstring&s,
         //    case L'\v':  str << L"\\v"; break;
         //    case L'\f':  str << L"\\f"; break;
 
-      case L'\r':  str << L"\\r"; break; // 20121220
+      case L'\r':  str << L"\\r"; break;
 
       case L'\"':  str << L"\\\""; break;
       case L'\'':  str << L"\\\'"; break;
       case L'\\':  str << L"\\\\"; break;
 
-      default:
+      default: {
         if (c<32
             // Dec cxx V6.0-021 cannot parse embedded wchar_t with ascii value 255
             || c==(wchar_t)'\xff'
@@ -340,6 +347,7 @@ void Backslashed::convert_internal_to_java_backslash(const std::wstring&s,
           str << c;
         }
         break;
+      }
     }
   }
   res.assign(str.str());
@@ -376,22 +384,21 @@ void Backslashed::convert_internal_to_printed_backslash(const std::wstring&s,
       case L'\177':  str += L"\\c?"; break;
       case L'\\':    str += L"\\\\"; break;
 
-      case L'\"':
-        if (textlit)
+      case L'\"': {
+        if (textlit) {
           str += L"\\\"";
-        else
+        }
+        else {
           str +=  L"\"";
+        }
         break;
-
+      }
       case L'\'': str += L"'"; break;
 
-      default:
-        //      if (c<32) {
-        //        str << L"\\x" << number_to_hex2(c);
-        //      } else {
-          str.append(1, c);
-          //      }
+      default: {
+        str.append(1, c);
         break;
+      }
     }
   }
   ostr << str.c_str();

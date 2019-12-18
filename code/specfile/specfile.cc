@@ -643,7 +643,7 @@ bool SpecFileHandler::create_action_list(SpecFile & sf, const Sequence & old_ast
 
   // Get the token list for the file
   ContextInfo & old_ci = sf.get_contextinfo();
-  old_ci.UseContextTab(sf.get_file_id(), false); // 20080804
+  old_ci.UseContextTab(sf.get_file_id(), false);
   TokenList & old_tokl = old_ci.GetTokenList(sf.get_file_id());
 
   // Next we construct asts and context info for the classes of this module:

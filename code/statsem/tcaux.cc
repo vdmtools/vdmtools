@@ -1379,12 +1379,10 @@ Generic StatSem::SetTypeMinus (const TYPE_REP_TypeRep & St1, const TYPE_REP_Type
 Generic StatSem::UnmaskSeqType(const Int & i, const TYPE_REP_TypeRep & tp)
 {
   switch(tp.GetTag()) {
-// 20111212 -->
     case TAG_TYPE_REP_AllTypeRep:
     case TAG_TYPE_REP_TypeVarRep: {
       return rep_alltp;
     }
-// <-- 20111212
     case TAG_TYPE_REP_EmptySeqTypeRep: {
       return Nil();
     }

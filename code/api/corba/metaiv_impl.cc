@@ -107,7 +107,6 @@ Nil_i::~Nil_i()
 
 Nil_i::Nil_i(VDM::ClientID id)
 {
-//  ::Nil* n = new ::Nil();  // 20060614
   _g = new Generic(Nil());
   _owner = id;
 }
@@ -161,7 +160,7 @@ Token_i::~Token_i()
 char * Token_i::GetValue ()
 {
   ::Token t(*_g);
-  return CORBA::string_dup(TBWSTR::wstring2string(t.GetString()).c_str()); // 20100616
+  return CORBA::string_dup(TBWSTR::wstring2string(t.GetString()).c_str());
 }
 
 Set_i::~Set_i()

@@ -80,67 +80,45 @@ Tuple vdm_DriverManager::vdm_getConnection_q_q_q
     if (nRetCode != SQL_SUCCESS && nRetCode != SQL_SUCCESS_WITH_INFO)
       throw new SqlException(SQL_HANDLE_ENV, this->m_henv);
 
-// 20120719 -->
-/*
-    SQLTCHAR *serverName = NULL;
-    SQLTCHAR *userName = NULL;
-    SQLTCHAR *authentication = NULL;
-
-    string url = TBWSTR::wstring2string(vdm_url.getValue());
-    if (!url.empty())
-      serverName = (SQLTCHAR*)url.c_str();
-
-    string user = TBWSTR::wstring2string(vdm_user.getValue());
-    if (!user.empty())
-      userName = (SQLTCHAR*)user.c_str();
-
-    string password = TBWSTR::wstring2string(vdm_password.getValue());
-    if (!password.empty())
-      authentication = (SQLTCHAR*)password.c_str();
-
-    nRetCode = ::SQLConnect(m_hdbc, serverName, SQL_NTS, userName, SQL_NTS, authentication, SQL_NTS);
-*/
 #ifdef _MSC_VER
     wstring cstr;
     wstring url = vdm_url.getValue();
-    if (!url.empty())
+    if (!url.empty()) {
       cstr += L"DSN=" + url + L";"; 
-
+    }
     wstring user = vdm_user.getValue();
-    if (!user.empty())
+    if (!user.empty()) {
       cstr += L"UID=" + user + L";"; 
-
+    }
     wstring password = vdm_password.getValue();
-    if (!password.empty())
+    if (!password.empty()) {
       cstr += L"PWD=" + password + L";"; 
-
+    }
     SQLWCHAR *connectionString = (SQLWCHAR*)cstr.c_str();
 
     nRetCode = ::SQLDriverConnectW(this->m_hdbc, NULL, connectionString, SQL_NTS, NULL, 0, NULL, SQL_DRIVER_COMPLETE);
 #else
     string cstr;
     string url = TBWSTR::wstring2string(vdm_url.getValue());
-    if (!url.empty())
+    if (!url.empty()) {
       cstr += "DSN=" + url + ";"; 
-
+    }
     string user = TBWSTR::wstring2string(vdm_user.getValue());
-    if (!user.empty())
+    if (!user.empty()) {
       cstr += "UID=" + user + ";"; 
-
+    }
     string password = TBWSTR::wstring2string(vdm_password.getValue());
-    if (!password.empty())
+    if (!password.empty()) {
       cstr += "PWD=" + password + ";"; 
-
+    }
     SQLCHAR *connectionString = (SQLCHAR*)cstr.c_str();
 
     nRetCode = ::SQLDriverConnect(this->m_hdbc, NULL, connectionString, SQL_NTS, NULL, 0, NULL, SQL_DRIVER_COMPLETE);
 #endif // _MSC_VER
 
-// <-- 20120719
-
-    if (nRetCode != SQL_SUCCESS && nRetCode != SQL_SUCCESS_WITH_INFO)
+    if (nRetCode != SQL_SUCCESS && nRetCode != SQL_SUCCESS_WITH_INFO) {
       throw new SqlException(SQL_HANDLE_DBC, this->m_hdbc);
-
+    }
     Tuple res(4);
     res.SetField(1, Int(0));
     res.SetField(2, Sequence());

@@ -449,7 +449,7 @@ public:
   static std::wstring ExtractToolCommand (const TYPE_ProjectTypes_ToolCommand& ToolCommand)
   {
     Token command (ToolCommand.GetField(pos_ToolCommand_command));
-    return command.GetString (); // 20100616
+    return command.GetString ();
   }
 
   static std::wstring ExtractMessage (const TYPE_ProjectTypes_InfoMsg & msg)
@@ -460,19 +460,25 @@ public:
   static status_type::status vdm_Status2status (const Quote & Status)
   {
     status_type::status status;
-    if (Status == Quote (L"NONE"))
+    if (Status == Quote (L"NONE")) {
       status = status_type::status_none;
-    else if (Status == Quote (L"ERROR"))
+    }
+    else if (Status == Quote (L"ERROR")) {
       status = status_type::status_error;
-    else if (Status == Quote (L"OK"))
+    }
+    else if (Status == Quote (L"OK")) {
       status = status_type::status_ok;
-    else if (Status == Quote (L"POS"))
+    }
+    else if (Status == Quote (L"POS")) {
       status = status_type::status_pos;
-    else if (Status == Quote (L"DEF"))
+    }
+    else if (Status == Quote (L"DEF")) {
       status = status_type::status_def;
-    else
+    }
+    else {
       // This must never happen!
       status = status_type::status_none;
+    }
     return status;
   }
 
@@ -539,44 +545,51 @@ public:
   
   static Generic ExtractCGInfo (const Generic& CGInfo)
   {
-    if (CGInfo.IsRecord ())
+    if (CGInfo.IsRecord ()) {
       return Record (CGInfo).GetField (pos_CGInfo_repos);
-    else
+    }
+    else {
       return Nil ();
+    }
   }
 
   static TYPE_ProjectTypes_SemVal mk_SemVal (const Record& v)
   {
     TYPE_ProjectTypes_SemVal r;
-//    r.set_v (v);
     r.SetField (pos_SemVal_v,v);  // Token is spec
     return r;
   }
 
   static Generic ExtractSemVal (const Generic& s)
   {
-    if (s.IsRecord ())
+    if (s.IsRecord ()) {
       return Record (s).GetField(pos_SemVal_v);
-    else
+    }
+    else {
       return Nil ();
+    }
   }
 
   static std::wstring ExtractOldProjName (const TYPE_ProjectTypes_ChangedProjName& r)
   {
     Generic nm (r.get_oldn ());
-    if (nm.IsRecord ())
+    if (nm.IsRecord ()) {
       return ExtractFileName (nm);
-    else
+    }
+    else {
       return L"";
+    }
   }
 
   static std::wstring ExtractNewProjName (const TYPE_ProjectTypes_ChangedProjName& r)
   {
     Generic nm (r.get_newn ());
-    if (nm.IsRecord ())
+    if (nm.IsRecord ()) {
       return ExtractFileName (nm);
-    else
+    }
+    else {
       return L"";
+    }
   }
 };
 
@@ -644,11 +657,6 @@ Record PTAUX::ExtractModuleAst (const TYPE_ProjectTypes_Module& m)
 {
     return Values::ExtractModuleAst (m);
 }
-
-//TYPE_ProjectTypes_ModuleName PTAUX::mk_ModuleName (const TYPE_AS_Name& file)
-//{
-//  return Values::mk_ModuleName (file);
-//}
 
 TYPE_ProjectTypes_Module PTAUX::mk_Module (const TYPE_AS_Name & AsName, const Record & AsModule)
 {
@@ -870,8 +878,9 @@ SEQ<Record> PTAUX::ExtractAstOrFlats (const SEQ<TYPE_ProjectTypes_AstVal> & asts
 {
   SEQ<Record> val_l; // seq of (AS`DLModule | AS`Module | AS`Class | CPP`Module)
   size_t len_asts = asts.Length();
-  for (size_t idx = 1; idx <= len_asts; idx++)
+  for (size_t idx = 1; idx <= len_asts; idx++) {
     val_l.ImpAppend (Values::ExtractAstOrFlat(asts[idx]));
+  }
   return val_l;
 }
 
@@ -937,16 +946,15 @@ std::wstring PTAUX::ExtractMessageAll(const std::wstring & file, const TYPE_Proj
 {
   std::wstring messageString;
 
-  if (file != std::wstring(L""))
+  if (file != std::wstring(L"")) {
     messageString = file + L", ";
-
+  }
   Tuple t (Values::ExtractErrMsg(msg));
   int fileid = t.GetIntValue(1);
   int lineid = t.GetIntValue(2);
   int columnid = t.GetIntValue(3);
 
-  if ((lineid > 0) && (columnid > 0))
-  {
+  if ((lineid > 0) && (columnid > 0)) {
     std::wstring lid (Int(lineid).ascii());    
     std::wstring cid (Int(columnid).ascii());
     if (fileid == -10 && lineid == 1) {
@@ -956,14 +964,13 @@ std::wstring PTAUX::ExtractMessageAll(const std::wstring & file, const TYPE_Proj
       messageString += L"l. " + lid + L", c. " + cid;
     }
   }
-  else
+  else {
     messageString += L"No precise position information available";
-  
+  }
   const type_cLL & descr_l (t.GetSequence(4));
   messageString += (descr_l.IsEmpty() ? L"\n" : L":\n"); 
   size_t len_descr_l = descr_l.Length();
-  for (size_t idx = 1; idx <= len_descr_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_descr_l; idx++) {
     std::wstring ws = L"  " + descr_l[idx].GetString() + L"\n";
     messageString.append(ws) ;
   }
@@ -1028,28 +1035,31 @@ void PTAUX::UpdateIsEverythingTypeCorrect()
   bool isTypeCorrect = true;
   SET<TYPE_ProjectTypes_ModuleName> mod_s (ToolMediator::Repos()->vdm_AllModules());
   Generic modnm;
-  for (bool bb = mod_s.First(modnm); bb && isTypeCorrect; bb = mod_s.Next(modnm))
-  {
+  for (bool bb = mod_s.First(modnm); bb && isTypeCorrect; bb = mod_s.Next(modnm)) {
     status_type st = ExtractStatus(ToolMediator::Repos()->vdm_Status(modnm));
       
     switch (st.syntax) {
       case status_type::status_error:
-      case status_type::status_none:
+      case status_type::status_none: {
           isTypeCorrect = false;
-      break;
-      default:
-      break;
+        break;
+      }
+      default: {
+        break;
+      }
     }
 
     if(!isTypeCorrect) continue;
 
     switch (st.type) {
       case status_type::status_error:
-      case status_type::status_none:
+      case status_type::status_none: {
         isTypeCorrect = false;
-      break;
-      default:
-      break;
+        break;
+      }
+      default: {
+        break;
+      }
     }
   }
   PTAUX::isEverythingTypeCorrect = isTypeCorrect;
@@ -1067,43 +1077,50 @@ int PTAUX::Compare (const TYPE_ProjectTypes_Message & tp1,
                     bool sep)
 {
   if (sep) {
-    if (PTAUX::is_ErrMsg(tp1) && PTAUX::is_WarnMsg(tp2))
+    if (PTAUX::is_ErrMsg(tp1) && PTAUX::is_WarnMsg(tp2)) {
       return 0;
-    else if (PTAUX::is_ErrMsg(tp2) && PTAUX::is_WarnMsg(tp1))
+    }
+    else if (PTAUX::is_ErrMsg(tp2) && PTAUX::is_WarnMsg(tp1)) {
       return 2;
+    }
   }
 
   // fid
   int f1 = tp1.GetIntValue (1);
   int f2 = tp2.GetIntValue (1);
 
-  if (f1 < f2)
+  if (f1 < f2) {
     return 0;
-  else if (f1 == f2)
-  {
+  }
+  else if (f1 == f2) {
     // line
     int l1 = tp1.GetIntValue (2);
     int l2 = tp2.GetIntValue (2);
-    if (l1 < l2)
+    if (l1 < l2) {
       return 0;
-    else if (l1 == l2)
-    {
+    }
+    else if (l1 == l2) {
       // col
       int c1 = tp1.GetIntValue (3);
       int c2 = tp2.GetIntValue (3);
 
-      if (c1 < c2)
+      if (c1 < c2) {
         return 0;
-      else if (c1 == c2)
+      }
+      else if (c1 == c2) {
         return 1;
-      else
+      }
+      else {
         return 2;
+      }
     }
-    else
+    else {
       return 2;
+    }
   }
-  else
+  else {
     return 2;
+  }
 }
 
 //QS implements the QuickSort algorithm and sorts
@@ -1113,15 +1130,14 @@ int PTAUX::Compare (const TYPE_ProjectTypes_Message & tp1,
 // +> seq of (ProjectTypes`ErrMsg | ProjectTypes`WarnMsg) 
 SEQ<TYPE_ProjectTypes_Message> PTAUX::QS (const SEQ<TYPE_ProjectTypes_Message> & sq, bool sep)
 {
-  if (sq.Length() <= 1)
+  if (sq.Length() <= 1) {
     return sq;
-  else
-  {
+  }
+  else {
     TYPE_ProjectTypes_Message half (sq[sq.Length() / 2]);
     SEQ<TYPE_ProjectTypes_Message> sq1, sq2, sq3;
     size_t len_sq = sq.Length();
-    for (size_t i = 1; i <= len_sq; i++)
-    {
+    for (size_t i = 1; i <= len_sq; i++) {
       const TYPE_ProjectTypes_Message & mes (sq[i]);
       switch (Compare (sq[i], half, sep)) {
         case 0: {

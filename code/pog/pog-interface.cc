@@ -232,10 +232,8 @@ Tuple PogInterface::toText(const TYPE_POG_uMEDIATOR_ProofObligationPP & po)
   Int length (-1);
   Sequence file (L"");;
 
-// 20081209 -->
   Tuple gfp (GetCI().GetFilePos(po.get_cid()));
-  if (gfp.GetBoolValue(1))
-  {
+  if (gfp.GetBoolValue(1)) {
     const TYPE_CI_FileId & fid (gfp.GetInt(2));
     const TYPE_CI_TokenPos & stpos (gfp.GetRecord(3));
 //    const TYPE_CI_TokenPos & astpos (gfp.GetRecord(4));
@@ -249,12 +247,13 @@ Tuple PogInterface::toText(const TYPE_POG_uMEDIATOR_ProofObligationPP & po)
     line = sline;
     column = scol;
     
-    if (sline == eline)
+    if (sline == eline) {
       length = (ecol - scol);
-    else
+    }
+    else {
       length = 1;
+    }
   }
-// <-- 20081209
 
   TYPE_POGTP_LocContext loc(po.get_loc());
 

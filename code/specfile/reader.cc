@@ -123,7 +123,7 @@ static void ReadCharSetMaps ();
 void RTFSetCurFontNum(int fn);
 void RTFSetNonAsciiFontNum(int fn);
 
-// 20060324 for unicode 
+// unicode 
 static void ReadNewDestination();
 static void ReadTwoEmbedded();
 static void ReadUnicode();
@@ -282,7 +282,7 @@ void RTFInit ()
   RTFSetDestinationCallback (rtfPict, ReadPictGroup);
   RTFSetDestinationCallback (rtfObject, ReadObjGroup);
 
-  // 20060324 for unicode
+  // unicode
   RTFSetDestinationCallback (rtfNewDestination, ReadNewDestination);
   RTFSetDestinationCallback (rtfTwoEmbedded, ReadTwoEmbedded);
   RTFSetDestinationCallback (rtfUnicode, ReadUnicode);
@@ -752,21 +752,11 @@ static void _RTFGetToken2 ()
       return;
     }
 
-    // 20060324
-//    if ( c == '*' )
-//    {
-// 20061116
-//      rtfClass = rtfText;
-//      rtfMajor = c;
-//      return;
-//    }
-
     /* control symbol */
     Lookup (rtfTextBuf);  /* sets class, major, minor */
     return;
   }
 
-  // 20060324
   // for unicode
   if( c == 'u' ) {
     if( ( c = GetChar() ) != EOF ) {
@@ -1688,8 +1678,7 @@ ReadStyleSheet ()
       RTFPanic(std::wstring(fn) + L": cannot allocate stylesheet entry");
     }
     sp->rtfSName = (char *) NULL;
-//    sp->rtfSNum = -1;
-    sp->rtfSNum = 0; // 20060324
+    sp->rtfSNum = 0;
     sp->rtfSType = rtfParStyle;
     sp->rtfSAdditive = 0;
     sp->rtfSBasedOn = rtfNoStyleNum;
@@ -2533,7 +2522,7 @@ static RTFKey rtfKey[] =
   {rtfDestination,  rtfListLevel,  "listlevel",  0},
   {rtfDestination,  rtfListText,  "listtext",  0},
 
-  // 20060324 for unicode 
+  // unicode 
   {rtfDestination,  rtfNewDestination,  "*",  0},
   {rtfDestination,  rtfTwoEmbedded,  "upr",  0},
   {rtfDestination,  rtfUnicode,  "ud",  0},
@@ -3308,7 +3297,7 @@ void RTFPanic (const std::wstring & msg)
   throw TB_Exception(ERR_RTF_Parser);
 }
 
-// 20060324 for unicode
+// unicode
 void ReadNewDestination()
 {
 }

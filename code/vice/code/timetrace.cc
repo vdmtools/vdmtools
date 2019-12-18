@@ -71,8 +71,7 @@ void TIMETRACE::AddCPU(const Generic & sysnm, const Generic & cpunm,
                        const Bool & expl)
 {
   Int num (ConvertNameToNum(cpunm));
-  if (num.GetValue() > 0)
-  {
+  if (num.GetValue() > 0) {
     TYPE_TIMETRACETP_CPUdecl decl;
     decl.set_id(num);
     decl.set_sys(sysnm);
@@ -92,12 +91,10 @@ void TIMETRACE::AddBUS(const Generic & busnm, const Set & cpus)
   SET<Int> converted;
   Set cpus_q (cpus);
   Generic cpu;
-  for(bool bb = cpus_q.First(cpu); bb; bb = cpus_q.Next(cpu))
-  {
+  for(bool bb = cpus_q.First(cpu); bb; bb = cpus_q.Next(cpu)) {
     converted.Insert(ConvertNameToNum(cpu));
   }
-  if (num.GetValue() > 0)
-  {
+  if (num.GetValue() > 0) {
     TYPE_TIMETRACETP_BUSdecl decl;
     decl.set_id(num);
     decl.set_topo(converted);
@@ -129,16 +126,15 @@ void TIMETRACE::LogHistEvent(const TYPE_SCHDTP_ThreadId & threadid,
   Int curtime (GetTime());
   Int cpu (ConvertNameToNum(GetCurCPU()));
   Sequence val;
-  if( !vals.IsEmpty() && kind.Is(TAG_TYPE_INSTRTP_fin))
+  if( !vals.IsEmpty() && kind.Is(TAG_TYPE_INSTRTP_fin)) {
     val.ImpAppend(vals.Hd());
-  else
+  }
+  else {
     val = vals; 
-
+  }
   TYPE_AS_Ids opids (opname.get_ids());
   TYPE_AS_Name opname2 (opname);
-// 20090529 -->
-  if (MANGLE::IsMangled(opname))
-  {
+  if (MANGLE::IsMangled(opname)) {
     Tuple t (MANGLE::UnMangle(opname));
     const TYPE_AS_Name & nm (t.GetRecord(1));
     const SEQ<TYPE_AS_Type> & tp_l (t.GetSequence(3));
@@ -147,10 +143,10 @@ void TIMETRACE::LogHistEvent(const TYPE_SCHDTP_ThreadId & threadid,
     TYPE_AS_Id id (ids[len_ids]);
     id.ImpConc(SEQ<Char>(L"("));
     size_t len_tp_l = tp_l.Length();
-    for (size_t i = 1; i <= len_tp_l; i++)
-    {
-      if (i > 1)
+    for (size_t i = 1; i <= len_tp_l; i++) {
+      if (i > 1) {
         id.ImpConc(SEQ<Char>(L", "));
+      }
       id.ImpConc(SEQ<Char>(GetStatSem().ASType2Ascii(tp_l[i])));
     }
     id.ImpConc(SEQ<Char>(L")"));
@@ -158,38 +154,30 @@ void TIMETRACE::LogHistEvent(const TYPE_SCHDTP_ThreadId & threadid,
     opids = ids;
     opname2 = nm;
   }
-//wcout << L"opname:  " << ASTAUX::ASName2String(opname) << endl;
-//wcout << L"opname2: " << ASTAUX::ASName2String(opname2) << endl;
-//wcout << L"kind: " << kind << endl;
-// <-- 20090529
   
   switch(kind.GetTag()) {
-    case TAG_TYPE_INSTRTP_req:
-    {
+    case TAG_TYPE_INSTRTP_req: {
       TYPE_TIMETRACETP_OpRequest new_event;
       new_event.Init(threadid, opids, objref, clnm.get_ids(), cpu, val, async, curtime);
       VC::AddOpReq(opname2, val, threadid, curtime);
       AddToLogfile(new_event);
       break;
     }
-    case TAG_TYPE_INSTRTP_act:
-    {
+    case TAG_TYPE_INSTRTP_act: {
       TYPE_TIMETRACETP_OpActivate new_event;
       new_event.Init(threadid, opids, objref, clnm.get_ids(), cpu, async, curtime);
       VC::AddOpAct(opname2, threadid, curtime);
       AddToLogfile(new_event);
       break;
     }
-    case TAG_TYPE_INSTRTP_fin:
-    {
+    case TAG_TYPE_INSTRTP_fin: {
       TYPE_TIMETRACETP_OpCompleted new_event;
       new_event.Init(threadid, opids, objref, clnm.get_ids(), cpu, val, async, curtime);
       VC::AddOpFin(opname2, val, threadid, curtime);
       AddToLogfile(new_event);
       break;
     }
-    default:
-    {
+    default: {
       RTERR::Error(L"TIMETRACE::LogHistEvent", RTERR_UNEXPECTED_HISTORY_EVENT, Nil(), Nil(), Sequence());
       break;
     }
@@ -209,18 +197,20 @@ void TIMETRACE::LogThreadSwapIn(const TYPE_SCHDTP_ThreadId & threadid,
   Generic objref (ConvertObjRef(objref_));
 
   Generic ids;
-  if (clnm.IsNil())
+  if (clnm.IsNil()) {
     ids = Nil();
-  else
+  }
+  else {
     ids = ((TYPE_AS_Name) clnm).get_ids();
+  }
 //  Int curtime (GetTime());
 //  Int curtime (SCHD`MAX(TIMETRACE::threadcreate(threadid), GetTime()));
   
 // TODO
   Int curtime (GetTime());
-  if( curtime < TIMETRACE::threadcreate[threadid] )
+  if( curtime < TIMETRACE::threadcreate[threadid] ) {
     curtime = TIMETRACE::threadcreate[threadid];
-  
+  } 
   Int cpu (ConvertNameToNum(GetCurCPU()));
 
   TYPE_TIMETRACETP_ThreadSwapIn t_in;
@@ -247,11 +237,12 @@ void TIMETRACE::LogDelayedThreadSwapIn(const TYPE_SCHDTP_ThreadId & threadid,
   Int cpu (ConvertNameToNum(GetCurCPU()));
 
   Generic ids;
-  if (clnm.IsNil())
+  if (clnm.IsNil()) {
     ids = Nil();
-  else
+  }
+  else {
     ids = ((TYPE_AS_Name) clnm).get_ids();
-
+  }
   TYPE_TIMETRACETP_DelayedThreadSwapIn t_in;
   t_in.Init(threadid, objref, ids, delay, cpu, overhead, curtime);
   
@@ -274,11 +265,12 @@ void TIMETRACE::LogThreadSwapOut(const TYPE_SCHDTP_ThreadId & threadid,
   Int cpu (ConvertNameToNum(GetCurCPU()));
 
   Generic ids;
-  if (clnm.IsNil())
+  if (clnm.IsNil()) {
     ids = Nil();
-  else
+  }
+  else {
     ids = ((TYPE_AS_Name) clnm).get_ids();
-
+  }
   TYPE_TIMETRACETP_ThreadSwapOut t_in;
   t_in.Init(threadid, objref, ids, cpu, overhead, curtime);
   
@@ -633,7 +625,6 @@ bool TIMETRACE::LogOpName(const TYPE_AS_Ids & opname, const Generic & logargs)
 // -> seq of char
 wstring TIMETRACE::Num2String(const Real & r )
 {
-//  return Int2String(Int((int)floor(r.GetValue())));
   return Int2String(Int(r.GetIntValue()));
 }
 
@@ -650,10 +641,12 @@ wstring TIMETRACE::Int2String(const Int & i)
 // -> seq of char
 wstring TIMETRACE::Clnm2String(const Generic & ids)
 {
-  if( ids.IsNil() )
+  if( ids.IsNil() ) {
     return L"nil";
-  else
+  }
+  else {
     return Ids2String((const TYPE_AS_Ids &)ids);
+  }
 }
 
 // Ids2String
@@ -663,12 +656,12 @@ wstring TIMETRACE::Ids2String(const TYPE_AS_Ids & ids_)
 {
   wstring res = L"\"";
   TYPE_AS_Ids ids (ids_);
-  while (!ids.IsEmpty())
-  {
+  while (!ids.IsEmpty()) {
     res += ids[1].GetString();
     ids.ImpTl();
-    if (!ids.IsEmpty())
+    if (!ids.IsEmpty()) {
       res += L"`";
+    }
   }
   res += L"\"";
   return res;
@@ -680,10 +673,12 @@ wstring TIMETRACE::Ids2String(const TYPE_AS_Ids & ids_)
 wstring TIMETRACE::Int2Char(const Int & i)
 {
   int num = i.GetValue();
-  if( num >= 0 || num <= 9 )
+  if( num >= 0 || num <= 9 ) {
     return i.ascii();
-  else
+  }
+  else {
     return L"";
+  }
 }
 
 // Bool2Char
@@ -699,9 +694,9 @@ wstring TIMETRACE::Bool2Char(const Bool & b )
 // wstring -> seq of char
 wstring TIMETRACE::Objref2String(const Generic & objref)
 {
-  if(objref.IsNil())
+  if(objref.IsNil()) {
     return L"nil";
-  
+  } 
   return Int2String(((const TYPE_SEM_OBJ_uRef &)objref).get_ref());
 }
 
@@ -713,8 +708,7 @@ wstring TIMETRACE::ObjrefSet2String(const SET<TYPE_SEM_OBJ_uRef> & objrefs)
   SET<Int> oids;
   SET<TYPE_SEM_OBJ_uRef> objrefs_q (objrefs);
   Generic ref;
-  for(bool bb = objrefs_q.First(ref); bb; bb = objrefs_q.Next(ref))
-  {
+  for(bool bb = objrefs_q.First(ref); bb; bb = objrefs_q.Next(ref)) {
     oids.Insert(((const TYPE_SEM_OBJ_uRef &)ref).get_ref());
   }
   return NatSet2String(oids);
@@ -728,13 +722,13 @@ wstring TIMETRACE::NatSet2String(const SET<Int> & ns)
   if( ns.IsEmpty() ) return L"";
   Set tmp (ns);
   wstring ret;
-  while( !tmp.IsEmpty() )
-  {
+  while( !tmp.IsEmpty() ) {
     Int i (tmp.GetElem());
     ret += Int2Char(i);
     tmp.RemElem(i);
-    if( !tmp.IsEmpty() )
+    if( !tmp.IsEmpty() ) {
       ret += L", "; 
+    }
   }
   return ret;
 }
@@ -764,32 +758,32 @@ void TIMETRACE::AddToLogfile(const TYPE_TIMETRACETP_TraceEvent & te)
 //wcout << TraceEvent2String(te, TIMETRACE::logargs) << endl;
 //wcout << te << endl;
 //  TIMETRACE::log.ImpAppend(te);
-  if ( TIMETRACE::new_log )
-  {
-    if( TIMETRACE::tracelogstream.is_open() )
+  if ( TIMETRACE::new_log ) {
+    if( TIMETRACE::tracelogstream.is_open() ) {
       TIMETRACE::tracelogstream.close();
+    }
     TIMETRACE::new_log = false;
   }
 
-  if( !TIMETRACE::tracelogstream.is_open() )
-  {
+  if( !TIMETRACE::tracelogstream.is_open() ) {
     TIMETRACE::tracelogstream.open(TBWSTR::wstring2fsstr(TIMETRACE::logfile).c_str(), ios::out);
   }
 
-  if( TIMETRACE::tracelogstream )
-  {
+  if( TIMETRACE::tracelogstream ) {
     wstring logstr (TraceEvent2String(te, TIMETRACE::logargs));
     TIMETRACE::tracelogstream << TBWSTR::wstring2utf8str(logstr) << endl << flush;
   }
-  else
+  else {
     RTERR::Error(L"TIMETRACE::AddToLogfile", RTERR_UNABLE_OPEN_LOGFILE, Nil(), Nil(), Sequence());
+  }
 }
 
 // FlushLogfile
 void TIMETRACE::FlushLogfile()
 {
-  if( TIMETRACE::tracelogstream.is_open() )
+  if( TIMETRACE::tracelogstream.is_open() ) {
     TIMETRACE::tracelogstream.flush();
+  }
 }
 
 wstring TIMETRACE::ThreadSwapIn2String(const TYPE_TIMETRACETP_ThreadSwapIn & e)
@@ -802,9 +796,9 @@ wstring TIMETRACE::ThreadSwapIn2String(const TYPE_TIMETRACETP_ThreadSwapIn & e)
   ret += L" overhead: " + Num2String(e.get_overhead());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -818,9 +812,9 @@ wstring TIMETRACE::ThreadSwapOut2String(const TYPE_TIMETRACETP_ThreadSwapOut & e
   ret += L" overhead: " + Num2String(e.get_overhead());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -835,9 +829,9 @@ wstring TIMETRACE::DelayedThreadSwapIn2String(const TYPE_TIMETRACETP_DelayedThre
   ret += L" overhead: " + Num2String(e.get_overhead());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -857,9 +851,9 @@ wstring TIMETRACE::ThreadCreate2String(const TYPE_TIMETRACETP_ThreadCreate & e)
   ret += L" cpunm: " +  Num2String(e.get_cpunm());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -870,9 +864,9 @@ wstring TIMETRACE::ThreadKill2String(const TYPE_TIMETRACETP_ThreadKill & e)
   ret += L" cpunm: " +  Num2String(e.get_cpunm());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 wstring TIMETRACE::OpRequest2String(const TYPE_TIMETRACETP_OpRequest & e,
@@ -885,15 +879,15 @@ wstring TIMETRACE::OpRequest2String(const TYPE_TIMETRACETP_OpRequest & e,
   ret += L" clnm: " + Clnm2String(e.get_clnm());
   ret += L" cpunm: " + Num2String(e.get_cpunm());
 
-  if(LogOpName(e.get_opname(),logargs))
+  if(LogOpName(e.get_opname(),logargs)) {
     ret += L" args: \"[" + SemRec::ValSeq2String(e.get_args()) + L"]\"";
-
+  }
   ret += L" async: " + Bool2Char(e.get_async());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -908,9 +902,9 @@ wstring TIMETRACE::OpActivate2String(const TYPE_TIMETRACETP_OpActivate & e)
   ret += L" async: " + Bool2Char(e.get_async());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -924,15 +918,15 @@ wstring TIMETRACE::OpCompleted2String(const TYPE_TIMETRACETP_OpCompleted & e,
   ret += L" clnm: " + Clnm2String(e.get_clnm());
   ret += L" cpunm: " +  Num2String(e.get_cpunm());
 
-  if(LogOpName(e.get_opname(), logargs))
+  if(LogOpName(e.get_opname(), logargs)) {
     ret += L" result: \"" + SemRec::ValSeq2String(e.get_res()) + L"\"";
-
+  }
   ret += L" async: " + Bool2Char(e.get_async());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -1031,9 +1025,9 @@ wstring TIMETRACE::DeployObj2String(const TYPE_TIMETRACETP_DeployObj & e)
   ret += L" cpunm: " + Num2String(e.get_cpunm());
   ret += L" time: " + Num2String(e.get_time());
 
-  if (!CheckTime(e.get_cpunm(), e.get_time()))
+  if (!CheckTime(e.get_cpunm(), e.get_time())) {
     ret += L" ERROR";
-
+  }
   return ret;
 }
 
@@ -1054,37 +1048,37 @@ wstring TIMETRACE::InstVarChange2String(
 // ==> [SEM`VAL  | seq of SEM`VAL | set of SEM`VAL ]
 Generic TIMETRACE::ConvertObjRef(const Generic & val_)
 {
-  if (val_.IsNil())
+  if (val_.IsNil()) {
     return Nil();
-  else if (val_.IsSequence())
-  {
+  }
+  else if (val_.IsSequence()) {
     SEQ<TYPE_SEM_VAL> s (val_);
     SEQ<TYPE_SEM_VAL> ns;
     Generic g;
-    for (bool bb = s.First(g); bb; bb = s.Next(g))
+    for (bool bb = s.First(g); bb; bb = s.Next(g)) {
       ns.ImpAppend(ConvertObjRef(g));
+    }
     return ns;
   }
-  else if (val_.IsSet())
-  {
+  else if (val_.IsSet()) {
     SET<TYPE_SEM_VAL> s (val_);
     SET<TYPE_SEM_VAL> ns;
     Generic g;
-    for (bool bb = s.First(g); bb; bb = s.Next(g))
+    for (bool bb = s.First(g); bb; bb = s.Next(g)) {
       ns.Insert(ConvertObjRef(g));
+    }
     return ns;
   }
-  else if (val_.IsMap())
-  {
+  else if (val_.IsMap()) {
     MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> m (val_);
     MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> nm;
     Generic g, h;
-    for (bool bb = m.First(g, h); bb; bb = m.Next(g, h))
+    for (bool bb = m.First(g, h); bb; bb = m.Next(g, h)) {
       nm.ImpModify(ConvertObjRef(g), ConvertObjRef(h));
+    }
     return mk_SEM_MAP(nm);
   }
-  else if (val_.IsRecord())
-  {
+  else if (val_.IsRecord()) {
     Record val (val_);
     switch(val.GetTag()) {
       case TAG_TYPE_SEM_OBJ_uRef: {
@@ -1098,32 +1092,36 @@ Generic TIMETRACE::ConvertObjRef(const Generic & val_)
         SET<TYPE_SEM_VAL> s (val.GetField(pos_SEM_SET_v));
         SET<TYPE_SEM_VAL> ns;
         Generic g;
-        for (bool bb = s.First(g); bb; bb = s.Next(g))
+        for (bool bb = s.First(g); bb; bb = s.Next(g)) {
           ns.Insert(ConvertObjRef(g));
+        }
         return mk_SEM_SET(ns);
       }
       case TAG_TYPE_SEM_SEQ: {
         SEQ<TYPE_SEM_VAL> s (val.GetField(pos_SEM_SEQ_v));
         SEQ<TYPE_SEM_VAL> ns;
         Generic g;
-        for (bool bb = s.First(g); bb; bb = s.Next(g))
+        for (bool bb = s.First(g); bb; bb = s.Next(g)) {
           ns.ImpAppend(ConvertObjRef(g));
+        }
         return mk_SEM_SEQ(ns);
       }
       case TAG_TYPE_SEM_TUPLE: {
         SEQ<TYPE_SEM_VAL> s (val.GetField(pos_SEM_TUPLE_v));
         SEQ<TYPE_SEM_VAL> ns;
         Generic g;
-        for (bool bb = s.First(g); bb; bb = s.Next(g))
+        for (bool bb = s.First(g); bb; bb = s.Next(g)) {
           ns.ImpAppend(ConvertObjRef(g));
+        }
         return mk_SEM_TUPLE(ns);
       }
       case TAG_TYPE_SEM_MAP: {
         MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> m (val.GetField(pos_SEM_MAP_v));
         MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> nm;
         Generic g, h;
-        for (bool bb = m.First(g, h); bb; bb = m.Next(g, h))
+        for (bool bb = m.First(g, h); bb; bb = m.Next(g, h)) {
           nm.ImpModify(ConvertObjRef(g), ConvertObjRef(h));
+        }
         return mk_SEM_MAP(nm);
       }
       // NOTE: SEM`REC implimentation is different from spec.
@@ -1133,8 +1131,7 @@ Generic TIMETRACE::ConvertObjRef(const Generic & val_)
         SEQ<TYPE_SEM_VAL> fields_v (value.GetFields());
         SEQ<TYPE_SEM_VAL> nfields_v;
         Generic g;
-        for ( bool bb = fields_v.First( g ); bb; bb = fields_v.Next( g ) )
-        {
+        for ( bool bb = fields_v.First( g ); bb; bb = fields_v.Next( g ) ) {
           nfields_v.ImpAppend(ConvertObjRef(g));
         }
         value.SetFields(nfields_v);
@@ -1142,12 +1139,14 @@ Generic TIMETRACE::ConvertObjRef(const Generic & val_)
         nsrec.set_value(value);
         return nsrec;
       }
-      default:
+      default: {
         return val;
+      }
     }
   }
-  else
+  else {
     return val_;
+  }
 }
 
 Int TIMETRACE::GetTime()

@@ -932,7 +932,6 @@ wstring MPP::Type2Ascii (const Record & tp)
            Type2Ascii(tp.GetField(pos_AS_LambdaExpr_body));
     break;
   }
-  // 20060525
   case TAG_TYPE_AS_TypeVar : {
     str += L"@" + Type2Ascii(tp.GetField(pos_AS_TypeVar_name));
     break;

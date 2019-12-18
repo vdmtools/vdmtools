@@ -135,19 +135,15 @@ bool LatexSpecFileHandler::pp(SpecFile & sf, Sequence & asts, ContextInfo & ci)
 
   Set sp_asts (ToolMediator::GetAstsOfFileName(sf.get_filename()));
 
-// 20100528 -->
-  if (sp_asts.IsEmpty())
-  {
+  if (sp_asts.IsEmpty()) {
     vdm_log << L"Could not read spec" << endl << flush;
     ToolMediator::UpdatePP (sf.get_filename(), Bool (false));
     return false;
   }
-// <-- 20100528
 
   // Get hold of Test coverage info output to file <fname>.tmp3 - if any
   
-  if (!TestCoverage::texvdmrti2texvdm (this->docif, test_cov_file, sp_asts, ci, short_file_name))
-  {
+  if (!TestCoverage::texvdmrti2texvdm (this->docif, test_cov_file, sp_asts, ci, short_file_name)) {
     vdm_log << L"Could not read test coverage information" << endl << flush;
     TBUTILS::remove_file(test_cov_file);
     ToolMediator::UpdatePP (sf.get_filename(), Bool (false)); // cast ???
@@ -195,8 +191,7 @@ bool LatexSpecFileHandler::pp(SpecFile & sf, Sequence & asts, ContextInfo & ci)
   // and save the result in <fname>.tex
   ////////////////////////////////////////////////
 
-  if (!MIXEDTEXT::vdmmerge (test_cov_file, gen_latex_file, output_file))
-  {
+  if (!MIXEDTEXT::vdmmerge (test_cov_file, gen_latex_file, output_file)) {
     //      vdm_log << L"Some error occurred when executing vdmmerge" << endl;
 
     TBUTILS::remove_file(gen_latex_file);

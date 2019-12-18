@@ -227,7 +227,6 @@ Set CodeGenTools::EvalPossibleInterfaces ()
     TBUTILS::ClearErrorsCount();
     GetStatSem().ResetErrors();
 
-    //InitCG(); // 20110603
     SetCGOptions(Settings.GetJCGSkel(),
                  Settings.GetJCGGenPrePost(), 
                  Settings.GetJCGTypes(),

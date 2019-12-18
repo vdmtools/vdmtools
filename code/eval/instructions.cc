@@ -3882,8 +3882,7 @@ void StackEval::ExeSTARTLIST(const Bool & isset)
 
   SET<TYPE_SEM_VAL> instr_s (isset ? TYPE_SEM_SET(instr).GetSet(pos_SEM_SET_v) : Set().Insert(instr));
 
-// 20071024 change scan direction
-  SEQ<TYPE_SEM_VAL> instr_l (ASTAUX::SetToSequenceR(instr_s));
+  SEQ<TYPE_SEM_VAL> instr_l (ASTAUX::SetToSequenceR(instr_s)); // change scan direction
   size_t len_instr_l = instr_l.Length(); 
   for (size_t index = 1; index <= len_instr_l; index++) {
     const TYPE_SEM_VAL & inst (instr_l[index]);

@@ -192,12 +192,8 @@ Bool vdm_SqlResultSet::vdm_next ()
 {
   if(this->pStmt == NULL) return Bool(false);
 
-// 20120719 -->
-//  SQLRETURN nRetCode = ::SQLFetch(this->pStmt->m_hstmt);
   SQLRETURN nRetCode = ::SQLFetchScroll(this->pStmt->m_hstmt, SQL_FETCH_NEXT, 0);
-// <-- 20120719
-  if (nRetCode == SQL_SUCCESS || nRetCode == SQL_SUCCESS_WITH_INFO)
-  {
+  if (nRetCode == SQL_SUCCESS || nRetCode == SQL_SUCCESS_WITH_INFO) {
     return Bool(true);
   }
   return Bool(false);
@@ -298,12 +294,12 @@ Tuple vdm_SqlResultSet::vdm_getInt (const Int &vdm_columnIndex)
                        &namesize, &datatype, &colsize, &decimal, &null);
 #endif // _MSC_VER
 
-    if(nRetCode != SQL_SUCCESS && nRetCode != SQL_SUCCESS_WITH_INFO)
+    if(nRetCode != SQL_SUCCESS && nRetCode != SQL_SUCCESS_WITH_INFO) {
       throw new SqlException(SQL_HANDLE_STMT, this->pStmt->m_hstmt);
-
+    }
     Tuple res(4);
     switch(datatype) {
-      case SQL_BIGINT: // 20120730
+      case SQL_BIGINT:
       case SQL_INTEGER: {
         SQLINTEGER zbr;
         SQLLEN zbrsize;

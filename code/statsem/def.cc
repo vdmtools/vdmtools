@@ -77,7 +77,7 @@ bool StatSem::wf_Class(const Int & i, const TYPE_AS_Class & as_class)
   if (! as_class.GetField(pos_AS_Class_defs).IsNil ()) {
     const TYPE_AS_Name & clsnm (as_class.GetRecord(pos_AS_Class_nm));
 
-    SetDefClass(clsnm);                 // 20070305
+    SetDefClass(clsnm);
 
     const TYPE_AS_Definitions & defs (as_class.GetRecord(pos_AS_Class_defs));
 
@@ -1054,7 +1054,6 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
     }
   }
 
-// 20100913 -->
 #ifdef VDMPP
   bool ok_subresp = true;
   if (fnbody.GetField(pos_AS_FnBody_body) == Int(SUBRESP)) {
@@ -1068,7 +1067,6 @@ bool StatSem::wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef)
     }
   }
 #endif // VDMPP
-// <-- 20100913
 
   SEQ<TYPE_REP_TypeRep> dom_l (TransTypeList(Nil(), tp.GetField(1)));
 #ifdef VDMPP
@@ -1230,7 +1228,6 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
     GenErr (nm, ERR, 9, mk_sequence(PrintName(nm)));
   }
 
-// 20100913 -->
 #ifdef VDMPP
   bool ok_subresp = true;
   if (fnbody.GetField(pos_AS_FnBody_body) == Int(SUBRESP)) {
@@ -1244,7 +1241,6 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
     }
   }
 #endif // VDMPP
-// <-- 20100913
 
   EnterScope(bind);
 #ifdef VDMPP
@@ -2186,7 +2182,7 @@ bool StatSem::wf_InstanceVars (const Int & i, const SEQ<TYPE_AS_InstanceVarDef> 
 //wcout << L"var_tp: " << INT2Q::h2gAS(var_tp) << endl;
 //wcout << L"rtp: " << INT2Q::h2gAS(rtp) << endl;
           bool cmp = IsCompatible(i, var_tp, rtp);
-          //bool cmp = IsCompatible(DEF, var_tp, rtp); // 20090827
+          //bool cmp = IsCompatible(DEF, var_tp, rtp);
           reswf = t.GetBool (1) && cmp && reswf;
           if (!cmp) {
             //------------------------------------------------------------------------
@@ -3626,7 +3622,6 @@ bool StatSem::wf_Measure(const Int & i,
   return ok_out;
 }
  
-// 20130110 -->
 // EquivDomFn
 // i : TYPE`Ind
 // fndom1 : seq of REP`TypeRep
@@ -3645,11 +3640,6 @@ bool StatSem::EquivDomFn(const Int & i, const SEQ<TYPE_REP_TypeRep> & mfndom, co
 
   SEQ<TYPE_REP_TypeRep> mdom (mfndom);
   TYPE_REP_TypeRep mrng (mfnrng);
-//  while ((mrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || mrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-//  {
-//    mdom.ImpConc(mrng.GetSequence(1));
-//    mrng = mrng.GetRecord(2);
-//  }
   SEQ<TYPE_REP_TypeRep> rdom (rfndom);
   TYPE_REP_TypeRep rrng (rfnrng);
   while ((rrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rrng.Is(TAG_TYPE_REP_TotalFnTypeRep))) {
@@ -3664,73 +3654,13 @@ bool StatSem::EquivDomFn(const Int & i, const SEQ<TYPE_REP_TypeRep> & mfndom, co
   }
   this->MeasureCheckOff();
   return forall;
-
-/*
-  if (mfndom.Length() == rfndom.Length())
-  {
-    bool forall = true;
-    this->MeasureCheckOn();
-    size_t len = mfndom.Length();
-    for (size_t idx = 1; (idx <= len) && forall; idx++)
-      forall = IsEquivalent(i, mfndom[idx], rfndom[idx]);
-    this->MeasureCheckOff();
-    res = forall;
-  }
-// 20130703 -->
-  else if ((rfnrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rfnrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-  {
-    SEQ<TYPE_REP_TypeRep> mdom (mfndom);
-    TYPE_REP_TypeRep mrng (mfnrng);
-//    while ((mrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || mrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-//    {
-//      mdom.ImpConc(mrng.GetSequence(1));
-//      mrng = mrng.GetRecord(2);
-//    }
-    SEQ<TYPE_REP_TypeRep> rdom (rfndom);
-    TYPE_REP_TypeRep rrng (rfnrng);
-    while ((rrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-    {
-      rdom.ImpConc(rrng.GetSequence(1));
-      rrng = rrng.GetRecord(2);
-    }
-    bool forall = (mdom.Length() <= rdom.Length());
-    this->MeasureCheckOn();
-    size_t len = mdom.Length();
-    for (size_t idx = 1; (idx <= len) && forall; idx++)
-      forall = IsEquivalent(i, mdom[idx], rdom[idx]);
-    this->MeasureCheckOff();
-    res = forall;
-  }
-// <-- 20130703
-//  if (res)
-//  {
-//    // check for curried function
-//    if ((mfnrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || mfnrng.Is(TAG_TYPE_REP_TotalFnTypeRep)) &&
-//        (rfnrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rfnrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-//    {
-//      res = EquivDomFn(i, mfnrng.GetSequence(1), rfnrng.GetSequence(1), mfnrng.GetRecord(2), rfnrng.GetRecord(2)); 
-//    }
-//    else if (!(mfnrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || mfnrng.Is(TAG_TYPE_REP_TotalFnTypeRep)) &&
-//             !(rfnrng.Is(TAG_TYPE_REP_PartialFnTypeRep) || rfnrng.Is(TAG_TYPE_REP_TotalFnTypeRep)))
-//    {
-//    }
-//    else
-//      res = false;
-//  }
-//  return res;
-*/
 }
-// <-- 20130110
 
 // CheckAllType
 // tp : AS`Type
 // +> bool
 bool StatSem::CheckAllType(const TYPE_AS_Type & tp)
 {
-//  if (tp_.IsNil())
-//    return false;
-//
-//  TYPE_AS_Type tp (tp_);
   switch(tp.GetTag()) {
     case TAG_TYPE_AS_AllType: {
       return true;

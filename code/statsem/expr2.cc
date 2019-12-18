@@ -1365,7 +1365,6 @@ Tuple StatSem::CheckBasicApply (const Int & i,
         }
         return mk_(Bool(false), Rng);
       }
-// 20130724 -->
       if (IsInVDContext()) {
         //-----------------------------
         // Error message #349
@@ -1373,7 +1372,6 @@ Tuple StatSem::CheckBasicApply (const Int & i,
         //-----------------------------
         GenErr (vApply, WRN1, 349, Sequence());
       }
-// <-- 20130724
 #endif // VDMSL
 
       if ((Settings.ErrorLevel() >= ERR2) && ((GetContext() == PRE) || (GetContext() == POST))) {
@@ -3197,7 +3195,7 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
         l_argtpL.ImpAppend(t.GetRecord(2));
       }
 
-      SetDefClass(nm); // 20070301
+      SetDefClass(nm);
 
       if (!ConstructorExists(i, nm, l_argtpL, nm, false)) {
         // -----------------------------------------------------------------------------------

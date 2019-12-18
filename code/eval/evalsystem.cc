@@ -166,7 +166,7 @@ TYPE_STKM_CPUSigma SYSTEM::EmptyCPU(const Generic & decl)
         }
         else if( second.Is(TAG_TYPE_AS_NumLit) ) {
           TYPE_AS_NumLit rl (second);
-          GetCI().IncTestCoverageInfo(rl.get_cid()); // 20081030
+          GetCI().IncTestCoverageInfo(rl.get_cid());
           if( rl.get_val().GetValue() >= 1 ) {
             capacity = Int(rl.get_val());
           }
@@ -265,16 +265,16 @@ TYPE_STKM_BUSSigma SYSTEM::EmptyBUS(const Generic & decl)
     TYPE_AS_Expr r (decl);
     if( r.Is(TAG_TYPE_AS_NewExpr) ) {
       TYPE_AS_NewExpr ne (decl);
-      GetCI().IncTestCoverageInfo(ne.get_cid()); // 20081030
+      GetCI().IncTestCoverageInfo(ne.get_cid());
       if( (ASTAUX::ASName2String(ne.get_cls()) == L"BUS") &&
           (ne.get_args().Length() == 3) ) {
-        GetCI().IncTestCoverageInfo(ne.get_cls().get_cid()); // 20081030
+        GetCI().IncTestCoverageInfo(ne.get_cls().get_cid());
         Generic first (ne.get_args().Index(1));
         Generic second (ne.get_args().Index(2));
         Generic third (ne.get_args().Index(3));
         if( first.Is(TAG_TYPE_AS_QuoteLit) ) {
           TYPE_AS_QuoteLit ql (first);
-          GetCI().IncTestCoverageInfo(ql.get_cid()); // 20081030
+          GetCI().IncTestCoverageInfo(ql.get_cid());
           if( ql.get_val().GetString() == L"CSMACD" ) {
             kind = TYPE_SCHDTP_CSMACD();
           }

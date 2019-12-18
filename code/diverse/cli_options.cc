@@ -239,7 +239,7 @@ bool CLIOptions::ProcessOptions(int argc, char** argv)
       }
       case 'I': {
         Settings.InvOn();
-        Settings.DtcOn(); // 20071030
+        Settings.DtcOn();
         break;
       }
       case 'A': {

@@ -352,10 +352,7 @@ Set CGBackEnd::GetASTEntities(const Generic & ast, bool inClass)
         }
         break;
       }
-      case TAG_TYPE_CPP_FunctionDefinition:
-      {
-// 20080818
-//        result.Insert(Sequence(GetName(rc.GetRecord(pos_CPP_FunctionDefinition_decl))));
+      case TAG_TYPE_CPP_FunctionDefinition: {
         result.Insert(Sequence(GetMangleName(rc.GetRecord(pos_CPP_FunctionDefinition_decl))));
         break;
       }
@@ -1774,7 +1771,7 @@ void CGBackEnd::GenCode(const Generic & ast)
       const TYPE_CPP_Expr & cexpr (rc.GetRecord(pos_CPP_CaseStmt_cexpr));
       const Generic & stmt (rc.GetRecord(pos_CPP_CaseStmt_stmt));
 
-      GenNewLine(m4code); // 20070911
+      GenNewLine(m4code);
 
       IND(m4code);
 
@@ -1794,7 +1791,7 @@ void CGBackEnd::GenCode(const Generic & ast)
     case TAG_TYPE_CPP_DefaultStmt: {
       const Generic & stmt (rc.GetRecord(pos_CPP_DefaultStmt_stmt));
 
-      GenNewLine(m4code); // 20070911
+      GenNewLine(m4code);
       IND(m4code);
 
       m4code << "default: ";

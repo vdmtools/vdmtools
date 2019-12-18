@@ -160,7 +160,7 @@ string get_char_style(int num) {
   RTFStyle * sty = RTFGetStyle(num);
   ostringstream buf;
 //  buf << "\\cs" << num;
-  buf << "\\*\\cs" << num; // 20070123
+  buf << "\\*\\cs" << num;
 
   if (sty) {
     RTFStyleElt *elt = sty->rtfSSEList;

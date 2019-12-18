@@ -703,8 +703,7 @@ TYPE_AUML_CommonSign XmiInterface::CreateOperations(const TYPE_XMI_UMLClass & c,
   TYPE_AUML_CommonSign ops;
   Sequence o_l (XmiAux::GetAllOperations(c));
   Generic g;
-  for (bool bb = o_l.First(g); bb; bb = o_l.Next(g))
-  {
+  for (bool bb = o_l.First(g); bb; bb = o_l.Next(g)) {
     TYPE_XMI_UMLOperation o (g);
     if (!XmiAux::IsOperation(o, idm)) continue;
 
@@ -713,8 +712,6 @@ TYPE_AUML_CommonSign XmiInterface::CreateOperations(const TYPE_XMI_UMLClass & c,
     IXmiParameter rtp (XmiAux::GetReturnType(o));
     Sequence rt (XmiAux::GetElementName(rtp.GetTypeRef(), idm));
 
-// 20090708 return type is`t specified
-//    Tuple tr ( (rt != Sequence(L"void")) ? UMLPARSE::Seq2Type(rt)
     Tuple tr ( (!rt.IsEmpty() && (rt != Sequence(L"void"))) ? UMLPARSE::Seq2Type(rt)
                                            : mk_(Bool(true), TYPE_AS_VoidType().Init(Int(-1))));
     Tuple tp (XMIParameters2AUMLParams(XmiAux::GetParam(o), idm));
