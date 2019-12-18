@@ -27,7 +27,7 @@ main(int argc, wchar_t *argv[])
 
   VDMApplication_var app;
   init_corba(argc, argv);
-  if(!get_app(app, argc, argv)){
+  if(!get_app(app, argc, argv)) {
     cerr << argv[0] << L": cannot invoke on a nil object reference.\n" << endl;
     exit(0);
   }
@@ -139,7 +139,7 @@ main(int argc, wchar_t *argv[])
     VDMModuleRepos_var repos;
     repos = app->GetModuleRepos();
     int i;
-    for(i=0; i<ml->length(); i++){
+    for(i=0; i<ml->length(); i++) {
       ModuleStatus stat;
       repos->Status(stat, ml[i]);
       cout << (int) stat.SyntaxChecked 
@@ -150,8 +150,9 @@ main(int argc, wchar_t *argv[])
       ClassList_var cl;
       int nl = repos->Uses(cl, ml[i]);
       cout << L"Uses: ";
-      for(int j=0; j<nl; j++)
+      for(int j=0; j<nl; j++) {
         cout << (wchar_t*) cl[j] << L", ";
+      }
       cout << L"\n";
     }
 
@@ -165,12 +166,14 @@ main(int argc, wchar_t *argv[])
     FileList_var fl;
     prj->GetFiles(fl);
     cout << L"Parsing files individually\n";
-    for(i=0; i<fl->length(); i++){
+    for(i=0; i<fl->length(); i++) {
       cout << (wchar_t *)fl[i] << L"...Parsing...";
-      if(parser->Parse(fl[i]))
+      if(parser->Parse(fl[i])) {
         cout << L"done.\n";
-      else
+      }
+      else {
         cout << L"error.\n";
+      }
     }
     cout << L"\nParsing entire list...";
     parser->ParseList(fl);
@@ -181,13 +184,13 @@ main(int argc, wchar_t *argv[])
     int nerr = errhandler->n_err();
     nerr = errhandler->GetErrors(errs);
     cout << nerr << L" errors:\n";
-    for(int ierr=0; ierr<nerr; ierr++){
+    for(int ierr=0; ierr<nerr; ierr++) {
       cout << (wchar_t *) errs[ierr].fname << L", " << errs[ierr].line << L"\n" 
            << (wchar_t*) errs[ierr].msg << L"\n";
     }
     nerr = errhandler->GetWarnings(errs);
     cout << nerr << L" warnings:\n";
-    for(ierr=0; ierr<nerr; ierr++){
+    for(ierr=0; ierr<nerr; ierr++) {
       cout << (wchar_t *) errs[ierr].fname << L", " << errs[ierr].line << L"\n" 
            << (wchar_t*) errs[ierr].msg << L"\n";
     }

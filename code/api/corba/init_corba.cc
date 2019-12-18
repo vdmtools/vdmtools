@@ -77,24 +77,27 @@ std::string VDMCORBA::getIorFileLocation( const ToolboxAPI::ToolType& type )
   //string prext = "_" + pid;
 
   std::string iorFileName;
-  if ( SL_TOOLBOX == type )
+  if ( SL_TOOLBOX == type ) {
     iorFileName = VDM_IOR_FILENAME;
-  else
+  }
+  else {
     iorFileName = VPP_IOR_FILENAME;
-
+  }
   iorFileName += prext;
 
   std::string iorFilePath;
   const char *location = getenv( "VDM_OBJECT_LOCATION" );
-  if( NULL != location )
+  if( NULL != location ) {
     iorFilePath = location;
-  else
-  {
+  }
+  else {
     const char* home = getenv( HOME_ENV_NAME );
-    if( NULL != home )
+    if( NULL != home ) {
       iorFilePath = home;
-    else
+    }
+    else {
       iorFilePath = ".";
+    }
   }
   std::string iorfile_s = iorFilePath + "/" + iorFileName;
   return iorfile_s;
@@ -203,9 +206,9 @@ bool VDMCORBA::init_corba_api(int argc, char *argv[], std::wstring &err)
   // obj_map.Insert(app_ref, VDMCORBA::toolbox_app);
 
   // If there is a COS NamingService, make the application object known to it
-  if (bindObjectToName (VDMCORBA::orb, app_ref))
+  if (bindObjectToName (VDMCORBA::orb, app_ref)) {
     vdm_log << L"API-Info: Registered VDMApplication at COS-NamingService." << endl;
-
+  }
   // Write a wstring representing the object to a file.
 
   PortableServer::POAManager_var pman = VDMCORBA::poa->the_POAManager();
@@ -308,10 +311,12 @@ bool VDMCORBA::bindObjectToName (CORBA::ORB_ptr orb, CORBA::Object_ptr appObj)
     }
     CosNaming::Name objectName;
     objectName.length(1);
-    if ((VDMCORBA::toolType = VDMCORBA::toolbox_app->Tool ()) == ToolboxAPI::SL_TOOLBOX)
+    if ((VDMCORBA::toolType = VDMCORBA::toolbox_app->Tool ()) == ToolboxAPI::SL_TOOLBOX) {
       objectName[0].id = (const char*)"SL_TOOLBOX";
-    else
+    }
+    else {
       objectName[0].id = (const char*)"PP_TOOLBOX";
+    }
     objectName[0].kind = (const char*)"VDMApplication";
     // Note on kind: The kind field is used to indicate the type
     // of the object. This is to avoid conventions such as that used
@@ -320,8 +325,7 @@ bool VDMCORBA::bindObjectToName (CORBA::ORB_ptr orb, CORBA::Object_ptr appObj)
     try {
       vdmContext->bind(objectName, appObj);
     }
-    catch (CosNaming::NamingContext::AlreadyBound& e)
-    {
+    catch (CosNaming::NamingContext::AlreadyBound& e) {
 //      cerr << L"API-Error: Could not bind VDMApplication"
 //           << L" to NamingService.\nAn instance of the "
 //           << ( VDMCORBA::toolbox_app->Tool() == SL_TOOLBOX ? L"VDM-" : L"VDM++-" )
@@ -358,13 +362,13 @@ bool VDMCORBA::unbindObjectFromName (CORBA::ORB_ptr orb)
   try {
     CORBA::Object_ptr obj;
     obj = orb->resolve_initial_references ("NameService");
-    if (CORBA::is_nil (obj))
+    if (CORBA::is_nil (obj)) {
       return false;
-
+    }
     rootContext = CosNaming::NamingContext::_narrow (obj);
-    if (CORBA::is_nil (rootContext))
+    if (CORBA::is_nil (rootContext)) {
       return false;
-
+    }
   if (CORBA::is_nil (rootContext))
     return false;
   }
@@ -379,11 +383,12 @@ bool VDMCORBA::unbindObjectFromName (CORBA::ORB_ptr orb)
     CosNaming::Name contextName;
     contextName.length (1);
 
-    if (VDMCORBA::toolType == SL_TOOLBOX)
+    if (VDMCORBA::toolType == SL_TOOLBOX) {
       contextName[0].id = (const char*)"SL_TOOLBOX";
-    else
+    }
+    else {
       contextName[0].id = (const char*)"PP_TOOLBOX";
-
+    }
     contextName[0].kind = (const char*)"VDMApplication";
 
     rootContext->unbind (contextName);
@@ -403,9 +408,9 @@ void VDMCORBA::terminate_corba_api()
   // Remove file
   remove(home_s.c_str());
 
-  if (unbindObjectFromName (VDMCORBA::orb))
+  if (unbindObjectFromName (VDMCORBA::orb)) {
     vdm_log << L"API-Info: Unregistered VDMApplication from COS-NamingService." << endl;
-
+  }
   try {
     //      VDMCORBA::toolbox_app->_dispose ();
     // FIXME: What should be here?

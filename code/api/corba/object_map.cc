@@ -58,13 +58,14 @@ void ObjectMap::Insert(VDM::VDMGeneric_var obj_ref, void * v, VDM::ClientID id)
   */
 
   ObjectTagMap::iterator i = tagmap.find(id);
-  if(i != tagmap.end()){
+  if(i != tagmap.end()) {
     int tag = (*i).second;
     tbl[obj_ref->_hash(tbl_sz)].push_front(item(obj_ref, v, tag, id));
   }
-  else
+  else {
     ThrowApiError(L"ObjectMap::Insert(): The ClientID passed does not exist. Need to call VDMAppliction::Register() to get a valid ClientID.",
 		  L"ObjectMap::Insert");
+  }
 }
 
 
@@ -80,17 +81,17 @@ void * ObjectMap::Find(VDM::VDMGeneric_var obj)
   ItemsList* l = &tbl[obj->_hash(tbl_sz)];
   i = l->begin();
   j = l->end();
-  while( i!= l->end() && ! (*i).obj_ref->_is_equivalent(obj)){
+  while( i!= l->end() && ! (*i).obj_ref->_is_equivalent(obj)) {
     ++i;
     //    cerr << L"i is " << (Generic*) (i->impl_obj) << endl;
     cerr << L"i is " << (Generic*) ((*i).impl_obj) << endl;
   }
-  if(i==l->end()){
+  if(i==l->end()) {
     cerr << L"Leaving ObjectMap::Find" << endl;
     return NULL;
   }
   
-  else{
+  else {
     void *v;
     v = (*i).impl_obj;
     // Move object to front of list:
@@ -109,11 +110,13 @@ bool ObjectMap::Delete(VDM::VDMGeneric_var obj)
   ItemsIterator i;
   ItemsList* l = &tbl[obj->_hash(tbl_sz)];
   i = l->begin();
-  while( i!= l->end() && ! (*i).obj_ref->_is_equivalent(obj))
+  while( i!= l->end() && ! (*i).obj_ref->_is_equivalent(obj)) {
     ++i;
-  if(i==l->end())
+  }
+  if(i==l->end()) {
     return false;
-  else{
+  }
+  else {
     l->erase(i);
     return true;
   }
@@ -123,10 +126,11 @@ bool ObjectMap::Delete(VDM::VDMGeneric_var obj)
 void ObjectMap::Tag(VDM::ClientID id)
 { 
   ObjectTagMap::iterator i = tagmap.find(id);
-  if(i != tagmap.end())
+  if(i != tagmap.end()) {
     // The client id is known already, increment the tag value:
     (*i).second++;
-  else{
+  }
+  else {
     ThrowApiError(L"ObjectMap::Tag(): The ClientID passed does not exist. Need to call VDMAppliction::Register() to get a valid ClientID.",
 		  L"ObjectMap::Tag");
   }
@@ -137,32 +141,33 @@ void ObjectMap::DestroyTag(VDM::ClientID id)
   // tagmap[id].
 {
   ObjectTagMap::iterator tm_i = tagmap.find(id);
-  if(tm_i != tagmap.end()){
+  if(tm_i != tagmap.end()) {
     int tag = (*tm_i).second;
     if(tag){
       // Remove objects that are owned by id _and_ tagged by tag:
-      for(int j=0; j<tbl_sz; j++){
+      for(int j=0; j<tbl_sz; j++) {
         ItemsIterator i;
         ItemsList* l = &tbl[j];
         i = l->begin();
         while( i!= l->end() ) {
-          if( (*i).tag == tag && (*i).clientID == id ){
+          if( (*i).tag == tag && (*i).clientID == id ) {
             CORBA::BOA::getBOA()->dispose((*i).obj_ref);
             i = l->erase(i);
           }
-          else
+          else {
             ++i;
+          }
         }
       }
     }
-    else
+    else {
       ThrowApiError(L"DestroyTag() failed. The tag stack was empty.",
 		    L"ObjectMap::DestroyTag");
-
+    }
     // Finally decrement the tag value of this client.
     (*tm_i).second--;
   }
-  else{
+  else {
     ThrowApiError(L"ObjectMap::DestroyTag(): The ClientID passed does not exist. Need to call VDMAppliction::Register() to get a valid ClientID.",
 		  L"ObjectMap::DestroyTag");
   }
@@ -181,29 +186,31 @@ void ObjectMap::Register(VDM::ClientID id)
 void ObjectMap::CleanUpClient(VDM::ClientID id)
   // Disposes all CORBA objects owned by the client identified by id
 {
-  for(int j=0; j<tbl_sz; j++){
+  for(int j=0; j<tbl_sz; j++) {
     ItemsIterator i;
     ItemsList* l = &tbl[j];
     i = l->begin();
     while( i!= l->end() ) {
-      if( (*i).clientID == id ){
+      if( (*i).clientID == id ) {
         CORBA::BOA::getBOA()->dispose((*i).obj_ref);
         i = l->erase(i);
       }
-      else
+      else {
         ++i;
+      }
     }
   }
   // Remove the client from the tagmap:
   ObjectTagMap::iterator i = tagmap.find(id);
-  if(i != tagmap.end())
+  if(i != tagmap.end()) {
     tagmap.erase(i);
+  }
 }
 
 void ObjectMap::Echo()
 {
   cout << "\nCurrent Object Hash Table:\n";
-  for(int j=0;j<tbl_sz; j++){
+  for(int j=0;j<tbl_sz; j++) {
     cout << tbl[j].size() << ": ";
     ItemsIterator i;
     ItemsList* l = &tbl[j];
@@ -214,10 +221,12 @@ void ObjectMap::Echo()
 	//        ((Generic_i*) (*i).impl_obj)->GetMetaivValue() << 
 	")";
       ++i;
-      if(i!= l->end())
+      if(i!= l->end()) {
         cout << ", ";
-      else
+      }
+      else {
         cout << endl;
+      }
     }
     cout << endl;
   }

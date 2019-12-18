@@ -40,8 +40,7 @@ UserInputThread::UserInputThread (APICommandQueue* queue): omni_thread (), _queu
 void* UserInputThread::run_undetached (void* arg)
 {
   Bool cont (true);
-  while (cont.GetValue ())
-  {
+  while (cont.GetValue ()) {
     wstring input (TOOLS::ReadLine ());
     cont = _queue->EnqueueStringCommand (input);
   }
@@ -53,8 +52,7 @@ void* UserInputThread::run_undetached (void* arg)
  */
 APICommandQueue::APICommandQueue ()
 {
-  if (APICommandQueue::_instance == (APICommandQueue*)NULL)
-  {
+  if (APICommandQueue::_instance == (APICommandQueue*)NULL) {
     // initialize the semaphores and locks
     this->_queueLock = new omni_mutex ();
     
@@ -79,15 +77,13 @@ APICommandQueue::APICommandQueue ()
  */
 APICommandQueue::~APICommandQueue ()
 {
-  if (this->_inputThread != (UserInputThread*)NULL)
-  {
+  if (this->_inputThread != (UserInputThread*)NULL) {
     this->_inputThread->join (0);
     delete _inputThread;
   }
 
-  if ((this->_currentCommand != (APICommand*)NULL) || (this->_currentStringCommand != (wstring*)NULL))
+  if ((this->_currentCommand != (APICommand*)NULL) || (this->_currentStringCommand != (wstring*)NULL)) {
   // oops - somebody closed the queue before the command was evaluated!
-  {
     delete this->_currentCommand; 
     delete this->_currentStringCommand;
     vdm_err << L"PANIC! Somebody killed the CommandQueue before the command was executed!" << endl;
@@ -99,8 +95,9 @@ APICommandQueue::~APICommandQueue ()
   delete this->_queueLock;
   delete this->_waitSemaphore;
 
-  if (this->_result != (Generic*)NULL)
+  if (this->_result != (Generic*)NULL) {
     delete this->_result;
+  }
 }
 
 /**
@@ -108,9 +105,9 @@ APICommandQueue::~APICommandQueue ()
  */
 APICommandQueue* APICommandQueue::GetInstance ()
 {
-  if (APICommandQueue::_instance == (APICommandQueue*)NULL)
+  if (APICommandQueue::_instance == (APICommandQueue*)NULL) {
     APICommandQueue::_instance = new APICommandQueue ();
-
+  }
   return APICommandQueue::_instance;
 }
 
@@ -123,9 +120,9 @@ bool APICommandQueue::TimedWaitForCommand (unsigned long sec, unsigned long nsec
   unsigned long abs_sec, abs_nsec;
 
   omni_thread::get_time (&abs_sec, &abs_nsec, sec, nsec);
-  if (_waitSemaphore->timedwait (abs_sec, abs_nsec) == ETIMEDOUT)
+  if (_waitSemaphore->timedwait (abs_sec, abs_nsec) == ETIMEDOUT) {
     return false;
-
+  }
   // let EnqueueCommand block before starting the evaluation
   omni_thread::yield (); 
   return true;
@@ -159,8 +156,9 @@ void APICommandQueue::SignalCommand ()
  */ 
 void APICommandQueue::StartUserInputLoop ()
 {
-  if (this->_inputThread == (UserInputThread*)NULL)
+  if (this->_inputThread == (UserInputThread*)NULL) {
     this->_inputThread = new UserInputThread (this);
+  }
 }
 
 /**
@@ -182,23 +180,23 @@ Generic APICommandQueue::EnqueueCommand (APICommand& command)
   this->_commandLock->release ();
 
   // rethrow exception
-  if (this->_exceptionType != NONE)
-  {
+  if (this->_exceptionType != NONE) {
     // clean up !!!
-    if (this->_result != (Generic*)NULL)
+    if (this->_result != (Generic*)NULL) {
       delete this->_result;
-    
+    }
     this->_queueLock->release ();
     
-    if (this->_exceptionType == API)
+    if (this->_exceptionType == API) {
       ThrowApiError (this->_exceptionStr.c_str (), L"APICommandQueue::EnqueueCommand");
-    else
+    }
+    else {
       throw VDM::VDMError (this->_exceptionNum);
+    }
   }
 
   Generic res;
-  if (this->_result != (Generic*)NULL)
-  {
+  if (this->_result != (Generic*)NULL) {
     res = *_result;
     delete this->_result;
     this->_result = (Generic*)NULL;
@@ -227,8 +225,7 @@ Bool APICommandQueue::EnqueueStringCommand (const wstring & cmd)
   this->_commandLock->release ();
 
   Bool res (false);
-  if (this->_result != (Generic*)NULL)
-  {
+  if (this->_result != (Generic*)NULL) {
     res = Bool(*this->_result);
     delete this->_result;
     this->_result = (Generic*)NULL;
@@ -246,13 +243,12 @@ Bool APICommandQueue::EnqueueStringCommand (const wstring & cmd)
  */
 void APICommandQueue::ExecuteQueuedCommand ()
 {
-  if ((this->_currentCommand == (APICommand*)NULL) && (this->_currentStringCommand == (wstring*)NULL))
+  if ((this->_currentCommand == (APICommand*)NULL) && (this->_currentStringCommand == (wstring*)NULL)) {
     return; // nothing to do...
-  
+  } 
   this->_commandLock->acquire ();
 
-  if (this->_currentStringCommand != (wstring*)NULL)
-  {
+  if (this->_currentStringCommand != (wstring*)NULL) {
     Bool cont (ToolMediator::BTools()->vdm_ExecuteCommand(PTAUX::mk_ToolCommand (*this->_currentStringCommand)));
     vdm_log.flush ();
     vdm_err.flush ();
@@ -271,8 +267,7 @@ void APICommandQueue::ExecuteQueuedCommand ()
 
   this->_exceptionType = NONE;
 
-  try
-  {
+  try {
     switch (this->_currentCommand->GetTag ()) {
       case VDM_PROJECT_NEW: {
         VDMProject_New ();
@@ -424,18 +419,15 @@ void APICommandQueue::ExecuteQueuedCommand ()
       }
     }
   }
-  catch (ToolboxAPI::APIError &ex)
-  {
+  catch (ToolboxAPI::APIError &ex) {
     this->_exceptionType = API;
     this->_exceptionStr = TBWSTR::string2wstring(string(ex.msg));
   }
-  catch (VDM::VDMError &ex)
-  {
+  catch (VDM::VDMError &ex) {
     this->_exceptionType = VDM;
     this->_exceptionNum = ex.err;
   }
-  catch (...)
-  {
+  catch (...) {
     this->_exceptionType = API;
     this->_exceptionStr = L"Unknown exception occured during execution of API command";
   }
@@ -472,9 +464,9 @@ void APICommandQueue::VDMProject_New ()
  */
 void APICommandQueue::VDMProject_Open (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMProject_Open");
-
+  }
   const Generic & fileName (params[1]);
   checkValidFile (fileName, wstring(L"VDMProject::Open ()"));
 
@@ -488,13 +480,13 @@ void APICommandQueue::VDMProject_Open (const Sequence & params)
  */
 void APICommandQueue::VDMProject_SaveAs (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMProject_SaveAs");
-
+  }
   const Generic & fileName (params[1]);
-  if (!fileName.Is(TAG_TYPE_ProjectTypes_FileName))
+  if (!fileName.Is(TAG_TYPE_ProjectTypes_FileName)) {
     ThrowApiError(INVALID_ARG, L"APICommandQueue::VDMProject_SaveAs");
-
+  }
   ToolMediator::SaveAs (fileName);
 }
 
@@ -523,9 +515,9 @@ Generic* APICommandQueue::VDMProject_GetFiles ()
  */
 void APICommandQueue::VDMProject_AddFile (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMProject_AddFile");
-
+  }
   const Generic & fileName (params[1]);
   checkValidFile (fileName, wstring(L"VDMProject::AddFile ()"));
 
@@ -539,16 +531,15 @@ void APICommandQueue::VDMProject_AddFile (const Sequence & params)
  */
 void APICommandQueue::VDMProject_RemoveFile (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMProject_RemoveFile"); 
-
+  }
   const Generic & fileName (params[1]);
-  if (!fileName.Is(TAG_TYPE_ProjectTypes_FileName))
+  if (!fileName.Is(TAG_TYPE_ProjectTypes_FileName)) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMProject_RemoveFile"); 
-  
+  } 
   Set files (ToolMediator::Repos()->vdm_Files());
-  if(!files.InSet(fileName))
-  {
+  if(!files.InSet(fileName)) {
     wstring name (PTAUX::ExtractFileName (fileName));
     wstring message (wstring(L"VDMProject::RemoveFile() failed. File is not in current project: ") + name);
     ThrowApiError(message.c_str(), L"CommandQueue::VDMProject_RemoveFile");
@@ -568,9 +559,9 @@ void APICommandQueue::VDMProject_RemoveFile (const Sequence & params)
  */
 Generic* APICommandQueue::VDMModuleRepos_FilesOfModule (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_FilesOfModule"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::FilesOfModule ()"));
 
@@ -584,9 +575,9 @@ Generic* APICommandQueue::VDMModuleRepos_FilesOfModule (const Sequence & params)
  */
 Generic* APICommandQueue::VDMModuleRepos_Status (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_Status"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::Status ()"));
 
@@ -600,9 +591,9 @@ Generic* APICommandQueue::VDMModuleRepos_Status (const Sequence & params)
  */
 Generic* APICommandQueue::VDMModuleRepos_SuperClasses (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_SuperClasses"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::SuperClasses ()"));
 
@@ -616,9 +607,9 @@ Generic* APICommandQueue::VDMModuleRepos_SuperClasses (const Sequence & params)
  */
 Generic* APICommandQueue::VDMModuleRepos_SubClasses (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_SubClasses"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::SubClasses ()"));
 
@@ -632,9 +623,9 @@ Generic* APICommandQueue::VDMModuleRepos_SubClasses (const Sequence & params)
  */
 Generic* APICommandQueue::VDMModuleRepos_Uses (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_Uses"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::Uses ()"));
 
@@ -650,9 +641,9 @@ Generic* APICommandQueue::VDMModuleRepos_Uses (const Sequence & params)
  */
 Generic* APICommandQueue::VDMModuleRepos_UsedBy (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_UsedBy"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::UsedBy ()"));
 
@@ -668,11 +659,13 @@ Generic* APICommandQueue::VDMModuleRepos_UsedBy (const Sequence & params)
 Generic* APICommandQueue::VDMModuleRepos_GetCurrentModule ()
 {
   Tuple res (ToolMediator::BTools()->vdm_GetCurrentModule ());
-  if (res.GetBoolValue(1))
+  if (res.GetBoolValue(1)) {
     return new Generic (res.GetField (2));
-  else
+  }
+  else {
     ThrowApiError (L"VDMModuleRepos::GetCurrentModule() failed",
                    L"APICommandQueue::VDMModuleRepos_GetCurrentModule");
+  }
   return new Generic (); // dummy
 }
 
@@ -683,9 +676,10 @@ Generic* APICommandQueue::VDMModuleRepos_GetCurrentModule ()
 void APICommandQueue::VDMModuleRepos_PopModule ()
 {
   Bool b (ToolMediator::BTools()->vdm_PopModule ());
-  if (!b.GetValue ())
+  if (!b.GetValue ()) {
     ThrowApiError (L"VDMModuleRepos::PopModule () failed",
                    L"APICommandQueue::VDMModuleRepos_PopModule");
+  }
 }
 
 /**
@@ -694,17 +688,18 @@ void APICommandQueue::VDMModuleRepos_PopModule ()
  */
 void APICommandQueue::VDMModuleRepos_PushModule (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMModuleRepos_PushModule"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMModuleRepos::PushModule ()"));
 
   Bool b (ToolMediator::BTools()->vdm_PushModule (moduleName));
   
-  if (!b.GetValue ())
+  if (!b.GetValue ()) {
     ThrowApiError (L"VDMModuleRepos::PushModule() failed",
                    L"APICommandQueue::VDMModuleRepos_PushModule");
+  }
 }
 
 /*******************************************************
@@ -724,13 +719,13 @@ void APICommandQueue::VDMInterpreter_Initialize ()
  */
 Generic* APICommandQueue::VDMInterpreter_DoEval (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMInterpreter_DoEval"); 
-
+  }
   const Generic & expression (params[1]);
-  if (!expression.Is(TAG_TYPE_ProjectTypes_ToolCommand))
+  if (!expression.Is(TAG_TYPE_ProjectTypes_ToolCommand)) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_DoEval");
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_ParseAndEvalExprs (expression));
 }
 
@@ -739,13 +734,13 @@ Generic* APICommandQueue::VDMInterpreter_DoEval (const Sequence & params)
  */
 void APICommandQueue::VDMInterpreter_EvalCmd (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMInterpreter_EvalCmd"); 
-
+  }
   const Generic & cmd (params[1]);
-  if (!cmd.Is(TAG_TYPE_ProjectTypes_ToolCommand))
+  if (!cmd.Is(TAG_TYPE_ProjectTypes_ToolCommand)) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_EvalCmd");
-
+  }
   ToolMediator::BTools()->vdm_ExecuteCommand(cmd);
 }
 
@@ -756,20 +751,20 @@ void APICommandQueue::VDMInterpreter_EvalCmd (const Sequence & params)
  */
 Generic* APICommandQueue::VDMInterpreter_SetBreakPointByPos (const Sequence & params)
 {
-  if (params.Length() != 3)
+  if (params.Length() != 3) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMInterpreter_SetBreakPointByPos"); 
-
+  }
   const Generic & fileName (params[1]);
   checkValidFile (fileName, wstring(L"VDMInterpreter::SetBreakPointByPos ()"));
 
   const Generic & line (params[2]);
-  if (!line.IsInt())
+  if (!line.IsInt()) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_SetBreakPointByPos");
-
+  }
   const Generic & col (params[3]);
-  if (!col.IsInt())
+  if (!col.IsInt()) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_SetBreakPointByPos");
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_SetBreakOnPos (fileName, line, col));
 }
 
@@ -782,16 +777,16 @@ Generic* APICommandQueue::VDMInterpreter_SetBreakPointByPos (const Sequence & pa
  */
 Generic* APICommandQueue::VDMInterpreter_SetBreakPointByName (const Sequence & params)
 {
-  if (params.Length() != 2)
+  if (params.Length() != 2) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMInterpreter_SetBreakPointByName"); 
-
+  }
   const Generic & moduleName (params[1]);
   checkValidModuleName (moduleName, wstring(L"VDMInterpreter::SetBreakPointByName ()"));
 
   const Generic & nm (params[2]);
-  if (!nm.Is(TAG_TYPE_ProjectTypes_Name))
+  if (!nm.Is(TAG_TYPE_ProjectTypes_Name)) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_SetBreakPointByName");
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_SetBreakOnName (moduleName, nm));
 }
 
@@ -802,13 +797,13 @@ Generic* APICommandQueue::VDMInterpreter_SetBreakPointByName (const Sequence & p
  */
 void APICommandQueue::VDMInterpreter_DeleteBreakPoint (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMInterpreter_DeleteBreakPoint"); 
-  
+  } 
   const Generic & num (params[1]);
-  if (!num.IsInt ())
+  if (!num.IsInt ()) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_DeleteBreakPoint");
-
+  }
   ToolMediator::BTools()->vdm_DeleteBreakPoint (num);
 }
 
@@ -817,19 +812,17 @@ void APICommandQueue::VDMInterpreter_DeleteBreakPoint (const Sequence & params)
  */
 Generic* APICommandQueue::VDMInterpreter_ParseAndDebug (const Sequence & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMInterpreter_ParseAndDebug"); 
-
+  }
   const Generic & expression (params[1]);
-  if (!expression.Is(TAG_TYPE_ProjectTypes_ToolCommand))
+  if (!expression.Is(TAG_TYPE_ProjectTypes_ToolCommand)) {
     ThrowApiError (INVALID_ARG, L"APICommandQueue::VDMInterpreter_ParseAndDebug");
-
-  try
-  {
+  }
+  try {
     return new Generic (ToolMediator::BTools()->vdm_ParseAndDebugExprs (expression));
   }
-  catch (...) // alas, almost everything can happen in there :(
-  {
+  catch (...) { // alas, almost everything can happen in there :(
     ThrowApiError (L"Error occured when debugging expression",
                    L"APICommandQueue::VDMInterpreter_ParseAndDebug");
   }
@@ -880,13 +873,13 @@ Generic* APICommandQueue::VDMInterpreter_DebugContinue ()
 Generic* APICommandQueue::VDMCodeGenerator_CodeGenerate (const SEQ<TYPE_ProjectTypes_ModuleName> & params,
                                                          const Quote & targetLang)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMCodeGenerator_CodeGenerate"); 
-
+  }
   size_t len_params = params.Length();
-  for (size_t idx = 1; idx <= len_params; idx++)
+  for (size_t idx = 1; idx <= len_params; idx++) {
     checkValidModuleName (params[idx], wstring(L"VDMCodeGenerator::CodeGenerate[List] ()"));
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_CodeGenerate(params, targetLang,
                                            false, true, false, false, Nil(), false, false));
 }
@@ -901,13 +894,13 @@ Generic* APICommandQueue::VDMCodeGenerator_CodeGenerate (const SEQ<TYPE_ProjectT
  */
 Generic* APICommandQueue::VDMParser_Parse (const SEQ<TYPE_ProjectTypes_FileName> & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMParser_Parse"); 
-
+  }
   size_t len_params = params.Length();
-  for (size_t idx = 1; idx <= len_params; idx++)
+  for (size_t idx = 1; idx <= len_params; idx++) {
     checkValidFile (params[idx], wstring(L"VDMParser::Parse ()"));
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_SyntaxCheck (params));
 }
 
@@ -923,13 +916,13 @@ Generic* APICommandQueue::VDMParser_Parse (const SEQ<TYPE_ProjectTypes_FileName>
 Generic* APICommandQueue::VDMTypeChecker_TypeCheck (const SEQ<TYPE_ProjectTypes_ModuleName> & params)
 {
 
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMTypeChecker_TypeCheck"); 
-
+  }
   size_t len_params = params.Length();
-  for (size_t idx = 1; idx <= len_params; idx++)
+  for (size_t idx = 1; idx <= len_params; idx++) {
     checkValidModuleName (params[idx], wstring(L"VDMTypeChecker::TypeCheck[List] ()"));
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_TypeCheck (params));
 }
 
@@ -944,13 +937,13 @@ Generic* APICommandQueue::VDMTypeChecker_TypeCheck (const SEQ<TYPE_ProjectTypes_
  */
 Generic* APICommandQueue::VDMPrettyPrinter_PrettyPrint (const SEQ<TYPE_ProjectTypes_FileName> & params)
 {
-  if (params.IsEmpty())
+  if (params.IsEmpty()) {
     ThrowApiError (WRONG_ARG_NUM, L"APICommandQueue::VDMPrettyPrinter_PrettyPrint"); 
-
+  }
   size_t len_params = params.Length();
-  for (size_t idx = 1; idx <= len_params; idx++)
+  for (size_t idx = 1; idx <= len_params; idx++) {
     checkValidFile (params[idx], wstring(L"VDMPrettyPrinter::PrettyPrint[List] ()"));
-
+  }
   return new Generic (ToolMediator::BTools()->vdm_PrettyPrint (params));
 }
 
@@ -986,13 +979,14 @@ Generic* APICommandQueue::VDMErrors_GetWarnings ()
  */
 void APICommandQueue::checkValidFile (const Generic & fileName, const wstring & func)
 {
-  if (!fileName.Is(TAG_TYPE_ProjectTypes_FileName))
+  if (!fileName.Is(TAG_TYPE_ProjectTypes_FileName)) {
     ThrowApiError (INVALID_ARG, func.c_str());
-
+  }
   wstring file (PTAUX::ExtractFileName (fileName));
   wifstream wif (TBWSTR::wstring2fsstr(file).c_str());
-  if(wif)
+  if(wif) {
     wif.close();
+  }
   else {
     wstring s (func + wstring(L" failed. File does not exist: ") + file);
     ThrowApiError(s.c_str(), L"checkValidFile");
@@ -1007,12 +1001,10 @@ void APICommandQueue::checkValidFile (const Generic & fileName, const wstring & 
 void APICommandQueue::checkValidModuleName(const Generic & moduleName, const wstring & func)
   // Determines if the module 'name' is known to the toolbox.
 {
-  if (!moduleName.Is(TAG_TYPE_ProjectTypes_ModuleName))
+  if (!moduleName.Is(TAG_TYPE_ProjectTypes_ModuleName)) {
     ThrowApiError (INVALID_ARG, func.c_str());
-
-  //if(!((Set) ToolMediator::Repos()->vdm_AllModules()).InSet(moduleName))
-  if(!(ToolMediator::Repos()->vdm_AllModules().InSet(moduleName)))
-  {
+  }
+  if(!(ToolMediator::Repos()->vdm_AllModules().InSet(moduleName))) {
     wstring name (PTAUX::ExtractModuleName(moduleName));
     wstring s (func + wstring(L" failed. Module does not exist: ") + name);
     ThrowApiError(s.c_str(), L"checkValidModuleName");

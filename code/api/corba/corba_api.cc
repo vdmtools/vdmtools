@@ -283,8 +283,9 @@ VDMModuleRepos_i::~VDMModuleRepos_i()
 void checkValidFile ( const char * name, std::wstring func )
 {
   FILE *exists = fopen(name, "r");
-  if(exists != NULL)
+  if(exists != NULL) {
     fclose(exists);
+  }
   else {
     std::wstring s = func +
                     std::wstring(L" failed. File does not exist: ") +
@@ -301,8 +302,9 @@ int VDMModuleRepos_i::Set_to_FileList( FileList *& fl, const Set & files )
   int n = 0;
   Set files_q (files);
   Generic g;
-  for(bool bb = files_q.First(g); bb; bb = files_q.Next(g))
+  for(bool bb = files_q.First(g); bb; bb = files_q.Next(g)) {
     (*fl)[n++] = CORBA::string_dup(TBWSTR::wstring2utf8str(PTAUX::ExtractFileName(g)).c_str());
+  }
   return files.Card();
 }
 
@@ -314,8 +316,9 @@ int VDMModuleRepos_i::Set_to_ModuleList( ModuleList *& fl, const Set & modules )
   int n = 0;
   Set modules_q (modules);
   Generic g;
-  for(bool bb = modules_q.First(g); bb; bb = modules_q.Next(g))
+  for(bool bb = modules_q.First(g); bb; bb = modules_q.Next(g)) {
     (*fl)[n++] = CORBA::string_dup(TBWSTR::wstring2utf8str(PTAUX::ExtractModuleName(g)).c_str());
+  }
   return modules.Card();
 }
 
@@ -327,8 +330,9 @@ int VDMModuleRepos_i::Set_to_ClassList( ClassList *& fl, const Set & modules )
   int n = 0;
   Set modules_q (modules);
   Generic g;
-  for(bool bb = modules_q.First(g); bb; bb = modules_q.Next(g))
+  for(bool bb = modules_q.First(g); bb; bb = modules_q.Next(g)) {
     (*fl)[n++] = CORBA::string_dup(TBWSTR::wstring2utf8str(PTAUX::ExtractModuleName(g)).c_str());
+  }
   return modules.Card();
 }
 
@@ -399,10 +403,10 @@ void VDMProject_i::Save ()
 
   // following call does not influence the GUI, so we don't have to queue it
   Generic fileName (ToolMediator::GetProjectName());
-  if (fileName.IsNil())
+  if (fileName.IsNil()) {
     ThrowApiError(L"VDMProject::Save() failed. Unable to save a project with no name. Use SaveAs in stead",
                   L"VDMProject_i::Save");
-
+  }
   APICommand command (VDM_PROJECT_SAVEAS, mk_sequence(fileName));
 
   // add command to queue and wait for return
@@ -612,13 +616,13 @@ void VDMInterpreter_i::DynInvCheck (CORBA::Boolean _value)
 {
   MUTEX_METHOD;
 
-  if(_value)
-  {
+  if(_value) {
     Settings.DtcOn();
     Settings.InvOn();
   }
-  else
+  else {
     Settings.InvOff();
+  }
 }
 
 void VDMInterpreter_i::Initialize ( )
@@ -717,9 +721,10 @@ VDM::VDMGeneric_ptr VDMInterpreter_i::Apply ( VDM::ClientID id, const char * f, 
   Sequence arg_l = p->GetMetaivValue();
   s += L"(";
   size_t len_arg_l = arg_l.Length();
-  for (size_t idx = 1; idx <= len_arg_l; idx++)
-  {
-    if (idx >= 2) s += L", ";
+  for (size_t idx = 1; idx <= len_arg_l; idx++) {
+    if (idx >= 2) {
+      s += L", ";
+    }
     s += arg_l[idx].ascii();
   }
   s += L")";
@@ -821,8 +826,7 @@ VDM::VDMTuple_ptr VDMInterpreter_i::DebugState(VDM::ClientID id, const Tuple & r
   VDM::VDMTuple_ptr p = VDM::VDMTuple::_narrow (g);
   CORBA::release (g);
 
-  if((evalstate.GetValue() != L"ERROR") && val.IsSequence () && !Sequence(val).IsEmpty())
-  {
+  if((evalstate.GetValue() != L"ERROR") && val.IsSequence () && !Sequence(val).IsEmpty()) {
     const Sequence & v_lv (res.GetField(2));
     // We only consider the result of the *first* expression:
     p->SetField (2, Generic_i::metaiv_to_idl(id, VAL2X::val2generic(v_lv[1], Set())));
@@ -871,9 +875,9 @@ CORBA::Boolean VDMCodeGenerator_i::GenerateCodeList ( const ModuleList & names,
   MUTEX_METHOD;
 
   Sequence s;
-  for(unsigned int i = 0; i < names.length(); i++)
+  for(unsigned int i = 0; i < names.length(); i++) {
     s.ImpAppend(PTAUX::mk_ModuleName(TBWSTR::utf8str2wstring(std::string((const char *)names[i]))));
-
+  }
   int tag;
 
   switch (targetLang) {
@@ -953,7 +957,7 @@ CORBA::Boolean VDMTypeChecker_i::TypeCheckList ( const ModuleList & names )
   MUTEX_METHOD;
 
   Sequence s;
-  for(unsigned int i = 0; i < names.length(); i++){
+  for(unsigned int i = 0; i < names.length(); i++) {
     s.ImpAppend(PTAUX::mk_ModuleName(TBWSTR::utf8str2wstring(std::string((const char *)names[i]))));
   }
   APICommand command (VDM_TYPECHECKER_TYPECHECK, s);
@@ -1020,8 +1024,7 @@ int VDMErrors_i::ErrorsToIDL ( ErrorList *& err, const Sequence & vdmerr_l ) con
   err->length(vdmerr_l.Length());
 
   int len = vdmerr_l.Length();
-  for (int index = 0; index < len; index++)
-  {
+  for (int index = 0; index < len; index++) {
     const TYPE_ProjectTypes_Message & r (vdmerr_l[index + 1]);
 
     // Extract file name and position information:
@@ -1039,8 +1042,9 @@ int VDMErrors_i::ErrorsToIDL ( ErrorList *& err, const Sequence & vdmerr_l ) con
 
         std::wstring s;
         size_t len_descr_l = descr_l.Length();
-        for (size_t idx = 1; idx <= len_descr_l; idx++)
+        for (size_t idx = 1; idx <= len_descr_l; idx++) {
           s += descr_l[idx].GetString() + L" "; 
+        }
         item.msg = CORBA::string_dup(TBWSTR::wstring2utf8str(s).c_str());
         (*err)[index] = item;
         break;
@@ -1058,8 +1062,9 @@ int VDMErrors_i::ErrorsToIDL ( ErrorList *& err, const Sequence & vdmerr_l ) con
 
         std::wstring s;
         size_t len_descr_l = descr_l.Length();
-        for (size_t idx = 1; idx <= len_descr_l; idx++)
+        for (size_t idx = 1; idx <= len_descr_l; idx++) {
           s += descr_l[idx].GetString() + L" "; 
+        }
         item.msg = CORBA::string_dup(TBWSTR::wstring2utf8str(s).c_str());
         (*err)[index] = item;
         break;
@@ -1123,10 +1128,8 @@ VDM::VDMSequence_ptr Application_i::GetEvents ( VDM::ClientID id )
   VDM::VDMSequence_ptr p = NULL;
 
   ClientEventQueues::iterator eq_i = _event_queues.find(id);
-  if(eq_i != _event_queues.end())
-  {
-    if(!(*eq_i).second.Length())
-    {
+  if(eq_i != _event_queues.end()) {
+    if(!(*eq_i).second.Length()) {
       // There are not any events yet, wait until one event arrive:
       CondVar.wait();
     }
@@ -1135,7 +1138,7 @@ VDM::VDMSequence_ptr Application_i::GetEvents ( VDM::ClientID id )
     CORBA::release(p); // necessary because _narrow() increments the reference count
     (*eq_i).second = Sequence();
   }
-  else{
+  else {
     ThrowApiError(L"Application::GetEvents() failed. Client id unknown. Event listeners must be registered by a call to RegisterEventListener().", 
                   L"GetEvents");
   }

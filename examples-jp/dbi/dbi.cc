@@ -6,20 +6,20 @@ extern wstring utf8str2wstring(const string & s);
 
 DlClass* DlClass_new (const wchar_t* name)
 {
-  if (!wcscmp (name, L"DBI"))
+  if (!wcscmp (name, L"DBI")) {
     return new DBI ();
-  else
+  }
+  else {
     return NULL; // nothing found
+  }
 }
 
 int DlClass_delete (DlClass* c)
 {
-  try
-  {
+  try {
     delete c;
   }
-  catch (...)
-  {
+  catch (...) {
     return 0;
   }
   return 1;
@@ -28,14 +28,12 @@ int DlClass_delete (DlClass* c)
 Generic DlClass_call (DlClass* c, const wchar_t* name, const Sequence & params, int & success)
 {
   Generic result;
-  try
-  {
+  try {
     result = c->DlMethodCall (name, params);
     success = 1;
     return result;
   }
-  catch (...)
-  {
+  catch (...) {
     success = 0;
     return result;
   }
@@ -50,44 +48,61 @@ Generic DBI::DlMethodCall (const wchar_t * name, const Sequence & p)
 
   Generic res;
 
-  if (wcscmp(name, L"dl_connect")==0)
+  if (wcscmp(name, L"dl_connect")==0) {
     res = this->Connect(p);
-//  else if (wcscmp(name, L"disconnect")==0)
+  }
+//  else if (wcscmp(name, L"disconnect")==0) {
 //    res = this->Disconnect();
-  else if (wcscmp(name, L"dl_execute")==0)
+//  }
+  else if (wcscmp(name, L"dl_execute")==0) {
     res = this->Execute(SEQ<Char>(p[1]));
-  else if (wcscmp(name, L"dl_executeQuery")==0)
+  }
+  else if (wcscmp(name, L"dl_executeQuery")==0) {
     res = this->ExecuteQuery(SEQ<Char>(p[1]));
-  else if (wcscmp(name, L"dl_fetch")==0)
+  }
+  else if (wcscmp(name, L"dl_fetch")==0) {
     res = this->Fetch();
-  else if (wcscmp(name, L"dl_getInt")==0)
+  }
+  else if (wcscmp(name, L"dl_getInt")==0) {
     res = this->GetInt(Int(p[1]));
-  else if (wcscmp(name, L"dl_getString")==0)
+  }
+  else if (wcscmp(name, L"dl_getString")==0) {
     res = this->GetString(Int(p[1]));
-  else if (wcscmp(name, L"dl_getChar")==0)
+  }
+  else if (wcscmp(name, L"dl_getChar")==0) {
     res = this->GetChar(Int(p[1]));
-  else if (wcscmp(name, L"dl_getNumeric")==0)
+  }
+  else if (wcscmp(name, L"dl_getNumeric")==0) {
     res = this->GetNumeric(Int(p[1]));
-  else if (wcscmp(name, L"dl_getQuote")==0)
+  }
+  else if (wcscmp(name, L"dl_getQuote")==0) {
     res = this->GetQuote(Int(p[1]));
-  else if (wcscmp(name, L"dl_getDate")==0)
+  }
+  else if (wcscmp(name, L"dl_getDate")==0) {
     res = this->GetDate(Int(p[1]));
-  else if (wcscmp(name, L"dl_getTime")==0)
+  }
+  else if (wcscmp(name, L"dl_getTime")==0) {
     res = this->GetTime(Int(p[1]));
-  else if (wcscmp(name, L"dl_getTimestamp")==0)
+  }
+  else if (wcscmp(name, L"dl_getTimestamp")==0) {
     res = this->GetTimestamp(Int(p[1]));
-  else if (wcscmp(name, L"dl_getRecordMap")==0)
+  }
+  else if (wcscmp(name, L"dl_getRecordMap")==0) {
     res = this->GetRecordMap();
-  else if (wcscmp(name, L"dl_getRecordSeq")==0)
+  }
+  else if (wcscmp(name, L"dl_getRecordSeq")==0) {
     res = this->GetRecordSeq();
-  else if (wcscmp(name, L"dl_startTransaction")==0)
+  }
+  else if (wcscmp(name, L"dl_startTransaction")==0) {
     res = this->StartTransaction();
-  else if (wcscmp(name, L"dl_commitTransaction")==0)
+  }
+  else if (wcscmp(name, L"dl_commitTransaction")==0) {
     res = this->EndTransaction(true);
-  else if (wcscmp(name, L"dl_rollbackTransaction")==0)
+  }
+  else if (wcscmp(name, L"dl_rollbackTransaction")==0) {
     res = this->EndTransaction(false);
-  else
-  {
+  }
+  else {
     // the method does not exist - throw exception
   }
   return res;
@@ -110,28 +125,29 @@ Tuple DBI::Connect(const Sequence & arg)
 {
   SQLRETURN nResult;
 
-  if (this->m_henv == SQL_NULL_HENV)
-  {
+  if (this->m_henv == SQL_NULL_HENV) {
     nResult = ::SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &this->m_henv);
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_ENV, this->m_henv);
-
+    }
     nResult = ::SQLSetEnvAttr(this->m_henv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_ENV, this->m_henv);
+    }
   }
 
   nResult = ::SQLAllocHandle(SQL_HANDLE_DBC, this->m_henv, &this->m_hdbc);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_DBC, this->m_hdbc);
-
+  }
 #ifdef _MSC_VER
   wstring mds = Sequence(arg[1]).GetString();
 //  nResult = ::SQLConnectW(this->m_hdbc, (SQLWCHAR *)mds.c_str(), SQL_NTS, (SQLWCHAR *)wstring(L"").c_str(), SQL_NTS,
 //                                      (SQLWCHAR *)wstring(L"").c_str(), SQL_NTS);
   wstring connectionString;
-  if (!mds.empty())
+  if (!mds.empty()) {
     connectionString = wstring(L"DSN=") + mds;
+  }
   nResult = ::SQLDriverConnectW(this->m_hdbc, NULL, (SQLWCHAR *)connectionString.c_str(), SQL_NTS, NULL, 0, NULL,
                               SQL_DRIVER_COMPLETE);
 #else
@@ -139,34 +155,32 @@ Tuple DBI::Connect(const Sequence & arg)
 //  nResult = ::SQLConnect(this->m_hdbc, (SQLCHAR *)mds.c_str(), SQL_NTS, (SQLCHAR *)string("").c_str(), SQL_NTS,
 //                                     (SQLCHAR *)string("").c_str(), SQL_NTS);
   string connectionString;
-  if (!mds.empty())
+  if (!mds.empty()) {
     connectionString = string("DSN=") + mds;
+  }
   nResult = ::SQLDriverConnect(this->m_hdbc, NULL, (SQLCHAR *)connectionString.c_str(), SQL_NTS, NULL, 0, NULL,
                                SQL_DRIVER_COMPLETE);
 #endif // _MSC_VER
 
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_DBC, this->m_hdbc);
-
+  }
   return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
 }
 
 Tuple DBI::Disconnect()
 {
-  if (this->m_hstmt != SQL_NULL_HSTMT)
-  {
+  if (this->m_hstmt != SQL_NULL_HSTMT) {
     ::SQLCloseCursor(this->m_hstmt);
     ::SQLFreeHandle(SQL_HANDLE_STMT, this->m_hstmt);
     this->m_hstmt = SQL_NULL_HSTMT;
   }
-  if (this->m_hdbc != SQL_NULL_HDBC)
-  {
+  if (this->m_hdbc != SQL_NULL_HDBC) {
     ::SQLDisconnect(this->m_hdbc);
     ::SQLFreeHandle(SQL_HANDLE_DBC, this->m_hdbc);
     this->m_hdbc = SQL_NULL_HDBC;
   }
-  if (this->m_henv != SQL_NULL_HENV)
-  {
+  if (this->m_henv != SQL_NULL_HENV) {
     ::SQLFreeHandle(SQL_HANDLE_ENV, this->m_henv);
     this->m_henv = SQL_NULL_HENV;
   }
@@ -183,9 +197,9 @@ Tuple DBI::CheckError(SQLSMALLINT handleType, SQLHANDLE handle)
 
   ::SQLGetDiagRecW(handleType, handle, 1, szState, &nErrorCode, szErrorMsg, 1024, &nSize);
 
-  if (nErrorCode == SQL_SUCCESS)
+  if (nErrorCode == SQL_SUCCESS) {
     nErrorCode = -1;
-
+  }
   szState[5] = '\0';
   Tuple res(4);
   res.SetField(1, Int(nErrorCode));
@@ -200,9 +214,9 @@ Tuple DBI::CheckError(SQLSMALLINT handleType, SQLHANDLE handle)
 
   ::SQLGetDiagRec(handleType, handle, 1, szState, &nErrorCode, szErrorMsg, 1024, &nSize);
 
-  if (nErrorCode == SQL_SUCCESS)
+  if (nErrorCode == SQL_SUCCESS) {
     nErrorCode = -1;
-
+  }
   szState[5] = '\0';
   Tuple res(4);
   res.SetField(1, Int(nErrorCode));
@@ -229,8 +243,9 @@ Tuple DBI::CheckError(SQLSMALLINT handleType, SQLHANDLE handle)
     case SQL_HANDLE_STMT: {
       if (handle != SQL_NULL_HSTMT) {
         SQLCloseCursor(handle);
-        if (handle == this->m_hstmt)
+        if (handle == this->m_hstmt) {
           this->m_hstmt = SQL_NULL_HSTMT;
+        }
         SQLFreeHandle(SQL_HANDLE_STMT, handle);
       }
     }
@@ -240,25 +255,23 @@ Tuple DBI::CheckError(SQLSMALLINT handleType, SQLHANDLE handle)
 
 Tuple DBI::StartTransaction()
 {
-  if (!this->m_inTransaction)
-  {
+  if (!this->m_inTransaction) {
     SQLRETURN nResult;
     // do commit
     nResult = ::SQLEndTran(SQL_HANDLE_DBC, this->m_hdbc, SQL_COMMIT );
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_DBC, this->m_hdbc);
-
+    }
     // set auto commit off
     nResult = ::SQLSetConnectAttr(this->m_hdbc, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, SQL_NTS);
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_DBC, this->m_hdbc);
-
+    }
     this->m_inTransaction = true;
 
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
   }
-  else
-  {
+  else {
     Tuple res(4);
     res.SetField(1, Int(9001));
     res.SetField(2, Sequence(L"XXXX"));
@@ -270,27 +283,27 @@ Tuple DBI::StartTransaction()
 
 Tuple DBI::EndTransaction(bool commit)
 {
-  if (this->m_inTransaction)
-  {
+  if (this->m_inTransaction) {
     SQLRETURN nResult;
-    if (commit)
+    if (commit) {
       nResult = ::SQLEndTran(SQL_HANDLE_DBC, this->m_hdbc, SQL_COMMIT );   // commit
-    else
+    }
+    else {
       nResult = ::SQLEndTran(SQL_HANDLE_DBC, this->m_hdbc, SQL_ROLLBACK ); // rollback
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    }
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_DBC, this->m_hdbc);
-
+    }
     this->m_inTransaction = false;
 
     // set auto commit on
     nResult = ::SQLSetConnectAttr(this->m_hdbc, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_DBC, this->m_hdbc);
-
+    }
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
   }
-  else
-  {
+  else {
     Tuple res(4);
     res.SetField(1, Int(9002));
     res.SetField(2, Sequence(L"XXXX"));
@@ -306,9 +319,9 @@ Tuple DBI::Execute(const SEQ<Char> & arg)
   SQLRETURN nResult;
 
   nResult = ::SQLAllocHandle(SQL_HANDLE_STMT, this->m_hdbc, &hstmt);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, hstmt);
-  
+  } 
 #ifdef _MSC_VER
   wstring sql = arg.GetString();
   nResult = ::SQLPrepareW(hstmt, (SQLWCHAR *)sql.c_str(), SQL_NTS);
@@ -317,17 +330,17 @@ Tuple DBI::Execute(const SEQ<Char> & arg)
   nResult = ::SQLPrepare(hstmt, (SQLCHAR *)sql.c_str(), SQL_NTS);
 #endif // _MSC_VER
 
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, hstmt);
-
+  }
   switch (::SQLExecute(hstmt)) {
     case SQL_SUCCESS:
     case SQL_SUCCESS_WITH_INFO: {
       SQLLEN numrows;
       nResult = ::SQLRowCount(hstmt, &numrows);
-      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
         return CheckError(SQL_HANDLE_STMT, hstmt);
-
+      }
       ::SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
       return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), (numrows != -1) ? Int(numrows) : Int(0));
     }
@@ -344,16 +357,14 @@ Tuple DBI::ExecuteQuery(const SEQ<Char> & arg)
 {
   SQLRETURN nResult;
 
-  if (this->m_hstmt != SQL_NULL_HSTMT)
-  {
+  if (this->m_hstmt != SQL_NULL_HSTMT) {
     nResult = ::SQLCloseCursor(this->m_hstmt);
   }
-
-  if (this->m_hstmt == SQL_NULL_HSTMT)
-  {
+  if (this->m_hstmt == SQL_NULL_HSTMT) {
     nResult = ::SQLAllocHandle(SQL_HANDLE_STMT, this->m_hdbc, &this->m_hstmt);
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
+    }
   }
   
 #ifdef _MSC_VER
@@ -364,9 +375,9 @@ Tuple DBI::ExecuteQuery(const SEQ<Char> & arg)
   nResult = ::SQLPrepare(this->m_hstmt, (SQLCHAR *)sql.c_str(), SQL_NTS);
 #endif // _MSC_VER
 
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
-
+  }
   switch (::SQLExecute(this->m_hstmt)) {
     case SQL_SUCCESS:
     case SQL_SUCCESS_WITH_INFO: {
@@ -382,12 +393,11 @@ Tuple DBI::ExecuteQuery(const SEQ<Char> & arg)
   
   SQLSMALLINT columnCount;
   nResult = ::SQLNumResultCols(this->m_hstmt, &columnCount);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
-
+  }
   this->m_columnInfo.Clear();
-  for (SQLUSMALLINT columnNumber = 1; columnNumber <= columnCount; columnNumber++)
-  {
+  for (SQLUSMALLINT columnNumber = 1; columnNumber <= columnCount; columnNumber++) {
     SQLSMALLINT bufferLength = 256;
     SQLSMALLINT nameLength;
     SQLSMALLINT dataType;
@@ -410,18 +420,18 @@ Tuple DBI::ExecuteQuery(const SEQ<Char> & arg)
 
     SEQ<Char> name (SEQ<Char>(utf8str2wstring(string((char *)columnName, nameLength))));
 #endif // _MSC_VER
-    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+    if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
       return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
-
+    }
     this->m_columnInfo.Insert(Int(columnNumber), mk_(name, Int(dataType), Int(columnSize),
                               Bool(decimalDigits == 1), Bool(nullable == 1)));
   }
 
   SQLLEN numrows;
   nResult = ::SQLRowCount(this->m_hstmt, &numrows);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
-
+  }
   //return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), (numrows != -1) ? Int(numrows) : Int(0));
   return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Int(numrows));
 }
@@ -476,13 +486,15 @@ Tuple DBI::GetInt(const Int & arg)
   SQLLEN      nCol;
 
   nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_INTEGER, &value, sizeof(value), &nCol);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-  if (nCol == SQL_NULL_DATA)
+  } 
+  if (nCol == SQL_NULL_DATA) {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-  else
+  }
+  else {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Int(value));
+  }
 }
 
 Tuple DBI::GetString(const Int & arg)
@@ -506,13 +518,13 @@ Tuple DBI::GetString(const Int & arg)
       SQLLEN  nCol;
 
       nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_WCHAR, value, sizeof(value), &nCol);
-      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
         return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-      if (nCol == SQL_NULL_DATA)
+      } 
+      if (nCol == SQL_NULL_DATA) {
         return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-      else
-      {
+      }
+      else {
         //SEQ<Char> res ((wstring((wchar_t *)value, nCol)));
         SEQ<Char> res ((wstring((wchar_t *)value, nCol/2)));
         return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
@@ -522,13 +534,13 @@ Tuple DBI::GetString(const Int & arg)
       SQLLEN  nCol;
 
       nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_CHAR, value, sizeof(value), &nCol);
-      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
         return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-      if (nCol == SQL_NULL_DATA)
+      } 
+      if (nCol == SQL_NULL_DATA) {
         return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-      else
-      {
+      }
+      else {
         SEQ<Char> res (utf8str2wstring(string((char *)value, nCol))); // UTF-8 -> UTF-16
         return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
       }
@@ -542,13 +554,13 @@ Tuple DBI::GetString(const Int & arg)
       SQLLEN  nCol;
 
       nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_CHAR, value, sizeof(value), &nCol);
-      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+      if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
         return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-      if (nCol == SQL_NULL_DATA)
+      } 
+      if (nCol == SQL_NULL_DATA) {
         return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-      else
-      {
+      }
+      else {
         SEQ<Char> res (SEQ<Char>(string2wstring(string((char *)value, nCol))));;
         return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
       }
@@ -566,13 +578,15 @@ Tuple DBI::GetChar(const Int & arg)
   SQLLEN      nCol;
 
   nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_WCHAR, &value, sizeof(value), &nCol);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-  if (nCol == SQL_NULL_DATA)
+  } 
+  if (nCol == SQL_NULL_DATA) {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-  else
+  }
+  else {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Char(value));
+  }
 }
 
 Tuple DBI::GetNumeric(const Int & arg)
@@ -585,13 +599,13 @@ Tuple DBI::GetNumeric(const Int & arg)
   SQLLEN  nCol;
 
   nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_CHAR, &value, sizeof(value), &nCol);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-  if (nCol == SQL_NULL_DATA)
+  } 
+  if (nCol == SQL_NULL_DATA) {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-  else
-  {
+  }
+  else {
     SEQ<Char> res (SEQ<Char>(utf8str2wstring(string((char *)value,nCol))));;
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
   }
@@ -601,8 +615,7 @@ Tuple DBI::GetQuote(const Int & arg)
 {
   Tuple res (GetString(arg));
 
-  if (res.GetIntValue(1) == SQL_SUCCESS)
-  {
+  if (res.GetIntValue(1) == SQL_SUCCESS) {
     Quote val (res.GetSequence(4).GetString());
     res.SetField(4, val);
   }
@@ -619,13 +632,13 @@ Tuple DBI::GetDate(const Int & arg)
   SQLLEN  nCol;
 
   nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_DATE, &value, sizeof(value), &nCol);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-  if (nCol == SQL_NULL_DATA)
+  } 
+  if (nCol == SQL_NULL_DATA) {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-  else
-  {
+  }
+  else {
     Tuple res (mk_(Int(value.year), Int(value.month), Int(value.day)));
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
   }
@@ -641,13 +654,13 @@ Tuple DBI::GetTime(const Int & arg)
   SQLLEN  nCol;
 
   nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_TIME, &value, sizeof(value), &nCol);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-  if (nCol == SQL_NULL_DATA)
+  } 
+  if (nCol == SQL_NULL_DATA) {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-  else
-  {
+  }
+  else {
     Tuple res (mk_(Int(value.hour), Int(value.minute), Int(value.second)));
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
   }
@@ -663,13 +676,13 @@ Tuple DBI::GetTimestamp(const Int & arg)
   SQLLEN  nCol;
 
   nResult = ::SQLGetData(this->m_hstmt, columnNumber, SQL_C_TIMESTAMP, &value, sizeof(value), &nCol);
-  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO)
+  if (nResult != SQL_SUCCESS && nResult != SQL_SUCCESS_WITH_INFO) {
     return CheckError(SQL_HANDLE_STMT, this->m_hstmt);
- 
-  if (nCol == SQL_NULL_DATA)
+  } 
+  if (nCol == SQL_NULL_DATA) {
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), Nil());
-  else
-  {
+  }
+  else {
     Tuple res (mk_(Int(value.year), Int(value.month), Int(value.day),
                    Int(value.hour), Int(value.minute), Int(value.second), Int(value.fraction)));
     return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), res);
@@ -680,15 +693,16 @@ Tuple DBI::GetRecordMap()
 {
   Map m;
   int num = this->m_columnInfo.Size();
-  for (int i = 1; i <= num; i++)
-  {
+  for (int i = 1; i <= num; i++) {
     Tuple t (this->m_columnInfo[Int(i)]);
     SEQ<Char> name (t.GetSequence(1));
     Tuple res (GetString(Int(i)));
-    if (res.GetIntValue(1) != SQL_SUCCESS)
+    if (res.GetIntValue(1) != SQL_SUCCESS) {
       return res;
-    if (!res.GetField(4).IsNil())
+    }
+    if (!res.GetField(4).IsNil()) {
       m.Insert(name, res.GetSequence(2));
+    }
   }
   return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), m);
 }
@@ -697,13 +711,13 @@ Tuple DBI::GetRecordSeq()
 {
   Sequence s;
   int num = this->m_columnInfo.Size();
-  for (int i = 1; i <= num; i++)
-  {
+  for (int i = 1; i <= num; i++) {
     Tuple t (this->m_columnInfo[Int(i)]);
     SEQ<Char> name (t.GetSequence(1));
     Tuple res (GetString(Int(i)));
-    if (res.GetIntValue(1) != SQL_SUCCESS)
+    if (res.GetIntValue(1) != SQL_SUCCESS) {
       return res;
+    }
     s.ImpAppend(res.GetField(4));
   }
   return mk_(Int(SQL_SUCCESS), Sequence(), Sequence(), s);

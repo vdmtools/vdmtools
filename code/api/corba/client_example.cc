@@ -50,12 +50,10 @@ int main(int argc, char *argv[])
 #endif //VDMPP
 
   const char * source_path_p = getenv("VDM_SOURCE_LOCATION");
-  if( source_path_p == NULL )
-  {
+  if( source_path_p == NULL ) {
     string sdir;
     char buf[1024];
-    if( getcwd( buf, sizeof( buf ) ) != NULL )
-    {
+    if( getcwd( buf, sizeof( buf ) ) != NULL ) {
 #ifdef _MSC_VER
       // Convert backslash in path to forward slash as on Unix.
       for (char* s = buf; s = strchr(s, '\\'); s++) {
@@ -63,8 +61,7 @@ int main(int argc, char *argv[])
       }
 #endif
       sdir = buf;
-      for( int i = 0; i < 2; i++ )
-      {
+      for( int i = 0; i < 2; i++ ) {
         std::string::size_type index = sdir.find_last_of( '/' );
         if( index == string::npos ) break;
         sdir = sdir.substr( 0, index );
@@ -101,19 +98,23 @@ int main(int argc, char *argv[])
 //#endif //VDMPP
   GetAppReturnCode rt = client.get_app(app, NULL);
   switch(rt) {
-    case VDM_OBJECT_LOCATION_NOT_SET:
+    case VDM_OBJECT_LOCATION_NOT_SET: {
       cerr << "Environment variable VDM_OBJECT_LOCATION not set" << endl;
       exit(0);
-    case OBJECT_STRING_NON_EXISTING:
+    }
+    case OBJECT_STRING_NON_EXISTING: {
         cerr << "The file " + client.GetIORFileName() + " could not be located. \
                  Make sure the Toolbox is running" << endl;
       exit(0);
-    case CORBA_ERROR:
+    }
+    case CORBA_ERROR: {
       cerr << "Unable to setup the CORBA environment" << endl;
       exit(0);
+    }
     case CORBA_SUCCESS:
-    default:
+    default: {
       break;
+    }
   }
 
   try {
@@ -130,8 +131,7 @@ int main(int argc, char *argv[])
     // files must be located in the same directory as where the 
     // VDM Toolbox was started. Otherwise the absolute path to the 
     // files should be used
-    if(app->Tool() == ToolboxAPI::SL_TOOLBOX)
-    {
+    if(app->Tool() == ToolboxAPI::SL_TOOLBOX) {
       //prj->AddFile(ADD_PATH(source_path, "sort.vdm"));
       prj->AddFile((source_path + "sort.vdm").c_str());
     }
@@ -154,10 +154,12 @@ int main(int argc, char *argv[])
     cout << "Parsing files individually" << endl;
     for(unsigned int i = 0; i < fl->length(); i++) {
       cout << (char *)fl[i] << "...Parsing...";
-      if(parser->Parse(fl[i]))
+      if(parser->Parse(fl[i])) {
         cout << "done." << endl;
-      else
+      }
+      else {
         cout << "error." << endl;
+      }
     }
     cout << endl;
     
@@ -177,11 +179,11 @@ int main(int argc, char *argv[])
     if(nerr) {
       // Print the error:
       cout << nerr << " errors:" << endl;
-      for(int ierr = 0; ierr < nerr; ierr++)
+      for(int ierr = 0; ierr < nerr; ierr++) {
         cout << (char *) errs[ierr].fname << ", " 
              << errs[ierr].line << endl 
              << (char *) errs[ierr].msg << endl;
-
+      }
     }
     // Warnings can be queried similarly.
 
@@ -193,11 +195,12 @@ int main(int argc, char *argv[])
     ToolboxAPI::ModuleList_var modules;
     prj->GetModules(modules);
     cout << "Type checking all " << (app->Tool() == ToolboxAPI::SL_TOOLBOX ? "modules" : "classes") << "...";
-    if(tchk->TypeCheckList(modules))
+    if(tchk->TypeCheckList(modules)) {
       cout << "done." << endl;
-    else
+    }
+    else {
       cout << "errors." << endl;
-
+    }
     // If warnings were encountered during the type check they can now be inspected:
     ToolboxAPI::VDMErrors_var warnhandler = app->GetErrorHandler();
     // The error handler
@@ -207,14 +210,17 @@ int main(int argc, char *argv[])
     int nwarn = warnhandler->GetWarnings(warns);
     if(nwarn) {
       // Print the warning:
-      if (nwarn == 1)
+      if (nwarn == 1) {
         cout << nwarn << " warning:" << endl;
-      else
+      }
+      else {
         cout << nwarn << " warnings:" << endl;
-      for(int iwarn = 0; iwarn < nwarn; iwarn++)
+      }
+      for(int iwarn = 0; iwarn < nwarn; iwarn++) {
         cout << (char *) warns[iwarn].fname << ", "
              << warns[iwarn].line << endl
              << (char *) warns[iwarn].msg << endl;
+      }
     }
 
     // List the new status of all modules:
@@ -256,10 +262,10 @@ int main(int argc, char *argv[])
     interp->Initialize();
 
     VDM::VDMGeneric_var g;
-    if(app->Tool() == ToolboxAPI::SL_TOOLBOX) {
+    if (app->Tool() == ToolboxAPI::SL_TOOLBOX) {
       g = interp->Apply(client_id, "MergeSort", arg_l);
     }
-    else{ // PP_TOOLBOX
+    else { // PP_TOOLBOX
       // First we create the main sort object:
       interp->EvalCmd("create o := new SortMachine()");
       
@@ -274,7 +280,7 @@ int main(int argc, char *argv[])
 
     VDM::VDMSequence_var s = VDM::VDMSequence::_narrow(g);
     int sum = 0;
-    for(int k = 1; k <= s->Length(); k++) {
+    for (int k = 1; k <= s->Length(); k++) {
       VDM::VDMNumeric_var n = VDM::VDMNumeric::_narrow(s->Index(k));
       sum += (Int(client.GetCPPValue(n))).GetValue();
     }
@@ -314,12 +320,12 @@ void EchoPrimes(int n, ToolboxAPI::VDMInterpreter_var interp, ToolboxAPI::VDMApp
   char expr[200];
   sprintf(expr, "[e|e in set {1,...,%d} & exists1 x in set {2,...,e} & e mod x = 0 ]", n);
   g = interp->EvalExpression(client_id, expr);
-  if(g->IsSequence()) {
+  if (g->IsSequence()) {
     cout << "All primes below " << n << ":" << endl << g->ToAscii() << endl;
   }
   VDM::VDMSequence_var s = VDM::VDMSequence::_narrow(g);
   int sum = 0;
-  for(int k = 1; k <= s->Length(); k++) {
+  for (int k = 1; k <= s->Length(); k++) {
     VDM::VDMNumeric_var n = VDM::VDMNumeric::_narrow(s->Index(k));
     sum += (Int(VDMCorbaClient::GetCPPValue(n))).GetValue();
   }

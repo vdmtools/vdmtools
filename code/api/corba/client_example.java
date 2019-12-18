@@ -33,20 +33,18 @@ import jp.vdmtools.api.corba.ToolboxAPI.ToolType;
 
 import org.omg.CORBA.COMM_FAILURE;
 
-public class client_example 
-{
-  public static void main(String args[])
-  {
+public class client_example {
+  public static void main(String args[]) {
     try {
       String source_path = System.getenv("VDM_SOURCE_LOCATION");
 
-      if (source_path == null)
-      {
+      if (source_path == null) {
         File currentDirectory = new File(".");
         String pwd = currentDirectory.getAbsolutePath();
         int index = pwd.indexOf("api/corba");
-        if (index > 0)
+        if (index > 0) {
           source_path = pwd.substring(0, index);
+        }
         System.err.println("Environment variable VDM_SOURCE_LOCATION not set");
         System.err.println("Default location: " + source_path);
       }
@@ -55,12 +53,13 @@ public class client_example
       // Create ORB
       //
       VDMApplication app;
-      if (System.getProperty("VDMPP") == null)
+      if (System.getProperty("VDMPP") == null) {
         app = (new ToolboxClient ()).getVDMApplication(args, ToolType.SL_TOOLBOX);
-      else
+      }
+      else {
         app = (new ToolboxClient ()).getVDMApplication(args, ToolType.PP_TOOLBOX); // 
         //app = (new ToolboxClient ()).getVDMApplication(args, ToolType.PP_TOOLBOX, true); // use NameService
-      
+      }
       // Register the client in the Toolbox:
       
       short client = app.Register();
@@ -106,10 +105,12 @@ public class client_example
         for(int i = 0; i < flist.length; i++) {
           System.out.println(ToolboxClient.fromISO(flist[i]));
           System.out.println("...Parsing...");
-          if(parser.Parse(flist[i]))
+          if(parser.Parse(flist[i])) {
             System.out.println("done.");
-          else
+          }
+          else {
             System.out.println("error.");
+          }
         }
               
         // And then we parse all files in one go:
@@ -150,11 +151,12 @@ public class client_example
         prj.GetModules(moduleholder);
         String modules[] = moduleholder.value;
         System.out.println("Type checking all " + (app.Tool() == ToolType.SL_TOOLBOX ? "modules" : "classes") + "...");
-        if(tchk.TypeCheckList(modules))
+        if(tchk.TypeCheckList(modules)) {
           System.out.println("done.");
-        else
+        }
+        else {
           System.out.println("errors.");
-            
+        }
         // The warning handler
         VDMErrors warnhandler = app.GetErrorHandler();
 
@@ -226,7 +228,7 @@ public class client_example
         if(app.Tool() == ToolType.SL_TOOLBOX) {
           g = interp.Apply(client, "MergeSort", arg_l);
         }
-        else{ // PP_TOOLBOX
+        else { // PP_TOOLBOX
           // First we create the main sort object:
           interp.EvalCmd("create o := new SortMachine()");
          
@@ -385,7 +387,7 @@ public class client_example
       }
             
       int sum = 0;
-      for (Iterator itr = sj.iterator(); itr.hasNext();){
+      for (Iterator itr = sj.iterator(); itr.hasNext();) {
           Integer i = (Integer) itr.next ();
           sum = sum + i.intValue();
       }
@@ -402,18 +404,15 @@ public class client_example
   public static int GetNumeric( VDMNumeric num )
   {
     byte[] b1 = num.GetCPPValue();
-    try
-    {
+    try {
       InputStream is = new ByteArrayInputStream( b1 );
       int type = is.read(); 
       int c = -1;
       int last = -1;
       String str = "";
-      while( true )
-      {
+      while( true ) {
         c = is.read();
-        if ( ( c == -1 ) || ( c == ',' ) )
-        {
+        if ( ( c == -1 ) || ( c == ',' ) ) {
           last = c;
           break;
         }
@@ -421,8 +420,7 @@ public class client_example
       }
       return Integer.parseInt( str );
     }
-    catch( Exception e )
-    {
+    catch( Exception e ) {
       return 0;
     }
   } 
