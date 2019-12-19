@@ -522,8 +522,7 @@ Generic DlClassFactory::GetInstance (const TYPE_AS_Name & clnm, const Generic & 
     dcih.get_shared_ref().dcip = new DlClassInstance (dlclassp, classInfo);
     return dcih;
   }
-  catch (DLException e)
-  {
+  catch (DLException e) {
     vdm_iplog << e.GetErrorMessage() << endl;
     RTERR::Error(L"CreateNEW", RTERR_DLCLASS_NEW_ERROR, Nil(), Nil(), Sequence());
   }

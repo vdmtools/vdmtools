@@ -28,7 +28,6 @@ void SemRecTable::Decl_SEM_REC(const TYPE_AS_Name & astag,
                                int size,
                                const SEQ<Bool> & dc_s)
 {
-  //TYPE_AS_Name qnm (UTIL::QualiName(this->currentmodcls, astag));
   TYPE_AS_Name qnm (AUX::ConstructDoubleName(this->currentmodcls, astag));
 
   int tag = this->next_tag;

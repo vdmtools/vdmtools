@@ -90,11 +90,11 @@ Record TestCoverage::GetRtInfoToken (std::ifstream & istr)
 {
   Record token (0,0);
 
-  if (!ReadAhead.IsEmpty ())
-    { token = ReadAhead.Hd ();
-      ReadAhead.ImpTl ();
-      return token;
-    }
+  if (!ReadAhead.IsEmpty ()) {
+    token = ReadAhead.Hd ();
+    ReadAhead.ImpTl ();
+    return token;
+  }
 
   std::string str;
   istr >> str;
@@ -152,15 +152,25 @@ Record TestCoverage::GetRtInfoToken (std::ifstream & istr)
       else {
         length = str.size();
         std::string::size_type n = str.find(MatchOutRTIStr);
-        if ((n != std::string::npos) && (n < length)) length = n;
+        if ((n != std::string::npos) && (n < length)) {
+          length = n;
+        }
         n = str.find("{");
-        if ((n != std::string::npos) && (n < length)) length = n;
+        if ((n != std::string::npos) && (n < length)) {
+          length = n;
+        }
         n = str.find("}");
-        if ((n != std::string::npos) && (n < length)) length = n;
+        if ((n != std::string::npos) && (n < length)) {
+          length = n;
+        }
         n = str.find("[");
-        if ((n != std::string::npos) && (n < length)) length = n;
+        if ((n != std::string::npos) && (n < length)) {
+          length = n;
+        }
         n = str.find("]");
-        if ((n != std::string::npos) && (n < length)) length = n;
+        if ((n != std::string::npos) && (n < length)) {
+          length = n;
+        }
         rc = Record (ID_TOKEN_TC, 1);
         rc.SetField (1, SEQ<Char> (TBWSTR::string2wstring(str.substr(0,length))));
         str.replace(0, length, "");
@@ -197,8 +207,7 @@ void TestCoverage::PrintHead (std::ostream& ostr,    // output stream
        << TBWSTR::wstring2string(GenLatexOutput::ConvertStr (suite_name)) 
        << " \\\\ " << endl;
 
-  if (! (mod_name == std::wstring ()))
-  {
+  if (! (mod_name == std::wstring ())) {
     ostr << "{\\bf " 
          << TBWSTR::wstring2string(ModuleStr) 
          << " :} & " 
@@ -210,8 +219,7 @@ void TestCoverage::PrintHead (std::ostream& ostr,    // output stream
   
   ostr << "\\begin{longtable}{|l|r|r|}\\hline" << endl;
  
-  if (LongString.length() > 0)
-  {
+  if (LongString.length() > 0) {
     ostr << "{\\bf " 
          << TBWSTR::wstring2mbstr(GenLatexOutput::ConvertStr (LongString) )
          << "} & {\\bf \\#Calls} & {\\bf Coverage} \\kill" << endl;
@@ -292,8 +300,7 @@ bool TestCoverage::PrintTestSuiteItem (
     }
   }
 #endif //VDMPP
-  if (!found)
-  {
+  if (!found) {
     vdm_iplog << ModuleStr << L" '" << ASTAUX::ASName2String (mod_name)
               << L"' is not contained in the file " << endl << flush;
     return false;
@@ -305,15 +312,13 @@ bool TestCoverage::PrintTestSuiteItem (
 
   // Function map in ast:
   Map fnm;
-  if (!gdefs.IsNil())
-  {
+  if (!gdefs.IsNil()) {
     TYPE_AS_Definitions defs(gdefs);
     fnm.ImpOverride(defs.GetMap(pos_AS_Definitions_fnm)); 
     fnm.ImpOverride(defs.GetMap(pos_AS_Definitions_opm));
   }
   
-  if (! fnm.DomExists (func_name))
-  {
+  if (! fnm.DomExists (func_name)) {
     vdm_iplog << L"Function/operation '" << ASTAUX::ASName2String (func_name)
               << L"' is not defined for " << moduleStr 
               << L" '" << ASTAUX::ASName2String (mod_name)
@@ -328,8 +333,7 @@ bool TestCoverage::PrintTestSuiteItem (
   if ((fndef.Is(TAG_TYPE_AS_ExplFnDef) ||
        fndef.Is(TAG_TYPE_AS_ExplOpDef) ||
        fndef.Is(TAG_TYPE_AS_ExtExplFnDef) ||
-       fndef.Is(TAG_TYPE_AS_ExtExplOpDef)))
-  {
+       fndef.Is(TAG_TYPE_AS_ExtExplOpDef))) {
     Tuple cc (RTINFO::Calc_Coverage(fndef, ci));
     exprs = cc.GetIntValue(1);
     covered = cc.GetIntValue(2);
