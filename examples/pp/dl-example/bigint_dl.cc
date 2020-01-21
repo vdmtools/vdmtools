@@ -5,10 +5,12 @@ DlClass* DlClass_new (const wchar_t* name)
 #ifdef DEBUG
   wcerr << L"DlClass_new called" << endl;
 #endif //DEBUG
-  if (!wcscmp(name, L"BigInt"))
+  if (!wcscmp(name, L"BigInt")) {
     return new BigIntDL ();
-  else
+  }
+  else {
     return 0;
+  }
 }
 
 int DlClass_delete (DlClass* c)
@@ -18,7 +20,8 @@ int DlClass_delete (DlClass* c)
 #endif //DEBUG
   try {
     delete c;
-  } catch (...) {
+  }
+  catch (...) {
     return 0;
   }
   return 1;
@@ -32,7 +35,8 @@ Generic DlClass_call (DlClass* c, const wchar_t* name, const Sequence& params, i
   Generic result;
   try {
       result = c->DlMethodCall (name, params);
-  } catch (...) {
+  }
+  catch (...) {
     success = 0;
     return result;
   }
@@ -44,12 +48,15 @@ Generic BigIntDL::DlMethodCall (const wchar_t* name, const Sequence &p)
 {
   Generic res;
 	
-  if (!wcscmp (name, L"SetVal"))
-    res = this->SetVal(p); 
-  else if (!wcscmp(name, L"plus"))
+  if (!wcscmp (name, L"SetVal")) {
+    res = this->SetVal(p);  
+  }
+  else if (!wcscmp(name, L"plus")) {
     res = this->plus(p);
-  else if (!wcscmp(name, L"toString"))
+  }
+  else if (!wcscmp(name, L"toString")) {
     res = this->toString();
+  }
   else {
       // the method does not exist
   }

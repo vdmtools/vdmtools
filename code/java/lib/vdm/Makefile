@@ -111,21 +111,21 @@ javadoc: $(JAVAFILES)
 endif
 
 $(PACKAGEDIR)/%.class: %.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH1)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH1)$<
 
 $(PACKAGEDIR)/EvaluatePP.class: EvaluatePP.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH2)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH2)$<
 $(PACKAGEDIR)/PeriodicThread.class: PeriodicThread.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH2)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH2)$<
 $(PACKAGEDIR)/Sentinel.class: Sentinel.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH2)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH2)$<
 $(PACKAGEDIR)/VDMThread.class: VDMThread.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH2)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH2)$<
 $(PACKAGEDIR)/RANDOM.class: RANDOM.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH3)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH3)$<
 
 $(QUOTEDIR)/%.class: %.java
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH1)$<
+	$(JAVAC) -classpath . -d . $(SOURCEPATH1)$<
 
 $(VPSTAMP): ValueParser.jj
 	rm -rf $(PARSER_DIR)/*.java*
@@ -137,13 +137,13 @@ $(PACKAGEDIR)/ValueParser/ValueParser.class: $(PARSER_DIR) $(VPSTAMP)
 
 ifeq ($(strip $(OSTYPE)),win32)
 $(PACKAGEDIR)/Tuple.class: Tuple.java 
-	$(JAVAC) -O -d . -sourcepath $(dir $<) -classpath $(dir $<) $<
+	$(JAVAC) -d . -sourcepath $(dir $<) -classpath $(dir $<) $<
 $(PACKAGEDIR)/UTIL.class: UTIL.java 
-	$(JAVAC) -O -d . -sourcepath $(dir $<) -classpath $(dir $<) $<
+	$(JAVAC) -d . -sourcepath $(dir $<) -classpath $(dir $<) $<
 else
 $(PACKAGEDIR)/Tuple.class\
 $(PACKAGEDIR)/UTIL.class: UTIL.java Tuple.java 
-	$(JAVAC) -O -classpath . -d . $(SOURCEPATH1)UTIL.java $(SOURCEPATH1)Tuple.java 
+	$(JAVAC) -classpath . -d . $(SOURCEPATH1)UTIL.java $(SOURCEPATH1)Tuple.java 
 endif
 
 javadist: $(JARFILE) $(DOCDIR) javadoc
