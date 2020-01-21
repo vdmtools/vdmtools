@@ -1,5 +1,7 @@
 ; VDMTools Installer by NSIS
 
+Unicode True
+
 !include MUI2.nsh
 
 !ifdef WIN64
@@ -65,8 +67,8 @@ VIAddVersionKey "LegalCopyright" "${KYUSHU_UNIVERSITY}"
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "Japanese"
 
-LicenseLangString license ${LANG_JAPANESE} "gplv3.rtf"
-LicenseLangString license ${LANG_ENGLISH} "gplv3.rtf"
+#LicenseLangString license ${LANG_JAPANESE} "gplv3.rtf"
+#LicenseLangString license ${LANG_ENGLISH} "gplv3.rtf"
 
 Section
   SectionIn RO
