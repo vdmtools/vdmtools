@@ -26,7 +26,9 @@ else
     export USERLIBDIR=/usr/lib
 fi
 
-export QTVERSION=4
+PYTHON=/usr/bin/python3
+
+export QTVERSION=5
 export QT3DIR=${USERLIBDIR}/qt-3.3
 export QT4DIR=${USERLIBDIR}/qt4
 export QT5DIR=${USERLIBDIR}/qt5

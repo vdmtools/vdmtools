@@ -108,7 +108,7 @@ export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
 
 export PYTHON=/usr/bin/python3
 
-export QTVERSION=4
+export QTVERSION=5
 export QTDIR=/usr
 if [ -f ${QTDIR}/bin/qtchooser ]; then
   export QTMOC="${QTDIR}/bin/moc -qt=${QTVERSION}"
