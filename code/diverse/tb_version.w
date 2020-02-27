@@ -234,11 +234,20 @@ std::wstring TB_Version::GetCompilerVersion () const
     case 1700: { s << L"11.0 (Visual Studio 2012)"; break; }
     case 1800: { s << L"12.0 (Visual Studio 2013)"; break; }
     case 1900: { s << L"14.0 (Visual Studio 2015)"; break; }
-    case 1910: { s << L"14.10 (Visual Studio 2017)"; break; }
-    case 1911: { s << L"14.11 (Visual Studio 2017)"; break; }
-    case 1912: { s << L"14.12 (Visual Studio 2017)"; break; }
-    case 1913: { s << L"14.13 (Visual Studio 2017)"; break; }
-    case 1914: { s << L"14.14 (Visual Studio 2017)"; break; }
+    case 1910: { s << L"14.10 (Visual Studio 2017 15.0)"; break; }
+    case 1911: { s << L"14.11 (Visual Studio 2017 15.3)"; break; }
+    case 1912: { s << L"14.12 (Visual Studio 2017 15.5)"; break; }
+    case 1913: { s << L"14.13 (Visual Studio 2017 15.6)"; break; }
+    case 1914: { s << L"14.14 (Visual Studio 2017 15.7)"; break; }
+    case 1915: { s << L"14.15 (Visual Studio 2017 15.8)"; break; }
+    case 1916: { s << L"14.16 (Visual Studio 2017 15.9)"; break; }
+    case 1920: { s << L"14.20 (Visual Studio 2019 16.0)"; break; }
+    case 1921: { s << L"14.21 (Visual Studio 2019 16.1)"; break; }
+    case 1922: { s << L"14.22 (Visual Studio 2019 16.2)"; break; }
+    case 1923: { s << L"14.23 (Visual Studio 2019 16.3)"; break; }
+    case 1924: { s << L"14.24 (Visual Studio 2019 16.4)"; break; }
+    case 1925: { s << L"14.25 (Visual Studio 2019 16.5)"; break; }
+    case 1926: { s << L"14.26 (Visual Studio 2019 16.6)"; break; }
     default: { s << L"unknown version"; break; }
   }
 #else

@@ -995,18 +995,29 @@ endif
 INSTALLER ?= NSIS
 
 # VC++ Version
-#MSVC++ 4.x  _MSC_VER == 1000
-#MSVC++ 5.0  _MSC_VER == 1100
-#MSVC++ 6.0  _MSC_VER == 1200
-#MSVC++ 7.0  _MSC_VER == 1300
-#MSVC++ 7.1  _MSC_VER == 1310 (Visual Studio 2003)
-#MSVC++ 8.0  _MSC_VER == 1400 (Visual Studio 2005)
-#MSVC++ 9.0  _MSC_VER == 1500 (Visual Studio 2008)
-#MSVC++ 10.0 _MSC_VER == 1600 (Visual Studio 2010)
-#MSVC++ 11.0 _MSC_VER == 1700 (Visual Studio 2012)
-#MSVC++ 12.0 _MSC_VER == 1800 (Visual Studio 2013)
-#MSVC++ 14.0 _MSC_VER == 1900 (Visual Studio 2015)
-#MSVC++ 14.1 _MSC_VER == 1910 (Visual Studio 2017)
+#MSVC++ 6.0   _MSC_VER == 1200 (Visual Studio 6.0)
+#MSVC++ 7.0   _MSC_VER == 1300 (Visual Studio 2002  7.0)
+#MSVC++ 7.1   _MSC_VER == 1310 (Visual Studio 2003  7.1)
+#MSVC++ 8.0   _MSC_VER == 1400 (Visual Studio 2005  8.0)
+#MSVC++ 9.0   _MSC_VER == 1500 (Visual Studio 2008  9.0)
+#MSVC++ 10.0  _MSC_VER == 1600 (Visual Studio 2010 10.0)
+#MSVC++ 11.0  _MSC_VER == 1700 (Visual Studio 2012 11.0)
+#MSVC++ 12.0  _MSC_VER == 1800 (Visual Studio 2013 12.0)
+#MSVC++ 14.0  _MSC_VER == 1900 (Visual Studio 2015 14.0)
+#MSVC++ 14.10 _MSC_VER == 1910 (Visual Studio 2017 15.0)
+#MSVC++ 14.11 _MSC_VER == 1911 (Visual Studio 2017 15.3)
+#MSVC++ 14.12 _MSC_VER == 1912 (Visual Studio 2017 15.5)
+#MSVC++ 14.13 _MSC_VER == 1913 (Visual Studio 2017 15.6)
+#MSVC++ 14.14 _MSC_VER == 1914 (Visual Studio 2017 15.7)
+#MSVC++ 14.15 _MSC_VER == 1915 (Visual Studio 2017 15.8)
+#MSVC++ 14.16 _MSC_VER == 1916 (Visual Studio 2017 15.9)
+#MSVC++ 14.20 _MSC_VER == 1920 (Visual Studio 2019 16.0)
+#MSVC++ 14.21 _MSC_VER == 1921 (Visual Studio 2019 16.1)
+#MSVC++ 14.22 _MSC_VER == 1922 (Visual Studio 2019 16.2)
+#MSVC++ 14.23 _MSC_VER == 1923 (Visual Studio 2019 16.3)
+#MSVC++ 14.24 _MSC_VER == 1924 (Visual Studio 2019 16.4)
+#MSVC++ 14.25 _MSC_VER == 1925 (Visual Studio 2019 16.5)
+#MSVC++ 14.26 _MSC_VER == 1926 (Visual Studio 2019 16.6)
 
 # 14 : VC8
 # 15 : VC9
@@ -1930,7 +1941,7 @@ ALL_OBJ = stringext.o tb_exceptions.o lex.pf_.o
 
 # Object files specific for VDMSL:
 ALL_SL_OBJ = vdmde-sl.o cli_options-sl.o \
-	astaux-sl.o mangle-sl.o unmangle-sl.o \
+	astaux-sl.o mangle-sl.o \
 	intconvquotes-sl.o \
 	tbutils-sl.o tools-sl.o \
 	tb_readline-sl.o \
@@ -1940,7 +1951,7 @@ ALL_SL_OBJ = vdmde-sl.o cli_options-sl.o \
 
 # Object files specific for VDMPP:
 ALL_PP_OBJ = vdmde-pp.o cli_options-pp.o \
-	astaux-pp.o mangle-pp.o unmangle-pp.o \
+	astaux-pp.o mangle-pp.o \
 	intconvquotes-pp.o \
 	tbutils-pp.o tools-pp.o \
 	priority.tab-pp.o \
@@ -2308,7 +2319,7 @@ $(LIB_JAVA2VDM_PP): $(LIB_JAVA2VDM_PP)($(LIB_JAVA2VDM_PP_O))
 javamain$(EXE): $(shell $(LINKCHG) \
 	priority.tab-pp.o lex.pf_.o \
 	javamain-pp.o \
-	cli_options-pp.o unmangle-pp.o\
+	cli_options-pp.o \
 	$(GETOPT_O) astaux-pp.o mangle-pp.o tb_version-pp.o date.o \
 	intconvquotes-pp.o \
 	tbutils-pp.o tools-pp.o tktreewin-pp.o treecalc.o \
@@ -2328,12 +2339,12 @@ j2vbe$(EXE): $(shell $(LINKCHG) j2vbe-pp.o as2ascii-pp.o libvdm.a libgen-pp.a li
 	$(shell $(LINKCHG) ${CCC} ${LNKOPT} -o $@ $+ )
 
 # Unmangling parser
-unmangle.cc: unmangle.y
-	$(YACC) -punmangle_ ${YACCOPT} -b $(YACCFILEPREFIX) $(YACCFILEPREFIX).y
-	mv $(YACCFILEPREFIX).tab.c $(YACCFILEPREFIX).cc
+#unmangle.cc: unmangle.y
+#	$(YACC) -punmangle_ ${YACCOPT} -b $(YACCFILEPREFIX) $(YACCFILEPREFIX).y
+#	mv $(YACCFILEPREFIX).tab.c $(YACCFILEPREFIX).cc
 
-unmangle$(EXE): $(shell $(LINKCHG) unmangle-pp.o libvdm.a libgen-pp.a libCG.a)
-	$(shell $(LINKCHG) ${CCC} ${LNKOPT} -o $@ $+ )
+#unmangle$(EXE): $(shell $(LINKCHG) unmangle-pp.o libvdm.a libgen-pp.a libCG.a)
+#	$(shell $(LINKCHG) ${CCC} ${LNKOPT} -o $@ $+ )
 
 # libsssl.a  -- static semantic source files
 
@@ -3435,7 +3446,6 @@ ntinit:
 	rm -f libvdm.a libvdm_darwin.a
 
 preprocessed: contextinfo.cc contextinfo.h tb_version.cc \
-	      unmangle.cc \
 	      preprocess.cc \
 	      scanner-sl.cc scanner-pp.cc scanner-rt.cc \
 	      pexprsl.cc parssl.cc \
@@ -3451,7 +3461,6 @@ preprocessed: contextinfo.cc contextinfo.h tb_version.cc \
 	      
 links:  tb_version-sl.cc tb_version-pp.cc tb_version-rt.cc \
 	tools-sl.cc tools-pp.cc tools-rt.cc \
-	unmangle-pp.cc unmangle-sl.cc unmangle-rt.cc \
 	priority.tab-pp.cc priority.tab-rt.cc
 
 # VDM Graphical Development Environment. 
@@ -5183,8 +5192,6 @@ clean: bin_clean distclean $(CLEANJAVALIB)
 	rm -f parspp.y pexprpp.y pstmtpp.y parspp.cc pexprpp.cc pstmtpp.cc
 	rm -f parsrt.y pexprrt.y pstmtrt.y parsrt.cc pexprrt.cc pstmtrt.cc
 	rm -f lex.backup
-	rm -f unmangle.cc
-	rm -f unmangle-sl.cc unmangle-pp.cc unmangle-rt.cc
 	rm -f valueparser.cc valuescanner.cc
 	rm -f javascan.cc javaparse.cc
 	rm -f service_startup.cc lex.smd_.cc

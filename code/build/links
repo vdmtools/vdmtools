@@ -147,13 +147,12 @@ ln $PORTDIR/tb_readline.cc tb_readline-rt.cc
 ln $PORTDIR/tb_readline.cc tb_readline-sl.cc
 
 # linkWIN32:
-oscheck(win32) ln $WIN32DIR/wise/setup.wse .
-oscheck(win32) ln $WIN32DIR/wise/inst_addin.wse .
-oscheck(win32) ln $WIN32DIR/unix2dos .
-oscheck(win32) ln $WIN32DIR/wise/dirtowise .
+#oscheck(win32) ln $WIN32DIR/wise/setup.wse .
+#oscheck(win32) ln $WIN32DIR/wise/inst_addin.wse .
+#oscheck(win32) ln $WIN32DIR/unix2dos .
+#oscheck(win32) ln $WIN32DIR/wise/dirtowise .
 ln $WIN32DIR/print_name_vers.cc .
-oscheck(win32) ln $WIN32DIR/wise/wisemod .
-oscheck(win32) ln $GUIDIR/vdmgde.rc .
+#oscheck(win32) ln $WIN32DIR/wise/wisemod .
 oscheck(win32) ln $WIN32DIR .
 oscheck(win32) ln $WIN32DIR/mscver.cc .
 oscheck(win32) ln $WIN32DIR/nsis/vdmtools.nsi
@@ -238,8 +237,8 @@ ln $UTILSDIR/UTIL.h .
 ln $UTILSDIR/UTIL_anonym.h
 ln $UTILSDIR/UTIL_userdef.h
 ln $UTILSDIR/UTIL_userimpl.cc
-ln $UTILSDIR/unmangle.y .
-ln $UTILSDIR/unmangle.h .
+#ln $UTILSDIR/unmangle.y .
+#ln $UTILSDIR/unmangle.h .
 ln $UTILSDIR/MANGLE.h
 ln $UTILSDIR/MANGLE_anonym.h
 ln $UTILSDIR/MANGLE_userdef.h
