@@ -30,7 +30,9 @@ workaround:
 
 Do following 
 
-export PYVERSION=2.7
+export PYTHON=/usr/bin/python
+or
+export PYTHON=/usr/bin/python3
 
 before doing configure
 
