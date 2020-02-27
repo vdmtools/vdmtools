@@ -212,8 +212,9 @@ export JAVA_HOME=${JDKHOME}
 export ANTHOME=/usr/local/apache-ant-1.9.13
 export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
 
-export QTVERSION=4
-export QTDIR=/usr/lib/qt4
+#export QTVERSION=4
+export QTVERSION=5
+export QTDIR=/usr/lib/qt${QTVERSION}
 export QTBIN=${QTDIR}/bin
 export QTINCDIR=${QTDIR}/include
 export PATH=${PATH}:${QTBIN}
