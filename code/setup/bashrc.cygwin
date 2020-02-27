@@ -226,8 +226,8 @@ export PATH=${PATH}:${CORBABIN}
 export OSTYPE=$(uname | awk -F '-' '{print $1}')
 export WHOME="$(cygpath -w -m ${HOME})"
 
-export PYTHON=/usr/bin/python
-#export PYTHON=/usr/bin/python3
+#export PYTHON=/usr/bin/python
+export PYTHON=/usr/bin/python3
 
 export TBDIR=${HOME}/vdmtools
 export POWERTEST=${TBDIR}/test/powertest/powertest
