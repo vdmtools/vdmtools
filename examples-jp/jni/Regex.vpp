@@ -19,14 +19,14 @@ Pattern() ==
 
 public static
 compile: seq of char ==> Pattern
-compile(str) ==
-  def pat = new Pattern().compile'(str);
-  in return pat;
+compile(regex) ==
+  def pattern = new Pattern().compile'(regex);
+  in return pattern;
 
 public
 compile': seq of char ==> Pattern 
-compile'(str) ==
-  def jstr = JNI`NewString(str);
+compile'(regex) ==
+  def jstr = JNI`NewString(regex);
       cls = JNI`FindClass(classname);
       resobj = JNI`CallStaticMethod(cls, "compile", [jstr], "(Ljava/lang/String;)Ljava/util/regex/Pattern;");
   in
@@ -41,11 +41,19 @@ pattern() ==
 
 public
 matcher: seq of char ==> Matcher
-matcher(str) ==
-  def jstr = JNI`NewString(str);
+matcher(input) ==
+  def jstr = JNI`NewString(input);
 
       resobj = JNI`CallMethod(obj, "matcher", [jstr], "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;");
   in return new Matcher(resobj); 
+
+public static
+matches: seq of char * seq of char ==> bool
+matches(regex, input) ==
+  def jstr = JNI`NewString(regex);
+      jinp = JNI`NewString(input);
+      cls = JNI`FindClass(classname);
+  in return JNI`CallStaticMethod(cls, "matches", [jstr, jinp], "(Ljava/lang/String;Ljava/lang/CharSequence;)Z");
 
 end Pattern
 

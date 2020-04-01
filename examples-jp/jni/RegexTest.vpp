@@ -6,16 +6,19 @@ Test: () ==> ()
 Test() ==
    (
      Test1();
+     Test2();
    );
 
-private
+public
 Test1: () ==> ()
 Test1() ==
   def pattern = Pattern`compile("(山.C)");
       str = pattern.pattern();
       matcher = pattern.matcher("山BCDE山XC");
   in
-   (println(str);
+   (
+    println("Test1");
+    println(str);
     println(matcher.find());
 --    println(matcher.matches());
     println(matcher.groupCount());
@@ -24,6 +27,15 @@ Test1() ==
     println(matcher.find());
     println(matcher.group(1));
    );
+
+public
+Test2: () ==> ()
+Test2() ==
+ (
+  println("Test2");
+  println(Pattern`matches("A*B","AAAAAAAAAAAAAAAB"));
+  println(Pattern`matches("A*B","AAAAAAAAAAAAAAAC"));
+ );
 
 public
 println: seq of char | real | bool | jstring ==> ()
