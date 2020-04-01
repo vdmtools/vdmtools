@@ -1,0 +1,9 @@
+r jni.vpp
+r jnienv.vpp
+r io.vpp
+r VDMUtil.vpp
+r Regex.vpp
+r RegexTest.vpp
+tc * pos
+init
+d new RegexTest().Test()

@@ -1,0 +1,99 @@
+class Pattern
+
+values
+private
+classname = "java/util/regex/Pattern";
+
+instance variables
+private
+obj : [jobject] := nil;
+
+operations
+public
+Pattern: () ==> Pattern
+Pattern() ==
+  def version = JNIEnv`JNI_VERSION_1_8;
+      options = [ "-Xmx128m", "-verbose:gc" ];
+      - = JNI`CreateJavaVM(version, options);
+  in return self;
+
+public static
+compile: seq of char ==> Pattern
+compile(str) ==
+  def pat = new Pattern().compile'(str);
+  in return pat;
+
+public
+compile': seq of char ==> Pattern 
+compile'(str) ==
+  def jstr = JNI`NewString(str);
+      cls = JNI`FindClass(classname);
+      resobj = JNI`CallStaticMethod(cls, "compile", [jstr], "(Ljava/lang/String;)Ljava/util/regex/Pattern;");
+  in
+   (obj := resobj;
+    return self);
+
+public
+pattern: () ==> seq of char
+pattern() ==
+  def resobj = JNI`CallMethod(obj, "pattern", [], "()Ljava/lang/String;");
+  in return JNI`GetStringChars(resobj);
+
+public
+matcher: seq of char ==> Matcher
+matcher(str) ==
+  def jstr = JNI`NewString(str);
+
+      resobj = JNI`CallMethod(obj, "matcher", [jstr], "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;");
+  in return new Matcher(resobj); 
+
+end Pattern
+
+class Matcher
+
+values
+private
+classname = "java/util/regex/Matcher";
+
+instance variables
+private
+obj : [jobject] := nil;
+
+operations
+public
+Matcher: jobject ==> Matcher
+Matcher(jobj) ==
+ (obj := jobj;
+  return self);
+
+public
+find: () ==> bool
+find() ==
+  return JNI`CallMethod(obj, "find", [], "()Z");
+
+public
+matches: () ==> bool
+matches() ==
+  return JNI`CallMethod(obj, "matches", [], "()Z");
+
+public
+groupCount: () ==> nat
+groupCount() ==
+  return JNI`CallMethod(obj, "groupCount", [], "()I");
+
+public
+group: nat ==> seq of char
+group(i) ==
+  def resobj =  JNI`CallMethod(obj, "group", [i], "(I)Ljava/lang/String;");
+  in return JNI`GetStringChars(resobj);
+
+public
+printClass: jobject ==> ()
+printClass(jobj) ==
+  def o = JNI`CallMethod(jobj, "getClass", [], "()Ljava/lang/Class;");
+      jstr = JNI`CallMethod(o, "getName", [], "()Ljava/lang/String;");
+      str = JNI`GetStringChars(jstr);
+      - = new IO().echo(str ^ "\n");
+  in skip;
+
+end Matcher
