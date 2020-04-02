@@ -277,22 +277,17 @@ GetClassTp(obj) ==
 public static
 GetClassName: jobject ==> seq of char
 GetClassName(obj) ==
---  def clso = JNI`CallMethod(obj, "getClass", [], "()Ljava/lang/Class;");
---      jstr = JNI`CallMethod(clso, "getName", [], "()Ljava/lang/String;");
---  in return JNI`GetStringChars(jstr);
   return JNI`GetStringChars(obj.getClass().getName());
   
 public static
 GetThrowableMessage: jthrowable ==> seq of char
 GetThrowableMessage(tobj) ==
-  --def jstr = JNI`CallMethod(tobj, "getMessage", [], "()Ljava/lang/String;");
   def jstr = tobj.getMessage();
   in return JNI`GetStringChars(jstr);
 
 public static
 GetThrowableStackTraceElement: jthrowable ==> jobjectArray
 GetThrowableStackTraceElement(tobj) ==
-  --def ste = JNI`CallMethod(tobj, "getStackTrace", [], "()[Ljava/lang/StackTraceElement;");
   def ste = tobj.getStackTrace();
   in return ste;
 

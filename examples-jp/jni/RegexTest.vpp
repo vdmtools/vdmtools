@@ -17,53 +17,24 @@ Test1() ==
       matcher = pattern.matcher("山BCDE山XC");
   in
    (
-    println("Test1");
-    println(str);
-    println(matcher.find());
---    println(matcher.matches());
-    println(matcher.groupCount());
-    println(matcher.group(0));
-    println(matcher.group(1));
-    println(matcher.find());
-    println(matcher.group(1));
+    JNI`println("Test1");
+    JNI`println(str);
+    JNI`println(matcher.find());
+--    JNI`println(matcher.matches());
+    JNI`println(matcher.groupCount());
+    JNI`println(matcher.group(0));
+    JNI`println(matcher.group(1));
+    JNI`println(matcher.find());
+    JNI`println(matcher.group(1));
    );
 
 public
 Test2: () ==> ()
 Test2() ==
  (
-  println("Test2");
-  println(Pattern`matches("A*B","AAAAAAAAAAAAAAAB"));
-  println(Pattern`matches("A*B","AAAAAAAAAAAAAAAC"));
+  JNI`println("Test2");
+  JNI`println(Pattern`matches("A*B","AAAAAAAAAAAAAAAB"));
+  JNI`println(Pattern`matches("A*B","AAAAAAAAAAAAAAAC"));
  );
-
-public
-println: seq of char | real | bool | jstring ==> ()
-println(x) ==
-  def ostr = cases true:
-               (is_(x, seq of char))   -> x,
-               (is_real(x))            -> NumToStr(x),
-               (is_bool(x))            -> BoolToStr(x),
-               (isofclass(jstring, x)) -> JNI`GetStringChars(x)
-             end;
-      - = new IO().echo(ostr ^ "\n");
-  in skip;
-
-public
-NumToStr: real ==> seq of char
-NumToStr(num) ==
-  return VDMUtil`val2seq_of_char[real](num);
-
-public
-BoolToStr: bool ==> seq of char
-BoolToStr(num) ==
-  return VDMUtil`val2seq_of_char[bool](num);
-
-public
-printClass: jobject ==> ()
-printClass(obj) == 
-  def o = JNI`CallMethod(obj, "getClass", [], "()Ljava/lang/Class;");
-      cls = JNI`CallMethod(o, "getName", [], "()Ljava/lang/String;");
-  in println(JNI`GetStringChars(cls));
 
 end RegexTest
