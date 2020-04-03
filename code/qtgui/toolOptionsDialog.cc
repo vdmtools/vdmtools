@@ -103,7 +103,9 @@ toolOptionsDialog::toolOptionsDialog( QWidget* parent,  const char* name,
   this->setWindowTitle( tr( "Tool Options" ) );
 #else
   // Create layout
-  if ( NULL != name ) setName( "toolOptionsDialog" );
+  if ( NULL != name ) {
+    setName( "toolOptionsDialog" );
+  }
   this->setCaption( tr( "Tool Options" ) );
 #endif // QT_VERSION >= 0x040000
 
@@ -122,7 +124,11 @@ toolOptionsDialog::toolOptionsDialog( QWidget* parent,  const char* name,
   int fontSize = 11;
   QFont font = QFont("monospace", fontSize);
   font.setStyleHint(QFont::TypeWriter);
-  int fontPxSize = QFontMetrics(font).width('0');
+//#if QT_VERSION >= 0x050000
+//  int fontPxSize = QFontMetrics(font).boundingRect('0').width();
+//#else
+//  int fontPxSize = QFontMetrics(font).width('0');
+//#endif // QT_VERSION >= 0x050000
   this->currentFont = font;
   this->selectedFont = font;
 #endif // QT_VERSION >= 0x040000
@@ -149,26 +155,13 @@ toolOptionsDialog::toolOptionsDialog( QWidget* parent,  const char* name,
   }
 
   // Load ini file
-/*
-  if( !this->loadOptions() )
-  {
-    const char* edName = getenv("EDITOR");
-    if ( NULL != edName )
-    {
-      this->editorName = edName;
-      this->useExternalEditor = true;
-    }
-  }
-*/
   this->loadOptions();
   this->resize( this->sizeHint() );
 }
 
 QSpacerItem * toolOptionsDialog::createSpacer()
 {
-  return new QSpacerItem( 20, 20,
-                          QSizePolicy::Minimum,
-                          QSizePolicy::Expanding );
+  return new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
 }
 
 QFrame * toolOptionsDialog::createFrame( QWidget* parent )
