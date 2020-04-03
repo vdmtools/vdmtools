@@ -70,11 +70,24 @@ CCPATH = /usr/bin/
 CC      = $(CCPATH)gcc
 CCC     = $(CCPATH)g++
 
+JAVA_VERSION_MAJOR=$(shell java -version 2>&1 | head -1 | awk -F '["|.]' '{print $$2}')
+JAVA_VERSION_MINOR=$(shell java -version 2>&1 | head -1 | awk -F '["|.]' '{print $$3}')
+
+ifeq ($(JAVA_VERSION_MAJOR),1)
+JAVA_VERSION=$(JAVA_VERSION_MINOR)
+else
+JAVA_VERSION=$(JAVA_VERSION_MAJOR)
+endif
+
+ifeq ($(JAVA_VERSION),11)
+JVMDIR=server
+else
 CPUTYPE = $(shell uname -m)
 ifeq ($(strip $(CPUTYPE)),x86_64)
 JVMDIR=amd64/server
 else
 JVMDIR=i386/client
+endif
 endif
 
 # for Ubuntu 10.04 - 12.04, Debian 6
@@ -85,7 +98,11 @@ endif
 JDK_HOME = $(shell readlink -f $(shell which javac) | xargs dirname | xargs dirname)
 JNI_INC_DIR = $(JDK_HOME)/include
 
+ifeq ($(JAVA_VERSION),11)
+JNI_LIB_DIR = $(JDK_HOME)/lib/$(JVMDIR)
+else
 JNI_LIB_DIR = $(JDK_HOME)/jre/lib/$(JVMDIR)
+endif
 
 CFLAGS	= -g -I$(INCDIR) -I$(JNI_INC_DIR) -I$(JNI_INC_DIR)/linux
 CCFLAGS	= $(CFLAGS)
