@@ -255,136 +255,130 @@ TypeToSet(tp) ==
                                                return {})
   end; 
 
-IsIntNum : AS`Expr ==> bool
-IsIntNum(expr) ==
+RemoveBracketedExpr: AS`Expr ==> AS`Expr
+RemoveBracketedExpr(expr) ==
  (dcl e : AS`Expr := expr;
   while is_AS`BracketedExpr(e) do
     e := e.expr;
-  cases e:
-    mk_AS`NumLit(-,-)           -> return true,
-    mk_AS`PrefixExpr(opr,arg,-) -> cases opr:
-                                     <NUMPLUS>,
-                                     <NUMMINUS> -> return IsIntNum(arg),
-                                     others     -> return false
-                                   end,
-    others                      -> return false
-  end;
- );
+  return e);
+  
+IsIntNum : AS`Expr ==> bool
+IsIntNum(expr) ==
+  def e = RemoveBracketedExpr(expr)
+  in
+    cases e:
+      mk_AS`NumLit(-,-)                  -> return true,
+      mk_AS`PrefixExpr(<NUMPLUS>,arg,-),
+      mk_AS`PrefixExpr(<NUMMINUS>,arg,-) -> return IsIntNum(arg),
+      others                             -> return false
+    end;
 
 GetIntNum : AS`Expr ==> [int]
 GetIntNum(expr) ==
- (dcl e : AS`Expr := expr;
-  while is_AS`BracketedExpr(e) do
-    e := e.expr;
-  cases e:
-    mk_AS`NumLit(val,-)         -> return val,
-    mk_AS`PrefixExpr(opr,arg,-) -> cases opr:
-                                     <NUMPLUS>  -> return GetIntNum(arg),
-                                     <NUMMINUS> -> def n = GetIntNum(arg)
-                                                   in
-                                                     if n = nil
-                                                     then return nil
-                                                     else return -n,
-                                     others     -> return nil
-                                   end,
-    others                      -> return nil
-  end;
- );
+  def e = RemoveBracketedExpr(expr)
+    in
+    cases e:
+      mk_AS`NumLit(val,-)                -> return val,
+      mk_AS`PrefixExpr(<NUMPLUS>,arg,-)  -> return GetIntNum(arg),
+      mk_AS`PrefixExpr(<NUMMINUS>,arg,-) -> def n = GetIntNum(arg)
+                                            in
+                                              if n = nil
+                                              then return nil
+                                              else return -n,
+      others                             -> return nil
+    end;
 
 ExprToSet: AS`Name * AS`Expr * [int] * [int] ==> bool * [int] * [int]
 ExprToSet(name,expr,min,max) ==
   cases expr:
     mk_AS`BracketedExpr(e,-) -> return ExprToSet(name, e, min, max),
     mk_AS`BinaryExpr(left,opr,right,-) ->
-        (dcl left' : AS`Expr := left,
-             right' : AS`Expr := right;
-         while is_AS`BracketedExpr(left') do
-           left' := left'.expr;
-         while is_AS`BracketedExpr(right') do
-           right' := right'.expr;
+       def left' = RemoveBracketedExpr(left);
+           right' = RemoveBracketedExpr(right)
+       in
          if opr = <AND>
          then
            def mk_(ok, min',max') = ExprToSet(name,left',min,max)
            in
              if ok
              then return ExprToSet(name,right',min',max')
-             else return mk_(false,nil,nil);
-         if (left' = name and IsIntNum(right')) or (right' = name and IsIntNum(left'))
-         then
-           cases opr:
-             <NUMLT> -> if IsIntNum(right')
-                        then
-                          def n = GetIntNum(right') - 1
-                          in
-                            if max = nil
-                            then return mk_(true,min,n)
-                            elseif n < max
-                            then return mk_(true,min,n)
-                            else return mk_(true,min,max)
-                        else
-                          def n = GetIntNum(left') + 1
-                          in
-                            if min = nil
-                            then return mk_(true,n,max)
-                            elseif n > min
-                            then return mk_(true,n,max)
-                            else return mk_(true,min,max),
-             <NUMLE> -> if IsIntNum(right')
-                        then
-                          def n = GetIntNum(right')
-                          in
-                            if max = nil
-                            then return mk_(true,min,n)
-                            elseif n < max
-                            then return mk_(true,min,n)
-                            else return mk_(true,min,max)
-                        else
-                          def n = GetIntNum(left')
-                          in
-                            if min = nil
-                            then return mk_(true,n,max)
-                            elseif n > min
-                            then return mk_(true,n,max)
-                            else return mk_(true,min,max),
-             <NUMGT> -> if IsIntNum(right')
-                        then
-                          def n = GetIntNum(right') + 1
-                          in
-                            if min = nil
-                            then return mk_(true,n,max)
-                            elseif n > min
-                            then return mk_(true,n,max)
-                            else return mk_(true,min,max)
-                        else
-                          def n = GetIntNum(left') - 1
-                          in
-                            if max = nil
-                            then return mk_(true,min,n)
-                            elseif n < max
-                            then return mk_(true,min,n)
-                            else return mk_(true,min,max),
-             <NUMGE> -> if IsIntNum(right')
-                        then
-                          def n = GetIntNum(right')
-                          in
-                            if min = nil
-                            then return mk_(true,n,max)
-                            elseif n > min
-                            then return mk_(true,n,max)
-                            else return mk_(true,min,max)
-                        else
-                          def n = GetIntNum(left')
-                          in
-                            if max = nil
-                            then return mk_(true,min,n)
-                            elseif n < max
-                            then return mk_(true,min,n)
-                            else return mk_(true,min,max),
-             others  -> return mk_(false,nil,nil)
-           end
+             else return mk_(false,nil,nil)
          else
-           return mk_(false,nil,nil);
-        ),
+           if (left' = name and IsIntNum(right')) or (right' = name and IsIntNum(left'))
+           then
+             cases opr:
+               <NUMLT> -> if IsIntNum(right')
+                          then
+                            def n = GetIntNum(right') - 1
+                            in
+                              if max = nil
+                              then return mk_(true,min,n)
+                              elseif n < max
+                              then return mk_(true,min,n)
+                              else return mk_(true,min,max)
+                          else
+                            def n = GetIntNum(left') + 1
+                            in
+                              if min = nil
+                              then return mk_(true,n,max)
+                              elseif n > min
+                              then return mk_(true,n,max)
+                              else return mk_(true,min,max),
+               <NUMLE> -> if IsIntNum(right')
+                          then
+                            def n = GetIntNum(right')
+                            in
+                              if max = nil
+                              then return mk_(true,min,n)
+                              elseif n < max
+                              then return mk_(true,min,n)
+                              else return mk_(true,min,max)
+                          else
+                            def n = GetIntNum(left')
+                            in
+                              if min = nil
+                              then return mk_(true,n,max)
+                              elseif n > min
+                              then return mk_(true,n,max)
+                              else return mk_(true,min,max),
+               <NUMGT> -> if IsIntNum(right')
+                          then
+                            def n = GetIntNum(right') + 1
+                            in
+                              if min = nil
+                              then return mk_(true,n,max)
+                              elseif n > min
+                              then return mk_(true,n,max)
+                              else return mk_(true,min,max)
+                          else
+                            def n = GetIntNum(left') - 1
+                            in
+                              if max = nil
+                              then return mk_(true,min,n)
+                              elseif n < max
+                              then return mk_(true,min,n)
+                              else return mk_(true,min,max),
+               <NUMGE> -> if IsIntNum(right')
+                          then
+                            def n = GetIntNum(right')
+                            in
+                              if min = nil
+                              then return mk_(true,n,max)
+                              elseif n > min
+                              then return mk_(true,n,max)
+                              else return mk_(true,min,max)
+                          else
+                            def n = GetIntNum(left')
+                            in
+                              if max = nil
+                              then return mk_(true,min,n)
+                              elseif n < max
+                              then return mk_(true,min,n)
+                              else return mk_(true,min,max),
+               others  -> return mk_(false,nil,nil)
+             end
+           else
+             return mk_(false,nil,nil),
     others  -> return mk_(false,nil,nil)
   end;
 

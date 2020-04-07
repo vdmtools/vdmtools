@@ -1628,6 +1628,7 @@ public:
                  const TYPE_AS_Name & name,
                  const SEQ<TYPE_AS_Pattern> & parms);
   SET<TYPE_SEM_VAL> TypeToSet(const TYPE_AS_Type & tp);
+  TYPE_AS_Expr RemoveBracketedExpr(const TYPE_AS_Expr & expr);
   bool IsIntNum(const TYPE_AS_Expr & expr);
   Generic GetIntNum(const TYPE_AS_Expr & expr);
   Tuple ExprToSet(const TYPE_AS_Name & name, const TYPE_AS_Expr & expr, const Generic & min, const Generic & max);

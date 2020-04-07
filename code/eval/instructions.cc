@@ -548,14 +548,22 @@ SET<TYPE_SEM_VAL> StackEval::TypeToSet(const TYPE_AS_Type & tp)
   return Set(); // dummy
 }
 
-// IsIntNum
+// RemoveBracketedExpr
 // expr : AS`Expr
-// ==> bool
-bool StackEval::IsIntNum(const TYPE_AS_Expr & expr) {
+// ==> AS`Expr
+TYPE_AS_Expr StackEval::RemoveBracketedExpr(const TYPE_AS_Expr & expr) {
   TYPE_AS_Expr e (expr);
   while (e.Is(TAG_TYPE_AS_BracketedExpr)) {
     e = e.GetRecord(pos_AS_BracketedExpr_expr);
   }
+  return e;
+}
+
+// IsIntNum
+// expr : AS`Expr
+// ==> bool
+bool StackEval::IsIntNum(const TYPE_AS_Expr & expr) {
+  TYPE_AS_Expr e (RemoveBracketedExpr(expr));
   switch (e.GetTag()) {
     case TAG_TYPE_AS_NumLit: {
       return true;
@@ -583,10 +591,7 @@ bool StackEval::IsIntNum(const TYPE_AS_Expr & expr) {
 // expr : AS`Expr
 // ==> [int]
 Generic StackEval::GetIntNum(const TYPE_AS_Expr & expr) {
-  TYPE_AS_Expr e (expr);
-  while (e.Is(TAG_TYPE_AS_BracketedExpr)) {
-    e = e.GetRecord(pos_AS_BracketedExpr_expr);
-  }
+  TYPE_AS_Expr e (RemoveBracketedExpr(expr));
   switch (e.GetTag()) {
     case TAG_TYPE_AS_NumLit: {
       return Int(e.GetReal(pos_AS_NumLit_val).GetIntValue());
@@ -630,15 +635,9 @@ Tuple StackEval::ExprToSet(const TYPE_AS_Name & name, const TYPE_AS_Expr & expr,
       return ExprToSet(name, expr.GetRecord(pos_AS_BracketedExpr_expr), min, max);
     }
     case TAG_TYPE_AS_BinaryExpr: {
-      TYPE_AS_Expr left (expr.GetRecord(pos_AS_BinaryExpr_left));
-      TYPE_AS_Expr right (expr.GetRecord(pos_AS_BinaryExpr_right));
+      TYPE_AS_Expr left (RemoveBracketedExpr(expr.GetRecord(pos_AS_BinaryExpr_left)));
+      TYPE_AS_Expr right (RemoveBracketedExpr(expr.GetRecord(pos_AS_BinaryExpr_right)));
       const Int & opr (expr.GetInt(pos_AS_BinaryExpr_opr));
-      while (left.Is(TAG_TYPE_AS_BracketedExpr)) {
-        left = left.GetRecord(pos_AS_BracketedExpr_expr);
-      }
-      while (right.Is(TAG_TYPE_AS_BracketedExpr)) {
-        right = right.GetRecord(pos_AS_BracketedExpr_expr);
-      }
       if (opr.GetValue() == AND) {
         Tuple t1 (ExprToSet(name, left, min, max));
         if (t1.GetBoolValue(1)) {
