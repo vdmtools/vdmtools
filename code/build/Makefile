@@ -2763,23 +2763,23 @@ endif
 
 ifdef WINDEBUG
 CORBA_ARCH_LIB = \
-	$(CORBALIBDIR)/omniORB423_rtd.lib \
-	$(CORBALIBDIR)/omniDynamic423_rtd.lib \
+	$(CORBALIBDIR)/omniORB424_rtd.lib \
+	$(CORBALIBDIR)/omniDynamic424_rtd.lib \
 	$(CORBALIBDIR)/omnithread41_rtd.lib \
 	wsock32.lib
 CORBA_DLL = \
-	$(CORBABINDIR)/omniORB423_$(VCVER)_rtd.dll \
-	$(CORBABINDIR)/omniDynamic423_$(VCVER)_rtd.dll \
+	$(CORBABINDIR)/omniORB424_$(VCVER)_rtd.dll \
+	$(CORBABINDIR)/omniDynamic424_$(VCVER)_rtd.dll \
 	$(CORBABINDIR)/omnithread41_$(VCVER)_rtd.dll
 else
 CORBA_ARCH_LIB = \
-	$(CORBALIBDIR)/omniORB423_rt.lib \
-	$(CORBALIBDIR)/omniDynamic423_rt.lib \
+	$(CORBALIBDIR)/omniORB424_rt.lib \
+	$(CORBALIBDIR)/omniDynamic424_rt.lib \
 	$(CORBALIBDIR)/omnithread41_rt.lib \
 	wsock32.lib
 CORBA_DLL = \
-	$(CORBABINDIR)/omniORB423_$(VCVER)_rt.dll \
-	$(CORBABINDIR)/omniDynamic423_$(VCVER)_rt.dll \
+	$(CORBABINDIR)/omniORB424_$(VCVER)_rt.dll \
+	$(CORBABINDIR)/omniDynamic424_$(VCVER)_rt.dll \
 	$(CORBABINDIR)/omnithread41_$(VCVER)_rt.dll
 endif
 
@@ -2832,14 +2832,14 @@ CORBABIN_DIR = $(CORBADIR)/bin
 CORBALIB = -L$(CORBALIB_DIR)
 CORBA_CPPFLAGS = $(CORBA_API)
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4
-LIBOMNIORB4=libomniORB4.2.3.dylib
-LIBOMNIDYNAMIC4=libomniDynamic4.2.3.dylib
+LIBOMNIORB4=libomniORB4.2.4.dylib
+LIBOMNIDYNAMIC4=libomniDynamic4.2.4.dylib
 LIBOMNITHREAD=libomnithread.4.1.dylib
 CORBA_DIST_LIB = $(CORBALIB_DIR)/$(LIBOMNIORB4) \
 	    $(CORBALIB_DIR)/$(LIBOMNIDYNAMIC4) \
 	    $(CORBALIB_DIR)/$(LIBOMNITHREAD)
-OLDOMNIORB4=$(CORBALIB_DIR)/libomniORB4.2.3.dylib
-OLDOMNIDYNAMIC4=$(CORBALIB_DIR)/libomniDynamic4.2.3.dylib
+OLDOMNIORB4=$(CORBALIB_DIR)/libomniORB4.2.4.dylib
+OLDOMNIDYNAMIC4=$(CORBALIB_DIR)/libomniDynamic4.2.4.dylib
 OLDOMNITHREAD=$(CORBALIB_DIR)/libomnithread.4.1.dylib
 NEWOMNIORB4=@executable_path/../lib/$(LIBOMNIORB4)
 NEWOMNIDYNAMIC4=@executable_path/../lib/$(LIBOMNIDYNAMIC4)
@@ -2858,9 +2858,9 @@ CORBA_CPPFLAGS = $(CORBA_API)
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4 -lsocket -lnsl
 CORBALIB = -L$(CORBADIR)/lib
 IDLCC = $(CORBADIR)/bin/omniidl -bcxx -Wbs=SK.cc
-CORBA_DIST_LIB = $(CORBALIB_DIR)/libomniORB4.so.1 \
-	    $(CORBALIB_DIR)/libomniDynamic4.so.1 \
-	    $(CORBALIB_DIR)/libomnithread.so.3
+CORBA_DIST_LIB = $(CORBALIB_DIR)/libomniORB4.so.2 \
+	    $(CORBALIB_DIR)/libomniDynamic4.so.2 \
+	    $(CORBALIB_DIR)/libomnithread.so.4
 endif
 
 #
@@ -2873,9 +2873,9 @@ CORBA_CPPFLAGS = $(CORBA_API)
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lpthread -lomniDynamic4
 CORBALIB = -L$(CORBADIR)/lib
 IDLCC = $(CORBADIR)/bin/omniidl -bcxx -Wbs=SK.cc
-CORBA_DIST_LIB = $(CORBALIB_DIR)/libomniORB4.so.1 \
-	    $(CORBALIB_DIR)/libomniDynamic4.so.1 \
-	    $(CORBALIB_DIR)/libomnithread.so.3
+CORBA_DIST_LIB = $(CORBALIB_DIR)/libomniORB4.so.2 \
+	    $(CORBALIB_DIR)/libomniDynamic4.so.2 \
+	    $(CORBALIB_DIR)/libomnithread.so.4
 endif
 
 endif
