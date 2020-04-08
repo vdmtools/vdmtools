@@ -25,6 +25,7 @@ if [ "10.4" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
     export CC=gcc-4.0
     export CXX=g++-4.0
     export ANTHOME=/usr
+    export PYTHON=/usr/bin/python
 else
     export COCOA=1
     if [ "10.5" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
@@ -33,12 +34,14 @@ else
         export CC=gcc-4.2
         export CXX=g++-4.2
         export ANTHOME=/usr
+        export PYTHON=/usr/bin/python
     elif [ "10.6" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
         export SDK=/Developer/SDKs/MacOSX10.6.sdk
         export ARCH="-arch x86_64"
         export CC=gcc-4.2
         export CXX=g++-4.2
         export ANTHOME=/usr
+        export PYTHON=/usr/bin/python
     else
         export SDK=$(xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $2}')
         export ARCH="-arch x86_64"
@@ -49,6 +52,13 @@ else
         else
             export ANTHOME=/usr/local/apache-ant-1.9.13
             export PATH=${ANTHOME}/bin:${PATH}
+        fi
+        if [ "10.7" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+            export PYTHON=/usr/bin/python
+        elif [ "10.8" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+            export PYTHON=/usr/bin/python
+        else
+            export PYTHON=/usr/local/bin/python3
         fi
     fi
 fi
