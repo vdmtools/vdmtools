@@ -2555,9 +2555,10 @@ void AS2ASCII::CallStmt2ASCII(const TYPE_AS_CallStmt & stmt, wostream & result)
 void AS2ASCII::ReturnStmt2ASCII(const TYPE_AS_ReturnStmt & stmt, wostream & result)
 {
   MakeKeyword(L"return", result);
-  if (!stmt.GetField(pos_AS_ReturnStmt_val).IsNil())
+  if (!stmt.GetField(pos_AS_ReturnStmt_val).IsNil()) {
     MakeSpace(result);
     Expr2ASCII(stmt.GetRecord(pos_AS_ReturnStmt_val), result);
+  }
 }
 
 void AS2ASCII::IfStmt2ASCII(const TYPE_AS_IfStmt & stmt, wostream & result)
