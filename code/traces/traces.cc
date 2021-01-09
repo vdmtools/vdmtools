@@ -150,7 +150,7 @@ Set EXPANDED::ExpandTraceDef(const TYPE_AS_TraceDefTerm & tdef, const SET<TYPE_S
   switch(tdef.GetTag()) {
     case TAG_TYPE_AS_TraceApplyExpr:       { return ExpandTraceApplyExpr(tdef, ctx_s); }
     case TAG_TYPE_AS_TraceBracketedExpr:   { return ExpandTraceBracketedExpr(tdef, ctx_s); }
-    case TAG_TYPE_AS_TracePermuteExpr:     { return ExpandTracePermuteExpr(tdef, ctx_s); }
+    case TAG_TYPE_AS_TraceConcurrentExpr:  { return ExpandTraceConcurrentExpr(tdef, ctx_s); }
     case TAG_TYPE_AS_QualifiedTrace:       { return ExpandQualifiedTrace(tdef, ctx_s); }
     case TAG_TYPE_AS_RepeatTrace:          { return ExpandRepeatTrace(tdef, ctx_s); }
     case TAG_TYPE_AS_QualifiedRepeatTrace: { return ExpandQualifiedRepeatTrace(tdef, ctx_s); }
@@ -213,13 +213,13 @@ Set EXPANDED::ExpandTraceBracketedExpr(const TYPE_AS_TraceBracketedExpr & tdef, 
   return res;
 }
 
-// ExpandTracePermuteExpr
-// tdef : AS`TracePermuteExpr
+// ExpandTraceConcurrentExpr
+// tdef : AS`TraceConcurrentExpr
 // ctx_s : set of SEM`BlkEnv
 // -> set of seq of AS`Expr
-Set EXPANDED::ExpandTracePermuteExpr(const TYPE_AS_TracePermuteExpr & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s)
+Set EXPANDED::ExpandTraceConcurrentExpr(const TYPE_AS_TraceConcurrentExpr & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s)
 {
-  const TYPE_AS_TraceDefList & list (tdef.GetSequence(pos_AS_TracePermuteExpr_list));
+  const TYPE_AS_TraceDefList & list (tdef.GetSequence(pos_AS_TraceConcurrentExpr_list));
   PushCxt(ctx_s);
   Set ps (list.Permute());
   Set e_l_s;

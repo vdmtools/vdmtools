@@ -155,7 +155,7 @@ TraceDefAltn :: term : TraceDefTerm
                 CNTXT
                 ;
 
-SimpleTrace = TraceApplyExpr | TraceBracketedExpr | TracePermuteExpr;
+SimpleTrace = TraceApplyExpr | TraceBracketedExpr | TraceConcurrentExpr;
 
 #ifdef VDMSL
 TraceApplyExpr :: op   : Name
@@ -175,7 +175,7 @@ TraceBracketedExpr :: list : TraceDefList
                       CNTXT
                       ;
 
-TracePermuteExpr :: list : TraceDefList
+TraceConcurrentExpr :: list : TraceDefList
                     CNTXT
                     ;
 

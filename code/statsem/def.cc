@@ -2701,8 +2701,8 @@ bool StatSem::wf_TraceDefTerm(const Int & i, const TYPE_AS_TraceDefTerm & tdt)
     case TAG_TYPE_AS_TraceBracketedExpr: {
       return wf_TraceDefList(i, tdt.GetSequence(pos_AS_TraceBracketedExpr_list));
     }
-    case TAG_TYPE_AS_TracePermuteExpr: {
-      return wf_TraceDefList(i, tdt.GetSequence(pos_AS_TracePermuteExpr_list));
+    case TAG_TYPE_AS_TraceConcurrentExpr: {
+      return wf_TraceDefList(i, tdt.GetSequence(pos_AS_TraceConcurrentExpr_list));
     }
     case TAG_TYPE_AS_QualifiedTrace: {
       return wf_QualifiedTrace(i,

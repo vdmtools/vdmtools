@@ -2058,7 +2058,7 @@ void GenLatexOutput::GenTraceDefTerm(const Generic & modnm, const TYPE_AS_TraceD
   switch(tdt.GetTag()) {
     case TAG_TYPE_AS_TraceApplyExpr:       { GenTraceApplyExpr(modnm, tdt); break; }
     case TAG_TYPE_AS_TraceBracketedExpr:   { GenTraceBracketedExpr(modnm, tdt); break; }
-    case TAG_TYPE_AS_TracePermuteExpr:     { GenTracePermuteExpr(modnm, tdt); break; }
+    case TAG_TYPE_AS_TraceConcurrentExpr:  { GenTraceConcurrentExpr(modnm, tdt); break; }
     case TAG_TYPE_AS_QualifiedTrace:       { GenQualifiedTrace(modnm, tdt); break; }
     case TAG_TYPE_AS_RepeatTrace:          { GenRepeatTrace(modnm, tdt); break; }
     case TAG_TYPE_AS_QualifiedRepeatTrace: { GenQualifiedRepeatTrace(modnm, tdt); break; }
@@ -2110,15 +2110,21 @@ void GenLatexOutput::GenTraceBracketedExpr(const Generic & modnm, const TYPE_AS_
   this->LatexOutput << "}";
 }
 
-void GenLatexOutput::GenTracePermuteExpr(const Generic & modnm, const TYPE_AS_TracePermuteExpr & tbe)
+void GenLatexOutput::GenTraceConcurrentExpr(const Generic & modnm, const TYPE_AS_TraceConcurrentExpr & tbe)
 {
-  const SEQ<TYPE_AS_TraceDefTerm> & list (tbe.GetSequence(pos_AS_TracePermuteExpr_list));
+  const SEQ<TYPE_AS_TraceDefTerm> & list (tbe.GetSequence(pos_AS_TraceConcurrentExpr_list));
   
   this->LatexOutput << "\\begin{nondetstmt}";
   this->LatexOutput << endl;
 
   this->linefeed = false;
-  GenTraceDefList(modnm, list);
+  size_t len_list = list.Length();
+  for (size_t j = 1; j <= len_list; j++) {
+    if (j > 1) {
+      LatexOutput << "," << LF;
+    }
+    GenTraceDefTerm(modnm, list[j]);
+  }
 
   this->LatexOutput << "\\end{nondetstmt}";
 }

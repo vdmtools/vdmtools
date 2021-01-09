@@ -184,7 +184,7 @@ private:
   void GenTraceDefTerm(const Generic & modnm, const TYPE_AS_TraceDefTerm & tdt);
   void GenTraceApplyExpr(const Generic & modnm, const TYPE_AS_TraceApplyExpr & te);
   void GenTraceBracketedExpr(const Generic & modnm, const TYPE_AS_TraceBracketedExpr & tbe);
-  void GenTracePermuteExpr(const Generic & modnm, const TYPE_AS_TracePermuteExpr & tbe);
+  void GenTraceConcurrentExpr(const Generic & modnm, const TYPE_AS_TraceConcurrentExpr & tbe);
   void GenQualifiedTrace(const Generic & modnm, const TYPE_AS_QualifiedTrace & qt);
   void GenRepeatTrace(const Generic & modnm, const TYPE_AS_RepeatTrace & rt);
   void GenQualifiedRepeatTrace(const Generic & modnm, const TYPE_AS_QualifiedRepeatTrace & qrt);

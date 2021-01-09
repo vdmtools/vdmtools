@@ -443,6 +443,7 @@ static void yyerror(const char *);
 %type <map>      ListOfNamedTrace
 %type <sequence> IdentifierSlashList
 %type <sequence> TraceDefinitionList
+%type <sequence> TraceDefinitionCommaList
 %type <record>   TraceDefinitionTerm
 %type <record>   TraceDefinition
 %type <record>   SimpleTraceDefinition
@@ -2606,6 +2607,19 @@ TraceDefinitionList
         }
         ;
 
+TraceDefinitionCommaList
+        : TraceDefinitionTerm
+        { $$ = new Sequence();
+          $$->ImpAppend(*$1);
+          delete $1;
+        }
+        | TraceDefinitionCommaList ',' TraceDefinitionTerm
+        { $$ = $1;
+          $$->ImpAppend(*$3);
+          delete $3;
+        }
+        ;
+
 TraceDefinitionTerm
         : TraceDefinition                             // TraceDef
         { $$ = $1;
@@ -2659,8 +2673,14 @@ SimpleTraceDefinition
           $$->SetField(1, *$2);
           delete $2;
         }
+        | LEX_NONDET '(' TraceDefinitionCommaList ')'
+        { $$ = new TYPE_AS_TraceConcurrentExpr();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField(1, *$3);
+          delete $3;
+        }
         | LEX_NONDET '(' TraceDefinitionList ')'
-        { $$ = new TYPE_AS_TracePermuteExpr();
+        { $$ = new TYPE_AS_TraceConcurrentExpr();
           MYPARSER::SetPos2(*$$, @1, @4);
           $$->SetField(1, *$3);
           delete $3;

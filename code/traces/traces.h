@@ -24,7 +24,7 @@ private:
   static Set ExpandTraceDef(const TYPE_AS_TraceDefTerm & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
   static Set ExpandTraceApplyExpr(const TYPE_AS_TraceApplyExpr & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
   static Set ExpandTraceBracketedExpr(const TYPE_AS_TraceBracketedExpr & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
-  static Set ExpandTracePermuteExpr(const TYPE_AS_TracePermuteExpr & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
+  static Set ExpandTraceConcurrentExpr(const TYPE_AS_TraceConcurrentExpr & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
   static Set ExpandQualifiedTrace(const TYPE_AS_QualifiedTrace & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
   static Set ExpandRepeatTrace(const TYPE_AS_RepeatTrace & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);
   static Set ExpandQualifiedRepeatTrace(const TYPE_AS_QualifiedRepeatTrace & tdef, const SET<TYPE_SEM_BlkEnv> & ctx_s);

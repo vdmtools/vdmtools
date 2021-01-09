@@ -316,7 +316,7 @@ bool ASTAUX::IsASTRec(const Record & rec)
     case TAG_TYPE_AS_TraceDefAltn:
     case TAG_TYPE_AS_TraceApplyExpr:
     case TAG_TYPE_AS_TraceBracketedExpr:
-    case TAG_TYPE_AS_TracePermuteExpr:
+    case TAG_TYPE_AS_TraceConcurrentExpr:
     case TAG_TYPE_AS_QualifiedTrace:
     case TAG_TYPE_AS_LocalTraceBind:
     case TAG_TYPE_AS_LetTraceBind:

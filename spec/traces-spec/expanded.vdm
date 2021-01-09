@@ -88,7 +88,7 @@ ExpandTraceDef(tdef, ctx_s) ==
   cases true :
     (is_AS`TraceApplyExpr(tdef))       -> return ExpandTraceApplyExpr(tdef, ctx_s),
     (is_AS`TraceBracketedExpr(tdef))   -> return ExpandTraceBracketedExpr(tdef, ctx_s),
-    (is_AS`TracePermuteExpr(tdef))     -> return ExpandTracePermuteExpr(tdef, ctx_s),
+    (is_AS`TraceConcurrentExpr(tdef))  -> return ExpandTraceConcurrentExpr(tdef, ctx_s),
     (is_AS`QualifiedTrace(tdef))       -> return ExpandQualifiedTrace(tdef, ctx_s),
     (is_AS`RepeatTrace(tdef))          -> return ExpandRepeatTrace(tdef, ctx_s),
     (is_AS`QualifiedRepeatTrace(tdef)) -> return ExpandQualifiedRepeatTrace(tdef, ctx_s),
@@ -137,8 +137,8 @@ ExpandTraceBracketedExpr(tdef, ctx_s) ==
        return dunion e_l_s2)
   );
 
-ExpandTracePermuteExpr: AS`TracePermuteExpr * set of SEM`BlkEnv ==> set of seq of AS`Expr
-ExpandTracePermuteExpr(tdef, ctx_s) ==
+ExpandTraceConcurrentExpr: AS`TraceConcurrentExpr * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandTraceConcurrentExpr(tdef, ctx_s) ==
   (PushCxt(ctx_s);
    def e_l_s = ExpandTraceDefList(tdef.list, {AUX`MkEmptyBlkEnv(<READ_ONLY>)});
        e_l_s2 = { AddContextToExprList(e_l, hd cxt_s_stack) | e_l in set e_l_s }

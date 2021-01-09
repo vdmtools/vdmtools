@@ -2454,7 +2454,7 @@ wf_TraceDefTerm(i,tdt) ==
     mk_AS`TraceApplyExpr(obj,op,args,-) -> wf_TraceApplyExpr(i,obj,op,args),
 #endif VDMPP
     mk_AS`TraceBracketedExpr(tdl,-)     -> wf_TraceDefList(i,tdl),
-    mk_AS`TracePermuteExpr(tdl,-)       -> wf_TraceDefList(i,tdl),
+    mk_AS`TraceConcurrentExpr(tdl,-)    -> wf_TraceDefList(i,tdl),
     mk_AS`QualifiedTrace(binds,tdef,-)  -> wf_QualifiedTrace(i,binds,tdef),
     mk_AS`RepeatTrace(tdef,pat,-)       -> wf_RepeatTrace(i,tdef,pat),
     mk_AS`QualifiedRepeatTrace(binds,tdef,pat,-) -> wf_QualifiedRepeatTrace(i,binds,tdef,pat),
