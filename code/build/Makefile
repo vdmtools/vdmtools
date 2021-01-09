@@ -3079,10 +3079,11 @@ endif # win32
 
 ifeq ($(strip $(OSTYPE)),Darwin)
 ODBCDIR= /usr
-ODBCINCDIR= -I$(ODBCDIR)/include -I /usr/local/include
+#ODBCINCDIR= -I$(ODBCDIR)/include -I /usr/local/include
+ODBCINCDIR= -I /usr/local/include
 ODBCLIBDIR= -L$(ODBCDIR)/lib
 ODBCLIB= -liodbc
-CXX_FLAGS= -fPIC $(ODBCINCDIR)
+CXX_FLAGS= -I /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -fPIC $(ODBCINCDIR)
 
 %-j2vdll.o: %.cc
 	$(CXX) $(ARCH) $(ARCH_DEFINES) $(CXX_FLAGS) -I. -c -o $@ $<
