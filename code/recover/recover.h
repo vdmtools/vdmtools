@@ -92,14 +92,20 @@ public:
   typedef const short * cshortp;
   typedef const unsigned short * cushortp;
   typedef const unsigned char * cucharp;
+  typedef const signed char * cscharp;
 
 #ifdef USE_BISON128
   typedef cshortp CUSHORTP;
   typedef cshortp CUCHARP;
 #else
+#ifdef BISONNEW
+  typedef cshortp CUSHORTP;
+  typedef cscharp CUCHARP;
+#else
   typedef cushortp CUSHORTP;
   typedef cucharp CUCHARP;
-#endif // USE_BISON2
+#endif // BISONNEW
+#endif // USE_BISON128
 
 private:
   enum ParsStat {PARS_OK, PARS_FINAL, PARS_ERROR};

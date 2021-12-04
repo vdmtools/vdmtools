@@ -212,6 +212,7 @@ BISONVERSION_MAJOR = 2
 else
 BISONVERSION = $(shell $(YACC) --version | head -1 | awk -F ' ' '{print $$4}')
 BISONVERSION_MAJOR = $(shell echo $(BISONVERSION) | awk -F '.' '{print $$1}')
+BISONVERSION_MINOR = $(shell echo $(BISONVERSION) | awk -F '.' '{print $$2}')
 endif
 
 bison:
@@ -221,6 +222,16 @@ bison:
 ifeq ($(strip $(BISONVERSION_MAJOR)),1)
 BISONFLAG = -DUSE_BISON128
 PREPROCESS += -DUSE_BISON128
+else
+ifeq ($(strip $(BISONVERSION_MAJOR)),3)
+ifeq ($(strip $(BISONVERSION_MINOR)),5)
+BISONFLAG = -DBISONNEW
+else
+ifeq ($(strip $(BISONVERSION_MINOR)),7)
+BISONFLAG = -DBISONNEW
+endif
+endif
+endif
 endif
 
 #YACCOPT = -d -v 
